@@ -1592,3 +1592,13 @@ ul.cover { margin: 0; padding-left: 17px; font-size: 12.5px; line-height: 1.5; c
    desktop breakpoint must not reach them (it cut the period select to 182px). */
 @media (min-width: 720px) { .setup-2 { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); } }
 @media (max-width: 719px) { .setup-2 { grid-template-columns: minmax(0, 1fr); } }
+
+/* Phone run button (2026-09-29): the bar keeps 88px clear of the live-help
+   bubble, which left the button about 214px wide, so "Run Matchup Report",
+   the cost and the arrow wrapped into a ragged three-line block. On a phone the
+   label and the cost now stack as two clean lines and the arrow is dropped. */
+@media (max-width: 560px) {
+    .run { flex-direction: column; gap: 1px; padding: 6px 14px; line-height: 1.2; white-space: nowrap; }
+    .run::after { display: none; }
+    .run .cost:empty { display: none; }
+}

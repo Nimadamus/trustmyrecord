@@ -174,7 +174,7 @@
                 <div class="intro-lede">
                     <h1 class="intro-title">BetLegend Pro <span>Historical Matchup Research</span></h1>
                     <p>Pick two teams, choose the years, add a situation if you like, and see how
-                    they actually played each other. Graded games only &mdash; research, never a
+                    they actually played each other. Graded games only. Research, never a
                     prediction.</p>
                 </div>
 
@@ -429,7 +429,7 @@
                                     <div class="sit-search">
                                         <label class="sr" for="sitSearch-t1">Search situations</label>
                                         <input class="search" id="sitSearch-t1" data-search="t1" type="search"
-                                               placeholder="Search &mdash; rest, streak, off a loss, moneyline&hellip;" autocomplete="off">
+                                               placeholder="Search: rest, streak, off a loss, moneyline&hellip;" autocomplete="off">
                                     </div>
                                     <div class="sit-options" id="sitOptions-t1"></div>
                                 </div>
@@ -448,7 +448,7 @@
                                     <div class="sit-search">
                                         <label class="sr" for="sitSearch-t2">Search situations</label>
                                         <input class="search" id="sitSearch-t2" data-search="t2" type="search"
-                                               placeholder="Search &mdash; rest, streak, off a loss, moneyline&hellip;" autocomplete="off">
+                                               placeholder="Search: rest, streak, off a loss, moneyline&hellip;" autocomplete="off">
                                     </div>
                                     <div class="sit-options" id="sitOptions-t2"></div>
                                 </div>
@@ -467,7 +467,7 @@
                                     <div class="sit-search">
                                         <label class="sr" for="sitSearch-game">Search game situations</label>
                                         <input class="search" id="sitSearch-game" data-search="game" type="search"
-                                               placeholder="Search &mdash; night game, total, day of week&hellip;" autocomplete="off">
+                                               placeholder="Search: night game, total, day of week&hellip;" autocomplete="off">
                                     </div>
                                     <div class="sit-options" id="sitOptions-game"></div>
                                 </div>
@@ -503,8 +503,8 @@
                                         <label for="ttTeam">Team</label>
                                         <select id="ttTeam">
                                             <option value="">Off</option>
-                                            <option value="team_1">&mdash;</option>
-                                            <option value="team_2">&mdash;</option>
+                                            <option value="team_1">Away team</option>
+                                            <option value="team_2">Home team</option>
                                         </select>
                                     </div>
                                     <div class="ttfield">
@@ -618,7 +618,7 @@
                                 <div class="field">
                                     <label class="lbl" for="simStrategy">Staking strategy</label>
                                     <select class="sel" id="simStrategy">
-                                        <option value="flat">Flat &mdash; 2% per bet</option>
+                                        <option value="flat">Flat, 2% per bet</option>
                                         <option value="half_kelly">Half Kelly</option>
                                         <option value="kelly">Full Kelly</option>
                                     </select>
@@ -643,7 +643,7 @@
                     <form class="card" id="trendForm" novalidate>
                         <div class="card-head">
                             <h2>Team Trends</h2>
-                            <p class="sub">One team, one situation, the raw split &mdash; straight up, against the spread and over/under. No narrative, no synthesis.</p>
+                            <p class="sub">One team, one situation, the raw split: straight up, against the spread and over/under. No narrative, no synthesis.</p>
                         </div>
                         <div class="card-body">
                             <div class="grid2">
@@ -701,7 +701,7 @@
                     <div class="card">
                         <div class="card-head">
                             <h2>Library</h2>
-                            <p class="sub">Every report and simulation you've run. Reopening one shows exactly what you got &mdash; it never calls BetLegend Pro again and never charges again.</p>
+                            <p class="sub">Every report and simulation you've run. Reopening one shows exactly what you got. It never calls BetLegend Pro again and never charges again.</p>
                         </div>
                         <div class="card-body"><div id="libList"></div></div>
                     </div>
@@ -760,7 +760,7 @@
     sheet.rel = 'stylesheet';
 // A new NAME per build, not a new query string: the edge caches this sheet
     // for four hours and ignores the query string, so `?v=` never reached it.
-    sheet.href = '/betlegend-pro/app/console.20260902d.css';
+    sheet.href = '/betlegend-pro/app/console.20260929a.css';
     root.appendChild(sheet);
     root.appendChild(document.getElementById('blpMarkup').content.cloneNode(true));
 
@@ -781,6 +781,14 @@
         return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) {
             return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
         });
+    }
+
+    /* DISPLAY ONLY (2026-09-29): engine notes arrive with em dashes ("All available
+       history — since 1966"). prose() escapes like esc() and swaps those for
+       plain punctuation. Used only on read-only sentences, never on a value that is
+       sent back to the API, so no query can change because of it. */
+    function prose(v) {
+        return esc(v).replace(/\s*—\s*/g, ', ').replace(/(\d)\s*–\s*(\d)/g, '$1 to $2').replace(/\s*–\s*/g, ', ');
     }
 
     function uuid() {
@@ -956,7 +964,7 @@
             notice.innerHTML = '';
             if (!ACCESS.entitled && s.isFrozen) {
                 notice.innerHTML = '<div class="note is-warn"><span><strong>Your TMR Coin wallet is frozen.</strong> '
-                    + 'Contact support before running a paid report — or get unlimited access and skip coin '
+                    + 'Contact support before running a paid report, or get unlimited access and skip coin '
                     + 'entirely.</span><a class="btn" href="/betlegend-pro/#pricing">See plans</a></div>';
             } else if (!ACCESS.entitled && !s.eligible) {
                 notice.innerHTML = '<div class="note is-warn"><span>This account isn’t eligible to run a '
@@ -1097,8 +1105,8 @@
         function check(n, what) {
             if (n === null || n === undefined || n === '' || !isFinite(Number(n))) return '';
             n = Number(n);
-            if (lo !== null && n < lo) return what + n + ' is below the range this reading covers — use ' + band() + '.';
-            if (hi !== null && n > hi) return what + n + ' is above the range this reading covers — use ' + band() + '.';
+            if (lo !== null && n < lo) return what + n + ' is below the range this reading covers. Use ' + band() + '.';
+            if (hi !== null && n > hi) return what + n + ' is above the range this reading covers. Use ' + band() + '.';
             return '';
         }
         if (lo === null && hi === null) return '';
@@ -1251,12 +1259,12 @@
                     + '<div class="cond-body">' + renderControl(r.spec, r.bucket) + '</div>'
                     + (r.spec.help ? '<p class="cond-help">' + esc(r.spec.help) + '</p>' : '')
                     + (r.spec.available === false
-                        ? '<p class="cond-warn">' + esc(r.spec.unavailable_reason
+                        ? '<p class="cond-warn">' + prose(r.spec.unavailable_reason
                             || ('Not offered for ' + mSport.value + '.')) + ' This situation will not be sent.</p>'
                         : (valueError(r.spec, filters[r.key])
                             ? '<p class="fielderr" role="alert">' + esc(valueError(r.spec, filters[r.key])) + '</p>'
                             : (set ? '<p class="cond-reads">Reads as: ' + esc(chipFor(r.spec, filters[r.key])) + '</p>'
-                                : '<p class="cond-warn">Set a value &mdash; until then this situation is not part of the query.</p>')))
+                                : '<p class="cond-warn">Set a value. Until then this situation is not part of the query.</p>')))
                     + '</div>';
             }).join('');
         });
@@ -1299,7 +1307,7 @@
             var groups = areaGroups(bucket);
             if (!groups.length) {
                 box.innerHTML = '<p class="empty-note">No situation matches that search. This database supports '
-                    + 'only the situations listed here &mdash; nothing is estimated or substituted.</p>';
+                    + 'only the situations listed here. Nothing is estimated or substituted.</p>';
                 return;
             }
             box.innerHTML = groups.map(function (g) {
@@ -1319,7 +1327,7 @@
                         return '<div class="condopt' + (spec.available ? '' : ' is-off') + (already ? ' is-added' : '') + '">'
                             + '<div class="condopt-t"><span class="condopt-l">' + esc(spec.label) + '</span>'
                             + (spec.help ? '<span class="condopt-h">' + esc(spec.help) + '</span>' : '')
-                            + (spec.available ? '' : '<span class="cond-warn">' + esc(spec.unavailable_reason
+                            + (spec.available ? '' : '<span class="cond-warn">' + prose(spec.unavailable_reason
                                 || ('Not offered for ' + mSport.value + '.')) + '</span>')
                             + '</div>' + actions + '</div>';
                     }).join('') + '</section>';
@@ -1461,7 +1469,7 @@
         var span = (pv.first_game && pv.last_game)
             ? '<p class="trail-span">' + esc(pv.first_game) + ' through ' + esc(pv.last_game) + '</p>' : '';
         var warn = pv.small_sample_note
-            ? '<p class="trail-warn">' + esc(pv.small_sample_note) + '</p>' : '';
+            ? '<p class="trail-warn">' + prose(pv.small_sample_note) + '</p>' : '';
         var notes = (pv.filters_not_applied || []).concat(pv.unavailable_filters || []);
         host.innerHTML = '<div class="trail-head"><span class="trail-lbl">Matching games</span>'
             + '<b class="trail-n">' + fmtInt(pv.qualifying_games)
@@ -1657,7 +1665,7 @@
             return;
         }
         line.innerHTML = '<strong>' + esc(mSport.value) + ' database coverage: '
-            + esc(coverage.earliest_season) + '–' + esc(coverage.latest_season) + '</strong>'
+            + esc(coverage.earliest_season) + ' to ' + esc(coverage.latest_season) + '</strong>'
             + ' <span class="cover-sub">· ' + fmtInt(coverage.games) + ' games on file</span>';
         meta.textContent = coverage.earliest_date + ' → ' + coverage.latest_date;
     }
@@ -1670,7 +1678,7 @@
         var keep = mTimeframe.value;
         var first = coverage && coverage.earliest_season, last = coverage && coverage.latest_season;
         var opts = ['<option value="all">All available history'
-            + (first ? ' — since ' + first : '') + '</option>'];
+            + (first ? ', since ' + first : '') + '</option>'];
         if (first && last) {
             for (var y = last; y >= first; y--) opts.push('<option value="' + y + '">' + y + '</option>');
         }
@@ -1723,7 +1731,7 @@
         reads.className = set ? 'cond-reads' : 'cond-warn';
         reads.textContent = set
             ? 'Reads as: ' + chipFor(spec, filters[key])
-            : 'Set a value — until then this situation is not part of the query.';
+            : 'Set a value. Until then this situation is not part of the query.';
     }
 
     $('sitAreas').addEventListener('change', function (ev) {
@@ -1935,7 +1943,7 @@
             + mSport.value + ' team totals are ' + ttNoun() + ', usually '
             + (mSport.value === 'NBA' ? '95 to 130' : mSport.value === 'NFL' ? '14 to 34'
                 : mSport.value === 'NHL' ? '1.5 to 4.5' : '3 to 6')
-            + ' — enter the number you are being offered.';
+            + '. Enter the number you are being offered.';
         ttNote.hidden = false;
     }
 
@@ -2001,7 +2009,7 @@
         if (!isSet(v)) return null;
         var who = teamName(bktOf(key));
         var body = chipFor(spec, v);
-        return who ? who + ' — ' + body : body;
+        return who ? who + ': ' + body : body;
     }
 
     /** Every situation, in the order the reader added them, with both benches
@@ -2022,7 +2030,7 @@
             // The same question of both teams, answered the same way, reads as
             // one clause rather than two near-identical ones.
             if (keys.length === 2 && spec && JSON.stringify(filters[keys[0]]) === JSON.stringify(filters[keys[1]])) {
-                out.push('both teams — ' + chipFor(spec, filters[keys[0]]));
+                out.push('both teams: ' + chipFor(spec, filters[keys[0]]));
                 return;
             }
             keys.forEach(function (k) {
@@ -2093,7 +2101,7 @@
         if (!a || !h) { el.textContent = 'Choose an away team and a home team.'; return; }
         var v = mVenue.value;
         el.innerHTML = '<strong>' + esc(a) + (v === 'all' ? ' and ' : (v === 'home' ? ' vs ' : ' at '))
-            + esc(h) + '</strong> — ' + (v === 'all'
+            + esc(h) + '</strong>: ' + (v === 'all'
                 ? 'either location: ' + esc(a) + ' home or ' + esc(h) + ' home.'
                 : (v === 'home' ? esc(a) + ' at home, ' + esc(h) + ' away.'
                                 : esc(a) + ' away, ' + esc(h) + ' at home.'));
@@ -2383,7 +2391,7 @@
             bits.push('<b>Small sample: ' + games + ' game' + (games === 1 ? '' : 's') + '.</b> '
                 + 'Every percentage above is exact arithmetic on those ' + games + ' results, but one more '
                 + 'win or loss moves it by about ' + Math.round(100 / games) + ' points. Read the game list '
-                + 'rather than the rate — or widen the timeframe or drop a condition to build a bigger sample.');
+                + 'rather than the rate, or widen the timeframe or drop a condition to build a bigger sample.');
         }
         if (r.sample_note) bits.push(esc(r.sample_note));
         return bits.length ? '<div class="thin"><span>' + bits.join(' ') + '</span></div>' : '';
@@ -2401,10 +2409,10 @@
         };
         return '<div class="facts">'
             + fact('Database coverage', (cov && cov.earliest_season != null)
-                ? esc(d.sport) + ' ' + esc(cov.earliest_season) + '–' + esc(cov.latest_season)
+                ? esc(d.sport) + ' ' + esc(cov.earliest_season) + ' to ' + esc(cov.latest_season)
                     + ' <em>(' + fmtInt(cov.games) + ' games)</em>'
                 : DASH)
-            + fact('Report period', per ? esc(per.label) : 'All available history')
+            + fact('Report period', per ? prose(per.label) : 'All available history')
             + fact('Qualifying meetings', fmtInt(total))
             + fact('Span of the answer', span
                 ? esc(span.first_game) + ' → ' + esc(span.last_game) : DASH)
@@ -2538,11 +2546,11 @@
                 + '<thead><tr>' + head + '</tr></thead><tbody>'
                 + rows + '</tbody></table></div>'
             : '<p class="note-s">No meeting matches these situations in this period. Remove a situation or '
-                + 'widen the period — nothing here is broken, the dataset simply holds no meeting that met '
+                + 'widen the period. Nothing here is broken: the dataset simply holds no meeting that met '
                 + 'all of them.</p>';
         return '<section class="rcard">'
             + '<div class="rcard-head"><h3>' + ((games.length && games.length < total)
-                ? 'Qualifying meetings — most recent ' + fmtInt(games.length) + ' of ' + fmtInt(total)
+                ? 'Qualifying meetings, most recent ' + fmtInt(games.length) + ' of ' + fmtInt(total)
                 : 'Every qualifying meeting (' + fmtInt(total) + ')') + '</h3>'
             + '<span class="range">Away side listed first</span></div>'
             + body + '</section>';
@@ -2593,12 +2601,12 @@
             + kpi(t1 + ' record', rec(m.team_1), pct(m.team_1.win_pct))
             + kpi(t2 + ' record', rec(m.team_2), pct(m.team_2.win_pct))
             + ((ats && ats.eligible_games > 0)
-                ? kpi(t1 + ' ATS', esc(ats.wins + '-' + ats.losses + '-' + ats.pushes),
+                ? kpi(t1 + ' ATS', esc(ats.wins != null ? ats.wins + '-' + ats.losses + '-' + (ats.pushes || 0) : (ats.record || '')),
                       (ats.cover_pct == null ? '' : ats.cover_pct + '% · ') + ats.eligible_games + ' of '
                       + fmtInt(m.qualifying_games) + ' had a closing spread')
                 : kpi(t1 + ' ATS', DASH, 'no closing spread on file'))
             + ((ou && ou.graded_games > 0)
-                ? kpi('Over / under', esc(ou.overs + '-' + ou.unders + '-' + ou.pushes),
+                ? kpi('Over / under', esc(ou.overs != null ? ou.overs + '-' + ou.unders + '-' + (ou.pushes || 0) : (ou.record || '')),
                       'over-under-push · ' + ou.graded_games + ' of ' + fmtInt(m.qualifying_games)
                       + ' had a closing total')
                 : kpi('Over / under', DASH, 'no closing total on file'))
@@ -2610,9 +2618,9 @@
                       'minus = favored · ' + cl.closing_line_games + ' games') : '')
             + ((cl && cl.closing_total_games > 0)
                 ? kpi('Avg closing total', num(cl.avg_closing_total), cl.closing_total_games + ' games') : '')
-            + (sc ? kpi('Avg ' + m.scoring_noun + ' — ' + m.team_1.team, num(sc.avg_team_1),
+            + (sc ? kpi('Avg ' + m.scoring_noun + ', ' + m.team_1.team, num(sc.avg_team_1),
                         'median ' + num(sc.median_team_1)) : '')
-            + (sc ? kpi('Avg ' + m.scoring_noun + ' — ' + m.team_2.team, num(sc.avg_team_2),
+            + (sc ? kpi('Avg ' + m.scoring_noun + ', ' + m.team_2.team, num(sc.avg_team_2),
                         'median ' + num(sc.median_team_2)) : '')
             + kpi('Home side', fmtInt(m.home_side_wins) + '-' + fmtInt(m.away_side_wins),
                   'whichever team hosted')
@@ -2638,15 +2646,15 @@
             + '<span class="range">Genuine stored lines only</span></div>'
             + '<div class="kpis">'
             + (ml
-                ? kpi('Moneyline — ' + ml.team_1.team, esc(ml.team_1.record),
+                ? kpi('Moneyline, ' + ml.team_1.team, esc(ml.team_1.record),
                       pct(ml.team_1.win_pct) + ' · ' + units(ml.team_1.units) + ' flat · '
                       + ml.team_1.eligible_games + ' priced')
-                  + kpi('Moneyline — ' + ml.team_2.team, esc(ml.team_2.record),
+                  + kpi('Moneyline, ' + ml.team_2.team, esc(ml.team_2.record),
                       pct(ml.team_2.win_pct) + ' · ' + units(ml.team_2.units) + ' flat · '
                       + ml.team_2.eligible_games + ' priced')
                 : '')
             + (atsN > 0
-                ? kpi('Against the spread — ' + m.team_1.team, esc(mk.ats.record),
+                ? kpi('Against the spread, ' + m.team_1.team, esc(mk.ats.record),
                       pct(mk.ats.cover_pct) + ' · ' + atsN + ' of ' + fmtInt(m.qualifying_games)
                       + ' carried a real closing spread')
                 : '')
@@ -2662,7 +2670,7 @@
                 + 'against-the-spread record is reported.'))
             + (ouN > 0 ? '' : absent('Totals', 'none of these meetings carry a genuine closing total, so no '
                 + 'over/under record is reported.'))
-            + (ml ? '<p class="note-s">' + esc(ml.note) + '</p>' : '')
+            + (ml ? '<p class="note-s">' + prose(ml.note) + '</p>' : '')
             + ((m.unavailable_readings || []).length
                 ? '<div class="block-note"><strong>Not shown, and why</strong><ul>'
                     + m.unavailable_readings.map(function (u) {
@@ -2729,7 +2737,7 @@
                         return esc(r.filter) + ' on file for ' + hxPct(r.coverage_pct);
                     }).join(', ') + ' of those games.</li>' : '')
                 + '</ul>'
-                + (thin.length ? '<p class="note-s">' + thin.map(function (r) { return esc(r.note); }).join(' ') + '</p>' : '')
+                + (thin.length ? '<p class="note-s">' + thin.map(function (r) { return prose(r.note); }).join(' ') + '</p>' : '')
                 + '</div>' : '';
 
         // What was searched, in words, plus the sample's own span. This is
@@ -2752,7 +2760,7 @@
                         return '<li>' + (c.applies_to_team
                             ? '<b>' + esc(c.applies_to_team) + '</b> ' : '') + esc(c.description)
                             + (c.unavailable_reason
-                                ? ' <i>— not applied: ' + esc(c.unavailable_reason) + '</i>' : '')
+                                ? ' <i>(not applied: ' + prose(c.unavailable_reason) + ')</i>' : '')
                             + '</li>';
                     }).join('') + '</ul>' : '')
                 + '</div>'
@@ -2764,7 +2772,7 @@
         var zero = d.zero_result
             ? '<div class="block-note is-warn zero"><strong>' + esc(d.zero_result.message) + '</strong>'
                 + (d.zero_result.narrowest_filter
-                    ? '<p>' + esc(d.zero_result.narrowest_filter.filter) + ' was the narrowest part of this query — '
+                    ? '<p>' + prose(d.zero_result.narrowest_filter.filter) + ' was the narrowest part of this query: '
                         + fmtInt(d.zero_result.narrowest_filter.games_before) + ' qualified before it, '
                         + fmtInt(d.zero_result.narrowest_filter.games_after) + ' after.</p>' : '')
                 + '<div class="zero-acts">' + (d.zero_result.actions || []).map(function (a) {
@@ -2784,7 +2792,7 @@
             + '<div class="tags">'
             + (applied.length
                 ? applied.map(function (a) { return '<span class="tag">' + esc(a) + '</span>'; }).join('')
-                : '<span class="tag">No situations — every completed game</span>')
+                : '<span class="tag">No situations: every completed game</span>')
             + '</div>'
             + (declined.length
                 ? '<div class="block-note is-warn"><strong>Conditions requested but not applied</strong><ul>'
@@ -2852,7 +2860,7 @@
                 + '<p class="note-s">Share of the same qualifying games at every number the sample reaches.</p>';
             }
             ttBlock = '<section class="rcard is-answer"><div class="rcard-head">'
-                + '<h3>Team total &mdash; ' + esc(tt.team) + ' ' + esc(tt.side) + ' ' + esc(tt.line) + '</h3>'
+                + '<h3>Team total: ' + esc(tt.team) + ' ' + esc(tt.side) + ' ' + esc(tt.line) + '</h3>'
                 + '<span class="range">Read from the qualifying sample, not a filter on it</span></div>'
                 + '<div class="kpis">'
                 + '<div class="kpi"><span>Historical</span><strong class="tt-lead">'
@@ -2871,10 +2879,10 @@
                     : '')
                 + '</div>'
                 + strip
-                + '<p class="note-s">' + esc(tt.basis) + '</p>'
+                + '<p class="note-s">' + prose(tt.basis) + '</p>'
                 + (tt.pricing_unavailable_reason
-                    ? '<p class="note-s">' + esc(tt.pricing_unavailable_reason) + '</p>' : '')
-                + (pr ? '<p class="note-s">' + esc(pr.note) + '</p>' : '')
+                    ? '<p class="note-s">' + prose(tt.pricing_unavailable_reason) + '</p>' : '')
+                + (pr ? '<p class="note-s">' + prose(pr.note) + '</p>' : '')
                 + '</section>';
         }
 
@@ -2925,7 +2933,7 @@
                 // figures that add to 250. The server explains exactly that in
                 // h2h.note, and the renderer was dropping the field, so the
                 // reader saw two denominators and no way to tell.
-                + (h2h.note ? '<p class="note-s">' + esc(h2h.note) + '</p>' : '')
+                + (h2h.note ? '<p class="note-s">' + prose(h2h.note) + '</p>' : '')
                 + thinNote(h2h) + '</section>' : '';
 
         // Answer first: the result card leads, the methodology card (what was
@@ -3041,8 +3049,8 @@
         var haveBoth = !!(mAway.value && mHome.value && mAway.value !== mHome.value);
         ttCard.hidden = !haveBoth;
         if (!haveBoth) return;
-        ttTeam.options[1].textContent = mAway.value;
-        ttTeam.options[2].textContent = mHome.value;
+        ttTeam.options[1].textContent = mAway.value || 'Away team';
+        ttTeam.options[2].textContent = mHome.value || 'Home team';
 
         var err = teamTotalError();
         ttErr.textContent = err;
@@ -3094,7 +3102,7 @@
         hide($('mError'));
         mSubmit.disabled = true;
         $('mLoading').innerHTML = skeleton('report',
-            'Pulling both teams’ histories and applying your situations — 15 to 30 seconds…');
+            'Pulling both teams’ histories and applying your situations. About 15 to 30 seconds…');
         $('mLoading').hidden = false;
         try {
             var res = await window.api.submitBetLegendProHistoricalMatchup(payload);
@@ -3129,12 +3137,12 @@
         var after = await refreshStatus();
         if (balanceBefore != null && after != null && after < balanceBefore) {
             showNote(target, '<span><strong>The connection dropped while this was completing, and it looks like '
-                + 'it went through</strong> — your balance fell by ' + esc(balanceBefore - after)
+                + 'it went through</strong>: your balance fell by ' + esc(balanceBefore - after)
                 + ' TMR Coin. Check your Library before running it again so you are not charged twice.</span>');
             loadLibrary();
         } else {
             showNote(target, '<span>BetLegend Pro could not complete this ' + esc(what) + ' ('
-                + esc((data && data.error) || 'server error') + '). Nothing was charged — you can try again.</span>');
+                + esc((data && data.error) || 'server error') + '). Nothing was charged, so you can try again.</span>');
         }
     }
 
@@ -3201,13 +3209,13 @@
         var html = '<section class="verdict">'
             + '<div class="verdict-k">Recommendation</div>'
             + '<h2 class="verdict-label">' + esc(reco || 'No call') + '</h2>'
-            + '<p class="verdict-sel">' + esc(r.interpreted_as || r.query || '')
+            + '<p class="verdict-sel">' + prose(r.interpreted_as || r.query || '')
             + (r.sport ? ' · ' + esc(r.sport) : '')
             + ((r.teams && r.teams.length) ? ' · ' + esc(r.teams.join(' vs ')) : '') + '</p>'
             + '<div class="verdict-k" style="margin-top:11px">Confidence · ' + esc(cr.level || '—')
             + (typeof cr.score === 'number' ? ' · ' + cr.score : '') + '</div>'
             + '<div class="meter"><i style="width:' + confPct + '%"></i></div>'
-            + (cr.basis ? '<p class="verdict-sel">' + esc(cr.basis) + '</p>' : '')
+            + (cr.basis ? '<p class="verdict-sel">' + prose(cr.basis) + '</p>' : '')
             + (rep.recommended_line_and_max_price ? '<p class="verdict-sel">' + esc(rep.recommended_line_and_max_price) + '</p>' : '')
             + '</section>';
         var order = Object.keys(REPORT_SECTIONS).filter(function (k) {
@@ -3242,14 +3250,14 @@
         var balanceBefore = Number(($('balanceValue').textContent || '').replace(/,/g, ''));
         if (!isFinite(balanceBefore)) balanceBefore = null;
         askSubmit.disabled = true;
-        $('askLoading').innerHTML = skeleton('report', 'Reading your question, gathering the data and writing the report — 20 to 40 seconds…');
+        $('askLoading').innerHTML = skeleton('report', 'Reading your question, gathering the data and writing the report. About 20 to 40 seconds…');
         $('askLoading').hidden = false;
         try {
             var res = await window.api.submitBetLegendProReport({ query: query, idempotency_key: key });
             askLastSig = null; askLastKey = null;
             var r = res.result || {};
             if (r.needs_clarification) {
-                showNote($('askClarify'), '<span>' + esc(r.interpreted_as
+                showNote($('askClarify'), '<span>' + prose(r.interpreted_as
                     || 'That question could not be resolved to a report. Try naming a team or a specific matchup.') + '</span>');
             } else {
                 $('askResult').innerHTML = renderAsk(res);
@@ -3284,7 +3292,7 @@
         var edge = p - be;
         note.className = 'note ' + (edge > 0 ? 'is-ok' : 'is-warn');
         note.innerHTML = '<span>At ' + esc(odds > 0 ? '+' + odds : odds) + ' you need to win <strong>' + pct(be)
-            + '</strong> to break even. You entered <strong>' + pct(p) + '</strong> — '
+            + '</strong> to break even. You entered <strong>' + pct(p) + '</strong>, '
             + (edge > 0
                 ? 'an assumed edge of <strong>+' + pct(edge) + '</strong>. The simulation below shows how that plays out with variance.'
                 : 'that is <strong>' + pct(Math.abs(edge)) + '</strong> below break-even, so this is a losing proposition at this price.')
@@ -3325,7 +3333,7 @@
             simLastSig = null; simLastKey = null;
             var r = res.result || {}, out = r.results || {}, params = r.parameters || {};
             var kpis = [
-                { v: '$' + fmtInt(Math.round(out.median_final_bankroll)), l: 'Median finish', h: 'The middle outcome — a better guide than the mean, which a few huge runs can drag upward.' },
+                { v: '$' + fmtInt(Math.round(out.median_final_bankroll)), l: 'Median finish', h: 'The middle outcome, a better guide than the mean, which a few huge runs can drag upward.' },
                 { v: '$' + fmtInt(Math.round(out.mean_final_bankroll)), l: 'Mean finish', h: 'Average across every simulated run.' },
                 { v: pct(out.profit_probability), l: 'Finished ahead', h: 'Share of runs that ended above the starting bankroll.', tone: out.profit_probability >= 0.5 ? 'pos' : '' },
                 { v: pct(out.bust_rate), l: 'Bust rate', h: 'Share of runs that lost the bankroll entirely.', tone: out.bust_rate > 0.05 ? 'neg' : '' },
@@ -3349,7 +3357,7 @@
                 kpis.push({
                     v: (out.roi_on_turnover_pct > 0 ? '+' : '') + Number(out.roi_on_turnover_pct).toFixed(1) + '%',
                     l: 'ROI per $ staked', tone: out.roi_on_turnover_pct > 0 ? 'pos' : 'neg',
-                    h: 'Profit as a share of everything put through — the ROI a record is judged on.'
+                    h: 'Profit as a share of everything put through: the ROI a record is judged on.'
                 });
             }
             $('simResult').innerHTML = '<section class="rcard"><div class="rcard-head"><h2>Simulation results</h2></div>'
@@ -3368,7 +3376,7 @@
                         + '</div><div class="kpi-l">' + esc(k.l) + '</div><div class="kpi-h">' + esc(k.h) + '</div></div>';
                 }).join('') + '</div>'
                 + '<div class="unavail" style="margin-top:11px">These outcomes follow entirely from the win '
-                + 'probability you supplied. BetLegend Pro does not verify that assumption — if it is wrong, '
+                + 'probability you supplied. BetLegend Pro does not verify that assumption. If it is wrong, '
                 + 'so is everything above.</div>' + receiptRow(res) + '</section>';
             $('simResult').hidden = false;
             await refreshStatus();
@@ -3403,7 +3411,7 @@
             }).join('');
         } catch (err) {
             if (tSport.value !== sport) return;
-            tTeam.innerHTML = '<option value="">Unavailable — try again</option>';
+            tTeam.innerHTML = '<option value="">Unavailable, try again</option>';
         } finally {
             if (tSport.value === sport) { tTeam.disabled = false; syncTrendSubmit(); }
         }
@@ -3446,7 +3454,7 @@
         sel.innerHTML = cat.situations.map(function (s) {
             return '<option value="' + esc(s.id) + '"' + (s.supported ? '' : ' disabled')
                 + (s.reason ? ' title="' + esc(s.reason) + '"' : '') + '>'
-                + esc(s.label) + (s.supported ? '' : ' — not available for ' + esc(sport))
+                + esc(s.label) + (s.supported ? '' : ' (not available for ' + esc(sport) + ')')
                 + '</option>';
         }).join('');
         var keep = cat.situations.filter(function (s) { return s.id === wanted && s.supported; });
@@ -3499,10 +3507,10 @@
                 if (s.su_record) tiles.push({ v: s.su_record, l: 'Straight up', h: typeof s.su_win_pct === 'number' ? pct(s.su_win_pct) + ' win rate' : '' });
                 if (s.ats_record) tiles.push({ v: s.ats_record, l: 'Against the spread', h: typeof s.ats_win_pct === 'number' ? pct(s.ats_win_pct) + ' cover rate' : '' });
                 if (s.ou_record) tiles.push({ v: s.ou_record, l: 'Over / under', h: typeof s.over_pct === 'number' ? pct(s.over_pct) + ' went over' : '' });
-                $('tResult').innerHTML = '<section class="rcard"><div class="rcard-head"><h2>' + esc(team) + ' — '
+                $('tResult').innerHTML = '<section class="rcard"><div class="rcard-head"><h2>' + esc(team) + ': '
                     + esc(r.situation || situation) + '</h2></div>'
                     + '<p class="note-s" style="margin-top:0">' + esc(r.sport || sport) + ' · ' + fmtInt(games)
-                    + ' games matched' + (res.note ? ' · ' + esc(res.note) : '') + '</p>'
+                    + ' games matched' + (res.note ? ' · ' + prose(res.note) : '') + '</p>'
                     + '<div class="kpis-lg" style="margin-top:11px">' + tiles.map(function (t) {
                         return '<div class="kpi-lg"><div class="kpi-v">' + esc(t.v) + '</div><div class="kpi-l">'
                             + esc(t.l) + '</div>' + (t.h ? '<div class="kpi-h">' + esc(t.h) + '</div>' : '') + '</div>';
@@ -3539,7 +3547,7 @@
             list.dataset.loadedOnce = '1';
             if (!items.length) {
                 list.innerHTML = emptyState('Nothing saved yet',
-                    'Run a matchup report, a question or a simulation and it will be kept here — reopening one is always free.',
+                    'Run a matchup report, a question or a simulation and it will be kept here. Reopening one is always free.',
                     '<button class="btn is-primary" type="button" data-goto="matchup">Run your first report</button>');
                 list.querySelectorAll('[data-goto]').forEach(function (b) {
                     b.addEventListener('click', function () { selectTool(b.dataset.goto, true); });
@@ -3549,8 +3557,8 @@
             list.innerHTML = '<div class="lib">' + items.map(function (it) {
                 var when = it.created_at ? new Date(it.created_at).toLocaleString() : '';
                 return '<div class="lib-item"><span class="lib-kind">' + esc(KIND[it.kind] || it.kind) + '</span>'
-                    + '<div class="lib-main"><div class="lib-title" title="' + esc(it.title || '') + '">'
-                    + esc(it.title || 'Untitled') + '</div><div class="lib-meta">' + esc(when)
+                    + '<div class="lib-main"><div class="lib-title" title="' + prose(it.title || '') + '">'
+                    + prose(it.title || 'Untitled') + '</div><div class="lib-meta">' + esc(when)
                     + (it.ledger_entry_id ? ' · receipt #' + esc(it.ledger_entry_id) : ' · included in plan')
                     + '</div></div><button class="btn" data-lib-id="' + esc(it.id) + '" type="button">Open</button></div>';
             }).join('') + '</div>';
@@ -3569,7 +3577,7 @@
 
     async function openLibraryItem(id) {
         var box = $('libDetail');
-        box.innerHTML = skeleton('report', 'Opening saved item — this is a stored copy, nothing is charged…');
+        box.innerHTML = skeleton('report', 'Opening saved item. This is a stored copy, nothing is charged…');
         box.hidden = false;
         try {
             var d = await window.api.getBetLegendProHistoryDetail(id);
@@ -3583,7 +3591,7 @@
             else if (d.kind === 'report') body = renderAsk(fake);
             else if (d.kind === 'simulation') {
                 var out = (d.result && d.result.results) || {};
-                body = '<section class="rcard"><div class="rcard-head"><h2>' + esc(d.title || 'Simulation') + '</h2></div>'
+                body = '<section class="rcard"><div class="rcard-head"><h2>' + prose(d.title || 'Simulation') + '</h2></div>'
                     + '<div class="kpis-lg">' + [['$' + fmtInt(Math.round(out.median_final_bankroll)), 'Median finish'],
                         ['$' + fmtInt(Math.round(out.mean_final_bankroll)), 'Mean finish'],
                         [pct(out.profit_probability), 'Finished ahead'],
@@ -3594,13 +3602,13 @@
                     + '</div></section>';
             } else {
                 var s = (d.result && d.result.summary) || {};
-                body = '<section class="rcard"><div class="rcard-head"><h2>' + esc(d.title || 'Saved item') + '</h2></div>'
+                body = '<section class="rcard"><div class="rcard-head"><h2>' + prose(d.title || 'Saved item') + '</h2></div>'
                     + '<div class="kpis-lg">' + [[s.su_record, 'Straight up'], [s.ats_record, 'Against the spread'], [s.ou_record, 'Over / under']]
                         .filter(function (k) { return k[0]; })
                         .map(function (k) { return '<div class="kpi-lg"><div class="kpi-v">' + esc(k[0]) + '</div><div class="kpi-l">' + esc(k[1]) + '</div></div>'; }).join('')
                     + '</div></section>';
             }
-            box.innerHTML = '<div class="note is-ok"><span>Reopened from your library — not charged.</span></div>' + body;
+            box.innerHTML = '<div class="note is-ok"><span>Reopened from your library. Not charged.</span></div>' + body;
         } catch (err) {
             box.innerHTML = '<div class="note is-err"><span>Could not open that saved item.</span></div>';
         }
