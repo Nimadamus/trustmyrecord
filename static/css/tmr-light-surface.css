@@ -173,16 +173,20 @@ html body .player-box-score-content > h4 {
     color: var(--ls-ink, #0B1220) !important;
 }
 
-/* The navy sub-headings inside the dark box-score shell - "Scoring Plays &
-   Detail", "<Team> Batting", "Batting, Baserunning & Fielding", the pitching
-   notes - are the other half of requirement 4: they get the dark-shell primary
-   ink and a rule, not the theme's washed secondary. */
+/* The box-score sub-sections - "Scoring Plays & Detail", "<Team> Batting",
+   "Batting, Baserunning & Fielding", substitutions and the pitching notes -
+   sit on the WHITE .player-box-score-panel (mlb-simulator.css, tmr-theme-a.css),
+   not a dark shell. BOXSCORE_INK_20260929: they used to carry dark-shell ink
+   (#EAF1F9 / #C9D9EC / #FFFFFF), which washed the whole section out to about
+   1.1 to 1.4:1 contrast. Primary ink for headings and strong, readable
+   secondary ink for body copy, matching the batting and pitching tables. */
 html body .scoring-detail > h4,
 html body .box-score-detail-section > h4,
 html body .box-score-stat-section > h4,
 html body .espn-box-group > h4,
-html body .player-box-score-heading h3 {
-    color: #EAF1F9 !important;
+html body .player-box-score-heading h3,
+html body .team-box-header .team-box-label {
+    color: var(--ls-ink, #0B1220) !important;
     font-size: 14px;
     letter-spacing: 0.04em;
 }
@@ -192,7 +196,7 @@ html body .batting-fielding-details h5,
 html body .box-score-team-details h5,
 html body .box-score-detail-group h6,
 html body .rm-block h5 {
-    color: #C9D9EC !important;
+    color: #1F2B3D !important;
 }
 
 html body .scoring-detail-list li,
@@ -201,14 +205,14 @@ html body .box-score-team-details p,
 html body .box-score-game-meta p,
 html body .rm-block li,
 html body .bx-mode-legend {
-    color: #C9D9EC !important;
+    color: #1F2B3D !important;
 }
 
 html body .scoring-detail-list li strong,
 html body .batting-fielding-details p strong,
 html body .box-score-team-details p strong,
 html body .bx-mode-legend strong {
-    color: #FFFFFF !important;
+    color: var(--ls-ink, #0B1220) !important;
 }
 
 html body .player-box-score-content > h4 {
@@ -224,7 +228,7 @@ html body .box-score-detail-section > h4,
 html body .box-score-stat-section > h4,
 html body .espn-box-group > h4 {
     padding-bottom: 6px;
-    border-bottom: 2px solid rgba(160, 190, 225, 0.45);
+    border-bottom: 2px solid var(--ls-rule-strong, #8FA0B6);
 }
 
 /* -----------------------------------------------------------------------------
@@ -344,7 +348,7 @@ html body .scoring-detail-empty {
 }
 
 html body .box-score-summary-head span { color: #C9D9EC !important; }
-html body .scoring-detail .scoring-detail-empty { color: #A9BCD4 !important; }
+html body .scoring-detail .scoring-detail-empty { color: #46536A !important; }
 
 html body .player-box-table .bx-season {
     color: #3E4A63 !important;
