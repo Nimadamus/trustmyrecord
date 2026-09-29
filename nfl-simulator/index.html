@@ -413,8 +413,50 @@
       <tr><th scope="row">Against the spread, 284 games</th><td class="n">47.89%</td></tr>
       <tr><th scope="row">Game totals, 285 games</th><td class="n">48.07%</td></tr>
       <tr><th scope="row">Break-even rate at standard pricing</th><td class="n">52.38%</td></tr>
+      <tr><th scope="row">Brier score, closing market favourite (no vig moneyline)</th><td class="n">0.2104</td></tr>
+      <tr><th scope="row">Winner accuracy, closing market favourite, 283 decided games</th><td class="n">66.08%</td></tr>
+      <tr><th scope="row">Mean absolute margin error, closing spread</th><td class="n">9.7 points</td></tr>
     </table>
   </div>
+  <div class="acc" id="nflAccYtd" hidden></div>
+  <script>
+  /* NFL_SIM_ACCURACY_YTD_20260928. The current season, graded game by game,
+     from accuracy-ytd.json (built by the backend's read only
+     scripts/nfl-sim-accuracy-ytd.js). Each game is simulated as of its
+     kickoff and scored against the final and the closing line, with the
+     closing market favourite scored on the same games. */
+  (function(){
+    var box=document.getElementById('nflAccYtd');if(!box||!window.fetch)return;
+    fetch('/nfl-simulator/accuracy-ytd.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null}).then(function(d){
+      if(!d||!d.ytd||!d.ytd.model||!d.games||!d.games.length)return;
+      var M=d.ytd.model,K=d.ytd.market_favourite||{};
+      var e=function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})};
+      var pc=function(v){return v==null?'n/a':(v*100).toFixed(1)+'%'};
+      var br=function(v){return v==null?'n/a':v.toFixed(4)};
+      var pt=function(v){return v==null?'n/a':v.toFixed(1)+' points'};
+      var when='';try{when=new Date(d.generated_at).toLocaleString('en-US',{timeZone:'America/Los_Angeles',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})+' PT'}catch(x){}
+      var row=function(l,a,b){return '<tr><th scope="row">'+l+'</th><td class="n">'+a+'</td><td class="n">'+b+'</td></tr>'};
+      var h='<table><caption>'+e(d.season)+' season to date, '+d.games.length+' completed games through Week '+e(d.through_week)+'. Each game simulated as of its kickoff and graded against the final score and the closing line. Updated '+e(when)+'.</caption>'
+        +'<tr><th scope="col">Measure</th><th scope="col" class="n">Model</th><th scope="col" class="n">Closing market favourite</th></tr>'
+        +row('Brier score, win probability',br(M.brier),br(K.brier))
+        +row('Winner accuracy',pc(M.winner_accuracy),pc(K.winner_accuracy))
+        +row('Mean absolute margin error',pt(M.margin_mae),pt(K.margin_mae))
+        +row('Against the spread, '+M.ats_n+' games',pc(M.ats_accuracy),'n/a')
+        +row('Game totals, '+M.totals_n+' games',pc(M.totals_accuracy),'n/a')
+        +'</table>';
+      var lead=(M.brier!=null&&K.brier!=null)?(M.brier<=K.brier?'So far this season the model has matched or beaten the closing market favourite on Brier score.':'So far this season the closing market favourite has been more accurate than the model on Brier score.'):'';
+      var g=d.games.slice().sort(function(a,b){return (b.week-a.week)||String(a.kickoff_utc).localeCompare(String(b.kickoff_utc))});
+      var gl='<details style="margin-top:10px"><summary style="cursor:pointer;color:var(--ink)">Every graded game</summary><table><tr><th scope="col">Week</th><th scope="col">Game</th><th scope="col">Final</th><th scope="col">Model pick</th><th scope="col">Market favourite</th></tr>'
+        +g.map(function(x){var won=x.final.home>x.final.away?x.home:(x.final.away>x.final.home?x.away:null);
+          var mp=x.model?x.model.pick+' '+pc(Math.max(x.model.home_win_prob,1-x.model.home_win_prob)):'n/a';
+          var mk=x.market&&x.market.favourite?x.market.favourite:'n/a';
+          var mark=function(t){return won&&t===won?' ✓':''};
+          return '<tr><td>'+e(x.week)+'</td><td>'+e(x.away)+' at '+e(x.home)+'</td><td class="n">'+e(x.final.away)+' to '+e(x.final.home)+'</td><td>'+e(mp)+(x.model?mark(x.model.pick):'')+'</td><td>'+e(mk)+mark(mk)+'</td></tr>'}).join('')
+        +'</table></details>';
+      box.innerHTML=h+(lead?'<p class="acc-note">'+lead+'</p>':'')+gl;box.hidden=false;
+    }).catch(function(){});
+  })();
+  </script>
   <p class="acc-note">Both market results sit below the break-even rate, so this is not a proven betting edge and should not be used as one. Player-level box-score accuracy has not yet been validated: the box score is reconciled by construction and checked against league-wide distributions, but individual player lines have not been graded against real results. Home-score and away-score accuracy are not reported because those figures have not been computed.</p>
 
   <h2>Limitations and responsible use</h2>
@@ -767,7 +809,20 @@ async function loadSchedule(pickDefaultWeek){
     $('#week').innerHTML=d.weeks.map(w=>{const l=w.season_type_code===3?('Playoffs '+w.week):('Week '+w.week);return `<option value="${w.season_type_code}:${w.week}">${l}</option>`}).join('');
     if(pickDefaultWeek){
       let target=null;
-      for(const w of d.weeks){const has=d.games.some(g=>g.week===w.week&&g.is_postseason===(w.season_type_code===3)&&g.status==='upcoming');if(has){target=w.season_type_code+':'+w.week;break}}
+      /* NFL_SIM_DEFAULT_WEEK_20260928. On a Monday the first week with an
+         unplayed game is the one that is 15 finals and one night game, so the
+         page opened on a week that is effectively over. Once all but two or
+         fewer of a week's games are final, open on the next week instead and
+         keep a one tap way back to the game still to play. */
+      const inWeek=w=>d.games.filter(g=>g.week===w.week&&g.is_postseason===(w.season_type_code===3));
+      const open=gs=>gs.filter(g=>g.status==='upcoming'||g.status==='live');
+      STATE.leftover=null;
+      for(let i=0;i<d.weeks.length;i++){const w=d.weeks[i];const gs=inWeek(w);const left=open(gs);if(!gs.some(g=>g.status==='upcoming'))continue;
+        const nx=d.weeks[i+1];
+        if(nx&&left.length<=2&&gs.length-left.length>=left.length*4&&inWeek(nx).some(g=>g.status==='upcoming')){
+          STATE.leftover={key:w.season_type_code+':'+w.week,label:(w.season_type_code===3?'Playoffs ':'Week ')+w.week,games:left};
+          target=nx.season_type_code+':'+nx.week;break}
+        target=w.season_type_code+':'+w.week;break}
       if(!target)target=d.weeks[0].season_type_code+':'+d.weeks[0].week;
       $('#week').value=target;
     }
@@ -785,6 +840,20 @@ function renderGames(){
   box.setAttribute('role','listbox');
   box.setAttribute('aria-label','Games this week');
   if(!games.length){box.appendChild(Object.assign(el('div','unavail'),{textContent:'No games for this week.'}));return}
+  {
+    let n=document.getElementById('nflLeftover');
+    if(!n&&box.parentNode){n=el('div','dim');n.id='nflLeftover';n.style.cssText='font-size:.85rem;margin:0 0 8px';box.parentNode.insertBefore(n,box)}
+    if(n){
+      n.innerHTML='';n.hidden=true;
+      const lo=STATE.leftover;
+      if(lo&&lo.key!==STATE.week){
+        const b=el('button','btn ghost',`View ${lo.label}`);b.style.marginLeft='8px';
+        b.onclick=()=>{$('#week').value=lo.key;STATE.week=lo.key;renderGames()};
+        n.appendChild(document.createTextNode(`${lo.label} still has ${lo.games.length===1?'one game':lo.games.length+' games'} to play: ${lo.games.map(g=>(g.away_abbr||g.away)+' at '+(g.home_abbr||g.home)).join(', ')}.`));
+        n.appendChild(b);n.hidden=false;
+      }
+    }
+  }
   for(const g of games){
     const c=el('div','game');c.dataset.ref=g.ref;
     const away=el('div','g-row'),home=el('div','g-row');
@@ -1122,12 +1191,12 @@ function renderResult(out,d){
   const tie=rep&&rep.away_score===rep.home_score;
   grid.appendChild(side(aAbbr,g.away,neutral?'Team A':'Away',aPts,awayWP,rep&&!tie?aPts>hPts:null));
   const mid=el('div','mh-mid');
-  mid.innerHTML=`<div class="mh-scorelabel">${rep?`Simulated final score${rep.ot?' · OT':''}`:`Projected score — average of ${nSims} simulations`}</div><div class="at">${neutral?'vs':'@'}</div><div style="margin-top:6px">${g.status?esc(g.status):''}${g.final?` · actual ${g.final.away}-${g.final.home}`:''}</div>`;
+  mid.innerHTML=`<div class="mh-scorelabel">${rep?`Simulated final score${rep.ot?' · OT':''}`:`Projected score from ${nSims} simulations`}</div><div class="at">${neutral?'vs':'@'}</div><div style="margin-top:6px">${g.status?esc(g.status):''}${g.final?` · actual ${g.final.away}-${g.final.home}`:''}</div>`;
   grid.appendChild(mid);
   grid.appendChild(side(hAbbr,g.home,neutral?'Team B':'Home',hPts,homeWP,rep&&!tie?hPts>aPts:null));
   mh.appendChild(grid);
   const avg=el('div','mh-avg');
-  avg.innerHTML=(rep?`Projected score — average of ${nSims} simulations: ${esc(aAbbr)} <b>${nz(p.score.away)}</b> – ${esc(hAbbr)} <b>${nz(p.score.home)}</b> · `:'')
+  avg.innerHTML=(rep?`Projected score from ${nSims} simulations: ${esc(aAbbr)} <b>${nz(p.score.away)}</b> – ${esc(hAbbr)} <b>${nz(p.score.home)}</b> · `:'')
     +`Win probability from all ${nSims} simulations: ${esc(aAbbr)} <b>${pct(awayWP)}</b> · ${esc(hAbbr)} <b>${pct(homeWP)}</b>`;
   mh.appendChild(avg);
 
@@ -1170,7 +1239,7 @@ function renderResult(out,d){
   /* ---- summary cards ---- */
   const k=el('div','kpis');
   const cards=[
-    `<div class="kpi" data-kpi="avg"><div class="k">Projected score — average of ${nSims} simulations</div><div class="v">${nz(p.score.away)}–${nz(p.score.home)}</div><div class="s">${esc(aAbbr)} – ${esc(hAbbr)}</div></div>`,
+    `<div class="kpi" data-kpi="avg"><div class="k">Projected score from ${nSims} simulations</div><div class="v">${nz(p.score.away)}–${nz(p.score.home)}</div><div class="s">${esc(aAbbr)} – ${esc(hAbbr)}</div></div>`,
     // The average is the projection; THIS is a game. Both belong at the top,
     // because a reader who only sees the average reasonably concludes the model
     // thinks a seven-point favourite wins by seven. It does not: at the spread
@@ -1180,14 +1249,17 @@ function renderResult(out,d){
       ? `<div class="kpi" data-kpi="sim" data-sim-away="${rep.away_score}" data-sim-home="${rep.home_score}"><div class="k">Simulated final score</div><div class="v">${nz(rep.away_score)}–${nz(rep.home_score)}</div><div class="s">${esc(aAbbr)} – ${esc(hAbbr)} · the game on the scoreboard and in the Box Score${rep.ot?' · OT':''}</div></div>`
       : '',
     `<div class="kpi"><div class="k">Win probability</div><div class="v">${pct(homeWP)}</div><div class="s">${esc(g.home)} · all ${nSims} simulations</div></div>`,
-    `<div class="kpi"><div class="k">Median margin</div><div class="v">${p.median_margin>0?'+':''}${nz(p.median_margin)}</div><div class="s">${esc(g.home)}</div></div>`,
+    (p.margin!=null
+      ? `<div class="kpi"><div class="k">Projected margin</div><div class="v">${p.margin>0?'+':''}${nz(p.margin)}</div><div class="s">${esc(g.home)}</div></div>`
+      : `<div class="kpi"><div class="k">Median margin</div><div class="v">${p.median_margin>0?'+':''}${nz(p.median_margin)}</div><div class="s">${esc(g.home)}</div></div>`),
     `<div class="kpi"><div class="k">Projected total</div><div class="v">${nz(p.projected_total)}</div><div class="s">combined points</div></div>`,
     `<div class="kpi"><div class="k">Margin range</div><div class="v" style="font-size:1.05rem">${nz(p.confidence_range.margin_low)} … ${nz(p.confidence_range.margin_high)}</div><div class="s">80% of sims</div></div>`,
     p.likely_scores&&p.likely_scores[0]?`<div class="kpi"><div class="k">Most likely score</div><div class="v" style="font-size:1.15rem">${p.likely_scores[0].away}–${p.likely_scores[0].home}</div><div class="s">${pct(p.likely_scores[0].prob,1)} of sims</div></div>`:'',
     `<div class="kpi"><div class="k">Simulations</div><div class="v">${fmtN(d.meta.simulations)}</div><div class="s">runs averaged</div></div>`,
     env?`<div class="kpi"><div class="k">Venue</div><div class="v" style="font-size:1.05rem">${esc(env.neutral?'Neutral':(hAbbr+' home'))}</div><div class="s">${esc(env.kickoff_window_label)} · ${env.indoor?'indoor':'outdoor'}</div></div>`:'',
-    d.market&&d.market.spread?`<div class="kpi"><div class="k">Home covers ${d.market.spread.line>0?'+':''}${d.market.spread.line}</div><div class="v">${pct(d.market.spread.home_cover_prob)}</div><div class="s">vs closing line</div></div>`:'',
-    d.market&&d.market.total?`<div class="kpi"><div class="k">Over ${d.market.total.line}</div><div class="v">${pct(d.market.total.over_prob)}</div><div class="s">total points</div></div>`:'',
+    d.market&&d.market.spread?(()=>{const hl=d.market.spread.home_line!=null?d.market.spread.home_line:-d.market.spread.line;return `<div class="kpi"><div class="k">${esc(hAbbr)} covers ${hl>0?'+':''}${hl}</div><div class="v">${pct(d.market.spread.home_cover_prob)}</div><div class="s">vs ${d.market.source==='current'?'current line'+(d.market.book?' ('+esc(d.market.book)+')':''):'closing line'}</div></div>`})():'',
+    d.market&&d.market.total?`<div class="kpi"><div class="k">Over ${d.market.total.line}</div><div class="v">${pct(d.market.total.over_prob)}</div><div class="s">model total ${d.market.total.model_total!=null?nz(Math.round(d.market.total.model_total*10)/10):''} vs ${d.market.source==='current'?'current':'closing'} ${d.market.total.line}</div></div>`:'',
+    d.market&&d.market.moneyline&&d.market.moneyline.market_home_win_prob!=null?`<div class="kpi"><div class="k">Model vs market</div><div class="v" style="font-size:1.05rem">${pct(d.market.moneyline.model_home_win_prob)} vs ${pct(d.market.moneyline.market_home_win_prob)}</div><div class="s">${esc(hAbbr)} win chance, model vs no vig moneyline${d.market.as_of?' · odds '+esc(new Date(d.market.as_of).toLocaleString('en-US',{timeZone:'America/Los_Angeles',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}))+' PT':''}</div></div>`:'',
   ].filter(Boolean);
   k.innerHTML=cards.join('');
   out.appendChild(k);
@@ -1331,7 +1403,7 @@ function renderTab(body,id,d,g,hAbbr,aAbbr){
       for(const st of r.expected_starters){const li=el('div','li');li.appendChild(Object.assign(el('span'),{textContent:st.name}));li.appendChild(Object.assign(el('span','role'),{textContent:st.role}));s1.appendChild(li)}
       sec.appendChild(s1);
       sec.appendChild(Object.assign(el('h3',null,'Ruled out / inactive')));
-      if(r.major_inactives.length){const s2=el('div','list');for(const pl of r.major_inactives){const li=el('div','li');li.appendChild(Object.assign(el('span'),{textContent:pl.name}));if(pl.pos)li.appendChild(Object.assign(el('span','role'),{textContent:pl.pos}));s2.appendChild(li)}sec.appendChild(s2)}
+      if(r.major_inactives.length){const s2=el('div','list');for(const pl of r.major_inactives){const li=el('div','li');li.appendChild(Object.assign(el('span'),{textContent:pl.name}));if(pl.pos)li.appendChild(Object.assign(el('span','role'),{textContent:pl.pos}));if(pl.status)li.appendChild(Object.assign(el('span','role'),{textContent:pl.status}));s2.appendChild(li)}sec.appendChild(s2)}
       else sec.appendChild(Object.assign(el('div','dim'),{textContent:'No major inactives reported for this game.'}));
       body.appendChild(sec);
     }
