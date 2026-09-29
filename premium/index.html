@@ -7,10 +7,10 @@
     <title>TMR Pro | Sports Betting Research Tools | TrustMyRecord</title>
 
 <link rel="canonical" href="https://trustmyrecord.com/premium/">
-    <meta name="description" content="TMR Pro is the research-tool layer on TrustMyRecord: Bet Legend Pro matchup research, TrendSpotter profitability analysis and Model Builder forward tracking. $24.99/month or $239/year.">
+    <meta name="description" content="TMR Pro: today's pending picks from the handicappers TrustMyRecord tracks around the web, next to their graded records, plus Bet Legend Pro, unlimited simulators, TrendSpotter money data and Model Builder. $79.99 a month or $800 a year.">
     <meta name="keywords" content="sports betting research tools, historical betting trends, betting model tracking, handicapping research">
     <meta property="og:title" content="TMR Pro | Sports Betting Research Tools">
-    <meta property="og:description" content="Professional sports betting research tools built on real historical data. Bet Legend Pro, TrendSpotter and Model Builder.">
+    <meta property="og:description" content="Pending picks from tracked handicappers with their graded records, Bet Legend Pro, unlimited simulators, TrendSpotter money data and Model Builder.">
     <meta property="og:url" content="https://trustmyrecord.com/premium/">
     <meta property="og:type" content="website">
 
@@ -363,6 +363,92 @@
             opacity: .55;
         }
 
+        /* TMR_PRO_ACCOUNT_20260928: a button the server has said this user may
+           use. Everything else keeps the inert look above. */
+        .pro-buy.is-live {
+            cursor: pointer;
+            opacity: 1;
+            background: var(--pro-brand-dark);
+            border-color: var(--pro-brand-dark);
+            color: #fff;
+        }
+        .pro-buy.is-live:hover, .pro-buy.is-live:focus-visible { filter: brightness(1.12); }
+        .pro-buy.is-busy { cursor: progress; opacity: .7; }
+        .pro-banner {
+            margin-top: 16px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: 1px solid var(--pro-line);
+            background: var(--pro-page);
+            color: var(--pro-ink);
+            font-size: .95rem;
+            line-height: 1.5;
+        }
+        .pro-banner.is-good { border-color: #1D7A46; }
+        .pro-banner.is-warn { border-color: #A5620A; }
+        .pro-manage {
+            margin-left: 10px;
+            font: inherit;
+            font-weight: 700;
+            font-size: .85rem;
+            padding: 6px 12px;
+            border-radius: 999px;
+            border: 1px solid var(--pro-brand-dark);
+            background: transparent;
+            color: var(--pro-brand-dark);
+            cursor: pointer;
+        }
+        .pro-renew-note {
+            margin: 14px auto 0;
+            max-width: 720px;
+            text-align: center;
+            font-size: .88rem;
+            color: var(--pro-muted);
+            line-height: 1.5;
+        }
+
+        /* TMR_PRO_SALES_20260928 */
+        .pro-benefits { list-style: none; margin: 18px auto 0; padding: 0; display: grid; gap: 8px; max-width: 560px; text-align: left; }
+        .pro-benefits li { position: relative; padding-left: 26px; color: var(--pro-ink); font-weight: 600; line-height: 1.45; }
+        .pro-benefits li::before { content: ""; position: absolute; left: 4px; top: .5em; width: 10px; height: 10px; border-radius: 50%; background: var(--pro-brand); }
+        .pro-hero-price { margin: 18px 0 0; color: var(--pro-body); font-size: 1rem; }
+        .pro-hero-price b { color: var(--pro-ink); }
+        .pro-cta { display: inline-block; margin-top: 16px; padding: 14px 28px; border-radius: 12px; background: var(--pro-brand-dark); color: #fff !important; font-family: 'Barlow', sans-serif; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; text-decoration: none; }
+        .pro-cta:hover, .pro-cta:focus-visible { filter: brightness(1.12); }
+        .pro-save { display: inline-block; margin-left: 6px; padding: 2px 8px; border-radius: 999px; background: #E3F4EA; color: #1D7A46; font-size: .78rem; font-weight: 800; }
+        .pro-welcome { margin-top: 16px; padding: 16px; border-radius: 14px; border: 1px solid #1D7A46; background: var(--pro-surface); text-align: left; }
+        .pro-welcome h2 { margin: 0 0 6px; font-size: 1.3rem; color: var(--pro-ink); }
+        .pro-welcome p { margin: 0 0 12px; color: var(--pro-body); }
+        .pro-links { display: flex; flex-wrap: wrap; gap: 8px; }
+        .pro-links a { padding: 8px 12px; border-radius: 10px; border: 1px solid var(--pro-line); background: var(--pro-page); color: var(--pro-ink); font-weight: 700; font-size: .9rem; text-decoration: none; }
+        .pro-links a:hover { border-color: var(--pro-brand); }
+
+        /* TMR_PRO_PENDING_BOARD_20260928 */
+        .pro-board-bar { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; margin: 6px 0 16px; font-size: .92rem; color: var(--pro-body); }
+        .pro-board-bar label { display: inline-flex; gap: 6px; align-items: center; }
+        .pro-board-bar input[type=checkbox] { width: 18px !important; height: 18px !important; min-width: 0 !important; margin: 0; flex: none; }
+        .pro-cons-row > span:last-child { white-space: nowrap; }
+        .pro-board-bar select { font: inherit; padding: 6px 10px; border-radius: 10px; border: 1px solid var(--pro-line); background: var(--pro-surface); color: var(--pro-ink); }
+        .pro-board-count { font-weight: 700; color: var(--pro-ink); }
+        .pro-cons { background: var(--pro-surface); border: 1px solid var(--pro-line); border-radius: 14px; padding: 14px 16px; margin-bottom: 18px; }
+        .pro-cons h3 { margin: 0 0 8px; font-size: 1.05rem; color: var(--pro-ink); }
+        .pro-cons-row { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-top: 1px solid var(--pro-line); font-size: .92rem; color: var(--pro-body); }
+        .pro-cons-row:first-of-type { border-top: 0; }
+        .pro-cons-row b { color: var(--pro-ink); }
+        .pro-cappers { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); gap: 14px; }
+        .pro-capper { background: var(--pro-surface); border: 1px solid var(--pro-line); border-radius: 14px; padding: 14px 16px; min-width: 0; }
+        .pro-capper-head { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+        .pro-capper-head a { font-weight: 800; color: var(--pro-ink); text-decoration: none; }
+        .pro-capper-rec { font-size: .85rem; color: var(--pro-muted); font-variant-numeric: tabular-nums; }
+        .pro-capper-rec .up { color: #1D7A46; font-weight: 700; }
+        .pro-capper-rec .down { color: #B3261E; font-weight: 700; }
+        .pro-pick { border-top: 1px solid var(--pro-line); margin-top: 10px; padding-top: 10px; font-size: .92rem; color: var(--pro-body); }
+        .pro-pick-sel { font-weight: 700; color: var(--pro-ink); }
+        .pro-pick-meta { font-size: .8rem; color: var(--pro-muted); margin-top: 2px; }
+        .pro-pick-meta a { color: var(--pro-brand); }
+        .pro-teaser { background: var(--pro-surface); border: 1px dashed var(--pro-line); border-radius: 14px; padding: 18px; color: var(--pro-body); line-height: 1.6; }
+        .pro-teaser b { color: var(--pro-ink); }
+
         .pro-buy-note {
             margin-top: 10px;
             font-size: .82rem;
@@ -501,40 +587,92 @@
 <body class="tmr-site-shell tmr-ds-shell tmr-light pro-page">
     <!-- Sitewide global nav is injected by tmr-sitewide.js -->
 
-    <header class="pro-hero">
+    <!-- A div, not a header: tmr-ds-nav hides every legacy <header> on the page,
+         which blanked this hero (the H1 and the account panel) in production. -->
+    <div class="pro-hero">
         <div class="pro-wrap">
-            <span class="pro-eyebrow">Research tools</span>
+            <span class="pro-eyebrow">One membership</span>
             <h1>TMR Pro</h1>
             <p class="pro-lede">
-                Professional sports betting research tools built on real historical data.
+                Track proven handicappers before games start. Run unlimited simulations.
+                Use professional betting research tools in one membership.
             </p>
-            <p class="pro-note">
-                These are research tools. They describe what has already happened in the
-                data, in the sports and markets we cover. They do not predict results and
-                nothing here is a claim about your future returns.
-            </p>
+            <ul class="pro-benefits">
+                <li>Pending picks board: what the tracked handicappers are betting today, with their records</li>
+                <li>Unlimited runs on every MLB, NFL, NBA and NHL simulator</li>
+                <li>Bet Legend Pro in full (sold alone for $49 a month)</li>
+                <li>TrendSpotter money figures: units, ROI and price behind every trend</li>
+                <li>Model Builder with 15 saved models</li>
+            </ul>
+            <p class="pro-hero-price"><b>$79.99 a month</b> or <b>$800 a year</b> <span class="pro-save">Save $159.88</span></p>
+            <a class="pro-cta" id="proHeroCta" href="#pricing">Get TMR Pro</a>
 
             <div class="pro-status" id="proStatus" aria-live="polite">
                 <span class="pro-chip" id="proStatusChip">Free account</span>
                 <span id="proStatusText"></span>
+                <button type="button" class="pro-manage" id="proManage" hidden>Manage subscription</button>
             </div>
+            <div class="pro-banner" id="proBanner" role="status" hidden></div>
+            <div class="pro-welcome" id="proWelcome" hidden>
+                <h2 id="proWelcomeTitle">Welcome to TMR Pro</h2>
+                <p id="proWelcomeText">Everything is unlocked on your account. Start here:</p>
+                <div class="pro-links">
+                    <a href="#board">Pending picks</a>
+                    <a href="/sports-simulators/">Simulators</a>
+                    <a href="/betlegend-pro/">Bet Legend Pro</a>
+                    <a href="/trendspotter/">TrendSpotter</a>
+                    <a href="/model-builder/">Model Builder</a>
+                </div>
+            </div>
+            <p class="pro-note">
+                Research tools describe what has already happened. They do not predict results
+                and nothing here is a claim about your future returns.
+            </p>
         </div>
-    </header>
+    </div>
 
     <main>
         <!-- ================================================= the products -->
         <section class="pro-section" id="tools">
             <div class="pro-wrap">
                 <div class="pro-section-head">
-                    <h2>Three tools, one subscription</h2>
+                    <h2>Everything in TMR Pro</h2>
                     <p>
-                        TMR Pro is a layer of research tools on top of TrustMyRecord. Each
-                        one answers a different question, and each one reads the same
-                        historical record.
+                        TMR Pro is the research layer on top of TrustMyRecord: what the
+                        handicappers we track are betting today, and the tools to check it
+                        against the record.
                     </p>
                 </div>
 
                 <div class="pro-products">
+                    <article class="pro-product">
+                        <div class="pro-product-kicker">TMR Pro only</div>
+                        <h3>Pending picks board</h3>
+                        <p>
+                            Today's pending picks from every handicapper TrustMyRecord tracks
+                            around the web, on Covers, X, TheRX, Reddit and more, before their
+                            games start. Every pick sits next to that handicapper's graded
+                            record and units, with a link to the post it came from, and the
+                            board shows where the proven handicappers agree.
+                        </p>
+                        <div class="pro-allowance">
+                            <span>Updated all day, pregame only</span>
+                        </div>
+                    </article>
+
+                    <article class="pro-product">
+                        <div class="pro-product-kicker">Included with TMR Pro</div>
+                        <h3>Every simulator, unlimited</h3>
+                        <p>
+                            The MLB, NFL, NBA and NHL game, season and playoff simulators with no
+                            daily limit and no TMR Coin per run. Free accounts get one free run a
+                            day.
+                        </p>
+                        <div class="pro-allowance">
+                            <span>Unlimited runs on all 12 simulators</span>
+                        </div>
+                    </article>
+
                     <article class="pro-product">
                         <div class="pro-product-kicker">Included with TMR Pro</div>
                         <h3>Bet Legend Pro</h3>
@@ -584,7 +722,7 @@
                     </article>
 
                     <article class="pro-product">
-                        <div class="pro-product-kicker">Free and Pro</div>
+                        <div class="pro-product-kicker">Included with TMR Pro</div>
                         <h3>Model Builder</h3>
                         <p>
                             Define a set of conditions once. From then on it finds every
@@ -594,24 +732,27 @@
                             build it. The separate historical preview is the only part that
                             looks backwards.
                         </p>
-                        <div class="pro-split">
-                            <div class="pro-split-col">
-                                <h4>Free</h4>
-                                <ul class="pro-list">
-                                    <li>2 active models</li>
-                                    <li>Full forward tracking</li>
-                                    <li>Record, units and ROI</li>
-                                </ul>
-                            </div>
-                            <div class="pro-split-col is-pro">
-                                <h4>TMR Pro</h4>
-                                <ul class="pro-list">
-                                    <li>15 active models</li>
-                                    <li>Everything in Free</li>
-                                </ul>
-                            </div>
+                        <div class="pro-allowance">
+                            <span>15 active models with TMR Pro</span>
                         </div>
                     </article>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================ the pending board -->
+        <section class="pro-section" id="board">
+            <div class="pro-wrap">
+                <div class="pro-section-head">
+                    <h2>Today's pending picks</h2>
+                    <p>
+                        Picks from the handicappers we track around the web, before their games
+                        start, next to their graded records. TrustMyRecord members' own picks
+                        stay private until game time and are never shown here.
+                    </p>
+                </div>
+                <div id="proBoard">
+                    <div class="pro-teaser" id="proBoardTeaser">Loading today's board.</div>
                 </div>
             </div>
         </section>
@@ -621,69 +762,41 @@
             <div class="pro-wrap">
                 <div class="pro-section-head">
                     <h2>Pricing</h2>
-                    <p>One subscription covers all three tools. Cancel any time.</p>
+                    <p>One subscription covers everything above. Cancel any time.</p>
                 </div>
 
                 <div class="pro-prices">
-                    <div class="pro-price is-featured">
-                        <div class="pro-price-flag">Founding member</div>
-                        <h3>Founding</h3>
-                        <div class="pro-amount">$19.99<small>/month</small></div>
-                        <p class="pro-price-detail">
-                            The first <em>100</em> eligible subscribers. The founding rate holds
-                            for as long as the subscription runs without a break.
-                        </p>
-                        <button type="button" class="pro-buy is-primary" disabled aria-disabled="true"
-                                data-pro-buy="founding">Coming soon</button>
-                        <p class="pro-buy-note">Availability is confirmed by our server</p>
-                    </div>
-
                     <div class="pro-price">
                         <div class="pro-price-flag">&nbsp;</div>
                         <h3>Monthly</h3>
-                        <div class="pro-amount">$24.99<small>/month</small></div>
+                        <div class="pro-amount">$79.99<small>/month</small></div>
                         <p class="pro-price-detail">
-                            The standard rate. Billed monthly.
+                            Billed monthly. Cancel any time.
                         </p>
                         <button type="button" class="pro-buy" disabled aria-disabled="true"
-                                data-pro-buy="monthly">Coming soon</button>
-                        <p class="pro-buy-note">&nbsp;</p>
+                                data-pro-buy="monthly">Choose monthly</button>
+                        <p class="pro-buy-note" id="proMonthlyNote">&nbsp;</p>
                     </div>
 
                     <div class="pro-price">
-                        <div class="pro-price-flag">Best value per month</div>
+                        <div class="pro-price-flag">Save $159.88 a year</div>
                         <h3>Annual</h3>
-                        <div class="pro-amount">$239<small>/year</small></div>
+                        <div class="pro-amount">$800<small>/year</small></div>
                         <p class="pro-price-detail">
-                            Works out to <em>$19.92 a month</em>. Against $24.99 a month for a
-                            year, that is <em>$60.88</em> less, about <em>20%</em>.
+                            Works out to <em>$66.67 a month</em>. Against $79.99 a month for a
+                            year, that is <em>$159.88</em> less, about <em>17%</em>.
                         </p>
                         <button type="button" class="pro-buy" disabled aria-disabled="true"
-                                data-pro-buy="annual">Coming soon</button>
+                                data-pro-buy="annual">Choose annual</button>
                         <p class="pro-buy-note">&nbsp;</p>
                     </div>
                 </div>
-            </div>
-        </section>
-
-        <!-- ================================================= the founding -->
-        <section class="pro-section">
-            <div class="pro-wrap">
-                <div class="pro-founding">
-                    <h2>How founding membership works</h2>
-                    <p>
-                        There are 100 founding places. That is the whole of it: no countdown,
-                        no expiring offer, just a fixed number of places that either exist or
-                        do not when you subscribe.
-                    </p>
-                    <ul>
-                        <li>The <strong>first 100 eligible subscribers</strong> pay <strong>$19.99 a month</strong>.</li>
-                        <li>That rate <strong>stays</strong> for as long as the subscription runs continuously.</li>
-                        <li>If the subscription ends, the place returns to the pool for somebody else, and a later subscription is at <strong>whatever the price is then</strong>.</li>
-                        <li>Whether a place is available is <strong>decided by our server</strong> at the moment you subscribe, not by anything this page can set.</li>
-                        <li>One founding place per account.</li>
-                    </ul>
-                </div>
+                <p class="pro-renew-note" id="proRenewNote" hidden>
+                    Subscriptions renew automatically at the same price until you cancel.
+                    Cancel any time with Manage subscription on this page, and you keep
+                    TMR Pro until the end of the period you already paid for. Payment is
+                    handled by Stripe.
+                </p>
             </div>
         </section>
 
@@ -725,6 +838,23 @@
                 </div>
                 <div class="pro-faq">
                     <details>
+                        <summary>Where do the pending picks come from?</summary>
+                        <p>
+                            From public posts by handicappers TrustMyRecord tracks on Covers, X,
+                            TheRX, Reddit and other sites. We grade every pick they post against
+                            the final score, so each one on the board comes with that
+                            handicapper's real record and units, and a link to the original post.
+                            Only games that have not started are shown.
+                        </p>
+                    </details>
+                    <details>
+                        <summary>Are TrustMyRecord members' picks on the board?</summary>
+                        <p>
+                            No. Members' picks stay private until their games start, for everyone,
+                            including TMR Pro subscribers.
+                        </p>
+                    </details>
+                    <details>
                         <summary>Does TMR Pro change how my record looks?</summary>
                         <p>
                             No. A subscription buys research tools and nothing else. It does not
@@ -762,10 +892,9 @@
                     </details>
                     <details>
                         <summary>When can I subscribe?</summary>
-                        <p>
-                            Not yet. Checkout is not open, which is why the buttons on this page
-                            do nothing. When it opens these buttons will start working and this
-                            answer will change.
+                        <p id="proWhenAnswer">
+                            Now. Pick monthly or annual above. Checkout is handled by Stripe, and you can
+                            cancel any time with Manage subscription on this page.
                         </p>
                     </details>
                 </div>
@@ -787,97 +916,327 @@
     </main>
 
     <script>
-    /* TMR_PRO_PRICING_PAGE_20260912.
-       Two jobs, and deliberately no others:
-         1. render the right state for a logged-out visitor, a logged-in free
-            user, or a Pro subscriber;
-         2. make certain nothing on this page can transact.
+    /* TMR_PRO_PRICING_PAGE_20260912, reworked TMR_PRO_ACCOUNT_20260928.
 
-       There is no checkout call here, and no Stripe price id: the server picks
-       the price when checkout opens, including whether a founding place is
-       available. This file cannot name a price even if it wanted to. */
+       The page never decides who may buy or at what price. It asks the
+       server two questions and draws what it is told:
+         GET /api/premium/checkout-status  (public) is checkout open to all?
+         GET /api/premium/me               (signed in) may THIS account buy,
+                                           is the founding rate on offer, and
+                                           what is its current subscription?
+       A buy button only becomes live when the server has said yes. The
+       server picks the Stripe price, including the founding substitution,
+       so nothing here can name a price. With checkout closed on the server
+       this page behaves exactly as before: "Coming soon" and inert. */
     (function () {
         'use strict';
 
-        var CHECKOUT_OPEN = false;   /* flipped only when checkout is approved */
+        /* tmr-session.js loads after this block, so both are resolved in start(). */
+        var S = null;
+        var API = 'https://trustmyrecord-api.onrender.com/api';
+        var LOGIN = '/login/?next=' + encodeURIComponent('/premium/#pricing');
 
-        /* ------------------------------------------------ inert purchase -- */
         var buttons = document.querySelectorAll('[data-pro-buy]');
-        Array.prototype.forEach.call(buttons, function (btn) {
-            btn.disabled = true;
-            btn.setAttribute('aria-disabled', 'true');
-            /* Belt and braces: a disabled button fires no click, but if anything
-               ever re-enables one by accident this still refuses to transact. */
-            btn.addEventListener('click', function (ev) {
-                ev.preventDefault();
-                ev.stopPropagation();
-            });
-        });
-
-        /* ---------------------------------------------------- auth state -- */
         var statusEl = document.getElementById('proStatus');
         var chipEl = document.getElementById('proStatusChip');
         var textEl = document.getElementById('proStatusText');
+        var manageEl = document.getElementById('proManage');
+        var bannerEl = document.getElementById('proBanner');
+        var monthlyNote = document.getElementById('proMonthlyNote');
+        var renewNote = document.getElementById('proRenewNote');
+        var whenAnswer = document.getElementById('proWhenAnswer');
 
-        function paint(state, user) {
-            if (!statusEl || !chipEl || !textEl) return;
-            var isPro = false;
-            if (user) {
-                var tier = String(user.subscription_tier || user.tier || '').toLowerCase();
-                var expires = user.subscription_expires_at ? new Date(user.subscription_expires_at) : null;
-                isPro = (tier === 'pro' || tier === 'elite') && (!expires || expires > new Date());
-            }
+        var LABEL = { monthly: 'Choose monthly', annual: 'Choose annual' };
+        var welcomeEl = document.getElementById('proWelcome');
+        var PRICE = { monthly: 79.99, annual: 800 };
+        /* TMR_PRO_ANALYTICS_20260928: funnel events to GA4 (G-V5MCVXS2HE). */
+        function ga(name, params) {
+            try { if (typeof window.gtag === 'function') window.gtag('event', name, params || {}); } catch (e) { }
+        }
+        ga('pro_page_view', {});
+        var mode = 'closed';          // closed | signin | buy | subscribed
+        var busy = false;
 
-            if (state === 'signed-in' && isPro) {
-                chipEl.textContent = 'TMR Pro';
-                chipEl.classList.add('is-pro');
-                textEl.textContent = 'Your subscription is active. All three tools are unlocked on your account.';
-                statusEl.classList.add('is-shown');
+        function fmtDate(iso) {
+            if (!iso) return '';
+            var d = new Date(iso);
+            if (isNaN(d.getTime())) return '';
+            return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+        }
+        function banner(msg, kind) {
+            if (!bannerEl) return;
+            if (!msg) { bannerEl.hidden = true; return; }
+            bannerEl.textContent = msg;
+            bannerEl.className = 'pro-banner' + (kind ? ' is-' + kind : '');
+            bannerEl.hidden = false;
+        }
+        function setButton(btn, live, label) {
+            btn.disabled = !live;
+            btn.setAttribute('aria-disabled', live ? 'false' : 'true');
+            btn.classList.toggle('is-live', live);
+            btn.textContent = label;
+        }
+        var foundingFull = false;
+        function paintButtons(foundingOffered) {
+            Array.prototype.forEach.call(buttons, function (btn) {
+                var kind = btn.getAttribute('data-pro-buy');
+                if (mode === 'buy') {
+                    setButton(btn, true, LABEL[kind]);
+                } else if (mode === 'signin') {
+                    setButton(btn, true, 'Sign up or sign in');
+                } else if (mode === 'subscribed') {
+                    setButton(btn, false, 'You are subscribed');
+                } else {
+                    setButton(btn, false, 'Coming soon');
+                }
+            });
+            if (monthlyNote) monthlyNote.textContent = '\u00a0';
+            var open = mode === 'buy' || mode === 'signin' || mode === 'subscribed';
+            if (renewNote) renewNote.hidden = !open;
+            if (whenAnswer && open) {
+                whenAnswer.textContent = 'Now. Pick a plan above. Checkout is handled by Stripe, and you can cancel any time from Manage subscription on this page.';
+            }
+        }
+        function paintStatus(chip, text, isPro, canManage) {
+            if (!statusEl) return;
+            chipEl.textContent = chip;
+            chipEl.classList.toggle('is-pro', !!isPro);
+            textEl.textContent = text;
+            if (manageEl) manageEl.hidden = !canManage;
+            statusEl.classList.add('is-shown');
+        }
+
+        function drawAccount(me) {
+            var sub = me && me.subscription;
+            if (sub) {
+                mode = 'subscribed';
+                var plan = (sub.billing_period === 'yearly' ? 'Annual plan' : sub.billing_period === 'monthly' ? 'Monthly plan' : 'TMR Pro');
+                var when = fmtDate(sub.current_period_end || sub.expires_at);
+                var line;
+                if (sub.source && sub.source !== 'stripe') {
+                    line = 'TMR Pro is active on your account.' + (when ? ' Access runs to ' + when + '.' : '');
+                } else if (sub.cancel_at_period_end) {
+                    line = plan + '. Cancelled: you keep TMR Pro until ' + (when || 'the end of the paid period') + ', and you will not be charged again.';
+                } else if (sub.status === 'past_due') {
+                    line = plan + '. Your last payment did not go through. Update your card with Manage subscription to keep access.';
+                } else {
+                    line = plan + '. Everything in TMR Pro is unlocked.' + (when ? ' Renews ' + when + '.' : '');
+                }
+                paintStatus('TMR Pro', line, true, !!me.can_manage_billing);
+                paintButtons(false);
+                loadBoard(true);
+                if (welcomeEl && purchase !== 'success') {
+                    welcomeEl.hidden = false;
+                    document.getElementById('proWelcomeTitle').textContent = 'Your TMR Pro';
+                    document.getElementById('proWelcomeText').textContent = 'Jump straight in:';
+                }
+                var cta = document.getElementById('proHeroCta');
+                if (cta) { cta.textContent = 'Open the pending picks'; cta.setAttribute('href', '#board'); }
                 return;
             }
-            if (state === 'signed-in') {
-                chipEl.textContent = 'Free account';
-                chipEl.classList.remove('is-pro');
-                textEl.textContent = CHECKOUT_OPEN
-                    ? 'You are on the free plan. Pick a plan below to upgrade.'
-                    : 'You are on the free plan, and everything free stays free. Subscriptions are not open yet.';
-                statusEl.classList.add('is-shown');
+            mode = me && me.checkout_open ? 'buy' : 'closed';
+            paintStatus('Free account', mode === 'buy'
+                ? 'You are on the free plan, and everything free stays free. Pick a plan below to add TMR Pro.'
+                : 'You are on the free plan, and everything free stays free. Subscriptions are not open yet.',
+                false, !!(me && me.can_manage_billing));
+            foundingFull = !!(me && me.founding && me.founding.seats_left === 0);
+            paintButtons(false);
+            loadBoard(false);
+        }
+
+
+        /* ------------------------------------------ pending picks board -- */
+        var boardEl = document.getElementById('proBoard');
+        var boardData = null;
+        var boardFilter = { proven: true, league: 'all' };
+        function esc(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+        function odds(o) { if (o == null || o === '') return ''; var n = Number(o); return isNaN(n) ? esc(o) : (n > 0 ? '+' + n : String(n)); }
+        function line(l) { if (l == null || l === '') return ''; var n = Number(l); return isNaN(n) ? esc(l) : (n > 0 ? '+' + n : String(n)); }
+        function kick(iso) {
+            var d = new Date(iso); if (isNaN(d.getTime())) return '';
+            return d.toLocaleString('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' }) + ' PT';
+        }
+        function teaser(summary) {
+            if (!boardEl) return;
+            var t = summary && summary.picks
+                ? '<b>' + summary.picks + ' pending picks</b> from <b>' + summary.handicappers + ' tracked handicappers</b> are on the board right now, ' + summary.proven_handicappers + ' of them with 25 or more graded picks. TMR Pro shows every pick, the record behind it and where the proven handicappers agree.'
+                : 'The board fills up as the handicappers we track post their picks for the next games. TMR Pro shows every pick, the record behind it and where the proven handicappers agree.';
+            boardEl.innerHTML = '<div class="pro-teaser">' + t + '</div>';
+        }
+        function drawBoard() {
+            if (!boardEl || !boardData) return;
+            var d = boardData;
+            var leagues = d.summary.leagues || [];
+            var cap = d.handicappers.filter(function (c) { return !boardFilter.proven || c.graded >= 25; }).map(function (c) {
+                var picks = c.picks.filter(function (p) { return boardFilter.league === 'all' || p.league === boardFilter.league; });
+                return picks.length ? { c: c, picks: picks } : null;
+            }).filter(Boolean);
+            var n = cap.reduce(function (a, x) { return a + x.picks.length; }, 0);
+            var html = '<div class="pro-board-bar"><span class="pro-board-count">' + n + ' picks from ' + cap.length + ' handicappers</span>' +
+                '<label><input type="checkbox" id="proBoardProven"' + (boardFilter.proven ? ' checked' : '') + '> Proven only (25+ graded picks)</label>' +
+                '<label>League <select id="proBoardLeague"><option value="all">All</option>' + leagues.map(function (l) { return '<option' + (boardFilter.league === l ? ' selected' : '') + '>' + esc(l) + '</option>'; }).join('') + '</select></label>' +
+                '<span>Updated ' + esc(new Date(d.generated_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' })) + ' PT</span></div>';
+            var cons = (d.consensus || []).filter(function (g) { return g.proven >= 2 && (boardFilter.league === 'all' || g.league === boardFilter.league); }).slice(0, 8);
+            if (cons.length) {
+                html += '<div class="pro-cons"><h3>Where the proven handicappers agree</h3>' + cons.map(function (g) {
+                    return '<div class="pro-cons-row"><span><b>' + esc(g.selection) + '</b> ' + esc(g.bet_type || '') + ' &middot; ' + esc(g.matchup || '') + ' &middot; ' + esc(kick(g.start)) + '</span><span><b>' + g.proven + '</b> proven, ' + g.cappers + ' total</span></div>';
+                }).join('') + '</div>';
+            }
+            if (!cap.length) {
+                html += '<div class="pro-teaser">No pending picks match these filters right now. The board fills up as the handicappers post for the next games.</div>';
+            } else {
+                html += '<div class="pro-cappers">' + cap.map(function (x) {
+                    var c = x.c, r = c.record || {};
+                    var u = c.units == null ? '' : ' &middot; <span class="' + (c.units >= 0 ? 'up' : 'down') + '">' + (c.units > 0 ? '+' : '') + c.units.toFixed(2) + 'u</span>';
+                    var head = c.profile_url ? '<a href="' + esc(c.profile_url) + '">' + esc(c.name) + '</a>' : '<b>' + esc(c.name) + '</b>';
+                    return '<div class="pro-capper"><div class="pro-capper-head">' + head +
+                        '<span class="pro-capper-rec">' + esc(c.source || '') + ' &middot; ' + r.w + '-' + r.l + (r.p ? '-' + r.p : '') + u + ' &middot; ' + c.graded + ' graded</span></div>' +
+                        x.picks.map(function (p) {
+                            var hasLine = p.line != null && String(p.selection || '').indexOf(String(Math.abs(Number(p.line)))) === -1;
+                            var sel = esc(p.selection || '') + (hasLine ? ' ' + (/total/i.test(p.bet_type || '') ? esc(p.line) : line(p.line)) : '') + (p.odds != null ? ' (' + odds(p.odds) + ')' : '');
+                            return '<div class="pro-pick"><div class="pro-pick-sel">' + sel + '</div><div class="pro-pick-meta">' +
+                                esc(p.league || '') + ' &middot; ' + esc(p.bet_type || '') + ' &middot; ' + esc(p.matchup || '') + ' &middot; ' + esc(kick(p.start)) +
+                                (p.source_post ? ' &middot; <a href="' + esc(p.source_post) + '" rel="nofollow noopener" target="_blank">Original post</a>' : '') + '</div></div>';
+                        }).join('') + '</div>';
+                }).join('') + '</div>';
+            }
+            boardEl.innerHTML = html;
+            var pv = document.getElementById('proBoardProven');
+            if (pv) pv.addEventListener('change', function () { boardFilter.proven = pv.checked; drawBoard(); });
+            var lg = document.getElementById('proBoardLeague');
+            if (lg) lg.addEventListener('change', function () { boardFilter.league = lg.value; drawBoard(); });
+        }
+        function loadBoard(isPro) {
+            if (!boardEl) return;
+            if (isPro) {
+                S.authFetch(API + '/pro/pending-board').then(function (r) {
+                    if (!r.ok) throw new Error('board ' + r.status);
+                    return r.json();
+                }).then(function (d) { boardData = d; drawBoard(); }).catch(function () {
+                    boardEl.innerHTML = '<div class="pro-teaser">The board could not load right now. Refresh in a minute.</div>';
+                });
                 return;
             }
-            if (state === 'signed-out') {
-                chipEl.textContent = 'Not signed in';
-                chipEl.classList.remove('is-pro');
-                textEl.textContent = 'A free account is all you need for profiles, pick tracking and leaderboards.';
-                statusEl.classList.add('is-shown');
-                return;
-            }
-            /* 'unknown': a cold start or a network blip. Say nothing rather than
-               claim a state, exactly as the shared session resolver does. */
-            statusEl.classList.remove('is-shown');
+            fetch(API + '/pro/pending-board/summary', { cache: 'no-store' }).then(function (r) { return r.json(); })
+                .then(teaser).catch(function () { teaser(null); });
+        }
+
+        function loadMe() {
+            return S.authFetch(API + '/premium/me').then(function (r) {
+                if (!r.ok) throw new Error('me ' + r.status);
+                return r.json();
+            });
+        }
+
+        function startCheckout(kind) {
+            if (busy) return;
+            if (mode === 'signin') { ga('pro_signin_click', { plan: kind }); window.location.href = LOGIN; return; }
+            if (mode !== 'buy') return;
+            busy = true;
+            ga('pro_checkout_click', { plan: kind, value: PRICE[kind], currency: 'USD' });
+            var btn = document.querySelector('[data-pro-buy="' + kind + '"]');
+            if (btn) { btn.classList.add('is-busy'); btn.textContent = 'Opening checkout'; }
+            banner('');
+            S.authFetch(API + '/premium/upgrade', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ tier: 'pro', billing_period: kind === 'annual' ? 'yearly' : 'monthly' })
+            }).then(function (r) {
+                return r.json().catch(function () { return {}; }).then(function (b) { return { r: r, b: b }; });
+            }).then(function (x) {
+                if (x.r.ok && x.b.url) {
+                    ga('begin_checkout', { plan: kind, value: PRICE[kind], currency: 'USD', items: [{ item_id: 'tmr_pro_' + kind, item_name: 'TMR Pro ' + kind, price: PRICE[kind], quantity: 1 }] });
+                    try { sessionStorage.setItem('tmr_pro_plan', kind); } catch (e) { }
+                    setTimeout(function () { window.location.href = x.b.url; }, 150);
+                    return;
+                }
+                if (x.r.status === 401) { window.location.href = LOGIN; return; }
+                ga('pro_checkout_error', { plan: kind, status: x.r.status });
+                banner(x.b.error || 'Checkout could not open. Nothing was charged. Please try again in a minute.', 'warn');
+                throw new Error('upgrade ' + x.r.status);
+            }).catch(function () {
+                busy = false;
+                if (btn) btn.classList.remove('is-busy');
+                loadMe().then(drawAccount).catch(function () {});
+            });
+        }
+
+        Array.prototype.forEach.call(buttons, function (btn) {
+            btn.addEventListener('click', function (ev) {
+                ev.preventDefault();
+                if (btn.disabled) return;
+                startCheckout(btn.getAttribute('data-pro-buy'));
+            });
+        });
+
+        if (manageEl) {
+            manageEl.addEventListener('click', function () {
+                manageEl.disabled = true;
+                ga('pro_manage_click', {});
+                S.authFetch(API + '/premium/portal', { method: 'POST' }).then(function (r) {
+                    return r.json().then(function (b) { return { r: r, b: b }; });
+                }).then(function (x) {
+                    if (x.r.ok && x.b.url) { window.location.href = x.b.url; return; }
+                    manageEl.disabled = false;
+                    banner('The billing page could not open right now. Please try again in a minute, or email support@trustmyrecord.com.', 'warn');
+                }).catch(function () {
+                    manageEl.disabled = false;
+                    banner('The billing page could not open right now. Please try again in a minute.', 'warn');
+                });
+            });
+        }
+
+        /* Coming back from Stripe. The webhook, not this redirect, grants
+           access, so after a success the page polls until the server shows
+           the subscription (normally a few seconds). */
+        var params = new URLSearchParams(window.location.search);
+        var purchase = params.get('purchase');
+        var sessionId = params.get('session_id');
+        if (purchase && window.history && history.replaceState) {
+            history.replaceState(null, '', window.location.pathname + window.location.hash);
+        }
+        if (purchase === 'canceled') { banner('Checkout was cancelled. You were not charged.', 'warn'); ga('pro_checkout_canceled', {}); }
+        if (purchase === 'success') banner('Payment received. Turning on TMR Pro for your account now.', 'good');
+
+        function pollUntilActive(tries) {
+            loadMe().then(function (me) {
+                drawAccount(me);
+                if (me.subscription) {
+                    banner('');
+                    if (welcomeEl) { welcomeEl.hidden = false; try { welcomeEl.scrollIntoView({ block: 'center' }); } catch (e) { } }
+                    var plan = me.subscription.billing_period === 'yearly' ? 'annual' : 'monthly';
+                    var val = me.subscription.amount ? me.subscription.amount / 100 : PRICE[plan];
+                    ga('purchase', { transaction_id: sessionId || ('pro_' + Date.now()), value: val, currency: 'USD', items: [{ item_id: 'tmr_pro_' + plan, item_name: 'TMR Pro ' + plan, price: val, quantity: 1 }] });
+                    return;
+                }
+                if (tries > 0) setTimeout(function () { pollUntilActive(tries - 1); }, 2000);
+                else banner('Payment received. Activation is taking longer than usual; refresh in a minute. If TMR Pro is not on within a few minutes, email support@trustmyrecord.com.', 'warn');
+            }).catch(function () {
+                if (tries > 0) setTimeout(function () { pollUntilActive(tries - 1); }, 2000);
+            });
         }
 
         function start() {
-            var S = window.TMRSession;
-            if (!S) { paint('signed-out', null); return; }
-
-            /* The cached identity paints immediately so the panel does not flash. */
-            var cached = null;
-            try { cached = S.getCachedUser && S.getCachedUser(); } catch (e) { cached = null; }
-            if (cached) paint('signed-in', cached);
-            else if (!S.hasTokens || !S.hasTokens()) paint('signed-out', null);
-
-            if (!S.resolveUser) return;
-            S.resolveUser().then(function (res) {
-                if (!res) return;
-                paint(res.state || 'unknown', res.user || null);
-            }).catch(function () { /* keep whatever is on screen */ });
+            S = window.TMRSession || null;
+            if (S && S.api) API = S.api;
+            paintButtons(false);
+            if (!S) { paintStatus('Not signed in', 'A free account is all you need for profiles, pick tracking and leaderboards.', false, false); return; }
+            if (!S.hasTokens || !S.hasTokens()) {
+                paintStatus('Not signed in', 'A free account is all you need for profiles, pick tracking and leaderboards.', false, false);
+                loadBoard(false);
+                fetch(API + '/premium/checkout-status', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (b) {
+                    if (b && b.open_to_public) { mode = 'signin'; paintButtons(false); }
+                }).catch(function () {});
+                return;
+            }
+            if (purchase === 'success') { pollUntilActive(15); return; }
+            loadMe().then(drawAccount).catch(function () {
+                /* Cold start or a network blip: leave the inert page as is. */
+            });
         }
 
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', start);
-        } else {
-            start();
-        }
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
+        else start();
     })();
     </script>
 <script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-ds-nav.83270b679707.js"></script>
