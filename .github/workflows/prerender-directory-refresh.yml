@@ -98,7 +98,10 @@ jobs:
             if [ -e "$p" ]; then PUBLISH="$PUBLISH $p"; fi
           done
           git add -A $PUBLISH
-          git add -u
+          # ATW_GUARD_20260929: around-the-web/ is owned by the Watchdog publish (it commits fresh records every run).
+          # `git add -u` staged this job's stale checkout of it and commit e543980ef68 (Sep 29 6:44 PM PDT) put the board
+          # back on an older record set right after a fresh publish. Never stage it here.
+          git add -u -- . ':(exclude)around-the-web'
           if git diff --cached --quiet; then
             echo "No data change in generated output — skipping commit."
             exit 0
