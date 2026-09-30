@@ -128,7 +128,7 @@ def result_banner(ctx):
         close.append("%d goals against a closing total of %s on the TMR board: %s" % (
             goals, tot, "over" if goals > tot else "under" if goals < tot else "push"))
     return ('        <div class="fg-final"><span class="fg-final-k">Final</span>'
-            '<p><b>%s %d, %s %d</b>%s. %s wins.%s</p></div>\n' % (
+            '<p><b>%s %d, %s %d</b>%s. The %s win.%s</p></div>\n' % (
                 esc(a["common"]), f["away"], esc(h["common"]), f["home"], esc(tail), esc(win["common"]),
                 (" " + esc(close[0]) + ".") if close else ""))
 
