@@ -13,25 +13,35 @@ name: NHL Featured Game
 #   data/nhl-featured/*.json. featured_matchups.py sync then registers the page
 #   and bakes the NHL door, the NHL hub card and the Featured Matchups menu.
 #
-# CADENCE. :20 and :50, clear of the prerender cron (:00, :30), the MLB bake
-# (:10) and the sport hubs (:40), so two jobs never push in the same minute.
-# Every run is idempotent: a file is only rewritten when its data changed, so a
-# quiet run commits nothing.
+# WHY A LOOP AND NOT A 30 MINUTE CRON. GitHub drops scheduled runs on this repo
+# under load: on 2026-09-29 the '*/30' prerender cron actually fired at 15:28,
+# 20:10 and 23:53 UTC, hours apart. A goalie confirmation or a line move cannot
+# wait four hours. So one run works for up to five and a half hours, refreshing
+# on every :20 and :50, then dispatches its own successor (workflow_dispatch is
+# the one event GITHUB_TOKEN may start). The cron below is only the safety net
+# that restarts the chain if a successor ever fails to start; the concurrency
+# group means a cron start that lands mid chain just waits and then carries on
+# as the next link, so there is never more than one chain.
 #
-# PUSH. If main moved, the run resets onto the new main and runs the generator
-# again rather than hand merging generated files, then pushes. Three tries.
+# PUSH. Each refresh resets onto the current main and runs the generator again
+# rather than hand merging generated files, then pushes. Three tries.
 #
-# ALERTS. A failed run opens (or comments on) one GitHub issue labelled
-# nhl-featured-alert, which emails the repo owner; the next good run closes it.
+# IDEMPOTENT. A file is only rewritten when its data changed, so a quiet
+# refresh commits nothing.
+#
+# ALERTS. A failed refresh opens (or comments on) one GitHub issue labelled
+# nhl-featured-alert, which emails the repo owner; the next good refresh closes
+# it. The run itself is marked failed if any refresh in it failed.
 
 on:
   schedule:
-    - cron: '20,50 * * * *'
+    - cron: '20 */2 * * *'
   workflow_dispatch:
 
 permissions:
   contents: write
   issues: write
+  actions: write
 
 concurrency:
   group: nhl-featured-game
@@ -40,7 +50,7 @@ concurrency:
 jobs:
   run:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 350
     steps:
       - name: Checkout main
         uses: actions/checkout@v5
@@ -55,67 +65,67 @@ jobs:
         with:
           node-version: 22
 
-      - name: Build, gate and publish
-        id: build
+      - name: Refresh every 30 minutes for five and a half hours
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -o pipefail
           git config user.name "tmr-nhl-featured-bot"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          for attempt in 1 2 3; do
-            git fetch -q origin main
-            git reset -q --hard origin/main
-            python scripts/nhl_featured_game.py run | tee -a nhl_run.log
-            python scripts/featured_matchups.py sync | tee -a nhl_run.log
-            # THE GATE runs before the commit: if it fails, nothing is published
-            # and the last good pages stay live.
-            node tests/seo-indexability-regression-test.js > gate.log 2>&1 || { tail -40 gate.log; exit 1; }
-            git add -A nhl data/nhl-featured matchup-of-the-day/nhl data/featured-matchups.json index.html sitemap.xml handicapping/nhl/index.html static/js/tmr-ds-nav.js static/js/tmr-sitewide.js
-            git add -u
-            if git diff --cached --quiet; then
-              echo "NHL featured game already current."
-              exit 0
-            fi
-            git commit -q -m "chore(nhl-featured): refresh the NHL Featured Game of the Day [skip ci]"
-            if git push -q origin HEAD:main; then
-              git show --stat --oneline HEAD | head -30
-              exit 0
-            fi
-            echo "main moved during the run; rebuilding on top of it (attempt $attempt)"
-          done
-          echo "::error::push to main failed three times"
-          exit 1
-
-      - name: Upload run log
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: nhl-featured-run-${{ github.run_id }}
-          path: |
-            nhl_run.log
-            gate.log
-          if-no-files-found: ignore
-          retention-days: 14
-
-      - name: Raise the alert issue
-        if: failure()
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
           RUN_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
-          gh label create nhl-featured-alert --color B60205 --description "NHL Featured Game pipeline failure" 2>/dev/null || true
-          N=$(gh issue list --label nhl-featured-alert --state open --json number --jq '.[0].number')
-          if [ -n "$N" ]; then
-            gh issue comment "$N" --body "Failed again: $RUN_URL"
-          else
-            gh issue create --label nhl-featured-alert --title "NHL Featured Game pipeline is failing" \
-              --body "The scheduled NHL Featured Game run failed: $RUN_URL. The last good page stays live until a run succeeds. This issue closes itself on the next good run."
-          fi
+          END=$(( $(date +%s) + 330*60 ))
+          FAILED=0
 
-      - name: Close the alert issue after a good run
-        if: success()
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          for N in $(gh issue list --label nhl-featured-alert --state open --json number --jq '.[].number' 2>/dev/null); do
-            gh issue close "$N" --comment "Recovered: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          alert() {
+            gh label create nhl-featured-alert --color B60205 --description "NHL Featured Game pipeline failure" >/dev/null 2>&1 || true
+            N=$(gh issue list --label nhl-featured-alert --state open --json number --jq '.[0].number' 2>/dev/null)
+            if [ -n "$N" ]; then
+              gh issue comment "$N" --body "Refresh failed at $(TZ=America/Los_Angeles date '+%b %d %I:%M %p PT'): $1. Run: $RUN_URL" || true
+            else
+              gh issue create --label nhl-featured-alert --title "NHL Featured Game pipeline is failing" \
+                --body "A refresh failed at $(TZ=America/Los_Angeles date '+%b %d %I:%M %p PT'): $1. Run: $RUN_URL. The last good page stays live. This issue closes itself after the next good refresh." || true
+            fi
+          }
+          recovered() {
+            for N in $(gh issue list --label nhl-featured-alert --state open --json number --jq '.[].number' 2>/dev/null); do
+              gh issue close "$N" --comment "Recovered at $(TZ=America/Los_Angeles date '+%b %d %I:%M %p PT'): $RUN_URL" || true
+            done
+          }
+          refresh() {
+            for attempt in 1 2 3; do
+              git fetch -q origin main && git reset -q --hard origin/main || return 1
+              python scripts/nhl_featured_game.py run > nhl_run.log 2>&1 || { tail -30 nhl_run.log; return 1; }
+              grep -E '"(notes|written)"' -A6 nhl_run.log | head -20
+              python scripts/featured_matchups.py sync > sync.log 2>&1 || { tail -20 sync.log; return 1; }
+              # THE GATE runs before the commit: a failing gate publishes nothing.
+              node tests/seo-indexability-regression-test.js > gate.log 2>&1 || { tail -40 gate.log; return 1; }
+              git add -A nhl data/nhl-featured matchup-of-the-day/nhl data/featured-matchups.json index.html sitemap.xml handicapping/nhl/index.html static/js/tmr-ds-nav.js static/js/tmr-sitewide.js
+              git add -u
+              if git diff --cached --quiet; then
+                echo "NHL featured game already current."
+                return 0
+              fi
+              git commit -q -m "chore(nhl-featured): refresh the NHL Featured Game of the Day [skip ci]"
+              if git push -q origin HEAD:main; then
+                git show --stat --oneline HEAD | head -20
+                return 0
+              fi
+              echo "main moved during the refresh; rebuilding on top of it (attempt $attempt)"
+            done
+            return 1
+          }
+
+          while :; do
+            echo "=== refresh at $(TZ=America/Los_Angeles date '+%Y-%m-%d %I:%M %p PT')"
+            if refresh; then recovered; else FAILED=1; alert "see the log for this refresh"; fi
+            # Sleep to the next :20 or :50, and stop when the next one would
+            # land past this run's budget.
+            NOW=$(date +%s); M=$(( 10#$(date -u +%M) )); S=$(( 10#$(date -u +%S) ))
+            if [ $M -lt 20 ]; then W=$(( (20-M)*60 - S )); elif [ $M -lt 50 ]; then W=$(( (50-M)*60 - S )); else W=$(( (80-M)*60 - S )); fi
+            [ $(( NOW + W )) -gt $END ] && break
+            sleep $W
           done
+
+          # Hand over to the next link of the chain.
+          gh workflow run nhl-featured-game.yml --ref main || { alert "could not dispatch the next run"; FAILED=1; }
+          exit $FAILED
