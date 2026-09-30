@@ -303,7 +303,8 @@ def goaltending(ctx):
             if gap >= 8:
                 better = named[0] if la["sv"] > lh["sv"] else named[1]
                 paras.append("That's a real gap in the crease: %s's save percentage sits about %d points higher, and "
-                             "on 30 shots that's close to a quarter of a goal a night." % (better["name"], round(gap)))
+                             "over 30 shots that works out to roughly %.1f goals a night." % (
+                                 better["name"], round(gap), gap * 30 / 1000.0))
             else:
                 paras.append("On paper the crease is close to even, the two save percentages within %d points of each "
                              "other, so the skaters in front of them are more likely to decide it." % max(1, round(gap)))
