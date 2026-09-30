@@ -313,9 +313,9 @@ def league_table(rows, names):
         gf, ga = r.get("goalsFor") or 0, r.get("goalsAgainst") or 0
         out.append({"_team": ab, "gp": gp, "gfpg": r.get("goalsForPerGame"), "gapg": r.get("goalsAgainstPerGame"),
                     "sfpg": r.get("shotsForPerGame"), "sapg": r.get("shotsAgainstPerGame"),
-                    "shpct": (gf / sf) if sf else None, "svpct": (1 - ga / sa) if sa else None,
+                    "shpct": round(gf / sf, 5) if sf else None, "svpct": round(1 - ga / sa, 5) if sa else None,
                     "pp": r.get("powerPlayPct"), "pk": r.get("penaltyKillPct"), "fo": r.get("faceoffWinPct"),
-                    "gdpg": ((gf - ga) / gp), "sdpg": ((sf - sa) / gp), "ptpct": r.get("pointPct"),
+                    "gdpg": round((gf - ga) / gp, 4), "sdpg": round((sf - sa) / gp, 4), "ptpct": r.get("pointPct"),
                     "record": "%s-%s-%s" % (r.get("wins"), r.get("losses"), r.get("otLosses")),
                     "points": r.get("points")})
     return out
@@ -346,12 +346,12 @@ def moneypuck_table(mp):
         try:
             gp = float(a["games_played"])
             row = {"_team": ab, "gp": int(gp),
-                   "xgf": float(a["xGoalsFor"]) / gp, "xga": float(a["xGoalsAgainst"]) / gp,
+                   "xgf": round(float(a["xGoalsFor"]) / gp, 4), "xga": round(float(a["xGoalsAgainst"]) / gp, 4),
                    "xgpct": float(a["xGoalsPercentage"]),
-                   "hdf": float(a["highDangerShotsFor"]) / gp, "hda": float(a["highDangerShotsAgainst"]) / gp}
+                   "hdf": round(float(a["highDangerShotsFor"]) / gp, 4), "hda": round(float(a["highDangerShotsAgainst"]) / gp, 4)}
             if five:
                 row.update({"cf5": float(five["corsiPercentage"]), "xgpct5": float(five["xGoalsPercentage"]),
-                            "gf5": float(five["goalsFor"]) / gp, "ga5": float(five["goalsAgainst"]) / gp})
+                            "gf5": round(float(five["goalsFor"]) / gp, 4), "ga5": round(float(five["goalsAgainst"]) / gp, 4)})
         except (KeyError, ValueError, ZeroDivisionError):
             continue
         rows.append(row)
@@ -523,8 +523,10 @@ def goalie_line(rows):
     w = sum(1 for r in rows if r.get("decision") == "W")
     l = sum(1 for r in rows if r.get("decision") == "L")
     o = sum(1 for r in rows if r.get("decision") == "O")
-    return {"gp": len(rows), "record": "%d-%d-%d" % (w, l, o), "sv": (1 - ga / sa) if sa else None,
-            "gaa": (ga * 60.0 / mins) if mins else None, "so": sum(1 for r in rows if r.get("shutouts")),
+    # Rounded so a float summed on another Python build (3.12 compensates
+    # float sums) does not register as new data.
+    return {"gp": len(rows), "record": "%d-%d-%d" % (w, l, o), "sv": round(1 - ga / sa, 5) if sa else None,
+            "gaa": round(ga * 60.0 / mins, 4) if mins else None, "so": sum(1 for r in rows if r.get("shutouts")),
             "ga": ga, "sa": sa}
 
 
@@ -980,7 +982,7 @@ def build_context(src, g, standings, names, tmr_teams, tables, mps, board, lines
                  "label": ctx_label(cur_sid if use_cur else prev_season(cur_sid), use_cur)}
     if stats:
         rows_ = list(tbl.values())
-        stats["avg"] = {k: sum(r[k] for r in rows_ if r.get(k) is not None) / max(1, len([r for r in rows_ if r.get(k) is not None]))
+        stats["avg"] = {k: round(sum(r[k] for r in rows_ if r.get(k) is not None) / max(1, len([r for r in rows_ if r.get(k) is not None])), 4)
                         for k in ("gfpg", "gapg", "sfpg", "sapg", "pp", "pk", "shpct", "svpct")}
     mp_key = "cur" if use_cur and mps["cur"].get(a_abbr) else "prev"
     adv = {}
@@ -988,7 +990,7 @@ def build_context(src, g, standings, names, tmr_teams, tables, mps, board, lines
         adv = {"away": mps[mp_key][a_abbr], "home": mps[mp_key][h_abbr],
                "label": ctx_label(cur_sid if mp_key == "cur" else prev_season(cur_sid), mp_key == "cur")}
         mrows = list(mps[mp_key].values())
-        adv["avg"] = {"pace": sum(r["xgf"] + r["xga"] for r in mrows) / len(mrows)}
+        adv["avg"] = {"pace": round(sum(r["xgf"] + r["xga"] for r in mrows) / len(mrows), 4)}
 
     # Odds: the live board when it is current, else the last good read if it
     # is under ODDS_MAX_AGE_H old, else nothing.
