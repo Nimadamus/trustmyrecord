@@ -1,0 +1,121 @@
+name: NHL Featured Game
+
+# NHL_FEATURED_GAME_20260929. The NHL Featured Game of the Day, end to end, in
+# the cloud. Nothing here needs a laptop, a browser or a Claude terminal.
+#
+# Every 30 minutes, around the clock, scripts/nhl_featured_game.py:
+#   reads the league schedule and standings (api-web.nhle.com), league team
+#   stats (api.nhle.com), both clubs' results, MoneyPuck expected goals, the
+#   TMR sportsbook board, Daily Faceoff's starting goalie reports, ESPN's
+#   injury report and the TMR NHL simulator; selects the day's featured game
+#   once (sticky; a postponement reselects); writes /nhl/<slug>/, the archive
+#   /nhl/featured-games/, the homepage module, the sitemap block and
+#   data/nhl-featured/*.json. featured_matchups.py sync then registers the page
+#   and bakes the NHL door, the NHL hub card and the Featured Matchups menu.
+#
+# CADENCE. :20 and :50, clear of the prerender cron (:00, :30), the MLB bake
+# (:10) and the sport hubs (:40), so two jobs never push in the same minute.
+# Every run is idempotent: a file is only rewritten when its data changed, so a
+# quiet run commits nothing.
+#
+# PUSH. If main moved, the run resets onto the new main and runs the generator
+# again rather than hand merging generated files, then pushes. Three tries.
+#
+# ALERTS. A failed run opens (or comments on) one GitHub issue labelled
+# nhl-featured-alert, which emails the repo owner; the next good run closes it.
+
+on:
+  schedule:
+    - cron: '20,50 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: nhl-featured-game
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: Build, gate and publish
+        id: build
+        run: |
+          set -o pipefail
+          git config user.name "tmr-nhl-featured-bot"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          for attempt in 1 2 3; do
+            git fetch -q origin main
+            git reset -q --hard origin/main
+            python scripts/nhl_featured_game.py run | tee -a nhl_run.log
+            python scripts/featured_matchups.py sync | tee -a nhl_run.log
+            # THE GATE runs before the commit: if it fails, nothing is published
+            # and the last good pages stay live.
+            node tests/seo-indexability-regression-test.js > gate.log 2>&1 || { tail -40 gate.log; exit 1; }
+            git add -A nhl data/nhl-featured matchup-of-the-day/nhl data/featured-matchups.json index.html sitemap.xml handicapping/nhl/index.html static/js/tmr-ds-nav.js static/js/tmr-sitewide.js
+            git add -u
+            if git diff --cached --quiet; then
+              echo "NHL featured game already current."
+              exit 0
+            fi
+            git commit -q -m "chore(nhl-featured): refresh the NHL Featured Game of the Day [skip ci]"
+            if git push -q origin HEAD:main; then
+              git show --stat --oneline HEAD | head -30
+              exit 0
+            fi
+            echo "main moved during the run; rebuilding on top of it (attempt $attempt)"
+          done
+          echo "::error::push to main failed three times"
+          exit 1
+
+      - name: Upload run log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nhl-featured-run-${{ github.run_id }}
+          path: |
+            nhl_run.log
+            gate.log
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Raise the alert issue
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          RUN_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          gh label create nhl-featured-alert --color B60205 --description "NHL Featured Game pipeline failure" 2>/dev/null || true
+          N=$(gh issue list --label nhl-featured-alert --state open --json number --jq '.[0].number')
+          if [ -n "$N" ]; then
+            gh issue comment "$N" --body "Failed again: $RUN_URL"
+          else
+            gh issue create --label nhl-featured-alert --title "NHL Featured Game pipeline is failing" \
+              --body "The scheduled NHL Featured Game run failed: $RUN_URL. The last good page stays live until a run succeeds. This issue closes itself on the next good run."
+          fi
+
+      - name: Close the alert issue after a good run
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for N in $(gh issue list --label nhl-featured-alert --state open --json number --jq '.[].number' 2>/dev/null); do
+            gh issue close "$N" --comment "Recovered: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          done

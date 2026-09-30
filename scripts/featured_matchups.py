@@ -735,7 +735,7 @@ def _normalise(text):
 
 
 MENU_SPORT = {"nfl-gotw": "nfl", "nfl": "nfl", "ncaaf": "ncaaf", "mlb": "mlb",
-              "tennis": "tennis", "soccer": "soccer"}
+              "tennis": "tennis", "soccer": "soccer", "nhl": "nhl"}
 FMENU = re.compile(r"/\*FMENU (\S+)\*/\s*\[\s*(['\"])([^'\"]+)\2")
 
 

@@ -243,6 +243,7 @@
             ['/matchup-of-the-day/mlb/', 'MLB Matchup of the Day'],
             ['/matchup-of-the-day/ncaaf/', 'NCAAF Matchup of the Day'],
             ['/matchup-of-the-day/tennis/', 'Tennis Matchup of the Day'],
+            ['/matchup-of-the-day/nhl/', 'NHL Featured Game of the Day'],
             ['/handicapping/mlb/', 'MLB Matchups Today'],
             ['/handicapping/', 'Handicapping Hub'],
             ['/my-record/', 'My record'],
@@ -414,6 +415,8 @@
             if (SPORT_HUB[s]) out.push(SPORT_HUB[s]);
             out.push(['/forum/' + s + '/', label(s) + ' forum board']);
             out.push(['/' + s + '-pick-tracker/', label(s) + ' pick tracker']);
+            /* NHL_FEATURED_GAME_20260929: every NHL page links the feature archive. */
+            if (s === 'nhl') out.push(['/nhl/featured-games/', 'NHL Featured Game of the Day']);
             return out.concat(CORE);
         }
 

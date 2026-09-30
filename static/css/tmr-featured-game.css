@@ -1,0 +1,152 @@
+/* Featured Game of the Day. FEATURED_GAME_ENGINE_20260929.
+   Layered on tmr-handicap.css: only the pieces a featured game page has and a
+   matchup page does not. Dark theme tokens from tmr-ds.css. */
+
+.fg-page .hx-wrap { max-width: 1180px; }
+.fg-h3 { font: 800 1.15rem/1.2 var(--display, 'Barlow Condensed', Inter, sans-serif); text-transform: uppercase;
+  letter-spacing: .04em; color: var(--ink); margin: 22px 0 10px; }
+
+/* jump bar */
+.fg-jump { display: flex; gap: 8px; overflow-x: auto; margin: 0 0 26px; padding: 4px 0 8px; scrollbar-width: none; }
+.fg-jump::-webkit-scrollbar { display: none; }
+.fg-jump a { flex: none; font: 700 13px/1 var(--font, Inter, sans-serif); color: var(--ink-2); text-decoration: none;
+  border: 1px solid var(--line-2); border-radius: 999px; padding: 9px 14px; background: var(--panel-2); }
+.fg-jump a:hover { border-color: var(--brand-lt); color: var(--ink); }
+
+/* final banner */
+.fg-final { display: flex; align-items: center; gap: 14px; background: var(--panel); border: 1px solid var(--gold);
+  border-radius: 14px; padding: 16px 18px; margin: 0 0 24px; }
+.fg-final p { margin: 0; color: var(--ink-2); line-height: 1.5; }
+.fg-final b { color: var(--ink); font-size: 1.1rem; }
+.fg-final-k { font: 800 .75rem/1 var(--display, sans-serif); letter-spacing: .18em; text-transform: uppercase;
+  background: var(--gold); color: #04101c; padding: 7px 10px; border-radius: 5px; flex: none; }
+
+/* why featured */
+.fg-why { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
+.fg-why-chip { background: var(--panel); border: 1px solid var(--line); border-left: 3px solid var(--brand-lt);
+  border-radius: 10px; padding: 12px 14px; }
+.fg-why-chip b { display: block; font: 800 .8rem/1.2 var(--display, sans-serif); letter-spacing: .12em; text-transform: uppercase; color: var(--brand-dk); }
+.fg-why-chip span { display: block; margin-top: 5px; color: var(--ink-2); font-size: 14px; line-height: 1.45; }
+
+/* goalies */
+.fg-goalies { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.fg-goalie { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 18px;
+  border-top: 4px solid var(--hx-away, #1D7FE8); min-width: 0; }
+.fg-goalie--home { border-top-color: var(--hx-home, #B98505); }
+.fg-gtop { display: flex; gap: 14px; align-items: center; margin-bottom: 12px; }
+.fg-gface { width: 76px; height: 76px; border-radius: 50%; object-fit: cover; background: var(--panel-3); flex: none;
+  border: 2px solid var(--line-2); display: inline-block; }
+.fg-gteam { margin: 0; color: var(--muted); font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.fg-gname { margin: 2px 0 6px; font: 900 1.45rem/1.05 var(--display, sans-serif); text-transform: uppercase; color: var(--ink); }
+.fg-gbadge { display: inline-block; font: 800 .7rem/1 var(--font, Inter, sans-serif); letter-spacing: .08em; text-transform: uppercase;
+  padding: 6px 9px; border-radius: 999px; }
+.fg-gbadge--confirmed { background: var(--green-soft); color: var(--green); border: 1px solid var(--green); }
+.fg-gbadge--expected { background: var(--gold-soft); color: var(--gold); border: 1px solid var(--gold); }
+.fg-gbadge--unknown { background: var(--panel-3); color: var(--ink-2); border: 1px solid var(--line-2); }
+.fg-glabel { margin: 12px 0 8px; color: var(--muted); font-size: 12px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+.fg-gstats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+.fg-gstat { background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; padding: 9px 8px; text-align: center; min-width: 0; }
+.fg-gstat b { display: block; font: 900 1.2rem/1.1 var(--display, sans-serif); color: var(--ink); }
+.fg-gstat span { display: block; font-size: 11px; color: var(--muted); margin-top: 3px; }
+.fg-gmini { margin: 10px 0 0; color: var(--ink-2); font-size: 13px; }
+.fg-grecent { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.fg-grecent li { background: var(--panel-2); border: 1px solid var(--line); border-radius: 9px; padding: 7px 6px; text-align: center; font-size: 12px; min-width: 0; }
+.fg-grecent span, .fg-grecent em, .fg-grecent i { display: block; font-style: normal; color: var(--muted); }
+.fg-grecent b { display: block; color: var(--ink); font-size: 14px; }
+.fg-gextra, .fg-groster { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 6px; }
+.fg-gextra li, .fg-groster li { font-size: 13.5px; color: var(--ink-2); line-height: 1.45; background: var(--panel-2);
+  border: 1px solid var(--line); border-radius: 9px; padding: 8px 10px; }
+.fg-groster b { color: var(--ink); margin-right: 6px; }
+.fg-gsrc { margin: 10px 0 0; font-size: 12px; color: var(--muted); }
+
+/* results */
+.fg-rescards { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+.fg-rescard ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.fg-res { display: grid; grid-template-columns: 54px 44px 1fr auto; gap: 8px; align-items: center; background: var(--panel);
+  border: 1px solid var(--line); border-radius: 9px; padding: 8px 12px; font-size: 14px; }
+.fg-res span { color: var(--muted); }
+.fg-res b { font-weight: 900; }
+.fg-res--w b { color: var(--green); }
+.fg-res--l b, .fg-res--otl b { color: var(--red); }
+.fg-res em { font-style: normal; color: var(--ink-2); }
+.fg-res i { font-style: normal; color: var(--ink); font-weight: 800; }
+
+/* head to head */
+.fg-h2h { list-style: none; margin: 16px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; }
+.fg-h2h-card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; display: grid; gap: 4px; }
+.fg-h2h-d { color: var(--muted); font-size: 12px; font-weight: 700; }
+.fg-h2h-m { color: var(--ink-2); font-size: 13px; }
+.fg-h2h-s { font: 900 1.25rem/1.2 var(--display, sans-serif); color: var(--muted); }
+.fg-h2h-s em { font-style: normal; }
+.fg-h2h-s em.w { color: var(--ink); }
+.fg-h2h-s small { font-size: .7em; color: var(--gold); }
+
+/* odds */
+.fg-moves { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 8px; }
+.fg-moves li { background: var(--panel-2); border: 1px solid var(--line); border-radius: 9px; padding: 8px 10px; font-size: 13px; }
+.fg-moves span, .fg-moves em { display: block; color: var(--muted); font-style: normal; }
+.fg-moves b { color: var(--ink); }
+.fg-cta-row { display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0 0; }
+.fg-btn { display: inline-block; font-weight: 800; font-size: 14px; text-decoration: none; color: #04101c; background: var(--brand-lt);
+  border-radius: 999px; padding: 10px 16px; }
+.fg-btn--ghost { background: transparent; color: var(--brand-dk); border: 1px solid var(--brand-lt); }
+
+/* trends */
+.fg-trends { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.fg-trends li { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+.fg-trends p { margin: 6px 0 0; color: var(--ink); line-height: 1.5; font-size: 15px; }
+.fg-trend-tag { font: 800 .72rem/1 var(--display, sans-serif); letter-spacing: .14em; text-transform: uppercase; color: var(--gold); }
+
+/* injuries */
+.fg-injs { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.fg-inj ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.fg-inj li { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; background: var(--panel); border: 1px solid var(--line);
+  border-radius: 9px; padding: 8px 12px; font-size: 14px; }
+.fg-inj b { color: var(--ink); }
+.fg-inj span { grid-column: 1; color: var(--muted); font-size: 12.5px; }
+.fg-inj em { grid-column: 2; grid-row: 1 / span 2; align-self: center; font-style: normal; font-size: 12px; font-weight: 800; color: var(--red); }
+
+/* article */
+.fg-article { max-width: 760px; margin: 8px 0 36px; }
+.fg-article-k { font: 800 .75rem/1 var(--display, sans-serif); letter-spacing: .18em; text-transform: uppercase; color: var(--gold); margin: 0 0 6px; }
+.fg-article h2 { font: 900 clamp(1.35rem, 3.2vw, 1.75rem)/1.15 var(--display, sans-serif); text-transform: uppercase; color: var(--ink);
+  margin: 30px 0 10px; letter-spacing: .01em; }
+.fg-article p, .fg-article li { font-size: 17px; line-height: 1.72; color: var(--ink-2); }
+.fg-article p { margin: 0 0 14px; }
+.fg-article ul { margin: 0 0 14px; padding-left: 20px; }
+.fg-article li { margin-bottom: 8px; }
+.fg-article-foot { font-size: 13px !important; color: var(--muted) !important; border-top: 1px solid var(--line); padding-top: 12px; margin-top: 22px !important; }
+
+/* archive */
+.fg-arcs { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; }
+.fg-arc { display: flex; gap: 14px; align-items: center; background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+  padding: 14px 16px; text-decoration: none; color: inherit; }
+.fg-arc:hover { border-color: var(--brand-lt); }
+.fg-arc-logos { display: flex; flex: none; }
+.fg-arc-logos img + img { margin-left: -8px; }
+.fg-arc-body b { display: block; color: var(--ink); font-size: 15px; line-height: 1.3; }
+.fg-arc-body span { display: block; color: var(--muted); font-size: 13px; margin-top: 3px; }
+.fg-arc-body em { display: block; color: var(--gold); font-style: normal; font-size: 13px; font-weight: 700; margin-top: 3px; }
+
+@media (max-width: 760px) {
+  .fg-goalies, .fg-rescards, .fg-trends, .fg-injs { grid-template-columns: 1fr; }
+  .fg-gstats { grid-template-columns: repeat(3, 1fr); }
+  .fg-grecent { grid-template-columns: repeat(3, 1fr); }
+  .fg-article p, .fg-article li { font-size: 16px; }
+  .fg-res { grid-template-columns: 48px 40px 1fr auto; padding: 8px 10px; }
+  .fg-arcs { grid-template-columns: 1fr; }
+}
+
+/* article rhythm: tmr-ds resets p margins inside .hx-page, so these carry page specificity */
+.fg-page .fg-article p { margin: 0 0 16px; }
+.fg-page .fg-article h2 { margin: 34px 0 12px; }
+.fg-page .fg-article ul { margin: 0 0 16px; }
+
+/* odds, first posted versus current: cards, never a squeezed table */
+.fg-odds { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.fg-odd { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+.fg-odd-l { margin: 0 0 8px; font: 800 .78rem/1.2 var(--display, sans-serif); letter-spacing: .12em; text-transform: uppercase; color: var(--brand-dk); }
+.fg-odd-v { display: flex; gap: 18px; flex-wrap: wrap; }
+.fg-odd-v span { display: flex; flex-direction: column; }
+.fg-odd-v em { font-style: normal; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+.fg-odd-v b { font: 900 1.25rem/1.2 var(--display, sans-serif); color: var(--ink); }
