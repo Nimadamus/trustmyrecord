@@ -90,7 +90,14 @@ jobs:
           # baked yet (EDGE_FALLBACK_20260810). It is regenerated from the same
           # renderer on every run, so it must ship in the same commit or the
           # edge would serve a page built from a stale template.
-          git add -A handicappers/index.html leaderboards/index.html index.html u forum sitemap.xml static/prerender matchup-of-the-day data/featured-matchups.json data/featured-urls.json nfl ncaaf mlb soccer tennis nfl-game-of-the-week
+          # PATHSPEC_FIX_20260929: `soccer` has no directory yet, and a missing
+          # pathspec makes `git add` exit 128, so every run since 2026-09-24
+          # baked correctly and then published nothing. Only existing paths are added.
+          PUBLISH=""
+          for p in handicappers/index.html leaderboards/index.html index.html u forum sitemap.xml static/prerender matchup-of-the-day data/featured-matchups.json data/featured-urls.json nfl ncaaf mlb soccer tennis nfl-game-of-the-week; do
+            if [ -e "$p" ]; then PUBLISH="$PUBLISH $p"; fi
+          done
+          git add -A $PUBLISH
           git add -u
           if git diff --cached --quiet; then
             echo "No data change in generated output — skipping commit."
