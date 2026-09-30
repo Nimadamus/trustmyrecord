@@ -31,6 +31,10 @@
   .line .sel{color:var(--text)}
   .line .odds{color:var(--green);font-weight:700}
   .empty{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:28px;text-align:center;color:var(--muted)}
+  .about{max-width:1000px;margin:0 auto;padding:0 20px 40px;color:var(--text)}
+  .about h2{font-size:17px;margin:28px 0 8px}
+  .about p{color:#c9cfdb;font-size:14.5px;line-height:1.65;margin:0 0 12px;max-width:78ch}
+  .about a{color:var(--cyan)}
   footer{color:var(--muted);font-size:12px;text-align:center;padding:20px}
 </style>
 <link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=b088fdc7f9d5">
@@ -52,6 +56,17 @@
   <div class="status" id="status">Loading…</div>
   <div id="board"></div>
 </div>
+<section class="about" aria-label="About Extra Markets">
+  <h2>What Extra Markets shows</h2>
+  <p>This page lists alternate lines: the same game offered at different numbers than the main board, each with its own price. Two kinds of full game market appear here when the feed has them. <b>Alternate spreads</b> are the run line in baseball, the puck line in hockey and the point spread in football and basketball, moved up or down. <b>Alternate totals</b> are the game total set higher or lower than the main number.</p>
+  <p>The trade off is always the same. Moving a line in your favor costs you price, and taking a harder number pays more. For example, if a team is favored by 3.5 on the main board, an alternate list might offer that team at 1.5 for a shorter price or at 6.5 for a longer one. Nothing here is a better bet by default; it is a different bet on the same game.</p>
+  <h2>Where the numbers come from</h2>
+  <p>Alternate lines are read from Bovada's public feed, separately from the feed behind the main sportsbook board, so nothing on this page changes the prices you see there. Only full game markets are shown. To lock a pick on an alternate line, use the Alt Lines tab on the <a href="/sportsbook/">Sportsbook</a>; this page is a read only view.</p>
+  <h2>Why a sport can be empty</h2>
+  <p>A sport only shows games when the book has alternate lines posted for them. Between seasons, on days with no games, early before lines go up, and once a game has started and its markets come down, the list for that sport will be empty, and the page says so instead of showing old numbers. If the feed itself cannot be reached, the page tells you that too.</p>
+  <h2>How it updates</h2>
+  <p>The page asks the feed for the current list every time you open it or switch sports, so reloading always shows the latest numbers the feed has. Lines move often, so the price when you lock a pick is the one that counts. For the main moneylines, spreads and totals on every game, use the <a href="/sportsbook/">Sportsbook</a>, and for matchup research see the <a href="/handicapping/">Handicapping hub</a>.</p>
+</section>
 <footer>TrustMyRecord · Extra Markets preview · alt lines refresh ~90s</footer>
 
 <script>

@@ -364,6 +364,49 @@ def _team_row(side, other, ml, spreads):
                 _form_pills(side.get("form"))))
 
 
+# NBA_HUB_GUIDE_20260929 (Nima, AdSense thin content). An evergreen guide that
+# explains what this board shows and how to read it. It never states a current
+# game, stat, injury or trend: everything live on this page comes from the feeds.
+NBA_GUIDE = (
+    '            <div class="hx-guide">\n'
+    '            <style>.hx-guide h3{margin:22px 0 6px;font-size:1.05rem}.hx-guide p{margin:0 0 12px;line-height:1.6;max-width:78ch}</style>\n'
+    '            <p class="hx-lede">This guide stays the same from day to day. It explains what each game card on '
+    'this page carries once lines are posted, and what to weigh before you lock a pick. The live numbers above '
+    'always come from the sportsbook feed and the league feed, never from this text.</p>\n'
+    '            <h3>The three prices on every card</h3>\n'
+    '            <p><b>Moneyline</b> is a straight bet on who wins. A minus price marks the favorite and shows what you '
+    'risk to win 100; a plus price marks the underdog and shows what 100 wins. <b>Spread</b> is the margin: the '
+    'favorite has to win by more than the number, and the underdog covers by losing by less or winning outright. '
+    '<b>Total</b> is the combined score of both teams, and you take the over or the under.</p>\n'
+    '            <p>Every price also carries an implied chance. A team at -200 has to win about 67 percent of the time '
+    'just to break even, and a team at +150 about 40 percent. If your own read of the game is not clearly better '
+    'than that, the bet is not worth much at that price, however confident you feel.</p>\n'
+    '            <h3>What the research on each card means</h3>\n'
+    '            <p>When games are posted, each card shows both clubs\' points scored and allowed per game this season, '
+    'their last five results (hover over each one for the score), home and road records, up to three names from each injury '
+    'report, and the TrustMyRecord model\'s projected score and win probability. When the model sits a point or '
+    'more away from the spread, or two points away from the total, the card says so. The full research page for '
+    'each matchup is one click away.</p>\n'
+    '            <h3>Things worth checking yourself</h3>\n'
+    '            <p><b>Rest and travel.</b> NBA teams often play on consecutive nights. The second game of a back to back, '
+    'especially on the road, is where tired legs and rested stars show up, so look at when each team last played.</p>\n'
+    '            <p><b>Late injury news.</b> Availability can change right up to tip off, and a star who sits moves the '
+    'spread more than any stat on the card. Treat the injury names as a starting point and check again close to '
+    'game time.</p>\n'
+    '            <p><b>Pace and scoring.</b> Two fast teams tend to push a total up and two slow teams pull it down. Points '
+    'scored and allowed per game give a quick read on this, but early in the season the sample is small and can '
+    'mislead.</p>\n'
+    '            <p><b>Home and road splits.</b> Some teams are much better in their own building. Compare the home '
+    'record of the home side with the road record of the visitor, not just the two overall records.</p>\n'
+    '            <p><b>Recent form against the season.</b> Five games is a small window. A winning run against weak '
+    'opponents says less than a close loss to a good team, so look at who the results came against.</p>\n'
+    '            <h3>Why the board can be empty</h3>\n'
+    '            <p>Between seasons, on days with no games, and before sportsbooks post the next slate, there is nothing '
+    'to show. The board fills in on its own as soon as the sportsbook feed carries NBA lines, and the update time '
+    'at the top of the page shows when it was last built.</p>\n'
+    '            </div>\n')
+
+
 def render(bld, sport, games, built_at, hist_by_pair=None, extras=None):
     S = bld.SPORTS[sport]
     label = S["label"]
@@ -582,6 +625,8 @@ def render(bld, sport, games, built_at, hist_by_pair=None, extras=None):
          ('        <p class="hx-lede">%s</p>\n' % esc(lede)) if lede else "",
          bld.gotw_block(sport),
          '        <section class="hx-sec">\n', tiles, body, '        </section>\n',
+         ui.section("How to read the NBA board", NBA_GUIDE, eyebrow="Evergreen guide")
+         if sport == "nba" else "",
          ui.section("Earlier %s matchups" % label,
                     ui.links(bld.earlier_matchups(sport, {bld.game_url(sport, g) for g in games}))
                     if hasattr(bld, "earlier_matchups") else "",
