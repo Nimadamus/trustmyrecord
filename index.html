@@ -2339,7 +2339,7 @@ a.tkact-welcome:hover .tkact-mem b{color:#fff}
 
 
 
-<div class="ticker"><div class="ticker-in"><span class="tlbl"><span class="bl"></span>Today</span><button type="button" class="tk-nav tk-prev" aria-label="Previous games" hidden>&lsaquo;</button><div class="ticker-games" data-slate-date="" aria-busy="true"><div class="ticker-track"><div class="ticker-page"><span class="gm is-skel" aria-hidden="true"><i class="sk a"></i><i class="sk b"></i><i class="sk c"></i></span><span class="gm is-skel" aria-hidden="true"><i class="sk a"></i><i class="sk b"></i><i class="sk c"></i></span><span class="gm is-skel" aria-hidden="true"><i class="sk a"></i><i class="sk b"></i><i class="sk c"></i></span><span class="gm is-skel" aria-hidden="true"><i class="sk a"></i><i class="sk b"></i><i class="sk c"></i></span><span class="gm is-skel" aria-hidden="true"><i class="sk a"></i><i class="sk b"></i><i class="sk c"></i></span><span class="sr-only" role="status">Loading today&rsquo;s MLB slate&hellip;</span></div></div></div><div class="tkcenter"><div class="tkcontest" role="status"><span class="tkc-ic" aria-hidden="true">&#9733;</span><span class="tkc-msg"><b>The contest is live</b><span>$2,500 · 50 MLB picks</span></span><a class="tkc-go" href="/sportsbook/?contest=justbet-mlb">Enter here</a></div><div class="tkslogan" role="note"><span class="tkslogan-lead">In a world where the truth can get buried beneath the noise,</span><span class="tkslogan-end">Trust My Record is where <em>results do the talking</em>.</span></div></div><div class="tkact" id="tmrActivity"><span class="tkact-lbl"><span class="bl"></span>Live on TMR</span><div class="tkact-slot"></div></div><button type="button" class="tk-nav tk-next" aria-label="Next games" hidden>&rsaquo;</button></div></div></div>
+<div class="ticker"><div class="ticker-in"><span class="tlbl"><span class="bl"></span>Today</span><button type="button" class="tk-nav tk-prev" aria-label="Previous games" hidden>&lsaquo;</button><div class="ticker-games" data-slate-date="" aria-busy="true"><div class="ticker-track"><div class="ticker-page"><span class="gm is-skel" aria-hidden="true"><i class="sk a"></i><i class="sk b"></i><i class="sk c"></i></span><span class="gm is-skel" aria-hidden="true"><i class="sk a"></i><i class="sk b"></i><i class="sk c"></i></span><span class="gm is-skel" aria-hidden="true"><i class="sk a"></i><i class="sk b"></i><i class="sk c"></i></span><span class="gm is-skel" aria-hidden="true"><i class="sk a"></i><i class="sk b"></i><i class="sk c"></i></span><span class="gm is-skel" aria-hidden="true"><i class="sk a"></i><i class="sk b"></i><i class="sk c"></i></span><span class="sr-only" role="status">Loading today&rsquo;s MLB slate&hellip;</span></div></div></div><div class="tkcenter"><div class="tkcontest" role="status"><span class="tkc-ic" aria-hidden="true">&#10003;</span><span class="tkc-msg"><b>Watchdog</b><span id="tkWdMsg">Every handicapper claim, checked</span></span><a class="tkc-go" href="/premium/#watchdog">See who&rsquo;s real</a></div><div class="tkslogan" role="note"><span class="tkslogan-lead">In a world where the truth can get buried beneath the noise,</span><span class="tkslogan-end">Trust My Record is where <em>results do the talking</em>.</span></div></div><div class="tkact" id="tmrActivity"><span class="tkact-lbl"><span class="bl"></span>Live on TMR</span><div class="tkact-slot"></div></div><button type="button" class="tk-nav tk-next" aria-label="Next games" hidden>&rsaquo;</button></div></div></div>
 
 <section class="hero"><div class="hero-bg" aria-hidden="true"></div>
   <div class="grain"></div>
@@ -2430,20 +2430,33 @@ a.tkact-welcome:hover .tkact-mem b{color:#fff}
   <!-- COMPETE ROW -->
   <div class="compete">
     <section class="ccard feat">
-      <div class="cch"><span class="ic" style="background:rgba(255,201,60,.15);border:1px solid rgba(255,201,60,.38)">&#127942;</span><h4>Free <em>$2,500</em> Contest</h4><span class="st">Running</span></div>
+      <!-- HOME_WATCHDOG_20260930 (Nima): replaces the finished JustBet contest card. Numbers are live from
+           GET /api/pro/watchdog/stats (the Watchdog ledger); nothing is typed in. -->
+      <div class="cch"><span class="ic" style="background:rgba(255,201,60,.15);border:1px solid rgba(255,201,60,.38)">&#128269;</span><h4>Handicapper <em>Watchdog</em></h4><span class="st">Live</span></div>
       <div class="cbody">
-        <p>Fifty MLB picks. Every entry locks before first pitch and is auto-graded by net units on a public leaderboard. Top three finishers paid.</p>
-        <div class="kv">
-          <span class="k"><b class="num g">$2,500</b><span>Prize Pool</span></span>
-          <span class="k"><b class="num">50</b><span>Picks</span></span>
-          <span class="k"><b class="num">$0</b><span>To Enter</span></span>
+        <p>Anyone can claim they hit 70%. We check. The Watchdog tracks public handicappers across Reddit, Covers, X and the betting forums, grades every qualifying pick on the final score, and keeps the whole record, wins and losses. No deleted posts, no cherry picked screenshots.</p>
+        <div class="kv" id="homeWdKv">
+          <span class="k"><b class="num g" data-hwd="accounts">&nbsp;</b><span>Tracked</span></span>
+          <span class="k"><b class="num" data-hwd="platforms">&nbsp;</b><span>Sources</span></span>
+          <span class="k"><b class="num" data-hwd="graded_picks">&nbsp;</b><span>Graded Picks</span></span>
         </div>
         <div class="grow">
-          <div class="crow"><i>&#10003;</i>Picks lock before first pitch, no edits</div>
-          <div class="crow"><i>&#10003;</i>Auto-graded by net units</div>
-          <div class="crow"><i>&#10003;</i>Public leaderboard, top 3 paid</div>
+          <div class="crow"><i>&#10003;</i>Every qualifying pick graded on the final score</div>
+          <div class="crow"><i>&#10003;</i>Full records, losses included, linked to the original post</div>
+          <div class="crow"><i>&#10003;</i>Pending picks before the game with TMR Pro</div>
         </div>
-        <a class="btn d" style="width:100%;margin-top:18px" href="/contests/justbet-mlb/">Enter the Contest</a>
+        <a class="btn d" style="width:100%;margin-top:18px" href="/premium/#watchdog">Open the Watchdog</a>
+        <a href="/around-the-web/" style="display:block;margin-top:10px;text-align:center;font-weight:700;font-size:14px;color:#8CC4FF;text-decoration:none">Look up a handicapper &rarr;</a>
+        <script>
+        (function () {
+          fetch('https://trustmyrecord-api.onrender.com/api/pro/watchdog/stats').then(function (r) { if (!r.ok) throw 0; return r.json(); }).then(function (d) {
+            if (!d || !d.accounts) return;
+            var f = function (v) { return Number(v).toLocaleString('en-US'); };
+            document.querySelectorAll('[data-hwd]').forEach(function (el) { var v = d[el.getAttribute('data-hwd')]; if (v != null) el.textContent = f(v); });
+            var m = document.getElementById('tkWdMsg'); if (m) m.textContent = f(d.accounts) + ' handicappers tracked';
+          }).catch(function () { });
+        })();
+        </script>
       </div>
     </section>
 
@@ -2544,7 +2557,7 @@ a.tkact-welcome:hover .tkact-mem b{color:#fff}
 
 <footer><div class="in">
   <span>&copy; 2026 TrustMyRecord &mdash; transparent sports records, locked picks, verified results.</span>
-  <span><a href="/how-it-works/">How It Works</a><a href="/rules/">Rules</a><a href="/leaderboards/">Leaderboards</a><a href="/marketplace/" style="white-space:nowrap">Pick Marketplace</a><a href="/contests/justbet-mlb/">Contest</a><a href="/best-online-sportsbooks/" style="white-space:nowrap">Best Sportsbooks</a><a href="/tmr-coin/" style="white-space:nowrap">TMR Coin</a><a href="/contact/">Contact</a><a href="/about/">About</a><a href="/methodology/">Methodology</a><a href="/responsible-gambling/" style="white-space:nowrap">Responsible Gambling</a><a href="/terms/">Terms</a><a href="/privacy/">Privacy</a></span>
+  <span><a href="/how-it-works/">How It Works</a><a href="/rules/">Rules</a><a href="/leaderboards/">Leaderboards</a><a href="/marketplace/" style="white-space:nowrap">Pick Marketplace</a><a href="/premium/#watchdog" style="white-space:nowrap">Handicapper Watchdog</a><a href="/best-online-sportsbooks/" style="white-space:nowrap">Best Sportsbooks</a><a href="/tmr-coin/" style="white-space:nowrap">TMR Coin</a><a href="/contact/">Contact</a><a href="/about/">About</a><a href="/methodology/">Methodology</a><a href="/responsible-gambling/" style="white-space:nowrap">Responsible Gambling</a><a href="/terms/">Terms</a><a href="/privacy/">Privacy</a></span>
 </div></footer>
 
 
