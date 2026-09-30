@@ -48,6 +48,7 @@ Add --dry-run to print the eligible/excluded sets without writing files.
 import gzip, json, os, sys, html, urllib.request, urllib.error, urllib.parse, datetime, re, shutil
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from prerender_report import record
+import profile_research
 
 API   = "https://trustmyrecord-api.onrender.com/api"
 SITE  = "https://trustmyrecord.com"
@@ -690,7 +691,15 @@ def derive(picks):
     sport_rows = sorted(by.items(), key=lambda kv: sum(kv[1]), reverse=True)
     # recent 5 graded by graded_at desc
     graded_sorted = sorted(graded, key=lambda p: p.get("graded_at") or "", reverse=True)
+    # PROFILE_RESEARCH_20260929: the research section needs the whole graded
+    # list (teams, earlier picks). Keyed by the member the picks belong to.
+    for p in graded_sorted[:1]:
+        if p.get("username"):
+            GRADED_BY_USER[p["username"]] = graded_sorted
     return graded_sorted[:5], avg_amer, sport_rows, len(graded)
+
+
+GRADED_BY_USER = {}
 
 _HEX_RE = re.compile(r"^#[0-9a-fA-F]{6}$")
 
@@ -1033,6 +1042,11 @@ def page_html(d, recent, avg_amer, sport_rows, m=None, siblings=None, awards=Non
             f'Full SEO feature listing unlocks at {GRADED_MIN} graded picks; '
             'the stats above are the live graded totals and update automatically '
             'as picks settle.</p>')
+    # PROFILE_RESEARCH_20260929: research section from the metrics aggregator and
+    # the graded pick list. Nothing invented; empty modules are omitted.
+    research_html = profile_research.research_html(
+        disp, un, m, GRADED_BY_USER.get(un) or [], tp, sport_label, short_team,
+        joined=member_since(d.get("created_at")))
     # "How this record is verified" describes an existing record. Don't assert one
     # for a member who has never had a pick graded.
     how_html = "" if tp < 1 else (
@@ -1091,6 +1105,7 @@ def page_html(d, recent, avg_amer, sport_rows, m=None, siblings=None, awards=Non
   {recent_html}
   {related_html}
   </div>
+  {research_html}
   {building_html}
   {how_html}
   <a class="u-cta" href="/register/">Start Your Free Verified Record</a>
