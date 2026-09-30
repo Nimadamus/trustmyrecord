@@ -22,7 +22,7 @@ SITEMAP_BEGIN = "BEGIN_NHL_FEATURED_URLS"
 SITEMAP_END = "END_NHL_FEATURED_URLS"
 HOME_MARKER = "homeNhlFeatured"
 # Bump when the markup changes, so pages whose data did not move still re-render.
-RENDER_VERSION = "2026-09-29.labels"
+RENDER_VERSION = "2026-09-29.no-moneypuck"
 OG_IMAGE = SITE + "/static/og/og-home.png"
 esc = ui.esc
 
@@ -317,27 +317,6 @@ def comparison(ctx):
             out += '            <h3 class="fg-h3">%s season rates (prior season)</h3>\n' % esc(yr)
         out += ui.compare(uictx, srows, note="%s, all situations. League ranks out of 32. Source: NHL.com team stats%s." % (
             s["label"], ", through %d games" % min(ra["gp"], rh["gp"]) if s.get("current") else ""))
-    adv = ctx.get("adv") or {}
-    if adv:
-        xa, xh = adv["away"], adv["home"]
-        arows = [r for r in (
-            _row("Expected goals for per game", xa, xh, "xgf", "xgf", lambda v: fg.num(v, 2)),
-            _row("Expected goals against per game", xa, xh, "xga", "xga", lambda v: fg.num(v, 2), False),
-            _row("Expected goals share", xa, xh, "xgpct", "xgpct", fg.pct),
-            _row("High danger shots for per game", xa, xh, "hdf", "hdf", lambda v: fg.num(v, 1)),
-            _row("High danger shots against per game", xa, xh, "hda", "hda", lambda v: fg.num(v, 1), False),
-            _row("5 on 5 shot attempt share", xa, xh, "cf5", "cf5", fg.pct),
-            _row("5 on 5 expected goals share", xa, xh, "xgpct5", "xgpct5", fg.pct),
-            _row("5 on 5 goals for per game", xa, xh, "gf5", "gf5", lambda v: fg.num(v, 2)),
-            _row("5 on 5 goals against per game", xa, xh, "ga5", "ga5", lambda v: fg.num(v, 2), False),
-        ) if r]
-        adv_yr = adv["label"].replace(" regular season", "")
-        if adv_yr != ctx["season_label"]:
-            for r in arows:
-                r["label"] = "%s %s" % (adv_yr, r["label"][0].lower() + r["label"][1:])
-        out += ('            <h3 class="fg-h3">Advanced and 5 on 5%s</h3>\n' % (
-            (", %s (prior season)" % esc(adv_yr)) if adv_yr != ctx["season_label"] else "") +
-                ui.compare(uictx, arows, note="%s. Expected goals and high danger shots from MoneyPuck.com." % adv["label"]))
     if not out:
         return ""
     lede = None
@@ -592,8 +571,6 @@ def sources_block(ctx):
     has = lambda p: any(k.startswith(p) for k in s)
     if has("schedule") or has("standings"):
         names.append("NHL.com (schedule, standings, results, team and goalie stats)")
-    if has("moneypuck") and ctx.get("adv"):
-        names.append("MoneyPuck.com (expected goals, high danger shots, 5 on 5)")
     if ctx.get("goalies") and any((ctx["goalies"].get(x) or {}).get("status") in ("confirmed", "expected") for x in ("away", "home")):
         names.append("Daily Faceoff (starting goalie reports)")
     if ctx.get("injuries"):

@@ -8,7 +8,7 @@ minutes, around the clock. Each run:
      hockey day (Eastern time, rolling over at 5 AM ET so a late West Coast
      game still belongs to the night it was played)
   2. reads standings, both teams' full results, league wide team stats,
-     MoneyPuck expected goals, the TMR sportsbook board, Daily Faceoff's
+     the TMR sportsbook board, Daily Faceoff's
      starting goalie report, ESPN's injury report and the TMR NHL simulator
   3. scores every game on the day and selects the featured game ONCE (a
      selection is sticky; only a postponement moves it)
@@ -28,9 +28,7 @@ core feed fails, which fails the workflow and raises the alert issue.
 """
 
 import argparse
-import csv
 import datetime as dt
-import io
 import json
 import os
 import re
@@ -59,7 +57,6 @@ NHL_STATS = "https://api.nhle.com/stats/rest/en"
 TMR_API = "https://trustmyrecord-api.onrender.com/api"
 ESPN_INJ = "https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/injuries"
 DFO = "https://www.dailyfaceoff.com/starting-goalies/%s"
-MONEYPUCK = "https://moneypuck.com/moneypuck/playerData/seasonSummary/%d/regular/teams.csv"
 
 FINAL_STATES = ("OFF", "FINAL")
 LIVE_STATES = ("LIVE", "CRIT")
@@ -170,16 +167,6 @@ def fetch_club_schedule(src, abbr, season_id):
     data = src.try_get("club_%s_%d" % (abbr, season_id),
                        NHL + "/club-schedule-season/%s/%d" % (abbr, season_id), browser=True) or {}
     return data.get("games") or []
-
-
-def fetch_moneypuck(src, season_start_year):
-    text = src.try_get("moneypuck_%d" % season_start_year, MONEYPUCK % season_start_year, kind="text", browser=True)
-    if not text or "team" not in text[:200]:
-        return {}
-    out = {}
-    for r in csv.DictReader(io.StringIO(text)):
-        out.setdefault(r.get("team"), {})[r.get("situation")] = r
-    return out
 
 
 def fetch_board(src):
@@ -322,9 +309,7 @@ def league_table(rows, names):
 
 
 STAT_DIRECTION = {"gfpg": True, "gapg": False, "sfpg": True, "sapg": False, "shpct": True, "svpct": True,
-                  "pp": True, "pk": True, "fo": True, "gdpg": True, "sdpg": True, "ptpct": True,
-                  "xgf": True, "xga": False, "xgpct": True, "hdf": True, "hda": False,
-                  "cf5": True, "xgpct5": True, "gf5": True, "ga5": False}
+                  "pp": True, "pk": True, "fo": True, "gdpg": True, "sdpg": True, "ptpct": True}
 
 
 def with_ranks(table):
@@ -335,27 +320,6 @@ def with_ranks(table):
         row["rank"] = {k: ranks[k].get(r["_team"]) for k in ranks if r.get(k) is not None}
         out[r["_team"]] = row
     return out
-
-
-def moneypuck_table(mp):
-    rows = []
-    for ab, sits in (mp or {}).items():
-        a, five = sits.get("all"), sits.get("5on5")
-        if not a:
-            continue
-        try:
-            gp = float(a["games_played"])
-            row = {"_team": ab, "gp": int(gp),
-                   "xgf": round(float(a["xGoalsFor"]) / gp, 4), "xga": round(float(a["xGoalsAgainst"]) / gp, 4),
-                   "xgpct": float(a["xGoalsPercentage"]),
-                   "hdf": round(float(a["highDangerShotsFor"]) / gp, 4), "hda": round(float(a["highDangerShotsAgainst"]) / gp, 4)}
-            if five:
-                row.update({"cf5": float(five["corsiPercentage"]), "xgpct5": float(five["xGoalsPercentage"]),
-                            "gf5": round(float(five["goalsFor"]) / gp, 4), "ga5": round(float(five["goalsAgainst"]) / gp, 4)})
-        except (KeyError, ValueError, ZeroDivisionError):
-            continue
-        rows.append(row)
-    return rows
 
 
 # ================================================================== odds
@@ -954,7 +918,7 @@ def build_trends(ctx):
     return out
 
 
-def build_context(src, g, standings, names, tmr_teams, tables, mps, board, lines, dfo_rows, inj, now, state_game):
+def build_context(src, g, standings, names, tmr_teams, tables, board, lines, dfo_rows, inj, now, state_game):
     cur_sid = g["season"]
     a_abbr, h_abbr = g["awayTeam"]["abbrev"], g["homeTeam"]["abbrev"]
     sched = {}
@@ -984,13 +948,6 @@ def build_context(src, g, standings, names, tmr_teams, tables, mps, board, lines
         rows_ = list(tbl.values())
         stats["avg"] = {k: round(sum(r[k] for r in rows_ if r.get(k) is not None) / max(1, len([r for r in rows_ if r.get(k) is not None])), 4)
                         for k in ("gfpg", "gapg", "sfpg", "sapg", "pp", "pk", "shpct", "svpct")}
-    mp_key = "cur" if use_cur and mps["cur"].get(a_abbr) else "prev"
-    adv = {}
-    if mps[mp_key].get(a_abbr) and mps[mp_key].get(h_abbr):
-        adv = {"away": mps[mp_key][a_abbr], "home": mps[mp_key][h_abbr],
-               "label": ctx_label(cur_sid if mp_key == "cur" else prev_season(cur_sid), mp_key == "cur")}
-        mrows = list(mps[mp_key].values())
-        adv["avg"] = {"pace": round(sum(r["xgf"] + r["xga"] for r in mrows) / len(mrows), 4)}
 
     # Odds: the live board when it is current, else the last good read if it
     # is under ODDS_MAX_AGE_H old, else nothing.
@@ -1031,7 +988,7 @@ def build_context(src, g, standings, names, tmr_teams, tables, mps, board, lines
                for b_ in g.get("tvBroadcasts") or []],
         "state": g.get("gameState"), "schedule_state": g.get("gameScheduleState"),
         "away": away, "home": home,
-        "stats": stats, "adv": adv,
+        "stats": stats,
         "h2h": h2h_rows(sched, a_abbr, h_abbr, cur_sid, g["id"])[:6],
         "meeting_n": meeting_number(sched, a_abbr, h_abbr, cur_sid, g),
         "division_game": bool(away["standing"]["division"] and away["standing"]["division"] == home["standing"]["division"]),
@@ -1105,9 +1062,6 @@ def run(now=None, dry=False):
               "prev": with_ranks(league_table(fetch_team_stats(src, prev_season(cur_sid)), names))}
     if not tables["prev"]:
         raise fg.FetchError("league team stats unavailable")
-    y = int(str(cur_sid)[:4])
-    mps = {"cur": with_ranks(moneypuck_table(fetch_moneypuck(src, y))),
-           "prev": with_ranks(moneypuck_table(fetch_moneypuck(src, y - 1)))}
     board = fetch_board(src)
     lines = fg.load_json(LINES, {})
     lines_changed = snapshot_lines(lines, games, board, now)
@@ -1175,7 +1129,7 @@ def run(now=None, dry=False):
         if sg["date"] not in dfo_cache:
             dfo_cache[sg["date"]] = fetch_dfo(src, gdate)
         dfo_rows = dfo_cache[sg["date"]]
-        ctx = build_context(src, g, standings, names, tmr_teams, tables, mps, board, lines, dfo_rows or [], inj,
+        ctx = build_context(src, g, standings, names, tmr_teams, tables, board, lines, dfo_rows or [], inj,
                             now, sg)
         # Volatile sections ride on their last good value for a few hours.
         ctx["odds"] = section_cache(sg, "odds", ctx["odds"], now, ODDS_MAX_AGE_H) if ctx["state"] in ("FUT", "PRE") else ctx["odds"]

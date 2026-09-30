@@ -197,7 +197,7 @@ def players(ctx):
 
 
 def offense(ctx):
-    s, adv = ctx.get("stats") or {}, ctx.get("adv") or {}
+    s = ctx.get("stats") or {}
     if not s:
         return []
     a, h = ctx["away"], ctx["home"]
@@ -217,21 +217,11 @@ def offense(ctx):
             "way." if gap > 0.012 and rs["sfpg"] > rd["sfpg"] else
             "A finishing gap that wide tends to shrink over a long season, so don't lean on it too hard." if gap > 0.012
             else "Neither side relied on unusual finishing, so shot volume carries most of the weight."))
-    if adv:
-        xa, xh = adv["away"], adv["home"]
-        lbl = adv["label"].replace(" regular season", "")
-        paras.append("MoneyPuck's expected goals model tells the same story from a different angle. In %s %s created "
-                     "%s expected goals a game (%s) with %s high danger shots, while %s created %s (%s) with %s. "
-                     "Those attacks now run into %s defense, which allowed %s expected goals a game, and %s, which "
-                     "allowed %s." % (
-                         lbl, the(a), fg.num(xa["xgf"]), _rk(xa, "xgf"), fg.num(xa["hdf"], 1), the(h), fg.num(xh["xgf"]),
-                         _rk(xh, "xgf"), fg.num(xh["hdf"], 1), poss(h), fg.num(xh["xga"]), poss(a),
-                         fg.num(xa["xga"])))
     return paras
 
 
 def defense(ctx):
-    s, adv = ctx.get("stats") or {}, ctx.get("adv") or {}
+    s = ctx.get("stats") or {}
     if not s:
         return []
     a, h = ctx["away"], ctx["home"]
@@ -247,13 +237,6 @@ def defense(ctx):
                      "for %s, and the team that owns the puck usually decides what kind of game this is." % (
                          the(better, True), rb["sdpg"], _in(ctx, s.get("current")), rw["sdpg"],
                          the(h if better is a else a)))
-    if adv and adv["away"].get("hda") is not None and adv["home"].get("hda") is not None:
-        xa, xh = adv["away"], adv["home"]
-        tight = a if xa["hda"] < xh["hda"] else h
-        paras.append("Around the net, %s were the stingier side%s, allowing %s high danger shots a game to %s %s." % (
-            the(tight), "" if adv["label"].startswith(ctx["season_label"]) else " in %s" % adv["label"].split(" ")[0],
-            fg.num(min(xa["hda"], xh["hda"]), 1), poss(h if tight is a else a),
-            fg.num(max(xa["hda"], xh["hda"]), 1)))
     return paras
 
 
@@ -373,27 +356,30 @@ def injuries(ctx):
 
 
 def tactics(ctx):
-    adv = ctx.get("adv") or {}
+    s = ctx.get("stats") or {}
+    if not s:
+        return []
     a, h = ctx["away"], ctx["home"]
-    paras = []
-    if adv and adv["away"].get("cf5") is not None and adv["home"].get("cf5") is not None:
-        xa, xh = adv["away"], adv["home"]
-        lbl = adv["label"].replace(" regular season", "")
-        paras.append("At five on five in %s, %s took %s of the shot attempts in their games and %s of the expected "
-                     "goals. %s sat at %s and %s." % (lbl, the(a), fg.pct(xa["cf5"]), fg.pct(xa.get("xgpct5")),
-                                                     the(h, True), fg.pct(xh["cf5"]), fg.pct(xh.get("xgpct5"))))
-        tilt = a if (xa.get("xgpct5") or 0) > (xh.get("xgpct5") or 0) else h
-        other = h if tilt is a else a
-        paras.append("So the likely shape of this one has %s spending more time in the offensive zone, and %s needing "
-                     "their goaltender and their transition game to make fewer looks count." % (the(tilt), the(other)))
-        avg = (adv.get("avg") or {}).get("pace")
-        if avg:
-            both = (xa["xgf"] + xa["xga"] + xh["xgf"] + xh["xga"]) / 2
-            paras.append("Games involving these two produced %s expected goals a night on average, against a league "
-                         "norm of %s. %s" % (fg.num(both), fg.num(avg),
-                                             "That's a higher event pairing than usual." if both > avg * 1.03 else
-                                             "That's a lower event pairing than usual." if both < avg * 0.97 else
-                                             "That's right around league average for pace."))
+    ra, rh = s["away"], s["home"]
+    if None in (ra.get("sfpg"), ra.get("sapg"), rh.get("sfpg"), rh.get("sapg")):
+        return []
+    when = _in(ctx, s.get("current"))
+    paras = ["By volume%s, %s took %s shots a game and allowed %s, while %s took %s and allowed %s." % (
+        when, the(a), fg.num(ra["sfpg"], 1), fg.num(ra["sapg"], 1), the(h), fg.num(rh["sfpg"], 1),
+        fg.num(rh["sapg"], 1))]
+    tilt = a if (ra["sfpg"] - ra["sapg"]) > (rh["sfpg"] - rh["sapg"]) else h
+    other = h if tilt is a else a
+    paras.append("So the likely shape of this one has %s spending more time in the offensive zone, and %s needing "
+                 "their goaltender and their transition game to make fewer looks count." % (the(tilt), the(other)))
+    avg = s.get("avg") or {}
+    if avg.get("sfpg") and avg.get("sapg"):
+        both = (ra["sfpg"] + ra["sapg"] + rh["sfpg"] + rh["sapg"]) / 2
+        norm = avg["sfpg"] + avg["sapg"]
+        paras.append("Games involving these two averaged %s total shots on goal, against a league norm of %s. %s" % (
+            fg.num(both, 1), fg.num(norm, 1),
+            "That's a higher event pairing than usual." if both > norm * 1.03 else
+            "That's a lower event pairing than usual." if both < norm * 0.97 else
+            "That's right around league average for pace."))
     return paras
 
 
