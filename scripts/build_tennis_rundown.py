@@ -162,6 +162,7 @@ def page(doc):
                    "name": "%s vs %s" % (m["players"][0]["name"], m["players"][1]["name"]),
                    "startDate": m.get("start_utc"),
                    "sport": "Tennis",
+                   "eventStatus": "https://schema.org/EventScheduled",
                    "location": {"@type": "Place", "name": m.get("venue") or "Unlisted"}}
                   for m in matches],
     }

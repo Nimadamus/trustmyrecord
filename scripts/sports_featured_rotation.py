@@ -25,6 +25,7 @@ import unicodedata
 
 import nfl_featured_rotation as nfl
 import dateless_slug
+from schema_event import event_status, place_node
 
 SOURCE = "rotation"
 URL_STORE = "data/featured-urls.json"
@@ -106,6 +107,7 @@ def _flatten(data, league):
                         "league": league,
                         "round": comp.get("round"),
                         "notes": event.get("name") or "",
+                        "venue": event.get("venue") or {},
                     }
                     out.append(synth)
             continue
@@ -281,6 +283,10 @@ def normalize(event, sport):
     addr = (comp.get("venue") or event.get("venue") or {}).get("address") or {}
     if not addr and isinstance(event.get("venue"), dict):
         addr = event["venue"].get("address") or {}
+    # EVENT_LOCATION_20260930: Search Console flagged 'Missing field
+    # "location"' on these pages. The venue is read from the feed, never made up.
+    venue_node = comp.get("venue") or event.get("venue") or {}
+    venue_name = str(venue_node.get("fullName") or venue_node.get("displayName") or "").strip()
     away_s, home_s = _side(away), _side(home)
     if not away_s["display"] or not home_s["display"]:
         return None
@@ -304,6 +310,8 @@ def normalize(event, sport):
         "neutral": bool(comp.get("neutralSite")) or sport == "tennis",
         "country": addr.get("country") or "",
         "city": addr.get("city") or "",
+        "venue": venue_name,
+        "venue_address": addr,
         "notes": str(event.get("notes") or ""),
         "spread": spread,
         "favored": favored,
@@ -782,7 +790,12 @@ def _write_page(root, sport, game, spec, href, headline, lede, when_line, body=N
         "url": canonical,
         "homeTeam": {"@type": "SportsTeam", "name": game["home"]["display"]},
         "awayTeam": {"@type": "SportsTeam", "name": game["away"]["display"]},
+        # EVENT_STATUS_20260930: Search Console 'Missing field "eventStatus"'.
+        "eventStatus": event_status(game.get("state")),
     }
+    place = place_node(game.get("venue") or game.get("city"), game.get("venue_address"))
+    if place:
+        event["location"] = place
     ld = featured_ld(event, title.replace(" | TrustMyRecord", ""), description, canonical,
                      dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"))
     nav = _asset(root, "static/js/tmr-ds-nav.js")
