@@ -71,9 +71,8 @@ def _markets(ctx):
         m["total"] = {"point": tot.get("point"), "price": fg.american(tot.get("over")),
                       "sub": "Over %s" % fg.american(tot.get("over")), "sub2": "Under %s" % fg.american(tot.get("under"))}
     if o.get("book"):
-        upd = fg.parse_utc(o.get("updated"))
-        m["book_note"] = "Prices from %s%s. Lines move, so check the book before you act on any number here." % (
-            o["book"], (", as of %s" % fg.pacific_stamp(upd)) if upd else "")
+        m["book_note"] = ("Prices from %s on the TMR board, checked every 30 minutes. Lines move, so check the book "
+                          "before you act on any number here." % o["book"])
     return m
 
 

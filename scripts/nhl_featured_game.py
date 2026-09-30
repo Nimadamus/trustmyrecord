@@ -443,8 +443,8 @@ def snapshot_lines(lines, games, board, now):
             rec["moves"].append(snap)
             del rec["moves"][:-24]
             changed = True
-        if rec.get("last", {}).get("at") != snap["at"]:
-            rec["last"] = snap
+        if sig(rec.get("last") or {}) != sig(snap):
+            rec["last"] = snap          # the latest DISTINCT price; unchanged prices write nothing
             changed = True
     return changed
 
@@ -1006,6 +1006,8 @@ def build_context(src, g, standings, names, tmr_teams, tables, mps, board, lines
         if at and now - at <= dt.timedelta(hours=ODDS_MAX_AGE_H):
             odds = {"book": rec["last"]["book"], "ml": rec["last"]["ml"], "pl": rec["last"]["pl"],
                     "total": rec["last"]["total"], "updated": rec["last"]["at"]}
+    if odds:
+        odds = {k: v for k, v in odds.items() if k != "updated"}   # freshness checked above; not page data
     line_track = None
     if rec.get("first"):
         line_track = {"first": rec["first"], "last": rec.get("last") or rec["first"], "moves": rec.get("moves") or []}
@@ -1073,11 +1075,15 @@ def section_cache(state_game, key, value, now, max_h):
     """A volatile section falls back to its last good value while it is still
     young enough to be honest, and is dropped after that."""
     cache = state_game.setdefault("cache", {})
-    if value:
-        cache[key] = {"at": fg.iso(now), "data": value}
-        return value
     old = cache.get(key)
-    if old and now - fg.parse_utc(old["at"]) <= dt.timedelta(hours=max_h):
+    if value:
+        # The confirmation time is rewritten at most every two hours when the
+        # value itself has not changed, so a quiet run does not commit.
+        stale_mark = not old or now - fg.parse_utc(old["at"]) >= dt.timedelta(hours=2)
+        if not old or fg.content_hash(old.get("data")) != fg.content_hash(value) or stale_mark:
+            cache[key] = {"at": fg.iso(now), "data": value}
+        return value
+    if old and now - fg.parse_utc(old["at"]) <= dt.timedelta(hours=max(1, max_h - 2)):
         return old["data"]
     return value
 
@@ -1179,7 +1185,10 @@ def run(now=None, dry=False):
         ctx["model"] = section_cache(sg, "model", ctx["model"], now, 24)
         ctx["trends"] = build_trends(ctx)
         ctx["article"] = article.build(ctx)
-        digest = fg.content_hash({k: v for k, v in ctx.items() if k not in ("updated_pt",)})
+        # Fetch times are not data: a price the book has not moved does not
+        # make the page new, so they stay out of the change hash.
+        stable = dict(ctx, odds=dict(ctx["odds"] or {}, updated=None) if ctx.get("odds") else None)
+        digest = fg.content_hash({k: v for k, v in stable.items() if k not in ("updated_pt", "sources")})
         if digest != sg.get("hash"):
             sg["hash"] = digest
             sg["updated"] = fg.iso(now)
