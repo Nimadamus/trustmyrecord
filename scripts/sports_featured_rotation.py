@@ -979,6 +979,78 @@ def _sync_hub_links(root, store):
     return True
 
 
+# ---------------------------------------------------------------- research preview
+
+# FEATURED_PREVIEW_20260929. Nima, 2026-09-29: the Featured Matchup pages were
+# 50 word stubs and AdSense reviewed the site as low value content. Every page
+# this rotation owns carries a research preview from scripts/featured_preview.py
+# between these markers. URL, title, meta description, canonical and JSON-LD
+# are never touched. A game still to be played refreshes every few hours so the
+# price, injuries and starters stay current; a finished game is written once
+# with its result and then left alone.
+PREVIEW_BEGIN = "<!--FEATURED_PREVIEW-->"
+PREVIEW_END = "<!--/FEATURED_PREVIEW-->"
+PREVIEW_REFRESH = dt.timedelta(hours=6)
+PREVIEW_FINAL_AFTER = dt.timedelta(hours=4)
+
+
+def enrich_pages(root, store, now=None, get=None, build=None):
+    """Write or refresh the research preview on every rotation page. Returns the
+    number of pages written. A feed error leaves that page exactly as it is."""
+    import featured_preview as fp
+    build = build or fp.build
+    now = now or dt.datetime.now(dt.timezone.utc)
+    written = 0
+    for key, row in sorted(store.items()):
+        href = (row or {}).get("href") or ""
+        parts = key.split(":", 2)
+        if not href or len(parts) != 3:
+            continue
+        sport, league, event_id = parts
+        page = os.path.join(root, href.strip("/").replace("/", os.sep), "index.html")
+        if not os.path.isfile(page):
+            continue
+        with open(page, encoding="utf-8", newline="") as fh:
+            text = fh.read()
+        if MARK not in text or '<div class="links">' not in text:
+            continue
+        found = re.search(r'"startDate":\s*"([^"]+)"', text)
+        kickoff = nfl.parse_utc(found.group(1)) if found else None
+        mark = re.search(r'data-fp-state="(\w+)" data-fp-updated="([^"]+)"', text)
+        if mark:
+            state, updated = mark.group(1), nfl.parse_utc(mark.group(2))
+            if state == "post":
+                continue
+            due_final = kickoff is not None and now >= kickoff + PREVIEW_FINAL_AFTER
+            if updated is not None and now - updated < PREVIEW_REFRESH and not due_final:
+                continue
+        try:
+            out = build(sport, league, event_id, kickoff, get, now)
+        except Exception:  # noqa: BLE001 - one feed must not fail the bake
+            out = None
+        if not out:
+            continue
+        body, state = out
+        block = '%s<section class="fp" data-fp-state="%s" data-fp-updated="%s">%s</section>%s' % (
+            PREVIEW_BEGIN, html.escape(state), now.strftime("%Y-%m-%dT%H:%M:%SZ"), body, PREVIEW_END)
+        if PREVIEW_BEGIN in text and PREVIEW_END in text:
+            updated_text = re.sub(re.escape(PREVIEW_BEGIN) + r".*?" + re.escape(PREVIEW_END),
+                                  lambda _m: block, text, count=1, flags=re.S)
+        else:
+            updated_text = text.replace('<div class="links">', block + '\n<div class="links">', 1)
+        css = fp.CSS.strip("\n") + "\n"
+        if "/*FEATURED_PREVIEW_CSS*/" in updated_text:
+            updated_text = re.sub(r"/\*FEATURED_PREVIEW_CSS\*/.*?/\*/FEATURED_PREVIEW_CSS\*/\n?",
+                                  lambda _m: css, updated_text, count=1, flags=re.S)
+        elif "</style>" in updated_text:
+            updated_text = updated_text.replace("</style>", css + "</style>", 1)
+        if updated_text != text:
+            with open(page, "w", encoding="utf-8", newline="") as fh:
+                fh.write(updated_text)
+            written += 1
+    return written
+
+
 # ---------------------------------------------------------------- apply
 
 def _matchup(game):
@@ -1165,4 +1237,13 @@ def apply_all(reg, now, root, resolver, get=None, write=True):
         changed = True
     if write and _sync_hub_links(root, store):
         changed = True
+    if write:
+        try:
+            enriched = enrich_pages(root, store, now=now, get=get)
+        except Exception as exc:  # noqa: BLE001 - previews never fail the rotation
+            lines.append("featured preview: WARN %s" % exc)
+            enriched = 0
+        if enriched:
+            lines.append("featured preview: wrote %d page%s" % (enriched, "" if enriched == 1 else "s"))
+            changed = True
     return changed, lines
