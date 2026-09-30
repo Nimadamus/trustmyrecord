@@ -28,6 +28,7 @@ core feed fails, which fails the workflow and raises the alert issue.
 """
 
 import argparse
+import copy
 import datetime as dt
 import json
 import os
@@ -38,6 +39,7 @@ import unicodedata
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import featured_game_engine as fg  # noqa: E402
 import nhl_featured_article as article  # noqa: E402
+import nhl_featured_og as og_card  # noqa: E402
 import nhl_featured_render as render  # noqa: E402
 
 ROOT = fg.ROOT
@@ -46,6 +48,7 @@ DATA_DIR = os.path.join(ROOT, "data", "nhl-featured")
 STATE = os.path.join(DATA_DIR, "state.json")
 LINES = os.path.join(DATA_DIR, "lines.json")
 CURRENT = os.path.join(DATA_DIR, "current.json")
+VALIDATION = os.path.join(DATA_DIR, "validation.json")
 ARCHIVE_URL = "/nhl/featured-games/"
 ROLLOVER_HOURS = 5          # the hockey day ends at 5 AM Eastern
 FREEZE_AFTER_FINAL_MIN = 30  # one more pass after the final, then frozen
@@ -163,6 +166,23 @@ def fetch_team_stats(src, season_id):
     return data.get("data") or []
 
 
+# NHL.com's own team reports behind the advanced stats module: 5 on 5 shot
+# attempt shares (Corsi, Fenwick), PDO and zone starts, the real time events,
+# and power play and shorthanded volume. A report that does not answer only
+# drops its own rows.
+EXTRA_REPORTS = ("percentages", "realtime", "powerplay", "penaltykill")
+
+
+def fetch_team_reports(src, season_id):
+    out = {}
+    for rep in EXTRA_REPORTS:
+        url = (NHL_STATS + "/team/%s?isAggregate=false&isGame=false&limit=50&start=0"
+               "&cayenneExp=gameTypeId=2%%20and%%20seasonId=%d" % (rep, season_id))
+        data = src.try_get("team_%s_%d" % (rep, season_id), url, browser=True) or {}
+        out[rep] = {norm(r.get("teamFullName")): r for r in data.get("data") or []}
+    return out
+
+
 def fetch_club_schedule(src, abbr, season_id):
     data = src.try_get("club_%s_%d" % (abbr, season_id),
                        NHL + "/club-schedule-season/%s/%d" % (abbr, season_id), browser=True) or {}
@@ -245,6 +265,21 @@ def record(rows):
             "text": "%d-%d-%d" % (w, l, o), "gf": sum(r["gf"] for r in rows), "ga": sum(r["ga"] for r in rows)}
 
 
+def playoff_line(rows):
+    """Playoff games have no overtime loss column: a loss is a loss."""
+    if not rows:
+        return None
+    w = sum(1 for r in rows if r["res"] == "W")
+    series = []
+    for r in rows:
+        if not series or series[-1]["opp"] != r["opp"]:
+            series.append({"opp": r["opp"], "w": 0, "l": 0})
+        series[-1]["w" if r["res"] == "W" else "l"] += 1
+    for s in series:
+        s["result"] = "won" if s["w"] == 4 else "lost" if s["l"] == 4 else None
+    return {"gp": len(rows), "w": w, "l": len(rows) - w, "text": "%d-%d" % (w, len(rows) - w), "series": series}
+
+
 def streak(rows):
     if not rows:
         return None
@@ -286,9 +321,17 @@ def stat_row(rows, abbr, names):
     return None
 
 
-def league_table(rows, names):
+def _r(v, digits=5):
+    try:
+        return round(float(v), digits)
+    except (TypeError, ValueError):
+        return None
+
+
+def league_table(rows, names, extra=None):
     """Derived per game rates for all 32 clubs, keyed by abbreviation."""
     by_norm = {norm(v): k for k, v in names.items()}
+    extra = extra or {}
     out = []
     for r in rows:
         ab = by_norm.get(norm(r.get("teamFullName")))
@@ -298,18 +341,34 @@ def league_table(rows, names):
         sf = (r.get("shotsForPerGame") or 0) * gp
         sa = (r.get("shotsAgainstPerGame") or 0) * gp
         gf, ga = r.get("goalsFor") or 0, r.get("goalsAgainst") or 0
-        out.append({"_team": ab, "gp": gp, "gfpg": r.get("goalsForPerGame"), "gapg": r.get("goalsAgainstPerGame"),
-                    "sfpg": r.get("shotsForPerGame"), "sapg": r.get("shotsAgainstPerGame"),
-                    "shpct": round(gf / sf, 5) if sf else None, "svpct": round(1 - ga / sa, 5) if sa else None,
-                    "pp": r.get("powerPlayPct"), "pk": r.get("penaltyKillPct"), "fo": r.get("faceoffWinPct"),
-                    "gdpg": round((gf - ga) / gp, 4), "sdpg": round((sf - sa) / gp, 4), "ptpct": r.get("pointPct"),
-                    "record": "%s-%s-%s" % (r.get("wins"), r.get("losses"), r.get("otLosses")),
-                    "points": r.get("points")})
+        row = {"_team": ab, "gp": gp, "gfpg": r.get("goalsForPerGame"), "gapg": r.get("goalsAgainstPerGame"),
+               "sfpg": r.get("shotsForPerGame"), "sapg": r.get("shotsAgainstPerGame"),
+               "shpct": round(gf / sf, 5) if sf else None, "svpct": round(1 - ga / sa, 5) if sa else None,
+               "pp": r.get("powerPlayPct"), "pk": r.get("penaltyKillPct"), "fo": r.get("faceoffWinPct"),
+               "gdpg": round((gf - ga) / gp, 4), "sdpg": round((sf - sa) / gp, 4), "ptpct": r.get("pointPct"),
+               "record": "%s-%s-%s" % (r.get("wins"), r.get("losses"), r.get("otLosses")),
+               "points": r.get("points")}
+        key = norm(r.get("teamFullName"))
+        pc = (extra.get("percentages") or {}).get(key) or {}
+        rt = (extra.get("realtime") or {}).get(key) or {}
+        pp = (extra.get("powerplay") or {}).get(key) or {}
+        pk = (extra.get("penaltykill") or {}).get(key) or {}
+        row.update({
+            "cf": _r(pc.get("satPct")), "ff": _r(pc.get("usatPct")), "cf_close": _r(pc.get("satPctClose")),
+            "gf5": _r(pc.get("goalsForPct")), "pdo": _r(pc.get("shootingPlusSavePct5v5")),
+            "sh5": _r(pc.get("shootingPct5v5")), "sv5": _r(pc.get("savePct5v5")), "zs": _r(pc.get("zoneStartPct5v5")),
+            "hits60": _r(rt.get("hitsPer60"), 2), "blk60": _r(rt.get("blockedShotsPer60"), 2),
+            "tk60": _r(rt.get("takeawaysPer60"), 2), "gv60": _r(rt.get("giveawaysPer60"), 2),
+            "ppo": _r(pp.get("ppOpportunitiesPerGame"), 3), "tsh": _r(pk.get("timesShorthandedPerGame"), 3),
+        })
+        out.append({k: v for k, v in row.items() if v is not None or k in ("shpct", "svpct")})
     return out
 
 
 STAT_DIRECTION = {"gfpg": True, "gapg": False, "sfpg": True, "sapg": False, "shpct": True, "svpct": True,
-                  "pp": True, "pk": True, "fo": True, "gdpg": True, "sdpg": True, "ptpct": True}
+                  "pp": True, "pk": True, "fo": True, "gdpg": True, "sdpg": True, "ptpct": True,
+                  "cf": True, "ff": True, "cf_close": True, "gf5": True, "pdo": True, "sh5": True, "sv5": True,
+                  "zs": True, "hits60": True, "blk60": True, "tk60": True, "gv60": False, "ppo": True, "tsh": False}
 
 
 def with_ranks(table):
@@ -449,6 +508,16 @@ def dfo_for_game(dfo_rows, away_name, home_name):
     return None
 
 
+def roster_ids(src, abbr):
+    """Player ids on the club's current NHL roster, or None when the roster
+    feed does not answer (every roster check then fails closed)."""
+    data = src.try_get("roster_%s" % abbr, NHL + "/roster/%s/current" % abbr, browser=True)
+    if not data:
+        return None
+    ids = {p.get("id") for grp in ("forwards", "defensemen", "goalies") for p in data.get(grp) or []}
+    return ids if len(ids) >= 15 else None
+
+
 def roster_goalies(src, abbr):
     data = src.try_get("roster_%s" % abbr, NHL + "/roster/%s/current" % abbr, browser=True) or {}
     out = []
@@ -551,14 +620,18 @@ def resolve_goalies(src, g, dfo_rows, season_id):
         strength = row.get("%sNewsStrengthName" % side) if row else None
         name = row.get("%sGoalieName" % side) if row else None
         status = GOALIE_STATUS.get(strength or "")
+        hit = match_goalie(name, roster) if status and name else None
+        if status and name and not hit:
+            # A reported starter who is not on the club's current roster is a
+            # bad report (or a stale one): nobody is named on the page.
+            entry["issue"] = "%s reported as the %s starter but is not on the current roster" % (name, abbr)
+            status = None
         if status and name:
-            hit = match_goalie(name, roster)
             via = row.get("%sNewsSourceName" % side)
             entry.update({"status": status, "name": name,
                           "source": "Daily Faceoff" + (", citing %s" % via if via else ""),
                           "reported_at": row.get("%sNewsCreatedAt" % side)})
-            if hit:
-                entry["profile"] = goalie_profile(src, hit["id"], opp, season_id)
+            entry["profile"] = goalie_profile(src, hit["id"], opp, season_id)
         if entry["status"] == "unknown":
             for rg in roster[:3]:
                 prof = goalie_profile(src, rg["id"], opp, season_id)
@@ -599,6 +672,72 @@ def _leaders(landing, category="points"):
                                  "value": p.get("value"), "pos": p.get("positionCode"),
                                  "headshot": p.get("headshot"), "id": p.get("playerId")}
     return out
+
+
+def _skater_line(s):
+    """A season line from a stats row (game center or player landing)."""
+    if not s or not s.get("gamesPlayed"):
+        return None
+    return {"gp": s.get("gamesPlayed"), "g": s.get("goals"), "a": s.get("assists"), "pts": s.get("points"),
+            "pm": s.get("plusMinus"), "ppg": s.get("powerPlayGoals"), "ppp": s.get("powerPlayPoints"),
+            "shots": s.get("shots"), "shpct": _r(s.get("shootingPctg"), 4), "toi": s.get("avgTimeOnIce"),
+            "gwg": s.get("gameWinningGoals")}
+
+
+def key_players(src, g, landing, cur_sid):
+    """Two players per club to feature: the club's top two scorers in the
+    game center's comparison season, kept only while they are on the club's
+    current roster (and the league's own player record agrees)."""
+    m = ((landing or {}).get("matchup") or {}).get("skaterSeasonStats") or {}
+    ctx_sid = m.get("contextSeason")
+    out, issues = {}, []
+    for side in ("away", "home"):
+        abbr = g["%sTeam" % side]["abbrev"]
+        tid = ((landing or {}).get("%sTeam" % side) or {}).get("id")
+        ids = roster_ids(src, abbr)
+        if not tid or not ids:
+            issues.append("key players for %s skipped: roster or game center unavailable" % abbr)
+            continue
+        pool = [s for s in m.get("skaters") or [] if s.get("teamId") == tid]
+        pool.sort(key=lambda s: (-(s.get("points") or 0), -(s.get("goals") or 0), s.get("playerId") or 0))
+        picked = []
+        for s in pool:
+            if len(picked) == 2:
+                break
+            pid = s.get("playerId")
+            if pid not in ids:
+                issues.append("%s player %s not on the current roster, not featured" % (abbr, pid))
+                continue
+            land = src.try_get("player_%s" % pid, NHL + "/player/%s/landing" % pid, browser=True)
+            if not land or land.get("currentTeamAbbrev") != abbr or not land.get("isActive", True):
+                issues.append("%s player %s: league record does not place him on the club" % (abbr, pid))
+                continue
+            first = (land.get("firstName") or {}).get("default", "")
+            last = (land.get("lastName") or {}).get("default", "")
+            fs = land.get("featuredStats") or {}
+            cur_line = None
+            if fs.get("season") == cur_sid:
+                cur_line = _skater_line(((fs.get("regularSeason") or {}).get("subSeason")))
+            season = _skater_line(s)
+            if season and fs.get("season") == ctx_sid:
+                # the landing's line for the same season adds power play points
+                sub = _skater_line(((fs.get("regularSeason") or {}).get("subSeason"))) or {}
+                if sub.get("gp") == season["gp"] and sub.get("pts") == season["pts"]:
+                    season["ppp"] = sub.get("ppp")
+            career = _skater_line((land.get("careerTotals") or {}).get("regularSeason"))
+            last5 = [{"date": r.get("gameDate"), "opp": r.get("opponentAbbrev"), "ha": r.get("homeRoadFlag"),
+                      "g": r.get("goals"), "a": r.get("assists"), "pts": r.get("points"), "shots": r.get("shots"),
+                      "toi": r.get("toi"), "playoff": r.get("gameTypeId") == 3}
+                     for r in (land.get("last5Games") or [])[:5]]
+            picked.append({
+                "id": pid, "name": ("%s %s" % (first, last)).strip(), "first": first, "last": last,
+                "num": land.get("sweaterNumber") or s.get("sweaterNumber"), "pos": land.get("position") or s.get("position"),
+                "headshot": land.get("headshot"), "season_label": season_label(ctx_sid) if ctx_sid else None,
+                "season": season, "current": cur_line, "current_label": season_label(cur_sid),
+                "career": career, "last5": last5,
+            })
+        out[side] = picked
+    return out, issues
 
 
 def score_game(g, standings, prev_table, landing, mk, goalies=None):
@@ -752,6 +891,9 @@ def side_block(src, g, side, standings, names, tmr_teams, cur_sid, sched):
         "rest": rest_info(every, game_date),
         "prev": {"record": record(prev_rows), "home": record([r for r in prev_rows if r["home"]]),
                  "road": record([r for r in prev_rows if not r["home"]]), "b2b": b2b_record(prev_rows),
+                 "last10": record(prev_rows[-10:]), "last5": record(prev_rows[-5:]),
+                 "games10": prev_rows[-10:], "games5": prev_rows[-5:], "streak": streak(prev_rows),
+                 "playoffs": playoff_line(result_rows(sched[abbr][prev_season(cur_sid)], abbr, prev_season(cur_sid), (3,))),
                  "label": season_label(prev_season(cur_sid))} if prev_rows else None,
         "b2b_cur": b2b_record(cur),
         "standing": {
@@ -952,19 +1094,21 @@ def build_context(src, g, standings, names, tmr_teams, tables, board, lines, dfo
     # Odds: the live board when it is current, else the last good read if it
     # is under ODDS_MAX_AGE_H old, else nothing.
     an, hn = away["name"], home["name"]
-    odds = None
+    odds, odds_src = None, None
     b = board_match(board, an, hn, g.get("startTimeUTC")) if board and not board.get("stale") else None
     if b:
         mk = markets(b, an, hn)
         upd = fg.parse_utc(mk.get("updated"))
         if (mk["ml"] or mk["total"]) and upd and now - upd <= dt.timedelta(hours=ODDS_MAX_AGE_H):
             odds = mk
+            odds_src = "live"
     rec = lines.get(str(g["id"])) or {}
     if odds is None and g.get("gameState") in ("FUT", "PRE") and rec.get("last"):
         at = fg.parse_utc(rec["last"]["at"])
         if at and now - at <= dt.timedelta(hours=ODDS_MAX_AGE_H):
             odds = {"book": rec["last"]["book"], "ml": rec["last"]["ml"], "pl": rec["last"]["pl"],
                     "total": rec["last"]["total"], "updated": rec["last"]["at"]}
+            odds_src = rec["last"]["at"]
     if odds:
         odds = {k: v for k, v in odds.items() if k != "updated"}   # freshness checked above; not page data
     line_track = None
@@ -989,12 +1133,12 @@ def build_context(src, g, standings, names, tmr_teams, tables, board, lines, dfo
         "state": g.get("gameState"), "schedule_state": g.get("gameScheduleState"),
         "away": away, "home": home,
         "stats": stats,
-        "h2h": h2h_rows(sched, a_abbr, h_abbr, cur_sid, g["id"])[:6],
+        "h2h": h2h_rows(sched, a_abbr, h_abbr, cur_sid, g["id"])[:10],
         "meeting_n": meeting_number(sched, a_abbr, h_abbr, cur_sid, g),
         "division_game": bool(away["standing"]["division"] and away["standing"]["division"] == home["standing"]["division"]),
         "conference_game": bool(away["standing"]["conference"] and away["standing"]["conference"] == home["standing"]["conference"]),
         "rivalry": RIVALRIES.get(frozenset((a_abbr, h_abbr))),
-        "odds": odds, "line_track": line_track,
+        "odds": odds, "line_track": line_track, "_odds_src": odds_src,
         "goalies": goalies,
         "injuries": {"away": injuries_for(inj, an), "home": injuries_for(inj, hn)} if inj else None,
         "leaders": {"points": _leaders(landing, "points"), "goals": _leaders(landing, "goals")},
@@ -1002,7 +1146,10 @@ def build_context(src, g, standings, names, tmr_teams, tables, board, lines, dfo
         "selection": state_game.get("selection") or {},
         "slug": state_game["slug"], "url": "/nhl/%s/" % state_game["slug"],
         "research_page": research_page(g),
+        "team_names": dict(sorted(names.items())),
     }
+    ctx["key_players"], ctx["issues"] = key_players(src, g, landing, cur_sid)
+    ctx["issues"] += [x["issue"] for x in goalies.values() if x.get("issue")]
     ctx["model"] = run_model(src, away, home, goalies, g["id"])
     if g.get("gameState") in FINAL_STATES:
         ctx["final"] = {"away": g["awayTeam"].get("score"), "home": g["homeTeam"].get("score"),
@@ -1026,6 +1173,118 @@ def research_page(g):
 
 def ctx_label(sid, current):
     return ("%s regular season" % season_label(sid)) if current else ("%s regular season" % season_label(sid))
+
+
+# ================================================================== validation
+
+def _season_for(date):
+    y, mo = int(date[:4]), int(date[5:7])
+    start = y if mo >= 8 else y - 1
+    return "%d-%02d" % (start, (start + 1) % 100)
+
+
+def clean_odds(odds):
+    """Drop any market whose numbers cannot be a real posted price. Returns
+    (odds or None, [problems])."""
+    if not odds:
+        return odds, []
+    o, bad = dict(odds), []
+    ml = o.get("ml") or {}
+    if ml:
+        ia, ih = fg.implied(ml.get("away")), fg.implied(ml.get("home"))
+        if not (ia and ih and 0.98 <= ia + ih <= 1.15):
+            bad.append("moneyline %s / %s is not a two sided price" % (ml.get("away"), ml.get("home")))
+            o["ml"] = {}
+    pl = o.get("pl") or {}
+    if pl:
+        try:
+            pa, ph = float(pl["away"]["point"]), float(pl["home"]["point"])
+            ok = pa + ph == 0 and abs(pa) in (1.5, 2.5) and fg.implied(pl["away"]["price"]) and fg.implied(pl["home"]["price"])
+        except (KeyError, TypeError, ValueError):
+            ok = False
+        if not ok:
+            bad.append("puck line %s is not a valid pair" % pl)
+            o["pl"] = {}
+    tot = o.get("total") or {}
+    if tot:
+        try:
+            ok = 4.0 <= float(tot.get("point")) <= 9.0 and fg.implied(tot.get("over")) and fg.implied(tot.get("under"))
+        except (TypeError, ValueError):
+            ok = False
+        if not ok:
+            bad.append("total %s is not a valid market" % tot)
+            o["total"] = {}
+    if not (o.get("ml") or o.get("pl") or o.get("total")):
+        return None, bad
+    return o, bad
+
+
+def validate(ctx, g, sg, now, cur_sid):
+    """Checks run before a page is written. Errors block the write and fail
+    the run, which raises the alert issue, so an impossible page is never
+    published. Warnings drop or relabel the piece concerned and are logged."""
+    errors, warnings = [], list(ctx.get("issues") or [])
+    a, h = ctx["away"], ctx["home"]
+    if (a["abbr"], h["abbr"]) != (sg.get("away"), sg.get("home")):
+        errors.append("teams %s at %s do not match the selected game %s at %s"
+                      % (a["abbr"], h["abbr"], sg.get("away"), sg.get("home")))
+    if g.get("season") != cur_sid:
+        errors.append("game season %s is not the current season %s" % (g.get("season"), cur_sid))
+    if ctx.get("date") and ctx["season_label"] != _season_for(ctx["date"]):
+        errors.append("season label %s does not fit the game date %s" % (ctx["season_label"], ctx["date"]))
+    if ctx.get("date") and ctx["date"] != sg.get("date"):
+        errors.append("game date %s moved from the selected date %s" % (ctx["date"], sg.get("date")))
+    start = fg.parse_utc(ctx.get("start_utc"))
+    if ctx.get("state") in FINAL_STATES and not ctx.get("final"):
+        errors.append("game is final but carries no final score")
+    if ctx.get("state") in ("FUT", "PRE") and start and now > start + dt.timedelta(hours=5):
+        errors.append("game still reads as not started five hours after puck drop")
+    st = ctx.get("stats") or {}
+    if st and not st.get("current") and ctx["prev_label"] not in st.get("label", ""):
+        errors.append("prior season rates are not labeled with %s" % ctx["prev_label"])
+    ctx["odds"], bad = clean_odds(ctx.get("odds"))
+    warnings += ["odds: %s" % b for b in bad]
+    if ctx.get("state") in ("FUT", "PRE") and start and start - now <= dt.timedelta(hours=12) and not ctx.get("odds"):
+        warnings.append("no current odds within 12 hours of puck drop")
+    for t in (a, h):
+        sgp = (t.get("standing") or {}).get("gp")
+        if ctx.get("state") in ("FUT", "PRE") and sgp is not None and sgp != t["record"]["gp"]:
+            warnings.append("%s record %s counts %d games, standings count %d"
+                            % (t["abbr"], t["record"]["text"], t["record"]["gp"], sgp))
+    inj = ctx.get("injuries") or {}
+    today = now.astimezone(fg.ET).date()
+    for side in ("away", "home"):
+        keep = []
+        for r in inj.get(side) or []:
+            try:
+                age = (today - dt.date.fromisoformat(r.get("date") or "")).days
+            except ValueError:
+                age = None
+            if r.get("status") == "Day-To-Day" and age is not None and age > 30:
+                warnings.append("injury entry for %s (day to day, %d days old) dropped" % (r.get("name"), age))
+                continue
+            keep.append(r)
+        if side in inj:
+            inj[side] = keep
+    return errors, warnings
+
+
+def localize_images(ctx):
+    """Logos, key player and goalie headshots as small self hosted WebP files.
+    A new face (a different club, a new season's photo) gets a new file."""
+    def name(url):
+        return fg.content_hash(url)[:10]
+    for side in ("away", "home"):
+        t = ctx[side]
+        if t.get("logo"):
+            t["logo_img"] = fg.local_image(ROOT, t["logo"], "img/nhl-featured/logos/%s-%s" % (t["abbr"].lower(), name(t["logo"])), 240)
+        for p in (ctx.get("key_players") or {}).get(side) or []:
+            if p.get("headshot"):
+                p["img"] = fg.local_image(ROOT, p["headshot"], "img/nhl-featured/players/%s-%s" % (p["id"], name(p["headshot"])), 320)
+        gl = (ctx.get("goalies") or {}).get(side) or {}
+        for prof in [gl.get("profile")] + list(gl.get("roster") or []):
+            if prof and prof.get("headshot"):
+                prof["img"] = fg.local_image(ROOT, prof["headshot"], "img/nhl-featured/players/%s-%s" % (prof["id"], name(prof["headshot"])), 192)
 
 
 # ================================================================== run
@@ -1058,8 +1317,9 @@ def run(now=None, dry=False):
     tmr_teams = fetch_teams(src)
     season_ids = sorted({g["season"] for g in games if g.get("gameType") == 2}) or [None]
     cur_sid = season_ids[-1] or int("%d%d" % (day.year, day.year + 1))
-    tables = {"cur": with_ranks(league_table(fetch_team_stats(src, cur_sid), names)),
-              "prev": with_ranks(league_table(fetch_team_stats(src, prev_season(cur_sid)), names))}
+    tables = {"cur": with_ranks(league_table(fetch_team_stats(src, cur_sid), names, fetch_team_reports(src, cur_sid))),
+              "prev": with_ranks(league_table(fetch_team_stats(src, prev_season(cur_sid)), names,
+                                              fetch_team_reports(src, prev_season(cur_sid))))}
     if not tables["prev"]:
         raise fg.FetchError("league team stats unavailable")
     board = fetch_board(src)
@@ -1119,6 +1379,7 @@ def run(now=None, dry=False):
     # Build every featured page that is not frozen yet.
     dfo_cache = {}
     written = []
+    blocked = []
     for gid, sg in sorted(state["games"].items(), key=lambda kv: kv[1].get("start") or ""):
         if sg.get("frozen") or sg.get("withdrawn"):
             continue
@@ -1132,13 +1393,47 @@ def run(now=None, dry=False):
         ctx = build_context(src, g, standings, names, tmr_teams, tables, board, lines, dfo_rows or [], inj,
                             now, sg)
         # Volatile sections ride on their last good value for a few hours.
-        ctx["odds"] = section_cache(sg, "odds", ctx["odds"], now, ODDS_MAX_AGE_H) if ctx["state"] in ("FUT", "PRE") else ctx["odds"]
+        # "Updated" on the odds board is the last time the live board
+        # confirmed the price (refreshed at most every two hours while it holds
+        # still). A price read back from the line log keeps the time it was
+        # last seen live, never the time of this run.
+        src_ = ctx.pop("_odds_src", None)
+        checked = None
+        if ctx["state"] in ("FUT", "PRE"):
+            if src_ == "live":
+                ctx["odds"] = section_cache(sg, "odds", ctx["odds"], now, ODDS_MAX_AGE_H)
+                checked = sg["cache"]["odds"]["at"]
+            else:
+                cached = section_cache(sg, "odds", None, now, ODDS_MAX_AGE_H)
+                if cached:
+                    ctx["odds"], checked = cached, sg["cache"]["odds"]["at"]
+                elif ctx.get("odds"):
+                    checked = src_
         if dfo_rows is None:
             ctx["goalies"] = section_cache(sg, "goalies", None, now, 6) or ctx["goalies"]
         else:
             section_cache(sg, "goalies", ctx["goalies"], now, 6)
         ctx["injuries"] = section_cache(sg, "injuries", ctx["injuries"], now, 24)
         ctx["model"] = section_cache(sg, "model", ctx["model"], now, 24)
+        ctx["odds_checked"] = checked if ctx.get("odds") else None
+        # The cached sections are shared with the state file: work on copies,
+        # so validation and image paths never leak back into the cache.
+        for k in ("odds", "goalies", "injuries", "model"):
+            ctx[k] = copy.deepcopy(ctx.get(k))
+        errors, warnings = validate(ctx, g, sg, now, cur_sid)
+        sg["validation"] = {"errors": errors, "warnings": warnings} if (errors or warnings) else None
+        if errors:
+            # Flagged, not published: the page keeps its last good version and
+            # the finding goes to data/nhl-featured/validation.json and the run
+            # summary.
+            blocked.append("%s: %s" % (sg["slug"], "; ".join(errors)))
+            continue
+        if not dry:
+            localize_images(ctx)
+            ctx["og"] = og_card.build(ROOT, ctx)
+        ctx["others"] = [{"headline": o["headline"], "url": "/nhl/%s/" % o["slug"]}
+                         for oid, o in sorted(state["games"].items(), key=lambda kv: kv[1].get("start") or "", reverse=True)
+                         if oid != gid and not o.get("withdrawn") and o.get("headline")][:3]
         ctx["trends"] = build_trends(ctx)
         ctx["article"] = article.build(ctx)
         # Fetch times are not data: a price the book has not moved does not
@@ -1184,9 +1479,17 @@ def run(now=None, dry=False):
         fg.save_json(CURRENT, public_current(state, current, now, game_days))
         for p in render.site_surfaces(ROOT, state, current, now, game_days):
             written.append(p)
-    return {"day": day.isoformat(), "targets": targets, "current": (current or {}).get("slug"),
-            "written": [os.path.relpath(p, ROOT) for p in written], "notes": notes,
-            "failed_sources": src.failed(), "sources_ok": len([1 for v in src.rows.values() if v.get("ok")])}
+    out = {"day": day.isoformat(), "targets": targets, "current": (current or {}).get("slug"),
+           "written": [os.path.relpath(p, ROOT) for p in written], "notes": notes,
+           "validation": {sg["slug"]: sg["validation"] for sg in state["games"].values()
+                          if sg.get("validation") and not sg.get("frozen")},
+           "failed_sources": src.failed(), "sources_ok": len([1 for v in src.rows.values() if v.get("ok")])}
+    out["blocked"] = blocked
+    if not dry:
+        # The flag file: what every run checked and what it held back. It only
+        # changes when a finding changes, so a quiet run still commits nothing.
+        fg.save_json(VALIDATION, {"blocked": blocked, "pages": out["validation"]})
+    return out
 
 
 def withdraw_in_registry(state):

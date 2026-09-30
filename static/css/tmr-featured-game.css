@@ -150,3 +150,215 @@
 .fg-odd-v span { display: flex; flex-direction: column; }
 .fg-odd-v em { font-style: normal; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
 .fg-odd-v b { font: 900 1.25rem/1.2 var(--display, sans-serif); color: var(--ink); }
+
+/* ==========================================================================
+   NHL_FEATURED_REDESIGN_20260930
+   The matchup hero (three column grid: club, game facts, club, with each
+   club's lead players photographed behind its mark), the aligned odds board,
+   player cards, the article prose woven between modules and the FAQ.
+   Numbers use tabular figures everywhere so columns never shift.
+   ========================================================================== */
+
+.fgh .hx-hero-in { padding-bottom: 24px; }
+/* tmr-ds resets p, h1 and h2 margins inside .hx-page; these carry hero specificity */
+.fgh p.fgh-tags { margin: 0 0 16px; }
+.fgh p.fgh-feat { margin: 6px 0 12px; }
+.fgh h1.fgh-h1 { margin: 26px auto 10px; }
+.fgh p.fgh-sub { margin: 0 auto; }
+.fgh p.fgh-byline { margin: 10px auto 0; }
+.fgh h2.fgo-h { margin: 0; font-size: 1.05rem; }
+.fgh p.fgo-stamp, .fgh p.fgo-note { margin: 0; }
+.fgh p.fgo-note { margin-top: 10px; }
+.fgh p.fgh-names { margin: 10px 0 0; }
+.fgh-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+.fgh-tags .hx-kick + .hx-kick { margin-left: 0; }
+.fgh-live { border-color: var(--gold) !important; color: var(--gold) !important; }
+
+.fgh-match { display: grid; grid-template-columns: minmax(0, 1fr) minmax(210px, 250px) minmax(0, 1fr); gap: 14px; align-items: stretch; }
+
+.fgh-team { position: relative; overflow: hidden; isolation: isolate; min-height: 292px; border-radius: 18px;
+  border: 1px solid rgba(234, 242, 250, .14); background: rgba(6, 19, 33, .55); display: flex; }
+.fgh-team::before { content: ""; position: absolute; inset: 0; z-index: -2; }
+.fgh-team--away::before { background: linear-gradient(100deg, color-mix(in srgb, var(--hx-away) 46%, transparent) 0%,
+  color-mix(in srgb, var(--hx-away) 14%, transparent) 55%, transparent 100%); }
+.fgh-team--home::before { background: linear-gradient(260deg, color-mix(in srgb, var(--hx-home) 46%, transparent) 0%,
+  color-mix(in srgb, var(--hx-home) 14%, transparent) 55%, transparent 100%); }
+.fgh-team--away { border-top: 3px solid var(--hx-away); }
+.fgh-team--home { border-top: 3px solid var(--hx-home); flex-direction: row-reverse; }
+
+.fgh-stars { position: absolute; bottom: 0; z-index: -1; width: 58%; height: 100%; pointer-events: none; }
+.fgh-team--away .fgh-stars { left: 0; }
+.fgh-team--home .fgh-stars { right: 0; }
+.fgh-star { position: absolute; bottom: 0; height: auto; object-fit: contain; object-position: bottom;
+  -webkit-mask-image: linear-gradient(to top, transparent 0, #000 22%); mask-image: linear-gradient(to top, transparent 0, #000 22%); }
+.fgh-star--1 { width: 86%; max-width: 250px; z-index: 2; }
+.fgh-star--2 { width: 64%; max-width: 186px; z-index: 1; opacity: .78; filter: saturate(.85); }
+.fgh-team--away .fgh-star--1 { left: -4%; }
+.fgh-team--away .fgh-star--2 { left: 46%; }
+.fgh-team--home .fgh-star--1 { right: -4%; }
+.fgh-team--home .fgh-star--2 { right: 46%; }
+.fgh-stars--n1 .fgh-star--1 { max-width: 270px; width: 96%; }
+
+.fgh-id { position: relative; margin-left: auto; width: 50%; padding: 20px 20px 18px; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; text-align: center; gap: 2px;
+  background: linear-gradient(90deg, transparent, rgba(6, 19, 33, .62) 22%); }
+.fgh-team--home .fgh-id { margin-left: 0; margin-right: auto; background: linear-gradient(270deg, transparent, rgba(6, 19, 33, .62) 22%); }
+.fgh-team--solo .fgh-id { width: 100%; margin: 0; background: none; }
+.fgh-logo { width: 104px; height: 104px; object-fit: contain; filter: drop-shadow(0 6px 16px rgba(0, 0, 0, .45)); margin-bottom: 6px; }
+.fgh-place { margin: 0; font: 700 .78rem/1.2 var(--font, Inter, sans-serif); letter-spacing: .14em; text-transform: uppercase; color: rgba(234, 242, 250, .72); }
+.fgh-nick { margin: 0; font: 900 clamp(1.6rem, 2.9vw, 2.35rem)/1 var(--display, "Barlow Condensed", sans-serif); text-transform: uppercase; color: #fff; }
+.fgh-recs { margin: 12px 0 0; display: grid; gap: 5px; width: 100%; max-width: 210px; }
+.fgh-recs div { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: baseline; padding: 5px 10px;
+  border-radius: 8px; background: rgba(6, 19, 33, .55); border: 1px solid rgba(234, 242, 250, .10); }
+.fgh-recs dt { font: 700 .66rem/1.2 var(--font, Inter, sans-serif); letter-spacing: .08em; text-transform: uppercase; color: rgba(234, 242, 250, .66); text-align: left; }
+.fgh-recs dd { margin: 0; font: 800 .98rem/1.2 var(--display, "Barlow Condensed", sans-serif); color: #fff; font-variant-numeric: tabular-nums; letter-spacing: .02em; }
+.fgh-recs div:first-child dd { color: var(--gold-b, #FFC93C); }
+.fgh-names { margin: 10px 0 0; font: 600 .78rem/1.35 var(--font, Inter, sans-serif); color: rgba(234, 242, 250, .74); }
+
+.fgh-mid { border-radius: 18px; border: 1px solid rgba(234, 242, 250, .14); background: rgba(6, 19, 33, .72);
+  padding: 18px 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+.fgh-at { font: 900 1.9rem/1 var(--display, "Barlow Condensed", sans-serif); color: rgba(234, 242, 250, .55); letter-spacing: .12em; }
+.fgh-feat { margin: 6px 0 12px; font: 800 .66rem/1 var(--display, "Barlow Condensed", sans-serif); letter-spacing: .22em;
+  text-transform: uppercase; color: var(--brand-lt, #4DA3FF); }
+.fgh-facts { margin: 0; display: grid; gap: 10px; width: 100%; }
+.fgh-facts div { display: grid; gap: 2px; padding-top: 10px; border-top: 1px solid rgba(234, 242, 250, .10); }
+.fgh-facts dt { font: 700 .64rem/1 var(--font, Inter, sans-serif); letter-spacing: .14em; text-transform: uppercase; color: rgba(234, 242, 250, .55); }
+.fgh-facts dd { margin: 0; font: 700 .95rem/1.3 var(--font, Inter, sans-serif); color: #fff; }
+.fgh-facts small { display: block; font-size: .8rem; font-weight: 500; color: rgba(234, 242, 250, .7); }
+
+.fgh-h1 { margin: 24px auto 8px; max-width: 30ch; text-align: center; font: 900 clamp(1.75rem, 4.2vw, 3rem)/1.02 var(--display, "Barlow Condensed", sans-serif);
+  text-transform: uppercase; color: #fff; text-wrap: balance; }
+.fgh-sub { margin: 0 auto; max-width: 72ch; text-align: center; font: 400 1rem/1.6 var(--font, Inter, sans-serif); color: rgba(234, 242, 250, .82); text-wrap: pretty; }
+.fgh-byline { margin: 10px 0 0; text-align: center; font: 600 .8rem/1.4 var(--font, Inter, sans-serif); color: rgba(234, 242, 250, .6); }
+
+/* odds board: one grid template for every market */
+.fgo { margin: 22px 0 0; }
+.fgo-top { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 16px; margin: 0 0 10px; }
+.fgo-h { margin: 0; font: 900 1.05rem/1 var(--display, "Barlow Condensed", sans-serif); letter-spacing: .12em; text-transform: uppercase; color: #fff; }
+.fgo-stamp { margin: 0; font: 600 .78rem/1.3 var(--font, Inter, sans-serif); color: rgba(234, 242, 250, .66); }
+.fgo-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; align-items: stretch; }
+.fgo-grid--1 { grid-template-columns: minmax(0, 420px); }
+.fgo-grid--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.fgo-mk { display: grid; grid-template-rows: auto 1fr 1fr; background: rgba(6, 19, 33, .78); border: 1px solid rgba(234, 242, 250, .14);
+  border-radius: 14px; padding: 4px 16px; }
+.fgo-row { display: grid; grid-template-columns: minmax(0, 1fr) 4.6rem 4.6rem; column-gap: 10px; align-items: center; min-height: 46px;
+  border-top: 1px solid rgba(234, 242, 250, .08); }
+.fgo-row--head { min-height: 34px; border-top: 0; }
+.fgo-row--head span { font: 800 .66rem/1 var(--display, "Barlow Condensed", sans-serif); letter-spacing: .16em; text-transform: uppercase; color: var(--gold-b, #FFC93C); }
+.fgo-row--head span + span { text-align: right; color: rgba(234, 242, 250, .5); }
+.fgo-who { display: flex; align-items: center; gap: 8px; min-width: 0; font: 700 .95rem/1.2 var(--font, Inter, sans-serif); color: #EAF2FA;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fgo-dot { flex: none; width: 9px; height: 9px; border-radius: 50%; background: var(--hx-away); box-shadow: 0 0 0 2px rgba(234, 242, 250, .16); }
+.fgo-dot--home { background: var(--hx-home); }
+.fgo-n { text-align: right; font: 800 1.2rem/1 var(--display, "Barlow Condensed", sans-serif); color: #fff; font-variant-numeric: tabular-nums; letter-spacing: .01em; }
+.fgo-px { color: rgba(234, 242, 250, .78); font-weight: 700; }
+.fgo-note { margin: 10px 0 0; font: 400 .76rem/1.5 var(--font, Inter, sans-serif); color: rgba(234, 242, 250, .58); }
+
+/* article prose between the modules */
+.fg-story { display: block; }
+.fg-page .fg-prose { max-width: 76ch; margin: 0 0 18px; }
+.fg-page .fg-prose p { margin: 0 0 14px; font: 400 1.04rem/1.74 var(--font, Inter, sans-serif); color: var(--ink-2); text-wrap: pretty; }
+.fg-page .fg-prose p:last-child { margin-bottom: 0; }
+.fg-keys { margin: 0; padding: 0; list-style: none; counter-reset: k; display: grid; gap: 10px; max-width: 86ch; }
+.fg-keys li { counter-increment: k; position: relative; padding: 14px 16px 14px 56px; background: var(--panel); border: 1px solid var(--line);
+  border-radius: 12px; font: 400 1rem/1.6 var(--font, Inter, sans-serif); color: var(--ink-2); }
+.fg-keys li::before { content: counter(k); position: absolute; left: 16px; top: 13px; width: 28px; height: 28px; border-radius: 50%;
+  display: grid; place-items: center; background: var(--brand-soft); color: var(--brand-dk); font: 900 .95rem/1 var(--display, sans-serif); }
+.fg-keys b { color: var(--ink); }
+
+/* key player cards reuse the goalie card frame */
+.fg-players { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; }
+.fg-player { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 16px; border-top: 4px solid var(--hx-away, #1D7FE8); min-width: 0; }
+.fg-player.fg-goalie--home { border-top-color: var(--hx-home, #B98505); }
+.fg-page h3.fg-gname { margin: 2px 0 4px; font: 900 1.35rem/1.05 var(--display, sans-serif); text-transform: uppercase; color: var(--ink); }
+.fg-pmeta { margin: 0; color: var(--muted); font-size: 13px; font-weight: 600; }
+.fg-pstats { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
+.fg-pstat { background: var(--panel-2); border: 1px solid var(--line); border-radius: 9px; padding: 8px 2px; text-align: center; min-width: 0; }
+.fg-pstat b { display: block; font: 900 1.1rem/1.1 var(--display, sans-serif); color: var(--ink); font-variant-numeric: tabular-nums; }
+.fg-pstat span { display: block; font-size: 10.5px; color: var(--muted); margin-top: 2px; letter-spacing: .04em; }
+.fg-player .fg-grecent li { padding: 6px 3px; font-size: 11px; }
+.fg-player .fg-grecent b { font-size: 12.5px; }
+.fg-gface { background: var(--panel-3) linear-gradient(180deg, var(--panel-3), var(--panel-2)); }
+.fg-groster li { display: flex; gap: 10px; align-items: center; }
+.fg-gmug { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; flex: none; background: var(--panel-3); }
+.fg-groster li div b { display: block; }
+.fg-page h3.fg-glabel { font-family: var(--font, Inter, sans-serif); }
+
+/* model drivers */
+.fg-drivers { list-style: none; margin: 14px 0 16px; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
+.fg-drivers li { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+.fg-drivers b { display: block; font: 800 .75rem/1.2 var(--display, sans-serif); letter-spacing: .14em; text-transform: uppercase; color: var(--brand-dk); }
+.fg-drivers span { display: block; margin-top: 5px; color: var(--ink-2); font-size: 14px; line-height: 1.5; }
+
+/* opening versus current: a real table, numbers right aligned */
+.fgm-wrap { position: relative; overflow-x: auto; margin: 4px 0 14px; max-width: 640px; }
+.fgm { width: 100%; border-collapse: collapse; background: var(--panel); border: 1px solid var(--line); }
+.fgm caption { text-align: left; caption-side: top; }
+.fgm th, .fgm td { padding: 11px 14px; border-top: 1px solid var(--line); font-size: 14.5px; text-align: right; white-space: nowrap;
+  font-variant-numeric: tabular-nums; color: var(--ink); }
+.fgm thead th { border-top: 0; font: 800 .7rem/1.2 var(--display, sans-serif); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.fgm th[scope="row"], .fgm thead th:first-child { text-align: left; font-weight: 700; color: var(--ink-2); white-space: normal; }
+.fgm td { font-weight: 800; }
+.fgm td.fgm-moved { color: var(--gold); }
+
+/* FAQ */
+.fg-faq { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.fg-faq-i { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+.fg-page .fg-faq-i h3 { margin: 0 0 6px; font: 800 1rem/1.35 var(--font, Inter, sans-serif); color: var(--ink); }
+.fg-page .fg-faq-i p { margin: 0; font: 400 .95rem/1.6 var(--font, Inter, sans-serif); color: var(--ink-2); }
+
+@media (max-width: 1040px) {
+  .fgh-match { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .fgh-mid { grid-column: 1 / -1; order: 3; padding: 14px; }
+  .fgh-at, .fgh-feat { display: none; }
+  .fgh-facts { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+  .fgh-facts div { border-top: 0; padding-top: 0; }
+  .fgh-team, .fgh-team--home { flex-direction: column; min-height: 0; }
+  .fgh-stars { position: relative; width: 100%; height: 170px; z-index: 0; }
+  .fgh-star--1 { width: auto; height: 100%; max-width: none; }
+  .fgh-star--2 { width: auto; height: 78%; max-width: none; }
+  .fgh-team--away .fgh-star--1, .fgh-team--home .fgh-star--1 { left: 50%; right: auto; transform: translateX(-78%); }
+  .fgh-team--away .fgh-star--2, .fgh-team--home .fgh-star--2 { left: 50%; right: auto; transform: translateX(6%); }
+  .fgh-stars--n1 .fgh-star--1 { transform: translateX(-50%) !important; }
+  .fgh-id, .fgh-team--home .fgh-id { width: 100%; margin: -34px 0 0; padding: 0 14px 16px; background: none; }
+  .fgh-logo { width: 72px; height: 72px; background: rgba(6, 19, 33, .7); border-radius: 50%; padding: 8px; }
+  .fgo-grid, .fgo-grid--2, .fgo-grid--1 { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 760px) {
+  .fg-faq { grid-template-columns: 1fr; }
+  .fg-pstats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .fg-page .fg-prose p { font-size: 1rem; }
+}
+@media (max-width: 560px) {
+  .fgh-match { gap: 10px; }
+  .fgh-team { border-radius: 14px; }
+  .fgh-stars { height: 112px; }
+  .fgh-id, .fgh-team--home .fgh-id { margin-top: -26px; padding: 0 8px 12px; }
+  .fgh-logo { width: 58px; height: 58px; padding: 6px; }
+  .fgh-place { font-size: .64rem; letter-spacing: .1em; }
+  .fgh-nick { font-size: 1.45rem; }
+  .fgh-recs { max-width: none; }
+  .fgh-recs div { grid-template-columns: 1fr; gap: 1px; padding: 5px 8px; text-align: center; }
+  .fgh-recs dt { text-align: center; font-size: .6rem; }
+  .fgh-names { font-size: .7rem; }
+  .fgh-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .fgh-h1 { margin-top: 18px; }
+  .fgh-sub { font-size: .92rem; }
+  .fgo-mk { padding: 2px 12px; }
+  .fgo-row { grid-template-columns: minmax(0, 1fr) 4.1rem 4.1rem; column-gap: 8px; }
+  .fg-keys li { padding: 12px 12px 12px 48px; }
+  .fg-keys li::before { left: 12px; }
+}
+
+/* labels, spacing and small cards (tmr-ds resets p and h3 inside .hx-page) */
+.fg-page p.fg-glabel, .fg-page h3.fg-glabel { margin: 14px 0 8px; font: 800 12px/1.3 var(--font, Inter, sans-serif);
+  letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.fg-page .fg-rescard h3.fg-glabel { margin-top: 0; }
+.fg-page .fg-faq-i h3 { text-transform: none; letter-spacing: 0; }
+.fg-moves { margin-bottom: 6px; }
+.fg-page .fg-pstats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.fg-plast { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+.fg-plast li { background: var(--panel-2); border: 1px solid var(--line); border-radius: 9px; padding: 7px 2px 6px; text-align: center; min-width: 0; }
+.fg-plast b { display: block; font: 900 1.15rem/1 var(--display, sans-serif); color: var(--ink); font-variant-numeric: tabular-nums; }
+.fg-plast span { display: block; margin-top: 3px; font-size: 11px; color: var(--muted); white-space: nowrap; }
+.fg-gface--logo { object-fit: contain; padding: 12px; background: var(--panel-2); }

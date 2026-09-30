@@ -289,6 +289,39 @@ def asset(root, src):
         return "/" + src
 
 
+# ------------------------------------------------------------------ images
+
+def local_image(root, url, rel_path, size, quality=80):
+    """Self host a remote image as a square WebP of `size` pixels at
+    static/<rel_path>.webp, so a page serves a small, cached, same origin file
+    with known dimensions. Written once: an existing file is reused, which
+    keeps quiet runs byte identical. Returns {"src", "w", "h"}; the original
+    URL when Pillow is not installed or the conversion fails; None when there
+    is no URL."""
+    if not url:
+        return None
+    rel = "static/%s.webp" % rel_path.strip("/")
+    path = os.path.join(root, rel.replace("/", os.sep))
+    if os.path.exists(path):
+        return {"src": "/" + rel, "w": size, "h": size}
+    try:
+        import io
+        from PIL import Image
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                                                                 "AppleWebKit/537.36 Chrome/128.0 Safari/537.36"})
+        with urllib.request.urlopen(req, timeout=25) as resp:
+            raw = resp.read()
+        im = Image.open(io.BytesIO(raw)).convert("RGBA")
+        im.thumbnail((size, size), Image.LANCZOS)
+        canvas = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+        canvas.paste(im, ((size - im.width) // 2, size - im.height))
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        canvas.save(path, "WEBP", quality=quality, method=6)
+        return {"src": "/" + rel, "w": size, "h": size}
+    except Exception:  # no Pillow, network, bad image: serve the source URL
+        return {"src": url, "w": size, "h": size}
+
+
 # ------------------------------------------------------------------ page shell
 
 def json_ld(graph):
@@ -298,9 +331,15 @@ def json_ld(graph):
 
 
 def head(root, title, description, canonical, og_image, ld_graph, extra_meta="", css=(), robots="index, follow",
-         og_type="article", published=None, modified=None):
+         og_type="article", published=None, modified=None, og_alt=None, og_size=None):
     links = "".join('<link rel="stylesheet" href="%s">\n' % esc(asset(root, c)) for c in css)
     art = ""
+    if og_size:
+        art += ('<meta property="og:image:width" content="%d">\n<meta property="og:image:height" content="%d">\n'
+                % tuple(og_size))
+    if og_alt:
+        art += ('<meta property="og:image:alt" content="%s">\n<meta name="twitter:image:alt" content="%s">\n'
+                % (esc(og_alt), esc(og_alt)))
     if og_type == "article":
         if published:
             art += '<meta property="article:published_time" content="%s">\n' % esc(published)

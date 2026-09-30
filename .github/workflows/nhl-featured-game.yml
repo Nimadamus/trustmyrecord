@@ -65,6 +65,12 @@ jobs:
         with:
           node-version: 22
 
+      # Pillow turns player headshots and club marks into small self hosted
+      # WebP files and draws each game's share card. Without it the page
+      # falls back to the source image URLs and the site default card.
+      - name: Image tools
+        run: python -m pip install --quiet --disable-pip-version-check pillow
+
       - name: Refresh every 30 minutes for five and a half hours
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -99,7 +105,7 @@ jobs:
               python scripts/featured_matchups.py sync > sync.log 2>&1 || { tail -20 sync.log; return 1; }
               # THE GATE runs before the commit: a failing gate publishes nothing.
               node tests/seo-indexability-regression-test.js > gate.log 2>&1 || { tail -40 gate.log; return 1; }
-              git add -A nhl data/nhl-featured matchup-of-the-day/nhl data/featured-matchups.json index.html sitemap.xml handicapping/nhl/index.html static/js/tmr-ds-nav.js static/js/tmr-sitewide.js
+              git add -A nhl data/nhl-featured static/img/nhl-featured static/og/nhl-featured matchup-of-the-day/nhl data/featured-matchups.json index.html sitemap.xml handicapping/nhl/index.html static/js/tmr-ds-nav.js static/js/tmr-sitewide.js
               git add -u
               if git diff --cached --quiet; then
                 echo "NHL featured game already current."
