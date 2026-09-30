@@ -48,7 +48,12 @@ def _join(items):
 
 
 def _season_word(ctx, current):
-    return "this season" if current else "last season"
+    return "this season" if current else "last season (%s)" % ctx["prev_label"]
+
+
+def _in(ctx, current):
+    """' in 2025-26' after a prior season number; nothing for this season."""
+    return "" if current else " in %s" % ctx["prev_label"]
 
 
 def headline(ctx):
@@ -206,8 +211,8 @@ def offense(ctx):
         sharp, dull = (a, h) if ra["shpct"] > rh["shpct"] else (h, a)
         rs, rd = (ra, rh) if sharp is a else (rh, ra)
         gap = rs["shpct"] - rd["shpct"]
-        paras.append("%s converted %s of their shots on goal to %s for %s. %s" % (
-            the(sharp, True), fg.pct(rs["shpct"]), fg.pct(rd["shpct"]), the(dull),
+        paras.append("%s converted %s of their shots on goal%s, to %s for %s. %s" % (
+            the(sharp, True), fg.pct(rs["shpct"]), _in(ctx, cur), fg.pct(rd["shpct"]), the(dull),
             "A finishing gap that wide usually has a volume story behind it, and here the shot counts point the same "
             "way." if gap > 0.012 and rs["sfpg"] > rd["sfpg"] else
             "A finishing gap that wide tends to shrink over a long season, so don't lean on it too hard." if gap > 0.012
@@ -232,20 +237,22 @@ def defense(ctx):
     a, h = ctx["away"], ctx["home"]
     ra, rh = s["away"], s["home"]
     when = _season_word(ctx, s.get("current"))
-    paras = ["Defensively, %s allowed %s goals a game %s (%s) and %s shots against. %s gave up %s goals (%s) on %s "
+    paras = ["Defensively, %s allowed %s goals a game %s, %s in the league, and %s shots against. %s gave up %s goals (%s) on %s "
              "shots a game." % (the(a), fg.num(ra["gapg"]), when, _rk(ra, "gapg"), fg.num(ra["sapg"], 1),
                                 the(h, True), fg.num(rh["gapg"]), _rk(rh, "gapg"), fg.num(rh["sapg"], 1))]
     if ra.get("sdpg") is not None and rh.get("sdpg") is not None and abs(ra["sdpg"] - rh["sdpg"]) >= 0.5:
         better = a if ra["sdpg"] > rh["sdpg"] else h
         rb, rw = (ra, rh) if better is a else (rh, ra)
-        paras.append("The shot differential is where the gap shows. %s finished at %+.1f shots a game against %+.1f "
+        paras.append("The shot differential is where the gap shows. %s finished at %+.1f shots a game%s against %+.1f "
                      "for %s, and the team that owns the puck usually decides what kind of game this is." % (
-                         the(better, True), rb["sdpg"], rw["sdpg"], the(h if better is a else a)))
+                         the(better, True), rb["sdpg"], _in(ctx, s.get("current")), rw["sdpg"],
+                         the(h if better is a else a)))
     if adv and adv["away"].get("hda") is not None and adv["home"].get("hda") is not None:
         xa, xh = adv["away"], adv["home"]
         tight = a if xa["hda"] < xh["hda"] else h
-        paras.append("Around the net, %s were the stingier side, allowing %s high danger shots a game to %s %s." % (
-            the(tight), fg.num(min(xa["hda"], xh["hda"]), 1), poss(h if tight is a else a),
+        paras.append("Around the net, %s were the stingier side%s, allowing %s high danger shots a game to %s %s." % (
+            the(tight), "" if adv["label"].startswith(ctx["season_label"]) else " in %s" % adv["label"].split(" ")[0],
+            fg.num(min(xa["hda"], xh["hda"]), 1), poss(h if tight is a else a),
             fg.num(max(xa["hda"], xh["hda"]), 1)))
     return paras
 
@@ -331,14 +338,16 @@ def special_teams(ctx):
             ml = (ctx.get("odds") or {}).get("ml") or {}
             ia, ih = fg.implied(ml.get("away")), fg.implied(ml.get("home"))
             tight = bool(ia and ih and 0.4 <= ih / (ia + ih) <= 0.6)
-            paras.append("Add the two units together and %s carry a special teams edge of %.1f points. %s" % (
+            paras.append("Add the two units together and %s carry a special teams edge of %.1f points%s. %s" % (
                 the(better), abs(net_a - net_h) * 100,
+                "" if s.get("current") else " on %s numbers" % ctx["prev_label"],
                 "In a game priced this tight, one power play goal can be the whole difference." if tight else
                 "That's often where a favorite pulls away, or where an underdog finds the goal it needs."))
     if ra.get("fo") is not None and rh.get("fo") is not None:
         fo = a if ra["fo"] > rh["fo"] else h
-        paras.append("In the faceoff circle %s won %s of their draws to %s for %s." % (
-            the(fo), fg.pct(max(ra["fo"], rh["fo"])), fg.pct(min(ra["fo"], rh["fo"])), the(h if fo is a else a)))
+        paras.append("In the faceoff circle %s won %s of their draws%s, to %s for %s." % (
+            the(fo), fg.pct(max(ra["fo"], rh["fo"])), _in(ctx, s.get("current")), fg.pct(min(ra["fo"], rh["fo"])),
+            the(h if fo is a else a)))
     return paras
 
 

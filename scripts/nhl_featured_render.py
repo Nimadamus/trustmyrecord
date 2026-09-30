@@ -21,6 +21,8 @@ ARCHIVE = "/nhl/featured-games/"
 SITEMAP_BEGIN = "BEGIN_NHL_FEATURED_URLS"
 SITEMAP_END = "END_NHL_FEATURED_URLS"
 HOME_MARKER = "homeNhlFeatured"
+# Bump when the markup changes, so pages whose data did not move still re-render.
+RENDER_VERSION = "2026-09-29.labels"
 OG_IMAGE = SITE + "/static/og/og-home.png"
 esc = ui.esc
 
@@ -158,6 +160,14 @@ def _gline(line):
     return line and line.get("gp")
 
 
+def _season_of(date):
+    """NHL season label for a game date: August onward belongs to the season
+    that starts that fall."""
+    y, mo = int(date[:4]), int(date[5:7])
+    start = y if mo >= 8 else y - 1
+    return "%d-%02d" % (start, (start + 1) % 100)
+
+
 def goalie_card(t, gl, opp):
     status = gl.get("status") or "unknown"
     prof = gl.get("profile") or {}
@@ -171,7 +181,8 @@ def goalie_card(t, gl, opp):
             stats = "".join((_gstat("Record", use["record"]), _gstat("Save %", fg.svpct(use["sv"])),
                              _gstat("GAA", fg.num(use["gaa"])), _gstat("Shutouts", use["so"]),
                              _gstat("Games", use["gp"])))
-            stats = '<p class="fg-glabel">%s</p><div class="fg-gstats">%s</div>' % (esc(lbl), stats)
+            stats = '<p class="fg-glabel">%s%s</p><div class="fg-gstats">%s</div>' % (
+                esc(lbl), " season (prior season)" if lbl != prof.get("current_label") else " season", stats)
         if _gline(cur) and cur["gp"] < 3:
             stats += '<p class="fg-gmini">%s so far: %s, %s save %%, %s GAA in %d %s.</p>' % (
                 esc(prof.get("current_label")), esc(cur["record"]), esc(fg.svpct(cur["sv"])), esc(fg.num(cur["gaa"])),
@@ -183,7 +194,9 @@ def goalie_card(t, gl, opp):
                 esc(r["date"][5:].replace("-", "/") if r.get("date") else ""), esc({"O": "OTL"}.get(r["dec"], r["dec"])),
                 "vs" if r.get("ha") == "H" else "@", esc(r["opp"]),
                 esc("%s SV%%" % fg.svpct(r["sv"]) if r.get("sv") is not None else "")) for r in rec)
-            recent = '<p class="fg-glabel">Last %d appearances</p><ul class="fg-grecent">%s</ul>' % (len(rec), cells)
+            seasons = sorted({_season_of(r.get("date")) for r in rec if r.get("date")})
+            recent = '<p class="fg-glabel">Last %d appearances (%s)</p><ul class="fg-grecent">%s</ul>' % (
+                len(rec), esc(" and ".join(seasons) + (" season" if len(seasons) == 1 else " seasons")), cells)
         extra = []
         split = prof.get("road") if t["_side"] == "away" else prof.get("home")
         if _gline(split) and split["gp"] >= 3:
@@ -295,6 +308,13 @@ def comparison(ctx):
                    "Shots allowed per game": "sapg", "Faceoffs won": "fo"}.get(r["label"])
             if key and ra.get("rank", {}).get(key) and rh.get("rank", {}).get(key):
                 r["label"] = "%s (%s / %s in NHL)" % (r["label"], fg.ordinal(ra["rank"][key]), fg.ordinal(rh["rank"][key]))
+        if not s.get("current"):
+            # PRIOR_SEASON_LABELS_20260929: a prior season rate names its season
+            # on the row itself, not only in a note under the card.
+            yr = s["label"].replace(" regular season", "")
+            for r in srows:
+                r["label"] = "%s %s" % (yr, r["label"][0].lower() + r["label"][1:])
+            out += '            <h3 class="fg-h3">%s season rates (prior season)</h3>\n' % esc(yr)
         out += ui.compare(uictx, srows, note="%s, all situations. League ranks out of 32. Source: NHL.com team stats%s." % (
             s["label"], ", through %d games" % min(ra["gp"], rh["gp"]) if s.get("current") else ""))
     adv = ctx.get("adv") or {}
@@ -311,7 +331,12 @@ def comparison(ctx):
             _row("5 on 5 goals for per game", xa, xh, "gf5", "gf5", lambda v: fg.num(v, 2)),
             _row("5 on 5 goals against per game", xa, xh, "ga5", "ga5", lambda v: fg.num(v, 2), False),
         ) if r]
-        out += ('            <h3 class="fg-h3">Advanced and 5 on 5</h3>\n' +
+        adv_yr = adv["label"].replace(" regular season", "")
+        if adv_yr != ctx["season_label"]:
+            for r in arows:
+                r["label"] = "%s %s" % (adv_yr, r["label"][0].lower() + r["label"][1:])
+        out += ('            <h3 class="fg-h3">Advanced and 5 on 5%s</h3>\n' % (
+            (", %s (prior season)" % esc(adv_yr)) if adv_yr != ctx["season_label"] else "") +
                 ui.compare(uictx, arows, note="%s. Expected goals and high danger shots from MoneyPuck.com." % adv["label"]))
     if not out:
         return ""
@@ -498,7 +523,10 @@ def model_section(ctx):
     if m.get("ot") is not None:
         cells.append({"value": fg.pct(m["ot"]), "label": "Games reaching overtime"})
     named = m.get("named_goalies") or {}
-    wp_note = "%s simulations of this exact game by the TMR NHL simulator (%s)%s." % (
+    prior = m.get("stats_season") and m["stats_season"] != ctx["season_label"]
+    wp_note = "%s simulations of this exact game by the TMR NHL simulator (%s)%s" + (
+        ", with team ratings built from %s stats (prior season)." % m["stats_season"] if prior else ".")
+    wp_note = wp_note % (
         "{:,}".format(m.get("sims") or 10000), m.get("version") or "",
         (", with %s in goal" % " and ".join(v for v in (named.get("away"), named.get("home")) if v)) if named else "")
     panel = ui.model_panel(uictx, {"away_score": fg.num(m["score"]["away"], 1), "home_score": fg.num(m["score"]["home"], 1),

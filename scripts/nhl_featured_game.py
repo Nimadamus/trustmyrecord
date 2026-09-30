@@ -1190,7 +1190,8 @@ def run(now=None, dry=False):
         # Fetch times are not data: a price the book has not moved does not
         # make the page new, so they stay out of the change hash.
         stable = dict(ctx, odds=dict(ctx["odds"] or {}, updated=None) if ctx.get("odds") else None)
-        digest = fg.content_hash({k: v for k, v in stable.items() if k not in ("updated_pt", "sources")})
+        digest = fg.content_hash([render.RENDER_VERSION,
+                                  {k: v for k, v in stable.items() if k not in ("updated_pt", "sources")}])
         if digest != sg.get("hash"):
             sg["hash"] = digest
             sg["updated"] = fg.iso(now)
