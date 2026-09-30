@@ -89,11 +89,14 @@ def build(root, ctx):
         img.paste(panel, (320, 0), panel)
         d = ImageDraw.Draw(img)
         for i, t in enumerate((a, h)):
-            try:
-                logo = _get(t["logo"]).resize((150, 150), Image.LANCZOS)
-                img.paste(logo, (400 + i * 250, 130), logo)
-            except Exception:
-                pass
+            # the dark background version of the mark first, as on the page
+            for u in (t["logo"].replace("/teamlogos/nhl/500/", "/teamlogos/nhl/500-dark/"), t["logo"]):
+                try:
+                    logo = _get(u).resize((150, 150), Image.LANCZOS)
+                    img.paste(logo, (400 + i * 250, 130), logo)
+                    break
+                except Exception:
+                    continue
         d.text((600, 205), "AT", font=_font(True, 34), fill=(143, 174, 203), anchor="mm")
 
         def centre(y, text, size, bold=True, fill=(234, 242, 250)):

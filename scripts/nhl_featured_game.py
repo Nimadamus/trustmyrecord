@@ -1277,7 +1277,18 @@ def localize_images(ctx):
     for side in ("away", "home"):
         t = ctx[side]
         if t.get("logo"):
-            t["logo_img"] = fg.local_image(ROOT, t["logo"], "img/nhl-featured/logos/%s-%s" % (t["abbr"].lower(), name(t["logo"])), 240)
+            # ESPN publishes a dark background version of each mark (the
+            # Lightning's navy bolt vanishes on the dark hero otherwise). It
+            # is used only once it has converted to a local file; a missing
+            # one falls back to the standard mark.
+            dark = t["logo"].replace("/teamlogos/nhl/500/", "/teamlogos/nhl/500-dark/")
+            got = None
+            if dark != t["logo"]:
+                got = fg.local_image(ROOT, dark, "img/nhl-featured/logos/%s-%s" % (t["abbr"].lower(), name(dark)), 240)
+                if not (got or {}).get("src", "").startswith("/static/"):
+                    got = None
+            t["logo_img"] = got or fg.local_image(ROOT, t["logo"], "img/nhl-featured/logos/%s-%s" % (
+                t["abbr"].lower(), name(t["logo"])), 240)
         for p in (ctx.get("key_players") or {}).get(side) or []:
             if p.get("headshot"):
                 p["img"] = fg.local_image(ROOT, p["headshot"], "img/nhl-featured/players/%s-%s" % (p["id"], name(p["headshot"])), 320)

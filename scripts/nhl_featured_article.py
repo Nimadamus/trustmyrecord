@@ -178,11 +178,20 @@ def intro(ctx):
                                   if riv.startswith("the Battle") else "")
     out.append(s)
     s2 = ""
-    if a["record"]["gp"] or h["record"]["gp"]:
+    if a["record"]["gp"] >= 5 and h["record"]["gp"] >= 5:
         s2 = "%s are %s and %s are %s." % (the(a, True), a["record"]["text"], the(h), h["record"]["text"])
-    elif a.get("prev") and h.get("prev"):
+    elif not a["record"]["gp"] and not h["record"]["gp"] and a.get("prev") and h.get("prev"):
         s2 = "Last season %s went %s and %s %s." % (the(a), a["prev"]["record"]["text"], the(h),
                                                     h["prev"]["record"]["text"])
+    else:
+        bits = []
+        for t in (a, h):
+            if t["record"]["gp"] >= 5 or not t.get("prev"):
+                bits.append("%s are %s" % (the(t), t["record"]["text"]))
+            else:
+                bits.append("%s went %s last season%s" % (the(t), t["prev"]["record"]["text"],
+                                                         (" and are %s so far" % t["record"]["text"]) if t["record"]["gp"] else ""))
+        s2 = bits[0][0].upper() + bits[0][1:] + "; " + bits[1] + "."
     o = ctx.get("odds") or {}
     ml = o.get("ml") or {}
     fa, fh = _fair(ml.get("away"), ml.get("home"))
@@ -224,7 +233,9 @@ def why(ctx):
         s.append("It's a %s Division game, so the points come straight out of a direct rival's column."
                  % a["standing"]["division"])
     elif "Conference game" in factors:
-        s.append("It's a %s Conference game with seeding implications down the line." % a["standing"]["conference"])
+        conf = a["standing"]["conference"]
+        s.append("It's %s %s Conference game, points taken straight from a club they'll be measured against all "
+                 "season." % ("an" if conf[:1] in "AEIOU" else "a", conf))
     if "Original Six" in factors and "Rivalry" not in factors:
         s.append("It's two Original Six clubs.")
     lp = (ctx.get("leaders") or {}).get("points") or {}
@@ -295,8 +306,8 @@ def team_record_para(ctx, side):
         s += ", going %s at home and %s on the road." % (prev["home"]["text"], prev["road"]["text"])
         s += _playoff_text(ctx, t)
         return s
-    s = "%s are %s with %d points" % (the(t, True), rec["text"], rec["pts"])
-    if st.get("division_rank") and st.get("division"):
+    s = "%s are %s with %d %s" % (the(t, True), rec["text"], rec["pts"], "point" if rec["pts"] == 1 else "points")
+    if rec["gp"] >= 5 and st.get("division_rank") and st.get("division"):
         s += ", %s in the %s Division" % (fg.ordinal(st["division_rank"]), st["division"])
         if st.get("conference_rank"):
             s += " and %s in the %s Conference" % (fg.ordinal(st["conference_rank"]), st["conference"])
@@ -690,7 +701,21 @@ def form(ctx):
     else:
         for side in ("away", "home"):
             t = ctx[side]
-            if not t["record"]["gp"]:
+            if t["record"]["gp"] < 3:
+                pv = t.get("prev") or {}
+                l10 = pv.get("last10")
+                if not l10 or not l10["gp"]:
+                    continue
+                s = "%s closed %s %s over their final %d regular season games." % (
+                    the(t, True), pv["label"], l10["text"], l10["gp"])
+                g5 = t.get("games5") or []
+                if g5:
+                    s += " This season they've played %s: %s." % (
+                        _num_word(len(g5)), ", then ".join("%s the %s %s" % (_res_word(r), _common_of(ctx, r["opp"]),
+                                                                              _score_text(r)) for r in g5))
+                else:
+                    s += " They haven't played a %s game yet." % ctx["season_label"]
+                paras.append(s)
                 continue
             l5, l10, sk = t.get("last5"), t.get("last10"), t.get("streak")
             s = "%s are %s over their last %d%s" % (the(t, True), l5["text"], l5["gp"],
@@ -730,8 +755,11 @@ def h2h(ctx):
     po = [r for r in hh if r.get("playoff")]
     s = "%s have won %d of the last %d meetings since the start of %s, with %s taking %d." % (
         the(a, True), wins, len(hh), hh[-1]["season"], the(h), len(hh) - wins)
-    s += " %s of those games %s decided by one goal, %s needed overtime or a shootout, and they averaged %.1f total goals." % (
-        _num_word(one).capitalize(), "was" if one == 1 else "were", _num_word(extra), avg)
+    if one or extra:
+        s += " %s of those games %s decided by one goal, %s needed overtime or a shootout, and they averaged %.1f total goals." % (
+            _num_word(one).capitalize(), "was" if one == 1 else "were", _num_word(extra) if extra else "none", avg)
+    else:
+        s += " None of them was decided by one goal, and they averaged %.1f total goals." % avg
     paras = [s]
     last = hh[0]
     win = a if last["winner"] == a["abbr"] else h
@@ -834,8 +862,12 @@ def keys(ctx):
         if None not in (ra.get("pp"), rh.get("pp"), ra.get("pk"), rh.get("pk")):
             na, nh = ra["pp"] + ra["pk"], rh["pp"] + rh["pk"]
             better = a if na > nh else h
-            rb, rw = (ra, rh) if better is a else (rh, ra)
-            out.append("Special teams. %s combined power play and penalty kill came to %.1f%s against %.1f for %s, "
+            if abs(na - nh) < 0.03:
+                out.append("Special teams. The two clubs' power play and penalty kill add up within %.1f points of each "
+                           "other%s, so neither side should expect to win the game on the man advantage alone." % (
+                               abs(na - nh) * 100, when))
+            else:
+                out.append("Special teams. %s power play and penalty kill percentages add up to %.1f%s against %.1f for %s, "
                        "so a game with a lot of penalties leans their way." % (
                            poss(better, True), (na if better is a else nh) * 100, when, (nh if better is a else na) * 100,
                            the(h if better is a else a)))
