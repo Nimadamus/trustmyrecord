@@ -8050,7 +8050,7 @@
         window.TMRTakesFeed.mount(host, {
             username: socialState.username,
             composer: own,
-            composerContext: { source: 'profile', kind: 'general' },
+            composerContext: { source: 'profile', kind: 'general', placeholder: 'What’s on your mind?' },
             pageSize: 10,
             autoLoad: true,
             hideRecord: true,
@@ -8102,16 +8102,24 @@
             if (!window.TMRTakesFeed) return;
             var panel = document.querySelector('.profile-tab-panel[data-panel="social"]');
             if (panel && panel.classList.contains('active')) mountSocialFeed();
+            // TAKE_RELOCATE_20260930: the homepage dock is gone; the owner
+            // posts from here (and from the Social tab), never a visitor.
+            if (own) {
+                var title = section.querySelector('.tmrx-section-title');
+                if (title) title.textContent = 'Share Your Sports Take';
+            }
             window.TMRTakesFeed.mount(list, {
                 username: username,
                 compact: true,
                 pageSize: 3,
                 hideRecord: true,
-                emptyText: 'No takes yet. Share your first one from the Social tab.',
+                composer: own,
+                composerContext: { source: 'profile', kind: 'general', placeholder: 'Thoughts on today’s matchups?' },
+                emptyText: own ? 'No takes yet. Your first one shows up right here.' : 'No takes yet.',
                 onCount: function (n, feed) {
                     section.hidden = !n && !own;
                     section.classList.toggle('is-empty', !n);
-                    if (meta) meta.textContent = n ? 'The newest posts from this member. The full feed lives on the Social tab.' : 'Nothing posted yet.';
+                    if (meta) meta.textContent = own ? 'Post a take. Your newest ones show below and the full feed lives on the Social tab.' : (n ? 'The newest posts from this member. The full feed lives on the Social tab.' : 'Nothing posted yet.');
                     if (!socialState.mounted) setSocialCount(n, feed);
                 },
                 onError: function () { if (!own) section.hidden = true; }
