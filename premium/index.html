@@ -666,6 +666,106 @@
         .px-cols .px-col-public { padding: 18px; border-radius: 14px; border: 1px solid rgba(140, 196, 255, .25); }
         .px-tag { display: inline-block; margin-right: 8px; padding: 3px 9px; border-radius: 999px; font-size: 11px; letter-spacing: .08em; }
         .px-pro-lead { font-size: 16px; font-weight: 600; }
+        /* WATCHDOG_SCALE_20260929: the Watchdog module as a live research database. Always a dark panel,
+           so every text colour is pinned (the light theme recolours generic text). */
+        .wdx { --wx-ink: #FFFFFF; --wx-body: #C3D4E6; --wx-dim: #8FA6BF; --wx-line: rgba(140, 196, 255, .16); --wx-blue: #4DA3FF; --wx-gold: #F5C542; --wx-cell: rgba(140, 196, 255, .06);
+            position: relative; overflow: hidden; padding: clamp(22px, 3.4vw, 44px); border-radius: 20px; margin-bottom: 26px;
+            background: radial-gradient(1200px 420px at 85% -10%, rgba(77, 163, 255, .18), transparent 60%), linear-gradient(165deg, #06142A 0%, #0A2344 55%, #0B2A4D 100%);
+            box-shadow: 0 28px 70px -34px rgba(7, 24, 42, .8), inset 0 0 0 1px rgba(140, 196, 255, .14); color: var(--wx-body); }
+        .wdx::before { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .35;
+            background-image: linear-gradient(rgba(140, 196, 255, .05) 1px, transparent 1px), linear-gradient(90deg, rgba(140, 196, 255, .05) 1px, transparent 1px); background-size: 32px 32px;
+            -webkit-mask-image: linear-gradient(180deg, #000, transparent 55%); mask-image: linear-gradient(180deg, #000, transparent 55%); }
+        .wdx > * { position: relative; }
+        .wdx .px-kicker { color: var(--wx-gold) !important; }
+        .wdx .px-ico { background: rgba(245, 197, 66, .12); border-color: rgba(245, 197, 66, .4); }
+        .wdx-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+        .wdx-live { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; border: 1px solid rgba(61, 220, 132, .35); background: rgba(61, 220, 132, .08); font-size: 12px; font-weight: 700; letter-spacing: .04em; color: #BFF3D6 !important; }
+        .wdx-live i { width: 8px; height: 8px; border-radius: 50%; background: #3DDC84; box-shadow: 0 0 0 0 rgba(61, 220, 132, .6); animation: wdxPulse 2.4s ease-out infinite; }
+        .wdx-live b { font-weight: 600; color: #8FD9B0 !important; margin-left: 2px; }
+        @keyframes wdxPulse { 0% { box-shadow: 0 0 0 0 rgba(61, 220, 132, .55); } 70% { box-shadow: 0 0 0 8px rgba(61, 220, 132, 0); } 100% { box-shadow: 0 0 0 0 rgba(61, 220, 132, 0); } }
+        .wdx h3 { margin: 14px 0 10px; font-family: Barlow, Inter, sans-serif; font-size: clamp(28px, 3.6vw, 44px); line-height: 1.06; letter-spacing: -.01em; color: var(--wx-ink) !important; text-wrap: balance; max-width: 22ch; -webkit-hyphens: manual; hyphens: manual; overflow-wrap: normal; }
+        .wdx-hl { color: var(--wx-gold); font-variant-numeric: tabular-nums; white-space: nowrap; }
+        .wdx-lead { margin: 0; max-width: 62ch; font-size: 17px; line-height: 1.55; color: #DCE8F5 !important; }
+        .wdx-stats { display: grid; grid-template-columns: 1.35fr 1fr 1fr 1fr; gap: 12px; margin: 26px 0 14px; }
+        .wdx-stat { display: flex; flex-direction: column; gap: 4px; min-width: 0; padding: 18px 18px 16px; border-radius: 14px; background: var(--wx-cell); border: 1px solid var(--wx-line); }
+        .wdx-stat strong { font-family: Barlow, Inter, sans-serif; font-size: clamp(30px, 3.4vw, 42px); line-height: 1; font-weight: 800; color: var(--wx-ink) !important; font-variant-numeric: tabular-nums; min-height: 1em; }
+        .wdx-stat span { font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: #9CC9FF !important; }
+        .wdx-stat small { font-size: 12.5px; color: var(--wx-dim) !important; min-height: 1.2em; }
+        .wdx-stat.is-hero { background: linear-gradient(160deg, rgba(245, 197, 66, .16), rgba(245, 197, 66, .04)); border-color: rgba(245, 197, 66, .45); }
+        .wdx-stat.is-hero strong { font-size: clamp(38px, 4.6vw, 58px); color: var(--wx-gold) !important; }
+        .wdx-stat.is-hero span { color: #FFE6A3 !important; }
+        .wdx-pulse { display: flex; flex-wrap: wrap; gap: 8px 22px; padding: 12px 16px; border-radius: 12px; border: 1px dashed var(--wx-line); font-size: 13.5px; color: var(--wx-body) !important; }
+        .wdx-pulse span { color: var(--wx-body) !important; }
+        .wdx-pulse b { color: var(--wx-ink) !important; font-variant-numeric: tabular-nums; margin-left: 4px; }
+        .wdx-pulse[hidden], .wdx-live[hidden] { display: none; }
+        .wdx-block { margin-top: 34px; padding-top: 28px; border-top: 1px solid var(--wx-line); }
+        .wdx-h { margin: 0 0 6px; font-family: Barlow, Inter, sans-serif; font-size: 22px; letter-spacing: .01em; color: var(--wx-ink) !important; }
+        .wdx-sub { margin: 0 0 16px; max-width: 70ch; line-height: 1.55; color: var(--wx-body) !important; }
+        .wdx-flow { list-style: none; margin: 14px 0 0; padding: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; counter-reset: none; }
+        .wdx-flow li { position: relative; padding: 16px 14px 14px; border-radius: 14px; background: var(--wx-cell); border: 1px solid var(--wx-line); }
+        .wdx-flow li:not(:last-child)::after { content: ""; position: absolute; top: 28px; right: -11px; width: 10px; height: 10px; border-top: 2px solid var(--wx-blue); border-right: 2px solid var(--wx-blue); transform: rotate(45deg); opacity: .8; }
+        .wdx-step { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 8px; background: rgba(77, 163, 255, .16); border: 1px solid rgba(77, 163, 255, .45); font-size: 12px; font-weight: 800; color: #CFE4FF !important; }
+        .wdx-flow b { display: block; margin: 10px 0 4px; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--wx-ink) !important; }
+        .wdx-flow p { margin: 0; font-size: 13.5px; line-height: 1.45; color: var(--wx-body) !important; }
+        .wdx-sources { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+        .wdx-src { display: flex; flex-direction: column; gap: 10px; min-width: 0; padding: 16px; border-radius: 14px; background: var(--wx-cell); border: 1px solid var(--wx-line); }
+        .wdx-src-h { display: flex; align-items: center; gap: 12px; min-width: 0; }
+        .wdx-src-h b { display: block; font-size: 16px; color: var(--wx-ink) !important; }
+        .wdx-src-h em { display: block; font-style: normal; font-size: 12px; color: var(--wx-dim) !important; }
+        .wdx-mono { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 10px; font-size: 13px; font-weight: 800; letter-spacing: .02em; color: #fff !important; background: #1C3E66; border: 1px solid rgba(255, 255, 255, .12); }
+        .wdx-src.is-reddit .wdx-mono { background: #C2410C; }
+        .wdx-src.is-covers .wdx-mono { background: #0F5C3A; }
+        .wdx-src.is-x .wdx-mono { background: #000; }
+        .wdx-src.is-therx .wdx-mono { background: #7A1F2B; }
+        .wdx-src.is-sbr .wdx-mono { background: #1D4ED8; }
+        .wdx-src.is-predictem .wdx-mono { background: #5B3A8C; }
+        .wdx-src-n { font-family: Barlow, Inter, sans-serif; font-size: 32px; line-height: 1; font-weight: 800; color: var(--wx-ink) !important; font-variant-numeric: tabular-nums; }
+        .wdx-src-n small { margin-left: 6px; font-family: Inter, sans-serif; font-size: 12px; font-weight: 600; color: var(--wx-dim) !important; }
+        .wdx-bar { display: block; height: 4px; border-radius: 4px; background: rgba(140, 196, 255, .12); overflow: hidden; }
+        .wdx-bar i { display: block; height: 100%; border-radius: 4px; background: linear-gradient(90deg, #4DA3FF, #8CC4FF); }
+        .wdx-src dl { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 0; }
+        .wdx-src dl div { display: flex; align-items: baseline; gap: 5px; }
+        .wdx-src dt { font-weight: 800; font-size: 13.5px; color: var(--wx-ink) !important; font-variant-numeric: tabular-nums; }
+        .wdx-src dd { margin: 0; font-size: 12.5px; color: var(--wx-dim) !important; }
+        .wdx-note { margin: 14px 0 0; font-size: 13px; line-height: 1.55; color: var(--wx-dim) !important; }
+        .wdx-note b { color: #CFE4FF !important; font-variant-numeric: tabular-nums; }
+        .wdx-depth { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 28px; align-items: start; }
+        .wdx-groups { display: grid; gap: 14px; }
+        .wdx-groups h5 { margin: 0 0 8px; font-size: 11.5px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: #9CC9FF !important; }
+        .wdx-chips { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 7px; }
+        .wdx-chips li { padding: 6px 11px; border-radius: 999px; font-size: 13px; line-height: 1.2; color: #DCE8F5 !important; background: rgba(140, 196, 255, .08); border: 1px solid var(--wx-line); }
+        .wdx-chips li.is-pro { color: #1A1400 !important; background: var(--wx-gold); border-color: var(--wx-gold); font-weight: 700; }
+        .wdx .px-watch-shot { margin-top: 6px; }
+        .wdx .px-cols { margin-top: 0; }
+        .wdx .px-list li { color: #C9D8E8 !important; }
+        .wdx .px-list li::before { border-color: #4DA3FF; }
+        .wdx .px-list.is-pro li::before { border-color: #F5C542; }
+        .wdx h4 { margin: 0 0 12px; font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: #fff !important; }
+        .wdx .px-tag { background: rgba(140, 196, 255, .18); color: #CFE4FF !important; }
+        .wdx .px-tag.is-pro { background: #F5C542; color: #1A1400 !important; }
+        .wdx .px-pro-lead { margin: 0 0 12px; color: #fff !important; }
+        .wdx .px-small { font-size: 13px !important; color: #9FB5CC !important; margin: 12px 0 0 !important; }
+        .wdx .px-explore { margin-top: 16px; background: #FFFFFF; color: #07182A !important; box-shadow: 0 10px 26px -12px rgba(77, 163, 255, .8); }
+        .wdx .px-link { color: #8CC4FF !important; }
+        .wdx .pro-cta { margin-top: 0; background: #F5C542 !important; border-color: #F5C542 !important; color: #1A1400 !important; }
+        .wdx .px-actions { margin-top: 16px; }
+        @media (prefers-reduced-motion: reduce) { .wdx-live i { animation: none; } }
+        @media (max-width: 1000px) {
+            .wdx-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .wdx-flow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .wdx-flow li::after { display: none; }
+            .wdx-flow li:last-child { grid-column: 1 / -1; }
+            .wdx-sources { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .wdx-depth { grid-template-columns: minmax(0, 1fr); }
+        }
+        @media (max-width: 560px) {
+            .wdx { border-radius: 16px; }
+            .wdx-stats { gap: 10px; }
+            .wdx-stat { padding: 14px; }
+            .wdx-stat.is-hero { grid-column: 1 / -1; }
+            .wdx-flow, .wdx-sources { grid-template-columns: minmax(0, 1fr); }
+            .wdx-pulse { flex-direction: column; gap: 6px; }
+        }
         /* PRO_DASHBOARD_20260929 */
         .pd { text-align: left; margin-top: 18px; padding: clamp(18px, 3vw, 28px); border-radius: 18px; background: var(--pro-surface); border: 1px solid var(--pro-line); box-shadow: 0 18px 44px -28px rgba(7, 24, 42, .45); }
         .pd-anchor { display: block; position: relative; top: -90px; }
@@ -826,77 +926,123 @@
                     </p>
                 </div>
 
-                <!-- Handicapper Watchdog: the lead product. Every line below was checked
-                     against the live profile tabs and /api/pro endpoints on 2026-09-29. -->
-                <article class="px-watch" id="watchdog">
-                    <div class="px-watch-copy">
-                        <div class="px-kicker"><span class="px-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/><path d="M8 11l2 2 4-4"/></svg></span>Handicapper Watchdog</div>
-                        <h3>Research more than 1,000 tracked handicappers from around the web</h3>
-                        <p class="px-lead">
-                            Stop guessing whether a handicapper on Covers, X or Reddit is really
-                            winning. TrustMyRecord grades every pick these handicappers post on the
-                            final score and keeps a full profile for each one: record, units, ROI,
-                            streaks, recent form, sport by sport history and every past pick.
-                        </p>
-                        <p>
-                            A living database that keeps updating. The Watchdog checks Covers, X,
-                            Reddit, Sportsbook Review, TheRX and Predictem around the clock in the
-                            cloud, discovers new handicappers as they start posting, collects their
-                            qualifying picks, grades completed picks and recalculates every record
-                            automatically. TrustMyRecord member picks are never part of it. It covers
-                            outside, publicly posted handicappers only.
-                        </p>
-                        <a class="px-explore" href="/around-the-web/">Explore Handicappers Around the Web <span aria-hidden="true">&rarr;</span></a>
-                        <p class="px-small">Look through the database first and see how deep it goes. It is open to everyone.</p>
-                        <div class="px-cols">
+                <!-- WATCHDOG_SCALE_20260929: every number in this module is read live from the Watchdog ledger
+                     (GET /api/pro/watchdog/stats, which proxies the Watchdog's own /api/stats). No number is typed
+                     into this page; if the call fails the numbers stay blank and the copy still reads correctly.
+                     Profile features and the Public / Pro split were checked against the live profile tabs,
+                     the Around the Web directory and the /api/pro endpoints on 2026-09-29. -->
+                <article class="wdx" id="watchdog" aria-labelledby="wdxTitle">
+                    <header class="wdx-head">
+                        <div class="wdx-top">
+                            <div class="px-kicker"><span class="px-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/><path d="M8 11l2 2 4-4"/></svg></span>Handicapper Watchdog</div>
+                            <span class="wdx-live" id="wdxLive" hidden><i aria-hidden="true"></i>Live database<b id="wdxUpdated"></b></span>
+                        </div>
+                        <h3 id="wdxTitle">Research the tracked handicappers of the betting web</h3>
+                        <p class="wdx-lead">A searchable research database, not a directory. Every account is watched around the clock, every qualifying pick is graded on the final score, and every record rebuilds itself.</p>
+                    </header>
+
+                    <div class="wdx-stats" role="list">
+                        <div class="wdx-stat is-hero" role="listitem"><strong data-wdx="accounts">&nbsp;</strong><span>Tracked handicapper accounts</span><small data-wdx-sub="with_record"></small></div>
+                        <div class="wdx-stat" role="listitem"><strong data-wdx="platforms">&nbsp;</strong><span>Sources</span><small data-wdx-sub="communities"></small></div>
+                        <div class="wdx-stat" role="listitem"><strong>24/7</strong><span>Automated monitoring</span><small>Cloud harvester, no manual entry</small></div>
+                        <div class="wdx-stat" role="listitem"><strong data-wdx="graded_picks">&nbsp;</strong><span>Graded picks tracked</span><small data-wdx-sub="posts_captured"></small></div>
+                    </div>
+
+                    <div class="wdx-pulse" id="wdxPulse" hidden>
+                        <span>Last database update <b data-wdx-ago="last_capture_at"></b></span>
+                        <span>Handicappers discovered today <b data-wdx="new_accounts_today"></b></span>
+                        <span>New picks captured today <b data-wdx="picks_captured_today"></b></span>
+                        <span>Pending picks right now <b data-wdx="pending_picks"></b></span>
+                    </div>
+
+                    <section class="wdx-block" aria-labelledby="wdxFlowH">
+                        <h4 class="wdx-h" id="wdxFlowH">How the Watchdog works</h4>
+                        <ol class="wdx-flow">
+                            <li><span class="wdx-step">1</span><b>Discover</b><p>New public handicappers are found as they start posting.</p></li>
+                            <li><span class="wdx-step">2</span><b>Collect</b><p>Their publicly posted qualifying picks are captured, with the original post.</p></li>
+                            <li><span class="wdx-step">3</span><b>Grade</b><p>Completed picks are graded against the final score.</p></li>
+                            <li><span class="wdx-step">4</span><b>Build history</b><p>Record, units, ROI, streaks and splits update automatically.</p></li>
+                            <li><span class="wdx-step">5</span><b>Monitor</b><p>New pending picks keep arriving as they are posted.</p></li>
+                        </ol>
+                    </section>
+
+                    <section class="wdx-block" aria-labelledby="wdxSrcH">
+                        <div class="wdx-row">
+                            <div>
+                                <h4 class="wdx-h" id="wdxSrcH">Tracking the betting web</h4>
+                                <p class="wdx-sub">Betting forums, social platforms and betting communities, monitored continuously. Numbers are live from the Watchdog database.</p>
+                            </div>
+                        </div>
+                        <div class="wdx-sources" id="wdxSources">
+                            <div class="wdx-src"><div class="wdx-src-h"><span class="wdx-mono">RD</span><div><b>Reddit</b><em>Betting communities</em></div></div></div>
+                            <div class="wdx-src"><div class="wdx-src-h"><span class="wdx-mono">CV</span><div><b>Covers</b><em>Betting forum</em></div></div></div>
+                            <div class="wdx-src"><div class="wdx-src-h"><span class="wdx-mono">X</span><div><b>X</b><em>Social platform</em></div></div></div>
+                            <div class="wdx-src"><div class="wdx-src-h"><span class="wdx-mono">RX</span><div><b>TheRX</b><em>Betting forum</em></div></div></div>
+                            <div class="wdx-src"><div class="wdx-src-h"><span class="wdx-mono">SB</span><div><b>Sportsbook Review</b><em>Betting forum</em></div></div></div>
+                            <div class="wdx-src"><div class="wdx-src-h"><span class="wdx-mono">PE</span><div><b>Predictem</b><em>Betting forum</em></div></div></div>
+                        </div>
+                        <p class="wdx-note" id="wdxNote">Each account is one handle on one site. Accounts are never merged across sites without verified proof, so the numbers by source add up exactly to the total. TrustMyRecord member picks are never part of the Watchdog.</p>
+                    </section>
+
+                    <section class="wdx-block wdx-depth" aria-labelledby="wdxDepthH">
+                        <div class="wdx-depth-copy">
+                            <h4 class="wdx-h" id="wdxDepthH">Inside every profile</h4>
+                            <p class="wdx-sub">Not a list of names and records. Every number opens the individual picks behind it.</p>
+                            <div class="wdx-groups">
+                                <div><h5>Results</h5><ul class="wdx-chips"><li>Overall record</li><li>Units won and lost</li><li>ROI</li><li>Win rate</li><li>Current and longest streaks</li><li>Recent form</li><li>Running units</li><li>Max drawdown</li></ul></div>
+                                <div><h5>Splits</h5><ul class="wdx-chips"><li>Sport</li><li>League, conference and division</li><li>Moneyline, spread and total</li><li>Favorites and underdogs</li><li>Odds ranges</li><li>Overs and unders</li><li>Home and away</li><li>Backing and fading each team</li><li>Season, month and day</li></ul></div>
+                                <div><h5>Evidence</h5><ul class="wdx-chips"><li>Complete pick history</li><li>Picks behind every number</li><li>Link to the original post</li><li>Closing line value</li><li>Historical trends</li><li class="is-pro">Pending picks with TMR Pro</li></ul></div>
+                            </div>
+                        </div>
+                        <div class="px-watch-shot" aria-hidden="true">
+                            <div class="px-shot-bar"><i></i><i></i><i></i><span>Handicapper profile</span></div>
+                            <div class="px-shot-tabs"><b>Overview</b><span>Pick History</span><span>Sports</span><span>Markets &amp; Odds</span><span>Teams</span><span>Advanced</span><span>Trends</span></div>
+                            <div class="px-shot-grid">
+                                <div><small>Record</small><strong>W L P</strong></div>
+                                <div><small>Units</small><strong>+u</strong></div>
+                                <div><small>ROI</small><strong>%</strong></div>
+                                <div><small>Streak</small><strong>W / L</strong></div>
+                            </div>
+                            <div class="px-shot-rows">
+                                <div><span>By market</span><em>moneyline, spread, total</em></div>
+                                <div><span>By price</span><em>favorites, underdogs, odds ranges</em></div>
+                                <div><span>Teams</span><em>backed, faded, home, away</em></div>
+                                <div><span>Every number</span><em>opens the picks behind it</em></div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="wdx-block" aria-label="Public and TMR Pro access">
+                        <div class="px-cols wdx-access">
                             <div class="px-col-public">
                                 <h4><span class="px-tag">Public</span> Free for everyone</h4>
                                 <ul class="px-list">
-                                    <li>Handicapper profiles</li>
-                                    <li>Win and loss records, units, ROI and win rate</li>
-                                    <li>Current, best and worst streaks and recent form</li>
-                                    <li>Complete pick histories with odds, result and running units</li>
-                                    <li>Every graded pick, linked to the original post</li>
-                                    <li>Performance breakdowns by sport, season, market, price, home and away, and team</li>
+                                    <li>Search the handicapper database by name, sport and graded picks</li>
+                                    <li>Full historical profiles: record, units, ROI, win rate, streaks and recent form</li>
+                                    <li>Complete graded pick histories with odds, result and running units</li>
+                                    <li>Every graded pick linked to the original post</li>
+                                    <li>Breakdowns by sport, season, market, price, home and away, and team</li>
                                 </ul>
+                                <a class="px-explore" href="/around-the-web/">Explore Handicappers Around the Web <span aria-hidden="true">&rarr;</span></a>
                             </div>
                             <div class="px-col-pro">
                                 <h4><span class="px-tag is-pro">TMR Pro</span> The pending picks</h4>
-                                <p class="px-pro-lead">
-                                    See the pending picks these tracked handicappers post before their
-                                    games start, as they are collected each day.
-                                </p>
+                                <p class="px-pro-lead">See the pending picks these tracked handicappers post before their games start, as they are collected.</p>
                                 <ul class="px-list is-pro">
                                     <li>Every collected pregame pick in one board: matchup, market, selection, odds and units where posted</li>
                                     <li>Each pick beside that handicapper's record, units, ROI, streak and last 10</li>
-                                    <li>Updated as new picks are collected, and only for games that have not started</li>
+                                    <li>Updated as new picks are collected, only for games that have not started</li>
                                     <li>A link to the original post where one is available</li>
                                     <li>Sort and filter by record, streak, ROI, league and source, and see where the proven handicappers agree</li>
                                 </ul>
+                                <div class="px-actions">
+                                    <a class="pro-cta" href="#pricing">Get TMR Pro</a>
+                                    <a class="px-link" href="#board">See today's pending board</a>
+                                </div>
                                 <p class="px-small">Not every handicapper posts every day. The board shows the pending picks that have been posted and collected so far.</p>
                             </div>
                         </div>
-                        <div class="px-actions">
-                            <a class="pro-cta" href="#pricing">Get TMR Pro</a>
-                            <a class="px-link" href="#board">See today's pending board</a>
-                        </div>
-                    </div>
-                    <div class="px-watch-shot" aria-hidden="true">
-                        <div class="px-shot-bar"><i></i><i></i><i></i><span>Handicapper profile</span></div>
-                        <div class="px-shot-tabs"><b>Overview</b><span>Pick History</span><span>Sports</span><span>Markets &amp; Odds</span><span>Teams</span><span>Advanced</span><span>Trends</span></div>
-                        <div class="px-shot-grid">
-                            <div><small>Record</small><strong>W L P</strong></div>
-                            <div><small>Units</small><strong>+u</strong></div>
-                            <div><small>ROI</small><strong>%</strong></div>
-                            <div><small>Streak</small><strong>W / L</strong></div>
-                        </div>
-                        <div class="px-shot-rows">
-                            <div><span>By market</span><em>moneyline, spread, total</em></div>
-                            <div><span>By price</span><em>favorites, underdogs, odds ranges</em></div>
-                            <div><span>Teams</span><em>backed, faded, home, away</em></div>
-                            <div><span>Every number</span><em>opens the picks behind it</em></div>
-                        </div>
-                    </div>
+                    </section>
                 </article>
 
                 <div class="px-grid">
@@ -1589,6 +1735,81 @@
                 + (items.length ? '<div class="wd-net" style="margin:0 0 14px">' + items.join('') + '</div>' : '')
                 + '<a class="px-link" href="/around-the-web/">Browse Handicappers Around the Web</a></div>';
         }
+        /* WATCHDOG_SCALE_20260929: the Watchdog module's numbers, live from the ledger. Nothing is typed in;
+           when the call fails every number stays blank and the static copy still reads correctly. */
+        var WDX_MONO = { reddit: 'RD', covers: 'CV', x: 'X', therx: 'RX', sbr: 'SB', predictem: 'PE', twoplustwo: '2+2' };
+        var WDX_COMM = { reddit: 'subreddits', x: '' };
+        function wdxFmt(v) { return Number(v).toLocaleString('en-US'); }
+        function wdxEsc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+        function wdxCount(el, to, animate) {
+            var still = !animate || !window.requestAnimationFrame || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+            if (still || to < 50) { el.textContent = wdxFmt(to); return; }
+            var t0 = null, dur = 1100;
+            function step(t) {
+                if (t0 === null) t0 = t;
+                var k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+                el.textContent = wdxFmt(Math.round(to * e));
+                if (k < 1) requestAnimationFrame(step);
+            }
+            requestAnimationFrame(step);
+        }
+        var wdxSeen = false;
+        function paintWdx(d, animate) {
+            var root = document.getElementById('watchdog');
+            if (!root || !d || !d.accounts) return;
+            var h = document.getElementById('wdxTitle');
+            if (h) h.innerHTML = 'Research <span class="wdx-hl">' + wdxFmt(d.accounts) + '</span> tracked handicapper accounts from across the betting web';
+            root.querySelectorAll('[data-wdx]').forEach(function (el) {
+                var v = d[el.getAttribute('data-wdx')];
+                if (v == null) return;
+                if (el.tagName === 'STRONG') { if (animate !== 'defer') wdxCount(el, Number(v), animate); } else el.textContent = wdxFmt(v);
+            });
+            var subs = {
+                with_record: d.with_record != null ? wdxFmt(d.with_record) + ' with a graded record' : '',
+                communities: d.communities != null ? wdxFmt(d.communities) + ' forums, subreddits and feeds' : '',
+                posts_captured: d.posts_captured != null ? 'from ' + wdxFmt(d.posts_captured) + ' captured posts' : ''
+            };
+            root.querySelectorAll('[data-wdx-sub]').forEach(function (el) { el.textContent = subs[el.getAttribute('data-wdx-sub')] || ''; });
+            var ago = agoText(d.last_capture_at);
+            root.querySelectorAll('[data-wdx-ago]').forEach(function (el) { el.textContent = ago; });
+            var up = document.getElementById('wdxUpdated');
+            if (up && ago) { up.textContent = 'updated ' + ago; document.getElementById('wdxLive').hidden = false; }
+            if (ago) document.getElementById('wdxPulse').hidden = false;
+            var src = (d.sources || []).slice().sort(function (a, b) { return b.accounts - a.accounts; });
+            var box = document.getElementById('wdxSources');
+            if (box && src.length) {
+                var top = src[0].accounts || 1;
+                box.innerHTML = src.map(function (s) {
+                    var comm = WDX_COMM[s.id] === undefined ? 'forums' : WDX_COMM[s.id];
+                    var meta = [[s.graded_picks, 'graded picks'], [s.with_record, 'with a record']];
+                    if (comm && s.communities) meta.push([s.communities, s.communities === 1 ? comm.replace(/s$/, '') : comm]);
+                    return '<div class="wdx-src is-' + wdxEsc(s.id) + '"><div class="wdx-src-h"><span class="wdx-mono">' + wdxEsc(WDX_MONO[s.id] || s.label.slice(0, 2).toUpperCase())
+                        + '</span><div><b>' + wdxEsc(s.label) + '</b><em>' + wdxEsc(s.kind || '') + '</em></div></div>'
+                        + '<strong class="wdx-src-n">' + wdxFmt(s.accounts) + '<small>accounts</small></strong>'
+                        + '<span class="wdx-bar"><i style="width:' + Math.max(2, Math.round(100 * s.accounts / top)) + '%"></i></span>'
+                        + '<dl>' + meta.map(function (m) { return '<div><dt>' + wdxFmt(m[0] || 0) + '</dt><dd>' + m[1] + '</dd></div>'; }).join('') + '</dl></div>';
+                }).join('');
+            }
+            var sum = src.reduce(function (a, s) { return a + (s.accounts || 0); }, 0);
+            var note = document.getElementById('wdxNote');
+            if (note && sum === d.accounts) note.innerHTML = '<b>' + src.map(function (s) { return wdxFmt(s.accounts); }).join(' + ') + ' = ' + wdxFmt(d.accounts) + ' accounts.</b> ' + note.textContent.replace(/^[^.]*=[^.]*accounts\.\s*/, '');
+        }
+        function loadWdx() {
+            if (!document.getElementById('watchdog')) return;
+            fetch(API + '/pro/watchdog/stats', { cache: 'no-store' }).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+                .then(function (d) {
+                    var el = document.getElementById('watchdog');
+                    if (wdxSeen || !('IntersectionObserver' in window)) { paintWdx(d, !wdxSeen); wdxSeen = true; return; }
+                    paintWdx(d, 'defer');
+                    var io = new IntersectionObserver(function (es) {
+                        if (!es[0].isIntersecting) return;
+                        io.disconnect(); wdxSeen = true; paintWdx(d, true);
+                    }, { threshold: 0.2 });
+                    io.observe(el.querySelector('.wdx-stats') || el);
+                }).catch(function () { });
+        }
+        loadWdx();
+        setInterval(function () { if (!document.hidden) loadWdx(); }, 5 * 60 * 1000);
         function loadBoard(isPro) {
             if (!boardEl) return;
             fetch(API + '/pro/pending-board/summary', { cache: 'no-store' }).then(function (r) { return r.json(); })
@@ -1750,6 +1971,18 @@ body.tmr-light .px-watch .px-pro-lead { color: #FFFFFF !important; }
 body.tmr-light .pd-card-lead strong { color: #FFFFFF !important; }
 body.tmr-light .pd-card-lead .pd-card-k { color: #F5C542 !important; }
 body.tmr-light .pd-card-lead .pd-card-d { color: #C9D8E8 !important; }
+/* WATCHDOG_SCALE_20260929: the Watchdog module is always dark; keep the light theme's text colours off it. */
+body.tmr-light .wdx h3 { color: #FFFFFF !important; }
+body.tmr-light .wdx .wdx-hl { color: #F5C542 !important; }
+body.tmr-light .wdx .wdx-lead { color: #DCE8F5 !important; }
+body.tmr-light .wdx .wdx-sub, body.tmr-light .wdx .wdx-flow p, body.tmr-light .wdx .wdx-pulse span { color: #C3D4E6 !important; }
+body.tmr-light .wdx .wdx-note { color: #8FA6BF !important; }
+body.tmr-light .wdx .wdx-chips li { color: #DCE8F5 !important; }
+body.tmr-light .wdx .wdx-chips li.is-pro { color: #1A1400 !important; }
+body.tmr-light .wdx .px-list li { color: #C9D8E8 !important; }
+body.tmr-light .wdx .px-pro-lead, body.tmr-light .wdx h4, body.tmr-light .wdx .wdx-h, body.tmr-light .wdx .wdx-flow b { color: #FFFFFF !important; }
+body.tmr-light .wdx .px-small { color: #9FB5CC !important; }
+body.tmr-light .wdx .px-explore { background: #FFFFFF !important; color: #07182A !important; }
 body.tmr-light .px-watch .pro-cta { background: #F5C542 !important; border-color: #F5C542 !important; color: #1A1400 !important; }
 </style>
 </body>
