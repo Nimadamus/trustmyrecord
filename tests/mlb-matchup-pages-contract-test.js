@@ -106,7 +106,10 @@ if (!ssr) {
 
   const hrefs = [...ssr[1].matchAll(/href="(\/handicapping\/mlb\/[^"]+)"/g)].map((m) => m[1]);
   const matchupHrefs = [...new Set(hrefs.filter((h) => SLUG_RE.test(h.split('/')[3] || '')))];
-  if (matchupHrefs.length < 2) fail(`slate block links only ${matchupHrefs.length} matchup pages`);
+  /* At least one, not two: a postseason day can have a single game. 2026-10-01
+     had only Phillies at Braves (Wild Card Game 3) and the old "< 2" threw the
+     whole bake away, leaving the 09-30 slate live. */
+  if (matchupHrefs.length < 1) fail('slate block links no matchup pages');
   else ok(`slate block links ${matchupHrefs.length} matchup pages with plain anchors`);
   const broken = matchupHrefs.filter((h) => !resolves(h));
   if (broken.length) fail('slate block links pages that do not exist: ' + broken.join(', '));
