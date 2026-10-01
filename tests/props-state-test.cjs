@@ -275,6 +275,22 @@ console.log('\nNo message tells the user to try again');
     /refresh/i.test(S.exhaustedView({ attempts: 4 }).message));
 }
 
+/* PROPS_WARM_20261001. The panel warms the board and asks again on a cache
+ * miss. A miss that survives that warm is a fault, never "still loading". */
+console.log('\nA cache miss after the board was warmed is a retryable fault');
+{
+  for (const st of ['board_not_cached', 'board_cache_expired']) {
+    const v = S.classify({ ok: true, httpStatus: 200, warmed: true, body: { status: st } }, null);
+    check(st + ' after warm -> retryable fault, not the loading message',
+      v.state === 'error' && v.retryable === true && v.reason === 'warm_failed'
+      && v.message === S.MESSAGES.fault && !/loading/i.test(v.message), v.message);
+  }
+  const ok2 = S.classify({ ok: true, httpStatus: 200, warmed: true, body: { status: 'ok' } }, [{ a: 1 }]);
+  check('an ok answer after warm still renders', ok2.state === 'ok');
+  check('the no-props message says props are not currently available',
+    S.MESSAGES.none === 'Player props are not currently available for this game.');
+}
+
 if (failures > 0) {
   console.error('\nprops-state-test: ' + failures + ' failure(s)');
   process.exit(1);
