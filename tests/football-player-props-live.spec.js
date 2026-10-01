@@ -139,6 +139,6 @@ test('a game the book has not priced says so, and says whose choice it was', asy
   // expect action on and on nothing else, so most of the slate has none.
   await openBoard(page, 'NCAAF');
   await openPlayerProps(page);
-  const empties = page.locator('.sbn-norow', { hasText: 'Player props not currently posted by sportsbook' });
+  const empties = page.locator('.sbn-norow', { hasText: 'Player props are not currently available for this game' });
   await expect.poll(async () => empties.count(), { timeout: 60_000 }).toBeGreaterThan(0);
 });

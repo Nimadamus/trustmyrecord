@@ -31,6 +31,7 @@
     // A props request that has not answered in this long is treated as a
     // recoverable failure rather than an indefinite spinner.
     var PROPS_TIMEOUT_MS = 12000;
+    var PROPS_WARM_TIMEOUT_MS = 30000;
     /* PROPS_LAZY_20260911. Verification switch, not a feature flag for users.
      *
      * Until the board stops inlining player props there is nothing to lazy-load,
@@ -655,36 +656,86 @@
             render();
         }
 
-        PROPS_FETCH_COUNT += 1;
-        logPropsFetch({ gameId: g.id, sportKey: sportKey, attempt: attempt, requested: url.slice(url.indexOf('/games/board/')) });
-        fetch(url, { cache: 'no-store' })
-            .then(function (r) {
-                return r.text().then(function (text) {
-                    var body = null;
-                    try { body = JSON.parse(text); } catch (e) { body = null; }
-                    return { ok: r.ok, httpStatus: r.status, body: body };
+        /* PROPS_WARM_20261001. board_not_cached / board_cache_expired mean the
+         * API's board cache for this sport was dropped (it holds 4 sports and
+         * evicts after 10 minutes), NOT that props are coming. Before this the
+         * panel printed "still loading" and its Try again re-asked the props
+         * endpoint only, which can never warm the cache, so the panel stayed
+         * stuck until some other visitor happened to load the same board.
+         * Now the panel does what the endpoint asks: it requests the board
+         * named in warm_with (the same request this page makes on load), then
+         * asks for the props once more. If they are still missing after that,
+         * classify() turns it into a retryable fault, never a loading line. */
+        function requestProps(warmed) {
+            PROPS_FETCH_COUNT += 1;
+            logPropsFetch({ gameId: g.id, sportKey: sportKey, attempt: attempt, warmed: warmed, requested: url.slice(url.indexOf('/games/board/')) });
+            fetch(url, { cache: 'no-store' })
+                .then(function (r) {
+                    return r.text().then(function (text) {
+                        var body = null;
+                        try { body = JSON.parse(text); } catch (e) { body = null; }
+                        return { ok: r.ok, httpStatus: r.status, body: body, warmed: warmed };
+                    });
+                })
+                .then(function (outcome) {
+                    if (settled) return;
+                    var st = outcome.body && outcome.body.status;
+                    if (!warmed && (st === 'board_not_cached' || st === 'board_cache_expired')) {
+                        warmBoard(outcome.body.warm_with);
+                        return;
+                    }
+                    settled = true;
+                    var items = null, book = null;
+                    if (outcome.body && outcome.body.status === 'ok') {
+                        var built = mapGroupItems({
+                            key: 'player_props',
+                            label: (outcome.body.group && outcome.body.group.label) || 'Player Props',
+                            items: (outcome.body.group && outcome.body.group.items) || []
+                        }, state.sport);
+                        items = built ? built.items : [];
+                        book = built ? built.book : null;
+                    }
+                    finish(outcome, items, book);
+                })
+                .catch(function () {
+                    if (settled) return;
+                    settled = true;
+                    finish({ networkError: true });
                 });
-            })
-            .then(function (outcome) {
+        }
+
+        function warmBoard(warmWith) {
+            // A cold board build takes 5-22s, so the warm gets its own budget
+            // rather than eating the props timeout.
+            clearTimeout(timer);
+            timer = setTimeout(function () {
                 if (settled) return;
                 settled = true;
-                var items = null, book = null;
-                if (outcome.body && outcome.body.status === 'ok') {
-                    var built = mapGroupItems({
-                        key: 'player_props',
-                        label: (outcome.body.group && outcome.body.group.label) || 'Player Props',
-                        items: (outcome.body.group && outcome.body.group.items) || []
-                    }, state.sport);
-                    items = built ? built.items : [];
-                    book = built ? built.book : null;
-                }
-                finish(outcome, items, book);
-            })
-            .catch(function () {
-                if (settled) return;
-                settled = true;
-                finish({ networkError: true });
-            });
+                finish({ timedOut: true });
+            }, PROPS_WARM_TIMEOUT_MS);
+            logPropsFetch({ gameId: g.id, sportKey: sportKey, attempt: attempt, warming: true });
+            // warm_with is the server's own board path ("/api/games/board/x");
+            // the sport key is the fallback if a server ever omits it.
+            var path = (typeof warmWith === 'string' && /^\/api\/games\/board\/[^?#]+$/.test(warmWith))
+                ? warmWith.replace(/^\/api/, '')
+                : '/games/board/' + encodeURIComponent(sportKey);
+            // `warm` keeps this off tmr-board-dedupe.js's 15s memo: a memoised
+            // board answers from the browser and warms nothing on the server.
+            fetch(API.replace(/\/$/, '') + path + '?limit=' + BOARD_LIMIT + '&warm=' + Date.now(), { cache: 'no-store' })
+                .then(function (r) {
+                    return r.text().then(function (text) {
+                        var d = null;
+                        try { d = JSON.parse(text); } catch (e) { d = null; }
+                        logPropsFetch({ gameId: g.id, sportKey: sportKey, attempt: attempt, warmHttp: r.status,
+                            warmCache: d && d.diagnostics ? d.diagnostics.cache_status || null : null,
+                            warmGames: d && d.games ? d.games.length : null });
+                    });
+                })
+                .catch(function () { logPropsFetch({ gameId: g.id, sportKey: sportKey, attempt: attempt, warmHttp: 0 }); })
+                .then(function () { if (!settled) requestProps(true); });
+        }
+
+        requestProps(false);
     }
 
     function normalise(g, sport) {
@@ -1706,15 +1757,26 @@
             // PROPS_EMPTY_STATE_20260909: a book posts player props on the
             // games it expects action on and on nothing else. Say that, rather
             // than showing a card with an empty track.
+            /* PROPS_WARM_20261001. Since BOARD_PROPS_NOT_INLINED the board
+             * ships a COUNT of a game's props and no prices, so a lazy group has
+             * zero rows here while hundreds are posted. It used to fall into the
+             * empty branch and tell every visitor props were not posted, with no
+             * way to open them. A lazy group with a count now offers the drawer,
+             * which fetches the prices for that one game. */
+            var lazyProps = cat.key === 'player_props' && !rows.length && g.groups.player_props
+                && g.groups.player_props.lazy && g.groups.player_props.totalItems > 0;
             body = rows.length ? rows.map(function (r) { return stripRow(g, cat, r); }).join('')
+                : lazyProps ? '<div class="sbn-norow">' + g.groups.player_props.totalItems.toLocaleString()
+                    + ' player prop prices posted for this game.</div>'
                 : '<div class="sbn-norow">' + (cat.key === 'player_props'
-                    ? 'Player props not currently posted by sportsbook.'
+                    ? 'Player props are not currently available for this game.'
                     : 'Not posted for this game.') + '</div>';
             // pad so every card in this category is exactly the same height
             for (var pad = rows.length; rows.length && pad < want; pad++) body += '<div class="sbn-strip is-blank"></div>';
-            if (rows.length) body += '<button type="button" class="sbn-striprest" data-drawer="' + esc(g.id) +
+            if (rows.length || lazyProps) body += '<button type="button" class="sbn-striprest" data-drawer="' + esc(g.id) +
                 '" data-drawercat="' + esc(cat.key) + '">' +
-                (restRows > 0 ? restRows + ' more in ' + cat.label : 'See every ' + cat.label + ' price') + '</button>';
+                (lazyProps ? 'See every ' + cat.label + ' price'
+                    : restRows > 0 ? restRows + ' more in ' + cat.label : 'See every ' + cat.label + ' price') + '</button>';
         } else if (cat.layout === 'ttgrid') {
             body = ttGrid(g, cat);
         } else {

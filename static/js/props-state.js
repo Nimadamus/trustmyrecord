@@ -48,7 +48,7 @@
         fault: 'Player props could not be loaded just now.',
         offline: 'Player props could not be loaded. Check your connection.',
         // Not a fault at all.
-        none: 'No player props are posted for this game.'
+        none: 'Player props are not currently available for this game.'
     };
 
     // How many times a single game may be fetched before the panel stops
@@ -74,6 +74,15 @@
      * with nothing in it. */
     function classify(outcome, items) {
         outcome = outcome || {};
+
+        /* PROPS_WARM_20261001. The caller already warmed the board and asked
+         * again, and the endpoint STILL says the board is not cached. That is
+         * no longer an expected cache state, it is a fault: say so and offer
+         * the retry, never a "still loading" line that nothing will resolve. */
+        if (outcome.warmed && outcome.body && (outcome.body.status === 'board_not_cached'
+                || outcome.body.status === 'board_cache_expired')) {
+            return view('error', MESSAGES.fault, true, { reason: 'warm_failed' });
+        }
 
         if (outcome.timedOut) { return view('error', MESSAGES.offline, true, { reason: 'timeout' }); }
         if (outcome.networkError) { return view('error', MESSAGES.offline, true, { reason: 'network' }); }
