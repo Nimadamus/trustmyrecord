@@ -717,7 +717,7 @@
                     : '<button type="button" class="tsg-btn is-primary" id="tsgMeterBuy">Buy TMR</button>') +
                 '</div>' +
                 '<a class="tsg-btn is-ghost" id="tsgMeterPro" href="/premium/" style="margin-top:10px">Go unlimited with TMR Pro</a>' +
-                '<p class="tsg-note" style="margin-top:6px">TMR Pro includes unlimited runs on every simulator plus BetLegend Pro, $79.99/month or $800/year.</p>' +
+                '<p class="tsg-note" style="margin-top:6px">TMR Pro includes unlimited runs on every simulator plus BetLegend Pro, $49.99/month or $500/year.</p>' +
                 '<button type="button" class="tsg-later" id="tsgMeterLater">Not right now</button>' +
                 '<p class="tsg-note">Pay by card. TMR goes straight into your TrustMyRecord wallet. $5 buys 250 TMR.</p>' +
                 '</div>';

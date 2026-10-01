@@ -210,7 +210,7 @@
                     + '<p><b>Create a free account</b> and reveal one real Watchdog pick every day: handicapper, exact pick, record, units and streak.</p>'
                     + '<div class="tpf-row"><a class="tpf-btn ghost" data-tpf-signup href="/register/?return=' + encodeURIComponent(location.pathname) + '">Create free account</a>'
                     + proCta(comp, 'Unlock all picks with TMR Pro') + '</div>'
-                    + '<p class="tpf-muted" style="margin-top:10px">TMR Pro: every pending pick from every tracked handicapper, full histories and records, $79.99/month or $800/year.</p>';
+                    + '<p class="tpf-muted" style="margin-top:10px">TMR Pro: every pending pick from every tracked handicapper, full histories and records, $49.99/month or $500/year.</p>';
                 wireCtas(body);
                 return;
             }
