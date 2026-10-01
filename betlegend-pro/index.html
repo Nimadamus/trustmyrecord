@@ -1129,6 +1129,26 @@
         }
     }
 
+    // BETLEGEND_EMAIL_UTM_20261001: remember campaign tags (for example a
+    // BetLegend email click) across the sign in round trip, so the checkout
+    // session can carry them for purchase attribution. 30 day window.
+    var UTM_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'];
+    (function () {
+        try {
+            var q = new URLSearchParams(window.location.search), got = {}, any = false;
+            UTM_KEYS.forEach(function (k) { var v = q.get(k); if (v) { got[k] = v.slice(0, 100); any = true; } });
+            if (any) { got.at = Date.now(); localStorage.setItem('blp_utm', JSON.stringify(got)); }
+        } catch (e) { /* storage unavailable: attribution is optional */ }
+    })();
+    function storedUtm() {
+        try {
+            var u = JSON.parse(localStorage.getItem('blp_utm') || 'null');
+            if (!u || !u.at || Date.now() - u.at > 30 * 864e5) return null;
+            var out = {}; UTM_KEYS.forEach(function (k) { if (u[k]) out[k] = u[k]; });
+            return out;
+        } catch (e) { return null; }
+    }
+
     // ------------------------------------------------------- checkout
 
     document.querySelectorAll('[data-buy]').forEach(function (btn) {
@@ -1148,7 +1168,7 @@
             btn.disabled = true;
             btn.textContent = 'Opening checkout…';
             try {
-                var res = await window.api.startBetLegendProCheckout(plan);
+                var res = await window.api.startBetLegendProCheckout(plan, storedUtm());
                 if (res && res.url) { window.location.href = res.url; return; }
                 throw new Error('no checkout url');
             } catch (e) {

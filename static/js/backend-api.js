@@ -1588,8 +1588,11 @@ class TrustMyRecordAPI {
         return this.request('/betlegend-pro/billing/access');
     }
 
-    async startBetLegendProCheckout(plan) {
-        return this.request('/betlegend-pro/billing/checkout', { method: 'POST', body: { plan } });
+    async startBetLegendProCheckout(plan, utm) {
+        // BETLEGEND_EMAIL_UTM_20261001: optional campaign attribution for the Stripe session metadata.
+        const body = { plan };
+        if (utm && typeof utm === 'object' && Object.keys(utm).length) body.utm = utm;
+        return this.request('/betlegend-pro/billing/checkout', { method: 'POST', body });
     }
 
     async openBetLegendProBillingPortal() {

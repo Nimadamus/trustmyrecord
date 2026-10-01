@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unsubscribe From BetLegend Email | TrustMyRecord</title>
+<meta name="description" content="Stop the BetLegend Card and Monday Record Report emails from TrustMyRecord.">
+<link rel="canonical" href="https://trustmyrecord.com/email/unsubscribe/">
+<link rel="icon" type="image/png" href="/static/favicon.png">
+<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=859cacfb660e">
+<link rel="stylesheet" href="/static/css/tmr-page-polish.css?v=dcde044bca53">
+<script defer src="/static/js/tmr-sitewide.js?v=8f79e89e872f"></script>
+<link rel="stylesheet" href="/static/css/tmr-ds.d4d41a955166.css">
+<link rel="stylesheet" href="/static/css/tmr-ds-header.cc364e352e74.css">
+<link rel="stylesheet" href="/static/css/tmr-light.css?v=21433b023833">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap">
+<link rel="stylesheet" href="/static/css/tmr-navbar.css?v=68ec3081d29a">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-V5MCVXS2HE"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-V5MCVXS2HE');</script>
+<style>
+  .em-wrap{min-height:70vh;display:grid;place-items:center;padding:32px 16px;}
+  .em-card{width:min(520px,100%);background:#fff;border:1px solid #D2DEEA;border-radius:18px;box-shadow:0 24px 60px rgba(7,24,42,.1);padding:32px;font-family:'Inter',sans-serif;color:#07182A;}
+  .em-brand{font-family:'Anton',sans-serif;letter-spacing:1px;font-size:26px;color:#07182A;}
+  .em-brand span{font-family:'Inter',sans-serif;font-size:13px;color:#5b6b7f;letter-spacing:0;margin-left:6px;}
+  .em-title{font-size:22px;font-weight:800;margin:18px 0 8px;}
+  .em-text{font-size:15px;line-height:1.6;color:#33475b;margin:0 0 18px;}
+  .em-btn{display:inline-block;background:#0B4FA8;color:#fff;font-weight:800;border:0;border-radius:10px;padding:12px 22px;font-size:15px;text-decoration:none;cursor:pointer;}
+  .em-btn[disabled]{opacity:.6;cursor:default;}
+  .em-links{margin-top:18px;font-size:14px;}
+  .em-links a{color:#0B4FA8;margin-right:16px;}
+</style>
+</head>
+<body class="tmr-ds-shell tmr-polished-page tmr-light">
+<main class="em-wrap"><div class="em-card">
+  <div class="em-brand">BETLEGEND<span>on TrustMyRecord</span></div>
+  <h1 class="em-title" id="t">Unsubscribe</h1>
+  <p class="em-text" id="m">Tap the button to stop every BetLegend email to this address.</p>
+  <button class="em-btn" id="b" type="button">Unsubscribe me</button>
+  <div class="em-links"><a href="https://www.betlegendpicks.com/">BetLegend Picks</a><a href="/">TrustMyRecord</a></div>
+</div></main>
+<script>
+(function () {
+  var t = document.getElementById('t'), m = document.getElementById('m'), b = document.getElementById('b');
+  var token = new URLSearchParams(location.search).get('t');
+  if (!token || token.indexOf('{') === 0) {
+    m.textContent = 'This page needs the unsubscribe link from one of our emails. You can also use the Unsubscribe link at the bottom of any BetLegend email.';
+    b.hidden = true; return;
+  }
+  b.addEventListener('click', function () {
+    b.disabled = true; b.textContent = 'Working';
+    fetch('https://trustmyrecord-api.onrender.com/api/email/unsubscribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: token }) })
+      .then(function (r) { return r.json().catch(function () { return {}; }); })
+      .then(function (d) {
+        b.hidden = true;
+        if (d && d.ok) {
+          t.textContent = 'You are unsubscribed';
+          m.textContent = 'This address will not get the BetLegend Card or the Monday Record Report again.';
+        } else {
+          t.textContent = 'That link did not work';
+          m.textContent = 'Use the Unsubscribe link at the bottom of any BetLegend email instead. It works in one tap.';
+        }
+      })
+      .catch(function () { b.disabled = false; b.textContent = 'Unsubscribe me'; m.textContent = 'We could not reach the server. Try again in a minute.'; });
+  });
+})();
+</script>
+<script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-ds-nav.374c16b521dd.js"></script>
+</body>
+</html>
