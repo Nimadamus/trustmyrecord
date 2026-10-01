@@ -31,7 +31,7 @@
         ["@sub", "Featured Matchups", [
             /*FMENU nfl-gotw*/ ["/handicapping/nfl/pittsburgh-steelers-vs-cleveland-browns-290888/", "NFL Game of the Week", "/nfl-game-of-the-week/"],
             /*FMENU ncaaf*/ ["/ncaaf/lions-wildcats-becht-vs-chiles/", "NCAAF", "/matchup-of-the-day/ncaaf/"],
-            /*FMENU mlb*/ ["/handicapping/mlb/cubs-vs-padres-849842/", "MLB", "/matchup-of-the-day/mlb/"],
+            /*FMENU mlb*/ ["/handicapping/mlb/red-sox-vs-yankees-849847/", "MLB", "/matchup-of-the-day/mlb/"],
             /*FMENU nhl*/ ["/nhl/sabres-blue-jackets-thompson-vs-werenski/", "NHL", "/matchup-of-the-day/nhl/"],
             /*FMENU tennis*/ ["/tennis/han-qinwen-opening-round/", "Tennis", "/matchup-of-the-day/tennis/"],
             /*FMENU soccer*/ ["/matchup-of-the-day/inter-miami-cf-columbus-crew-the-table-says-one-side/", "Soccer", "/matchup-of-the-day/soccer/"]
