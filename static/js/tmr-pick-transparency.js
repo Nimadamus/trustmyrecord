@@ -20,33 +20,35 @@
   var TYPE = { wager_corrected: 'Wager corrected', withdrawn: 'Withdrawn', restored: 'Restored', regraded: 'Regraded', visibility_changed: 'Visibility changed', units_added: 'Units added', voided: 'Voided' };
 
   var css = document.createElement('style');
+  /* Fixed palette: the profile page is light themed; inheriting its variables
+     rendered light gray text on white. */
   css.textContent = [
-    '#pregame-record{margin:0 0 22px;border:1px solid var(--border-color,rgba(140,190,255,.18));border-radius:16px;background:var(--bg-card,#0E2034);color:var(--text-primary,#EEF4FB);padding:20px 22px;font-family:inherit}',
+    '#pregame-record{margin:0 0 22px;border:1px solid #D6E1EE;border-radius:18px;background:#FFFFFF;color:#0F1B2D;padding:22px 24px;font-family:inherit;box-shadow:0 1px 2px rgba(15,27,45,.04)}',
     '#pregame-record[hidden]{display:none}',
-    '.tpr-hd{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}',
-    '.tpr-hd h2{margin:0;font-size:20px;font-weight:800;display:flex;align-items:center;gap:10px}',
-    '.tpr-ok{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 11px;font-size:12px;font-weight:800;background:rgba(47,211,138,.13);color:#2FD38A;border:1px solid rgba(47,211,138,.35)}',
-    '.tpr-hd a{font-size:13.5px;font-weight:700;color:var(--accent-blue,#4DA3FF);text-decoration:none}',
-    '.tpr-grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1.4fr);gap:16px}',
-    '.tpr-today{border-radius:14px;padding:18px;background:linear-gradient(135deg,rgba(47,211,138,.10),rgba(77,163,255,.08));border:1px solid rgba(47,211,138,.25)}',
-    '.tpr-k{font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--text-secondary,#8299B2)}',
+    '.tpr-hd{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px}',
+    '.tpr-hd h2{margin:0;font-size:21px;font-weight:800;color:#0F1B2D;display:flex;align-items:center;gap:10px}',
+    '.tpr-ok{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 11px;font-size:12px;font-weight:800;background:#E6F8EF;color:#0E8A55;border:1px solid #A8E5C6}',
+    '.tpr-hd a{font-size:13.5px;font-weight:700;color:#1D6FE0;text-decoration:none}',
+    '.tpr-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);gap:18px}',
+    '.tpr-today{border-radius:14px;padding:18px;background:linear-gradient(135deg,#ECFAF3,#EEF5FF);border:1px solid #BDE9D2}',
+    '.tpr-k{font-size:11.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#5A6B80}',
     '.tpr-big{display:flex;align-items:baseline;gap:10px;margin:8px 0 10px}',
-    '.tpr-big b{font-size:52px;line-height:.9;font-weight:900;font-variant-numeric:tabular-nums}',
-    '.tpr-big span{font-size:16px;font-weight:700;color:var(--text-secondary,#B9C9DB);line-height:1.3}',
+    '.tpr-big b{font-size:52px;line-height:.9;font-weight:900;color:#0F1B2D;font-variant-numeric:tabular-nums}',
+    '.tpr-big span{font-size:16px;font-weight:700;color:#33465C;line-height:1.3}',
     '.tpr-lgs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}',
-    '.tpr-lg{border-radius:8px;padding:5px 9px;font-size:13px;font-weight:700;background:rgba(77,163,255,.14);border:1px solid rgba(77,163,255,.3)}',
-    '.tpr-acc{font-size:14.5px;font-weight:700}',
-    '.tpr-acc .g{color:#2FD38A}.tpr-acc .r{color:#FF6B6B}',
-    '.tpr-sec{margin-top:4px}',
-    '.tpr-tbl{width:100%;border-collapse:collapse;font-size:13.5px}',
-    '.tpr-tbl th,.tpr-tbl td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--border-color,rgba(140,190,255,.14));white-space:nowrap}',
-    '.tpr-tbl th{font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-secondary,#8299B2);font-weight:800}',
-    '.tpr-tbl td.ok{color:#2FD38A;font-weight:800}.tpr-tbl td.bad{color:#FF6B6B;font-weight:800}',
-    '.tpr-snaps{margin-top:16px;display:grid;gap:8px}',
-    '.tpr-snap{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;font-size:13.5px;padding:9px 12px;border-radius:10px;background:var(--bg-card-hover,rgba(255,255,255,.04))}',
-    '.tpr-snap a{margin-left:auto;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;color:var(--accent-blue,#4DA3FF);text-decoration:none}',
-    '.tpr-note{margin-top:14px;font-size:13px;color:var(--text-secondary,#8299B2);line-height:1.5}',
-    '.tpr-corr{margin-top:8px;display:grid;gap:6px;font-size:13px}',
+    '.tpr-lg{border-radius:8px;padding:5px 9px;font-size:13px;font-weight:700;color:#0F3D7A;background:#E8F1FF;border:1px solid #BCD5FA}',
+    '.tpr-acc{font-size:14.5px;font-weight:700;color:#33465C}',
+    '.tpr-acc .g{color:#0E8A55}.tpr-acc .r{color:#C93838}',
+    '.tpr-tbl{width:100%;border-collapse:collapse;font-size:13.5px;color:#0F1B2D}',
+    '.tpr-tbl th,.tpr-tbl td{text-align:left;padding:8px 6px;border-bottom:1px solid #E4EBF3;white-space:nowrap}',
+    '.tpr-tbl th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#5A6B80;font-weight:800}',
+    '.tpr-tbl td.ok{color:#0E8A55;font-weight:800}.tpr-tbl td.bad{color:#C93838;font-weight:800}',
+    '.tpr-snaps{margin-top:18px;display:grid;gap:8px}',
+    '.tpr-snap{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;font-size:13.5px;color:#0F1B2D;padding:10px 12px;border-radius:10px;background:#F4F7FB;border:1px solid #E4EBF3}',
+    '.tpr-snap a{margin-left:auto;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;color:#1D6FE0;text-decoration:none}',
+    '.tpr-note{margin-top:14px;font-size:13px;color:#5A6B80;line-height:1.5}',
+    '.tpr-note b{color:#0F1B2D}',
+    '.tpr-corr{margin-top:8px;display:grid;gap:6px;font-size:13px;color:#33465C}',
     '.tpr-scroll{overflow-x:auto}',
     '@media (max-width:860px){.tpr-grid{grid-template-columns:1fr}#pregame-record{padding:16px}.tpr-big b{font-size:44px}}'
   ].join('\n');
@@ -73,7 +75,7 @@
 
     var snaps = (d.snapshots || []).slice(0, 5).map(function (s) {
       return '<div class="tpr-snap"><b>' + esc(ptTime(s.taken_at)) + '</b><span>' + s.pending_count + ' pending (' + s.leagues.map(function (l) { return l.count + ' ' + esc(l.label); }).join(' · ') + ')</span>' +
-        '<span class="' + (s.now.withdrawn ? 'bad' : '') + '" style="color:' + (s.now.withdrawn ? '#FF6B6B' : '#2FD38A') + ';font-weight:800">' + s.now.accounted_for + ' of ' + s.pending_count + ' still in the record</span>' +
+        '<span class="' + (s.now.withdrawn ? 'bad' : '') + '" style="color:' + (s.now.withdrawn ? '#C93838' : '#0E8A55') + ';font-weight:800">' + s.now.accounted_for + ' of ' + s.pending_count + ' still in the record</span>' +
         '<a href="/pending-picks/?snapshot=' + s.id + '" title="Open this sealed snapshot">' + (s.commitment_verified ? '✓ ' : '') + '#' + esc(String(s.commitment).slice(0, 10)) + '</a></div>';
     }).join('');
 
@@ -86,7 +88,7 @@
     mount.innerHTML =
       '<div class="tpr-hd"><h2>Pregame Record <span class="tpr-ok">✓ Verified Pregame</span></h2><a href="/pending-picks/">Everyone’s pending picks →</a></div>' +
       '<div class="tpr-grid"><div class="tpr-today"><div class="tpr-k">Today, Pacific time</div>' + todayBlock + '</div>' +
-      '<div class="tpr-sec"><div class="tpr-k" style="margin-bottom:6px">Last 7 game days</div>' + days + '</div></div>' +
+      '<div class="tpr-sec"><div class="tpr-k" style="margin-bottom:6px">Recent and upcoming game days</div>' + days + '</div></div>' +
       (snaps ? '<div class="tpr-snaps"><div class="tpr-k">Sealed snapshots</div>' + snaps + '</div>' : '') +
       corr +
       (d.record_reset_at ? '<p class="tpr-note">This member reset their public record on ' + esc(new Date(d.record_reset_at).toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles', dateStyle: 'medium' })) + '. Every pick from before the reset is still in the ledger.</p>' : '') +
