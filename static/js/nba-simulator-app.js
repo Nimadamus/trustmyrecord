@@ -18,6 +18,7 @@
   var BOX_COLS = [
     { h: 'Player', fmt: function (p) {
       var wrap = el('span');
+      if (p.id != null) wrap.appendChild(S.headshot('nba', p, { size: 24 }));
       wrap.appendChild(el('span', 'nm', p.name));
       if (p.pos) wrap.appendChild(el('span', 'pos', p.pos));
       return wrap;
@@ -239,8 +240,10 @@
     var a = d.matchup.away.season;
     var h = d.matchup.home.season;
     var wrap = el('div');
-    wrap.appendChild(el('p', 'dim',
-      'Season inputs the model ran on, from the ' + d.meta.season + ' regular season.'));
+    wrap.appendChild(el('p', 'dim', d.meta.inputs_basis === 'blend'
+      ? 'Season inputs the model ran on: the ' + d.meta.season + ' regular season blended with '
+        + d.meta.current_season + ' so far, with this season weighted more as its games are played.'
+      : 'Season inputs the model ran on, from the ' + d.meta.season + ' regular season.'));
     wrap.appendChild(S.compare([
       { label: 'Points', away: a.ppg, home: h.ppg, fmt: function (v) { return v.toFixed(1); } },
       { label: 'Allowed', away: a.oppPpg, home: h.oppPpg, fmt: function (v) { return v.toFixed(1); } },
@@ -251,6 +254,52 @@
       { label: 'TO rate', away: a.turnoverRate, home: h.turnoverRate, fmt: function (v) { return (v * 100).toFixed(1) + '%'; } },
       { label: 'Off reb rate', away: a.offensiveReboundRate, home: h.offensiveReboundRate, fmt: function (v) { return (v * 100).toFixed(1) + '%'; } },
     ]));
+    return wrap;
+  }
+
+  /**
+   * Both clubs before anything is run: record (this season's once it has
+   * started, labelled by season), conference, and the PROJECTED starting five
+   * with photos. Players listed out are never in it. Built only from what the
+   * teams feed already sent; an older feed without starter flags shows the
+   * five with the most projected minutes.
+   */
+  function preview(app, away, home) {
+    var wrap = el('div', 'tsx-preview');
+    [away, home].forEach(function (t) {
+      var card = el('div', 'tsx-side');
+      var top = el('div', 'tsx-top');
+      top.appendChild(S.crest(t, 26));
+      top.appendChild(el('div', 'tsx-team', t.name));
+      var rec = S.recordText(t);
+      if (rec) top.appendChild(el('div', 'tsx-rec', rec));
+      card.appendChild(top);
+      var sub = [];
+      if (t.conference) sub.push(t.conference + (t.division ? ', ' + t.division : ''));
+      if (t.inputs && t.inputs.basis === 'blend' && t.inputs.currentSeason) {
+        sub.push('Inputs blend ' + (t.inputs.lastSeason || 'last season') + ' with ' + t.inputs.currentSeason);
+      }
+      if (sub.length) card.appendChild(el('div', 'tsx-sub', sub.join(' · ')));
+      var rot = (t.rotation || []).slice();
+      var five = rot.filter(function (p) { return p.starter; });
+      if (!five.length) five = rot.slice().sort(function (a, b) { return b.minutes - a.minutes; }).slice(0, 5);
+      if (five.length) {
+        var head = el('div', 'tsx-sub');
+        head.appendChild(document.createTextNode('Starting five '));
+        head.appendChild(S.statusBadge('projected', 'The five available players with the most projected minutes. No source publishes NBA starters before tip off.'));
+        card.appendChild(head);
+        var list = el('div', 'tsx-five');
+        five.forEach(function (p) {
+          var c = S.playerCell('nba', p, { size: 26 });
+          if (p.pos) c.appendChild(el('span', 'pos', p.pos));
+          list.appendChild(c);
+        });
+        card.appendChild(list);
+      }
+      var out = t.unavailable || [];
+      if (out.length) card.appendChild(el('div', 'tsx-why', 'Out: ' + out.map(function (x) { return x.name; }).join(', ')));
+      wrap.appendChild(card);
+    });
     return wrap;
   }
 
@@ -281,13 +330,27 @@
             // A first year player has no NBA line; his numbers are the prior for
             // his draft range, and a player back from a lost season is rated on
             // the one before. Say so beside the name.
+            var label = r.name;
             if (r.source === 'rookie prior') {
-              return r.name + (r.draft && r.draft.overall ? ' (rookie, pick ' + r.draft.overall + ')' : ' (rookie)');
+              label = r.name + (r.draft && r.draft.overall ? ' (rookie, pick ' + r.draft.overall + ')' : ' (rookie)');
+            } else if (r.source === 'previous season') {
+              label = r.name + ' (last full season)';
             }
-            if (r.source === 'previous season') return r.name + ' (last full season)';
-            return r.name;
+            var w = el('span');
+            w.appendChild(S.headshot('nba', r, { size: 24 }));
+            w.appendChild(el('span', 'nm', label));
+            return w;
           } },
           { h: 'Pos', k: 'pos' },
+          // Its own column, so the name cell stays just the name.
+          { h: 'Role', fmt: function (r) {
+            if (!r.starter) return 'Bench';
+            var w = el('span');
+            w.appendChild(document.createTextNode('Starter'));
+            w.appendChild(S.statusBadge(r.starterStatus === 'confirmed' ? 'confirmed' : 'projected',
+              'Among the five available players with the most projected minutes'));
+            return w;
+          } },
           { h: 'MIN', fmt: function (r) { return r.minutes.toFixed(1); } },
           { h: 'PPG', fmt: function (r) { return r.season.ppg.toFixed(1); } },
           { h: 'RPG', fmt: function (r) { return r.season.rpg.toFixed(1); } },
@@ -1170,6 +1233,7 @@
       sport: 'nba',
       homeVenueLabel: 'Home court',
       render: render,
+      preview: preview,
       prerunChips: function (away, home) {
         return [
           { label: away.abbr + ' net rating', value: S.signed(away.season.netRating) },

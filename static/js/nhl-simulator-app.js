@@ -33,8 +33,13 @@
         if (!team) { sel.disabled = true; return; }
         sel.disabled = false;
         team.goalies.forEach(function (g, i) {
+          // Starts per season where the feed gives them, so a number is never
+          // two seasons added together without saying so.
+          var gs = g.lastSeason
+            ? g.lastSeason.gs + ' GS last season' + (g.currentSeason ? ', ' + g.currentSeason.gs + ' this season' : '')
+            : g.gamesStarted + ' GS';
           var o = el('option', '', g.name + ' (' + g.savePct.toFixed(3).replace(/^0/, '') + ' SV%, '
-            + g.gamesStarted + ' GS)' + (g.replacementLevel ? ' - estimated' : ''));
+            + gs + (g.projectedStarter ? ', projected starter' : '') + ')' + (g.replacementLevel ? ' - estimated' : ''));
           o.value = g.id;
           if (i === 0) o.selected = true;
           sel.appendChild(o);
@@ -48,6 +53,58 @@
     // teams without firing the selects' change event, so the core calls this.
     app.refreshGoalies = refresh;
     refresh();
+    // The preview names the starter, so it follows the selectors.
+    ['homeGoalie', 'awayGoalie'].forEach(function (id) {
+      var sel = document.getElementById(id);
+      if (sel) sel.addEventListener('change', function () { app.renderPrerun(); });
+    });
+  }
+
+  /* ---------- the matchup before it is run ---------------------------------- */
+
+  /**
+   * Both clubs as they stand: record (this season's once it has started, and
+   * labelled), and the starting goaltender with his photo, labelled PROJECTED
+   * because the league publishes no starter before the game, or YOUR PICK when
+   * the visitor chose another. Uses only what the teams feed already sent.
+   */
+  function chosenGoalie(team, side) {
+    var sel = document.getElementById(side + 'Goalie');
+    var id = sel && sel.value ? sel.value : null;
+    var list = team.goalies || [];
+    return (id && list.filter(function (g) { return String(g.id) === String(id); })[0]) || list[0] || null;
+  }
+
+  function preview(app, away, home) {
+    var wrap = el('div', 'tsx-preview');
+    [['away', away], ['home', home]].forEach(function (pair) {
+      var t = pair[1];
+      var card = el('div', 'tsx-side');
+      var top = el('div', 'tsx-top');
+      top.appendChild(S.crest(t, 26));
+      top.appendChild(el('div', 'tsx-team', t.name));
+      var rec = S.recordText(t);
+      if (rec) top.appendChild(el('div', 'tsx-rec', rec));
+      card.appendChild(top);
+      var lastRec = t.lastSeason && t.lastSeason.record && t.recordSeason && t.lastSeason.label !== t.recordSeason
+        ? t.lastSeason.record : null;
+      if (lastRec) {
+        card.appendChild(el('div', 'tsx-sub', 'Last season ' + lastRec.wins + '-' + lastRec.losses + '-'
+          + lastRec.otLosses + ', ' + lastRec.points + ' points'));
+      }
+      var g = chosenGoalie(t, pair[0]);
+      if (g) {
+        var row = el('div', 'tsx-goalie');
+        row.appendChild(S.headshot('nhl', g, { team: t.abbr, size: 30 }));
+        row.appendChild(el('b', '', g.name));
+        var isProjected = g.projectedStarter || (t.goalies && t.goalies[0] === g);
+        row.appendChild(S.statusBadge(isProjected ? 'projected' : 'selected', g.starterReason || null));
+        card.appendChild(row);
+        if (isProjected && g.starterReason) card.appendChild(el('div', 'tsx-why', g.starterReason + '.'));
+      }
+      wrap.appendChild(card);
+    });
+    return wrap;
   }
 
   /* ---------- box score ---------------------------------------------------- */
@@ -55,6 +112,7 @@
   var SKATER_COLS = [
     { h: 'Player', fmt: function (p) {
       var wrap = el('span');
+      if (p.id != null && p._team) wrap.appendChild(S.headshot('nhl', p, { team: p._team, size: 24 }));
       wrap.appendChild(el('span', 'nm', p.name));
       wrap.appendChild(el('span', 'pos', p.pos));
       if (p.unit) wrap.appendChild(el('span', 'unit', p.unit));
@@ -187,6 +245,7 @@
   function skaterTable(side, teamName) {
     var rows = side.skaters.map(function (p, i) {
       var r = Object.assign({}, p);
+      r._team = side.team ? side.team.abbr : null;
       if (p.replacementLevel) r._class = 'replacement';
       // Visible break where the forwards end and the defence begins.
       if (i > 0 && side.skaters[i - 1].pos !== 'D' && p.pos === 'D') r._class = (r._class || '') + ' groupsplit';
@@ -265,6 +324,7 @@
     wrap.appendChild(S.table([
       { h: 'Goaltender', fmt: function (r) {
         var w = el('span');
+        if (r.id != null && side.team) w.appendChild(S.headshot('nhl', r, { team: side.team.abbr, size: 26 }));
         w.appendChild(el('span', 'nm', r.name));
         if (r.shutout) w.appendChild(el('span', 'unit', 'SO'));
         return w;
@@ -293,7 +353,8 @@
 
     wrap.appendChild(el('div', 'disc',
       (g.season
-        ? g.name + ' came in on ' + g.season.gp + ' games, a '
+        ? g.name + ' came in on ' + g.season.gp + ' games'
+          + (g.season.basis === 'current' ? ' this season' : (g.season.basis ? ' last season' : '')) + ', a '
           + g.season.savePct.toFixed(3).replace(/^0/, '') + ' save percentage and a '
           + g.season.gaa.toFixed(2) + ' goals-against average.'
         : g.name + ' has no qualifying season and started at replacement level.')
@@ -374,9 +435,12 @@
     var a = d.matchup.away.season;
     var h = d.matchup.home.season;
     var wrap = el('div');
-    wrap.appendChild(el('p', 'dim',
-      'Season inputs the model ran on, from the ' + d.meta.stats_season + ' regular season. '
-      + 'Rosters are the ' + d.meta.roster_season + ' rosters.'));
+    wrap.appendChild(el('p', 'dim', d.meta.inputs_basis === 'blend'
+      ? 'Season inputs the model ran on: the ' + d.meta.stats_season + ' regular season blended with '
+        + (d.meta.current_season || d.meta.roster_season) + ' so far, with this season weighted more as its games are played. '
+        + 'Rosters are the ' + d.meta.roster_season + ' rosters.'
+      : 'Season inputs the model ran on, from the ' + d.meta.stats_season + ' regular season. '
+        + 'Rosters are the ' + d.meta.roster_season + ' rosters.'));
     wrap.appendChild(S.compare([
       { label: 'Goals for', away: a.goalsFor, home: h.goalsFor, fmt: n2 },
       { label: 'Goals ag', away: a.goalsAgainst, home: h.goalsAgainst, fmt: n2 },
@@ -388,11 +452,13 @@
       { label: 'Faceoffs', away: a.faceoffPct, home: h.faceoffPct, fmt: function (v) { return v.toFixed(1) + '%'; } },
     ]));
     var rec = el('p', 'dim');
-    rec.textContent = d.matchup.away.name + ' finished ' + d.matchup.away.record.wins + '-'
-      + d.matchup.away.record.losses + '-' + d.matchup.away.record.otLosses + ' with '
-      + d.matchup.away.record.points + ' points. ' + d.matchup.home.name + ' finished '
-      + d.matchup.home.record.wins + '-' + d.matchup.home.record.losses + '-'
-      + d.matchup.home.record.otLosses + ' with ' + d.matchup.home.record.points + ' points.';
+    var said = function (t) {
+      var r = t.record;
+      var current = t.recordSeason && t.recordSeason === d.meta.current_season;
+      return t.name + (current ? ' is ' : ' finished ') + r.wins + '-' + r.losses + '-' + r.otLosses
+        + ' with ' + r.points + ' points' + (current ? ' in ' + t.recordSeason : '') + '.';
+    };
+    rec.textContent = said(d.matchup.away) + ' ' + said(d.matchup.home);
     wrap.appendChild(rec);
     return wrap;
   }
@@ -422,6 +488,7 @@
       var cols = [
         { h: 'Dressed', fmt: function (r) {
           var w = el('span');
+          if (r.id) w.appendChild(S.headshot('nhl', r, { team: full.abbr, size: 24 }));
           w.appendChild(el('span', 'nm', r.name));
           if (r.replacementLevel) w.appendChild(el('span', 'pos', 'estimated'));
           return w;
@@ -432,6 +499,13 @@
         { h: 'G', fmt: function (r) { return r.season ? r.season.g : '--'; } },
         { h: 'A', fmt: function (r) { return r.season ? r.season.a : '--'; } },
         { h: 'P', fmt: function (r) { return r.season ? r.season.pts : '--'; } },
+        // Which season the G, A and P beside it are from: this season once he
+        // has played in it, otherwise last season, labelled.
+        { h: 'Line', title: 'Which season the goals, assists and points are from',
+          fmt: function (r) {
+            if (!r.season) return '--';
+            return r.seasonBasis === 'current' ? 'This season' : 'Last season';
+          } },
         // SCRATCHING A SKATER, which the engine could not do at all until now.
         //
         // The ice time goes to the men who remain, the next forward or
@@ -454,13 +528,24 @@
       block.appendChild(S.table(cols, full.lineup.forwards.concat(full.lineup.defence)));
 
       var goalieRows = full.goalies.map(function (g, i) {
-        return { name: g.name, role: i === 0 ? 'Projected starter' : 'Backup', gs: g.gamesStarted,
+        return { id: g.id, headshot: g.headshot, name: g.name, role: i === 0 ? 'Projected starter' : 'Backup', gs: g.gamesStarted,
           sv: g.savePct.toFixed(3).replace(/^0/, ''), gaa: g.gaa.toFixed(2),
-          est: g.replacementLevel ? 'estimated' : '' };
+          est: g.replacementLevel ? 'estimated' : '', why: i === 0 ? (g.starterReason || '') : '' };
       });
       block.appendChild(S.table([
-        { h: 'Goaltender', fmt: function (r) { return r.name + (r.est ? ' (' + r.est + ')' : ''); } },
-        { h: 'Role', k: 'role' },
+        { h: 'Goaltender', fmt: function (r) {
+          var w = el('span');
+          if (r.id) w.appendChild(S.headshot('nhl', r, { team: full.abbr, size: 24 }));
+          w.appendChild(el('span', 'nm', r.name + (r.est ? ' (' + r.est + ')' : '')));
+          return w;
+        } },
+        { h: 'Role', fmt: function (r) {
+          if (r.role !== 'Projected starter') return r.role;
+          var w = el('span');
+          w.appendChild(S.statusBadge('projected', r.why || null));
+          if (r.why) w.title = r.why;
+          return w;
+        } },
         { h: 'GS', k: 'gs' },
         { h: 'SV%', k: 'sv' },
         { h: 'GAA', k: 'gaa' },
@@ -627,6 +712,7 @@
       var row = el('div', 'evrow');
       row.appendChild(el('span', 'when', (i + 1) + (i === 0 ? 'st' : (i === 1 ? 'nd' : 'rd'))));
       var what = el('span', 'what');
+      if (st.id && d.matchup[st.team]) what.appendChild(S.headshot('nhl', st, { team: d.matchup[st.team].abbr, size: 26 }));
       what.appendChild(el('b', '', st.name));
       what.appendChild(document.createTextNode(' — ' + (st.line || '')));
       row.appendChild(what);
@@ -1178,13 +1264,23 @@
     if (sg && sg.home && sg.away) {
       var gp = el('div', 'panel');
       gp.appendChild(el('div', 'sechead', 'Starting goaltenders'));
-      [[sg.away, away.name], [sg.home, home.name]].forEach(function (pair) {
+      [[sg.away, away.name, away], [sg.home, home.name, home]].forEach(function (pair) {
         var c = el('div', 'goaliecard');
         var left = el('div');
-        left.appendChild(el('div', 'nm', pair[0].name));
+        var nmRow = el('div', 'nm');
+        nmRow.appendChild(S.headshot('nhl', pair[0], { team: pair[2].abbr, size: 34 }));
+        nmRow.appendChild(document.createTextNode(pair[0].name));
+        nmRow.appendChild(S.statusBadge(pair[0].status === 'selected' ? 'selected'
+          : (pair[0].status === 'confirmed' ? 'confirmed' : 'projected'), pair[0].reason || null));
+        left.appendChild(nmRow);
+        var starts = pair[0].lastSeasonStarts != null
+          ? pair[0].lastSeasonStarts + ' starts last season'
+            + (pair[0].currentSeasonStarts != null ? ', ' + pair[0].currentSeasonStarts + ' this season' : '')
+          : pair[0].gamesStarted + ' starts last season';
         left.appendChild(el('div', 'sub', pair[1]
-          + (pair[0].replacementLevel ? ' - no qualifying season, started at replacement level'
-            : ' - ' + pair[0].gamesStarted + ' starts last season')));
+          + (pair[0].replacementLevel ? ', no qualifying season, started at replacement level'
+            : ', ' + starts)));
+        if (pair[0].reason) left.appendChild(el('div', 'sub', pair[0].reason + '.'));
         c.appendChild(left);
         c.appendChild(el('div', 'ln', pair[0].savePct.toFixed(3).replace(/^0/, '') + ' SV%'));
         gp.appendChild(c);
@@ -1337,6 +1433,7 @@
           awayGoalie: ag && ag.value ? ag.value : null,
         };
       },
+      preview: preview,
       prerunChips: function (away, home) {
         return [
           { label: away.abbr + ' goals for', value: away.season.goalsFor.toFixed(2) },
