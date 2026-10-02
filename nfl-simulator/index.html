@@ -676,7 +676,12 @@ function teamMark(abbr,size){
    from static/js/backend-api.js, which the auth gate below needs to read
    login state. SIM_AUTH_GATE_20260808. */
 async function nflApi(p){
-  let r; try{r=await fetch(API+p,{headers:{Accept:'application/json'}})}catch(e){throw{msg:'Network error — please try again.'}}
+  /* SIM_ATTRIBUTION_20261001: a signed-in visitor's simulations carry their
+     token so the run archive credits them (attribution only). Other reads
+     stay simple requests with no preflight. */
+  const h={Accept:'application/json'};
+  try{const t=/^\/simulate/.test(p)&&window.api&&window.api.token;if(t)h.Authorization='Bearer '+t}catch(e){}
+  let r; try{r=await fetch(API+p,{headers:h})}catch(e){throw{msg:'Network error — please try again.'}}
   /* API_HYGIENE_20260903: the busy path returns 503 {error:"sim_busy"}, not
      429, so this branch could never fire and the visitor got the generic
      "something went wrong" for a queue that clears in seconds. Both are handled
