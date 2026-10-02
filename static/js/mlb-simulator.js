@@ -464,7 +464,7 @@
     }
     function todaysScheduleUrl() {
         return 'https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=' + encodeURIComponent(todayIsoLocal()) +
-            '&hydrate=' + encodeURIComponent('probablePitcher,lineups,team,weather,venue') + '&_=' + encodeURIComponent(UI_BUILD);
+            '&hydrate=' + encodeURIComponent('probablePitcher,lineups,team,weather,venue,seriesStatus') + '&_=' + encodeURIComponent(UI_BUILD);
     }
     var TODAY_SCHEDULE_TTL_MS = 120000;
     function fetchTodaysSchedule() {
@@ -567,6 +567,11 @@
     function todaysRecordForTeam(games, team) {
         var found = todaysGameForTeam(games, team);
         if (!found) return null;
+        // POSTSEASON_MODE_20261001: on a postseason game statsapi's leagueRecord is
+        // the series record (a 2-0 lead reads as 1.000), verified 2026-10-01 on
+        // the Wild Card schedule. Feeding that in as a season record moved team
+        // strength by up to 3.5 points. Regular season games are unaffected.
+        if (isPostseasonGameType(found.game && found.game.gameType)) return null;
         var side = found.side;
         var rec = found.game.teams && found.game.teams[side] && found.game.teams[side].leagueRecord;
         if (!rec || !Number.isFinite(Number(rec.wins))) return null;
@@ -1127,13 +1132,17 @@
     function mlbDateString(date) {
         return date.toISOString().slice(0, 10);
     }
+    // POSTSEASON_MODE_20261001: the most recent lineup in October is the playoff
+    // lineup from the previous game, not the last regular season one. During the
+    // regular season no F/D/L/W games exist, so the result is unchanged.
+    var RECENT_LINEUP_GAME_TYPES = 'R,F,D,L,W';
     function recentLineupUrl(team) {
         var teamId = team && MLB_TEAM_IDS[team.abbreviation];
         if (!teamId) return '';
         var end = new Date();
         var start = new Date();
         start.setDate(start.getDate() - 21);
-        return 'https://statsapi.mlb.com/api/v1/schedule?sportId=1&teamId=' + teamId + '&startDate=' + mlbDateString(start) + '&endDate=' + mlbDateString(end) + '&gameType=R&_=' + encodeURIComponent(UI_BUILD);
+        return 'https://statsapi.mlb.com/api/v1/schedule?sportId=1&teamId=' + teamId + '&startDate=' + mlbDateString(start) + '&endDate=' + mlbDateString(end) + '&gameType=' + RECENT_LINEUP_GAME_TYPES + '&_=' + encodeURIComponent(UI_BUILD);
     }
     function teamSideInGame(game, team) {
         // Handles BOTH statsapi shapes: schedule games (teams.home.team.id) and
@@ -2916,7 +2925,7 @@
     // game (real MLB 2025 ~0.40), leaving BB ~2.8/team (well within the validator tol).
     var EV_HBP_SHARE = 0.13;
     // Build per-team lineup (anchored batter vectors + display rows) and staff.
-    function evBuildSide(team, oppPitcher, ownStarter, targetRuns, rosterContext, parkHr, simWeather, parkHrByHand) {
+    function evBuildSide(team, oppPitcher, ownStarter, targetRuns, rosterContext, parkHr, simWeather, parkHrByHand, postseasonOpts) {
         var roster = rosterForTeam(team, rosterContext);
         var oppHand = oppPitcher && oppPitcher.mlbId ? pitchHandOf(oppPitcher.mlbId) : null;
         var slotStats = roster ? rosterBatterSlotStats(roster, oppHand) : [];
@@ -3002,6 +3011,21 @@
         var starterOutsInfo = evStarterOuts(ownStarter, team);
         var starterOuts = starterOutsInfo.outs;
         var isOpenerGame = starterOutsInfo.isOpener;
+        // POSTSEASON_MODE_20261001: the starter leash. In October managers go to
+        // the bullpen earlier than in the regular season, and they trust an ace
+        // longer than a back end starter. Modeling assumption (documented, not a
+        // measured statistic): an ace (quality 112+) loses one out from his
+        // expected length, a mid rotation arm two, a below average arm three, and
+        // a starter on short rest (fewer than four days) loses three more.
+        // An opener keeps his own short target. Gated on postseasonOpts, so the
+        // regular season path never reaches this.
+        if (postseasonOpts && !isOpenerGame) {
+            var psQuality = Number(ownStarter && ownStarter.quality);
+            if (!Number.isFinite(psQuality)) psQuality = 100;
+            var psTrim = psQuality >= 112 ? 1 : (psQuality >= 100 ? 2 : 3);
+            if (postseasonOpts.shortRest && postseasonOpts.shortRest[team && team.abbreviation]) psTrim += 3;
+            starterOuts = clamp(starterOuts - psTrim, 9, 21);
+        }
         // SIM_WEATHER_20260726: fatigue>1 (heat/cold/rain) shortens the expected
         // starter outing a bounded amount; re-clamped to the same 9-24 out range
         // evStarterOuts already uses, so this can never push a starter outside a
@@ -3022,9 +3046,9 @@
         // fatigue needs no separate term: the existing times-through-order penalty
         // already degrades any reliever left in to face the lineup again. Fail-open to
         // the prior 3-slot team-profile pen (RP + CL) when real arms are unavailable.
-        var arms = evRelieverArms(roster, ownStarter);
+        var arms = evRelieverArms(roster, ownStarter, !!postseasonOpts);
         var pitchers = [
-            { name: staffNames[0] || (ownStarter && ownStarter.name) || (team.abbreviation + ' SP'), vec: starterVec, acc: evNewPit(), role: 'SP', hand: ownStarter && ownStarter.mlbId ? pitchHandOf(ownStarter.mlbId) : null, gbShare: bbShareOf('pitchers', ownStarter && ownStarter.mlbId), seasonEra: seasonEraOf(ownStarter && ownStarter.mlbId) }
+            { name: staffNames[0] || (ownStarter && ownStarter.name) || (team.abbreviation + ' SP'), vec: starterVec, acc: evNewPit(), role: 'SP', hand: ownStarter && ownStarter.mlbId ? pitchHandOf(ownStarter.mlbId) : null, gbShare: bbShareOf('pitchers', ownStarter && ownStarter.mlbId), seasonEra: seasonEraOf(ownStarter && ownStarter.mlbId), mlbId: (ownStarter && ownStarter.mlbId) || null }
         ];
         if (arms) {
             arms.ordered.forEach(function (a, idx) {
@@ -3035,7 +3059,7 @@
                 // the normal setup/closer pockets afterward rather than every arm
                 // getting an extended cap.
                 var role = a === arms.closer ? 'CL' : (a === arms.setup ? 'SU' : (isOpenerGame && idx === 0 ? 'BULK' : 'RP'));
-                pitchers.push({ name: a.name, vec: evPitcherVector({ mlbId: a.mlbId }, 100), acc: evNewPit(), role: role, hand: a.hand || null, gbShare: bbShareOf('pitchers', a.mlbId), seasonEra: seasonEraOf(a.mlbId) });
+                pitchers.push({ name: a.name, vec: evPitcherVector({ mlbId: a.mlbId }, 100), acc: evNewPit(), role: role, hand: a.hand || null, gbShare: bbShareOf('pitchers', a.mlbId), seasonEra: seasonEraOf(a.mlbId), mlbId: a.mlbId || null });
             });
         } else {
             pitchers.push({ name: staffNames[1] || (team.abbreviation + ' RP'), vec: penVec, acc: evNewPit(), role: isOpenerGame ? 'BULK' : 'RP' });
@@ -3045,6 +3069,10 @@
         // here and only ever consumed in the displayed game. Empty for synthetic teams.
         var benchPool = roster ? evBuildBench(team, roster, parkHr) : [];
         return {
+            // POSTSEASON_MODE_20261001: null in the regular season; every engine
+            // branch that reads it is skipped when it is null.
+            postseason: postseasonOpts ? { round: postseasonOpts.round || null } : null,
+            elimination: !!(postseasonOpts && postseasonOpts.elimination),
             team: team, lineup: lineup, benchPool: benchPool, anchorFactor: anchorFactor, pitchers: pitchers,
             starterOuts: starterOuts, roster: roster, hasNamedLineup: !!(roster && roster.players && roster.players.length),
             // Error-rate calibration (June 4, 2026 vs real MLB 2025): engine ran
@@ -3073,7 +3101,7 @@
     }
     // Layer 1: choose real bullpen arms from verified roster + cached season stats.
     // Returns null (fail-open) unless two qualified relievers are available.
-    function evRelieverArms(roster, ownStarter) {
+    function evRelieverArms(roster, ownStarter, postseason) {
         var players = roster && Array.isArray(roster.players) ? roster.players : [];
         var starterKey = ownStarter && ownStarter.name ? normalizeName(ownStarter.name) : '';
         var arms = players.filter(function (p) {
@@ -3119,7 +3147,12 @@
             // Up to five arms, ordered low to high leverage. evActivePitcher's
             // scheduler already splits the span between the starter's exit and the
             // ninth across however many middle arms exist, so nothing else changes.
-            var depth = rest.slice(0, 4).reverse(); // worst ERA first, best last
+            // POSTSEASON_MODE_20261001: a playoff pen is shorter and top heavy.
+            // Managers stop using the back of the bullpen in close October games,
+            // so the postseason staff keeps the three best middle arms instead of
+            // four. Modeling assumption, not a measured figure. Regular season
+            // (postseason falsy) is byte identical to before.
+            var depth = rest.slice(0, postseason ? 3 : 4).reverse(); // worst ERA first, best last
             for (var di = 0; di < depth.length; di++) {
                 if (depth[di] !== setup) ordered.push(depth[di]);
             }
@@ -3964,7 +3997,7 @@
                     var spPitches = (pitcher.acc && pitcher.acc.pitches) || 0;
                     var target = defSide.starterOutsGame || defSide.starterOuts || 16;
                     leverage = onBase && apptBf >= 3
-                        && (spOutsNow >= target || spPitches >= STARTER_PITCH_LIMIT);
+                        && (spOutsNow >= target || spPitches >= (defSide.postseason ? POSTSEASON_PITCH_LIMIT : STARTER_PITCH_LIMIT));
                 } else {
                     var margin = Math.abs((endLead == null ? 0 : endLead));
                     // A reliever is not lifted merely because runners are standing
@@ -4610,13 +4643,22 @@
     // Real starts pile up at 95-105 and thin out fast past 110; this is the point
     // at which the next inning goes to someone else, not a hard cutoff mid-frame.
     var STARTER_PITCH_LIMIT = 100;
+    // POSTSEASON_MODE_20261001: October pitch counts run shorter because every
+    // game is high leverage and off days rest the pen. 92 is a modeling
+    // assumption chosen to sit a little under the regular season limit, not a
+    // published figure. Only read when side.postseason is set.
+    var POSTSEASON_PITCH_LIMIT = 92;
     function armOutsThisGame(p) { return (p.acc && p.acc.outs) || 0; }
+    // POSTSEASON_MODE_20261001: per appearance out cap. capOverride is only ever
+    // set by the postseason path (a closer allowed a seven out save in an
+    // elimination game); undefined everywhere else, so this is ROLE_OUT_CAP.
+    function armCap(p) { return p.capOverride || ROLE_OUT_CAP[p.role]; }
     // .removed is the hard "left the game, can never return" flag (mirrors real
     // baseball substitution rules). armUnderCap folds it in: a removed arm is
     // never eligible again regardless of how few outs it recorded.
     function armUnderCap(p) {
-        if (p.removed) return false;
-        var cap = ROLE_OUT_CAP[p.role];
+        if (p.removed || p.unavailable) return false;
+        var cap = armCap(p);
         return !cap || armOutsThisGame(p) < cap;
     }
     function evActivePitcher(side, outsRecorded, extraInnings, defRuns, oppRuns, oppHand) {
@@ -4637,6 +4679,11 @@
             if (spOuts >= 6 && ((spOuts < 15 && spEr >= 5) || (spOuts < 18 && spEr >= 6))) {
                 starterOuts = Math.min(starterOuts, spOuts);
             }
+            // POSTSEASON_MODE_20261001: a quicker hook in October, one earned run
+            // sooner than the regular season rule above (assumption).
+            if (side.postseason && spOuts >= 6 && ((spOuts < 15 && spEr >= 4) || (spOuts < 18 && spEr >= 5))) {
+                starterOuts = Math.min(starterOuts, spOuts);
+            }
             // WORKLOAD_V2_20260827: the pitch count, which nothing was watching.
             //
             // A real starter comes out somewhere around a hundred pitches almost
@@ -4646,7 +4693,7 @@
             // only things that could pull a starter were an out target fixed before
             // the game and a five-run hook. This is the inning-boundary version: he
             // finishes the frame he is in, then hands it over.
-            if (workloadV2() && (spAcc.pitches || 0) >= STARTER_PITCH_LIMIT) {
+            if (workloadV2() && (spAcc.pitches || 0) >= (side.postseason ? POSTSEASON_PITCH_LIMIT : STARTER_PITCH_LIMIT)) {
                 starterOuts = Math.min(starterOuts, spOuts);
             }
         }
@@ -4662,6 +4709,12 @@
         // order, so the highest-leverage arm (setup) covers the latest pocket.
         var closerIdx = arms.length - 1;
         var CLOSER_FLOOR = 24; // 9th inning begins at the 24th defensive out
+        // POSTSEASON_MODE_20261001: in an elimination game the closer can be asked
+        // for a four out (or longer) save: with a lead of one to three runs or a
+        // tie, he may enter at the start of the 8th. Assumption, gated on
+        // side.elimination which only the postseason path sets.
+        var psLead = (Number.isFinite(defRuns) && Number.isFinite(oppRuns)) ? defRuns - oppRuns : null;
+        if (side.postseason && side.elimination && psLead !== null && psLead >= 0 && psLead <= 3) CLOSER_FLOOR = 21;
         // BULLPEN_FATIGUE_ROTATION_20260725: fallback once every scheduled pocket is
         // spoken for (past the 9th in regulation, or ANY extra inning - there is no
         // fixed pocket left there at all). Picks whichever relief arm is still
@@ -4680,8 +4733,14 @@
                 var p = arms[i];
                 if ((p.role === 'CL' || p.role === 'SU' || p.role === 'RP' || p.role === 'BULK') && !p.removed) candidates.push(p);
             }
+            // POSTSEASON_MODE_20261001: an arm ruled out by series workload is not
+            // a candidate unless every arm is ruled out (then the least used goes).
+            if (side.postseason) {
+                var rested = candidates.filter(function (p) { return !p.unavailable; });
+                if (rested.length) candidates = rested;
+            }
             if (!candidates.length) return arms[closerIdx];
-            var fresh = candidates.filter(function (p) { var cap = ROLE_OUT_CAP[p.role]; return !cap || armOutsThisGame(p) < cap; });
+            var fresh = candidates.filter(function (p) { var cap = armCap(p); return !cap || armOutsThisGame(p) < cap; });
             var pool = (fresh.length ? fresh : candidates).slice().sort(function (a, b) { return armOutsThisGame(a) - armOutsThisGame(b); });
             // RELIEVER_MATCHUP_20260727: workload/freshness stays the PRIMARY factor
             // (a manager doesn't burn his best-rested arm on a handedness whim) -
@@ -4755,6 +4814,13 @@
                     k = clamp(wi, 0, midCount - 1);
                 }
                 scheduledIdx = 1 + k;
+                // POSTSEASON_MODE_20261001: leverage, not the calendar. From the
+                // 7th inning on in a game within two runs, the best non closer arm
+                // (the setup man, last before the closer in the ordering) takes the
+                // ball instead of whoever the regular season schedule would use.
+                if (side.postseason && psLead !== null && Math.abs(psLead) <= 2 && outsRecorded >= 18 && midCount > 1 && armUnderCap(pick(closerIdx - 1))) {
+                    scheduledIdx = Math.max(scheduledIdx, closerIdx - 1);
+                }
             }
         }
         // WORKLOAD_CAP_20260725: whatever the schedule says, never hand an arm more
@@ -5270,7 +5336,7 @@
         }
         return built;
     }
-    function buildEventInputs(away, home, awayPitcher, homePitcher, awayRuns, homeRuns, rosterContext, simWeather) {
+    function buildEventInputs(away, home, awayPitcher, homePitcher, awayRuns, homeRuns, rosterContext, simWeather, postseasonOpts) {
         // SIM_WEATHER_20260726: HR/carry factor folds into the same parkHr channel
         // every plate appearance already applies (evApplyParkHr at PA-resolution
         // time), so no new per-PA call site is needed for this effect. Clamped as a
@@ -5284,8 +5350,8 @@
             L: clamp(parkHrHand.L * weatherHr, 0.5, 2.0),
             R: clamp(parkHrHand.R * weatherHr, 0.5, 2.0),
         };
-        var awaySide = evBuildSide(away, homePitcher, awayPitcher, awayRuns, rosterContext && rosterContext.away, parkHr, simWeather, parkHrByHand);
-        var homeSide = evBuildSide(home, awayPitcher, homePitcher, homeRuns, rosterContext && rosterContext.home, parkHr, simWeather, parkHrByHand);
+        var awaySide = evBuildSide(away, homePitcher, awayPitcher, awayRuns, rosterContext && rosterContext.away, parkHr, simWeather, parkHrByHand, postseasonOpts || null);
+        var homeSide = evBuildSide(home, awayPitcher, homePitcher, homeRuns, rosterContext && rosterContext.home, parkHr, simWeather, parkHrByHand, postseasonOpts || null);
         return { awaySide: awaySide, homeSide: homeSide };
     }
     function eventWinProbability(inputs, samples, statsOut, random, bbRandom) {
@@ -5362,7 +5428,9 @@
                 seasonOps: b.realOps != null ? b.realOps : null,
                 seasonSlg: b.realSlg != null ? b.realSlg : null,
                 seasonObp: b.realObp != null ? b.realObp : null,
-                statSource: b.statSource
+                statSource: b.statSource,
+                // HEADSHOTS_20261001: display only, recovered from the engine pid.
+                mlbId: (/^id(\d+)$/.exec(String(b.pid || '')) || [null, null])[1]
             };
         }).filter(function (row) { return row.name; });
     }
@@ -5413,7 +5481,9 @@
                 // His real season line, for the box row. Never derived from this
                 // game, and null rather than a league average when unknown.
                 seasonEra: p.seasonEra != null ? p.seasonEra : null,
-                role: p.role || null
+                role: p.role || null,
+                // HEADSHOTS_20261001: display only (player photo), never read by the sim.
+                mlbId: p.mlbId || null
             };
         });
     }
@@ -6517,7 +6587,12 @@
         if (!report) return 0;
         return clamp((report.ilCount * 0.32) + (report.dayToDay * 0.12) + (report.relieverCount * 0.12), 0, 2.8);
     }
-    function simulate(away, home, context, seedSalt, allowUpset, simWeatherKey) {
+    function simulate(away, home, context, seedSalt, allowUpset, simWeatherKey, simOpts) {
+        // POSTSEASON_MODE_20261001: simOpts is optional and only ever passed by the
+        // postseason paths: { postseason, awayPitcher, homePitcher, wpSamples,
+        // skipTodayWeather }. Regular season calls pass nothing and run exactly
+        // as before.
+        simOpts = simOpts || {};
         var simWeather = simWeatherByKey(simWeatherKey || 'clear');
         // Home-field run environment (Layer 3 calibration). HOME_FIELD_HOME_BONUS +
         // HOME_FIELD_AWAY_BONUS is held CONSTANT (= 0.32) so total runs/game and
@@ -6530,8 +6605,8 @@
         var awayRuns = expectedRunsFor(away, home, HOME_FIELD_AWAY_BONUS);
         var homeRuns = expectedRunsFor(home, away, HOME_FIELD_HOME_BONUS);
         var liveFactors = [];
-        var awayPitcherPre = selectedPitcher('away', away, context);
-        var homePitcherPre = selectedPitcher('home', home, context);
+        var awayPitcherPre = simOpts.awayPitcher || selectedPitcher('away', away, context);
+        var homePitcherPre = simOpts.homePitcher || selectedPitcher('home', home, context);
         var homePitcherHand = homePitcherPre && homePitcherPre.mlbId ? pitchHandOf(homePitcherPre.mlbId) : null;
         var awayPitcherHand = awayPitcherPre && awayPitcherPre.mlbId ? pitchHandOf(awayPitcherPre.mlbId) : null;
         var awayOps = teamLiveOpsFactor(away, homePitcherHand);
@@ -6628,7 +6703,7 @@
         }
         if (away && away.era === 'current' && home && home.era === 'current' && state.liveContext.todaySchedule && Array.isArray(state.liveContext.todaySchedule.games)) {
             var mlbGames = state.liveContext.todaySchedule.games;
-            if (!context || !context.espnGame || !context.espnGame.weather) {
+            if (!simOpts.skipTodayWeather && (!context || !context.espnGame || !context.espnGame.weather)) {
                 var mlbWeather = todaysWeatherForTeam(mlbGames, home);
                 if (mlbWeather) {
                     var mlbAdj = weatherRunAdjustment(mlbWeather);
@@ -6637,7 +6712,7 @@
                     liveFactors.push('Weather from MLB schedule: ' + [mlbWeather.temperature != null ? mlbWeather.temperature + 'F' : '', mlbWeather.display, mlbWeather.wind ? 'wind ' + mlbWeather.wind : ''].filter(Boolean).join(' / ') + '.');
                 }
             }
-            if (!context || !context.espnGame || !context.espnGame.venue) {
+            if (!simOpts.skipTodayWeather && (!context || !context.espnGame || !context.espnGame.venue)) {
                 var mlbVenue = todaysVenueForTeam(mlbGames, home);
                 if (mlbVenue) liveFactors.push('Ballpark from MLB schedule: ' + mlbVenue.name + '.');
             }
@@ -6798,7 +6873,11 @@
             awayRuns = clamp(awayRuns * (1 - RSRA_W) + rExpA * RSRA_W, 1.6, 9.4);
             homeRuns = clamp(homeRuns * (1 - RSRA_W) + rExpH * RSRA_W, 1.6, 9.4);
         }
-        var eventInputs = buildEventInputs(away, home, awayPitcher, homePitcher, awayRuns, homeRuns, rosterContext, simWeather);
+        var eventInputs = buildEventInputs(away, home, awayPitcher, homePitcher, awayRuns, homeRuns, rosterContext, simWeather, simOpts.postseason || null);
+        if (simOpts.postseason) {
+            liveFactors.push('Postseason mode: ' + (simOpts.postseason.label || 'playoff game') + '. Playoff settings: a shorter starter leash, a top heavy bullpen with the best arms in high leverage'
+                + (simOpts.postseason.elimination ? ', and a closer who can get more than three outs in this elimination game' : '') + '.');
+        }
         // Win probability is the simulated frequency from the same plate-appearance
         // engine that produces the box score, so the displayed win % and the box
         // scores are one consistent model. The run-based blend above is the fallback.
@@ -6818,7 +6897,7 @@
         //
         // A batch of aggregate runs still defaults to the shallow sample, because
         // the batch itself is already averaging over many games.
-        var wpSamples = state.simulationCount > 1
+        var wpSamples = Number(simOpts.wpSamples) > 0 ? Number(simOpts.wpSamples) : state.simulationCount > 1
             // A batch is already averaging over many games, so it keeps the
             // shallow sample however deep a single run is set to. Otherwise a
             // hundred runs at ten thousand games each is a million simulated
@@ -6913,8 +6992,632 @@
             bullpenEdge: edgeLabel('bullpen', away, home),
             keyExplanation: reasonParts.join(' '),
             awayPitcher: awayPitcher,
-            homePitcher: homePitcher
+            homePitcher: homePitcher,
+            // POSTSEASON_MODE_20261001 (additive): the series simulator replays
+            // these exact sides; postseason is null for regular season games.
+            eventInputs: eventInputs,
+            postseason: simOpts.postseason || null
         };
+    }
+
+    // =====================================================================
+    // POSTSEASON_MODE_20261001: playoff game mode and series simulator.
+    //
+    // What this adds, and what it does not:
+    //   * A postseason game is detected from the official MLB postseason series
+    //     feed (statsapi /schedule/postseason/series). statsapi gameType codes:
+    //     F = Wild Card Series, D = Division Series, L = League Championship
+    //     Series, W = World Series.
+    //   * The roster is the same /teams/{id}/roster?rosterType=active call the
+    //     regular season uses. Verified 2026-10-01: during the postseason that
+    //     endpoint returns the 26 man playoff roster (NYY 26, ATL 26), where the
+    //     same call dated 2026-09-27 returned the 28 man September roster.
+    //   * Engine changes in a postseason game (each gated on side.postseason,
+    //     so a regular season game never reaches them): shorter starter leash,
+    //     lower pitch limit, quicker hook, a three arm top heavy middle relief
+    //     group, the best non closer arm in close late innings, and a closer who
+    //     may enter in the 8th of an elimination game. All of these are modeling
+    //     ASSUMPTIONS stated in comments at their use sites; none is presented to
+    //     the visitor as a measured playoff statistic.
+    //   * The series simulator replays the same plate appearance engine game by
+    //     game, with each club's top three (Wild Card) or top four starters on
+    //     their real rest days, home field by round, and bullpen workload carried
+    //     from game to game (off days restore it).
+    // =====================================================================
+    // Home field: H = higher seed hosts, L = lower seed hosts.
+    // days: typical day offsets from Game 1, used only when the official feed
+    // has no dates for a game (the feed's own dates always win).
+    var POSTSEASON_ROUNDS = {
+        F: { type: 'F', key: 'WC', label: 'Wild Card Series', bestOf: 3, rotation: 3, pattern: ['H', 'H', 'H'], days: [0, 1, 2] },
+        D: { type: 'D', key: 'DS', label: 'Division Series', bestOf: 5, rotation: 4, pattern: ['H', 'H', 'L', 'L', 'H'], days: [0, 1, 3, 4, 6] },
+        L: { type: 'L', key: 'LCS', label: 'League Championship Series', bestOf: 7, rotation: 4, pattern: ['H', 'H', 'L', 'L', 'L', 'H', 'H'], days: [0, 1, 3, 4, 5, 7, 8] },
+        W: { type: 'W', key: 'WS', label: 'World Series', bestOf: 7, rotation: 4, pattern: ['H', 'H', 'L', 'L', 'L', 'H', 'H'], days: [0, 1, 3, 4, 5, 7, 8] }
+    };
+    // Starters need four days of rest (pitching every fifth day) to count as
+    // fully rested. Fewer is "short rest" and shortens his leash further.
+    var POSTSEASON_FULL_REST_DAYS = 4;
+    function isPostseasonGameType(gameType) {
+        return Object.prototype.hasOwnProperty.call(POSTSEASON_ROUNDS, String(gameType || ''));
+    }
+    function postseasonRound(gameType) { return isPostseasonGameType(gameType) ? POSTSEASON_ROUNDS[gameType] : null; }
+    function seriesWinsNeeded(bestOf) { return Math.floor(Number(bestOf) / 2) + 1; }
+    // gameNumber is 1 based. Returns 'H' (higher seed at home) or 'L'.
+    function seriesHomeSeed(round, gameNumber) {
+        var r = typeof round === 'string' ? postseasonRound(round) : round;
+        if (!r || gameNumber < 1 || gameNumber > r.bestOf) return null;
+        return r.pattern[gameNumber - 1];
+    }
+    // "PHI leads 1 to 0", "Series tied 1 to 1", "PHI wins 2 to 0". Words, not a
+    // dash, because the page copy rule forbids dashes.
+    function seriesStateText(winsA, winsB, abbrA, abbrB, bestOf) {
+        var need = seriesWinsNeeded(bestOf);
+        if (winsA === winsB) return 'Series tied ' + winsA + ' to ' + winsB;
+        var leader = winsA > winsB ? abbrA : abbrB;
+        var hi = Math.max(winsA, winsB), lo = Math.min(winsA, winsB);
+        return leader + (hi >= need ? ' wins ' : ' leads ') + hi + ' to ' + lo;
+    }
+    function abbrForMlbTeamId(id) {
+        var key = String(id || '');
+        var abbrs = Object.keys(MLB_TEAM_IDS);
+        for (var i = 0; i < abbrs.length; i += 1) if (String(MLB_TEAM_IDS[abbrs[i]]) === key) return abbrs[i];
+        return null;
+    }
+    // Pure: the official series feed (one series object) to a compact context.
+    function seriesContextFromFeed(series, todayIso) {
+        if (!series || !Array.isArray(series.games) || !series.games.length) return null;
+        var games = series.games.slice().sort(function (a, b) { return Number(a.seriesGameNumber || 0) - Number(b.seriesGameNumber || 0); });
+        var gameType = (series.series && series.series.gameType) || games[0].gameType;
+        var round = postseasonRound(gameType);
+        if (!round) return null;
+        var g1 = games[0];
+        var higher = abbrForMlbTeamId(g1.teams && g1.teams.home && g1.teams.home.team && g1.teams.home.team.id);
+        var lower = abbrForMlbTeamId(g1.teams && g1.teams.away && g1.teams.away.team && g1.teams.away.team.id);
+        if (!higher || !lower) return null;
+        var wins = {}; wins[higher] = 0; wins[lower] = 0;
+        var day0 = g1.officialDate ? Date.parse(g1.officialDate + 'T12:00:00Z') : NaN;
+        var list = games.map(function (g) {
+            var homeAbbr = abbrForMlbTeamId(g.teams && g.teams.home && g.teams.home.team && g.teams.home.team.id);
+            var awayAbbr = abbrForMlbTeamId(g.teams && g.teams.away && g.teams.away.team && g.teams.away.team.id);
+            var final = !!(g.status && g.status.abstractGameState === 'Final' && !/postponed|suspended|cancel/i.test(String(g.status.detailedState || '')));
+            var winner = null;
+            if (final) {
+                if (g.teams.home.isWinner) winner = homeAbbr;
+                else if (g.teams.away.isWinner) winner = awayAbbr;
+            }
+            if (winner && Object.prototype.hasOwnProperty.call(wins, winner)) wins[winner] += 1;
+            var t = g.officialDate ? Date.parse(g.officialDate + 'T12:00:00Z') : NaN;
+            return {
+                number: Number(g.seriesGameNumber || 0),
+                gamePk: g.gamePk || null,
+                date: g.officialDate || null,
+                day: Number.isFinite(t) && Number.isFinite(day0) ? Math.round((t - day0) / 86400000) : null,
+                homeAbbr: homeAbbr, awayAbbr: awayAbbr,
+                final: final, winner: winner,
+                inProgress: !!(g.status && g.status.abstractGameState === 'Live'),
+                ifNecessary: g.ifNecessary === 'Y'
+            };
+        });
+        var need = seriesWinsNeeded(round.bestOf);
+        var played = wins[higher] + wins[lower];
+        var isOver = wins[higher] >= need || wins[lower] >= need;
+        return {
+            source: 'MLB Stats API postseason series',
+            seriesId: (series.series && series.series.id) || null,
+            gameType: gameType, round: round, label: games[0].seriesDescription || round.label,
+            higher: higher, lower: lower, wins: wins, played: played, isOver: isOver,
+            nextGameNumber: isOver ? null : played + 1,
+            games: list,
+            stateText: seriesStateText(wins[higher], wins[lower], higher, lower, round.bestOf),
+            today: todayIso || null
+        };
+    }
+    function findSeriesForTeams(seriesList, abbrA, abbrB) {
+        var idA = String(MLB_TEAM_IDS[abbrA] || ''), idB = String(MLB_TEAM_IDS[abbrB] || '');
+        if (!idA || !idB || !Array.isArray(seriesList)) return null;
+        var found = null;
+        seriesList.forEach(function (s) {
+            var g = s && Array.isArray(s.games) ? s.games[0] : null;
+            if (!g || !g.teams) return;
+            var ids = [String(g.teams.home && g.teams.home.team && g.teams.home.team.id), String(g.teams.away && g.teams.away.team && g.teams.away.team.id)];
+            if (ids.indexOf(idA) !== -1 && ids.indexOf(idB) !== -1) found = s; // later rounds come later in the feed
+        });
+        return found;
+    }
+    function postseasonFeedWindowOpen() {
+        // The feed is only consulted from late September to mid November, so a
+        // regular season run never makes this request at all.
+        var d = new Date();
+        var m = d.getMonth() + 1, day = d.getDate();
+        return (m === 9 && day >= 20) || m === 10 || m === 11;
+    }
+    var POSTSEASON_FEED_TTL_MS = 300000;
+    function fetchPostseasonSeries() {
+        if (!postseasonFeedWindowOpen()) return Promise.resolve(null);
+        var cached = state.liveContext.postseasonSeries;
+        if (cached && (Date.now() - (cached.fetchedAt || 0)) < POSTSEASON_FEED_TTL_MS) return Promise.resolve(cached);
+        var url = 'https://statsapi.mlb.com/api/v1/schedule/postseason/series?sportId=1&season=' + encodeURIComponent(seasonYear()) + '&_=' + encodeURIComponent(UI_BUILD);
+        return fetchJson(url, { cache: 'no-store', timeoutMs: 8000 }).then(function (data) {
+            state.liveContext.postseasonSeries = { fetchedAt: Date.now(), series: Array.isArray(data && data.series) ? data.series : [] };
+            return state.liveContext.postseasonSeries;
+        }).catch(function () {
+            state.liveContext.postseasonSeries = { fetchedAt: Date.now(), series: (cached && cached.series) || [], error: true };
+            return state.liveContext.postseasonSeries;
+        });
+    }
+    function postseasonContextFor(away, home) {
+        if (!away || !home || away.era !== 'current' || home.era !== 'current') return null;
+        var feed = state.liveContext.postseasonSeries;
+        if (!feed || !Array.isArray(feed.series)) return null;
+        var s = findSeriesForTeams(feed.series, away.abbreviation, home.abbreviation);
+        return s ? seriesContextFromFeed(s, todayIsoLocal()) : null;
+    }
+    // The single game options for a live postseason game (or null).
+    function postseasonGameOpts(series, gameNumber) {
+        if (!series || series.isOver) return null;
+        var n = gameNumber || series.nextGameNumber;
+        var need = seriesWinsNeeded(series.round.bestOf);
+        var elimination = series.wins[series.higher] === need - 1 || series.wins[series.lower] === need - 1;
+        return {
+            round: series.round.key, gameType: series.gameType,
+            label: series.label + ', Game ' + n + ', ' + series.stateText,
+            shortLabel: series.round.key + ' Game ' + n,
+            gameNumber: n, elimination: elimination
+        };
+    }
+
+    // ---- Series math (pure, unit tested) ----------------------------------
+    // Pick starters for each game. candidates: best first. days: day offset of
+    // each game from Game 1. fixed: { gameNumber: pitcher } overrides (today's
+    // confirmed starter). Rule: the best of the top `rotation` arms who has had
+    // at least four days of rest; if nobody has, the most rested (short rest).
+    function planSeriesRotation(candidates, days, rotation, fixed) {
+        var pool = (candidates || []).slice(0, Math.max(1, rotation || 4));
+        var last = {};
+        function key(p) { return p ? (normalizeName(p.name) || String(p.mlbId || p.id)) : ''; }
+        function restOf(p, day) { var k = key(p); return Object.prototype.hasOwnProperty.call(last, k) ? day - last[k] - 1 : null; }
+        var plan = [];
+        for (var i = 0; i < days.length; i += 1) {
+            var day = days[i];
+            var pick = fixed && fixed[i + 1] ? fixed[i + 1] : null;
+            if (!pick) {
+                for (var j = 0; j < pool.length && !pick; j += 1) {
+                    var r = restOf(pool[j], day);
+                    // never started this series, or fully rested, and not fixed to start a later game
+                    if (r === null || r >= POSTSEASON_FULL_REST_DAYS) pick = pool[j];
+                }
+                if (!pick && pool.length) {
+                    pick = pool.slice().sort(function (a, b) { return (restOf(b, day) || 0) - (restOf(a, day) || 0); })[0];
+                }
+            }
+            var rest = pick ? restOf(pick, day) : null;
+            if (pick) last[key(pick)] = day;
+            plan.push({ game: i + 1, day: day, pitcher: pick || null, restDays: rest, shortRest: rest !== null && rest < POSTSEASON_FULL_REST_DAYS });
+        }
+        return plan;
+    }
+    // Generic best of N Monte Carlo. playGame(gameNumber, seriesIndex) returns
+    // 'A' or 'B'. Every series ends exactly when one side reaches the win
+    // target; nothing else can end it.
+    function runSeriesMonteCarlo(cfg) {
+        var bestOf = Number(cfg.bestOf);
+        var need = seriesWinsNeeded(bestOf);
+        var a0 = Number(cfg.winsA || 0), b0 = Number(cfg.winsB || 0);
+        var n = Math.max(1, Math.floor(Number(cfg.nSeries) || 1));
+        var out = { nSeries: n, bestOf: bestOf, winsNeeded: need, startWinsA: a0, startWinsB: b0, seriesWinsA: 0, seriesWinsB: 0, lengthCounts: {}, outcomeCounts: { A: {}, B: {} }, gameReached: {}, gameWinsA: {} };
+        if (a0 >= need || b0 >= need || a0 + b0 >= bestOf) {
+            out.decided = a0 >= need ? 'A' : 'B';
+        } else {
+            for (var s = 0; s < n; s += 1) {
+                if (typeof cfg.onSeriesStart === 'function') cfg.onSeriesStart(s);
+                var a = a0, b = b0, g = a0 + b0 + 1;
+                while (a < need && b < need) {
+                    var w = cfg.playGame(g, s, a, b);
+                    out.gameReached[g] = (out.gameReached[g] || 0) + 1;
+                    if (w === 'A') { a += 1; out.gameWinsA[g] = (out.gameWinsA[g] || 0) + 1; } else b += 1;
+                    g += 1;
+                }
+                var len = a + b, winner = a >= need ? 'A' : 'B';
+                out.lengthCounts[len] = (out.lengthCounts[len] || 0) + 1;
+                out.outcomeCounts[winner][len] = (out.outcomeCounts[winner][len] || 0) + 1;
+                if (winner === 'A') out.seriesWinsA += 1; else out.seriesWinsB += 1;
+            }
+        }
+        var total = out.decided ? 1 : n;
+        out.pA = out.decided ? (out.decided === 'A' ? 1 : 0) : out.seriesWinsA / n;
+        out.pB = 1 - out.pA;
+        out.lengthDist = {};
+        Object.keys(out.lengthCounts).forEach(function (k) { out.lengthDist[k] = out.lengthCounts[k] / total; });
+        out.outcomeDist = { A: {}, B: {} };
+        ['A', 'B'].forEach(function (side) {
+            Object.keys(out.outcomeCounts[side]).forEach(function (k) { out.outcomeDist[side][k] = out.outcomeCounts[side][k] / total; });
+        });
+        return out;
+    }
+    // Reliever workload carried between series games (assumption, documented):
+    // an arm is unavailable the day after he records five or more outs, and the
+    // day after pitching on two consecutive days. Any off day clears both, which
+    // is how an off day restores the pen.
+    function relieverUnavailable(history, day) {
+        if (!Array.isArray(history) || !history.length) return false;
+        var prev = history.filter(function (h) { return h.day === day - 1; })[0];
+        if (!prev) return false;
+        if (prev.outs >= 5) return true;
+        return history.some(function (h) { return h.day === day - 2; });
+    }
+
+    // ---- Engine backed series simulation ---------------------------------
+    function starterCandidatesFor(team, side, context) {
+        var opts = pitcherOptionsFor(team, side, context) || [];
+        var starters = opts.filter(function (p) {
+            if (!p || p.emergencyFallback) return false;
+            var st = p.mlbId ? cachedPlayerStat(p.mlbId, 'pitching') : null;
+            return !st || Number(st.gamesStarted || 0) >= 5 || p.confirmed;
+        });
+        if (!starters.length) starters = opts.slice();
+        return starters.slice().sort(function (a, b) { return (Number(b.quality) || 100) - (Number(a.quality) || 100); });
+    }
+    function simulatePostseasonSeries(away, home, series, settings) {
+        // settings: { higher, lower (team objects), round, winsHigher, winsLower,
+        //   nSeries, seed, currentGameNumber }
+        var round = settings.round;
+        var higher = settings.higher, lower = settings.lower;
+        var need = seriesWinsNeeded(round.bestOf);
+        var played = settings.winsHigher + settings.winsLower;
+        var firstGame = played + 1;
+        var feedGames = series && series.round && series.round.type === round.type ? series.games : [];
+        function feedGame(n) { return (feedGames || []).filter(function (g) { return g.number === n; })[0] || null; }
+        var days = [];
+        for (var gi = 1; gi <= round.bestOf; gi += 1) {
+            var fg = feedGame(gi);
+            days.push(fg && Number.isFinite(fg.day) ? fg.day : round.days[gi - 1]);
+        }
+        var ctx = state.activeLiveContext;
+        var sideOf = function (team) { return team.id === away.id ? 'away' : 'home'; };
+        var selectedFor = function (team) { return selectedPitcher(sideOf(team), team, ctx); };
+        // Today's selected starters pitch the next game; everyone else follows
+        // the rest rule. Games already played are planned by the same rule so
+        // rest days carry forward (an approximation: the feed does not name the
+        // starters of finished games).
+        // The feed does not name the starters of finished games, so the plan
+        // starts at the next game: today's selected starter is fixed for it and
+        // everyone after follows the rest rule from there.
+        var remainingDays = days.slice(firstGame - 1);
+        var planH = [].concat(new Array(firstGame - 1), planSeriesRotation(starterCandidatesFor(higher, sideOf(higher), ctx), remainingDays, round.rotation, { 1: selectedFor(higher) }));
+        var planL = [].concat(new Array(firstGame - 1), planSeriesRotation(starterCandidatesFor(lower, sideOf(lower), ctx), remainingDays, round.rotation, { 1: selectedFor(lower) }));
+        var seed = String(settings.seed || 'series');
+        var configs = {};
+        var g;
+        for (g = firstGame; g <= round.bestOf; g += 1) {
+            var fg2 = feedGame(g);
+            var homeIsHigher = fg2 && fg2.homeAbbr ? fg2.homeAbbr === higher.abbreviation : seriesHomeSeed(round, g) === 'H';
+            var homeTeam = homeIsHigher ? higher : lower;
+            var awayTeam = homeIsHigher ? lower : higher;
+            var hp = homeIsHigher ? planH[g - 1] : planL[g - 1];
+            var ap = homeIsHigher ? planL[g - 1] : planH[g - 1];
+            var shortRest = {};
+            if (hp && hp.shortRest) shortRest[homeTeam.abbreviation] = true;
+            if (ap && ap.shortRest) shortRest[awayTeam.abbreviation] = true;
+            var isToday = g === firstGame && awayTeam.id === away.id;
+            var gameCtx = isToday ? ctx : { recentForm: buildRecentForm(awayTeam, homeTeam) };
+            var built = simulate(awayTeam, homeTeam, gameCtx, seed + '|cfg|' + g, false, isToday ? state.simWeatherCondition : 'clear', {
+                postseason: { round: round.key, gameType: round.type, label: round.label + ', Game ' + g, shortRest: shortRest },
+                awayPitcher: ap && ap.pitcher, homePitcher: hp && hp.pitcher,
+                wpSamples: 1, skipTodayWeather: !isToday
+            });
+            configs[g] = {
+                game: g, day: days[g - 1], home: homeTeam, away: awayTeam,
+                homePitcher: hp && hp.pitcher, awayPitcher: ap && ap.pitcher,
+                homeRest: hp ? hp.restDays : null, awayRest: ap ? ap.restDays : null,
+                homeShortRest: !!(hp && hp.shortRest), awayShortRest: !!(ap && ap.shortRest),
+                inputs: built.eventInputs, eliminationCount: 0
+            };
+        }
+        var rnd = seededRandom(seededHash('series|' + seed));
+        var bbRnd = seededRandom(seededHash('seriesbb|' + seed));
+        var usage = {}; // per series: abbr -> name -> [{day, outs}]
+        function gameSideFor(base, abbr, day, elimination) {
+            var hist = usage[abbr] || {};
+            var arms = base.pitchers.slice(0, base._baseArms || base.pitchers.length);
+            var keep = arms.filter(function (p, idx) { return idx === 0 || !relieverUnavailable(hist[p.name], day); });
+            if (keep.length < 2) keep = arms; // never leave a club with no pen at all
+            arms.forEach(function (p) { p.capOverride = (elimination && p.role === 'CL') ? 7 : undefined; });
+            var s = Object.create(base);
+            s.pitchers = keep;
+            s._baseArms = keep.length;
+            s.elimination = !!elimination;
+            s.restedOut = arms.length - keep.length;
+            return s;
+        }
+        function record(side, abbr, day) {
+            usage[abbr] = usage[abbr] || {};
+            side.pitchers.forEach(function (p, idx) {
+                if (idx === 0 || !p.acc || !(p.acc.bf > 0)) return;
+                (usage[abbr][p.name] = usage[abbr][p.name] || []).push({ day: day, outs: p.acc.outs || 0 });
+            });
+        }
+        var t0 = Date.now();
+        var mc = runSeriesMonteCarlo({
+            bestOf: round.bestOf, winsA: settings.winsHigher, winsB: settings.winsLower, nSeries: settings.nSeries,
+            onSeriesStart: function () { usage = {}; },
+            playGame: function (gameNumber, s, a, b) {
+                var c = configs[gameNumber];
+                var elim = a === need - 1 || b === need - 1;
+                if (elim) c.eliminationCount += 1;
+                var awaySide = gameSideFor(c.inputs.awaySide, c.away.abbreviation, c.day, elim);
+                var homeSide = gameSideFor(c.inputs.homeSide, c.home.abbreviation, c.day, elim);
+                var res = evSimGame(awaySide, homeSide, rnd, null, null, bbRnd);
+                record(awaySide, c.away.abbreviation, c.day);
+                record(homeSide, c.home.abbreviation, c.day);
+                // A tie cannot come out of a played game without weather; if one
+                // ever did, the home club is credited (documented, vanishingly rare).
+                var homeWon = res.hRuns >= res.aRuns;
+                var winnerTeam = homeWon ? c.home : c.away;
+                return winnerTeam.id === higher.id ? 'A' : 'B';
+            }
+        });
+        // Clean up the per game flags so nothing leaks into a later run.
+        Object.keys(configs).forEach(function (k) {
+            [configs[k].inputs.awaySide, configs[k].inputs.homeSide].forEach(function (side) {
+                side.pitchers.forEach(function (p) { p.capOverride = undefined; });
+            });
+        });
+        return {
+            round: round, higher: higher, lower: lower, mc: mc, configs: configs, firstGame: firstGame,
+            winsHigher: settings.winsHigher, winsLower: settings.winsLower, nSeries: settings.nSeries,
+            seed: seed, elapsedMs: Date.now() - t0, fromFeed: !!(series && series.round && series.round.type === round.type)
+        };
+    }
+
+    // ---- Presentation helpers ---------------------------------------------
+    // HEADSHOTS_20261001: official MLB headshot CDN. The d_people:generic part
+    // makes the CDN itself answer with a generic silhouette for an unknown id;
+    // the initials underneath cover a network failure (the img is hidden by the
+    // delegated error listener in wireEvents). Lazy, async, fixed size.
+    function mlbHeadshotUrl(mlbId) {
+        return 'https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_120,q_auto:best/v1/people/' + encodeURIComponent(String(mlbId)) + '/headshot/67/current';
+    }
+    function initialsOf(name) {
+        var parts = String(name || '').replace(/\s*\([^)]*\)\s*$/, '').trim().split(/\s+/).filter(Boolean);
+        if (!parts.length) return '?';
+        var first = parts[0].charAt(0), last = parts.length > 1 ? parts[parts.length - 1].charAt(0) : '';
+        return (first + last).toUpperCase();
+    }
+    function headshotHtml(mlbId, name, size, extraClass) {
+        var px = Number(size) || 32;
+        var cls = 'tmr-hs' + (extraClass ? ' ' + extraClass : '');
+        var fallback = '<span class="tmr-hs-initials" aria-hidden="true">' + escapeHtml(initialsOf(name)) + '</span>';
+        var idOk = /^\d{3,8}$/.test(String(mlbId || ''));
+        if (!idOk) return '<span class="' + cls + ' tmr-hs-noimg" style="width:' + px + 'px;height:' + px + 'px">' + fallback + '</span>';
+        return '<span class="' + cls + '" style="width:' + px + 'px;height:' + px + 'px">' + fallback +
+            '<img src="' + escapeAttr(mlbHeadshotUrl(mlbId)) + '" alt="" width="' + px + '" height="' + px + '" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-tmr-hs="1"></span>';
+    }
+    function pct1(v) { return Number.isFinite(v) ? (v * 100).toFixed(1).replace(/\.0$/, '') + '%' : '--'; }
+    function restLabel(days, isShort) {
+        if (days === null || days === undefined) return 'Rested';
+        return days + ' days rest' + (isShort ? ' (short rest)' : '');
+    }
+    function ensurePostseasonPanel() {
+        var existing = byId('postseasonPanel');
+        if (existing && existing.getAttribute && existing.getAttribute('data-ps-mounted') === '1') return existing;
+        var anchor = byId('resultCard');
+        if (!anchor || !anchor.parentNode || typeof document.createElement !== 'function') return null;
+        var el = document.createElement('section');
+        if (!el || typeof el.setAttribute !== 'function') return null;
+        el.id = 'postseasonPanel';
+        el.className = 'ps-panel';
+        el.setAttribute('data-ps-mounted', '1');
+        el.setAttribute('data-ps-state', 'hidden');
+        el.setAttribute('aria-label', 'Postseason series simulator');
+        el.hidden = true;
+        anchor.parentNode.insertBefore(el, anchor.nextSibling);
+        el.addEventListener('click', function (e) {
+            var btn = e.target && e.target.closest && e.target.closest('[data-ps-action]');
+            if (!btn) return;
+            e.preventDefault();
+            if (btn.getAttribute('data-ps-action') === 'run') runPostseasonSeriesFromPanel();
+        });
+        el.addEventListener('change', function (e) {
+            if (e.target && e.target.getAttribute && e.target.getAttribute('data-ps-field') === 'round') renderPostseasonPanel(state.simulation, { keepResult: false });
+        });
+        return el;
+    }
+    function psSelect(field, options, value, label) {
+        return '<label class="ps-field"><span>' + escapeHtml(label) + '</span><select class="sim-select" data-ps-field="' + escapeAttr(field) + '">' +
+            options.map(function (o) { return '<option value="' + escapeAttr(o[0]) + '"' + (String(o[0]) === String(value) ? ' selected' : '') + '>' + escapeHtml(o[1]) + '</option>'; }).join('') +
+            '</select></label>';
+    }
+    function psFieldValue(panel, field) {
+        var el = panel && panel.querySelector ? panel.querySelector('[data-ps-field="' + field + '"]') : null;
+        return el ? el.value : null;
+    }
+    // Renders the series panel for the current result. Live series: prefilled
+    // from the official feed. Otherwise a hypothetical series the visitor sets up.
+    function renderPostseasonPanel(result, opts) {
+        var panel = ensurePostseasonPanel();
+        if (!panel) return;
+        opts = opts || {};
+        function pv(f) { return opts.fresh ? null : psFieldValue(panel, f); }
+        if (!result || !result.away || !result.home || result.away.era !== 'current' || result.home.era !== 'current') {
+            panel.hidden = true;
+            panel.setAttribute('data-ps-state', 'hidden');
+            panel.innerHTML = '';
+            return;
+        }
+        var series = result.postseasonSeries || null;
+        var prevRound = pv('round');
+        var roundType = prevRound && postseasonRound(prevRound) ? prevRound : (series ? series.gameType : 'D');
+        var round = postseasonRound(roundType);
+        var useFeed = !!(series && !series.isOver && series.gameType === roundType);
+        var live = useFeed;
+        var higherAbbr = useFeed ? series.higher : (pv('higher') || result.home.abbreviation);
+        if (higherAbbr !== result.away.abbreviation && higherAbbr !== result.home.abbreviation) higherAbbr = result.home.abbreviation;
+                var need = seriesWinsNeeded(round.bestOf);
+        var wH = useFeed ? series.wins[series.higher] : Number(pv('winsHigher') || 0);
+        var wL = useFeed ? series.wins[series.lower] : Number(pv('winsLower') || 0);
+        if (!(wH < need && wL < need)) { wH = Math.min(wH, need - 1); wL = Math.min(wL, need - 1); }
+        var nSeries = Number(pv('count') || 500);
+        var headline = live
+            ? escapeHtml(series.label) + ': Game ' + series.nextGameNumber + ', ' + escapeHtml(series.stateText)
+            : (series && series.isOver ? escapeHtml(series.label) + ': ' + escapeHtml(series.stateText) + '. Set up a hypothetical series below.' : 'Hypothetical playoff series between these two clubs');
+        var winOpts = []; for (var w = 0; w < need; w += 1) winOpts.push([w, String(w)]);
+        var controls = useFeed && live
+            ? '<input type="hidden" data-ps-field="higher" value="' + escapeAttr(higherAbbr) + '">'
+            : psSelect('higher', [[result.home.abbreviation, result.home.name], [result.away.abbreviation, result.away.name]], higherAbbr, 'Higher seed (home field)') +
+              psSelect('winsHigher', winOpts, wH, 'Higher seed wins so far') +
+              psSelect('winsLower', winOpts, wL, 'Lower seed wins so far');
+        panel.hidden = false;
+        panel.setAttribute('data-ps-state', live ? 'live' : 'hypothetical');
+        panel.innerHTML =
+            '<div class="ps-head"><span class="ps-kicker">' + (live ? 'Postseason mode' : 'Playoff series') + '</span>' +
+            '<h3>' + headline + '</h3>' +
+            (live ? '<p class="ps-source">Series state from the official MLB postseason feed. Home field follows the official schedule.</p>' : '<p class="ps-source">Home field by round: Wild Card all games at the higher seed, Division Series 2, 2, 1, LCS and World Series 2, 3, 2.</p>') +
+            '</div>' +
+            '<div class="ps-controls">' +
+            psSelect('round', [['F', 'Wild Card (best of 3)'], ['D', 'Division Series (best of 5)'], ['L', 'LCS (best of 7)'], ['W', 'World Series (best of 7)']], roundType, 'Round') +
+            controls +
+            psSelect('count', [[200, '200 series'], [500, '500 series'], [1000, '1,000 series'], [2000, '2,000 series']], nSeries, 'Simulations') +
+            '<button type="button" class="sim-button ps-run" data-ps-action="run">Simulate Series</button>' +
+            '</div>' +
+            '<div class="ps-results" data-ps-results aria-live="polite">' + (opts.keepResult && state.postseasonResult ? postseasonResultHtml(state.postseasonResult) : '<p class="ps-empty">Runs the same plate appearance engine game by game, with each club\'s top ' + round.rotation + ' starters on proper rest and bullpen workload carried between games.</p>') + '</div>' +
+            '<p class="ps-notes"><strong>How playoff mode plays:</strong> starters come out one to three outs sooner than in the regular season (aces last longest) at a lower pitch count; the three best middle relievers carry the bridge innings; from the 7th on in a game within two runs, the best setup arm pitches; in an elimination game the closer can enter in the 8th. A reliever who gets five or more outs, or pitches two days in a row, sits the next day, and off days reset the pen.</p>';
+    }
+    function postseasonResultHtml(r) {
+        var mc = r.mc, round = r.round;
+        var H = r.higher, L = r.lower;
+        if (mc.decided) {
+            var champ = mc.decided === 'A' ? H : L;
+            return '<p class="ps-empty">' + escapeHtml(champ.name) + ' already won this series.</p>';
+        }
+        function bar(team, p, cls) {
+            return '<div class="ps-odds-row ' + cls + '">' + logoMarkup(team, 'ps-logo') + '<span class="ps-team">' + escapeHtml(team.abbreviation) + '</span>' +
+                '<div class="probability-track"><span style="width:' + clamp(p * 100, 2, 98) + '%"></span></div><strong>' + pct1(p) + '</strong></div>';
+        }
+        var lengths = [];
+        for (var len = seriesWinsNeeded(round.bestOf); len <= round.bestOf; len += 1) lengths.push(len);
+        var lenRows = lengths.filter(function (len) { return len > r.winsHigher + r.winsLower; }).map(function (len) {
+            var a = mc.outcomeDist.A[len] || 0, b = mc.outcomeDist.B[len] || 0;
+            return '<tr><th scope="row">In ' + len + '</th><td>' + pct1(a) + '</td><td>' + pct1(b) + '</td><td>' + pct1(a + b) + '</td></tr>';
+        }).join('');
+        var gameRows = Object.keys(r.configs).map(Number).sort(function (a, b) { return a - b; }).map(function (g) {
+            var c = r.configs[g];
+            var reached = mc.gameReached[g] || 0;
+            var winsA = mc.gameWinsA[g] || 0;
+            var homeIsHigher = c.home.id === H.id;
+            var homeWinPct = reached ? (homeIsHigher ? winsA / reached : 1 - winsA / reached) : null;
+            function sp(p, rest, shortRest) {
+                if (!p) return '<span class="ps-sp">TBD</span>';
+                return '<span class="ps-sp">' + headshotHtml(p.mlbId, p.name, 28, 'ps-sp-hs') + '<span><strong>' + escapeHtml(p.name) + '</strong><small>' + escapeHtml(restLabel(rest, shortRest)) + '</small></span></span>';
+            }
+            return '<tr><th scope="row">G' + g + '<small>' + escapeHtml(c.away.abbreviation) + ' at ' + escapeHtml(c.home.abbreviation) + '</small></th>' +
+                '<td>' + sp(c.awayPitcher, c.awayRest, c.awayShortRest) + '</td>' +
+                '<td>' + sp(c.homePitcher, c.homeRest, c.homeShortRest) + '</td>' +
+                '<td class="ps-num">' + pct1(reached / mc.nSeries) + '</td>' +
+                '<td class="ps-num">' + (homeWinPct === null ? '--' : escapeHtml(c.home.abbreviation) + ' ' + pct1(homeWinPct)) + '</td></tr>';
+        }).join('');
+        return '<div class="ps-odds">' + bar(H, mc.pA, 'is-higher') + bar(L, mc.pB, 'is-lower') + '</div>' +
+            '<p class="ps-meta">' + mc.nSeries.toLocaleString() + ' simulated series from ' + escapeHtml(seriesStateText(r.winsHigher, r.winsLower, H.abbreviation, L.abbreviation, round.bestOf)) + '.</p>' +
+            '<div class="ps-grid">' +
+            '<div class="ps-card"><h4>Series length</h4><div class="ps-table-wrap"><table class="ps-table"><thead><tr><th>Length</th><th>' + escapeHtml(H.abbreviation) + '</th><th>' + escapeHtml(L.abbreviation) + '</th><th>Total</th></tr></thead><tbody>' + lenRows + '</tbody></table></div></div>' +
+            '<div class="ps-card ps-card-wide"><h4>Game by game plan</h4><div class="ps-table-wrap"><table class="ps-table ps-plan"><thead><tr><th>Game</th><th>Away starter</th><th>Home starter</th><th>Played</th><th>Game win</th></tr></thead><tbody>' + gameRows + '</tbody></table></div>' +
+            '<p class="ps-foot">"Played" is the share of simulated series that reached that game. "Game win" comes from the series games themselves, so it already reflects bullpen workload; the single game card above also blends a season run differential prior and can differ slightly.</p></div>' +
+            '</div>';
+    }
+    function runPostseasonSeriesFromPanel() {
+        var result = state.simulation;
+        var panel = byId('postseasonPanel');
+        if (!result || !panel) return;
+        var roundType = psFieldValue(panel, 'round') || 'D';
+        var round = postseasonRound(roundType);
+        if (!round) return;
+        var series = result.postseasonSeries || null;
+        var useFeed = !!(series && series.gameType === roundType && !series.isOver);
+        var higherAbbr = useFeed ? series.higher : (psFieldValue(panel, 'higher') || result.home.abbreviation);
+        var higher = higherAbbr === result.away.abbreviation ? result.away : result.home;
+        var lower = higher === result.away ? result.home : result.away;
+        var need = seriesWinsNeeded(round.bestOf);
+        var wH = useFeed ? series.wins[series.higher] : clamp(Number(psFieldValue(panel, 'winsHigher') || 0), 0, need - 1);
+        var wL = useFeed ? series.wins[series.lower] : clamp(Number(psFieldValue(panel, 'winsLower') || 0), 0, need - 1);
+        var nSeries = clamp(Number(psFieldValue(panel, 'count') || 500), 50, 5000);
+        var box = panel.querySelector ? panel.querySelector('[data-ps-results]') : null;
+        if (box) box.innerHTML = '<p class="ps-loading" role="status">Simulating ' + nSeries.toLocaleString() + ' series game by game...</p>';
+        panel.setAttribute('data-ps-state', 'running');
+        var baseSeed = (result.boxScore && result.boxScore.seedSalt) || ('series-' + Date.now());
+        setTimeout(function () {
+            try {
+                state.postseasonResult = simulatePostseasonSeries(result.away, result.home, useFeed ? series : null, {
+                    round: round, higher: higher, lower: lower, winsHigher: wH, winsLower: wL, nSeries: nSeries,
+                    seed: baseSeed + '|' + round.key + '|' + higher.abbreviation + '|' + wH + '-' + wL + '|' + nSeries
+                });
+                if (box) box.innerHTML = postseasonResultHtml(state.postseasonResult);
+                panel.setAttribute('data-ps-state', 'done');
+            } catch (err) {
+                if (box) box.innerHTML = '<p class="ps-empty">The series simulation could not run: ' + escapeHtml(err && err.message || 'unknown error') + '</p>';
+                panel.setAttribute('data-ps-state', 'error');
+            }
+        }, 30);
+    }
+
+    // ---- Share / copy result ----------------------------------------------
+    // SHARE_RESULT_20261001: reuses the existing deep link the history recorder
+    // already honours (?simAway=PHI&simHome=ATL, see mlb-sim-history-record.js)
+    // and adds simSeed, which this file reads on load. Opening the link still
+    // goes through the normal Run button, so the sign in gate is untouched, and
+    // the same seed with the same live rosters reproduces the same game.
+    function shareUrlFor(result) {
+        if (!result || !result.away || !result.home || result.away.era !== 'current' || result.home.era !== 'current') return '';
+        var base = (typeof location !== 'undefined' && location.origin ? location.origin : 'https://trustmyrecord.com') + '/mlb-simulator/';
+        var seed = result.boxScore && result.boxScore.seedSalt;
+        return base + '?simAway=' + encodeURIComponent(result.away.abbreviation) + '&simHome=' + encodeURIComponent(result.home.abbreviation) +
+            (seed ? '&simSeed=' + encodeURIComponent(seed) : '');
+    }
+    function shareTextFor(result) {
+        if (!result || !result.boxScore) return '';
+        var box = result.boxScore;
+        var lines = [];
+        lines.push('TrustMyRecord MLB Simulator');
+        if (result.postseason && result.postseason.label) lines.push(result.postseason.label);
+        lines.push(result.away.abbreviation + ' ' + box.away.runs + ', ' + result.home.abbreviation + ' ' + box.home.runs + (box.totalInnings > 9 ? ' (' + box.totalInnings + ' innings)' : '') + ' (simulated)');
+        lines.push('Win probability: ' + result.away.abbreviation + ' ' + roundPct(result.awayWin) + ', ' + result.home.abbreviation + ' ' + roundPct(result.homeWin));
+        if (result.awayPitcher && result.homePitcher) lines.push('Starters: ' + result.awayPitcher.name + ' vs ' + result.homePitcher.name);
+        var url = shareUrlFor(result);
+        if (url) lines.push(url);
+        return lines.join('\n');
+    }
+    function copyText(text, okMsg) {
+        if (!text) return;
+        if (typeof navigator !== 'undefined' && navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(function () { setText('projectionNotice', okMsg); })
+                .catch(function () { setText('projectionNotice', 'Copy failed in this browser. ' + text); });
+        } else {
+            setText('projectionNotice', text);
+        }
+    }
+    function ensureShareActions() {
+        var row = document.querySelector ? document.querySelector('#resultCard .result-jump-actions') : null;
+        if (!row || typeof row.appendChild !== 'function' || byId('copyResultButton') && byId('copyResultButton').getAttribute && byId('copyResultButton').getAttribute('data-share') === '1') return;
+        function add(id, label, handler) {
+            var b = document.createElement('button');
+            if (!b || typeof b.setAttribute !== 'function') return;
+            b.type = 'button';
+            b.id = id;
+            b.className = 'sim-button secondary compact-action tmr-share-action';
+            b.setAttribute('data-share', '1');
+            b.textContent = label;
+            b.addEventListener('click', handler);
+            row.appendChild(b);
+        }
+        add('copyResultButton', 'Copy Result', function () { copyText(shareTextFor(state.simulation), 'Result copied. Paste it anywhere; the link reruns this exact seed.'); });
+        add('copyShareLinkButton', 'Copy Share Link', function () { copyText(shareUrlFor(state.simulation), 'Share link copied.'); });
+    }
+    function readShareParams() {
+        try {
+            if (typeof window === 'undefined' || !window.location || typeof URLSearchParams === 'undefined') return null;
+            var p = new URLSearchParams(window.location.search || '');
+            var seed = String(p.get('simSeed') || '');
+            var away = String(p.get('simAway') || '').toUpperCase(), home = String(p.get('simHome') || '').toUpperCase();
+            if (!/^[A-Za-z0-9|._:-]{1,80}$/.test(seed) || !/^[A-Z]{2,3}$/.test(away) || !/^[A-Z]{2,3}$/.test(home)) return null;
+            return { seed: seed, away: away, home: home };
+        } catch (e) { return null; }
     }
 
     function teamOption(team) {
@@ -6943,6 +7646,23 @@
             select.disabled = !options.length;
         }
         if (meta) meta.textContent = pitcherMeta(pitcher);
+        renderPitcherPickerHeadshot(side, pitcher);
+    }
+    function renderPitcherPickerHeadshot(side, pitcher) {
+        try {
+            var meta = byId(side === 'away' ? 'awayPitcherMeta' : 'homePitcherMeta');
+            if (!meta || !meta.parentNode || typeof document.createElement !== 'function') return;
+            var id = side === 'away' ? 'awayPitcherHeadshot' : 'homePitcherHeadshot';
+            var holder = byId(id);
+            if (!holder || !holder.setAttribute) {
+                holder = document.createElement('div');
+                holder.id = id;
+                holder.className = 'pitcher-picker-hs';
+                meta.parentNode.insertBefore(holder, meta);
+            }
+            if (!pitcher) { holder.innerHTML = ''; return; }
+            holder.innerHTML = headshotHtml(pitcher.mlbId, pitcher.name, 40, 'pp-hs') + '<span><strong>' + escapeHtml(pitcher.name) + '</strong><small>' + escapeHtml(pitcher.confirmed ? 'Probable starter' : 'Selected starter') + '</small></span>';
+        } catch (e) { }
     }
 
     function renderSelectors() {
@@ -7191,7 +7911,7 @@
             var plain = (row.playerName || String(row.name || '').replace(/\s*\([^)]*\)\s*$/, ''));
             var slotNum = row.slot != null ? row.slot : index;
             var posLabel = row.sub ? (row.subRole || 'PH') : (posBySlot[slotNum] || row.rawPos || '');
-            var name = (row.sub ? '<span class="bx-sub-arrow">↳</span> ' : '') + escapeHtml(plain) + ' <span class="bx-pos">' + escapeHtml(posLabel) + '</span>';
+            var name = (row.sub ? '<span class="bx-sub-arrow">↳</span> ' : '') + headshotHtml(row.mlbId, plain, 26, 'bx-hs') + '<span class="bx-pname">' + escapeHtml(plain) + '</span> <span class="bx-pos">' + escapeHtml(posLabel) + '</span>';
             var slotCell = row.sub ? '<span class="bx-slot bx-slot-sub"></span>' : '<span class="bx-slot">' + (slotNum + 1) + '</span>';
             var cells = cols.map(function (c) { return '<td>' + Number(row[c.k] || 0) + '</td>'; }).join('');
             return '<tr' + (row.sub ? ' class="bx-sub-row"' : '') + '><th scope="row">' + slotCell + ' ' + name + '</th>' + cells +
@@ -7268,7 +7988,7 @@
             // scores, since a blown save is independent of W/L/SV/HLD.
             var decText = [decisions[index], blownSaves[index] ? 'BS' : null].filter(Boolean).join(', ');
             var decClass = decText ? ' bx-dec-' + decText.replace(/[^A-Za-z]/g, '').toUpperCase() : '';
-            var name = escapeHtml(row.name) + (decText ? ' <span class="bx-dec' + decClass + '">' + escapeHtml(decText) + '</span>' : '');
+            var name = headshotHtml(row.mlbId, row.name, 26, 'bx-hs') + '<span class="bx-pname">' + escapeHtml(row.name) + '</span>' + (decText ? ' <span class="bx-dec' + decClass + '">' + escapeHtml(decText) + '</span>' : '');
             var stPct = ps.pc ? Math.round((ps.st / ps.pc) * 100) + '%' : '—';
             return '<tr><th scope="row">' + name + '</th><td>' + escapeHtml(row.ip) + '</td><td>' + row.h + '</td><td>' + row.r + '</td><td>' + row.er + '</td><td>' + row.bb + '</td><td>' + row.so + '</td><td>' + row.hr + '</td>' +
                 '<td>' + Number(row.hbp || 0) + '</td><td>' + Number(row.bf || 0) + '</td>' +
@@ -7485,6 +8205,18 @@
         var prefix = info.status === 'confirmed' ? 'CONFIRMED LINEUP' : 'PROJECTED LINEUP';
         return '<span class="lineup-status-chip" data-lineup-status="' + escapeAttr(tone) + '">' + prefix + ' - ' + escapeHtml(info.badge) + '</span>';
     }
+    // LINEUP_BANNER_20261001: one plain sentence saying whether this batting order
+    // is MLB's posted order or a projection, so nobody mistakes one for the other.
+    function lineupBannerHtml(info) {
+        if (!info || info.status === 'historical') return '';
+        var tone, text;
+        if (info.status === 'confirmed') { tone = 'confirmed'; text = 'Confirmed lineup from MLB.'; }
+        else if (info.status === 'posted') { tone = 'posted'; text = 'Lineup posted by MLB for today\'s game.'; }
+        else { tone = 'projected'; text = 'Lineup not posted yet, using projected lineup.'; }
+        var ts = info.lineupFetchedAt || info.rosterFetchedAt;
+        var stale = ts && (Date.now() - ts) > 6 * 3600000;
+        return '<p class="lineup-banner" data-lineup-banner="' + tone + (stale ? ' stale' : '') + '"><span class="lineup-banner-dot" aria-hidden="true"></span>' + escapeHtml(text) + (stale ? ' Refresh the page for the latest lineup.' : '') + '</p>';
+    }
     function battingTableSection(team, players) {
         var source = players && players.rosterSource ? players.rosterSource : 'Roster temporarily unavailable';
         var hasBatters = players && players.batters && players.batters.length;
@@ -7494,6 +8226,7 @@
         }
         var freshness = lineupFreshnessNote(players && players.lineupStatus);
         var freshnessHtml = freshness ? '<p class="player-source-note lineup-freshness-note">' + escapeHtml(freshness) + '</p>' : '';
+        freshnessHtml = lineupBannerHtml(players && players.lineupStatus) + freshnessHtml;
         return '<section class="player-team-box"' + boxTeamAttrs(team) + '>' + headerLabel + '<p class="player-source-note">Lineup source: ' + escapeHtml(source) + '.</p>' + freshnessHtml +
             '<p class="bx-mode-legend">Rate columns: <strong>AVG/OBP/SLG/OPS</strong> are <strong>this simulated game only</strong>. <strong>SEA AVG/SEA OPS</strong> are real season-to-date numbers <strong>against the handedness of the opposing starter</strong>, which is why they differ from an overall season line. The two are never blended.</p>' +
             '<div class="player-table-wrap"><table class="player-box-table bx-bat-table"><thead>' + batterTableHead(true) + '</thead><tbody>' + batterTableRows(players.batters, true) + '</tbody></table></div></section>';
@@ -7849,6 +8582,18 @@
             '<th class="sb-total sb-runs-head">R</th><th class="sb-total">H</th><th class="sb-total">E</th></tr></thead>' +
             '<tbody>' + sbRow(box.away, awayWon) + sbRow(box.home, !awayWon) + '</tbody></table></div>';
     }
+    // HEADSHOTS_20261001: probable/selected starters with photos on the matchup card.
+    function starterDuelHtml(result) {
+        if (!result || !result.awayPitcher || !result.homePitcher) return '';
+        function one(team, p, cls) {
+            var tag = p.confirmed ? 'Probable starter (MLB)' : (p.verified ? 'Selected starter' : 'Modeled starter');
+            var era = p.era != null && p.eraVerified !== false ? 'ERA ' + Number(p.era).toFixed(2) : '';
+            return '<div class="sp-duel-side ' + cls + '">' + headshotHtml(p.mlbId, p.name, 48, 'sp-duel-hs') +
+                '<div class="sp-duel-text"><small>' + escapeHtml(team.abbreviation) + ' \u00b7 ' + escapeHtml(tag) + '</small><strong>' + escapeHtml(p.name) + '</strong>' +
+                (era ? '<span>' + escapeHtml(era) + '</span>' : '') + '</div></div>';
+        }
+        return '<div class="sp-duel" aria-label="Starting pitchers">' + one(result.away, result.awayPitcher, 'away') + '<span class="sp-duel-vs">vs</span>' + one(result.home, result.homePitcher, 'home') + '</div>';
+    }
     function renderBoxScoreMatchupCard(result) {
         var card = byId('boxScoreMatchupCard');
         if (!card) return;
@@ -7872,6 +8617,7 @@
             '<div class="box-score-final' + (box.gameStatus === 'suspended' ? ' box-score-suspended' : '') + '"><span class="bsf-score"><strong>' + box.away.runs + '</strong><em>-</em><strong>' + box.home.runs + '</strong></span><span class="bsf-final">· ' + escapeHtml(statusLabel) + '</span></div>' +
             teamCard('home', box.home, box.gameStatus !== 'suspended' && box.home.runs > box.away.runs) +
             '</div>' +
+            starterDuelHtml(result) +
             '<p class="box-score-honesty">' + (box.gameStatus === 'suspended' ? 'Simulated score at the point of a weather stoppage, not a final result - no decision has been recorded yet.' : 'Simulated final score, not official MLB stats.') + '</p>';
     }
     function boxScoreText(result) {
@@ -8275,6 +9021,8 @@
             renderAggregate(null);
             renderBoxScore(null);
             renderBullpenPanels(null);
+            state.postseasonResult = null;
+            renderPostseasonPanel(null);
             return;
         }
         var shellProjected = byId('projectionShell');
@@ -8321,6 +9069,13 @@
         renderAggregate(state.aggregate);
         renderBoxScore(result);
         renderBullpenPanels(result);
+        // POSTSEASON_MODE_20261001 + SHARE_RESULT_20261001: additive panels.
+        try {
+            state.postseasonResult = null;
+            renderPostseasonPanel(result, { fresh: true });
+            ensureShareActions();
+            if (result.postseason && result.postseason.label) setText('winnerBadge', result.winner.name + ' ' + roundPct(result.winnerPct) + ' \u00b7 ' + (result.postseason.shortLabel || result.postseason.label));
+        } catch (e) { }
         /* SHARE_YOUR_TAKE_20260927: static/js/tmr-take.js places its composer after the result card. */
         try {
             document.dispatchEvent(new CustomEvent('tmr:sim-result', { detail: {
@@ -8400,7 +9155,10 @@
             return Promise.all([
                 ensureRostersForTeams(away, home),
                 fetchBackendProjectionStatus(state.activeLiveContext),
-                fetchLeagueSeasonStrength()
+                fetchLeagueSeasonStrength(),
+                // POSTSEASON_MODE_20261001: resolves null outside late Sep to Nov
+                // and on any failure, so it can never block a regular season run.
+                (away.era === 'current' && home.era === 'current') ? fetchPostseasonSeries() : Promise.resolve(null)
             ]);
         }).then(function () {
             setLiveInputsForMatchup(away, home);
@@ -8410,9 +9168,21 @@
             var count = state.simulationCount;
             var stamp = Date.now();
             var results = [];
-            for (var i = 0; i < count; i += 1) {
-                results.push(simulate(away, home, state.activeLiveContext, count === 1 ? 'single-' + stamp : 'batch-' + stamp + '-' + i, count > 1, state.simWeatherCondition));
+            // POSTSEASON_MODE_20261001: a live, unfinished postseason series between
+            // these two clubs switches the engine into playoff mode for this game.
+            var psSeries = postseasonContextFor(away, home);
+            var psOpts = psSeries && !psSeries.isOver ? { postseason: postseasonGameOpts(psSeries) } : undefined;
+            // SHARE_RESULT_20261001: a shared link's seed is used once, for the
+            // matchup it was shared for, on a single run.
+            var sharedSeed = null;
+            if (count === 1 && state.pendingShare && state.pendingShare.away === away.abbreviation && state.pendingShare.home === home.abbreviation) {
+                sharedSeed = state.pendingShare.seed;
+                state.pendingShare = null;
             }
+            for (var i = 0; i < count; i += 1) {
+                results.push(simulate(away, home, state.activeLiveContext, count === 1 ? (sharedSeed || 'single-' + stamp) : 'batch-' + stamp + '-' + i, count > 1, state.simWeatherCondition, psOpts));
+            }
+            results.forEach(function (r) { if (r) r.postseasonSeries = psSeries || null; });
             state.aggregate = count > 1 ? buildAggregate(results, away, home) : null;
             state.simulation = results[results.length - 1];
             renderResult(state.simulation);
@@ -8582,6 +9352,17 @@
     }
 
     function wireEvents() {
+        // HEADSHOTS_20261001: hide a headshot that fails to load so the initials
+        // underneath show. One capture listener covers every render.
+        if (typeof document !== 'undefined' && typeof document.addEventListener === 'function') {
+            document.addEventListener('error', function (e) {
+                var t = e && e.target;
+                if (t && t.getAttribute && t.getAttribute('data-tmr-hs') === '1') {
+                    t.style.display = 'none';
+                    if (t.parentNode && t.parentNode.classList) t.parentNode.classList.add('tmr-hs-noimg');
+                }
+            }, true);
+        }
         var away = byId('awayTeamSelect');
         var home = byId('homeTeamSelect');
         var awayPool = byId('awayPoolSelect');
@@ -8691,6 +9472,7 @@
     }
 
     function init() {
+        state.pendingShare = readShareParams();
         wireEvents();
         renderSelectors();
         renderResult(null);
@@ -8742,6 +9524,26 @@
         // Test-only hook (additive, no runtime effect): lets the offline validation
         // harness drive the plate-appearance engine with controlled inputs and read
         // raw per-game accumulators for integrity + distribution calibration.
+        // POSTSEASON_MODE_20261001: pure helpers for the offline tests.
+        _postseason: {
+            ROUNDS: POSTSEASON_ROUNDS,
+            isPostseasonGameType: isPostseasonGameType,
+            seriesWinsNeeded: seriesWinsNeeded,
+            seriesHomeSeed: seriesHomeSeed,
+            seriesStateText: seriesStateText,
+            seriesContextFromFeed: seriesContextFromFeed,
+            findSeriesForTeams: findSeriesForTeams,
+            planSeriesRotation: planSeriesRotation,
+            runSeriesMonteCarlo: runSeriesMonteCarlo,
+            relieverUnavailable: relieverUnavailable,
+            simulatePostseasonSeries: simulatePostseasonSeries,
+            postseasonGameOpts: postseasonGameOpts,
+            headshotHtml: headshotHtml,
+            shareUrlFor: shareUrlFor,
+            shareTextFor: shareTextFor,
+            todaysRecordForTeam: todaysRecordForTeam,
+            recentLineupUrl: recentLineupUrl
+        },
         _engine: {
             buildEventInputs: buildEventInputs,
             evSimGame: evSimGame,

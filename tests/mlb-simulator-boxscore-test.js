@@ -275,7 +275,8 @@ function parsePitchingTables(html) {
         .map((cell) => {
           const decisionCell = cell.match(/<span class="bx-dec[^"]*">([^<]+)<\/span>/);
           return {
-            name: cell.replace(/<span[\s\S]*$/, '').trim(),
+            // HEADSHOTS_20261001: the name sits in its own span after the photo.
+            name: (cell.match(/<span class="bx-pname">([^<]*)<\/span>/) || [null, cell.replace(/<span[\s\S]*$/, '')])[1].trim(),
             decisions: decisionCell ? decisionCell[1].split(',').map((part) => part.trim()) : [],
           };
         }),
@@ -334,7 +335,8 @@ function assertCleanProjectedLineups(html, label) {
   //   <th scope="row"><span class="bx-slot">N</span> Name <span class="bx-pos">POS</span></th>
   // The old pattern expected a flat "Name (POS)" cell, so once this function was
   // reachable at all it matched nothing and asserted against an empty list.
-  const rows = [...html.matchAll(/<span class="bx-slot">(\d+)<\/span>\s*([^<]+?)\s*<span class="bx-pos">([A-Z0-9]+)<\/span>/g)]
+  // HEADSHOTS_20261001: an optional photo span and a bx-pname span now wrap the name.
+  const rows = [...html.matchAll(/<span class="bx-slot">(\d+)<\/span>\s*(?:<span class="tmr-hs[^>]*><span class="tmr-hs-initials"[^>]*>[^<]*<\/span>(?:<img[^>]*>)?<\/span>)?(?:<span class="bx-pname">)?([^<]+?)\s*(?:<\/span>)?\s*<span class="bx-pos">([A-Z0-9]+)<\/span>/g)]
     .map((match) => ({ slot: Number(match[1]), name: match[2].trim(), position: match[3] }));
   assert(rows.length >= 18, label + ' renders two nine-player batting orders (got ' + rows.length + ' batter rows)');
 
