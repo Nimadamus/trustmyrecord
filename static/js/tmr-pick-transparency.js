@@ -50,6 +50,10 @@
     '.tpr-note b{color:#0F1B2D}',
     '.tpr-corr{margin-top:8px;display:grid;gap:6px;font-size:13px;color:#33465C}',
     '.tpr-scroll{overflow-x:auto}',
+    '#pregame-record h2,#pregame-record .tpr-tbl td,#pregame-record .tpr-big b,#pregame-record .tpr-snap b,#pregame-record .tpr-note b{color:#0F1B2D !important;-webkit-text-fill-color:#0F1B2D !important;opacity:1 !important}',
+    '#pregame-record .tpr-tbl td.ok{color:#0E8A55 !important;-webkit-text-fill-color:#0E8A55 !important}#pregame-record .tpr-tbl td.bad{color:#C93838 !important;-webkit-text-fill-color:#C93838 !important}',
+    '#pregame-record .tpr-tbl th,#pregame-record .tpr-k{color:#5A6B80 !important;-webkit-text-fill-color:#5A6B80 !important;opacity:1 !important}',
+    '#pregame-record .tpr-acc{overflow-wrap:anywhere}',
     '@media (max-width:860px){.tpr-grid{grid-template-columns:1fr}#pregame-record{padding:16px}.tpr-big b{font-size:44px}}'
   ].join('\n');
   document.head.appendChild(css);
