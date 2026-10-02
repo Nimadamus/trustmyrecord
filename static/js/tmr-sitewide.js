@@ -63,6 +63,8 @@
     // profiles/discovery/leaderboards).
     const handicappersMenuRoutes = [
         ["/handicappers/", "Find Handicappers"],
+        // PICK_INTEGRITY_20261001, kept in sync with tmr-ds-nav.js.
+        ["/pending-picks/", "Pending Picks"],
         ["/leaderboards/", "Leaderboards"],
         // One marketplace, two payment methods (Cash / TMR Coin tabs), kept in
         // sync with static/js/tmr-ds-nav.js.
@@ -1539,6 +1541,7 @@
                     <div class="tmr-global-footer__links">
                         <a href="/leaderboards/">Leaderboards</a>
                         <a href="/handicappers/">Browse Handicappers</a>
+                        <a href="/pending-picks/">Pending Picks</a>
                         <a href="/verified-handicapper-records/">Verified Records</a>
                         <a href="/sports-betting-record-tracker/">Pick Trackers</a>
                         <a href="/pick-history/">Bet History</a>

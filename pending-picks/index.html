@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="canonical" href="https://trustmyrecord.com/pending-picks/">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pending Picks: Locked Before Game Time | TrustMyRecord</title>
+    <meta name="description" content="See which handicappers have picks pending right now, how many, and in which leagues. Every pick was locked into the TrustMyRecord ledger before its game started and cannot be edited or deleted after.">
+    <meta name="robots" content="index, follow">
+    <meta property="og:title" content="Pending Picks: Locked Before Game Time">
+    <meta property="og:description" content="Live count of every handicapper's pending picks, registered before kickoff and kept in the permanent record.">
+    <meta property="og:url" content="https://trustmyrecord.com/pending-picks/">
+    <meta property="og:type" content="website">
+    <link rel="icon" type="image/png" href="/static/favicon.png">
+    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=859cacfb660e">
+    <script defer src="/static/js/tmr-sitewide.js?v=4c37c96954ee"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap">
+    <link rel="stylesheet" href="/static/css/tmr-ds.d4d41a955166.css">
+    <link rel="stylesheet" href="/static/css/tmr-ds-header.cc364e352e74.css">
+    <link rel="stylesheet" href="/static/css/tmr-navbar.css?v=68ec3081d29a">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Home", "item": "https://trustmyrecord.com/"}, {"@type": "ListItem", "position": 2, "name": "Pending Picks", "item": "https://trustmyrecord.com/pending-picks/"}]}
+</script>
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "WebPage", "name": "Pending Picks: Locked Before Game Time", "url": "https://trustmyrecord.com/pending-picks/", "description": "A live public directory of handicappers with pending picks on TrustMyRecord, showing counts and leagues while selections stay private until the games are graded.", "isPartOf": {"@type": "WebSite", "name": "TrustMyRecord", "url": "https://trustmyrecord.com/"}}
+</script>
+<style>
+/* PICK_INTEGRITY_20261001 (Nima): the public pending picks directory. */
+:root{
+  --pp-bg:#06111E; --pp-bg2:#0A1A2C; --pp-card:#0E2034; --pp-card2:#11263D; --pp-line:rgba(140,190,255,.14);
+  --pp-line2:rgba(140,190,255,.26); --pp-ink:#EEF4FB; --pp-ink2:#B9C9DB; --pp-muted:#8299B2;
+  --pp-green:#2FD38A; --pp-green-soft:rgba(47,211,138,.13); --pp-blue:#4DA3FF; --pp-blue-soft:rgba(77,163,255,.14);
+  --pp-gold:#FFC93C; --pp-red:#FF6B6B; --pp-r:18px;
+}
+body.pp-page{background:var(--pp-bg);color:var(--pp-ink);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;margin:0}
+.pp-page *{box-sizing:border-box}
+.pp-wrap{max-width:1680px;margin:0 auto;padding:0 32px}
+.pp-hero{position:relative;overflow:hidden;border-bottom:1px solid var(--pp-line);
+  background:radial-gradient(1100px 420px at 12% -10%,rgba(47,211,138,.16),transparent 60%),
+             radial-gradient(900px 380px at 95% 0%,rgba(77,163,255,.18),transparent 60%),linear-gradient(180deg,#071728,#06111E)}
+.pp-hero .pp-wrap{padding-top:54px;padding-bottom:40px}
+.pp-eyebrow{display:inline-flex;align-items:center;gap:10px;font-weight:800;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--pp-green)}
+.pp-dot{width:9px;height:9px;border-radius:50%;background:var(--pp-green);box-shadow:0 0 0 6px rgba(47,211,138,.18);animation:ppPulse 2.2s infinite}
+@keyframes ppPulse{0%,100%{box-shadow:0 0 0 4px rgba(47,211,138,.22)}50%{box-shadow:0 0 0 9px rgba(47,211,138,.05)}}
+.pp-h1{font-family:'Barlow Condensed',Inter,sans-serif;font-weight:900;font-size:clamp(38px,4.6vw,68px);line-height:.98;letter-spacing:-.01em;margin:14px 0 14px;max-width:1100px}
+.pp-h1 em{font-style:normal;color:var(--pp-green)}
+.pp-sub{font-size:clamp(16px,1.25vw,19px);line-height:1.55;color:var(--pp-ink2);max-width:880px;margin:0}
+.pp-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:32px}
+.pp-stat{background:rgba(255,255,255,.035);border:1px solid var(--pp-line);border-radius:14px;padding:16px 18px;min-width:0}
+.pp-stat b{display:block;font-family:'Barlow Condensed',Inter,sans-serif;font-weight:800;font-size:34px;line-height:1;font-variant-numeric:tabular-nums}
+.pp-stat span{display:block;margin-top:6px;font-size:13px;font-weight:700;color:var(--pp-muted);letter-spacing:.04em;text-transform:uppercase}
+.pp-stat.is-root b{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:19px;letter-spacing:.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.75}
+.pp-bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px;padding:26px 0 18px}
+.pp-chips{display:flex;flex-wrap:wrap;gap:8px}
+.pp-chip{appearance:none;border:1px solid var(--pp-line2);background:transparent;color:var(--pp-ink2);border-radius:999px;padding:8px 14px;font:700 13.5px Inter,sans-serif;cursor:pointer;display:inline-flex;align-items:center;gap:7px}
+.pp-chip i{font-style:normal;color:var(--pp-muted);font-weight:800}
+.pp-chip.on{background:var(--pp-ink);color:#07182A;border-color:var(--pp-ink)}
+.pp-chip.on i{color:#4b6582}
+.pp-sort{display:flex;align-items:center;gap:10px;color:var(--pp-muted);font-weight:700;font-size:13.5px}
+.pp-sort select{background:var(--pp-card);color:var(--pp-ink);border:1px solid var(--pp-line2);border-radius:10px;padding:9px 12px;font:700 14px Inter,sans-serif}
+.pp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:18px;padding-bottom:28px}
+.pp-card{position:relative;background:linear-gradient(180deg,var(--pp-card2),var(--pp-card));border:1px solid var(--pp-line);border-radius:var(--pp-r);padding:22px 22px 20px;display:flex;flex-direction:column;gap:16px;min-width:0;transition:border-color .18s,transform .18s}
+.pp-card:hover{border-color:var(--pp-line2);transform:translateY(-2px)}
+.pp-card::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;border-radius:var(--pp-r) var(--pp-r) 0 0;background:linear-gradient(90deg,var(--pp-green),var(--pp-blue))}
+.pp-who{display:flex;align-items:center;gap:14px;min-width:0}
+.pp-ava{flex:0 0 auto;width:56px;height:56px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:#fff;border:2px solid rgba(255,255,255,.14);font-weight:900;font-size:19px}
+.pp-ava img{width:100%;height:100%;object-fit:cover}
+.pp-ava img.logo{width:74%;height:74%;object-fit:contain}
+.pp-id{min-width:0}
+.pp-name{display:block;font-weight:800;font-size:19px;color:var(--pp-ink);text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pp-name:hover{color:var(--pp-blue)}
+.pp-rec{display:block;margin-top:3px;font-size:14px;font-weight:600;color:var(--pp-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pp-rec b.pos{color:var(--pp-green)} .pp-rec b.neg{color:var(--pp-red)}
+.pp-count{display:flex;align-items:baseline;gap:12px}
+.pp-count b{font-family:'Barlow Condensed',Inter,sans-serif;font-weight:900;font-size:64px;line-height:.86;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.pp-count span{font-family:'Barlow Condensed',Inter,sans-serif;font-weight:800;font-size:26px;letter-spacing:.05em;text-transform:uppercase;line-height:1}
+.pp-leagues{display:flex;flex-wrap:wrap;gap:7px}
+.pp-lg{display:inline-flex;align-items:center;gap:6px;border-radius:8px;padding:6px 10px;background:var(--pp-blue-soft);border:1px solid rgba(77,163,255,.32);font-weight:800;font-size:13.5px;color:#CFE5FF}
+.pp-lg b{color:#fff}
+.pp-verify{display:flex;flex-wrap:wrap;gap:8px}
+.pp-badge{display:inline-flex;align-items:center;gap:7px;border-radius:999px;padding:6px 11px;font-size:12.5px;font-weight:800;letter-spacing:.02em}
+.pp-badge.ok{background:var(--pp-green-soft);color:var(--pp-green);border:1px solid rgba(47,211,138,.35)}
+.pp-badge.lock{background:rgba(255,201,60,.1);color:var(--pp-gold);border:1px solid rgba(255,201,60,.3)}
+.pp-badge.up{background:rgba(255,255,255,.05);color:var(--pp-ink2);border:1px solid var(--pp-line2)}
+.pp-badge svg{width:13px;height:13px}
+.pp-snap{font-size:12.5px;color:var(--pp-muted);line-height:1.45;border-top:1px dashed var(--pp-line);padding-top:12px}
+.pp-snap a{color:var(--pp-ink2);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;text-decoration:none;border-bottom:1px dotted var(--pp-muted)}
+.pp-snap a:hover{color:var(--pp-blue)}
+.pp-actions{display:flex;gap:10px;margin-top:auto}
+.pp-btn{flex:1 1 0;display:inline-flex;justify-content:center;align-items:center;gap:8px;border-radius:11px;padding:12px 14px;font-weight:800;font-size:14.5px;text-decoration:none;border:1px solid var(--pp-line2);color:var(--pp-ink);background:rgba(255,255,255,.03);white-space:nowrap}
+.pp-btn:hover{border-color:var(--pp-ink2)}
+.pp-btn.primary{background:linear-gradient(180deg,#38E097,#22B874);color:#05261A;border-color:transparent}
+.pp-btn.primary:hover{filter:brightness(1.06)}
+.pp-btn.sealed{color:var(--pp-muted);cursor:default;background:transparent;border-style:dashed}
+.pp-empty,.pp-error{grid-column:1/-1;text-align:center;padding:60px 20px;border:1px dashed var(--pp-line2);border-radius:var(--pp-r);color:var(--pp-ink2);font-size:16px}
+.pp-skel{height:310px;border-radius:var(--pp-r);background:linear-gradient(90deg,#0d1f33 0%,#132a44 50%,#0d1f33 100%);background-size:200% 100%;animation:ppSk 1.4s infinite;border:1px solid var(--pp-line)}
+@keyframes ppSk{0%{background-position:100% 0}100%{background-position:-100% 0}}
+.pp-how{border-top:1px solid var(--pp-line);background:var(--pp-bg2)}
+.pp-how .pp-wrap{padding-top:44px;padding-bottom:54px}
+.pp-h2{font-family:'Barlow Condensed',Inter,sans-serif;font-weight:900;font-size:clamp(28px,2.6vw,40px);margin:0 0 8px;line-height:1.05}
+.pp-how p.lead{color:var(--pp-ink2);font-size:16.5px;line-height:1.6;max-width:900px;margin:0 0 26px}
+.pp-steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.pp-step{background:var(--pp-card);border:1px solid var(--pp-line);border-radius:16px;padding:20px}
+.pp-step i{display:inline-grid;place-items:center;width:34px;height:34px;border-radius:10px;background:var(--pp-green-soft);color:var(--pp-green);font-style:normal;font-weight:900;margin-bottom:12px}
+.pp-step h3{margin:0 0 8px;font-size:17px;font-weight:800}
+.pp-step p{margin:0;color:var(--pp-ink2);font-size:14.5px;line-height:1.55}
+.pp-fine{margin-top:22px;color:var(--pp-muted);font-size:13.5px;line-height:1.6;max-width:1100px}
+.pp-fine a{color:var(--pp-ink2)}
+.pp-modal{position:fixed;inset:0;z-index:2000;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(2,8,16,.72);backdrop-filter:blur(3px)}
+.pp-modal.open{display:flex}
+.pp-dlg{width:min(760px,100%);max-height:88vh;overflow:auto;background:var(--pp-bg2);border:1px solid var(--pp-line2);border-radius:20px;padding:26px;color:var(--pp-ink)}
+.pp-dlg h3{margin:0 0 4px;font-family:'Barlow Condensed',Inter,sans-serif;font-size:30px;font-weight:900}
+.pp-dlg .meta{color:var(--pp-ink2);font-size:14.5px;margin-bottom:16px}
+.pp-dlg .fp{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px;word-break:break-all;background:rgba(255,255,255,.04);border:1px solid var(--pp-line);border-radius:10px;padding:10px 12px;margin:6px 0 14px;color:var(--pp-ink2)}
+.pp-dlg table{width:100%;border-collapse:collapse;font-size:14px}
+.pp-dlg th,.pp-dlg td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--pp-line)}
+.pp-dlg th{color:var(--pp-muted);font-size:12px;letter-spacing:.06em;text-transform:uppercase}
+.pp-st{font-weight:800}.pp-st.won{color:var(--pp-green)}.pp-st.lost{color:var(--pp-red)}.pp-st.pending{color:var(--pp-gold)}.pp-st.withdrawn{color:var(--pp-red)}
+.pp-x{float:right;appearance:none;background:transparent;border:1px solid var(--pp-line2);color:var(--pp-ink);border-radius:10px;padding:6px 12px;font-weight:800;cursor:pointer}
+@media (max-width:1100px){.pp-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.pp-steps{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:640px){
+  .pp-wrap{padding:0 16px}
+  .pp-hero .pp-wrap{padding-top:34px;padding-bottom:28px}
+  .pp-grid{grid-template-columns:1fr;gap:14px}
+  .pp-stats{gap:10px}.pp-stat{padding:12px 14px}.pp-stat b{font-size:28px}
+  .pp-stat.is-root{grid-column:1/-1}
+  .pp-steps{grid-template-columns:1fr}
+  .pp-count b{font-size:56px}
+  .pp-bar{padding:20px 0 14px}
+  .pp-sort{width:100%}.pp-sort select{flex:1}
+}
+</style>
+</head>
+<body class="tmr-ds-shell pp-page">
+
+<main>
+  <section class="pp-hero">
+    <div class="pp-wrap">
+      <span class="pp-eyebrow"><span class="pp-dot"></span>Pick transparency &middot; live</span>
+      <h1 class="pp-h1">Pending picks, <em>locked before game time.</em></h1>
+      <p class="pp-sub">Every pick counted here was registered in the TrustMyRecord ledger before its game started. You can see who has picks waiting, how many and in which leagues. The selections stay private until they are graded, and after the start nobody can edit, swap or delete them, the site's admins included.</p>
+      <div class="pp-stats" id="ppStats" aria-live="polite">
+        <div class="pp-stat"><b id="ppStatPending">&nbsp;</b><span>Pending picks</span></div>
+        <div class="pp-stat"><b id="ppStatCappers">&nbsp;</b><span>Handicappers</span></div>
+        <div class="pp-stat"><b id="ppStatSnap">&nbsp;</b><span>Last snapshot (PT)</span></div>
+        <div class="pp-stat is-root"><b id="ppStatRoot" title="SHA256 over every pick in the ledger at the last snapshot">&nbsp;</b><span id="ppStatRootLbl">Ledger fingerprint</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="pp-wrap">
+    <div class="pp-bar">
+      <div class="pp-chips" id="ppLeagues" role="group" aria-label="Filter by league"></div>
+      <label class="pp-sort">Sort
+        <select id="ppSort">
+          <option value="pending">Most pending</option>
+          <option value="units">Top units</option>
+          <option value="next">Next game</option>
+          <option value="name">Name</option>
+        </select>
+      </label>
+    </div>
+    <div class="pp-grid" id="ppGrid" aria-busy="true">
+      <div class="pp-skel"></div><div class="pp-skel"></div><div class="pp-skel"></div><div class="pp-skel"></div>
+    </div>
+  </section>
+
+  <section class="pp-how" id="how-it-works">
+    <div class="pp-wrap">
+      <h2 class="pp-h2">How the pregame record works</h2>
+      <p class="lead">A record is only worth something if the losing picks can't vanish and the winners can't be added after the fact. TrustMyRecord proves both, without giving away anybody's picks early.</p>
+      <div class="pp-steps">
+        <div class="pp-step"><i>1</i><h3>Locked at submission</h3><p>The moment a pick is saved, the database writes a permanent copy of it with the time, the game's scheduled start and a SHA256 fingerprint. Nothing can change that copy.</p></div>
+        <div class="pp-step"><i>2</i><h3>Snapshot every 15 minutes</h3><p>Every handicapper's pending picks are counted and sealed into a timestamped snapshot. You see the count and the leagues. The picks themselves stay hidden.</p></div>
+        <div class="pp-step"><i>3</i><h3>Frozen at game time</h3><p>Once a game starts, its picks cannot be edited, hidden or withdrawn. A rare admin correction has to be logged with who made it and why, and the original stays on file.</p></div>
+        <div class="pp-step"><i>4</i><h3>Every pick accounted for</h3><p>After the games, each snapshot shows how many of its picks were graded, are still pending, or were withdrawn. Open any profile to check yesterday's picks against today's record.</p></div>
+      </div>
+      <p class="pp-fine">Only picks entered directly on TrustMyRecord appear here. Records of handicappers tracked from public posts are on <a href="/around-the-web/">Handicappers Around the Web</a>. A second half wager is placed at halftime through the halftime gate and is counted as registered before the second half. Times are Pacific. Snapshot fingerprints can be checked against the public record at any time from the link on each card.</p>
+    </div>
+  </section>
+</main>
+
+<div class="pp-modal" id="ppModal" role="dialog" aria-modal="true" aria-label="Snapshot check"><div class="pp-dlg" id="ppDlg"></div></div>
+
+<noscript><p style="padding:24px;text-align:center;color:#B9C9DB">Turn on JavaScript to load the live pending pick directory.</p></noscript>
+
+<script>
+(function () {
+  'use strict';
+  var API = 'https://trustmyrecord-api.onrender.com/api';
+  var state = { data: null, league: 'all', sort: 'pending' };
+  try { var s = localStorage.getItem('pp-sort'); if (s) state.sort = s; } catch (_) {}
+
+  function esc(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function units(n) { n = Number(n) || 0; return (n > 0 ? '+' : n < 0 ? '−' : '') + Math.abs(n).toFixed(2) + 'u'; }
+  function pt(iso, withDay) {
+    if (!iso) return '';
+    var d = new Date(iso);
+    var opts = { timeZone: 'America/Los_Angeles', hour: 'numeric', minute: '2-digit' };
+    if (withDay) { opts.weekday = 'short'; }
+    return d.toLocaleString('en-US', opts) + ' PT';
+  }
+  var CHECK = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M3 8.5l3.2 3L13 4.5"/></svg>';
+  var LOCK = '<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M4.5 7V5.2a3.5 3.5 0 017 0V7h.6c.5 0 .9.4.9.9v5.2c0 .5-.4.9-.9.9H3.9a.9.9 0 01-.9-.9V7.9c0-.5.4-.9.9-.9h.6zm1.6 0h3.8V5.2a1.9 1.9 0 00-3.8 0V7z"/></svg>';
+
+  function avatar(c) {
+    var a = (c && c.avatar) || {};
+    if (c.avatar_url) return '<span class="pp-ava"><img src="' + esc(c.avatar_url) + '" alt="" loading="lazy" onerror="this.parentNode.textContent=\'' + esc((a.mark || '').replace(/'/g, '')) + '\'"></span>';
+    if (a.logo) return '<span class="pp-ava"><img class="logo" src="' + esc(a.logo) + '" alt="" loading="lazy"></span>';
+    return '<span class="pp-ava" style="background:' + esc(a.primary || '#1D3B5C') + ';color:' + esc(a.ink || '#fff') + '">' + esc(a.mark || '') + '</span>';
+  }
+
+  function card(h) {
+    var c = h.competitor, r = h.record;
+    var rec = r.graded_picks > 0
+      ? r.wins + '-' + r.losses + (r.pushes ? '-' + r.pushes : '') + ' &middot; <b class="' + (r.net_units >= 0 ? 'pos' : 'neg') + '">' + units(r.net_units) + '</b>'
+      : 'New record &middot; no graded picks yet';
+    var leagues = h.leagues.map(function (l) { return '<span class="pp-lg"><b>' + l.count + '</b>' + esc(l.label) + '</span>'; }).join('');
+    var status = '<span class="pp-badge ok">' + CHECK + 'Submitted before game time</span>';
+    if (h.in_progress_count) status += '<span class="pp-badge lock">' + LOCK + h.in_progress_count + ' locked, game started</span>';
+    if (h.upcoming_count) status += '<span class="pp-badge up">' + h.upcoming_count + ' upcoming' + (h.next_start_at ? ', next ' + esc(pt(h.next_start_at, true)) : '') + '</span>';
+    var snap = h.snapshot
+      ? 'Sealed in snapshot ' + esc(pt(h.snapshot.taken_at, true)) + ' &middot; <a href="' + API + '/transparency/snapshots/' + h.snapshot.id + '" target="_blank" rel="noopener" title="Open the snapshot and recompute its fingerprint">#' + esc(String(h.snapshot.commitment).slice(0, 12)) + '</a>'
+      : 'Included in the next 15 minute snapshot';
+    snap = snap.replace(API + '/transparency/snapshots/' + (h.snapshot ? h.snapshot.id : ''), '/pending-picks/?snapshot=' + (h.snapshot ? h.snapshot.id : '')).replace(' target="_blank" rel="noopener"', ' data-snapshot="' + (h.snapshot ? h.snapshot.id : '') + '"');
+    var cta = h.view_picks
+      ? '<a class="pp-btn primary" href="' + esc(h.view_picks.href) + '">' + esc(h.view_picks.label) + '</a>'
+      : h.unlock
+        ? '<a class="pp-btn primary" href="' + esc(h.unlock.href) + '">' + esc(h.unlock.label) + '</a>'
+        : '<span class="pp-btn sealed" title="Selections become public when the picks are graded">Revealed when graded</span>';
+    return '<article class="pp-card" data-user="' + esc(c.username) + '">' +
+      '<div class="pp-who">' + avatar(c) + '<span class="pp-id"><a class="pp-name" href="' + esc(c.href) + '">' + esc(c.display_name || c.username) + '</a><span class="pp-rec">' + rec + '</span></span></div>' +
+      '<div class="pp-count"><b>' + h.pending_count + '</b><span>Pending ' + (h.pending_count === 1 ? 'pick' : 'picks') + '</span></div>' +
+      '<div class="pp-leagues">' + leagues + '</div>' +
+      '<div class="pp-verify">' + status + '</div>' +
+      '<div class="pp-snap">' + snap + '</div>' +
+      '<div class="pp-actions"><a class="pp-btn" href="/profile/?user=' + encodeURIComponent(c.username) + '#pregame-record">View Profile</a>' + cta + '</div>' +
+    '</article>';
+  }
+
+  function sorted(list) {
+    var k = state.sort;
+    return list.slice().sort(function (a, b) {
+      if (k === 'units') return b.record.net_units - a.record.net_units || b.pending_count - a.pending_count;
+      if (k === 'next') return (a.next_start_at || '9') < (b.next_start_at || '9') ? -1 : (a.next_start_at || '9') > (b.next_start_at || '9') ? 1 : b.pending_count - a.pending_count;
+      if (k === 'name') return a.competitor.username.toLowerCase() < b.competitor.username.toLowerCase() ? -1 : 1;
+      return b.pending_count - a.pending_count || b.record.net_units - a.record.net_units;
+    });
+  }
+
+  function render() {
+    var d = state.data, grid = document.getElementById('ppGrid');
+    if (!d) return;
+    var list = d.handicappers.filter(function (h) {
+      return state.league === 'all' || h.leagues.some(function (l) { return l.id === state.league; });
+    });
+    grid.setAttribute('aria-busy', 'false');
+    grid.innerHTML = list.length ? sorted(list).map(card).join('')
+      : '<div class="pp-empty">No pending picks ' + (state.league === 'all' ? 'right now' : 'in this league right now') + '. New picks appear here the moment they are locked.</div>';
+    var chips = [{ id: 'all', label: 'All leagues', count: d.totals.pending }].concat(d.totals.leagues);
+    document.getElementById('ppLeagues').innerHTML = chips.map(function (l) {
+      return '<button type="button" class="pp-chip' + (l.id === state.league ? ' on' : '') + '" data-league="' + esc(l.id) + '">' + esc(l.label) + ' <i>' + l.count + '</i></button>';
+    }).join('');
+    document.getElementById('ppStatPending').textContent = d.totals.pending.toLocaleString('en-US');
+    document.getElementById('ppStatCappers').textContent = d.totals.handicappers.toLocaleString('en-US');
+    var run = d.latest_run;
+    document.getElementById('ppStatSnap').textContent = run ? pt(run.taken_at).replace(' PT', '') : 'Pending';
+    var root = document.getElementById('ppStatRoot');
+    root.textContent = run && run.ledger_root ? run.ledger_root.slice(0, 16) + '…' : 'Pending';
+    if (run) document.getElementById('ppStatRootLbl').textContent = 'Ledger fingerprint, ' + Number(run.ledger_entries || 0).toLocaleString('en-US') + ' picks';
+  }
+
+  document.getElementById('ppLeagues').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-league]'); if (!b) return;
+    state.league = b.getAttribute('data-league'); render();
+  });
+  var sel = document.getElementById('ppSort');
+  sel.value = state.sort;
+  sel.addEventListener('change', function () { state.sort = sel.value; try { localStorage.setItem('pp-sort', state.sort); } catch (_) {} render(); });
+
+  function load() {
+    return fetch(API + '/transparency/pending-picks', { cache: 'no-store' })
+      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function (d) { state.data = d; window.__TMR_PENDING_DIRECTORY = d; render(); })
+      .catch(function () {
+        if (state.data) return;
+        var g = document.getElementById('ppGrid');
+        g.setAttribute('aria-busy', 'false');
+        g.innerHTML = '<div class="pp-error">The live directory could not be reached. It refreshes on its own, or reload the page in a moment.</div>';
+      });
+  }
+  /* Snapshot check: the stored fingerprint, the one recomputed from the
+     ledger right now, and where every pick in it stands today. */
+  var modal = document.getElementById('ppModal');
+  function closeModal() { modal.classList.remove('open'); try { history.replaceState(null, '', '/pending-picks/'); } catch (_) {} }
+  modal.addEventListener('click', function (e) { if (e.target === modal || e.target.closest('.pp-x')) closeModal(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
+  function openSnapshot(id) {
+    var dlg = document.getElementById('ppDlg');
+    dlg.innerHTML = '<button type="button" class="pp-x">Close</button><h3>Snapshot #' + esc(id) + '</h3><p class="meta">Loading the sealed record&hellip;</p>';
+    modal.classList.add('open');
+    fetch(API + '/transparency/snapshots/' + encodeURIComponent(id), { cache: 'no-store' })
+      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function (s) {
+        var counts = { pending: 0, settled: 0, void: 0, withdrawn: 0 };
+        s.picks.forEach(function (p) { var k = (p.status === 'won' || p.status === 'lost' || p.status === 'push') ? 'settled' : p.status; counts[k] = (counts[k] || 0) + 1; });
+        dlg.innerHTML = '<button type="button" class="pp-x">Close</button>' +
+          '<h3>' + esc(s.username) + ': ' + s.pending_count + ' pending ' + (s.pending_count === 1 ? 'pick' : 'picks') + '</h3>' +
+          '<p class="meta">Sealed ' + esc(new Date(s.taken_at).toLocaleString('en-US', { timeZone: 'America/Los_Angeles', dateStyle: 'medium', timeStyle: 'short' })) + ' PT &middot; ' +
+            s.leagues.map(function (l) { return l.count + ' ' + esc(l.label); }).join(' &middot; ') + '</p>' +
+          '<span class="pp-badge ' + (s.commitment_verified ? 'ok' : 'lock') + '">' + (s.commitment_verified ? CHECK + 'Fingerprint matches the ledger today' : 'Fingerprint does not match') + '</span>' +
+          '<div class="fp">Sealed: ' + esc(s.commitment) + '<br>Today: ' + esc(s.commitment_recomputed) + '</div>' +
+          '<p class="meta">Today: ' + (s.pending_count - counts.withdrawn) + ' of ' + s.pending_count + ' accounted for in the record (' + counts.settled + ' graded, ' + counts.pending + ' still pending' + (counts.void ? ', ' + counts.void + ' void' : '') + (counts.withdrawn ? ', ' + counts.withdrawn + ' withdrawn with a logged reason' : '') + ').</p>' +
+          '<table><thead><tr><th>Pick</th><th>League</th><th>Registered (PT)</th><th>Now</th></tr></thead><tbody>' +
+          s.picks.map(function (p) {
+            return '<tr><td>#' + p.id + '</td><td>' + esc(p.league) + '</td><td>' + esc(new Date(p.registered_at).toLocaleString('en-US', { timeZone: 'America/Los_Angeles', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })) +
+              (p.pregame_basis === 'record_timestamp' ? ' <span title="Registered before the ledger existed; pregame per its lock time">*</span>' : '') +
+              '</td><td><span class="pp-st ' + esc(p.status) + '">' + esc(p.status === 'pending' ? 'Pending' : p.status.charAt(0).toUpperCase() + p.status.slice(1)) + '</span></td></tr>';
+          }).join('') + '</tbody></table>';
+      })
+      .catch(function () { dlg.innerHTML = '<button type="button" class="pp-x">Close</button><h3>Snapshot #' + esc(id) + '</h3><p class="meta">This snapshot could not be loaded right now.</p>'; });
+  }
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest('[data-snapshot]'); if (!a) return;
+    e.preventDefault();
+    try { history.replaceState(null, '', '/pending-picks/?snapshot=' + a.getAttribute('data-snapshot')); } catch (_) {}
+    openSnapshot(a.getAttribute('data-snapshot'));
+  });
+  var qs = new URLSearchParams(location.search);
+  if (/^\d+$/.test(qs.get('snapshot') || '')) openSnapshot(qs.get('snapshot'));
+
+  load();
+  setInterval(function () { if (!document.hidden) load(); }, 60000);
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) load(); });
+})();
+</script>
+<script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-ds-nav.b6a82821235d.js"></script>
+</body>
+</html>

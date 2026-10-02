@@ -228,6 +228,8 @@
   ];
   var HANDICAPPERS = [
     ['/handicappers/', 'Find Handicappers'],
+    /* PICK_INTEGRITY_20261001: who has picks locked in before game time. */
+    ['/pending-picks/', 'Pending Picks'],
     /* Added 2026-09-15. Records of handicappers who post picks publicly on
        forums and X, monitored and graded by TMR. */
     ['/around-the-web/', 'Handicappers Around the Web'],
@@ -396,6 +398,7 @@
       ['/online-gaming/', 'Online Gaming'],
       ['/leaderboards/', 'Leaderboards'],
       ['/handicappers/', 'Browse Handicappers'],
+      ['/pending-picks/', 'Pending Picks'],
       ['/around-the-web/', 'Handicappers Around the Web'],
       ['/verified-handicapper-records/', 'Verified Records'],
       ['/sports-betting-record-tracker/', 'Pick Trackers']
