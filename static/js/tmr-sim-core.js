@@ -72,7 +72,15 @@
   }
 
   SimApp.prototype.api = function (path) {
-    return fetch(this.base + path, { headers: { Accept: 'application/json' } })
+    // SIM_ATTRIBUTION_20261001: a signed-in visitor's simulations carry their
+    // token so the run archive credits them (attribution only). Other reads
+    // stay simple requests with no preflight.
+    var headers = { Accept: 'application/json' };
+    try {
+      var tok = /^\/simulate/.test(path) && window.api && window.api.token;
+      if (tok) headers.Authorization = 'Bearer ' + tok;
+    } catch (e) { /* anonymous */ }
+    return fetch(this.base + path, { headers: headers })
       .then(function (r) {
         return r.json().then(function (body) {
           if (!r.ok) {
