@@ -193,7 +193,7 @@
         var g = opts.game, what = g ? esc(g.away) + ' at ' + esc(g.home) : esc(opts.name || 'this handicapper');
         var count = g ? g.handicappers : (opts.pending || 1);
         var head = '<div class="tpf-k">Handicapper Watchdog &middot; live</div><h3>' + what + '</h3>'
-            + '<p class="tpf-muted">' + (g ? count + ' tracked outside handicapper' + (count === 1 ? ' has a' : 's have') + ' pending pick' + (g.picks === 1 ? '' : 's') + ' on this game' + (g.proven ? ', ' + g.proven + ' of them proven (25+ graded picks)' : '') + '.'
+            + '<p class="tpf-muted">' + (g ? count + ' handicapper' + (count === 1 ? ' outside TMR has a' : 's outside TMR have') + ' pending pick' + (g.picks === 1 ? '' : 's') + ' on this game' + (g.proven ? ', ' + g.proven + ' of them proven (25+ graded picks)' : '') + '.'
                 : count + ' pending pick' + (count === 1 ? '' : 's') + ' right now.') + ' Collected from Covers, X, Reddit and other public sources, with each handicapper&#39;s graded record.</p>';
         var ov = openModal(head + '<div id="tpfBody"><p class="tpf-muted">Loading&hellip;</p></div>');
         var body = ov.querySelector('#tpfBody');
@@ -261,7 +261,7 @@
                     var btn = document.createElement('button');
                     btn.type = 'button';
                     btn.className = 'tpf-chip';
-                    btn.innerHTML = '<span>&#128274; <b>' + g.handicappers + '</b> tracked handicapper' + (g.handicappers === 1 ? ' has a pending pick' : 's have pending picks') + ' on this game &middot; <u>Unlock Handicapper Watchdog</u></span>';
+                    btn.innerHTML = '<span>&#128274; <b>' + g.handicappers + '</b> handicapper' + (g.handicappers === 1 ? ' outside TMR has a pending pick' : 's outside TMR have pending picks') + ' on this game &middot; <u>Unlock Handicapper Watchdog</u></span>';
                     btn.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); preview({ game: g, component: 'picks_board_game' }); });
                     var wrap = document.createElement('div');
                     wrap.className = 'tpf-chipline';
@@ -286,7 +286,7 @@
             var sm = r[0] || {}, games = (r[1].games || []).slice(0, 4), net = sm.network || {}, dir = net.directory || {};
             var nums = [];
             if (dir.accounts) nums.push([Number(dir.accounts).toLocaleString('en-US'), 'accounts monitored']);
-            if (dir.with_record) nums.push([Number(dir.with_record).toLocaleString('en-US'), 'handicappers with graded records']);
+            if (dir.with_record) nums.push([Number(dir.with_record).toLocaleString('en-US'), 'handicappers outside TMR with graded records']);
             nums.push([String(sm.picks || 0), 'pending picks right now']);
             if (sm.posted_last_24h != null) nums.push([String(sm.posted_last_24h), 'of them posted in the last 24 hours']);
             var wrap = document.createElement('div');
@@ -299,7 +299,7 @@
                 + '<div class="tpf-nums">' + nums.map(function (n) { return '<div><b>' + esc(n[0]) + '</b><small>' + esc(n[1]) + '</small></div>'; }).join('') + '</div>'
                 + (games.length ? '<div class="tpf-games">' + games.map(function (g, i) {
                     return '<button type="button" class="tpf-game" data-i="' + i + '"><span><b>' + esc(g.away) + ' at ' + esc(g.home) + '</b><br><span class="tpf-muted">' + esc(g.league) + ' &middot; ' + esc(kick(g.start)) + '</span></span>'
-                        + '<span class="tpf-pill">&#128274; ' + g.handicappers + ' handicapper' + (g.handicappers === 1 ? '' : 's') + '</span></button>';
+                        + '<span class="tpf-pill">&#128274; ' + g.handicappers + ' handicapper' + (g.handicappers === 1 ? '' : 's') + ' outside TMR</span></button>';
                 }).join('') + '</div>' : '')
                 + '<div class="tpf-row"><a class="tpf-btn gold" data-tpf-cta="home_live" href="/premium/#board">View Watchdog</a>'
                 + '<a class="tpf-btn ghost" href="/around-the-web/">Browse the tracked handicappers</a></div></section>';
@@ -351,7 +351,7 @@
             var d = document.createElement('div');
             d.id = 'tpfLb';
             d.style.margin = '10px 0 4px';
-            d.innerHTML = '<button type="button" class="tpf-chip"><span>&#128274; <b>' + sm.picks + '</b> pending picks from <b>' + sm.handicappers + '</b> tracked outside handicappers right now &middot; <u>Unlock Handicapper Watchdog</u></span></button>';
+            d.innerHTML = '<button type="button" class="tpf-chip"><span>&#128274; <b>' + sm.picks + '</b> pending picks from <b>' + sm.handicappers + '</b> handicappers outside TMR right now &middot; <u>Unlock Handicapper Watchdog</u></span></button>';
             d.querySelector('button').addEventListener('click', function () { preview({ key: null, name: 'Handicapper Watchdog', pending: sm.picks, component: 'leaderboards' }); });
             var anchor = h1.closest('header, section, div') || h1;
             anchor.parentNode.insertBefore(d, anchor.nextSibling);
