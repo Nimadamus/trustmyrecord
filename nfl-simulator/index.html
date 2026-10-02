@@ -2164,7 +2164,7 @@ function svgHist(bins,opt){
     const lab=opt.kind==='margin'
       ?(b.x===0?'Tie in regulation':(b.x>0?`${opt.hAbbr} by ${b.x}`:`${opt.aAbbr} by ${-b.x}`))
       :`${b.x} total points`;
-    s+=`<rect class="b" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${Math.max(0.8,bw-0.8).toFixed(1)}" height="${Math.max(0,h).toFixed(1)}" rx="1" fill="${fill}" opacity="0.88"><title>${esc(lab)}: ${(b.p/tot*100).toFixed(1)}% of simulations</title></rect>`;
+    s+=`<rect class="b" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${Math.max(0.8,bw-0.8).toFixed(1)}" height="${Math.max(0,h).toFixed(1)}" rx="1" fill="${fill}" opacity="0.88"><${"title"}>${esc(lab)}: ${(b.p/tot*100).toFixed(1)}% of simulations</${"title"}></rect>`;
   }
   s+=`<line class="axl" x1="${pl}" x2="${W-pr}" y1="${H-pb}" y2="${H-pb}"/>`;
   // ticks every 7 for margins (the football number), every 10 for totals
@@ -2186,7 +2186,7 @@ function svgHist(bins,opt){
   const desc=opt.kind==='margin'
     ?`Median margin ${sgn(opt.median,0)} for ${opt.hAbbr}. Half of the simulated games fall between ${numTxt(pc.p25)} and ${numTxt(pc.p75)}; 90% between ${numTxt(pc.p05)} and ${numTxt(pc.p95)}.${opt.line!=null?' Market line '+numTxt(opt.line)+'.':''}`
     :`Median total ${numTxt(opt.median)}. Half of the simulated games fall between ${numTxt(pc.p25)} and ${numTxt(pc.p75)} points; 90% between ${numTxt(pc.p05)} and ${numTxt(pc.p95)}.${opt.line!=null?' Market total '+numTxt(opt.line)+'.':''}`;
-  return `<svg class="hist" viewBox="0 0 ${W} ${H}" role="img" aria-labelledby="${id}t ${id}d"><title id="${id}t">${esc(title)}</title><desc id="${id}d">${esc(desc)}</desc>${s}</svg><p class="sr-only">${esc(desc)}</p>`;
+  return `<svg class="hist" viewBox="0 0 ${W} ${H}" role="img" aria-labelledby="${id}t ${id}d"><${"title"} id="${id}t">${esc(title)}</${"title"}><desc id="${id}d">${esc(desc)}</desc>${s}</svg><p class="sr-only">${esc(desc)}</p>`;
 }
 
 /* ---------------------------------------------------------------- props
