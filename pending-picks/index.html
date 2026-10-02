@@ -140,7 +140,8 @@ body.pp-page{background:var(--pp-bg);color:var(--pp-ink);font-family:Inter,syste
     <div class="pp-wrap">
       <span class="pp-eyebrow"><span class="pp-dot"></span>Pick transparency &middot; live</span>
       <h1 class="pp-h1">Pending picks, <em>locked before game time.</em></h1>
-      <p class="pp-sub">Every pick counted here was registered in the TrustMyRecord ledger before its game started. You can see who has picks waiting, how many and in which leagues. The selections stay private until they are graded, and after the start nobody can edit, swap or delete them, the site's admins included.</p>
+      <p class="pp-sub"><strong>These are the number of picks each user already has pending. The selections remain hidden until appropriate.</strong></p>
+      <p class="pp-sub" style="margin-top:12px">Why show a count at all? Because a record is only honest if losing picks can't quietly disappear. Every pick here was locked into the TrustMyRecord ledger before its game started, and every 15 minutes the counts are sealed into a timestamped snapshot. Later, anyone can check that every one of those picks made it into the graded record. That applies to every member, the site's admins included.</p>
       <div class="pp-stats" id="ppStats" aria-live="polite">
         <div class="pp-stat"><b id="ppStatPending">&nbsp;</b><span>Pending picks</span></div>
         <div class="pp-stat"><b id="ppStatCappers">&nbsp;</b><span>Handicappers</span></div>
@@ -156,7 +157,6 @@ body.pp-page{background:var(--pp-bg);color:var(--pp-ink);font-family:Inter,syste
       <label class="pp-sort">Sort
         <select id="ppSort">
           <option value="pending">Most pending</option>
-          <option value="units">Top units</option>
           <option value="next">Next game</option>
           <option value="name">Name</option>
         </select>
@@ -191,10 +191,9 @@ body.pp-page{background:var(--pp-bg);color:var(--pp-ink);font-family:Inter,syste
   'use strict';
   var API = 'https://trustmyrecord-api.onrender.com/api';
   var state = { data: null, league: 'all', sort: 'pending' };
-  try { var s = localStorage.getItem('pp-sort'); if (s) state.sort = s; } catch (_) {}
+  try { var s = localStorage.getItem('pp-sort'); if (s === 'pending' || s === 'next' || s === 'name') state.sort = s; } catch (_) {}
 
   function esc(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
-  function units(n) { n = Number(n) || 0; return (n > 0 ? '+' : n < 0 ? '−' : '') + Math.abs(n).toFixed(2) + 'u'; }
   function pt(iso, withDay) {
     if (!iso) return '';
     var d = new Date(iso);
@@ -214,9 +213,7 @@ body.pp-page{background:var(--pp-bg);color:var(--pp-ink);font-family:Inter,syste
 
   function card(h) {
     var c = h.competitor, r = h.record;
-    var rec = r.graded_picks > 0
-      ? r.wins + '-' + r.losses + (r.pushes ? '-' + r.pushes : '') + ' &middot; <b class="' + (r.net_units >= 0 ? 'pos' : 'neg') + '">' + units(r.net_units) + '</b>'
-      : 'New record &middot; no graded picks yet';
+    var rec = 'Picks on the board before game time';
     var leagues = h.leagues.map(function (l) { return '<span class="pp-lg"><b>' + l.count + '</b>' + esc(l.label) + '</span>'; }).join('');
     var status = '<span class="pp-badge ok">' + CHECK + 'Submitted before game time</span>';
     if (h.in_progress_count) status += '<span class="pp-badge lock">' + LOCK + h.in_progress_count + ' locked, game started</span>';
@@ -243,10 +240,9 @@ body.pp-page{background:var(--pp-bg);color:var(--pp-ink);font-family:Inter,syste
   function sorted(list) {
     var k = state.sort;
     return list.slice().sort(function (a, b) {
-      if (k === 'units') return b.record.net_units - a.record.net_units || b.pending_count - a.pending_count;
       if (k === 'next') return (a.next_start_at || '9') < (b.next_start_at || '9') ? -1 : (a.next_start_at || '9') > (b.next_start_at || '9') ? 1 : b.pending_count - a.pending_count;
       if (k === 'name') return a.competitor.username.toLowerCase() < b.competitor.username.toLowerCase() ? -1 : 1;
-      return b.pending_count - a.pending_count || b.record.net_units - a.record.net_units;
+      return b.pending_count - a.pending_count || (a.competitor.username.toLowerCase() < b.competitor.username.toLowerCase() ? -1 : 1);
     });
   }
 
