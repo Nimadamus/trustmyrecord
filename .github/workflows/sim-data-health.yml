@@ -1,0 +1,74 @@
+name: Simulator Data Health
+
+# SIM_DATA_HEALTH_20261001. Watches the simulators' roster and personnel data
+# (GET /api/roster/status on the TMR API: NBA, NHL, MLB, NFL). The API refreshes
+# NBA and NHL rosters itself every 6 hours and keeps the previous snapshot when
+# a refresh fails validation, so a failure is silent on the site by design.
+# This makes it loud: if any sport is not "current", its refresh is failing, or
+# the endpoint does not answer, one issue labelled sim-data-alert is opened (or
+# commented on), which emails the repo owner. The next healthy check closes it.
+# Read only: it never changes anything on the site or the API.
+
+on:
+  schedule:
+    - cron: '45 */3 * * *'
+  workflow_dispatch:
+
+permissions:
+  issues: write
+
+concurrency:
+  group: sim-data-health
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check roster freshness
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          RUN_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          WHEN=$(TZ=America/Los_Angeles date '+%b %d %I:%M %p PT')
+          BODY=""
+          for i in 1 2 3; do
+            BODY=$(curl -fsS -m 90 https://trustmyrecord-api.onrender.com/api/roster/status) && break
+            sleep 30
+          done
+          printf '%s' "$BODY" > status.json
+          cat > check.py <<'PY'
+          import json, sys
+          try:
+              d = json.load(open("status.json"))
+          except Exception:
+              print("roster status endpoint did not answer with JSON")
+              sys.exit()
+          out = []
+          sports = d.get("sports") or {}
+          for k in ("nba", "nhl", "mlb", "nfl"):
+              s = sports.get(k)
+              if not s:
+                  out.append(k.upper() + " missing from roster status")
+                  continue
+              if s.get("freshness") != "current":
+                  out.append("%s data is %s (%sh old)" % (k.upper(), s.get("freshness"), s.get("data_age_hours")))
+              if (s.get("consecutive_failures") or 0) > 0:
+                  out.append("%s refresh failed %sx: %s" % (k.upper(), s.get("consecutive_failures"), s.get("last_error")))
+          print("; ".join(out))
+          PY
+          PROBLEMS=$(python3 check.py)
+          if [ -n "$PROBLEMS" ]; then
+            echo "UNHEALTHY: $PROBLEMS"
+            gh label create sim-data-alert --color B60205 --description "Simulator data freshness problem" >/dev/null 2>&1 || true
+            N=$(gh issue list --label sim-data-alert --state open --json number --jq '.[0].number' 2>/dev/null)
+            if [ -n "$N" ]; then gh issue comment "$N" --body "$WHEN: $PROBLEMS. Run: $RUN_URL" || true
+            else gh issue create --label sim-data-alert --title "Simulator data is stale or failing to refresh" --body "$WHEN: $PROBLEMS. Run: $RUN_URL. This issue closes itself after the next healthy check." || true; fi
+            exit 1
+          fi
+          echo "healthy"
+          for N in $(gh issue list --label sim-data-alert --state open --json number --jq '.[].number' 2>/dev/null); do
+            gh issue close "$N" --comment "Healthy again at $WHEN: $RUN_URL" || true
+          done

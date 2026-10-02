@@ -1,0 +1,93 @@
+name: League Simulator Bake
+
+# SIM_BAKE_CLOUD_20261001. The NBA and NHL season and playoff simulator pages,
+# the NFL season, team and playoff pages, and the MLB playoff odds page, baked
+# from the live API in the cloud. This replaces the laptop task "TMR NBA NHL
+# Season Sims" (scripts/run_league_sim_bake.cmd), which stopped whenever the
+# laptop was off. Same steps, same order, same fail closed rule: any failing
+# build or gate publishes nothing and the last good bake stays live.
+#
+# SCHEDULE. The laptop ran at 06:20 and 14:20 PT. GitHub drops scheduled runs
+# on this repo under load, so this runs four times a day; a run with nothing
+# new commits nothing.
+#
+# ALERTS. A failed bake opens (or comments on) one issue labelled
+# sim-bake-alert, which emails the repo owner; the next good bake closes it.
+
+on:
+  schedule:
+    - cron: '20 1,9,13,21 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: league-sim-bake
+  cancel-in-progress: false
+
+jobs:
+  bake:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: Bake and publish
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -o pipefail
+          git config user.name "tmr-sim-bake-bot"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          RUN_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          WHEN() { TZ=America/Los_Angeles date '+%b %d %I:%M %p PT'; }
+
+          alert() {
+            gh label create sim-bake-alert --color B60205 --description "Simulator page bake failure" >/dev/null 2>&1 || true
+            N=$(gh issue list --label sim-bake-alert --state open --json number --jq '.[0].number' 2>/dev/null)
+            if [ -n "$N" ]; then
+              gh issue comment "$N" --body "Bake failed at $(WHEN): $1. Run: $RUN_URL" || true
+            else
+              gh issue create --label sim-bake-alert --title "Simulator page bake is failing" \
+                --body "A bake failed at $(WHEN): $1. Run: $RUN_URL. The last good pages stay live. This issue closes itself after the next good bake." || true
+            fi
+          }
+          recovered() {
+            for N in $(gh issue list --label sim-bake-alert --state open --json number --jq '.[].number' 2>/dev/null); do
+              gh issue close "$N" --comment "Recovered at $(WHEN): $RUN_URL" || true
+            done
+          }
+
+          bake() {
+            for attempt in 1 2 3; do
+              git fetch -q origin main && git reset -q --hard origin/main || return 1
+              node scripts/build_league_sim_pages.js > b1.log 2>&1 || { tail -30 b1.log; return 1; }
+              node scripts/build_nfl_season_page.js > b2.log 2>&1 || { tail -30 b2.log; return 1; }
+              node scripts/build_nfl_team_pages.js > b3.log 2>&1 || { tail -30 b3.log; return 1; }
+              node scripts/build_mlb_odds_page.js > b4.log 2>&1 || { tail -30 b4.log; return 1; }
+              # Never fails the bake; on bad inputs it leaves the last bake live.
+              node scripts/build_nfl_playoff_page.js > b5.log 2>&1 || tail -10 b5.log
+              # THE GATES run before the commit: a failing gate publishes nothing.
+              node tests/playoff-bracket-test.js > g1.log 2>&1 || { tail -30 g1.log; return 1; }
+              node tests/league-season-engine-test.js > g2.log 2>&1 || { tail -30 g2.log; return 1; }
+              node tests/seo-indexability-regression-test.js > g3.log 2>&1 || { tail -40 g3.log; return 1; }
+              git add mlb-playoff-odds mlb-simulator data/mlb-playoff-odds-inputs.json nfl-season-simulator nfl-simulator nfl-playoff-simulator sitemap.xml nba-season-simulator nba-playoff-simulator nhl-season-simulator nhl-playoff-simulator nba-simulator nhl-simulator
+              if git diff --cached --quiet; then echo "Simulator pages already current."; return 0; fi
+              git commit -q -m "chore(sims): bake NBA and NHL season and playoff simulators [skip ci]"
+              if git push -q origin HEAD:main; then git show --stat --oneline HEAD | head -20; return 0; fi
+              echo "main moved during the bake; rebuilding on top of it (attempt $attempt)"
+            done
+            return 1
+          }
+
+          echo "=== bake at $(WHEN)"
+          if bake; then recovered; else alert "see the log for this run"; exit 1; fi
