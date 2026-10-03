@@ -161,7 +161,7 @@
          /matchup-of-the-day/ncaaf/ is a stable door scoped to one sport: baked
          with the newest NCAAF Game File, canonicalised to it, and out of the
          sitemap so search consolidates on the article's own URL. */
-      /*FMENU ncaaf*/ ['/ncaaf/lions-wildcats-becht-vs-chiles/', 'NCAAF', '/matchup-of-the-day/ncaaf/'],
+      /*FMENU ncaaf*/ ['/matchup-of-the-day/huskies-trojans-the-price-is-lopsided/', 'NCAAF', '/matchup-of-the-day/ncaaf/'],
       /* Repointed 2026-09-04 from /today/ to /matchup-of-the-day/mlb/. /today/ is
          newest-wins across every sport, so once college football started publishing
          its own Game Files this entry and the NCAAF one both landed on whichever
