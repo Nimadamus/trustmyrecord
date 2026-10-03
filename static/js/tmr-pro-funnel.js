@@ -261,7 +261,7 @@
                     var btn = document.createElement('button');
                     btn.type = 'button';
                     btn.className = 'tpf-chip';
-                    btn.innerHTML = '<span>&#128274; <b>' + g.handicappers + '</b> handicapper' + (g.handicappers === 1 ? ' outside TMR has a pending pick' : 's outside TMR have pending picks') + ' on this game &middot; <u>Unlock Handicapper Watchdog</u></span>';
+                    btn.innerHTML = '<span>&#128274; <b>' + g.handicappers + '</b> handicapper' + (g.handicappers === 1 ? ' outside TMR has a pending pick' : 's outside TMR have pending picks') + ' on this game' + (g.proven ? ' &middot; <b>' + g.proven + ' proven</b> (25+ graded picks)' : '') + ' &middot; <u>See who and what they picked</u></span>';
                     btn.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); preview({ game: g, component: 'picks_board_game' }); });
                     var wrap = document.createElement('div');
                     wrap.className = 'tpf-chipline';
