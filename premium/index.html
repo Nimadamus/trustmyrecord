@@ -694,6 +694,9 @@
         .wdx-records:hover span { transform: translateX(3px); }
         .wdx-records:focus-visible { outline: 2px solid #FFFFFF; outline-offset: 3px; }
         @media (max-width: 820px) { .wdx-headrow { flex-direction: column; align-items: flex-start; } .wdx-records { white-space: normal; } }
+        .wdx-side { flex: none; display: flex; flex-direction: column; align-items: center; gap: 16px; }
+        .wdx-logo { display: block; width: 300px; height: auto; filter: drop-shadow(0 0 24px rgba(77, 163, 255, .28)); }
+        @media (max-width: 820px) { .wdx-side { align-self: center; } .wdx-logo { width: min(280px, 78vw); } }
         .wdx-lead { margin: 0; max-width: 62ch; font-size: 17px; line-height: 1.55; color: #DCE8F5 !important; }
         .wdx-stats { display: grid; grid-template-columns: 1.35fr 1fr 1fr 1fr; gap: 12px; margin: 26px 0 14px; }
         .wdx-stat { display: flex; flex-direction: column; gap: 4px; min-width: 0; padding: 18px 18px 16px; border-radius: 14px; background: var(--wx-cell); border: 1px solid var(--wx-line); }
@@ -974,7 +977,10 @@
                                 <h3 id="wdxTitle">Research the tracked handicappers of the betting web</h3>
                                 <p class="wdx-lead">A searchable research database, not a directory. Every account is watched around the clock, every qualifying pick is graded on the final score, and every record rebuilds itself.</p>
                             </div>
-                            <a class="wdx-records" href="/around-the-web/">VIEW ALL HANDICAPPER RECORDS <span aria-hidden="true">&rarr;</span></a>
+                            <div class="wdx-side">
+                                <img class="wdx-logo" src="/static/media/handicapper-watchdog-logo.webp" width="560" height="528" alt="Handicapper Watchdog logo" decoding="async">
+                                <a class="wdx-records" href="/around-the-web/">VIEW ALL HANDICAPPER RECORDS <span aria-hidden="true">&rarr;</span></a>
+                            </div>
                         </div>
                     </header>
 
