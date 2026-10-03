@@ -1342,26 +1342,26 @@ a.tkact-welcome:hover .tkact-mem b{color:#fff}
 .tkcenter{
   flex:1 1 auto;min-width:0;align-self:center;height:114px;
   display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:24px;padding:0 18px;box-sizing:border-box}
+  gap:14px;padding:0 18px;box-sizing:border-box}
 .tkcontest{
-  display:flex;align-items:center;gap:12px;height:46px;width:min(500px,100%);
-  padding:0 16px;border-radius:8px;border:1.5px solid #F0C449;
+  display:flex;align-items:center;justify-content:center;gap:14px;height:56px;width:min(560px,100%);
+  padding:0 22px;border-radius:10px;border:2px solid #F0C449;
   background:linear-gradient(90deg,#3A2A06,#1C1606);
-  box-shadow:0 0 12px rgba(240,196,73,.18);box-sizing:border-box}
+  box-shadow:0 0 16px rgba(240,196,73,.24);box-sizing:border-box;text-decoration:none;
+  transition:box-shadow .2s ease,border-color .2s ease}
+.tkcontest:hover,.tkcontest:focus-visible{border-color:#FFD866;box-shadow:0 0 22px rgba(240,196,73,.42)}
 .tkc-ic{
-  flex:0 0 auto;width:26px;height:26px;border-radius:6px;display:flex;
+  flex:0 0 auto;width:32px;height:32px;border-radius:8px;display:flex;
   align-items:center;justify-content:center;
   background:linear-gradient(180deg,#F0C449,#D4A72C);color:#1A1406;
-  font-size:13px;font-weight:900;line-height:1}
-.tkc-msg{display:flex;align-items:baseline;gap:8px;min-width:0;white-space:nowrap;overflow:hidden}
-.tkc-msg b{color:#FFF;font-size:13px;font-weight:900;letter-spacing:.06em;
+  font-size:17px;font-weight:900;line-height:1}
+.tkc-msg{display:flex;align-items:baseline;gap:12px;min-width:0;white-space:nowrap;overflow:hidden}
+.tkc-msg b{color:#FFF;font-size:19px;font-weight:900;letter-spacing:.07em;
   text-transform:uppercase;font-family:Barlow,Inter,system-ui,sans-serif}
-.tkc-msg span{color:#F5E8C9;font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis}
-.tkc-go{
-  flex:0 0 auto;display:inline-flex;align-items:center;height:28px;padding:0 14px;
-  border-radius:6px;background:linear-gradient(180deg,#F0C449,#D4A72C);color:#1A1406;
-  font-size:12px;font-weight:900;letter-spacing:.07em;text-transform:uppercase;
-  text-decoration:none;white-space:nowrap}
+.tkc-msg span{color:#F5E8C9;font-size:17px;font-weight:800;letter-spacing:.01em;overflow:hidden;text-overflow:ellipsis}
+/* Narrow center column (viewports under ~1610px): show the WATCHDOG label alone
+   rather than a clipped tagline. */
+@media (max-width:1609px){.tkc-msg span{display:none}}
 .tkslogan{display:flex;flex-direction:column;align-items:center;justify-content:center;
   gap:3px;text-align:center;pointer-events:none;max-width:720px;width:100%}
 .tkslogan-lead{display:block;color:#7F9BB4;font-size:14.5px;font-weight:500;
