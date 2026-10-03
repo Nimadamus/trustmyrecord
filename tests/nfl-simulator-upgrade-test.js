@@ -26,7 +26,7 @@ t('upgrade block is present and placed before the gate install', () => {
 
 t('SEO surface unchanged: one h1, title, canonical, robots, JSON-LD blocks', () => {
   assert.strictEqual((html.match(/<h1[\s>]/g) || []).length, 1);
-  assert.strictEqual(html.split('<title>NFL Simulator 2026 | Game, Score and Matchup Simulator</title>').length, 2);
+  assert.strictEqual(html.split('<title>NFL Game Simulator 2026 | Free NFL Simulator for Any Matchup and Score</title>').length, 2);
   assert.ok(/<link rel="canonical" href="https:\/\/trustmyrecord\.com\/nfl-simulator\/"/.test(html));
   assert.strictEqual((html.match(/application\/ld\+json/g) || []).length, 3);
 });
