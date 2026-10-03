@@ -3181,7 +3181,7 @@
                         <span class="filter-search-icon"><i class="fas fa-search"></i></span>
                         <input id="filterSearch" oninput="applyFilters()" class="filter-control filter-search-input" type="search" placeholder="Search game, pick, book, or notes">
                     </div>
-                    <select id="filterSport" onchange="applyFilters()" class="filter-control">
+                    <select id="filterSport" onchange="pscOnFilterSportChange(this.value)" class="filter-control">
                         <option value="">All Sports</option>
                     </select>
                     <select id="filterType" onchange="applyFilters()" class="filter-control">
@@ -8400,8 +8400,20 @@
             );
         } catch (err) {
             console.warn('[Profile] /metrics aggregator unavailable:', err && err.message ? err.message : err);
-            setAdvancedMetricsEmpty(err && err.code === 'TMR_TIMEOUT' ? 'Metrics still processing' : 'Metrics unavailable');
-            return;
+            /* PROFILE_SPORT_CONTEXT_20261003: the strip's own boot chain asks
+               for the same payload; if that one landed, draw from it. A sport
+               view can still draw from its own /metrics?sport= payload. */
+            data = window.__tmrAdvMetricsAll || null;
+            if (!data) {
+                if (pscId()) {
+                    window.__pscBodyReady = true;
+                    try { pscRenderBodyForCurrent(); } catch (_) {}
+                } else {
+                    setAdvancedMetricsEmpty(err && err.code === 'TMR_TIMEOUT' ? 'Metrics still processing' : 'Metrics unavailable');
+                }
+                try { tmrxRenderPickHistory(username); } catch (_) {}
+                return;
+            }
         }
         if (!data) {
             setAdvancedMetricsEmpty('No verified metrics yet');
@@ -8409,6 +8421,24 @@
         }
         try { renderProfileAdvancedMetricsStrip(data); } catch (e) { console.warn('[Profile] advanced strip render failed:', e); }
         try { applyRailAvgOdds(data); } catch (e) { console.warn('[Profile] rail avg odds failed:', e); }
+        /* PROFILE_SPORT_CONTEXT_20261003: the all-sports payload is kept, and
+           the body below renders whichever sport the profile is set to. A sport
+           chosen (or deep linked) before this landed is never overwritten by
+           the all-sports numbers. */
+        window.__tmrProfileMetricsAll = data;
+        try { pscRenderBodyForCurrent(); } catch (e) { console.warn('[Profile] metrics body render failed:', e); }
+        try { tmrxRenderPickHistory(username); } catch (e) { console.warn('[tmrx] pick history failed:', e); }
+    }
+
+    /* Everything on the page that reads one /metrics payload below the
+       Advanced Capper Metrics strip: the Advanced tab cards, the Charts tab
+       and the Overview stats (tmrxRenderRedesign). Called with the all-sports
+       payload or with a /metrics?sport= payload. Every target is put back to
+       its first-paint state first, so a value the sport payload does not
+       carry can never be left over from the previous sport. */
+    function renderProfileMetricsBody(data) {
+        if (!data) return;
+        pscResetMetricsTargets();
         const set = (id, value, opts) => {
             const el = document.getElementById(id);
             if (!el || value == null) return;
@@ -8578,7 +8608,7 @@
         // ===== TMRX REDESIGN: populate the universal wide layout. Same data,
         // cleaner display. No new calculations — purely a render pass. =====
         try { tmrxRenderRedesign(data); } catch (e) { console.warn('[tmrx] render failed:', e); }
-        try { tmrxRenderPickHistory(username); } catch (e) { console.warn('[tmrx] pick history failed:', e); }
+        try { pscStampDrills(); } catch (_) {}
     }
 
     /* ADV_SPORT_FILTER_20260909: opts.sport names the sport_key or sport GROUP
@@ -8587,6 +8617,10 @@
        below is a real per-sport figure, not a share of an all-sports total. */
     function renderProfileAdvancedMetricsStrip(data, opts) {
         opts = opts || {};
+        /* PROFILE_SPORT_CONTEXT_20261003: the all-sports payload arriving while
+           the profile is set to a sport is stored and handed to the context,
+           which renders that sport. It never paints over the sport view. */
+        if (!opts.sport && pscId()) { pscOverallArrived(data); return; }
         const statusEl = document.getElementById('profileAdvancedMetricsStatus');
         /* RECORD TIMESTAMP (2026-09-13): every public record states when it was computed,
            in Pacific time, so a cached or baked copy can never pass for the live figure. */
@@ -8881,6 +8915,7 @@
             try { applyRailCorrelation(); } catch (_) {}
             window.__tmrRailOverallMetrics = data || null;
             try { refreshRailSportBar(); } catch (e) { console.warn('[Profile] rail sport bar failed:', e); }
+            try { pscSyncControls(); } catch (_) {}
             try { applyRailSportView(); } catch (_) {}
             try { fitRailValues(); } catch (_) {}
         }
@@ -8948,56 +8983,33 @@
         return key.split('_')[0] || key;
     }
     function advSportLabel(bucket) {
-        const b = String(bucket || '').toLowerCase();
-        if (!b) return 'All Sports';
-        if (ADV_SPORT_LABELS[b]) return ADV_SPORT_LABELS[b];
-        return b.split('_').map(w => w ? w.charAt(0).toUpperCase() + w.slice(1) : w).join(' ');
+        return pscLabel(bucket);
     }
     function advSportMatches(pick, bucket) {
-        if (!bucket) return true;
-        const key = String((pick && pick.sport_key) || '').toLowerCase();
-        return key === bucket || key.split('_')[0] === bucket;
+        return pscMatches(pick && pick.sport_key, bucket);
     }
-    let advSportCurrent = '';
-    const advSportCache = Object.create(null);
+    /* PROFILE_SPORT_CONTEXT_20261003: these chips are a VIEW of the one profile
+       sport (railSportState().id), not a selector of their own. They list the
+       same sports as the header tabs (the /metrics sport_groups), and a click
+       sets the sport for the whole page. */
     function buildAdvancedSportBar(data, active) {
         const bar = document.getElementById('profileAdvancedSportBar');
         if (!bar) return;
-        /* Built ONCE, from the all-sports payload. A sport view's own splits
-           contain only that sport, so rebuilding from it would delete every
-           other chip the moment one was clicked. */
+        const html = pscTabsHtml('data-adv-sport', 'profile-advanced-sportchip', { countClass: 'chip-n', allLabel: 'All Sports' });
+        if (!html) { bar.hidden = true; return; }
+        if (bar.dataset.pscHtml !== html) {
+            bar.innerHTML = html;
+            bar.dataset.pscHtml = html;
+        }
+        bar.hidden = false;
         if (!bar.dataset.built) {
-            const source = window.__tmrAdvMetricsAll || data;
-            const rows = (source && source.splits && source.splits.by_sport) || [];
-            const totals = Object.create(null);
-            rows.forEach((row) => {
-                const bucket = advSportBucket(row && row.key);
-                if (!bucket) return;
-                totals[bucket] = (totals[bucket] || 0) + Number((row && row.total) || 0);
-            });
-            const buckets = Object.keys(totals).filter(k => totals[k] > 0).sort((a, b) => totals[b] - totals[a]);
-            if (!buckets.length) { bar.hidden = true; return; }
-            const all = Number(((source || {}).summary || {}).total_picks || 0);
-            const chips = [{ key: '', label: 'All Sports', n: all }]
-                .concat(buckets.map(k => ({ key: k, label: advSportLabel(k), n: totals[k] })));
-            bar.innerHTML = chips.map(ch =>
-                '<button type="button" role="tab" aria-selected="false" class="profile-advanced-sportchip"' +
-                ' data-adv-sport="' + ch.key + '">' + ch.label +
-                '<span class="chip-n">' + ch.n + '</span></button>'
-            ).join('');
             bar.dataset.built = '1';
-            bar.hidden = false;
             bar.addEventListener('click', (ev) => {
                 const btn = ev.target && ev.target.closest ? ev.target.closest('[data-adv-sport]') : null;
-                if (btn) selectAdvancedSport(btn.getAttribute('data-adv-sport') || '');
+                if (btn) setProfileSport(btn.getAttribute('data-adv-sport') || '');
             });
         }
-        const want = String(active || '');
-        bar.querySelectorAll('[data-adv-sport]').forEach((btn) => {
-            const on = (btn.getAttribute('data-adv-sport') || '') === want;
-            btn.classList.toggle('is-active', on);
-            btn.setAttribute('aria-selected', on ? 'true' : 'false');
-        });
+        pscSyncTabs(bar, 'data-adv-sport');
     }
     function renderAdvancedSportDiversity(bucket) {
         if (typeof allLoadedPicks === 'undefined' || !Array.isArray(allLoadedPicks) || !allLoadedPicks.length) return;
@@ -9021,30 +9033,8 @@
         if (!resp.ok) throw new Error('metrics ' + resp.status);
         return await resp.json();
     }
-    async function selectAdvancedSport(bucket) {
-        const want = String(bucket || '');
-        if (want === advSportCurrent) return;
-        const params = new URLSearchParams(window.location.search || '');
-        const username = params.get('user') || params.get('username') || profileUsername;
-        if (!username) return;
-        const bar = document.getElementById('profileAdvancedSportBar');
-        const statusEl = document.getElementById('profileAdvancedMetricsStatus');
-        advSportCurrent = want;
-        if (bar) bar.classList.add('is-busy');
-        if (statusEl) statusEl.textContent = 'Loading ' + advSportLabel(want) + '...';
-        try {
-            let data = advSportCache[want] || (!want ? window.__tmrAdvMetricsAll : null);
-            if (!data) data = await fetchAdvancedMetricsForSport(username, want);
-            if (advSportCurrent !== want) return;   // a later click already won
-            advSportCache[want] = data;
-            renderProfileAdvancedMetricsStrip(data, { sport: want });
-        } catch (err) {
-            console.warn('[Profile] sport metrics unavailable:', err && err.message ? err.message : err);
-            if (statusEl) statusEl.textContent = 'Metrics unavailable for ' + advSportLabel(want);
-        } finally {
-            if (bar) bar.classList.remove('is-busy');
-            buildAdvancedSportBar(null, advSportCurrent);
-        }
+    function selectAdvancedSport(bucket) {
+        return setProfileSport(bucket);
     }
 
     async function bootstrapProfileAdvancedMetricsStrip() {
@@ -9364,7 +9354,7 @@
                         && typeof tmrxMarketKeyMatches === 'function' && typeof tmrxAggregatePicks === 'function') {
                         const mp = allLoadedPicks.filter(function(p) {
                             const st = normalizeStatus(p && p.status);
-                            return (st === 'won' || st === 'lost' || st === 'push') && tmrxMarketKeyMatches(p, b.key);
+                            return (st === 'won' || st === 'lost' || st === 'push') && tmrxMarketKeyMatches(p, b.key) && pscMatches(p && p.sport_key);
                         });
                         if (mp.length) {
                             const a = tmrxAggregatePicks(mp);
@@ -10010,7 +10000,7 @@
 
         const graded = (Array.isArray(allLoadedPicks) ? allLoadedPicks : []).filter(function(p) {
             const st = normalizeStatus(p && p.status);
-            return (st === 'won' || st === 'lost' || st === 'push') && tmrxMarketKeyMatches(p, marketKey);
+            return (st === 'won' || st === 'lost' || st === 'push') && tmrxMarketKeyMatches(p, marketKey) && pscMatches(p && p.sport_key);
         });
 
         if (!graded.length) {
@@ -10164,7 +10154,7 @@
                 if (!cell || !key || !isEmpty(cell)) return;
                 fillCell(cell, allLoadedPicks.filter(function(p) {
                     const st = normalizeStatus(p && p.status);
-                    return (st === 'won' || st === 'lost' || st === 'push') && tmrxMarketKeyMatches(p, key);
+                    return (st === 'won' || st === 'lost' || st === 'push') && tmrxMarketKeyMatches(p, key) && pscMatches(p && p.sport_key);
                 }));
             });
         });
@@ -10180,7 +10170,7 @@
                 if (!cell || !grp || !isEmpty(cell)) return;
                 fillCell(cell, allLoadedPicks.filter(function(p) {
                     const st = normalizeStatus(p && p.status);
-                    return (st === 'won' || st === 'lost' || st === 'push') && String(p && p.sport_key || '').toLowerCase().split('_')[0] === grp;
+                    return (st === 'won' || st === 'lost' || st === 'push') && String(p && p.sport_key || '').toLowerCase().split('_')[0] === grp && pscMatches(p && p.sport_key);
                 }));
             });
         });
@@ -10304,25 +10294,18 @@
         const key = String(k || '').toLowerCase();
         return m[key] || (key ? key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : 'Other');
     }
+    /* PROFILE_SPORT_CONTEXT_20261003: the ledger filters by the profile sport
+       (a catalog id such as nfl or soccer) with the backend's own rule, so
+       Soccer is one pill however many competitions it spans. */
     function tmrxCanonicalLedgerSport(raw, picks) {
         const list = Array.isArray(picks) ? picks : tmrxLedgerPicks;
-        const key = String(raw || '').trim().toLowerCase().replace(/[\s-]+/g, '_');
-        if (!key) return '';
-        const aliased = (typeof SPORT_QUERY_ALIASES !== 'undefined' && SPORT_QUERY_ALIASES[key]) || key;
-        const present = {};
-        list.forEach(p => { present[tmrxLedgerSportId(p)] = true; });
-        if (present[aliased]) return aliased;
-        let found = '';
-        list.forEach(p => {
-            const id = tmrxLedgerSportId(p);
-            const label = tmrxLedgerSportLabel(id).toLowerCase().replace(/[\s-]+/g, '_');
-            if (label === key) found = id;
-        });
-        return found;
+        const id = pscFromParam(raw);
+        if (!id) return '';
+        return list.some(p => pscMatches(p && p.sport_key, id)) ? id : '';
     }
     function tmrxLedgerVisible() {
         if (!tmrxLedgerSport) return tmrxLedgerPicks;
-        return tmrxLedgerPicks.filter(p => tmrxLedgerSportId(p) === tmrxLedgerSport);
+        return tmrxLedgerPicks.filter(p => pscMatches(p && p.sport_key, tmrxLedgerSport));
     }
     function tmrxLedgerSummary(rows) {
         let w = 0, l = 0, pushes = 0, net = 0;
@@ -10342,7 +10325,7 @@
         const s = tmrxLedgerSummary(rows);
         const rec = s.w + '-' + s.l + (s.pushes ? '-' + s.pushes : '');
         const net = (s.net > 0 ? '+' : '') + s.net.toFixed(2) + 'u';
-        const who = tmrxLedgerSport ? tmrxLedgerSportLabel(tmrxLedgerSport) + ' · ' : '';
+        const who = tmrxLedgerSport ? pscLabel(tmrxLedgerSport) + ' · ' : '';
         return who + s.n + ' settled public pick' + (s.n === 1 ? '' : 's') + ' · ' + rec + ' · ' + net;
     }
     function tmrxRenderLedgerSports() {
@@ -10351,35 +10334,25 @@
         const counts = {};
         const order = [];
         tmrxLedgerPicks.forEach(p => {
-            const id = tmrxLedgerSportId(p);
+            const id = pscGroupIdFor(p && p.sport_key) || 'other';
             if (!counts[id]) { counts[id] = 0; order.push(id); }
             counts[id]++;
         });
-        order.sort((a, b) => counts[b] - counts[a] || tmrxLedgerSportLabel(a).localeCompare(tmrxLedgerSportLabel(b)));
-        if (tmrxLedgerSport && !counts[tmrxLedgerSport]) tmrxLedgerSport = '';
+        order.sort((a, b) => counts[b] - counts[a] || pscLabel(a).localeCompare(pscLabel(b)));
+        if (tmrxLedgerSport && !counts[tmrxLedgerSport]) { counts[tmrxLedgerSport] = 0; order.push(tmrxLedgerSport); }
         const btn = (id, label, count, on) =>
             '<button type="button" role="tab" class="tmrx-sport-pill' + (on ? ' is-active' : '') + '" aria-selected="' + (on ? 'true' : 'false') + '" data-tmrx-ledger-sport="' + escapeHtml(id) + '">' +
             escapeHtml(label) + '<span class="tmrx-sport-pill-count">' + count + '</span></button>';
         let html = btn('', 'All', tmrxLedgerPicks.length, !tmrxLedgerSport);
-        order.forEach(id => { html += btn(id, tmrxLedgerSportLabel(id), counts[id], id === tmrxLedgerSport); });
+        order.forEach(id => { html += btn(id, pscLabel(id), counts[id], id === tmrxLedgerSport); });
         picker.innerHTML = html;
         picker.hidden = order.length < 2;
     }
+    /* The ledger pills are a door to the profile sport like every other sport
+       control; this only adds the scroll a pill or a row link asks for. */
     function tmrxApplyLedgerSport(sportKey, opts) {
         opts = opts || {};
-        tmrxLedgerSport = tmrxCanonicalLedgerSport(sportKey, tmrxLedgerPicks);
-        tmrxLedgerPage = 1;
-        tmrxRenderLedgerSports();
-        tmrxRenderLedgerPage();
-        const sel = document.getElementById('filterSport');
-        if (sel && !opts.fromRecords) {
-            if (tmrxLedgerSport) ensureSportFilterOption(tmrxLedgerSport);
-            if (sel.value !== tmrxLedgerSport) sel.value = tmrxLedgerSport;
-            if (typeof applyFilters === 'function') applyFilters();
-        }
-        if (opts.updateUrl && typeof buildProfileSportFilterUrl === 'function') {
-            history.replaceState(null, '', buildProfileSportFilterUrl(tmrxLedgerSport));
-        }
+        setProfileSport(sportKey || '');
         if (opts.scroll) {
             const target = document.getElementById('tmrxPublicLedger');
             if (target && target.scrollIntoView) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -10427,9 +10400,7 @@
             .filter(p => !p.redacted && SETTLED_RE.test(p.status))
             .sort((a, b) => (tmrxLedgerEventMs(b) - tmrxLedgerEventMs(a)) || (Number(b.id || 0) - Number(a.id || 0)));
         tmrxLedgerPage = 1;
-        const requested = (typeof initialSportFilter !== 'undefined' && initialSportFilter) ||
-            (typeof urlParams !== 'undefined' && urlParams.get('sport')) || '';
-        tmrxLedgerSport = tmrxCanonicalLedgerSport(requested, tmrxLedgerPicks);
+        tmrxLedgerSport = pscId();
         tmrxRenderLedgerSports();
         if (!tmrxLedgerPicks.length) {
             if (meta) meta.textContent = tmrxLedgerMetaText([]);
@@ -10453,7 +10424,7 @@
         const start = (tmrxLedgerPage - 1) * TMRX_PICKS_PER_PAGE;
         const picks = visible.slice(start, start + TMRX_PICKS_PER_PAGE);
         if (!total) {
-            const name = tmrxLedgerSport ? tmrxLedgerSportLabel(tmrxLedgerSport) : '';
+            const name = tmrxLedgerSport ? pscLabel(tmrxLedgerSport) : '';
             tbody.innerHTML = '<tr class="empty"><td colspan="11">' + (name ? 'No settled ' + name + ' picks.' : 'No settled picks yet.') + '</td></tr>';
             if (pager) { pager.hidden = true; pager.innerHTML = ''; }
             return;
@@ -11279,10 +11250,12 @@
         renderAnalytics(stats);
         renderCapperMetrics(picks);
         try { renderPickDiversity(picks); } catch (e) { console.warn('[Profile] Pick diversity render failed:', e); }
-        if (initialSportFilter) {
-            ensureSportFilterOption(initialSportFilter);
-            const sportSelect = document.getElementById('filterSport');
-            if (sportSelect) sportSelect.value = initialSportFilter;
+        /* PROFILE_SPORT_CONTEXT_20261003: the Picks tab opens on the profile
+           sport, whatever it is by the time the ledger lands (a deep link, or
+           a tab the visitor clicked while it loaded). */
+        window.__pscPicksReady = true;
+        if (pscId()) {
+            pscSyncFilterSelect();
             applyFilters();
         } else {
             await refreshAdvancedBreakdowns();
@@ -12253,7 +12226,599 @@
     /* A hoisted accessor, not a const: renderProfileHeader can run before this
        part of the script has executed, and a const would throw there. */
     function railSportState() {
-        return window.__tmrRailSport || (window.__tmrRailSport = { id: '', seq: 0, cache: Object.create(null) });
+        if (!window.__tmrRailSport) {
+            /* PROFILE_SPORT_CONTEXT_20261003: the sport rides in the URL
+               (?sport=nfl), so a refresh or a shared link opens the same view. */
+            let id = '';
+            try {
+                const q = new URLSearchParams(window.location.search || '');
+                id = pscFromParam(q.get('sport') || q.get('league') || '');
+            } catch (_) { id = ''; }
+            window.__tmrRailSport = { id: id, seq: 0, cache: Object.create(null), inflight: Object.create(null) };
+        }
+        return window.__tmrRailSport;
+    }
+
+    /* ===================================================================
+       PROFILE_SPORT_CONTEXT_20261003 -- ONE sport for the whole profile.
+       Nima, 2026-10-03: picking NFL at the top and scrolling into an MLB
+       Performance by Team grid is wrong. The header sport tabs, the Advanced
+       Capper Metrics chips, the Overview stats bar, every league tab on a team
+       table, the Public Ledger pills and the Picks tab sport filter now all
+       read and write railSportState().id and nothing else, through
+       setProfileSport(). Every number below the header is then recomputed by
+       the backend for that sport:
+         /metrics?sport=            strip, Overview stats, Advanced tab, Charts
+         /stats/breakdowns?sport=   home/away, over/under, timing, team tables
+       and the client-side ledger views filter with the same catalog rule the
+       backend uses (utils/sportCatalog.js, mirrored below).
+       =================================================================== */
+    function pscCatalog() {
+        return window.__pscCatalog || (window.__pscCatalog = [
+            { id: 'mlb', label: 'MLB', keys: ['baseball_mlb'] },
+            { id: 'nfl', label: 'NFL', keys: ['americanfootball_nfl'] },
+            { id: 'ncaaf', label: 'NCAAF', keys: ['americanfootball_ncaaf'] },
+            { id: 'nba', label: 'NBA', keys: ['basketball_nba'] },
+            { id: 'nba_summer', label: 'NBA Summer League', keys: ['basketball_nba_summer'] },
+            { id: 'wnba', label: 'WNBA', keys: ['basketball_wnba'] },
+            { id: 'ncaab', label: 'NCAAB', keys: ['basketball_ncaab'] },
+            { id: 'nhl', label: 'NHL', keys: ['icehockey_nhl'] },
+            { id: 'soccer', label: 'Soccer', prefixes: ['soccer'] },
+            { id: 'tennis', label: 'Tennis', prefixes: ['tennis'] },
+            { id: 'mma', label: 'UFC/MMA', prefixes: ['mma', 'ufc', 'mixed_martial'] },
+            { id: 'boxing', label: 'Boxing', prefixes: ['boxing'] },
+            { id: 'npb', label: 'Japan NPB', keys: ['baseball_npb'] }
+        ]);
+    }
+    function pscNorm(v) {
+        return String(v == null ? '' : v).trim().toLowerCase().replace(/[\s-]+/g, '_');
+    }
+    function pscGroupMatchesKey(group, sportKey) {
+        const key = pscNorm(sportKey);
+        if (!group || !key) return false;
+        if ((group.keys || []).indexOf(key) !== -1) return true;
+        return (group.prefixes || []).some((p) => key === p || key.indexOf(p + '_') === 0);
+    }
+    function pscGroupForKey(sportKey) {
+        return pscCatalog().find((g) => pscGroupMatchesKey(g, sportKey)) || null;
+    }
+    /* The profile sport a stored sport_key belongs to: its catalog group, or
+       the key itself for a sport the catalog does not name (the /metrics
+       sport_groups rule). */
+    function pscGroupIdFor(sportKey) {
+        const g = pscGroupForKey(sportKey);
+        return g ? g.id : pscNorm(sportKey);
+    }
+    function pscId() {
+        return railSportState().id;
+    }
+    /* JS twin of routes/users.js metricsSportMatches. */
+    function pscMatches(sportKey, id) {
+        const want = pscNorm(id === undefined ? pscId() : id);
+        if (!want) return true;
+        const g = pscCatalog().find((x) => x.id === want);
+        if (g) return pscGroupMatchesKey(g, sportKey);
+        const key = pscNorm(sportKey);
+        return key === want || key.split('_')[0] === want;
+    }
+    function pscLabel(id) {
+        const want = pscNorm(id);
+        if (!want) return 'All Sports';
+        const g = pscCatalog().find((x) => x.id === want) || pscGroupForKey(want);
+        if (g) return g.label;
+        try {
+            const rg = railSportGroups().find((x) => x.id === want);
+            if (rg && rg.label) return rg.label;
+        } catch (_) {}
+        return want.split('_').map((w) => w ? w.charAt(0).toUpperCase() + w.slice(1) : w).join(' ');
+    }
+    /* Anything a link or a control may carry (nfl, NFL, americanfootball_nfl,
+       "ncaa football", a raw soccer competition key) to one profile sport id. */
+    function pscFromParam(raw) {
+        const v = pscNorm(raw);
+        if (!v) return '';
+        if (pscCatalog().some((g) => g.id === v)) return v;
+        let aliased = v;
+        try { if (typeof SPORT_QUERY_ALIASES !== 'undefined' && SPORT_QUERY_ALIASES[v]) aliased = SPORT_QUERY_ALIASES[v]; } catch (_) {}
+        const g = pscGroupForKey(aliased);
+        if (g) return g.id;
+        const byLabel = pscCatalog().find((x) => pscNorm(x.label) === v);
+        if (byLabel) return byLabel.id;
+        return /^[a-z0-9_]{1,48}$/.test(aliased) ? aliased : '';
+    }
+    /* The sports this member has graded picks in, header order. */
+    function pscSportList() {
+        return railSportGroups().slice().sort((a, b) => {
+            const ia = RAIL_SPORT_ORDER.indexOf(a.id), ib = RAIL_SPORT_ORDER.indexOf(b.id);
+            if (ia !== -1 || ib !== -1) return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+            return Number(b.graded_picks) - Number(a.graded_picks);
+        });
+    }
+    /* One tab strip, drawn identically wherever the page needs sport tabs. */
+    function pscTabsHtml(attr, cls, opts) {
+        opts = opts || {};
+        const groups = pscSportList();
+        if (!groups.length) return '';
+        const all = window.__tmrRailOverallMetrics && window.__tmrRailOverallMetrics.summary
+            ? Number(window.__tmrRailOverallMetrics.summary.total_picks || 0) : null;
+        const active = pscId();
+        return [{ id: '', label: opts.allLabel || 'Overall', graded_picks: all }].concat(groups).map((g) => {
+            const on = g.id === active;
+            const n = opts.countClass && g.graded_picks != null
+                ? '<span class="' + opts.countClass + '">' + Number(g.graded_picks) + '</span>' : '';
+            return '<button type="button" role="tab" class="' + cls + (on ? ' is-active' : '') + '"' +
+                ' aria-selected="' + (on ? 'true' : 'false') + '" ' + attr + '="' + railSportEsc(g.id) + '">' +
+                railSportEsc(g.label) + n + '</button>';
+        }).join('');
+    }
+    function pscSyncTabs(root, attr) {
+        if (!root) return;
+        const active = pscId();
+        root.querySelectorAll('[' + attr + ']').forEach((btn) => {
+            const on = (btn.getAttribute(attr) || '') === active;
+            btn.classList.toggle('is-active', on);
+            btn.setAttribute('aria-selected', on ? 'true' : 'false');
+        });
+    }
+    /* The bar at the top of the Overview statistics. Sticky, so whichever
+       table is on screen, the sport it is showing is named right above it and
+       can be changed from there. */
+    function pscRenderStatsBar() {
+        const root = document.getElementById('tmrxStatsRoot');
+        if (!root) return;
+        let bar = document.getElementById('profileSportCtxBar');
+        const html = pscTabsHtml('data-psc-sport', 'profile-sportctx-tab');
+        if (!html) { if (bar) bar.hidden = true; return; }
+        if (!bar) {
+            bar = document.createElement('div');
+            bar.id = 'profileSportCtxBar';
+            bar.className = 'profile-sportctx-bar';
+            bar.innerHTML = '<span class="profile-sportctx-label" id="profileSportCtxLabel"></span>' +
+                '<div class="profile-sportctx-tabs" role="tablist" aria-label="Sport for every statistic on this profile"></div>';
+            root.insertBefore(bar, root.firstChild);
+        }
+        const tabs = bar.querySelector('.profile-sportctx-tabs');
+        if (tabs && tabs.dataset.pscHtml !== html) { tabs.innerHTML = html; tabs.dataset.pscHtml = html; }
+        bar.hidden = false;
+        pscPlaceStatsBar();
+        pscSyncTabs(bar, 'data-psc-sport');
+        const label = document.getElementById('profileSportCtxLabel');
+        if (label) label.textContent = pscId() ? 'Showing ' + pscLabel(pscId()) + ' only' : 'Showing all sports';
+    }
+    /* The bar pins just under the profile's own sticky tab row (Overview,
+       Picks ...), which itself pins under the site nav; both heights change
+       with the viewport, so the offset is measured, not guessed. */
+    function pscPlaceStatsBar() {
+        const bar = document.getElementById('profileSportCtxBar');
+        if (!bar) return;
+        const tabs = document.querySelector('.profile-tabs-section');
+        let top = 0;
+        if (tabs) {
+            const cs = getComputedStyle(tabs);
+            if (cs.position === 'sticky' || cs.position === 'fixed') top = (parseFloat(cs.top) || 0) + tabs.offsetHeight;
+        }
+        if (!top) {
+            const nav = document.querySelector('nav.ds-nav');
+            top = nav ? nav.offsetHeight : 0;
+        }
+        bar.style.setProperty('--tmr-sticky-top', Math.round(top) + 'px');
+        bar.style.setProperty('--tmr-sticky-top-mobile', Math.round(top) + 'px');
+    }
+    window.addEventListener('resize', () => { try { pscPlaceStatsBar(); } catch (_) {} });
+    /* Every control that names a sport, put in step with the one state. */
+    function pscSyncControls() {
+        const id = pscId();
+        if (id) document.documentElement.setAttribute('data-profile-sport', id);
+        else document.documentElement.removeAttribute('data-profile-sport');
+        try { syncRailSportTabs(); } catch (_) {}
+        try { buildAdvancedSportBar(null, id); } catch (_) {}
+        try { pscRenderStatsBar(); } catch (_) {}
+        try { pscSyncFilterSelect(); } catch (_) {}
+    }
+    function pscWriteUrl(id) {
+        try {
+            const u = new URL(window.location.href);
+            if (id) u.searchParams.set('sport', id); else u.searchParams.delete('sport');
+            u.searchParams.delete('league');
+            const next = u.pathname + (u.search || '') + (u.hash || '');
+            if (next !== window.location.pathname + window.location.search + window.location.hash) {
+                history.replaceState(history.state, '', next);
+            }
+        } catch (_) {}
+    }
+    /* One /metrics?sport= request per sport per page view, shared by the
+       header rail, the strip and the body. */
+    function pscSportData(id) {
+        const st = railSportState();
+        const key = railSportCacheKey(id);
+        if (st.cache[key]) return Promise.resolve(st.cache[key]);
+        if (!st.inflight) st.inflight = Object.create(null);
+        if (!st.inflight[key]) {
+            st.inflight[key] = Promise.resolve()
+                .then(() => fetchAdvancedMetricsForSport(railSportUsername(), id))
+                .then((d) => { if (d && d.summary) st.cache[key] = d; return d; })
+                .catch((err) => { console.warn('[Profile] sport metrics unavailable:', err && err.message ? err.message : err); return null; })
+                .then((d) => { delete st.inflight[key]; return d; });
+        }
+        return st.inflight[key];
+    }
+    /* GET requests made under one sport, kept for the page view so flipping
+       back to a sport costs nothing and two loaders asking for the same rows
+       share one request. */
+    function pscCachedRequest(path) {
+        const cache = window.__pscReqCache || (window.__pscReqCache = Object.create(null));
+        if (!cache[path]) {
+            cache[path] = Promise.resolve().then(() => api.request(path));
+            cache[path].catch(() => { delete cache[path]; });
+        }
+        return cache[path];
+    }
+    function pscSetBusy(on) {
+        ['profileAdvancedSportBar', 'profileSportCtxBar'].forEach((id) => {
+            const el = document.getElementById(id);
+            if (el) el.classList.toggle('is-busy', !!on);
+        });
+        const root = document.getElementById('tmrxStatsRoot');
+        if (root) root.classList.toggle('psc-is-loading', !!on);
+    }
+    /* THE ONE ENTRY POINT. Every sport control on the page calls this. */
+    async function setProfileSport(id, opts) {
+        opts = opts || {};
+        const st = railSportState();
+        const want = pscFromParam(id);
+        if (want === st.id && !opts.force) { pscSyncControls(); return; }
+        const hadFocus = !!(document.activeElement && document.activeElement.closest && document.activeElement.closest('#railSportBar'));
+        st.id = want;
+        const seq = ++st.seq;
+        pscWriteUrl(want);
+        pscSyncControls();
+        try { pscApplyClientSections(); } catch (e) { console.warn('[Profile] sport ledger views failed:', e); }
+        try { loadTeamBreakdown(); } catch (_) {}
+        try { loadDepthBreakdowns(); } catch (_) {}
+        if (!want) {
+            setRailBusy(false);
+            pscSetBusy(false);
+            if (profileData) restoreRailOverall(hadFocus, opts.notice);
+            pscRenderMetrics(null, '');
+            return;
+        }
+        let data = st.cache[railSportCacheKey(want)];
+        if (!data) {
+            setRailBusy(true);
+            pscSetBusy(true);
+            data = await pscSportData(want);
+            if (seq !== st.seq) return;   // a later choice already won
+            setRailBusy(false);
+            pscSetBusy(false);
+        }
+        if (!data || !data.summary) {
+            return setProfileSport('', { force: true, notice: pscLabel(want) + ' stats unavailable, showing overall' });
+        }
+        applyRailSportView();
+        if (hadFocus) focusRailSportTab(want);
+        pscRenderMetrics(data, want);
+    }
+    window.setProfileSport = setProfileSport;
+    function pscRenderMetrics(data, sport) {
+        const strip = sport ? data : window.__tmrAdvMetricsAll;
+        if (strip) {
+            try { renderProfileAdvancedMetricsStrip(strip, sport ? { sport: sport } : {}); }
+            catch (e) { console.warn('[Profile] advanced strip render failed:', e); }
+        }
+        const body = sport ? data : window.__tmrProfileMetricsAll;
+        /* The body waits for loadAdvancedMetrics: until it has run, the page
+           below the strip has not drawn at all, and it draws the current sport
+           itself when it does (pscRenderBodyForCurrent). */
+        if (body && (window.__tmrProfileMetricsAll || window.__pscBodyReady)) {
+            try { renderProfileMetricsBody(body); } catch (e) { console.warn('[Profile] metrics body render failed:', e); }
+        }
+        pscSyncControls();
+    }
+    function pscRenderBodyForCurrent() {
+        const id = pscId();
+        if (!id) { renderProfileMetricsBody(window.__tmrProfileMetricsAll); return; }
+        pscSportData(id).then((d) => {
+            if (pscId() === id && d && d.summary) renderProfileMetricsBody(d);
+        });
+    }
+    /* The all-sports /metrics payload landed while the profile is set to a
+       sport: keep it for the header and for a later switch back to Overall,
+       check the member really has that sport, then draw the sport. */
+    function pscOverallArrived(data) {
+        window.__tmrAdvMetricsAll = data;
+        window.__tmrCorrelation = (data && data.correlation) || null;
+        window.__tmrRailOverallMetrics = data || null;
+        try { refreshRailSportBar(); } catch (_) {}
+        const id = pscId();
+        const known = railSportGroups().some((g) => g.id === id);
+        setProfileSport(known ? id : '', { force: true });
+    }
+    /* Sections computed in the browser from the loaded ledger. */
+    function pscApplyClientSections() {
+        if (typeof tmrxLedgerPicks !== 'undefined' && Array.isArray(tmrxLedgerPicks) && tmrxLedgerPicks.length) {
+            tmrxLedgerSport = pscId();
+            tmrxLedgerPage = 1;
+            tmrxRenderLedgerSports();
+            tmrxRenderLedgerPage();
+        }
+        if (window.__pscPicksReady) {
+            pscSyncFilterSelect();
+            applyFilters();
+        }
+        try { renderAdvancedSportDiversity(pscId()); } catch (_) {}
+    }
+    /* The Picks tab sport filter mirrors the profile sport. Its options are
+       profile sports, not raw sport keys, so Soccer is one choice. */
+    function pscSyncFilterSelect() {
+        const sel = document.getElementById('filterSport');
+        if (!sel) return;
+        const id = pscId();
+        if (id) ensureSportFilterOption(id);
+        if (sel.value !== id) sel.value = id;
+    }
+    function pscOnFilterSportChange(value) {
+        setProfileSport(value || '');
+    }
+    window.pscOnFilterSportChange = pscOnFilterSportChange;
+    /* The sport_key a /metrics-style single-key filter can carry for a profile
+       sport, or '' when the sport spans several keys (soccer, tennis, mma). */
+    function pscSingleKey(id) {
+        const want = pscNorm(id);
+        if (!want) return '';
+        const g = pscCatalog().find((x) => x.id === want);
+        if (!g) return want;
+        return (!g.prefixes && g.keys && g.keys.length === 1) ? g.keys[0] : '';
+    }
+
+    /* A league tab on a team table (MLB, NFL, SOCCER ...) is a door to the
+       profile sport. tmrxLeagueGroups records which sport_key each tab came
+       from, and a click on any of them changes the sport for the whole page
+       before the table's own handler can switch only that table. */
+    function pscNoteLeagueTab(tabKey, sportKey) {
+        const m = window.__pscTabSport || (window.__pscTabSport = Object.create(null));
+        if (tabKey && sportKey && !m[tabKey]) m[tabKey] = sportKey;
+    }
+    const PSC_LEAGUE_TAB_ATTRS = ['data-tmrx-team-tab', 'data-tmrx-opponent-tab', 'data-tmrx-team-market-tab',
+        'data-tmrx-line-number-tab', 'data-tmrx-season-tab', 'data-team-league-tab'];
+    document.addEventListener('click', (ev) => {
+        const t = ev.target;
+        if (!t || !t.closest) return;
+        const ctx = t.closest('[data-psc-sport]');
+        if (ctx) { ev.preventDefault(); setProfileSport(ctx.getAttribute('data-psc-sport') || ''); return; }
+        const ledger = t.closest('#tmrxLedgerSportPicker [data-tmrx-ledger-sport]');
+        if (ledger) {
+            ev.preventDefault();
+            ev.stopImmediatePropagation();
+            setProfileSport(ledger.getAttribute('data-tmrx-ledger-sport') || '');
+            return;
+        }
+        for (const attr of PSC_LEAGUE_TAB_ATTRS) {
+            const btn = t.closest('[' + attr + ']');
+            if (!btn) continue;
+            const key = btn.getAttribute(attr) || '';
+            const sportKey = (window.__pscTabSport || {})[key];
+            if (!sportKey) return;   // unknown tab: leave the table's own handler alone
+            ev.preventDefault();
+            ev.stopImmediatePropagation();
+            setProfileSport(pscGroupIdFor(sportKey));
+            return;
+        }
+    }, true);
+
+    /* ---- drilldowns follow the sport ---------------------------------------
+       A row on a sport view opens that sport's bets. `sport_scope` narrows the
+       ledger before the row's own rule (rolling form, streaks and windows then
+       slice the sport, not the whole record); `and=sport_filter:` is the same
+       narrowing for a server that predates sport_scope, and is left off the
+       two window rows it would get wrong, which on such a server simply stop
+       being clickable in a sport view rather than opening the wrong bets. */
+    const PSC_DRILL_ROOTS = ['#profileAdvancedMetricsSection', '#tmrxStatsRoot',
+        '.profile-tab-panel[data-panel="advanced"]', '.profile-tab-panel[data-panel="charts"]',
+        '.profile-tab-panel[data-panel="record"]'];
+    const PSC_WINDOW_SLICES = ['rolling_form', 'streak'];
+    function pscStampDrills() {
+        const id = pscId();
+        if (!id) {
+            /* Back to all sports: every row gets its own drill back. */
+            document.querySelectorAll('[data-psc-extra-base]').forEach((el) => {
+                const base = el.getAttribute('data-psc-extra-base');
+                if (base) el.setAttribute('data-drill-extra', base); else el.removeAttribute('data-drill-extra');
+                el.removeAttribute('data-psc-extra-base');
+            });
+            document.querySelectorAll('[data-psc-drill-off]').forEach((el) => {
+                el.setAttribute('data-drill-category', el.getAttribute('data-psc-drill-off'));
+                el.removeAttribute('data-psc-drill-off');
+                el.classList.add('tmrx-drillable');
+            });
+            return;
+        }
+        const scoped = !!window.__pscBackendSportScope;
+        PSC_DRILL_ROOTS.forEach((sel) => {
+            const root = document.querySelector(sel);
+            if (!root) return;
+            root.querySelectorAll('[data-drill-category], [data-psc-drill-off]').forEach((el) => {
+                if (el.hasAttribute('data-psc-drill-off')) {
+                    el.setAttribute('data-drill-category', el.getAttribute('data-psc-drill-off'));
+                    el.removeAttribute('data-psc-drill-off');
+                    el.classList.add('tmrx-drillable');
+                }
+                const cat = el.getAttribute('data-drill-category') || '';
+                if (!el.hasAttribute('data-psc-extra-base')) el.setAttribute('data-psc-extra-base', el.getAttribute('data-drill-extra') || '');
+                const base = el.getAttribute('data-psc-extra-base');
+                if (cat === 'sport_filter') {
+                    if (base) el.setAttribute('data-drill-extra', base); else el.removeAttribute('data-drill-extra');
+                    return;
+                }
+                const windowSlice = PSC_WINDOW_SLICES.indexOf(cat) !== -1;
+                if (windowSlice && !scoped) {
+                    el.setAttribute('data-psc-drill-off', cat);
+                    el.removeAttribute('data-drill-category');
+                    el.classList.remove('tmrx-drillable');
+                    return;
+                }
+                const parts = [];
+                if (base) parts.push(base.replace(/^[&?]/, ''));
+                parts.push('sport_scope=' + encodeURIComponent(id));
+                if (!windowSlice) parts.push('and=' + encodeURIComponent('sport_filter:' + id));
+                el.setAttribute('data-drill-extra', parts.join('&'));
+            });
+        });
+    }
+    let pscStampTimer = null;
+    function pscStampDrillsSoon() {
+        clearTimeout(pscStampTimer);
+        pscStampTimer = setTimeout(() => { try { pscStampDrills(); } catch (_) {} }, 60);
+    }
+    try {
+        new MutationObserver(() => { if (pscId() || document.querySelector('[data-psc-extra-base]')) pscStampDrillsSoon(); })
+            .observe(document.documentElement, { childList: true, subtree: true });
+    } catch (_) {}
+
+    /* ---- first-paint snapshot of everything one /metrics payload writes ----
+       Many of those writers only write when a value is present. Without a
+       reset, switching NFL -> NHL would leave an NFL figure in any slot the NHL
+       payload has nothing for. */
+    const PSC_METRIC_TABLES = ['tmrxTableSport', 'tmrxTableMarket', 'tmrxTableUnitSize', 'tmrxTableOddsBucket',
+        'tmrxTableFavDog', 'tmrxTableDow', 'tmrxTableForm', 'tmrxTableAdvanced', 'tmrxTableBest', 'tmrxTableWorst'];
+    const PSC_METRIC_IDS = ['Record', 'WinRate', 'NetUnits', 'Roi', 'AvgOdds', 'AvgUnits', 'Pending', 'Graded',
+        'Streak', 'BestStreak', 'LastGraded', 'DdPeak', 'DdMax', 'DdWorst', 'DdDays', 'EffectiveUnits'];
+    function pscMetricTargets() {
+        const out = [];
+        const add = (el) => { if (el && out.indexOf(el) === -1) out.push(el); };
+        PSC_METRIC_TABLES.forEach((id) => [id, id + 'Top'].forEach((x) => {
+            const t = document.getElementById(x);
+            add(t && t.querySelector('tbody'));
+        }));
+        PSC_METRIC_IDS.forEach((k) => [k, k + 'Top'].forEach((x) => add(document.getElementById('tmrx' + x))));
+        ['advTableBySport', 'advTableByMarket'].forEach((x) => {
+            const t = document.getElementById(x);
+            add(t && (t.querySelector('tbody') || t));
+        });
+        document.querySelectorAll('[id^="adv"]').forEach((el) => {
+            if (/^(advancedMetricsGlossaryBottom|advancedStatsTableBody|advTable)/.test(el.id)) return;
+            if (el.querySelector('[id]')) return;   // containers keep their children's own entries
+            add(el);
+        });
+        document.querySelectorAll('[data-period], [data-tmrx-period], [data-tmrx-form], [data-tmrx-streak], [data-tmrx-adv], [data-tmrx-bw], #advSplitsGrid [data-split]')
+            .forEach(add);
+        return out;
+    }
+    function pscResetMetricsTargets() {
+        if (!window.__pscMetricSnap) {
+            window.__pscMetricSnap = pscMetricTargets().map((el) => ({
+                el: el,
+                html: el.innerHTML,
+                cls: el.getAttribute('class'),
+                attrs: ['data-drill-category', 'data-drill-bucket', 'data-drill-label', 'data-drill-extra', 'role', 'tabindex', 'title']
+                    .map((a) => [a, el.getAttribute(a)])
+            }));
+            return;   // first paint: nothing to undo yet
+        }
+        window.__pscMetricSnap.forEach((s) => {
+            if (!s.el.isConnected) return;
+            s.el.innerHTML = s.html;
+            if (s.cls == null) s.el.removeAttribute('class'); else s.el.setAttribute('class', s.cls);
+            s.attrs.forEach(([a, v]) => { if (v == null) s.el.removeAttribute(a); else s.el.setAttribute(a, v); });
+            s.el.removeAttribute('data-psc-extra-base');
+            s.el.removeAttribute('data-psc-drill-off');
+        });
+    }
+    /* Taken now, while every slot still holds its first-paint placeholder. */
+    try { pscResetMetricsTargets(); } catch (_) {}
+
+    /* ---- depth breakdowns for the profile sport ---------------------------
+       /stats/breakdowns?sport= counts every category over that sport's picks
+       and echoes `sport`. A server that predates the parameter ignores it and
+       returns the all-sports rows; those are then narrowed here to what can be
+       read exactly for one sport (every sport-scoped bucket, home/away from
+       home_away_sport, over/under from wager_period_split), and a panel with
+       no sport-exact source is left out of the sport view instead of showing
+       all-sports numbers under a sport heading. */
+    function pscSportBreakdowns(categories, sport) {
+        const cats = categories.slice();
+        if (sport && cats.indexOf('wager_period_split') === -1 &&
+            (cats.indexOf('home_away') !== -1 || cats.indexOf('side_total') !== -1)) {
+            cats.push('wager_period_split', 'home_away_sport');
+        }
+        const path = '/users/' + encodeURIComponent(profileUsername) + '/stats/breakdowns?category=' +
+            cats.join(',') + (sport ? '&sport=' + encodeURIComponent(sport) : '');
+        return pscCachedRequest(path).then((data) => {
+            const rows = (data && Array.isArray(data.breakdowns)) ? data.breakdowns : [];
+            if (!sport) return { rows: rows, exact: true };
+            if (data && data.sport === sport) {
+                if (!window.__pscBackendSportScope) { window.__pscBackendSportScope = true; pscStampDrillsSoon(); }
+                return { rows: rows.filter((r) => categories.indexOf(r.category) !== -1), exact: true };
+            }
+            return { rows: pscNarrowBreakdowns(rows, sport, categories), exact: false };
+        });
+    }
+    const PSC_SPORT_FIRST = ['team', 'opponent', 'team_market', 'line_number', 'season', 'home_away_sport',
+        'wager_period_sport', 'wager_period_market', 'wager_period_split'];
+    const PSC_SPORT_SECOND = ['market_sport', 'market_sport_side'];
+    function pscSumRows(category, bucket, list) {
+        let t = 0, w = 0, l = 0, p = 0, risk = 0, net = 0, odds = 0, units = 0;
+        list.forEach((r) => {
+            const n = Number(r.total_picks) || 0;
+            t += n; w += Number(r.wins) || 0; l += Number(r.losses) || 0; p += Number(r.pushes) || 0;
+            risk += Number(r.total_units_wagered) || 0; net += Number(r.net_units) || 0;
+            odds += (Number(r.avg_odds) || 0) * n; units += (Number(r.avg_units) || 0) * n;
+        });
+        return {
+            category: category, bucket: bucket, total_picks: t, wins: w, losses: l, pushes: p,
+            total_units_wagered: Number(risk.toFixed(2)), net_units: Number(net.toFixed(2)),
+            roi: risk > 0 ? Number(((net / risk) * 100).toFixed(2)) : 0,
+            win_rate: (w + l) > 0 ? Number(((w / (w + l)) * 100).toFixed(2)) : 0,
+            avg_odds: t > 0 ? Number((odds / t).toFixed(2)) : 0,
+            avg_units: t > 0 ? Number((units / t).toFixed(2)) : 0
+        };
+    }
+    function pscNarrowBreakdowns(rows, sport, categories) {
+        const out = [];
+        const want = (c) => categories.indexOf(c) !== -1;
+        const sideBuckets = { home: [], away: [], over: [], under: [] };
+        rows.forEach((r) => {
+            const parts = String(r.bucket || '').split('|');
+            if (PSC_SPORT_FIRST.indexOf(r.category) !== -1) {
+                if (!pscMatches(parts[0], sport)) return;
+                if (r.category === 'home_away_sport' && sideBuckets[parts[1]]) sideBuckets[parts[1]].push(r);
+                if (r.category === 'wager_period_split' && (parts[2] === 'over' || parts[2] === 'under')) sideBuckets[parts[2]].push(r);
+                if (want(r.category)) out.push(r);
+            } else if (PSC_SPORT_SECOND.indexOf(r.category) !== -1) {
+                if (pscMatches(parts[1], sport) && want(r.category)) out.push(r);
+            } else if (r.category === 'sport') {
+                if (pscMatches(r.bucket, sport) && want('sport')) out.push(r);
+            }
+        });
+        if (want('home_away')) ['home', 'away'].forEach((s) => { if (sideBuckets[s].length) out.push(pscSumRows('home_away', s, sideBuckets[s])); });
+        if (want('side_total')) ['over', 'under'].forEach((s) => { if (sideBuckets[s].length) out.push(pscSumRows('side_total', s, sideBuckets[s])); });
+        return out;
+    }
+    /* Every depth panel back to hidden and empty before a sport is drawn, so a
+       panel the new sport has no rows for disappears instead of keeping the
+       last sport's rows. */
+    function pscResetDepthPanels() {
+        ['tmrxVenueSideSection', 'tmrxHomeAwayHalf', 'tmrxSideTotalHalf', 'tmrxHomeAwaySportSection',
+         'tmrxTimingSection', 'tmrxPropTypeSection', 'tmrxOpponentSection', 'tmrxTeamMarketSection',
+         'tmrxLineNumberSection', 'tmrxMonthSection', 'tmrxSeasonShell'].forEach((id) => {
+            const el = document.getElementById(id);
+            if (el) el.hidden = true;
+        });
+        ['tmrxTableHomeAwayTop', 'tmrxTableSideTotalTop', 'tmrxTableHomeAwaySport', 'tmrxTableBetTimingTop',
+         'tmrxTableDaypartTop', 'tmrxTablePropTypeTop', 'tmrxTableOpponentTop', 'tmrxTableTeamMarketTop',
+         'tmrxTableLineNumberTop', 'tmrxTableMonthTop', 'tmrxTableSeasonTop'].forEach((id) => {
+            const t = document.getElementById(id);
+            const b = t && t.querySelector('tbody');
+            if (b) b.innerHTML = '';
+        });
+        tmrxOpponentRows = []; tmrxOpponentShowAll = false;
+        tmrxTeamMarketRows = []; tmrxTeamMarketShowAll = false;
+        tmrxLineNumberRows = []; tmrxLineNumberShowAll = false;
+        tmrxSeasonRows = [];
+        tmrxMarketCrossRows = { sport: [], side: [] };
+        ['tmrxOpponentMore', 'tmrxTeamMarketMore', 'tmrxLineNumberMore'].forEach((id) => {
+            const el = document.getElementById(id);
+            if (el) el.hidden = true;
+        });
     }
     function railSportEsc(x) {
         return String(x == null ? '' : x).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -12369,34 +12934,9 @@
         if (ctxText) syncRailSportTabs(ctxText);
         if (hadFocus) focusRailSportTab('');
     }
-    async function selectRailSport(id) {
-        const want = String(id || '');
-        if (want === railSportState().id) return;
-        const hadFocus = !!(document.activeElement && document.activeElement.closest && document.activeElement.closest('#railSportBar'));
-        railSportState().id = want;
-        const seq = ++railSportState().seq;
-        syncRailSportTabs();
-        if (!want) { restoreRailOverall(hadFocus); return; }
-        const key = railSportCacheKey(want);
-        if (!railSportState().cache[key]) {
-            setRailBusy(true);
-            let data = null;
-            try {
-                data = await fetchAdvancedMetricsForSport(railSportUsername(), want);
-            } catch (err) {
-                console.warn('[Profile] rail sport metrics unavailable:', err && err.message ? err.message : err);
-            }
-            if (seq !== railSportState().seq) return;   // a later click already won
-            setRailBusy(false);
-            if (!data || !data.summary) {
-                const label = railSportLabel(want);
-                railSportState().id = '';
-                restoreRailOverall(hadFocus, label + ' stats unavailable, showing overall');
-                return;
-            }
-            railSportState().cache[key] = data;
-        }
-        applyRailSportView();
+    /* The header tabs are one of the doors to the profile sport. */
+    function selectRailSport(id) {
+        return setProfileSport(id);
     }
     let railFitRetries = 0;
     function fitRailValues() {
@@ -12576,6 +13116,12 @@
         const totalPicks = Number(p && (p.total_picks || p.totalPicks) || 0);
         set('sidebarTrackedPicks', String(totalPicks));
         set('sidebarLeaderboard', p && p.ranking_status ? p.ranking_status : (currentLeaderboardRank != null ? '#' + currentLeaderboardRank : 'Not Ranked'));
+
+        /* PROFILE_SPORT_CONTEXT_20261003: these Advanced tab cards follow the
+           profile sport (renderProfileMetricsBody fills them from that sport's
+           /metrics payload); the all-sports profile record must not repaint
+           them when the header redraws. */
+        if (pscId()) return;
 
         // Advanced Metrics top-line panel — populate from real fields where they exist;
         // never fabricate. Anything missing keeps its '—' placeholder.
@@ -14541,12 +15087,14 @@
     function populateFilterDropdowns() {
         const sportSelect = document.getElementById('filterSport');
         if (!sportSelect) return;
-        const currentValue = sportSelect.value || '';
+        /* PROFILE_SPORT_CONTEXT_20261003: one option per profile sport (the
+           header's sports), valued by the same id the whole page uses. */
+        const currentValue = pscId() || sportSelect.value || '';
         const sports = new Set();
-        allLoadedPicks.forEach(p => { if (p.sport_key) sports.add(p.sport_key); });
+        allLoadedPicks.forEach(p => { if (p.sport_key) sports.add(pscGroupIdFor(p.sport_key)); });
         if (currentValue) sports.add(currentValue);
         let opts = '<option value="">All Sports</option>';
-        sports.forEach(sk => { opts += '<option value="' + sk + '">' + fmtSport(sk) + '</option>'; });
+        sports.forEach(id => { opts += '<option value="' + escapeHtml(id) + '">' + escapeHtml(pscLabel(id)) + '</option>'; });
         sportSelect.innerHTML = opts;
         if (currentValue) sportSelect.value = currentValue;
     }
@@ -14559,7 +15107,7 @@
             'longshot': 'big_underdog'
         };
         return {
-            sport: document.getElementById('filterSport').value || '',
+            sport: pscSingleKey(document.getElementById('filterSport').value || ''),
             market_type: document.getElementById('filterType').value || '',
             result: document.getElementById('filterResult').value || '',
             odds_bucket: oddsMap[document.getElementById('filterOdds').value] || '',
@@ -14573,6 +15121,10 @@
         const dateFrom = document.getElementById('filterDateFrom');
         const dateTo = document.getElementById('filterDateTo');
         const sort = document.getElementById('filterSort');
+        /* A profile sport that spans several sport keys (Soccer) has no single
+           key for /stats/advanced to filter on, so it is counted here. */
+        const sportSel = document.getElementById('filterSport');
+        if (sportSel && sportSel.value && !pscSingleKey(sportSel.value)) return true;
         return !!((search && search.value) || (units && units.value) || (dateFrom && dateFrom.value) || (dateTo && dateTo.value) || (sort && sort.value && sort.value !== 'date_desc') || activeQuickFilter);
     }
 
@@ -14681,10 +15233,11 @@
 
         if (hasLocalOnlyFiltersActive()) {
             latestAdvancedStats = null;
-            renderSportGridFromPicks(getFilteredPicks());
-            renderBetTypeBreakdownFromPicks();
-            renderOddsRangeBreakdown();
-            renderRecentForm();
+            const localPicks = getFilteredPicks();
+            renderSportGridFromPicks(localPicks);
+            renderBetTypeBreakdownFromPicks(localPicks);
+            renderOddsRangeBreakdown(localPicks);
+            renderRecentForm(localPicks);
             return;
         }
 
@@ -14758,7 +15311,7 @@
             filtered = filtered.filter(p => getPickTimestamp(p) <= to);
         }
 
-        if (sport) filtered = filtered.filter(p => p.sport_key === sport);
+        if (sport) filtered = filtered.filter(p => pscMatches(p.sport_key, sport));
         if (type) { const types = type.split(','); filtered = filtered.filter(p => types.includes(p.market_type)); }
         if (result) filtered = filtered.filter(p => p.status === result || (result === 'push' && p.status === 'pushed'));
         if (search) {
@@ -14985,6 +15538,11 @@
         document.getElementById('filterBanner').style.display = 'none';
         currentPeriod = 'all';
         document.querySelectorAll('.period-btn').forEach(b => b.classList.toggle('active', b.dataset.period === 'all'));
+
+        /* Clearing the sport filter clears the profile sport: the page never
+           shows all sports here and one sport everywhere else. That call
+           redraws every section, this tab included. */
+        if (pscId()) { setProfileSport(''); return; }
 
         // Reset all sections to full data
         const stats = computeUnifiedStats(allLoadedPicks);
@@ -15289,6 +15847,7 @@
         const keys = [];
         (rows || []).forEach(function (row) {
             const tab = tmrxLeagueTab(sportKeyOf(row));
+            pscNoteLeagueTab(tab.key, sportKeyOf(row));
             if (!map[tab.key]) {
                 map[tab.key] = { key: tab.key, label: tab.label, teams: 0, picks: 0 };
                 keys.push(tab.key);
@@ -15308,6 +15867,17 @@
     /* A tab the member still has stays selected across a redraw; otherwise MLB,
        which is the live sport, and only then the first tab in reading order. */
     function tmrxDefaultLeagueTab(groups, current) {
+        /* PROFILE_SPORT_CONTEXT_20261003: a profile set to a sport shows that
+           sport's league, whatever this table showed before and never the MLB
+           default below. */
+        const ctx = pscId();
+        if (ctx) {
+            const hit = groups.find(function (g) {
+                const sk = (window.__pscTabSport || {})[g.key];
+                return sk && pscMatches(sk, ctx);
+            });
+            if (hit) return hit.key;
+        }
         if (current && groups.some(function (g) { return g.key === current; })) return current;
         if (groups.some(function (g) { return g.key === 'MLB'; })) return 'MLB';
         return groups.length ? groups[0].key : '';
@@ -15844,18 +16414,24 @@
         if (section) section.hidden = false;
     }
 
+    let pscDepthSeq = 0;
     async function loadDepthBreakdowns() {
         if (!profileUsername || !api || typeof api.request !== 'function') return;
+        /* PROFILE_SPORT_CONTEXT_20261003: the panels count the profile sport. */
+        const sport = pscId();
+        const seq = ++pscDepthSeq;
         let rows = [];
         try {
-            const data = await api.request('/users/' + encodeURIComponent(profileUsername) +
-                '/stats/breakdowns?category=' + TMRX_DEPTH_CATEGORIES.join(','));
-            rows = (data && Array.isArray(data.breakdowns)) ? data.breakdowns : [];
+            const data = await pscSportBreakdowns(TMRX_DEPTH_CATEGORIES, sport);
+            if (seq !== pscDepthSeq) return;   // the sport changed while this was in flight
+            rows = data.rows;
         } catch (e) {
             // Non-fatal: the panels stay hidden, the rest of the profile is untouched.
+            if (seq === pscDepthSeq) pscResetDepthPanels();
             return;
         }
-        if (!rows.length) return;
+        pscResetDepthPanels();
+        if (!rows.length) { pscStampDrillsSoon(); return; }
 
         const byCategory = {};
         rows.forEach(function (r) {
@@ -15901,26 +16477,37 @@
 
         tmrxRenderOpponent(byCategory.opponent);
 
-        tmrxRenderTeamMarket(byCategory.team_market);
+        tmrxRenderTeamMarket(byCategory.team_market || []);
 
-        tmrxRenderLineNumber(byCategory.line_number);
+        tmrxRenderLineNumber(byCategory.line_number || []);
 
         const months = tmrxRenderDepthTable('tmrxTableMonthTop', 'tmrxMonthSection', byCategory.month,
             { sort: 'bucket_desc', labelCells: plain(tmrxMonthLabel) });
-        const seasons = tmrxRenderSeason(byCategory.season);
+        const seasons = tmrxRenderSeason(byCategory.season || []);
+        /* A sport view on a server without /stats/breakdowns?sport= has season
+           rows but no sport-exact month rows: show the seasons alone. */
+        const monthTable = document.getElementById('tmrxTableMonthTop');
+        const monthShell = monthTable && monthTable.closest('.tmrx-table-shell');
+        if (monthShell) monthShell.hidden = !months;
         if (months || seasons) {
             const monthSection = document.getElementById('tmrxMonthSection');
             if (monthSection) monthSection.hidden = false;
         }
+        pscStampDrillsSoon();
     }
 
+    let pscTeamSeq = 0;
     async function loadTeamBreakdown() {
         const hasLegacy = !!document.getElementById('teamBreakdownModule');
         const hasStats = !!document.getElementById('tmrxTableTeamTop');
         if ((!hasLegacy && !hasStats) || !profileUsername || !api || typeof api.request !== 'function') return;
+        const seq = ++pscTeamSeq;
         try {
-            const data = await api.request('/users/' + encodeURIComponent(profileUsername) + '/stats/breakdowns?category=team');
-            const rows = (data && Array.isArray(data.breakdowns)) ? data.breakdowns : [];
+            /* PROFILE_SPORT_CONTEXT_20261003: the profile sport's clubs only,
+               counted over that sport's picks. */
+            const data = await pscSportBreakdowns(['team'], pscId());
+            if (seq !== pscTeamSeq) return;
+            const rows = data.rows;
             teamBreakdownRows = rows.map(function (r) {
                 const bucket = String(r.bucket || '');
                 const sep = bucket.indexOf('|');
@@ -15949,6 +16536,7 @@
             renderTeamBreakdown();
             renderTmrxTeamTable(true);
         } catch (e) {
+            if (seq !== pscTeamSeq) return;
             // Non-fatal: leave the panel empty rather than breaking the profile.
             teamBreakdownRows = [];
             renderTeamBreakdown();
@@ -16417,6 +17005,7 @@
 
     function ensureSportFilterOption(sportKey) {
         const select = document.getElementById('filterSport');
+        sportKey = pscFromParam(sportKey);
         if (!select || !sportKey) return;
         const exists = Array.from(select.options).some(function(option) {
             return option.value === sportKey;
@@ -16424,7 +17013,7 @@
         if (!exists) {
             const option = document.createElement('option');
             option.value = sportKey;
-            option.textContent = fmtSport(sportKey);
+            option.textContent = pscLabel(sportKey);
             select.appendChild(option);
         }
     }
@@ -16448,17 +17037,19 @@
             currentTableSort = 'date_desc';
         }
 
-        if (normalizedSport) ensureSportFilterOption(normalizedSport);
-        sportSelect.value = normalizedSport || '';
-
         if (options.updateUrl) {
             const nextUrl = buildProfileSportFilterUrl(normalizedSport);
             history.pushState(null, '', nextUrl);
         }
 
-        applyFilters();
-        if (typeof tmrxApplyLedgerSport === 'function') {
-            tmrxApplyLedgerSport(normalizedSport || '', { fromRecords: true, scroll: !!options.scroll });
+        /* PROFILE_SPORT_CONTEXT_20261003: a sport link on a pick row sets the
+           sport for the whole profile, not just this tab. */
+        const id = pscFromParam(sportKey);
+        if (id === pscId()) { pscSyncFilterSelect(); applyFilters(); }
+        else setProfileSport(id);
+        if (options.scroll) {
+            const target = document.getElementById('tmrxPublicLedger');
+            if (target && target.scrollIntoView) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
         return false;
     }
@@ -20937,6 +21528,34 @@ html body.profile-page .advanced-glossary-table td {
 /* SELECT_VISIBLE_20260913: light text on a native dropdown. Safari can paint its own light
    control behind author text, leaving the chosen value invisible. Drawn by the page instead. */
 select#tmrxTeamLeagueFilter { -webkit-appearance: none !important; appearance: none !important; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23C3D6EA' stroke-width='2'/%3E%3C/svg%3E") !important; background-repeat: no-repeat !important; background-position: right 12px center !important; background-size: 12px 8px !important; padding-right: 34px !important; }
+</style>
+<style id="profile-sport-context-20261003">
+/* PROFILE_SPORT_CONTEXT_20261003: one sport bar over the Overview statistics,
+   pinned while they scroll, in the same pill language as the header tabs. */
+.profile-sportctx-bar{position:sticky;top:var(--tmr-sticky-top,72px);z-index:30;display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 16px;padding:10px 14px;border:1px solid rgba(148,163,184,.16);border-radius:14px;background:#0b1424;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);box-shadow:0 10px 26px rgba(0,0,0,.28);}
+.profile-sportctx-bar[hidden]{display:none;}
+.profile-sportctx-label{font:900 11px/1.2 'Barlow','Inter',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#8fa3bf;white-space:nowrap;}
+.profile-sportctx-tabs{display:flex;flex-wrap:wrap;gap:6px;min-width:0;}
+#profileSportCtxBar .profile-sportctx-tab{-webkit-appearance:none;appearance:none;cursor:pointer;margin:0;padding:7px 13px!important;border-radius:999px!important;border:1px solid rgba(148,163,184,.18)!important;background:transparent!important;color:#aebbd0!important;box-shadow:none!important;font:900 11px/1 'Barlow','Inter',sans-serif!important;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;transition:background .15s ease,color .15s ease,border-color .15s ease;}
+#profileSportCtxBar .profile-sportctx-tab:hover{color:#e8f1ff!important;border-color:rgba(148,163,184,.42)!important;background:rgba(148,163,184,.08)!important;}
+#profileSportCtxBar .profile-sportctx-tab.is-active{background:linear-gradient(135deg,#2b8cff,#4DA3FF)!important;border-color:transparent!important;color:#04111a!important;box-shadow:0 6px 16px rgba(43,140,255,.28)!important;}
+.profile-sportctx-tab:focus-visible{outline:2px solid #4DA3FF;outline-offset:2px;}
+.profile-sportctx-bar.is-busy .profile-sportctx-tabs,#profileAdvancedSportBar.is-busy{opacity:.6;pointer-events:none;}
+#tmrxStatsRoot.psc-is-loading > :not(#profileSportCtxBar){opacity:.55;transition:opacity .15s ease;}
+/* A profile set to one sport draws one league in every team table, so the
+   per-table league tabs would only repeat the bar above. */
+html[data-profile-sport] #tmrxTeamSportPicker,
+html[data-profile-sport] #tmrxOpponentSportPicker,
+html[data-profile-sport] #tmrxTeamMarketSportPicker,
+html[data-profile-sport] #tmrxLineNumberSportPicker,
+html[data-profile-sport] #tmrxSeasonSportPicker,
+html[data-profile-sport] #teamBreakdownSportPicker{display:none!important;}
+@media (max-width:640px){
+  .profile-sportctx-bar{top:var(--tmr-sticky-top-mobile,60px);padding:8px 10px;gap:8px;border-radius:12px;}
+  .profile-sportctx-label{width:100%;}
+  .profile-sportctx-tabs{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;width:100%;}
+  .profile-sportctx-tabs::-webkit-scrollbar{display:none;}
+}
 </style>
 <script src="/static/js/tmr-pick-transparency.js?v=d4c821eee182"></script>
 </body>

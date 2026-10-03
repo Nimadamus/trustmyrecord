@@ -114,7 +114,7 @@
   if (!user || !window.TMRDrill) { document.getElementById('phLanding').hidden = false; return; }
   var category = qs.get('category') || 'all';
   var extra = new URLSearchParams();
-  qs.forEach(function (v, k) { if (k === 'narrow') extra.append(k, v); });
+  qs.forEach(function (v, k) { if (k === 'narrow' || k === 'sport_scope') extra.append(k, v); });
   var crumb = document.getElementById('phProfileCrumb');
   crumb.href = '/u/' + encodeURIComponent(user) + '/';
   crumb.textContent = user;
