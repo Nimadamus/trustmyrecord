@@ -1429,24 +1429,24 @@ a.tkact-welcome:hover .tkact-mem b{color:#fff}
   display:flex;flex-direction:column;align-items:center;justify-content:center;
   gap:14px;padding:0 18px;box-sizing:border-box}
 .tkcontest{
-  display:flex;align-items:center;justify-content:center;gap:14px;height:56px;width:min(560px,100%);
+  display:flex;align-items:center;justify-content:center;gap:14px;height:56px;width:min(640px,100%);
   padding:0 22px;border-radius:10px;border:2px solid #F0C449;
   background:linear-gradient(90deg,#3A2A06,#1C1606);
   box-shadow:0 0 16px rgba(240,196,73,.24);box-sizing:border-box;text-decoration:none;
   transition:box-shadow .2s ease,border-color .2s ease}
 .tkcontest:hover,.tkcontest:focus-visible{border-color:#FFD866;box-shadow:0 0 22px rgba(240,196,73,.42)}
-.tkc-ic{
-  flex:0 0 auto;width:32px;height:32px;border-radius:8px;display:flex;
-  align-items:center;justify-content:center;
-  background:linear-gradient(180deg,#F0C449,#D4A72C);color:#1A1406;
-  font-size:17px;font-weight:900;line-height:1}
+.tkc-ic{flex:0 0 auto;width:44px;height:44px;display:block;line-height:0;border-radius:9px;
+  overflow:hidden;box-shadow:0 0 0 1.5px rgba(62,232,255,.55),0 0 10px rgba(62,160,255,.35)}
+.tkc-ic img{display:block;width:44px;height:44px}
 .tkc-msg{display:flex;align-items:baseline;gap:12px;min-width:0;white-space:nowrap;overflow:hidden}
 .tkc-msg b{color:#FFF;font-size:19px;font-weight:900;letter-spacing:.07em;
   text-transform:uppercase;font-family:Barlow,Inter,system-ui,sans-serif}
 .tkc-msg span{color:#F5E8C9;font-size:17px;font-weight:800;letter-spacing:.01em;overflow:hidden;text-overflow:ellipsis}
-/* Narrow center column (viewports under ~1610px): show the WATCHDOG label alone
+/* Narrow center column (viewports under ~1780px): show the WATCHDOG label alone
    rather than a clipped tagline. */
-@media (max-width:1609px){.tkc-msg span{display:none}}
+@media (max-width:1779px){.tkc-msg span{display:none}}
+@media (max-width:1599px){.tkcontest{gap:8px;padding:0 10px}.tkc-msg b{font-size:14px;letter-spacing:.04em}}
+@media (max-width:1379px){.tkc-msg{display:none}}
 .tkslogan{display:flex;flex-direction:column;align-items:center;justify-content:center;
   gap:3px;text-align:center;pointer-events:none;max-width:720px;width:100%}
 .tkslogan-lead{display:block;color:#7F9BB4;font-size:14.5px;font-weight:500;
@@ -2342,7 +2342,7 @@ a.tkact-welcome:hover .tkact-mem b{color:#fff}
 
 
 
-<div class="ticker"><div class="ticker-in"><span class="tlbl"><span class="bl"></span>Today</span><button type="button" class="tk-nav tk-prev" aria-label="Previous games" hidden>&lsaquo;</button><div class="ticker-games" data-slate-date="" aria-busy="true"><div class="ticker-track"><div class="ticker-page"><span class="gm is-skel" aria-hidden="true"><i class="sk a"></i><i class="sk b"></i><i class="sk c"></i></span><span class="gm is-skel" aria-hidden="true"><i class="sk a"></i><i class="sk b"></i><i class="sk c"></i></span><span class="gm is-skel" aria-hidden="true"><i class="sk a"></i><i class="sk b"></i><i class="sk c"></i></span><span class="gm is-skel" aria-hidden="true"><i class="sk a"></i><i class="sk b"></i><i class="sk c"></i></span><span class="gm is-skel" aria-hidden="true"><i class="sk a"></i><i class="sk b"></i><i class="sk c"></i></span><span class="sr-only" role="status">Loading today&rsquo;s MLB slate&hellip;</span></div></div></div><div class="tkcenter"><a class="tkcontest" href="/premium/#watchdog" role="status"><span class="tkc-ic" aria-hidden="true">&#10003;</span><span class="tkc-msg"><b>Watchdog</b><span id="tkWdMsg">Every handicapper claim, checked</span></span></a><div class="tkslogan" role="note"><span class="tkslogan-lead">In a world where the truth can get buried beneath the noise,</span><span class="tkslogan-end">Trust My Record is where <em>results do the talking</em>.</span></div></div><div class="tkact" id="tmrActivity"><span class="tkact-lbl"><span class="bl"></span>Live on TMR</span><div class="tkact-slot"></div></div><button type="button" class="tk-nav tk-next" aria-label="Next games" hidden>&rsaquo;</button></div></div></div>
+<div class="ticker"><div class="ticker-in"><span class="tlbl"><span class="bl"></span>Today</span><button type="button" class="tk-nav tk-prev" aria-label="Previous games" hidden>&lsaquo;</button><div class="ticker-games" data-slate-date="" aria-busy="true"><div class="ticker-track"><div class="ticker-page"><span class="gm is-skel" aria-hidden="true"><i class="sk a"></i><i class="sk b"></i><i class="sk c"></i></span><span class="gm is-skel" aria-hidden="true"><i class="sk a"></i><i class="sk b"></i><i class="sk c"></i></span><span class="gm is-skel" aria-hidden="true"><i class="sk a"></i><i class="sk b"></i><i class="sk c"></i></span><span class="gm is-skel" aria-hidden="true"><i class="sk a"></i><i class="sk b"></i><i class="sk c"></i></span><span class="gm is-skel" aria-hidden="true"><i class="sk a"></i><i class="sk b"></i><i class="sk c"></i></span><span class="sr-only" role="status">Loading today&rsquo;s MLB slate&hellip;</span></div></div></div><div class="tkcenter"><a class="tkcontest" href="/premium/#watchdog" role="status"><span class="tkc-ic" aria-hidden="true"><img src="/static/media/web-watchdog-icon.webp" srcset="/static/media/web-watchdog-icon.webp 2x, /static/media/web-watchdog-icon@3x.webp 3x" width="44" height="44" alt="" decoding="async"></span><span class="tkc-msg"><b>Web Watchdog</b><span id="tkWdMsg">Every handicapper claim, checked</span></span></a><div class="tkslogan" role="note"><span class="tkslogan-lead">In a world where the truth can get buried beneath the noise,</span><span class="tkslogan-end">Trust My Record is where <em>results do the talking</em>.</span></div></div><div class="tkact" id="tmrActivity"><span class="tkact-lbl"><span class="bl"></span>Live on TMR</span><div class="tkact-slot"></div></div><button type="button" class="tk-nav tk-next" aria-label="Next games" hidden>&rsaquo;</button></div></div></div>
 
 <section class="hero"><div class="hero-bg" aria-hidden="true"></div>
   <div class="grain"></div>
