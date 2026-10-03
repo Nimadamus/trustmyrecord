@@ -1859,6 +1859,9 @@ def replace_marker(text, key, payload, anchor):
     return text[:i] + block + "\n" + text[i:]
 
 
+SITEMAP_FROZEN = True  # see SITEMAP_FROZEN_20261003 below
+
+
 def sitemap_block(urls):
     lines = ["  <!-- BEGIN_MLB_MATCHUP_URLS -->"]
     for u, lastmod, freq, prio in urls:
@@ -2116,7 +2119,11 @@ def build(dates, today, dry_run=False, workers=4):
                     lambda m: block, sm, flags=re.S)
     else:
         sm = sm.replace("</urlset>", block + "\n</urlset>")
-    pending[sm_path] = sm.replace("\n", sm_nl)
+    # SITEMAP_FROZEN_20261003 (Nima): the handicapping matchup pages are for
+    # visitors, not search. Their sitemap block stays exactly as it is (nothing
+    # removed) and new pages are no longer added to it.
+    if not SITEMAP_FROZEN:
+        pending[sm_path] = sm.replace("\n", sm_nl)
     seo.save_store(hook_store)
 
     # --- write --------------------------------------------------------------

@@ -1291,6 +1291,9 @@ def earlier_matchups(sport, exclude, limit=120):
     return [(label, path, None) for _, label, path in rows[:limit]]
 
 
+SITEMAP_FROZEN = True  # see SITEMAP_FROZEN_20261003 in main
+
+
 def update_sitemap(urls, today):
     """Rewrite this builder's block in sitemap.xml.
 
@@ -1477,7 +1480,12 @@ def main():
     print("total files written: %d" % total)
     # Only rewrite the block on a full run. A partial run would otherwise
     # delete the other sports' entries.
-    if sorted(wanted) == sorted(SPORTS):
+    # SITEMAP_FROZEN_20261003 (Nima): the handicapping matchup pages are for
+    # visitors, not search. The existing sitemap block stays exactly as it is
+    # (nothing removed) and new pages are no longer added to it.
+    if SITEMAP_FROZEN:
+        print("sitemap block frozen, left alone")
+    elif sorted(wanted) == sorted(SPORTS):
         update_sitemap(advertised, built_at[:10])
     else:
         print("partial run (%s), sitemap block left alone" % ", ".join(wanted))
