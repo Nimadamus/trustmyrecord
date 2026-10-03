@@ -1405,7 +1405,7 @@
         /* PRO_FUNNEL_FIX_20261002: a signed out visitor who picks a plan creates an account first. Send them to
            /register/ with ?return= so they come straight back here, where the saved plan opens checkout. Before
            this they went to /login/, and a new visitor who then registered landed on /welcome/ instead. */
-        var REGISTER = '/register/?return=' + encodeURIComponent('/premium/');
+        var REGISTER = '/register/?return=' + encodeURIComponent('/premium/' + (location.search || ''));
         /* PRO_INTENT_20260929: a signed-out visitor who picks a plan is sent to
            log in or sign up. The plan they picked is kept here, and when they
            land back on this page signed in, checkout for that plan opens
@@ -1994,7 +1994,7 @@
         else start();
     })();
     </script>
-<script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-ds-nav.cee00c91e711.js"></script>
+<script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-ds-nav.0b9a90a7cd9b.js"></script>
     <script src="/static/js/tmr-live-chat.js?v=816ec6f0a118"></script>
     <script src="/static/js/tmr-pro-hero.008435732044.js" defer></script>
 <style id="dark-text-fix-20260913">
