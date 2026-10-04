@@ -2137,7 +2137,7 @@
 
             addRawMarketGroup('first_half', 'First Half', ['first_half_h2h', 'h2h_h1', 'first_half_spreads', 'spreads_h1', 'first_half_totals', 'totals_h1']);
             addRawMarketGroup('second_half', 'Second Half', ['second_half_h2h', 'h2h_h2', 'second_half_spreads', 'spreads_h2', 'second_half_totals', 'totals_h2']);
-            addRawMarketGroup('period_1', '1st Period', ['period_1_h2h', 'h2h_p1', 'period_1_spreads', 'period_1_totals', 'totals_p1']);
+            addRawMarketGroup('period_1', /football/.test(String(sportKey || '')) ? '1st Quarter' : '1st Period', ['period_1_h2h', 'h2h_p1', 'period_1_spreads', 'period_1_totals', 'totals_p1']);
             addRawMarketGroup('alt_spreads', 'Alt Spreads', ['alt_spreads', 'alternate_spreads']);
             if (sportKey === 'baseball_mlb' || sportKey === 'icehockey_nhl') {
                 addRawMarketGroup('alt_totals', 'Alt Totals', ['alt_totals', 'alternate_totals']);
@@ -4837,22 +4837,22 @@
                         selectionLabel = '2H Under' + (lineDisp ? ' ' + lineDisp : '');
                         break;
                     case 'period1ml':
-                        marketType = 'period_1_h2h'; groupLabel = '1st Period';
+                        marketType = 'period_1_h2h'; groupLabel = (/football|^ncaaf$|^nfl$/i.test(String(game && game.sport_key || '')) ? '1st Quarter' : '1st Period');
                         selection = teamRaw;
                         selectionLabel = teamRaw + ' 1P ML';
                         break;
                     case 'period1spread':
-                        marketType = 'period_1_spreads'; groupLabel = '1st Period';
+                        marketType = 'period_1_spreads'; groupLabel = (/football|^ncaaf$|^nfl$/i.test(String(game && game.sport_key || '')) ? '1st Quarter' : '1st Period');
                         selection = teamRaw;
                         selectionLabel = teamRaw + ' 1P' + (lineDispSigned ? ' ' + lineDispSigned : '');
                         break;
                     case 'period1over':
-                        marketType = 'period_1_totals'; groupLabel = '1st Period';
+                        marketType = 'period_1_totals'; groupLabel = (/football|^ncaaf$|^nfl$/i.test(String(game && game.sport_key || '')) ? '1st Quarter' : '1st Period');
                         selection = 'Over';
                         selectionLabel = '1P Over' + (lineDisp ? ' ' + lineDisp : '');
                         break;
                     case 'period1under':
-                        marketType = 'period_1_totals'; groupLabel = '1st Period';
+                        marketType = 'period_1_totals'; groupLabel = (/football|^ncaaf$|^nfl$/i.test(String(game && game.sport_key || '')) ? '1st Quarter' : '1st Period');
                         selection = 'Under';
                         selectionLabel = '1P Under' + (lineDisp ? ' ' + lineDisp : '');
                         break;

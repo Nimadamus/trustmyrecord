@@ -10487,7 +10487,7 @@
     <!-- SPORTSBOOK_V2_20260903: feature-flagged skin, dark by default (ROLLOUT_PERCENT in sportsbook-v2.js). Opt in with ?sbv2=1, out with ?sbv2=0. -->
     <link rel="stylesheet" href="/static/css/sportsbook-v2.css?v=09347f7d1a8c">
     <script src="/static/js/sportsbook-v2.js?v=c58bd91331c6"></script>
-<script src="/static/js/tmr-market-labels.js?v=6026b1e47eeb"></script>
+<script src="/static/js/tmr-market-labels.js?v=5c17195ce302"></script>
 </head>
 <body class="tmr-site-shell tmr-ds-shell tmr-ds--dark" data-tmr-route="sportsbook" data-tmr-test-route="sportsbook">
     <script>
@@ -23667,7 +23667,7 @@ document.addEventListener('DOMContentLoaded', function() {
          Do not bypass it with inline sportsbook UI rewrites. -->
 <script src="/static/js/sportsbook-duplicate-guard-ui.js?v=3a9f9a3763a2"></script>
 <script src="/static/js/tmr-drill.js?v=c68f34eb6d14"></script>
-<script src="/static/js/sportsbook-production-fix-persist-reliability.js?v=f0101a48616a&cb=20260927drill"></script>
+<script src="/static/js/sportsbook-production-fix-persist-reliability.js?v=4f45d77ba03f"></script>
 <!-- MULTISLIP_20260730: flag-gated multi-pick slip. Inert unless
      localStorage tmr_multislip === '1' (set via /sportsbook/?multislip=1;
      ?multislip=0 turns it back off). Rollback = flag off, or remove this tag. -->
@@ -24325,10 +24325,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 const group = marketGroups.find(item => item && item.key === key);
                 const items = group && Array.isArray(group.items) ? group.items : [];
                 if (!items.length) return;
-                marketTags.push(groupTitles[key] || key);
+                // NFL_1ST_QUARTER_LABEL_20261004: football's period_1 is the 1st Quarter.
+                const groupTitle = (key === 'period_1' && (selSport === 'NFL' || selSport === 'NCAAF' || /football/i.test(game.sport_key || ''))) ? '1st Quarter' : (groupTitles[key] || key);
+                marketTags.push(groupTitle);
                 extraMarketSections.push(`
                     <div class="market-section preview-only">
-                        <div class="market-title">${groupTitles[key] || key}</div>
+                        <div class="market-title">${groupTitle}</div>
                         <div class="sportsbook-market-pills">
                             ${renderPreviewPills(items)}
                         </div>

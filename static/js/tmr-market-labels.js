@@ -163,6 +163,8 @@
                 break;
             }
         }
+        /* Football's period_1 is the 1st Quarter, not a hockey period. */
+        if (seg === '1st Period' && /football|^nfl$|^ncaaf$/i.test(text(sportKey))) seg = '1st Quarter';
         if (seg) {
             var g = gameLabel(key, sportKey);
             if (g) return seg + ' ' + g;
