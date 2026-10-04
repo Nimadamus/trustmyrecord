@@ -105,6 +105,46 @@
         .ss-cta-actions{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;}
         @media(max-width:900px){.ss-cards,.ss-pillars{grid-template-columns:repeat(2,1fr);}}
         @media(max-width:560px){.ss-hero{padding:32px 20px;}.ss-cards,.ss-pillars{grid-template-columns:1fr;}.ss-intro,.ss-angle,.ss-cta{padding:24px 20px;}}
+        /* Tracker pilot 2026-10-04: live ledger panel. Scoped trk- classes only. */
+        .ss-hero.trk-hero{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,0.85fr);gap:28px;align-items:start;}
+        .trk-live{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.16);border-radius:18px;padding:18px 18px 14px;}
+        .trk-live-hd{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;}
+        .trk-live-hd b{font-family:var(--font-display);font-weight:800;font-size:1rem;display:inline-flex;align-items:center;gap:8px;}
+        .trk-dot{width:8px;height:8px;border-radius:50%;background:#34D399;box-shadow:0 0 0 4px rgba(52,211,153,0.18);}
+        .trk-upd{font-size:0.74rem;white-space:nowrap;opacity:0.8;}
+        .trk-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+        .trk-stat{display:block;border:1px solid rgba(255,255,255,0.14);border-radius:12px;padding:10px 10px 9px;background:rgba(255,255,255,0.05);}
+        .trk-stat:hover{border-color:rgba(255,255,255,0.4);}
+        body.tmr-light .ss-hero .trk-live .trk-stat strong,body.tmr-light .ss-hero .trk-live a.trk-nm,body.tmr-light .ss-hero .trk-live-hd b{color:#fff;}
+        .trk-stat strong{display:block;font-family:var(--font-display);font-weight:900;font-size:1.45rem;line-height:1.1;}
+        .trk-stat span{display:block;font-size:0.72rem;font-weight:600;margin-top:2px;opacity:0.85;}
+        .trk-lb{list-style:none;margin:12px 0 0;padding:0;border-top:1px solid rgba(255,255,255,0.12);}
+        .trk-lb li{display:grid;grid-template-columns:22px minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:7px 2px;border-bottom:1px solid rgba(255,255,255,0.12);font-size:0.88rem;}
+        .trk-rk{font-weight:800;text-align:center;}
+        body.tmr-light .ss-hero .trk-live .trk-rk{color:#F5C451;}
+        .ss-wrap a.trk-nm{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+        .trk-rec{font-variant-numeric:tabular-nums;opacity:0.85;}
+        .trk-u{font-weight:800;font-variant-numeric:tabular-nums;}
+        .trk-box .pos{color:#0B6B3E;}.trk-box .neg{color:#BC372E;}
+        body.tmr-light .ss-hero .trk-live .pos{color:#4ADE80;}body.tmr-light .ss-hero .trk-live .neg{color:#F87171;}
+        .trk-live-ft{display:flex;justify-content:space-between;gap:10px;margin-top:10px;font-size:0.82rem;font-weight:700;}
+        .trk-strip{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;margin-top:16px;}
+        .trk-box{background:#fff;border:1px solid #D2DEEA;border-radius:16px;padding:16px 18px;color:#07182A;}
+        .trk-box h2{font-family:var(--font-display);font-weight:800;font-size:1rem;margin:0 0 10px;}
+        .trk-box p{font-size:0.86rem;color:#5E7590;margin:0 0 10px;line-height:1.5;}
+        .trk-chips{display:flex;flex-wrap:wrap;gap:8px;}
+        .ss-wrap a.trk-chip{display:inline-flex;align-items:center;gap:6px;padding:8px 13px;border-radius:999px;border:1px solid #D2DEEA;background:#F6F9FC;color:#07182A;font-weight:700;font-size:0.88rem;}
+        .ss-wrap a.trk-chip:hover{border-color:#0B4FA8;color:#0B4FA8;}
+        .trk-chip i{font-style:normal;font-weight:600;font-size:0.74rem;color:#0B6B3E;}
+        .trk-rec-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
+        .trk-badge{font-size:0.72rem;font-weight:800;color:#8A6206;background:#FBF1D8;border-radius:999px;padding:4px 10px;}
+        .ss-wrap a.trk-rec-name{font-family:var(--font-display);font-weight:900;font-size:1.15rem;color:#07182A;}
+        .trk-rec-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px 12px;margin:0;}
+        .trk-rec-grid dt{font-size:0.7rem;color:#5E7590;font-weight:600;}
+        .trk-rec-grid dd{margin:0;font-weight:800;font-variant-numeric:tabular-nums;}
+        .trk-more{display:inline-block;margin-top:10px;font-size:0.84rem;font-weight:700;}
+        @media(max-width:900px){.ss-hero.trk-hero{grid-template-columns:1fr;}.trk-strip{grid-template-columns:1fr;}}
+        @media(max-width:420px){.trk-stat strong{font-size:1.2rem;}.trk-lb li{grid-template-columns:20px minmax(0,1fr) auto;}.trk-lb .trk-rec{display:none;}}
     </style>
 <link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=b088fdc7f9d5">
 <script defer src="/static/js/tmr-linkhub.js?v=680cc4084d87"></script>
@@ -122,14 +162,38 @@
 
     <nav class="ss-crumb"><a href="/">Home</a> / Sports Betting Record Tracker</nav>
 
-    <section class="ss-hero">
+    <section class="ss-hero trk-hero">
+        <div class="trk-hero-copy">
         <span class="ss-kicker"><i class="fas fa-chart-line"></i> Free Record Tracking</span>
         <h1>Free Betting <span class="gold">Record Tracker</span></h1>
         <p class="sub">Track your sports betting record for free. Lock every pick before game time, let TrustMyRecord auto-grade the results, and build a verified public pick record on units, ROI, win percentage, and streaks.</p>
         <p class="ss-tagline"><span class="blue">Your memory rounds up.</span> <span class="gold">The ledger doesn't.</span></p>
         <div class="ss-hero-actions">
             <a class="btn btn-gold" href="/register/"><i class="fas fa-user-plus"></i> Start Tracking Free</a>
-            <a class="btn btn-outline" href="/sportsbook/"><i class="fas fa-plus"></i> Log a Pick</a>
+            <a class="btn btn-outline" href="/sportsbook/"><i class="fas fa-lock"></i> Lock a Pick</a>
+        </div>
+        </div>
+        <aside class="trk-live" id="trkLive" aria-label="Live TrustMyRecord ledger">
+            <div class="trk-live-hd"><b><span class="trk-dot"></span>Live ledger</b><span class="trk-upd" id="trkUpd">Updated Oct 4, 6:36 AM PT</span></div>
+            <div class="trk-stats" aria-live="polite">
+                <a class="trk-stat" href="/handicappers/"><strong id="trkGraded">4,847</strong><span>Graded picks</span></a>
+                <a class="trk-stat" href="/pending-picks/"><strong id="trkPending">63</strong><span>Pending now</span></a>
+                <a class="trk-stat" href="/handicappers/"><strong id="trkVerified">25</strong><span>Verified records</span></a>
+            </div>
+            <ol class="trk-lb" id="trkLb" aria-label="Official TMR rank, top 5"><li><span class="trk-rk">1</span><a class="trk-nm" href="/u/makaveli66/">makaveli66</a><span class="trk-rec">217-159-4</span><span class="trk-u pos">+66.15u</span></li><li><span class="trk-rk">2</span><a class="trk-nm" href="/u/BetLegend/">BetLegend</a><span class="trk-rec">490-393-11</span><span class="trk-u pos">+49.36u</span></li><li><span class="trk-rk">3</span><a class="trk-nm" href="/u/Mysticrich485/">Mysticrich485</a><span class="trk-rec">55-38-1</span><span class="trk-u pos">+37.06u</span></li><li><span class="trk-rk">4</span><a class="trk-nm" href="/u/clinscheid72/">clinscheid72</a><span class="trk-rec">36-31</span><span class="trk-u pos">+7.53u</span></li><li><span class="trk-rk">5</span><a class="trk-nm" href="/u/americanwiseguy/">americanwiseguy</a><span class="trk-rec">146-139</span><span class="trk-u pos">+5.09u</span></li></ol>
+            <div class="trk-live-ft"><span class="trk-upd">Official rank, 25+ graded picks</span><a href="/leaderboards/">Full leaderboard &rarr;</a></div>
+        </aside>
+    </section>
+
+    <section class="trk-strip" aria-label="Track by sport and a verified record">
+        <div class="trk-box">
+            <h2>Track picks by sport</h2>
+            <p>Every pick is locked before game time and graded from the final score. Choose a sport to see how its lines, totals and props are tracked.</p>
+            <div class="trk-chips" id="trkChips"><a class="trk-chip" href="/mlb-pick-tracker/" data-sport="mlb">MLB <i>3 pending</i></a><a class="trk-chip" href="/nfl-pick-tracker/" data-sport="nfl">NFL <i>57 pending</i></a><a class="trk-chip" href="/nba-pick-tracker/" data-sport="nba">NBA <i hidden></i></a><a class="trk-chip" href="/nhl-pick-tracker/" data-sport="nhl">NHL <i>1 pending</i></a><a class="trk-chip" href="/soccer-pick-tracker/" data-sport="soccer">Soccer <i hidden></i></a></div>
+        </div>
+        <div class="trk-box" id="trkRecord">
+            <h2>What a verified record looks like</h2>
+            <div class="trk-rec-head"><span class="trk-badge">#1 of 25 qualified</span><a class="trk-rec-name" href="/u/makaveli66/">makaveli66</a></div><dl class="trk-rec-grid"><div><dt>Record</dt><dd>217-159-4</dd></div><div><dt>Graded picks</dt><dd>380</dd></div><div><dt>Net units</dt><dd class="pos">+66.15u</dd></div><div><dt>ROI</dt><dd>+1.7%</dd></div><div><dt>Win rate</dt><dd>57.7%</dd></div><div><dt>Streak</dt><dd>W3</dd></div></dl><a class="trk-more" href="/u/makaveli66/">Open the full graded history &rarr;</a>
         </div>
     </section>
 
@@ -218,5 +282,49 @@
 </main>
 <script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-ds-nav.8c9e7579ee3f.js"></script>
     <script src="/static/js/tmr-live-chat.js?v=816ec6f0a118"></script>
+<script>
+/* Tracker pilot: refresh the baked ledger figures from the same public endpoints
+   the homepage, /handicappers/ and /pending-picks/ use. Baked values stay if a call fails. */
+(function () {
+  var API = 'https://trustmyrecord-api.onrender.com/api';
+  function j(p) { return fetch(API + p, { cache: 'no-store' }).then(function (r) { if (!r.ok) throw 0; return r.json(); }); }
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function n(v) { return Number(v || 0).toLocaleString('en-US'); }
+  function u(v) { v = Number(v || 0); return (v > 0 ? '+' : '') + v.toFixed(2) + 'u'; }
+  function w(r) { return r.wins + '-' + r.losses + (r.pushes ? '-' + r.pushes : ''); }
+  function set(id, v) { var el = document.getElementById(id); if (el) el.textContent = v; }
+  function pt(iso) {
+    try { return new Date(iso).toLocaleString('en-US', { timeZone: 'America/Los_Angeles', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) + ' PT'; } catch (_) { return ''; }
+  }
+  j('/users/directory-metrics').then(function (d) {
+    var m = d.metrics; set('trkGraded', n(m.total_graded_picks)); set('trkVerified', n(m.verified_handicappers));
+    if (d.generated_at) set('trkUpd', 'Updated ' + pt(d.generated_at));
+  }).catch(function () {});
+  j('/transparency/pending-picks').then(function (d) {
+    set('trkPending', n(d.totals.pending));
+    var by = {}; (d.totals.leagues || []).forEach(function (l) { by[l.id] = l.count; });
+    document.querySelectorAll('#trkChips [data-sport]').forEach(function (a) {
+      var i = a.querySelector('i'), c = by[a.getAttribute('data-sport')];
+      if (!i) return; if (c) { i.hidden = false; i.textContent = c + ' pending'; } else { i.hidden = true; i.textContent = ''; }
+    });
+  }).catch(function () {});
+  j('/users/leaderboard?sortBy=rank&limit=5').then(function (d) {
+    var rows = (d.leaderboard || []).slice(0, 5); if (!rows.length) return;
+    document.getElementById('trkLb').innerHTML = rows.map(function (r) {
+      return '<li><span class="trk-rk">' + esc(r.official_rank) + '</span><a class="trk-nm" href="/u/' + encodeURIComponent(r.username) + '/">' + esc(r.username) +
+        '</a><span class="trk-rec">' + esc(w(r)) + '</span><span class="trk-u ' + (r.net_units > 0 ? 'pos' : 'neg') + '">' + u(r.net_units) + '</span></li>';
+    }).join('');
+    var t = rows[0], q = (d.ranking && d.ranking.qualified_count) || '', s = t.current_streak;
+    var href = '/u/' + encodeURIComponent(t.username) + '/';
+    document.getElementById('trkRecord').innerHTML = '<h2>What a verified record looks like</h2>' +
+      '<div class="trk-rec-head"><span class="trk-badge">#' + esc(t.official_rank) + ' of ' + esc(q) + ' qualified</span><a class="trk-rec-name" href="' + href + '">' + esc(t.username) + '</a></div>' +
+      '<dl class="trk-rec-grid"><div><dt>Record</dt><dd>' + esc(w(t)) + '</dd></div><div><dt>Graded picks</dt><dd>' + n(t.graded_picks) + '</dd></div>' +
+      '<div><dt>Net units</dt><dd class="' + (t.net_units > 0 ? 'pos' : 'neg') + '">' + u(t.net_units) + '</dd></div>' +
+      '<div><dt>ROI</dt><dd>' + (t.roi > 0 ? '+' : '') + Number(t.roi).toFixed(1) + '%</dd></div><div><dt>Win rate</dt><dd>' + Number(t.win_rate).toFixed(1) + '%</dd></div>' +
+      '<div><dt>Streak</dt><dd>' + (s ? (s > 0 ? 'W' + s : 'L' + (-s)) : 'None') + '</dd></div></dl>' +
+      '<a class="trk-more" href="' + href + '">Open the full graded history &rarr;</a>';
+  }).catch(function () {});
+})();
+</script>
 </body>
 </html>
