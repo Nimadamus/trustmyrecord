@@ -173,7 +173,7 @@
       /*FMENU nhl*/ ['/nhl/senators-maple-leafs-stutzle-vs-nylander/', 'NHL', '/matchup-of-the-day/nhl/'],
       /* Added 2026-09-07 with the tennis section. Same stable-door pattern:
          /matchup-of-the-day/tennis/ bakes with the newest tennis Game File. */
-      /*FMENU tennis*/ ['/tennis/yuan-han-opening-round/', 'Tennis', '/matchup-of-the-day/tennis/'],
+      /*FMENU tennis*/ ['/tennis/zongyu-jing-opening-round/', 'Tennis', '/matchup-of-the-day/tennis/'],
       /* Added 2026-09-08, the day the soccer lane published its first Game
          File. The row went in only once /matchup-of-the-day/soccer/ was baked
          and serving: a menu entry pointing at a door that does not exist yet
