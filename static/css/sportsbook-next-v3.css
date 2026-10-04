@@ -17,7 +17,7 @@ html.sbn-v3 .sbn-toolbar {
     background: var(--sbn-panel);
     border: 1px solid var(--sbn-line);
     border-bottom: 0;
-    border-radius: 10px 10px 0 0;
+    border-radius: 11px 11px 0 0;
 }
 
 /* the sport is a label, not another tab: it gets its own cell and a divider */
@@ -26,9 +26,9 @@ html.sbn-v3 .sbn-boardname {
     display: flex;
     align-items: center;
     flex: 0 0 auto;
-    padding: 0 14px;
+    padding: 0 15px;
     border-right: 1px solid var(--sbn-line);
-    font-size: 13px;
+    font-size: 14.5px;
     font-weight: 800;
     letter-spacing: .08em;
     text-transform: uppercase;
@@ -61,14 +61,14 @@ html.sbn-v3 .sbn-cats::-webkit-scrollbar { display: none; }
 html.sbn-v3 .sbn-cat {
     position: relative;
     align-items: baseline;
-    gap: 8px;
-    height: 40px;
-    padding: 0 18px;
+    gap: 9px;
+    height: 44px;
+    padding: 0 20px;
     border: 0;
     border-radius: 0;
     background: transparent;
     color: #8ba3bd;
-    font-size: 12.5px;
+    font-size: 14px;
     font-weight: 600;
     letter-spacing: 0;
     transition: color .12s ease, background .12s ease;
@@ -81,7 +81,7 @@ html.sbn-v3 .sbn-cat + .sbn-cat::before {
     left: 0;
     top: 50%;
     width: 1px;
-    height: 16px;
+    height: 18px;
     transform: translateY(-50%);
     background: rgba(255, 255, 255, 0.07);
 }
@@ -113,7 +113,7 @@ html.sbn-v3 .sbn-cat i {
     border-radius: 0;
     background: none;
     color: #66788f;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
     font-variant-numeric: tabular-nums;
 }
@@ -122,11 +122,11 @@ html.sbn-v3 .sbn-cat.is-on i { background: none; color: rgba(34, 211, 238, 0.78)
 /* the padding comes back in as the toolbar narrows, so ten markets still fit a
    line before the bar has to wrap */
 @media (max-width: 1360px) {
-    html.sbn-v3 .sbn-cat { padding: 0 14px; gap: 7px; }
+    html.sbn-v3 .sbn-cat { padding: 0 15px; gap: 8px; }
     html.sbn-v3 .sbn-cat::after { left: 11px; right: 11px; }
 }
 @media (max-width: 1180px) {
-    html.sbn-v3 .sbn-cat { padding: 0 12px; }
+    html.sbn-v3 .sbn-cat { padding: 0 13px; }
     html.sbn-v3 .sbn-cat::after { left: 9px; right: 9px; }
 }
 @media (max-width: 720px) {
@@ -141,16 +141,16 @@ html.sbn-v3 .sbn-cat.is-on i { background: none; color: rgba(34, 211, 238, 0.78)
 html.sbn-v3 .sbn-headtally {
     text-align: left;
     color: #6f7c8e;
-    font-size: 10px;
+    font-size: 11px;
     letter-spacing: .12em;
 }
 html.sbn-v3 .sbn-tally {
     align-self: stretch;
     display: flex;
     align-items: center;
-    padding: 0 14px;
+    padding: 0 15px;
     border-left: 1px solid var(--sbn-line);
-    font-size: 10.5px;
+    font-size: 11.5px;
     letter-spacing: .1em;
     color: #6f7c8e;
 }
@@ -158,12 +158,12 @@ html.sbn-v3 .sbn-tally {
 /* the column headers close the panel rather than floating under it */
 html.sbn-v3 .sbn-colhead {
     top: 56px;
-    padding: 7px 13px;
-    margin: 0 0 6px;
+    padding: 8px 14px;
+    margin: 0 0 7px;
     background: var(--sbn-panel2);
     border: 1px solid var(--sbn-line);
-    border-radius: 0 0 10px 10px;
-    font-size: 10px;
+    border-radius: 0 0 11px 11px;
+    font-size: 11px;
     letter-spacing: .16em;
     color: #93a1b2;
 }
@@ -174,40 +174,40 @@ html.sbn-v3 .sbn-colhead {
    that ties it to the grid instead of leaving a gap. */
 html.sbn-v3 .sbn-colhead,
 html.sbn-v3 .sbn-trow {
-    grid-template-columns: minmax(0, 205px) repeat(3, minmax(104px, 1fr));
-    gap: 6px;
+    grid-template-columns: minmax(0, 226px) repeat(3, minmax(114px, 1fr));
+    gap: 7px;
 }
 html.sbn-v3 .sbn-trow {
-    height: 44px;
+    height: 48px;
     padding-left: 2px;
-    border-radius: 6px;
+    border-radius: 7px;
     transition: background .1s ease;
 }
 html.sbn-v3 .sbn-trow:hover { background: rgba(255, 255, 255, 0.022); }
 html.sbn-v3 .sbn-trow + .sbn-trow { margin-top: 4px; }
-html.sbn-v3 .sbn-tname { gap: 9px; padding-right: 12px; }
-html.sbn-v3 .sbn-tname b { font-size: 14.5px; line-height: 17px; }
-html.sbn-v3 .sbn-crest { flex-basis: 26px; width: 26px; height: 26px; }
+html.sbn-v3 .sbn-tname { gap: 10px; padding-right: 13px; }
+html.sbn-v3 .sbn-tname b { font-size: 16px; line-height: 18.5px; }
+html.sbn-v3 .sbn-crest { flex-basis: 29px; width: 29px; height: 29px; }
 
 /* ---- 4. Denser rows, same breathing room ---------------------------------- */
 html.sbn-v3 .sbn-row {
-    padding: 5px 11px 6px;
+    padding: 6px 12px 7px;
     margin: 0 0 4px;
-    border-radius: 9px;
+    border-radius: 10px;
     background: var(--sbn-panel);
     border-color: rgba(255, 255, 255, 0.055);
 }
 html.sbn-v3 .sbn-row:hover { border-color: rgba(255, 255, 255, 0.13); }
 /* The All markets pill measures 20px (14 line + 4 padding + 2 border). In a
    19px row that centres at -0.5px and put the whole card on a half pixel. */
-html.sbn-v3 .sbn-rowtop { height: 20px; }
+html.sbn-v3 .sbn-rowtop { height: 22px; }
 html.sbn-v3 .sbn-teams { margin-top: 2px; }
-html.sbn-v3 .sbn-rowtime { font-size: 10.5px; line-height: 14px; letter-spacing: .06em; color: #7b8798; }
+html.sbn-v3 .sbn-rowtime { font-size: 11.5px; line-height: 15.5px; letter-spacing: .06em; color: #7b8798; }
 html.sbn-v3 .sbn-deep {
-    padding: 2px 9px;
-    font-size: 10.5px;
-    line-height: 14px;
-    border-radius: 6px;
+    padding: 2px 10px;
+    font-size: 11.5px;
+    line-height: 15.5px;
+    border-radius: 7px;
     border-color: rgba(255, 255, 255, 0.1);
     color: #8fa3b8;
 }
@@ -218,20 +218,20 @@ html.sbn-v3 .sbn-deep b { color: var(--sbn-text2); opacity: 1; }
    Shorter, tighter corners, a hairline that reads as an edge rather than a box,
    and a hover that lifts the surface instead of outlining it. */
 html.sbn-v3 .sbn-chip {
-    height: 44px;
-    padding: 0 5px;
-    border-radius: 5px;
+    height: 48px;
+    padding: 0 6px;
+    border-radius: 6px;
     border-color: rgba(255, 255, 255, 0.075);
     background: #191f29;
     /* rows: 19 + 6 + 13 = 38, and 44 - 38 = 6, so the content still centres on a
        whole pixel, which is what keeps the numbers crisp */
-    grid-template-rows: 19px 13px;
-    row-gap: 6px;
+    grid-template-rows: 21px 14px;
+    row-gap: 7px;
 }
 /* A one-row cell needs its own even remainder: 44 - 19 is odd, which put every
    moneyline price on a half pixel. 44 - 20 is even. */
-html.sbn-v3 .sbn-chip.is-single { grid-template-rows: 20px; row-gap: 0; }
-html.sbn-v3 .sbn-chip.is-single .sbn-chip-top { line-height: 20px; }
+html.sbn-v3 .sbn-chip.is-single { grid-template-rows: 22px; row-gap: 0; }
+html.sbn-v3 .sbn-chip.is-single .sbn-chip-top { line-height: 22px; }
 html.sbn-v3 .sbn-chip:hover {
     background: #222b39;
     border-color: rgba(255, 255, 255, 0.18);
@@ -247,29 +247,29 @@ html.sbn-v3 .sbn-chip.is-off {
 
 /* ---- 3. The numbers -------------------------------------------------------- */
 html.sbn-v3 .sbn-chip-top {
-    line-height: 19px;
-    font-size: 16px;
+    line-height: 21px;
+    font-size: 17.5px;
     font-weight: 600;
     letter-spacing: -0.012em;
     color: #eef2f7;
 }
 html.sbn-v3 .sbn-chip-bot {
-    line-height: 13px;
-    font-size: 12.5px;
+    line-height: 14.5px;
+    font-size: 14px;
     font-weight: 600;
     color: #92cfa8;
 }
 html.sbn-v3 .sbn-chip .sbn-chip-bot.is-line { color: #aab6c6; }
 
 /* ---- 7. Pick slip: only enough to match the new cells ---------------------- */
-html.sbn-v3 .sbn-slip { border-radius: 10px; }
-html.sbn-v3 .sbn-sliphead { border-radius: 10px 10px 0 0; }
+html.sbn-v3 .sbn-slip { border-radius: 11px; }
+html.sbn-v3 .sbn-sliphead { border-radius: 11px 11px 0 0; }
 
 /* ---- Responsive ------------------------------------------------------------ */
 @media (max-width: 1180px) {
     html.sbn-v3 .sbn-colhead,
-    html.sbn-v3 .sbn-trow { grid-template-columns: minmax(0, 150px) repeat(3, minmax(96px, 1fr)); }
-    html.sbn-v3 .sbn-chip-top { font-size: 15px; }
+    html.sbn-v3 .sbn-trow { grid-template-columns: minmax(0, 165px) repeat(3, minmax(106px, 1fr)); }
+    html.sbn-v3 .sbn-chip-top { font-size: 16.5px; }
 }
 @media (max-width: 1023px) {
     html.sbn-v3 .sbn-colhead { top: 0; }
@@ -318,10 +318,10 @@ html.sbn-v3 .sbn-sliphead { border-radius: 10px 10px 0 0; }
 html.sbn-v3 .sbn-loosetally {
     /* line-height normal on a 10px font measured 11.5px and put every ladder
        card on a half pixel, which is what makes the numbers render soft */
-    line-height: 14px;
-    padding: 0 13px 8px;
+    line-height: 15.5px;
+    padding: 0 14px 9px;
     color: #6f7c8e;
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 700;
     letter-spacing: .12em;
     text-transform: uppercase;
@@ -332,35 +332,35 @@ html.sbn-v3 .sbn-loosetally {
    then a track of equal-width rungs. Fixed rung width is what stops a ladder
    reading as a wall: the eye can step along it. */
 html.sbn-v3 .sbn-strip {
-    grid-template-columns: 205px minmax(0, 1fr);
-    gap: 6px;
-    height: 44px;
+    grid-template-columns: 226px minmax(0, 1fr);
+    gap: 7px;
+    height: 48px;
 }
 html.sbn-v3 .sbn-strip + .sbn-strip { margin-top: 4px; }
-html.sbn-v3 .sbn-striplabel { gap: 9px; padding-right: 12px; }
-html.sbn-v3 .sbn-striplabel b { font-size: 14px; line-height: 17px; font-weight: 700; }
+html.sbn-v3 .sbn-striplabel { gap: 10px; padding-right: 13px; }
+html.sbn-v3 .sbn-striplabel b { font-size: 15.5px; line-height: 18.5px; font-weight: 700; }
 html.sbn-v3 .sbn-striptrack {
     grid-auto-columns: minmax(0, 1fr);
-    gap: 5px;
+    gap: 6px;
 }
-html.sbn-v3 .sbn-striptrack .sbn-chip { height: 44px; }
+html.sbn-v3 .sbn-striptrack .sbn-chip { height: 48px; }
 
 /* the overflow rung stops pretending to be a price and becomes a control */
 html.sbn-v3 .sbn-striptrack .sbn-more {
-    height: 44px;
-    padding: 0 10px;
+    height: 48px;
+    padding: 0 11px;
     gap: 4px;
     border: 1px dashed rgba(255, 255, 255, 0.16);
-    border-radius: 5px;
+    border-radius: 6px;
     background: transparent;
     color: #8fa3b8;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
     letter-spacing: .04em;
 }
 html.sbn-v3 .sbn-striptrack .sbn-more::after {
     content: 'more';
-    font-size: 9.5px;
+    font-size: 10.5px;
     font-weight: 600;
     letter-spacing: .1em;
     text-transform: uppercase;
@@ -376,9 +376,9 @@ html.sbn-v3 .sbn-striptrack .sbn-more:hover {
 /* ---- Player props ----------------------------------------------------------
    The player leads, the market supports. One string of identical weight was the
    whole problem on this tab. */
-html.sbn-v3 .sbn-strip.is-prop { height: 48px; }
+html.sbn-v3 .sbn-strip.is-prop { height: 53px; }
 html.sbn-v3 .sbn-strip.is-prop .sbn-chip,
-html.sbn-v3 .sbn-strip.is-prop .sbn-more { height: 48px; }
+html.sbn-v3 .sbn-strip.is-prop .sbn-more { height: 53px; }
 html.sbn-v3 .sbn-striplabel b {
     display: flex;
     flex-direction: column;
@@ -387,9 +387,9 @@ html.sbn-v3 .sbn-striplabel b {
     -webkit-line-clamp: none;
 }
 html.sbn-v3 .sbn-propwho {
-    font-size: 13.5px;
+    font-size: 15px;
     font-weight: 700;
-    line-height: 16px;
+    line-height: 17.5px;
     color: var(--sbn-text);
     overflow: hidden;
     text-overflow: ellipsis;
@@ -397,9 +397,9 @@ html.sbn-v3 .sbn-propwho {
 }
 html.sbn-v3 .sbn-striplabel b i {
     font-style: normal;
-    font-size: 10.5px;
+    font-size: 11.5px;
     font-weight: 600;
-    line-height: 13px;
+    line-height: 14.5px;
     letter-spacing: .06em;
     text-transform: uppercase;
     color: #7b8798;
@@ -424,21 +424,21 @@ html.sbn-v3 .sbn-striprest {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 7px;
+    gap: 8px;
     width: auto;
-    margin: 8px 0 1px;
-    padding: 8px 14px;
+    margin: 9px 0 1px;
+    padding: 9px 15px;
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 7px;
+    border-radius: 8px;
     background: rgba(255, 255, 255, 0.022);
     color: var(--sbn-text2);
-    font-size: 11.5px;
+    font-size: 12.5px;
     font-weight: 700;
     letter-spacing: .03em;
 }
 html.sbn-v3 .sbn-striprest::after {
     content: '';
-    width: 6px; height: 6px;
+    width: 7px; height: 7px;
     border-right: 1.5px solid currentColor;
     border-bottom: 1.5px solid currentColor;
     transform: rotate(-45deg) translateY(-1px);
@@ -450,14 +450,14 @@ html.sbn-v3 .sbn-striprest:hover {
     color: var(--sbn-accent);
 }
 html.sbn-v3 .sbn-norow {
-    padding: 14px 2px;
+    padding: 15px 2px;
     color: #6f7c8e;
-    font-size: 12px;
-    line-height: 18px;
+    font-size: 13px;
+    line-height: 20px;
 }
 
 @media (max-width: 1180px) {
-    html.sbn-v3 .sbn-strip { grid-template-columns: 150px minmax(0, 1fr); }
+    html.sbn-v3 .sbn-strip { grid-template-columns: 165px minmax(0, 1fr); }
 }
 @media (max-width: 720px) {
     html.sbn-v3 .sbn-strip { grid-template-columns: 108px minmax(0, 1fr); gap: 5px; height: 42px; }
@@ -476,7 +476,7 @@ html.sbn-v3 .sbn-norow {
 /* keep a ladder rung a rung: with only two rungs a 1fr track stretched each
    cell to 575px, which is why Player Props read as two slabs per player */
 html.sbn-v3 .sbn-striptrack {
-    grid-auto-columns: minmax(0, 168px);
+    grid-auto-columns: minmax(0, 185px);
     justify-content: start;
 }
 
@@ -485,39 +485,39 @@ html.sbn-v3 .sbn-striptrack {
  * type, same accent; the panel simply stops being cramped.
  * ========================================================================== */
 html.sbn-v3 .sbn-slip {
-    border-radius: 12px;
+    border-radius: 13px;
     border-color: rgba(255, 255, 255, 0.09);
 }
 html.sbn-v3 .sbn-sliphead {
-    gap: 10px;
-    padding: 14px 16px;
-    border-radius: 12px 12px 0 0;
+    gap: 11px;
+    padding: 15px 18px;
+    border-radius: 13px 13px 0 0;
     background: var(--sbn-panel2);
 }
 html.sbn-v3 .sbn-sliphead h3 {
-    font-size: 12.5px;
-    line-height: 18px;
+    font-size: 14px;
+    line-height: 20px;
     font-weight: 800;
     letter-spacing: .14em;
     color: var(--sbn-text2);
 }
 html.sbn-v3 .sbn-slipcount {
-    min-width: 22px;
-    height: 22px;
-    padding: 0 7px;
-    border-radius: 999px;
-    font-size: 12px;
+    min-width: 24px;
+    height: 24px;
+    padding: 0 8px;
+    border-radius: 1099px;
+    font-size: 13px;
     font-weight: 800;
-    line-height: 22px;
+    line-height: 24px;
 }
 html.sbn-v3 .sbn-clear {
     margin-left: auto;
-    padding: 5px 11px;
+    padding: 6px 12px;
     border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 7px;
+    border-radius: 8px;
     background: transparent;
     color: #8fa3b8;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
     letter-spacing: .05em;
     text-transform: uppercase;
@@ -528,20 +528,20 @@ html.sbn-v3 .sbn-clear:hover { border-color: rgba(248, 113, 113, 0.5); color: va
 html.sbn-v3 .sbn-mode {
     display: flex;
     gap: 3px;
-    margin: 12px 16px 0;
+    margin: 13px 18px 0;
     padding: 3px;
     border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 9px;
+    border-radius: 10px;
     background: rgba(0, 0, 0, 0.25);
 }
 html.sbn-v3 .sbn-modebtn {
     flex: 1 1 0;
-    height: 32px;
+    height: 35px;
     border: 0;
-    border-radius: 6px;
+    border-radius: 7px;
     background: transparent;
     color: #8fa3b8;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 700;
     letter-spacing: .04em;
     cursor: pointer;
@@ -550,40 +550,40 @@ html.sbn-v3 .sbn-modebtn {
 html.sbn-v3 .sbn-modebtn:hover { color: var(--sbn-text2); background: rgba(255, 255, 255, 0.045); }
 html.sbn-v3 .sbn-modebtn.is-on { background: var(--sbn-accent); color: var(--sbn-ink); }
 
-html.sbn-v3 .sbn-sliplist { padding: 12px 16px 0; }
+html.sbn-v3 .sbn-sliplist { padding: 13px 18px 0; }
 
 /* one selection, with the bet first and its context under it */
 html.sbn-v3 .sbn-sliprow {
     position: relative;
-    padding: 12px 13px;
+    padding: 13px 14px;
     border: 1px solid rgba(255, 255, 255, 0.075);
-    border-radius: 10px;
+    border-radius: 11px;
     background: rgba(255, 255, 255, 0.022);
 }
-html.sbn-v3 .sbn-sliprow + .sbn-sliprow { margin-top: 9px; }
+html.sbn-v3 .sbn-sliprow + .sbn-sliprow { margin-top: 10px; }
 html.sbn-v3 .sbn-slipsel {
-    padding-right: 26px;
-    font-size: 14.5px;
-    line-height: 19px;
+    padding-right: 29px;
+    font-size: 16px;
+    line-height: 21px;
     font-weight: 700;
     color: var(--sbn-text);
 }
 html.sbn-v3 .sbn-slipgame {
     margin-top: 3px;
-    font-size: 12px;
-    line-height: 16px;
+    font-size: 13px;
+    line-height: 17.5px;
     color: #8b97a8;
 }
 html.sbn-v3 .sbn-slipmeta {
-    margin-top: 6px;
-    font-size: 11px;
-    line-height: 15px;
+    margin-top: 7px;
+    font-size: 12px;
+    line-height: 16.5px;
     letter-spacing: .05em;
     text-transform: uppercase;
     color: #6f7c8e;
 }
 html.sbn-v3 .sbn-slipmeta b {
-    font-size: 13px;
+    font-size: 14.5px;
     font-weight: 800;
     letter-spacing: 0;
     color: #92cfa8;
@@ -591,13 +591,13 @@ html.sbn-v3 .sbn-slipmeta b {
 html.sbn-v3 .sbn-slipx {
     position: absolute;
     top: 9px; right: 9px;
-    width: 24px; height: 24px;
+    width: 26px; height: 26px;
     border: 1px solid transparent;
-    border-radius: 7px;
+    border-radius: 8px;
     background: transparent;
     color: #6f7c8e;
-    font-size: 17px;
-    line-height: 22px;
+    font-size: 18.5px;
+    line-height: 24px;
     cursor: pointer;
 }
 html.sbn-v3 .sbn-slipx:hover { border-color: rgba(248, 113, 113, 0.45); background: rgba(248, 113, 113, 0.1); color: var(--sbn-red); }
@@ -606,37 +606,37 @@ html.sbn-v3 .sbn-slipx:hover { border-color: rgba(248, 113, 113, 0.45); backgrou
 html.sbn-v3 .sbn-slipunits {
     display: flex;
     align-items: center;
-    gap: 7px;
-    margin-top: 11px;
-    padding-top: 11px;
+    gap: 8px;
+    margin-top: 12px;
+    padding-top: 12px;
     border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 html.sbn-v3 .sbn-slipunits label {
-    font-size: 10.5px;
+    font-size: 11.5px;
     font-weight: 700;
     letter-spacing: .1em;
     text-transform: uppercase;
     color: #6f7c8e;
 }
 html.sbn-v3 .sbn-step {
-    width: 28px; height: 28px;
+    width: 31px; height: 31px;
     border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 7px;
+    border-radius: 8px;
     background: rgba(255, 255, 255, 0.03);
     color: var(--sbn-text2);
-    font-size: 15px;
-    line-height: 26px;
+    font-size: 16.5px;
+    line-height: 28.5px;
     cursor: pointer;
 }
 html.sbn-v3 .sbn-step:hover { border-color: rgba(34, 211, 238, 0.45); color: var(--sbn-accent); background: rgba(34, 211, 238, 0.08); }
 html.sbn-v3 .sbn-slipunits input {
-    width: 52px; height: 28px;
+    width: 57px; height: 31px;
     border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 7px;
+    border-radius: 8px;
     background: rgba(0, 0, 0, 0.28);
     color: var(--sbn-text);
     font-family: var(--sbn-font);
-    font-size: 13.5px;
+    font-size: 15px;
     font-weight: 700;
     text-align: center;
     font-variant-numeric: tabular-nums;
@@ -644,7 +644,7 @@ html.sbn-v3 .sbn-slipunits input {
 html.sbn-v3 .sbn-slipunits input:focus { outline: none; border-color: rgba(34, 211, 238, 0.6); }
 html.sbn-v3 .sbn-slipcalc {
     margin-left: auto;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 700;
     color: #8b97a8;
     font-variant-numeric: tabular-nums;
@@ -654,13 +654,13 @@ html.sbn-v3 .sbn-slipcalc {
 html.sbn-v3 .sbn-sliptotals {
     display: flex;
     justify-content: space-between;
-    gap: 10px;
-    margin: 14px 16px 0;
-    padding: 12px 13px;
+    gap: 11px;
+    margin: 15px 18px 0;
+    padding: 13px 14px;
     border: 1px solid rgba(255, 255, 255, 0.07);
-    border-radius: 10px;
+    border-radius: 11px;
     background: rgba(0, 0, 0, 0.22);
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
     letter-spacing: .07em;
     text-transform: uppercase;
@@ -669,7 +669,7 @@ html.sbn-v3 .sbn-sliptotals {
 html.sbn-v3 .sbn-sliptotals span { display: flex; flex-direction: column; gap: 4px; }
 html.sbn-v3 .sbn-sliptotals span:last-child { text-align: right; }
 html.sbn-v3 .sbn-sliptotals b {
-    font-size: 17px;
+    font-size: 18.5px;
     font-weight: 800;
     letter-spacing: -0.01em;
     text-transform: none;
@@ -679,16 +679,16 @@ html.sbn-v3 .sbn-sliptotals b {
 html.sbn-v3 .sbn-sliptotals span:last-child b { color: #92cfa8; }
 html.sbn-v3 .sbn-submit {
     display: block;
-    width: calc(100% - 32px);
-    margin: 12px 16px 16px;
+    width: calc(100% - 35px);
+    margin: 13px 18px 18px;
     padding: 0;
-    height: 46px;
+    height: 51px;
     border: 0;
-    border-radius: 10px;
+    border-radius: 11px;
     background: var(--sbn-accent);
     color: var(--sbn-ink);
     font-family: var(--sbn-font);
-    font-size: 14px;
+    font-size: 15.5px;
     font-weight: 800;
     letter-spacing: .04em;
     cursor: pointer;
@@ -702,26 +702,26 @@ html.sbn-v3 .sbn-slipempty {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 6px;
-    margin: 0 0 16px;
-    padding: 30px 18px;
+    gap: 7px;
+    margin: 0 0 18px;
+    padding: 33px 20px;
     border: 1px dashed rgba(255, 255, 255, 0.11);
-    border-radius: 10px;
+    border-radius: 11px;
     background: rgba(255, 255, 255, 0.014);
     color: #7b8798;
-    font-size: 12.5px;
-    line-height: 18px;
+    font-size: 14px;
+    line-height: 20px;
     text-align: center;
 }
 html.sbn-v3 .sbn-slipempty strong {
-    font-size: 14px;
-    line-height: 20px;
+    font-size: 15.5px;
+    line-height: 22px;
     font-weight: 700;
     color: var(--sbn-text2);
 }
 
 @media (max-width: 1023px) {
-    html.sbn-v3 .sbn-submit { height: 48px; }
+    html.sbn-v3 .sbn-submit { height: 53px; }
 }
 @media (max-width: 720px) {
     html.sbn-v3 .sbn-sliphead { padding: 12px 14px; }
@@ -758,23 +758,23 @@ html.sbn-v3 .sbn-chip {
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
-    gap: 8px;
-    height: 42px;              /* 42 - 20 line box = 22, even, so text stays crisp */
-    padding: 0 11px;
+    gap: 9px;
+    height: 46px;              /* 42 - 20 line box = 22, even, so text stays crisp */
+    padding: 0 12px;
     border-radius: 4px;
     row-gap: 0;
 }
-html.sbn-v3 .sbn-chip.is-single { height: 42px; }
+html.sbn-v3 .sbn-chip.is-single { height: 46px; }
 html.sbn-v3 .sbn-chip-top,
 html.sbn-v3 .sbn-chip-bot {
     flex: 0 1 auto;
     min-width: 0;
-    line-height: 20px;
+    line-height: 22px;
     justify-content: flex-start;
 }
 /* the line leads */
 html.sbn-v3 .sbn-chip-top {
-    font-size: 15px;
+    font-size: 16.5px;
     font-weight: 700;
     letter-spacing: -0.01em;
     color: #f0f4f9;
@@ -782,7 +782,7 @@ html.sbn-v3 .sbn-chip-top {
 /* the price closes the row, hard right */
 html.sbn-v3 .sbn-chip-bot {
     justify-content: flex-end;
-    font-size: 14px;
+    font-size: 15.5px;
     font-weight: 700;
     color: #7fd6a0;
 }
@@ -792,13 +792,13 @@ html.sbn-v3 .sbn-chip-bot {
 html.sbn-v3 .sbn-chip .sbn-chip-bot.is-line {
     order: -1;
     justify-content: flex-start;
-    font-size: 15px;
+    font-size: 16.5px;
     font-weight: 700;
     color: #f0f4f9;
 }
 html.sbn-v3 .sbn-chip:has(.sbn-chip-bot.is-line) .sbn-chip-top {
     justify-content: flex-end;
-    font-size: 14px;
+    font-size: 15.5px;
     font-weight: 700;
     color: #7fd6a0;
 }
@@ -806,7 +806,7 @@ html.sbn-v3 .sbn-chip:has(.sbn-chip-bot.is-line) .sbn-chip-top {
 html.sbn-v3 .sbn-chip.is-single .sbn-chip-top {
     width: 100%;
     justify-content: space-between;
-    font-size: 15px;
+    font-size: 16.5px;
     color: #7fd6a0;
 }
 html.sbn-v3 .sbn-chip.is-off .sbn-chip-top { color: #566173; }
@@ -815,26 +815,26 @@ html.sbn-v3 .sbn-chip.is-sel .sbn-chip-bot,
 html.sbn-v3 .sbn-chip.is-sel .sbn-chip-bot.is-line { color: var(--sbn-ink); }
 
 /* rows tighten to match the shorter cell */
-html.sbn-v3 .sbn-trow { height: 42px; }
-html.sbn-v3 .sbn-strip { height: 42px; }
-html.sbn-v3 .sbn-strip.is-prop { height: 46px; }
-html.sbn-v3 .sbn-striptrack .sbn-chip { height: 42px; }
+html.sbn-v3 .sbn-trow { height: 46px; }
+html.sbn-v3 .sbn-strip { height: 46px; }
+html.sbn-v3 .sbn-strip.is-prop { height: 51px; }
+html.sbn-v3 .sbn-striptrack .sbn-chip { height: 46px; }
 html.sbn-v3 .sbn-strip.is-prop .sbn-chip,
-html.sbn-v3 .sbn-strip.is-prop .sbn-more { height: 46px; }
-html.sbn-v3 .sbn-striptrack .sbn-more { height: 42px; border-radius: 4px; }
-html.sbn-v3 .sbn-colhead span:not(:first-child) { text-align: left; padding-left: 11px; }
+html.sbn-v3 .sbn-strip.is-prop .sbn-more { height: 51px; }
+html.sbn-v3 .sbn-striptrack .sbn-more { height: 46px; border-radius: 4px; }
+html.sbn-v3 .sbn-colhead span:not(:first-child) { text-align: left; padding-left: 12px; }
 
 /* the ladder rung is narrower now that its content is one row */
-html.sbn-v3 .sbn-striptrack { grid-auto-columns: minmax(0, 148px); }
+html.sbn-v3 .sbn-striptrack { grid-auto-columns: minmax(0, 163px); }
 
 /* pick slip: the price leaves the middle of the meta line and closes the row,
    the way a slip states the bet then its price */
-html.sbn-v3 .sbn-slipmeta b { float: right; margin-left: 10px; font-size: 14px; }
+html.sbn-v3 .sbn-slipmeta b { float: right; margin-left: 11px; font-size: 15.5px; }
 
 @media (max-width: 1180px) {
-    html.sbn-v3 .sbn-chip { padding: 0 9px; gap: 6px; }
-    html.sbn-v3 .sbn-chip-top { font-size: 14px; }
-    html.sbn-v3 .sbn-chip-bot { font-size: 13px; }
+    html.sbn-v3 .sbn-chip { padding: 0 10px; gap: 7px; }
+    html.sbn-v3 .sbn-chip-top { font-size: 15.5px; }
+    html.sbn-v3 .sbn-chip-bot { font-size: 14.5px; }
 }
 @media (max-width: 720px) {
     /* too narrow for one row: the stack comes back, but left aligned */
@@ -863,10 +863,10 @@ html.sbn-v3 .sbn-slipmeta b { float: right; margin-left: 10px; font-size: 14px; 
    line and the price were being squeezed inside the rung and clipping. */
 html.sbn-v3 .sbn-chip-top,
 html.sbn-v3 .sbn-chip-bot { flex: 0 0 auto; }
-html.sbn-v3 .sbn-striptrack { grid-auto-columns: minmax(0, 158px); }
-html.sbn-v3 .sbn-striptrack .sbn-chip { padding: 0 9px; gap: 6px; }
-html.sbn-v3 .sbn-striptrack .sbn-chip .sbn-chip-top { font-size: 14px; }
-html.sbn-v3 .sbn-striptrack .sbn-chip .sbn-chip-bot { font-size: 13px; }
+html.sbn-v3 .sbn-striptrack { grid-auto-columns: minmax(0, 174px); }
+html.sbn-v3 .sbn-striptrack .sbn-chip { padding: 0 10px; gap: 7px; }
+html.sbn-v3 .sbn-striptrack .sbn-chip .sbn-chip-top { font-size: 15.5px; }
+html.sbn-v3 .sbn-striptrack .sbn-chip .sbn-chip-bot { font-size: 14.5px; }
 
 /* Restated last: the rung sizing above is declared after the breakpoints, so it
    was overriding the phone track and clipping every ladder number again. */
@@ -904,9 +904,9 @@ html.sbn-v3 .sbn-striptrack { align-items: stretch; }
 /* An NFL alt-totals rung is only 94px wide, and "O 41.5" plus "-172" at the
    board's type sizes needs 102px, so the price was pushing past the right inset.
    The ladder gets its own slightly tighter type and inset so the pair fits. */
-html.sbn-v3 .sbn-striptrack .sbn-chip { padding: 0 8px; gap: 4px; }
-html.sbn-v3 .sbn-striptrack .sbn-chip .sbn-chip-top { font-size: 13.5px; }
-html.sbn-v3 .sbn-striptrack .sbn-chip .sbn-chip-bot { font-size: 12.5px; }
+html.sbn-v3 .sbn-striptrack .sbn-chip { padding: 0 9px; gap: 4px; }
+html.sbn-v3 .sbn-striptrack .sbn-chip .sbn-chip-top { font-size: 15px; }
+html.sbn-v3 .sbn-striptrack .sbn-chip .sbn-chip-bot { font-size: 14px; }
 
 /* ============================================================================
  * PASS 2 — stop the board reading as a tray of floating cards.
@@ -918,7 +918,7 @@ html.sbn-v3 .sbn-striptrack .sbn-chip .sbn-chip-bot { font-size: 12.5px; }
 html.sbn-v3 .sbn-boardlist {
     border: 1px solid var(--sbn-line);
     border-top: 0;
-    border-radius: 0 0 10px 10px;
+    border-radius: 0 0 11px 11px;
     background: var(--sbn-panel);
     overflow: hidden;
 }
@@ -929,7 +929,7 @@ html.sbn-v3 .sbn-colhead {
 }
 html.sbn-v3 .sbn-row {
     margin: 0;
-    padding: 7px 12px 8px;
+    padding: 8px 13px 9px;
     border: 0;
     border-top: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: 0;
@@ -939,12 +939,12 @@ html.sbn-v3 .sbn-row:first-child { border-top: 0; }
 html.sbn-v3 .sbn-row:hover { background: rgba(255, 255, 255, 0.014); border-color: rgba(255, 255, 255, 0.05); }
 
 /* the kickoff line becomes a quiet caption, not a header bar */
-html.sbn-v3 .sbn-rowtop { height: 18px; }
-html.sbn-v3 .sbn-rowtime { font-size: 10px; letter-spacing: .08em; color: #717d8e; }
+html.sbn-v3 .sbn-rowtop { height: 20px; }
+html.sbn-v3 .sbn-rowtime { font-size: 11px; letter-spacing: .08em; color: #717d8e; }
 html.sbn-v3 .sbn-deep {
-    padding: 1px 8px;
-    font-size: 10px;
-    line-height: 14px;
+    padding: 1px 9px;
+    font-size: 11px;
+    line-height: 15.5px;
     border-radius: 4px;
     border-color: rgba(255, 255, 255, 0.08);
     color: #7f8c9e;
@@ -957,12 +957,12 @@ html.sbn-v3 .sbn-teams { margin-top: 3px; }
 html.sbn-v3 .sbn-colhead,
 html.sbn-v3 .sbn-trow { gap: 4px; }
 html.sbn-v3 .sbn-chip {
-    height: 40px;                    /* 40 - 20 line box = 20, even */
+    height: 44px;                    /* 40 - 20 line box = 20, even */
     border-radius: 4px;
     border-color: rgba(255, 255, 255, 0.06);
     background: #1b222d;
 }
-html.sbn-v3 .sbn-trow { height: 40px; }
+html.sbn-v3 .sbn-trow { height: 44px; }
 html.sbn-v3 .sbn-trow + .sbn-trow { margin-top: 3px; }
 html.sbn-v3 .sbn-chip:hover {
     background: #232d3c;
@@ -984,45 +984,45 @@ html.sbn-v3 .sbn-chip.is-sel:hover { background: rgba(34, 211, 238, 0.18); }
 html.sbn-v3 .sbn-toolbar {
     border: 1px solid var(--sbn-line);
     border-bottom: 1px solid var(--sbn-line);
-    border-radius: 10px 10px 0 0;
+    border-radius: 11px 11px 0 0;
     background: var(--sbn-panel2);
 }
 html.sbn-v3 .sbn-boardname {
-    padding: 0 13px;
-    font-size: 12px;
+    padding: 0 14px;
+    font-size: 13px;
     letter-spacing: .12em;
     color: var(--sbn-text2);
 }
 html.sbn-v3 .sbn-cat {
-    height: 36px;
-    padding: 0 11px;
-    font-size: 12px;
+    height: 40px;
+    padding: 0 12px;
+    font-size: 13px;
     font-weight: 600;
 }
-html.sbn-v3 .sbn-cat i { font-size: 10px; color: #5f6b7c; }
+html.sbn-v3 .sbn-cat i { font-size: 11px; color: #5f6b7c; }
 html.sbn-v3 .sbn-cat.is-on { font-weight: 700; }
 html.sbn-v3 .sbn-cat::after { left: 7px; right: 7px; height: 2px; }
-html.sbn-v3 .sbn-colhead { padding: 6px 12px; font-size: 9.5px; }
+html.sbn-v3 .sbn-colhead { padding: 7px 13px; font-size: 10.5px; }
 
 /* ---- Ladder: a price strip -------------------------------------------------
    Rungs share a surface and sit tight, so the line progression reads across in
    one sweep instead of as a wall of separate tiles. */
-html.sbn-v3 .sbn-strip { height: 40px; }
-html.sbn-v3 .sbn-strip.is-prop { height: 44px; }
-html.sbn-v3 .sbn-striptrack { gap: 3px; grid-auto-columns: minmax(0, 150px); }
+html.sbn-v3 .sbn-strip { height: 44px; }
+html.sbn-v3 .sbn-strip.is-prop { height: 48px; }
+html.sbn-v3 .sbn-striptrack { gap: 3px; grid-auto-columns: minmax(0, 165px); }
 html.sbn-v3 .sbn-striptrack .sbn-chip,
-html.sbn-v3 .sbn-striptrack .sbn-more { height: 40px; }
+html.sbn-v3 .sbn-striptrack .sbn-more { height: 44px; }
 html.sbn-v3 .sbn-strip.is-prop .sbn-chip,
-html.sbn-v3 .sbn-strip.is-prop .sbn-more { height: 44px; }
+html.sbn-v3 .sbn-strip.is-prop .sbn-more { height: 48px; }
 html.sbn-v3 .sbn-striptrack .sbn-more {
     border-style: solid;
     border-color: rgba(255, 255, 255, 0.07);
     background: rgba(255, 255, 255, 0.015);
-    font-size: 10px;
+    font-size: 11px;
 }
 
 /* ---- Pick slip: a touch wider and calmer ---------------------------------- */
-html.sbn-v3 .sbn-shell { grid-template-columns: 150px minmax(0, 1fr) 322px; }
+html.sbn-v3 .sbn-shell { grid-template-columns: 158px minmax(0, 1fr) 322px; }
 html.sbn-v3 .sbn-sliprow { border-color: rgba(255, 255, 255, 0.06); background: rgba(255, 255, 255, 0.016); }
 html.sbn-v3 .sbn-modebtn.is-on { background: rgba(34, 211, 238, 0.16); color: #8ff0ff; box-shadow: inset 0 0 0 1px rgba(34, 211, 238, 0.5); }
 
@@ -1056,23 +1056,23 @@ html.sbn-v3 .sbn-modebtn.is-on { background: rgba(34, 211, 238, 0.16); color: #8
 /* overflow:hidden on the list broke the sticky column header, which then
    clipped the first game. Round the last row instead of clipping the list. */
 html.sbn-v3 .sbn-boardlist { overflow: visible; }
-html.sbn-v3 .sbn-row:last-child { border-radius: 0 0 10px 10px; }
+html.sbn-v3 .sbn-row:last-child { border-radius: 0 0 11px 11px; }
 
 /* the floated price left a doubled separator behind it in the meta line, so the
    price goes back inline and simply carries the weight */
-html.sbn-v3 .sbn-slipmeta b { float: none; margin-left: 0; font-size: 13px; }
+html.sbn-v3 .sbn-slipmeta b { float: none; margin-left: 0; font-size: 14.5px; }
 
 /* The wider slip column was declared without a breakpoint, so the three-column
    shell was still in force at 390px and pushed the page 21px wide. It is a
    desktop rule and now says so. */
 html.sbn-v3 .sbn-shell { grid-template-columns: minmax(0, 1fr); }
 @media (min-width: 1024px) {
-    html.sbn-v3 .sbn-shell { grid-template-columns: 150px minmax(0, 1fr) 322px; }
+    html.sbn-v3 .sbn-shell { grid-template-columns: 158px minmax(0, 1fr) 322px; }
 }
 
 /* A rung needs a floor: at 150px max with no minimum, an NFL alt-totals track
    squeezed the pair until the price crossed the right inset. */
-html.sbn-v3 .sbn-striptrack { grid-auto-columns: minmax(96px, 150px); }
+html.sbn-v3 .sbn-striptrack { grid-auto-columns: minmax(106px, 165px); }
 
 /* stretch the label too, or a 41px label in a 40px row grows the card by a
    pixel and the cards stop matching each other */
@@ -1086,40 +1086,40 @@ html.sbn-v3 .sbn-striplabel { align-self: stretch; }
  * less rounded than a dashboard tile.
  * ========================================================================== */
 html.sbn-v3 .sbn-chip {
-    height: 36px;                    /* 36 - 18 line box = 18, even */
-    padding: 0 10px;
+    height: 40px;                    /* 36 - 18 line box = 18, even */
+    padding: 0 11px;
     border-radius: 3px;
     border-color: rgba(255, 255, 255, 0.055);
     background: #1a212b;
 }
 html.sbn-v3 .sbn-chip-top,
-html.sbn-v3 .sbn-chip-bot { line-height: 18px; }
+html.sbn-v3 .sbn-chip-bot { line-height: 20px; }
 
 /* the selection and its price carry the same weight and size: neither is a
    caption for the other, they are two halves of one quote */
 html.sbn-v3 .sbn-chip-top,
-html.sbn-v3 .sbn-chip .sbn-chip-bot.is-line { font-size: 14px; font-weight: 700; color: #eef2f7; }
+html.sbn-v3 .sbn-chip .sbn-chip-bot.is-line { font-size: 15.5px; font-weight: 700; color: #eef2f7; }
 html.sbn-v3 .sbn-chip-bot,
-html.sbn-v3 .sbn-chip:has(.sbn-chip-bot.is-line) .sbn-chip-top { font-size: 14px; font-weight: 700; color: #86d9a6; }
-html.sbn-v3 .sbn-chip.is-single .sbn-chip-top { font-size: 14px; color: #86d9a6; }
+html.sbn-v3 .sbn-chip:has(.sbn-chip-bot.is-line) .sbn-chip-top { font-size: 15.5px; font-weight: 700; color: #86d9a6; }
+html.sbn-v3 .sbn-chip.is-single .sbn-chip-top { font-size: 15.5px; color: #86d9a6; }
 
-html.sbn-v3 .sbn-trow { height: 36px; }
+html.sbn-v3 .sbn-trow { height: 40px; }
 html.sbn-v3 .sbn-trow + .sbn-trow { margin-top: 3px; }
-html.sbn-v3 .sbn-row { padding: 6px 12px 7px; }
+html.sbn-v3 .sbn-row { padding: 7px 13px 8px; }
 html.sbn-v3 .sbn-chip:hover { background: #212a37; border-color: rgba(255, 255, 255, 0.13); }
 
 /* the header sits on the same inset as the selection it labels */
-html.sbn-v3 .sbn-colhead span:not(:first-child) { padding-left: 10px; }
+html.sbn-v3 .sbn-colhead span:not(:first-child) { padding-left: 11px; }
 
 /* the ladder is the same quote cell, just narrower */
-html.sbn-v3 .sbn-strip { height: 36px; }
-html.sbn-v3 .sbn-strip.is-prop { height: 42px; }
+html.sbn-v3 .sbn-strip { height: 40px; }
+html.sbn-v3 .sbn-strip.is-prop { height: 46px; }
 html.sbn-v3 .sbn-striptrack .sbn-chip,
-html.sbn-v3 .sbn-striptrack .sbn-more { height: 36px; }
+html.sbn-v3 .sbn-striptrack .sbn-more { height: 40px; }
 html.sbn-v3 .sbn-strip.is-prop .sbn-chip,
-html.sbn-v3 .sbn-strip.is-prop .sbn-more { height: 42px; }
+html.sbn-v3 .sbn-strip.is-prop .sbn-more { height: 46px; }
 html.sbn-v3 .sbn-striptrack .sbn-chip .sbn-chip-top,
-html.sbn-v3 .sbn-striptrack .sbn-chip .sbn-chip-bot { font-size: 13px; }
+html.sbn-v3 .sbn-striptrack .sbn-chip .sbn-chip-bot { font-size: 14.5px; }
 
 /* Phones use the SAME one-row quote cell. The stack was a concession to width
    and it is exactly the thing that reads wrong; at 11.5px the pair fits an 84px
@@ -1209,12 +1209,12 @@ html.sbn-v3 .sbn-chip.is-single .sbn-chip-top {
    render through the same chip, so they inherit selection-left / price-right.
    These rules only size the ladder so the pair fits its narrower rung. */
 html.sbn-v3 .sbn-striptrack .sbn-chip {
-    padding: 0 9px;
-    gap: 6px;
+    padding: 0 10px;
+    gap: 7px;
     border-radius: 3px;
 }
 html.sbn-v3 .sbn-striptrack .sbn-chip .sbn-chip-top,
-html.sbn-v3 .sbn-striptrack .sbn-chip .sbn-chip-bot { font-size: 13px; font-weight: 700; }
+html.sbn-v3 .sbn-striptrack .sbn-chip .sbn-chip-bot { font-size: 14.5px; font-weight: 700; }
 html.sbn-v3 .sbn-striptrack .sbn-more {
     border-radius: 3px;
     border-style: dashed;
@@ -1222,32 +1222,32 @@ html.sbn-v3 .sbn-striptrack .sbn-more {
 }
 
 /* the ladder label column lines up with the matchup column on the main board */
-html.sbn-v3 .sbn-strip { grid-template-columns: 205px minmax(0, 1fr); gap: 6px; }
-html.sbn-v3 .sbn-striplabel b { font-size: 13.5px; line-height: 17px; }
+html.sbn-v3 .sbn-strip { grid-template-columns: 226px minmax(0, 1fr); gap: 7px; }
+html.sbn-v3 .sbn-striplabel b { font-size: 15px; line-height: 18.5px; }
 
 /* player props: the player leads, the market is a caption under it */
-html.sbn-v3 .sbn-propwho { font-size: 13px; line-height: 16px; font-weight: 700; }
-html.sbn-v3 .sbn-striplabel b i { font-size: 10px; line-height: 12px; letter-spacing: .07em; }
+html.sbn-v3 .sbn-propwho { font-size: 14.5px; line-height: 17.5px; font-weight: 700; }
+html.sbn-v3 .sbn-striplabel b i { font-size: 11px; line-height: 13px; letter-spacing: .07em; }
 
 /* ---- 9. Pick slip, matched to the flatter board --------------------------- */
-html.sbn-v3 .sbn-slip { border-radius: 8px; }
-html.sbn-v3 .sbn-sliphead { border-radius: 8px 8px 0 0; padding: 13px 15px; }
-html.sbn-v3 .sbn-sliprow { border-radius: 6px; padding: 11px 12px; }
-html.sbn-v3 .sbn-slipsel { font-size: 14px; line-height: 18px; }
-html.sbn-v3 .sbn-slipgame { font-size: 11.5px; line-height: 15px; }
-html.sbn-v3 .sbn-slipmeta { margin-top: 5px; font-size: 10.5px; line-height: 14px; }
-html.sbn-v3 .sbn-slipmeta b { font-size: 13px; font-weight: 800; }
-html.sbn-v3 .sbn-mode { border-radius: 6px; padding: 3px; }
-html.sbn-v3 .sbn-modebtn { height: 30px; border-radius: 4px; font-size: 11.5px; }
-html.sbn-v3 .sbn-step { width: 26px; height: 26px; border-radius: 4px; font-size: 14px; line-height: 24px; }
-html.sbn-v3 .sbn-slipunits input { width: 48px; height: 26px; border-radius: 4px; font-size: 13px; }
-html.sbn-v3 .sbn-sliptotals { border-radius: 6px; padding: 11px 12px; }
-html.sbn-v3 .sbn-sliptotals b { font-size: 18px; }
-html.sbn-v3 .sbn-submit { height: 44px; border-radius: 6px; font-size: 13.5px; }
-html.sbn-v3 .sbn-slipempty { border-radius: 6px; padding: 26px 16px; }
-html.sbn-v3 .sbn-clear { border-radius: 5px; }
-html.sbn-v3 .sbn-slipx { border-radius: 5px; }
-html.sbn-v3 .sbn-striprest { border-radius: 5px; }
+html.sbn-v3 .sbn-slip { border-radius: 9px; }
+html.sbn-v3 .sbn-sliphead { border-radius: 9px 9px 0 0; padding: 14px 16px; }
+html.sbn-v3 .sbn-sliprow { border-radius: 7px; padding: 12px 13px; }
+html.sbn-v3 .sbn-slipsel { font-size: 15.5px; line-height: 20px; }
+html.sbn-v3 .sbn-slipgame { font-size: 12.5px; line-height: 16.5px; }
+html.sbn-v3 .sbn-slipmeta { margin-top: 6px; font-size: 11.5px; line-height: 15.5px; }
+html.sbn-v3 .sbn-slipmeta b { font-size: 14.5px; font-weight: 800; }
+html.sbn-v3 .sbn-mode { border-radius: 7px; padding: 3px; }
+html.sbn-v3 .sbn-modebtn { height: 33px; border-radius: 4px; font-size: 12.5px; }
+html.sbn-v3 .sbn-step { width: 29px; height: 29px; border-radius: 4px; font-size: 15.5px; line-height: 26.5px; }
+html.sbn-v3 .sbn-slipunits input { width: 53px; height: 29px; border-radius: 4px; font-size: 14.5px; }
+html.sbn-v3 .sbn-sliptotals { border-radius: 7px; padding: 12px 13px; }
+html.sbn-v3 .sbn-sliptotals b { font-size: 20px; }
+html.sbn-v3 .sbn-submit { height: 48px; border-radius: 7px; font-size: 15px; }
+html.sbn-v3 .sbn-slipempty { border-radius: 7px; padding: 29px 18px; }
+html.sbn-v3 .sbn-clear { border-radius: 6px; }
+html.sbn-v3 .sbn-slipx { border-radius: 6px; }
+html.sbn-v3 .sbn-striprest { border-radius: 6px; }
 
 /* ---- 8. Mobile, restated last so nothing above overrides it ----------------
    The compromise: the quote columns keep the 74px they need for a readable
@@ -1311,10 +1311,10 @@ html.sbn-v3 .sbn-striprest { border-radius: 5px; }
 /* A six-rung NFL alt-totals track gives each rung about 93px, and "O 41.5" plus
    "-172" at 13px needs 93 exactly, so the price kept crossing the right inset.
    The ladder takes 12.5px and a tighter inset, which fits with room to spare. */
-html.sbn-v3 .sbn-striptrack { grid-auto-columns: minmax(88px, 150px); }
-html.sbn-v3 .sbn-striptrack .sbn-chip { padding: 0 8px; gap: 4px; }
+html.sbn-v3 .sbn-striptrack { grid-auto-columns: minmax(97px, 165px); }
+html.sbn-v3 .sbn-striptrack .sbn-chip { padding: 0 9px; gap: 4px; }
 html.sbn-v3 .sbn-striptrack .sbn-chip .sbn-chip-top,
-html.sbn-v3 .sbn-striptrack .sbn-chip .sbn-chip-bot { font-size: 12.5px; }
+html.sbn-v3 .sbn-striptrack .sbn-chip .sbn-chip-bot { font-size: 14px; }
 
 /* ---- Market column headings, readability only ------------------------------
    Run Line / Total / Moneyline, and the Over / Under headings on the two-column
@@ -1323,13 +1323,13 @@ html.sbn-v3 .sbn-striptrack .sbn-chip .sbn-chip-bot { font-size: 12.5px; }
    height is what keeps the board below it on whole pixels, so the type grows
    inside the same box and no geometry moves. */
 html.sbn-v3 .sbn-colhead {
-    font-size: 11.5px;
+    font-size: 12.5px;
     font-weight: 700;
     letter-spacing: .11em;
     color: #c6cfdb;
 }
 html.sbn-v3 .sbn-headtally,
-html.sbn-v3 .sbn-loosetally { font-size: 11px; color: #8d99aa; }
+html.sbn-v3 .sbn-loosetally { font-size: 12px; color: #8d99aa; }
 
 @media (max-width: 720px) {
     /* a touch smaller on a phone, still well above the 9.5px it was */
@@ -1368,14 +1368,14 @@ html.sbn-v3 .sbn-loosetally { font-size: 11px; color: #8d99aa; }
    obvious at a glance. Applies to every sport, since one element renders them
    all. Height stays even so the board below keeps landing on whole pixels. */
 html.sbn-v3 .sbn-cat {
-    height: 40px;
-    padding: 0 18px;
-    gap: 8px;
-    font-size: 13.5px;
+    height: 44px;
+    padding: 0 20px;
+    gap: 9px;
+    font-size: 15px;
     font-weight: 600;
     color: #8ba3bd;
 }
-html.sbn-v3 .sbn-cat i { font-size: 11.5px; font-weight: 600; color: #66788f; }
+html.sbn-v3 .sbn-cat i { font-size: 12.5px; font-weight: 600; color: #66788f; }
 html.sbn-v3 .sbn-cat:hover { background: rgba(34, 211, 238, 0.055); color: #cfe6f4; }
 html.sbn-v3 .sbn-cat:hover i { color: #8fa6bd; }
 html.sbn-v3 .sbn-cat.is-on {
@@ -1385,7 +1385,7 @@ html.sbn-v3 .sbn-cat.is-on {
 }
 html.sbn-v3 .sbn-cat.is-on i { color: rgba(34, 211, 238, 0.78); }
 html.sbn-v3 .sbn-cat::after { left: 14px; right: 14px; height: 2px; }
-html.sbn-v3 .sbn-boardname { font-size: 13px; letter-spacing: .1em; }
+html.sbn-v3 .sbn-boardname { font-size: 14.5px; letter-spacing: .1em; }
 
 @media (max-width: 720px) {
     html.sbn-v3 .sbn-cat { height: 38px; padding: 0 13px; font-size: 12.5px; gap: 6px; }
@@ -1412,41 +1412,41 @@ html.sbn-v3 .sbn-boardname { font-size: 13px; letter-spacing: .1em; }
 @media (min-width: 721px) {
 
     /* ---- Team names: +10% and a heavier stroke --------------------------- */
-    html.sbn-v3 .sbn-tname b { font-size: 16px; line-height: 18px; font-weight: 800; }
-    html.sbn-v3 .sbn-crest { flex-basis: 22px; width: 22px; height: 22px; }
+    html.sbn-v3 .sbn-tname b { font-size: 17.5px; line-height: 20px; font-weight: 800; }
+    html.sbn-v3 .sbn-crest { flex-basis: 24px; width: 24px; height: 24px; }
     /* 16px at 800 needs 176px for "San Francisco Giants", and the 205px column
        left 156px, which broke every long club name onto a second line. The
        matchup column takes the 30px back from the quote columns, which are
        1fr and already wider than the pair inside them. */
     html.sbn-v3 .sbn-colhead,
-    html.sbn-v3 .sbn-trow { grid-template-columns: minmax(0, 235px) repeat(3, minmax(104px, 1fr)); }
-    html.sbn-v3 .sbn-strip { grid-template-columns: 235px minmax(0, 1fr); }
+    html.sbn-v3 .sbn-trow { grid-template-columns: minmax(0, 258px) repeat(3, minmax(114px, 1fr)); }
+    html.sbn-v3 .sbn-strip { grid-template-columns: 258px minmax(0, 1fr); }
 
     /* ---- The quote: prices, spreads, totals, moneylines, +14% ------------ */
     html.sbn-v3 .sbn-chip-top,
-    html.sbn-v3 .sbn-chip-bot { line-height: 20px; }
+    html.sbn-v3 .sbn-chip-bot { line-height: 22px; }
     html.sbn-v3 .sbn-chip-top,
-    html.sbn-v3 .sbn-chip .sbn-chip-bot.is-line { font-size: 16px; }
+    html.sbn-v3 .sbn-chip .sbn-chip-bot.is-line { font-size: 17.5px; }
     html.sbn-v3 .sbn-chip-bot,
-    html.sbn-v3 .sbn-chip:has(.sbn-chip-bot.is-line) .sbn-chip-top { font-size: 16px; }
-    html.sbn-v3 .sbn-chip.is-single .sbn-chip-top { font-size: 16px; }
+    html.sbn-v3 .sbn-chip:has(.sbn-chip-bot.is-line) .sbn-chip-top { font-size: 17.5px; }
+    html.sbn-v3 .sbn-chip.is-single .sbn-chip-top { font-size: 17.5px; }
 
     /* ---- A little air between the matchup rows ---------------------------
        A 38px row holds a two-line club name at 18px without clipping it, and
        costs the card 10px against the 110px it measured before. */
-    html.sbn-v3 .sbn-trow { height: 38px; }
+    html.sbn-v3 .sbn-trow { height: 42px; }
     html.sbn-v3 .sbn-trow + .sbn-trow { margin-top: 4px; }
-    html.sbn-v3 .sbn-row { padding: 7px 12px 8px; }
+    html.sbn-v3 .sbn-row { padding: 8px 13px 9px; }
     html.sbn-v3 .sbn-teams { margin-top: 4px; }
 
     /* ---- Kickoff line and the All markets button ------------------------- */
-    html.sbn-v3 .sbn-rowtop { height: 20px; }
-    html.sbn-v3 .sbn-rowtime { font-size: 11.5px; line-height: 15px; letter-spacing: .06em; color: #8d9aac; }
+    html.sbn-v3 .sbn-rowtop { height: 22px; }
+    html.sbn-v3 .sbn-rowtime { font-size: 12.5px; line-height: 16.5px; letter-spacing: .06em; color: #8d9aac; }
     html.sbn-v3 .sbn-deep {
-        padding: 2px 10px;
-        font-size: 11.5px;
-        line-height: 15px;
-        border-radius: 5px;
+        padding: 2px 11px;
+        font-size: 12.5px;
+        line-height: 16.5px;
+        border-radius: 6px;
         border-color: rgba(255, 255, 255, 0.13);
         color: #9fb0c2;
     }
@@ -1455,80 +1455,80 @@ html.sbn-v3 .sbn-boardname { font-size: 13px; letter-spacing: .1em; }
     /* 15px labels need the inset back: the toolbar also carries the game/price
        tally, and at 14px of inset the last two markets wrapped to a second row
        in the states where that tally is present. */
-    html.sbn-v3 .sbn-cat { font-size: 15px; padding: 0 18px; gap: 8px; }
-    html.sbn-v3 .sbn-cat i { font-size: 11px; }
+    html.sbn-v3 .sbn-cat { font-size: 16.5px; padding: 0 20px; gap: 9px; }
+    html.sbn-v3 .sbn-cat i { font-size: 12px; }
     /* the inset comes back in as the toolbar narrows, so the markets still fit
        a line before the bar has to wrap */
     @media (max-width: 1360px) {
-        html.sbn-v3 .sbn-cat { padding: 0 14px; gap: 7px; }
+        html.sbn-v3 .sbn-cat { padding: 0 15px; gap: 8px; }
         html.sbn-v3 .sbn-cat::after { left: 11px; right: 11px; }
     }
     @media (max-width: 1180px) {
-        html.sbn-v3 .sbn-cat { padding: 0 12px; font-size: 14px; }
+        html.sbn-v3 .sbn-cat { padding: 0 13px; font-size: 15.5px; }
         html.sbn-v3 .sbn-cat::after { left: 9px; right: 9px; }
     }
-    html.sbn-v3 .sbn-boardname { font-size: 13px; }
-    html.sbn-v3 .sbn-tally { font-size: 11.5px; }
-    html.sbn-v3 .sbn-colhead { padding: 7px 12px; font-size: 12.5px; }
+    html.sbn-v3 .sbn-boardname { font-size: 14.5px; }
+    html.sbn-v3 .sbn-tally { font-size: 12.5px; }
+    html.sbn-v3 .sbn-colhead { padding: 8px 13px; font-size: 14px; }
     html.sbn-v3 .sbn-headtally,
-    html.sbn-v3 .sbn-loosetally { font-size: 11.5px; }
+    html.sbn-v3 .sbn-loosetally { font-size: 12.5px; }
 
     /* ---- Left sports rail: +8% ------------------------------------------ */
-    html.sbn-v3 .sbn-railhead { font-size: 11.5px; }
-    html.sbn-v3 .sbn-railbtn b { font-size: 14.5px; }
-    html.sbn-v3 .sbn-railbtn small { font-size: 11.5px; }
+    html.sbn-v3 .sbn-railhead { font-size: 12.5px; }
+    html.sbn-v3 .sbn-railbtn b { font-size: 16px; }
+    html.sbn-v3 .sbn-railbtn small { font-size: 12.5px; }
 
     /* ---- The ladder is the same quote cell, so it moves with it ----------
        "O 41.5" plus "-172" at 14px measures 84px inside an 18px inset, so the
        rung floor goes to 104px and the pair still clears the right edge. The
        rung keeps its 36px height. */
-    html.sbn-v3 .sbn-striptrack { grid-auto-columns: minmax(96px, 152px); }
-    html.sbn-v3 .sbn-striptrack .sbn-chip { padding: 0 8px; gap: 4px; }
+    html.sbn-v3 .sbn-striptrack { grid-auto-columns: minmax(106px, 167px); }
+    html.sbn-v3 .sbn-striptrack .sbn-chip { padding: 0 9px; gap: 4px; }
     html.sbn-v3 .sbn-striptrack .sbn-chip .sbn-chip-top,
-    html.sbn-v3 .sbn-striptrack .sbn-chip .sbn-chip-bot { font-size: 13.5px; }
-    html.sbn-v3 .sbn-striptrack .sbn-more { font-size: 11px; }
-    html.sbn-v3 .sbn-striplabel b { font-size: 14.5px; line-height: 18px; }
-    html.sbn-v3 .sbn-propwho { font-size: 14px; line-height: 17px; }
-    html.sbn-v3 .sbn-striplabel b i { font-size: 11px; line-height: 13px; }
+    html.sbn-v3 .sbn-striptrack .sbn-chip .sbn-chip-bot { font-size: 15px; }
+    html.sbn-v3 .sbn-striptrack .sbn-more { font-size: 12px; }
+    html.sbn-v3 .sbn-striplabel b { font-size: 16px; line-height: 20px; }
+    html.sbn-v3 .sbn-propwho { font-size: 15.5px; line-height: 18.5px; }
+    html.sbn-v3 .sbn-striplabel b i { font-size: 12px; line-height: 14.5px; }
 
     /* ---- Pick slip: the type only, the column keeps its 322px ------------ */
-    html.sbn-v3 .sbn-slipsel { font-size: 15px; line-height: 19px; }
-    html.sbn-v3 .sbn-slipgame { font-size: 12px; }
-    html.sbn-v3 .sbn-slipmeta { font-size: 11.5px; }
-    html.sbn-v3 .sbn-slipmeta b { font-size: 14px; }
+    html.sbn-v3 .sbn-slipsel { font-size: 16.5px; line-height: 21px; }
+    html.sbn-v3 .sbn-slipgame { font-size: 13px; }
+    html.sbn-v3 .sbn-slipmeta { font-size: 12.5px; }
+    html.sbn-v3 .sbn-slipmeta b { font-size: 15.5px; }
 }
 
 /* ---- PASS 6: the matchup header, sized to the readability pass ------------ */
 /* the matchup is the loudest thing on the card's top line, the kickoff time
    the quietest: on a ladder tab the rows say Over, Under or a player's name,
    so this line is the only thing that says whose game it is */
-html.sbn-v3 .sbn-rowmatch b { font-size: 15px; line-height: 20px; color: #f2f6fb; }
-html.sbn-v3 .sbn-rowmatch i { font-size: 11px; color: #75818f; }
-html.sbn-v3 .sbn-rowtop { height: 24px; }
+html.sbn-v3 .sbn-rowmatch b { font-size: 16.5px; line-height: 22px; color: #f2f6fb; }
+html.sbn-v3 .sbn-rowmatch i { font-size: 12px; color: #75818f; }
+html.sbn-v3 .sbn-rowtop { height: 26px; }
 html.sbn-v3 .sbn-rowtime { color: #7b8798; }
 /* one crest size everywhere on the board: the header of a ladder card and the
    team row of a lines card render the same 22px mark, so switching tabs or
    sports never changes the size of a club badge */
 html.sbn-v3 .sbn-rowmatch .sbn-crest,
 html.sbn-v3 .sbn-tname .sbn-crest,
-html.sbn-v3 .sbn-striplabel .sbn-crest { flex: 0 0 22px; width: 22px; height: 22px; }
-html.sbn-v3 .sbn-rowtop .sbn-rowtime::before { content: '\00b7'; margin-right: 6px; color: #5f6b7c; }
+html.sbn-v3 .sbn-striplabel .sbn-crest { flex: 0 0 24px; width: 24px; height: 24px; }
+html.sbn-v3 .sbn-rowtop .sbn-rowtime::before { content: '\00b7'; margin-right: 7px; color: #5f6b7c; }
 @media (max-width: 720px) {
     html.sbn-v3 .sbn-rowmatch b { font-size: 11.5px; }
 }
 
 /* ---- PASS 7: the expanded market view, at the board's own type scale ------ */
-html.sbn-v3 .sbn-dcell .sbn-chip { height: 46px; border-radius: 4px; }
+html.sbn-v3 .sbn-dcell .sbn-chip { height: 51px; border-radius: 4px; }
 html.sbn-v3 .sbn-dcell .sbn-chip .sbn-chip-top,
-html.sbn-v3 .sbn-dcell .sbn-chip .sbn-chip-bot { font-size: 15px; font-weight: 700; line-height: 20px; }
-html.sbn-v3 .sbn-dcat { font-size: 14px; }
+html.sbn-v3 .sbn-dcell .sbn-chip .sbn-chip-bot { font-size: 16.5px; font-weight: 700; line-height: 22px; }
+html.sbn-v3 .sbn-dcat { font-size: 15.5px; }
 html.sbn-v3 .sbn-dsec h4 { color: #c6cfdb; }
 /* INLINE_EXPAND_20260909: the expansion is part of the card, so it takes the
    card's own surface treatment rather than reading as a panel dropped on top */
 html.sbn-v3 .sbn-expand {
     background: rgba(255, 255, 255, 0.018);
     border-color: rgba(255, 255, 255, 0.07);
-    border-radius: 9px;
+    border-radius: 10px;
 }
 html.sbn-v3 .sbn-dcats { background: rgba(255, 255, 255, 0.022); border-bottom-color: rgba(255, 255, 255, 0.06); }
 html.sbn-v3 .sbn-expfoot { border-top-color: rgba(255, 255, 255, 0.06); }
@@ -1558,7 +1558,7 @@ html.sbn-v3 .sbn-row.is-expanded { background: rgba(255, 255, 255, 0.02); }
    own cell that never shrinks. */
 .sbn-sp {
     display: flex; align-items: baseline; gap: 4px; min-width: 0;
-    font-size: 13.5px; line-height: 16px; font-weight: 600; letter-spacing: .01em;
+    font-size: 15px; line-height: 17.5px; font-weight: 600; letter-spacing: .01em;
     color: #9db2c9;
     white-space: nowrap;
 }
@@ -1566,14 +1566,14 @@ html.sbn-v3 .sbn-row.is-expanded { background: rgba(255, 255, 255, 0.02); }
 .sbn-sp i { flex: 0 0 auto; font-style: normal; color: #75879c; font-weight: 700; }
 .sbn-sp i::before { content: '·'; margin-right: 4px; color: #5d6d80; }
 .sbn-sp.is-tbd { color: #6f7f92; font-weight: 500; font-style: italic; }
-html.sbn-v3 .sbn-sp { font-size: 13px; line-height: 15px; color: #9db2c9; }
+html.sbn-v3 .sbn-sp { font-size: 14.5px; line-height: 16.5px; color: #9db2c9; }
 html.sbn-v3 .sbn-sp i { color: #74889f; }
 html.sbn-v3 .sbn-sp.is-tbd { color: #6d7d90; }
 /* A club name that cannot fit one line at the desktop width still may not push
    the caption out of the row, so the row is allowed to find its own height with
    the old height as its floor. Nothing changes for a row that already fits. */
-.sbn-trow--sp { height: auto; min-height: 46px; }
-html.sbn-v3 .sbn-trow--sp { height: auto; min-height: 36px; }
+.sbn-trow--sp { height: auto; min-height: 51px; }
+html.sbn-v3 .sbn-trow--sp { height: auto; min-height: 40px; }
 @media (max-width: 720px) {
     .sbn-sp, html.sbn-v3 .sbn-sp { font-size: 10.5px; line-height: 13px; }
     .sbn-trow--sp { min-height: 42px; }
