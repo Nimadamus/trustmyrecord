@@ -643,10 +643,14 @@
        a member gets ONE free run per simulator per day, then each run costs
        METER_COST TMR, with a prompt to buy TMR when the balance is short.
        The server (/api/simulator-runs) decides free or paid and keeps the
-       ledger; this only asks it before a run starts. */
+       ledger; this only asks it before a run starts.
+       SIM_RUN_SETTLE_20261005: charge on success. Starting a run moves no TMR;
+       the run is charged when the page reports a finished result
+       (markCompleted / runSucceeded) and never when it fails or is abandoned. */
     var METER_COST = 5;
     var meterAutoPay = false;   // the member said yes once on this page view
     var meterPending = null;    // one decision at a time; extra clicks wait on it
+    var openRun = null;         // the started, not yet settled, metered run
 
     function meterKey() { return (cfg && (cfg.meterKey || cfg.simulator)) || null; }
 
@@ -664,14 +668,13 @@
 
     function chargeRun() {
         var label = (cfg && cfg.label) || 'simulator';
-        return meterRequest('/simulator-runs/charge', { method: 'POST', body: { sim: meterKey(), idempotencyKey: newRunKey() } })
+        return meterRequest('/simulator-runs/start', { method: 'POST', body: { sim: meterKey(), idempotencyKey: newRunKey() } })
             .then(function (d) {
-                if (d && d.charged) {
-                    toast(fmtTmr(d.charged) + ' TMR used for this run. Your balance is ' + fmtTmr(d.balance) + ' TMR.');
-                } else if (d && d.metered && d.isFree) {
+                openRun = d && d.metered && d.runId ? { id: d.runId, isFree: !!d.isFree, cost: d.cost } : null;
+                if (d && d.metered && d.isFree) {
                     toast('This is your free ' + label + ' run for today. Extra runs cost ' + METER_COST + ' TMR.');
                 }
-                track('simulator_run_metered', { charged: d && d.charged ? 'yes' : 'no', simulator: meterKey() });
+                track('simulator_run_metered', { charged: d && d.metered && !d.isFree ? 'yes' : 'no', simulator: meterKey() });
                 return true;
             }, function (e) {
                 var st = e && e.status;
@@ -686,6 +689,21 @@
                 track('simulator_run_meter_unreachable', { simulator: meterKey() });
                 return true;
             });
+    }
+
+    /* Settles the open run. ok: charged now (once, server side). Not ok: never
+       charged. A run nobody settles is settled by the server with no charge. */
+    function settleRun(ok, reason) {
+        var run = openRun;
+        openRun = null;
+        if (!run || !window.api || typeof window.api.request !== 'function') return;
+        var path = '/simulator-runs/' + encodeURIComponent(run.id) + (ok ? '/complete' : '/fail');
+        meterRequest(path, { method: 'POST', body: ok ? {} : { reason: String(reason || 'run failed').slice(0, 180) } })
+            .then(function (d) {
+                if (ok && d && d.charged) {
+                    toast(fmtTmr(d.charged) + ' TMR used for this run. Your balance is ' + fmtTmr(d.balance) + ' TMR.');
+                }
+            }, function () { /* the server settles an unreported run with no charge */ });
     }
 
     function goBuy() {
@@ -957,9 +975,16 @@
             track('simulator_configured', params || {});
         },
 
+        /* A metered run's result finished rendering: charge it now (once). */
+        runSucceeded: function () { settleRun(true); },
+
+        /* A metered run failed: it is never charged. */
+        runFailed: function (reason) { settleRun(false, reason); },
+
         /* Fire when a result finishes rendering. */
         markCompleted: function (params) {
             var p = params || {};
+            settleRun(true);
             track('simulator_simulation_completed', p);
             if (isLoggedIn() && markFirstSimulationIfNeeded()) {
                 track('simulator_first_simulation_completed', p);

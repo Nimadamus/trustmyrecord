@@ -148,7 +148,7 @@ for (const page of SIM_PAGES) {
 {
     const gate = read('static/js/sim-auth-gate.js');
     const adapter = read('static/js/sim-run-gate.js');
-    ok('gate asks the server before a signed-in run', /\/simulator-runs\/status\?sim=/.test(gate) && /\/simulator-runs\/charge/.test(gate));
+    ok('gate asks the server before a signed-in run', /\/simulator-runs\/status\?sim=/.test(gate) && /\/simulator-runs\/start/.test(gate));
     ok('gate exposes authorizeRun', /authorizeRun: authorizeRun/.test(gate));
     ok('gate has a meter kill switch', /FLAGS\.meter === false/.test(gate));
     ok('gate sends a short balance to the buy page', /\/wallet\/get-tmr\/#buy/.test(gate));

@@ -32,6 +32,12 @@
     var runs = document.getElementById('lsimRuns');
     if (!btn || !window.TMRNflSeason) return;
     var cached = null;
+    /* SIM_RUN_SETTLE_20261005: the TMR meter charges a run only when it finishes. */
+    function settle(ok, why) {
+      var G = window.TMRSimGate;
+      if (!G) return;
+      if (ok) { if (G.runSucceeded) G.runSucceeded(); } else if (G.runFailed) G.runFailed(why);
+    }
     btn.addEventListener('click', function () {
       if (btn.disabled) return;
       btn.disabled = true;
@@ -53,10 +59,12 @@
           document.getElementById('lsimStamp').innerHTML = window.TMRNflSeason.stamp(result, d);
           status.textContent = 'Done. Press again for a fresh set of seasons.';
           btn.disabled = false;
+          settle(true);
         });
       }).catch(function () {
         status.textContent = 'The live schedule did not load. The projection above is the latest published one.';
         btn.disabled = false;
+        settle(false, 'schedule or simulation failed');
       });
     });
   }

@@ -143,11 +143,19 @@
   function runSim() {
     var btn = $('#runSim');
     if (btn) { btn.disabled = true; btn.textContent = 'Simulating…'; }
+    var G = window.TMRSimGate;
     setTimeout(function () {
       var t0 = performance.now();
-      S.sims = E.simulateSeason(S.data.teams, S.data.games, S.picks, S.simN, S.seed, { withBracket: true });
-      S.sims.ms = Math.round(performance.now() - t0);
-      render();
+      try {
+        S.sims = E.simulateSeason(S.data.teams, S.data.games, S.picks, S.simN, S.seed, { withBracket: true });
+        S.sims.ms = Math.round(performance.now() - t0);
+        render();
+      } catch (e) {
+        /* SIM_RUN_SETTLE_20261005: a run that throws is never charged. */
+        if (G && G.runFailed) G.runFailed('simulation error');
+        throw e;
+      }
+      if (G && G.runSucceeded) G.runSucceeded();
     }, 20);
   }
 

@@ -88,7 +88,14 @@
             return run.apply(self, args);
         }
         G.authorizeRun({ sim_mode: opts && opts.fresh ? 'run' : 'again' }).then(function (go) {
-            if (go) run.apply(self, args);
+            if (!go) return;
+            /* SIM_RUN_SETTLE_20261005: charged only when a NEW result lands. */
+            var before = self.lastResult;
+            run.apply(self, args);
+            waitFor(function () { return !self.running; }, function () {
+                if (self.lastResult && self.lastResult !== before) { if (G.runSucceeded) G.runSucceeded(); }
+                else if (G.runFailed) G.runFailed('no result');
+            }, 180000);
         });
     };
 
