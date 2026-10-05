@@ -4,6 +4,11 @@
 
   var API = (window.TMR_API_BASE || window.API_BASE_URL || 'https://trustmyrecord-api.onrender.com').replace(/\/$/, '');
   var SEASON = 2026;
+  /* SEASON_LOCK_CUTOFF_20261005: entries close at first pitch of the final day
+     of the regular season (2026-09-27, 10:05 AM PT). The server enforces it; the
+     page reads the server's window from /teams and falls back to this date. */
+  var CLOSES_AT = '2026-09-27T17:05:00Z';
+  var closed = Date.now() >= Date.parse(CLOSES_AT);
 
   function getToken() {
     try { if (window.api && window.api.token) return window.api.token; } catch (e) {}
@@ -233,8 +238,25 @@
     state.world_series_champion = p.world_series_champion || null;
     state.team_win_totals = p.team_win_totals || {};
     state.is_public = p.is_public !== false;
-    locked = !!p.locked;
+    locked = !!p.locked || closed;
     var pub = el('ss-public-toggle'); if (pub) pub.checked = state.is_public;
+  }
+
+  function closedNote() {
+    var when = new Date(CLOSES_AT).toLocaleString('en-US', { timeZone: 'America/Los_Angeles', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) + ' PT';
+    return 'The ' + SEASON + ' entry window closed at first pitch on the final day of the regular season, ' + esc(when) + '.';
+  }
+  function showClosedState(p) {
+    locked = true;
+    var kick = document.querySelector('.ss-kicker');
+    if (kick) kick.innerHTML = '<i class="fas fa-lock"></i> ' + SEASON + ' Season &middot; Entries closed';
+    var cta = el('ss-auth-cta'); if (cta) cta.style.display = 'none';
+    var actions = el('ss-actions'); if (actions) actions.style.display = 'none';
+    var mine = p && p.locked
+      ? ' Your entry was locked ' + esc(p.locked_at ? new Date(p.locked_at).toLocaleString() : '') + ' and stays on your public record.'
+      : (p ? ' Your unlocked draft was not entered.' : '');
+    setStatus('<i class="fas fa-lock"></i> <b>Entries are closed.</b> ' + closedNote() + mine + ' Every prediction locked before then stays public on the board below and is graded against the real results.', 'locked');
+    document.querySelectorAll('#ss-builder input, #ss-builder select, #ss-builder button.ss-team-btn').forEach(function (n) { n.disabled = true; });
   }
 
   function showLockedState(p) {
@@ -259,6 +281,7 @@
   }
 
   function submit(lock) {
+    if (closed) { showClosedState(null); return; }
     if (!isLoggedIn()) { setStatus('<i class="fas fa-circle-exclamation"></i> Please log in to submit your predictions.', 'err'); return; }
     var btn = lock ? el('ss-lock-btn') : el('ss-draft-btn');
     if (btn) { btn.disabled = true; btn.dataset._t = btn.innerHTML; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...'; }
@@ -266,6 +289,7 @@
       .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, status: r.status, j: j }; }); })
       .then(function (res) {
         if (btn) { btn.innerHTML = btn.dataset._t; btn.disabled = false; }
+        if (!res.ok && res.j && res.j.code === 'prediction_window_closed') { closed = true; showClosedState(null); return; }
         if (!res.ok) {
           var msg = (res.j && res.j.error) || 'Submit failed';
           if (res.j && res.j.details) msg += ': ' + res.j.details.join(', ');
@@ -367,6 +391,7 @@
   // ---------- Init ----------
   function init() {
     showLoggedOut();
+    if (closed) showClosedState(null);
     var pub = el('ss-public-toggle');
     if (pub) pub.addEventListener('change', function () { state.is_public = pub.checked; });
     el('ss-lock-btn').addEventListener('click', function () {
@@ -407,13 +432,30 @@
         if (!d.teams || !d.teams.length) throw new Error('empty');
         TEAMS = d.teams; DIVISIONS = d.divisions || [];
         TEAM_BY_ABBR = {}; TEAMS.forEach(function (t) { TEAM_BY_ABBR[t.abbr] = t; });
+        var pw = d.prediction_window;
+        if (pw && pw.season_year === SEASON) {
+          if (pw.closes_at) CLOSES_AT = pw.closes_at;
+          closed = pw.open === false;
+        }
+        if (closed) locked = true;
+        else {
+          // The server says the window is open: undo the page's date based guess.
+          locked = false;
+          var acts = el('ss-actions'); if (acts) acts.style.display = '';
+          showLoggedOut();
+        }
         renderAll();
-        setStatus('', '');
+        if (closed) showClosedState(null); else setStatus('', '');
         if (isLoggedIn()) {
           fetch(API + '/api/season-simulator/me?year=' + SEASON, { headers: authHeaders() })
             .then(function (r) { return r.ok ? r.json() : { prediction: null }; })
             .then(function (d2) {
-              if (d2 && d2.prediction) { applyPrediction(d2.prediction); renderAll(); if (locked) showLockedState(d2.prediction); else setStatus('<i class="fas fa-rotate"></i> Loaded your saved draft. Keep editing, then lock when ready.', 'ok'); }
+              if (d2 && d2.prediction) {
+                applyPrediction(d2.prediction); renderAll();
+                if (closed) showClosedState(d2.prediction);
+                else if (locked) showLockedState(d2.prediction);
+                else setStatus('<i class="fas fa-rotate"></i> Loaded your saved draft. Keep editing, then lock when ready.', 'ok');
+              }
             }).catch(function () {});
         }
         loadPublic();
