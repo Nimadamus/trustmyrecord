@@ -666,9 +666,20 @@
         return meterKey() + '_' + Date.now() + '_' + Math.random().toString(36).slice(2, 10);
     }
 
+    /* Until the server has /start, the old /charge (charged at start) is used. */
+    function startRequest(body) {
+        return meterRequest('/simulator-runs/start', { method: 'POST', body: body }).then(null, function (e) {
+            if (!(e && e.status === 404)) throw e;
+            return meterRequest('/simulator-runs/charge', { method: 'POST', body: body }).then(function (d) {
+                if (d && d.charged) toast(fmtTmr(d.charged) + ' TMR used for this run. Your balance is ' + fmtTmr(d.balance) + ' TMR.');
+                return d && d.runId ? d : Object.assign({}, d || {}, { runId: null });
+            });
+        });
+    }
+
     function chargeRun() {
         var label = (cfg && cfg.label) || 'simulator';
-        return meterRequest('/simulator-runs/start', { method: 'POST', body: { sim: meterKey(), idempotencyKey: newRunKey() } })
+        return startRequest({ sim: meterKey(), idempotencyKey: newRunKey() })
             .then(function (d) {
                 openRun = d && d.metered && d.runId ? { id: d.runId, isFree: !!d.isFree, cost: d.cost } : null;
                 if (d && d.metered && d.isFree) {

@@ -27,7 +27,7 @@ function ok(name, cond, extra) {
 }
 const tick = () => new Promise((r) => setTimeout(r, 30));
 
-function member(statusBody) {
+function member(statusBody, oldServer) {
     const dom = new JSDOM('<!doctype html><html><body></body></html>', {
         url: 'https://trustmyrecord.com/nba-simulator/', runScripts: 'outside-only', pretendToBeVisual: true
     });
@@ -41,6 +41,8 @@ function member(statusBody) {
         request: (p, o) => {
             calls.push({ path: p, method: (o && o.method) || 'GET', body: o && o.body });
             if (p.indexOf('/simulator-runs/status') === 0) return Promise.resolve(statusBody);
+            if (p === '/simulator-runs/start' && oldServer) { const e = new Error('not found'); e.status = 404; return Promise.reject(e); }
+            if (p === '/simulator-runs/charge') return Promise.resolve({ allowed: true, metered: true, isFree: false, charged: 5, balance: 15 });
             if (p === '/simulator-runs/start') return Promise.resolve({ allowed: true, metered: true, isFree: !!statusBody.freeAvailable, runId: nextId++, cost: statusBody.freeAvailable ? 0 : 5, charged: 0 });
             if (/\/complete$/.test(p)) return Promise.resolve({ status: 'charged', charged: statusBody.freeAvailable ? 0 : 5, balance: 15 });
             if (/\/fail$/.test(p)) return Promise.resolve({ status: 'failed', charged: 0 });
@@ -102,7 +104,13 @@ const posts = (calls) => calls.filter((c) => c.method === 'POST' && c.path.index
     ok('NFL playoff simulator settles success and failure', /G\.runSucceeded\(\)/.test(playoff) && /G\.runFailed\('simulation error'\)/.test(playoff));
     ok('MLB and NFL game pages still call markCompleted on a result',
         /markCompleted\(/.test(read('static/js/mlb-simulator-gate.js')) && /markCompleted\(/.test(read('nfl-simulator/index.html')));
-    ok('the gate no longer posts to /simulator-runs/charge', !/simulator-runs\/charge/.test(GATE_SRC));
+
+    // A server without /start yet: the old /charge is used and nothing is settled later.
+    m = member({ metered: true, freeAvailable: true, balance: 20, canAfford: true }, true);
+    go = await m.G.authorizeRun({ trigger: 'old' });
+    m.G.runSucceeded(); await tick();
+    ok('against a server without /start the old /charge is used, and no settle call follows', go === true &&
+        posts(m.calls).join() === '/simulator-runs/start,/simulator-runs/charge', posts(m.calls).join());
 
     console.log('\n' + pass + ' passed, ' + fail + ' failed');
     process.exit(fail ? 1 : 0);
