@@ -79,6 +79,7 @@ jobs:
               # THE GATES run before the commit: a failing gate publishes nothing.
               node tests/playoff-bracket-test.js > g1.log 2>&1 || { tail -30 g1.log; return 1; }
               node tests/league-season-engine-test.js > g2.log 2>&1 || { tail -30 g2.log; return 1; }
+              node tests/mlb-postseason-odds-test.js > g4.log 2>&1 || { tail -30 g4.log; return 1; }
               node tests/seo-indexability-regression-test.js > g3.log 2>&1 || { tail -40 g3.log; return 1; }
               git add mlb-playoff-odds mlb-simulator data/mlb-playoff-odds-inputs.json nfl-season-simulator nfl-simulator nfl-playoff-simulator sitemap.xml nba-season-simulator nba-playoff-simulator nhl-season-simulator nhl-playoff-simulator nba-simulator nhl-simulator
               if git diff --cached --quiet; then echo "Simulator pages already current."; return 0; fi

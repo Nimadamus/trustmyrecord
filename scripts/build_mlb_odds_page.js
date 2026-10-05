@@ -66,8 +66,112 @@ function homeWin(th, ta) {
   return odds / (1 + odds);
 }
 
-async function buildInputs() {
-  const season = new Date().getUTCFullYear();
+/* MLB_POSTSEASON_STATE_CANDIDATE (lab, not deployed). Once every regular season
+   game is final the page must stop replaying the postseason from scratch. The
+   official seeds come from the final standings (division champions by league
+   rank take 1 to 3, wild cards by wild card rank take 4 to 6) and every
+   postseason series already under way carries its real wins and the home park
+   of each game from the official series feed. Only games final at asOfMs count. */
+function postseasonState(teams, standings, seriesFeed, asOfMs) {
+  const abbrOf = Object.fromEntries(teams.map((t) => [t.mlb_id, t.espn_abbr]));
+  const confOf = Object.fromEntries(teams.map((t) => [t.espn_abbr, t.conference]));
+  const seeds = {};
+  for (const rec of standings.records) {
+    const conf = rec.league.id === 103 ? 'American League' : 'National League';
+    const list = seeds[conf] = seeds[conf] || { champs: [], wild: [] };
+    for (const r of rec.teamRecords) {
+      /* divisionRank, not divisionChamp: on 2026-10-02 statsapi marks the Phillies
+         (second in the NL East) divisionChamp true. */
+      if (String(r.divisionRank) === '1') list.champs.push(r);
+      else if (r.wildCardRank && Number(r.wildCardRank) <= 3) list.wild.push(r);
+    }
+  }
+  const out = { seeds: {}, series: [] };
+  for (const conf of Object.keys(seeds)) {
+    const c = seeds[conf].champs.sort((a, b) => Number(a.leagueRank) - Number(b.leagueRank));
+    const w = seeds[conf].wild.sort((a, b) => Number(a.wildCardRank) - Number(b.wildCardRank));
+    if (c.length !== 3 || w.length !== 3) throw new Error(conf + ': seeds not final (' + c.length + ' division champions, ' + w.length + ' wild cards)');
+    out.seeds[conf] = c.concat(w).map((r) => abbrOf[r.team.id]);
+  }
+  for (const x of seriesFeed.series || []) {
+    const gs = (x.games || []).slice().sort((a, b) => (a.seriesGameNumber || 0) - (b.seriesGameNumber || 0));
+    if (!gs.length || !/^[FDLW]$/.test(gs[0].gameType)) continue;
+    const a = abbrOf[gs[0].teams.home.team.id], b = abbrOf[gs[0].teams.away.team.id];
+    if (!a || !b) continue; // placeholders: the matchup is not known yet
+    const done = gs.filter((g) => g.status && g.status.abstractGameState === 'Final' && Date.parse(g.gameDate) < asOfMs
+      && (g.teams.home.isWinner || g.teams.away.isWinner));
+    if (!done.length) continue; // not started: the bracket rule sets the home parks
+    const wins = { [a]: 0, [b]: 0 };
+    done.forEach((g) => { wins[abbrOf[(g.teams.home.isWinner ? g.teams.home : g.teams.away).team.id]] += 1; });
+    const homes = [];
+    gs.filter((g) => !/postponed|cancel/i.test((g.status && g.status.detailedState) || ''))
+      .forEach((g) => { homes[(g.seriesGameNumber || 1) - 1] = abbrOf[g.teams.home.team.id]; });
+    if (confOf[a] !== confOf[b] && gs[0].gameType !== 'W') throw new Error('series ' + x.series.id + ' crosses leagues');
+    out.series.push({ round: gs[0].gameType, id: x.series.id, a, b, wins, homes });
+  }
+  return out;
+}
+
+/* MLB_ELIMINATED_ZERO_20261005: what each club's postseason actually is, from
+   the same postseason state the simulation is conditioned on. 'out' missed the
+   postseason, 'eliminated' lost a series, 'champion' won the World Series,
+   'alive' is still playing. The pages state these as facts; only an alive
+   club gets a simulated chance. */
+const ROUND_NAME = { F: 'Wild Card Series', D: 'Division Series', L: 'League Championship Series', W: 'World Series' };
+const ROUND_NEED = { F: 2, D: 3, L: 4, W: 4 };
+const ROUND_ORDER = { F: 1, D: 2, L: 3, W: 4 };
+const LEAGUE_SHORT = { 'American League': 'AL', 'National League': 'NL' };
+
+function postseasonStatus(inp) {
+  const ps = inp.postseason;
+  if (!ps) return null;
+  const byAbbr = Object.fromEntries(inp.teams.map((t) => [t.espn_abbr, t]));
+  const games = (n) => `${n} game${n === 1 ? '' : 's'}`;
+  const out = {};
+  for (const t of inp.teams) {
+    const seed = (ps.seeds[t.conference] || []).indexOf(t.espn_abbr);
+    out[t.espn_abbr] = seed < 0 ? { state: 'out' } : { state: 'alive', seed: seed + 1, league: LEAGUE_SHORT[t.conference] || t.conference };
+  }
+  const series = ps.series.slice().sort((a, b) => ROUND_ORDER[a.round] - ROUND_ORDER[b.round]);
+  for (const s of series) {
+    const need = ROUND_NEED[s.round];
+    for (const [me, op] of [[s.a, s.b], [s.b, s.a]]) {
+      const st = out[me];
+      if (!st || st.state === 'out') continue;
+      const w = s.wins[me] || 0, l = s.wins[op] || 0, opp = byAbbr[op];
+      if (l >= need) Object.assign(st, { state: 'eliminated', round: s.round,
+        text: `eliminated by the ${opp.name} in the ${ROUND_NAME[s.round]}, ${games(l)} to ${w}` });
+      else if (w >= need && s.round === 'W') Object.assign(st, { state: 'champion', round: s.round,
+        text: `won the World Series over the ${opp.name}, ${games(w)} to ${l}` });
+      else if (w >= need) Object.assign(st, { round: s.round, text: `beat the ${opp.name} in the ${ROUND_NAME[s.round]}, ${games(w)} to ${l}` });
+      else Object.assign(st, { round: s.round, text: w === l
+        ? `are tied with the ${opp.name} at ${w} in the ${ROUND_NAME[s.round]}`
+        : `${w > l ? 'lead' : 'trail'} the ${opp.name} ${games(Math.max(w, l))} to ${Math.min(w, l)} in the ${ROUND_NAME[s.round]}` });
+    }
+  }
+  for (const st of Object.values(out)) {
+    if (st.state === 'alive' && !st.text) st.text = st.seed <= 2 ? 'earned a first round bye and open in the Division Series' : 'open in the Wild Card Series';
+  }
+  return out;
+}
+
+/* Percent text for MLB pages. Once the regular season is over a 0 or a 1 is a
+   fact, not a rounding: show 0% and 100%, never "under 1%" for an outcome a club
+   can no longer reach. Playoff spots, division titles and byes are settled by
+   the regular season. An outcome still open (open = true, the World Series for
+   a club still alive) never shows 0%. */
+function mlbPct(inp, status, abbr) {
+  return (v, open) => {
+    const st = status && status[abbr];
+    if (st && v === 0 && !(open && st.state === 'alive')) return '0%';
+    if (st && v === 1) return '100%';
+    return H.pctText(v);
+  };
+}
+
+async function buildInputs(opts = {}) {
+  const season = opts.season || new Date().getUTCFullYear();
+  const asOfMs = opts.asOfMs || Date.now();
   const [teamsFeed, divs, standings, sched] = await Promise.all([
     getJson(`${STATS}/teams?sportId=1&season=${season}`),
     getJson(`${STATS}/divisions?sportId=1`),
@@ -93,11 +197,17 @@ async function buildInputs() {
   if (teams.length !== 30) throw new Error(`standings returned ${teams.length} teams`);
   const abbrOf = Object.fromEntries(teams.map((t) => [t.mlb_id, t.espn_abbr]));
   const schedule = [];
+  const seenPk = new Set();
   for (const day of sched.dates || []) {
     for (const g of day.games) {
       if (g.status.detailedState === 'Postponed' || g.status.detailedState === 'Cancelled') continue;
       const home = abbrOf[g.teams.home.team.id], away = abbrOf[g.teams.away.team.id];
       if (!home || !away) continue;
+      /* A suspended game is listed on its original date and again on the day it
+         was resumed, same gamePk (2026: SF at ATL 824912; 2025: three CIN games).
+         Count it once. */
+      if (seenPk.has(g.gamePk)) continue;
+      seenPk.add(g.gamePk);
       const final = g.status.abstractGameState === 'Final';
       schedule.push({ id: String(g.gamePk), date: g.gameDate, home, away, final,
         home_score: final ? g.teams.home.score : null, away_score: final ? g.teams.away.score : null });
@@ -122,7 +232,22 @@ async function buildInputs() {
     });
   });
   teams.forEach((t) => { t.strength = Math.round(str[t.espn_abbr] * 1000) / 1000; });
+  let postseason = null;
+  if (schedule.length && opts.postseason !== false) {
+    const feed = opts.seriesFeed || await getJson(`${STATS}/schedule/postseason/series?sportId=1&season=${season}`);
+    if (schedule.every((g) => g.final)) postseason = postseasonState(teams, standings, feed, asOfMs);
+    /* MLB_ELIMINATED_ZERO_20261005: never fall back to replaying the regular
+       season once real postseason games are final. That fallback is how the
+       eliminated Cubs kept a 6% World Series chance. Fail the bake instead, which
+       leaves the last good build live. */
+    const started = (feed.series || []).some((x) => (x.games || []).some((g) => /^[FDLW]$/.test(g.gameType)
+      && g.status && g.status.abstractGameState === 'Final'));
+    if (started && !(postseason && postseason.series.length)) {
+      throw new Error('postseason games are final but no postseason state was built');
+    }
+  }
   return {
+    postseason,
     sport: 'mlb', season, season_label: String(season), generated_at: new Date().toISOString(),
     teams, schedule, games_final: schedule.filter((g) => g.final).length, matchups,
     model: { method: 'Pythagenpat 0.287, regressed 70 games, log5, home .540' },
@@ -139,9 +264,16 @@ function page(inp, result, shell) {
   const ptDay = (iso) => H.ptDate(iso);
   const title = `MLB Playoff Odds ${inp.season} | Live Postseason Chances, Byes and World Series Odds`;
   const desc = `Live ${inp.season} MLB playoff odds for all 30 teams from ${H.count(result.runs)} simulations of the ${remaining} games left: division titles, first round byes, the Wild Card Series and World Series chances.`;
-  const lead = `<p>${remaining} regular season games are left, the last on ${esc(ptDay(last.date))}. Across ${H.count(result.runs)} simulated finishes the ${esc(byTitle[0].name)} win the World Series ${H.pctText(byTitle[0].champion)} of the time, ahead of the ${esc(byTitle[1].name)} at ${H.pctText(byTitle[1].champion)}. ${bubble.length ? `The races still open: ${bubble.slice(0, 6).map((t) => `${esc(t.name)} ${Math.round(t.playoffs * 100)}%`).join(', ')}.` : ''}</p>`;
+  const status = postseasonStatus(inp);
+  const nameOf = Object.fromEntries(inp.teams.map((t) => [t.espn_abbr, t.name]));
+  const gone = status ? Object.keys(status).filter((k) => status[k].state === 'eliminated').map((k) => nameOf[k]).sort() : [];
+  const live = status ? Object.keys(status).filter((k) => status[k].state === 'alive').length : 0;
+  /* MLB_ELIMINATED_ZERO_20261005: after the regular season the page describes
+     the real postseason, not a replay of a season that is over. */
+  const psLead = status ? `<p>The ${inp.season} regular season is over and ${live} clubs are still alive in the postseason. Every completed series keeps its real result and each series in progress starts from its real score. Across ${H.count(result.runs)} simulations of the rest of the postseason the ${esc(byTitle[0].name)} win the World Series ${H.pctText(byTitle[0].champion)} of the time, ahead of the ${esc(byTitle[1].name)} at ${H.pctText(byTitle[1].champion)}.${gone.length ? ` Eliminated, at 0%: ${gone.map(esc).join(', ')}.` : ''}</p>` : '';
+  const lead = psLead || `<p>${remaining} regular season games are left, the last on ${esc(ptDay(last.date))}. Across ${H.count(result.runs)} simulated finishes the ${esc(byTitle[0].name)} win the World Series ${H.pctText(byTitle[0].champion)} of the time, ahead of the ${esc(byTitle[1].name)} at ${H.pctText(byTitle[1].champion)}. ${bubble.length ? `The races still open: ${bubble.slice(0, 6).map((t) => `${esc(t.name)} ${Math.round(t.playoffs * 100)}%`).join(', ')}.` : ''}</p>`;
   const faqs = [
-    [`What are the ${inp.season} MLB playoff odds?`, `Each team's chance comes from ${H.count(result.runs)} simulations of the rest of the ${inp.season} regular season and the postseason. The current favourite to win the World Series is the ${byTitle[0].name} at ${H.pctText(byTitle[0].champion)}.`],
+    [`What are the ${inp.season} MLB playoff odds?`, status ? `Each team's chance comes from ${H.count(result.runs)} simulations of the rest of the ${inp.season} postseason, starting from the real result of every game already played. Eliminated clubs and clubs that missed the postseason are at 0%. The current favourite to win the World Series is the ${byTitle[0].name} at ${H.pctText(byTitle[0].champion)}.` : `Each team's chance comes from ${H.count(result.runs)} simulations of the rest of the ${inp.season} regular season and the postseason. The current favourite to win the World Series is the ${byTitle[0].name} at ${H.pctText(byTitle[0].champion)}.`],
     ['How does the MLB playoff format work?', 'Twelve teams make it, six per league. The three division winners take seeds 1 to 3 by record and the three best remaining records are seeds 4 to 6. Seeds 1 and 2 get a bye. The Wild Card Series is best of three with every game at the higher seed, the Division Series best of five, and the League Championship Series and World Series best of seven.'],
     ['How is each game decided?', `A team's strength is its Pythagorean record from runs scored and allowed (the Pythagenpat method, exponent 0.287), pulled toward .500 by ${REGRESS_GAMES} games of average play so a hot or cold stretch does not overstate it. A game is log5 of the two strengths with a home field edge worth a .540 home winning rate. No betting line is used.`],
     ['Which tiebreakers are applied?', 'Head to head record between the tied teams, then a random draw. MLB’s later steps, such as intradivision record, are not applied and are listed here rather than approximated. There is no tiebreaker game.'.replace('’', "'")],
@@ -213,8 +345,9 @@ ${shell.head}
 
   <section class="lsim-copy">
     <h2>How the MLB playoff odds are calculated</h2>
-    <p>Every game that is final keeps its real score. The ${remaining} games left are each played out ${H.count(result.runs)} times. A team's strength is its Pythagorean record from the runs it has scored and allowed this season, using the Pythagenpat exponent of 0.287, pulled toward .500 by ${REGRESS_GAMES} games of average play so a hot or cold month does not overstate it. A single game is log5 of the two strengths, with a home field edge worth a .540 home winning rate. No betting line is used.</p>
-    <p>After each simulated regular season the ${inp.season} postseason is seeded and played: division winners take seeds 1 to 3 by record, the three best remaining records take 4 to 6, seeds 1 and 2 get a bye, and the Wild Card Series, Division Series, League Championship Series and World Series are played game by game at the correct home parks.</p>
+    ${status ? `<p>The regular season is complete, so the official seeds are used as MLB set them. Every postseason game that is final keeps its real result: a decided series is decided, a series in progress starts from its real score and its remaining home parks, and an eliminated club cannot advance. Only the games left are played out, ${H.count(result.runs)} times, with the same game model described here.</p>` : ''}
+    <p>${status ? '' : `Every game that is final keeps its real score. The ${remaining} games left are each played out ${H.count(result.runs)} times. `}A team's strength is its Pythagorean record from the runs it has scored and allowed this season, using the Pythagenpat exponent of 0.287, pulled toward .500 by ${REGRESS_GAMES} games of average play so a hot or cold month does not overstate it. A single game is log5 of the two strengths, with a home field edge worth a .540 home winning rate. No betting line is used.</p>
+    ${status ? '' : `<p>After each simulated regular season the ${inp.season} postseason is seeded and played: division winners take seeds 1 to 3 by record, the three best remaining records take 4 to 6, seeds 1 and 2 get a bye, and the Wild Card Series, Division Series, League Championship Series and World Series are played game by game at the correct home parks.</p>`}
     <h2>Tiebreakers</h2>
     <p>Ties in the standings are settled by head to head record between the tied teams, then by a random draw. MLB's later steps, such as intradivision record, are not applied, and they are listed here rather than approximated.</p>
     <h2>What the odds do not know</h2>
@@ -265,14 +398,33 @@ const TEAM_CSS = `
   .tlogo{width:52px;height:52px;vertical-align:middle;margin-right:10px}
 `;
 
+/* MLB_ELIMINATED_ZERO_20261005: team page copy once the regular season is over. */
+function postseasonLead(inp, t, st, rd) {
+  const fin = `The ${t.name} finished ${t.w} and ${t.l} with a run differential of ${rd > 0 ? '+' : ''}${rd}`;
+  if (st.state === 'out') return `${fin} and did not reach the ${inp.season} postseason.`;
+  const seed = `${fin} and entered the ${inp.season} postseason as the ${st.league} ${st.seed} seed`;
+  if (st.state === 'eliminated') return `${seed}. Their season ended when they were ${st.text}.`;
+  if (st.state === 'champion') return `${seed} and ${st.text}.`;
+  return `${seed}. They ${st.text}.`;
+}
+
+function postseasonAnswer(inp, t, st, p, pct, result) {
+  if (st.state === 'out') return `None. The ${t.name} finished ${t.w} and ${t.l} and did not reach the ${inp.season} postseason, so their chance of winning the World Series is 0%.`;
+  if (st.state === 'eliminated') return `None. They reached the ${inp.season} postseason as the ${st.league} ${st.seed} seed and were ${st.text}, so their chance of winning the World Series is 0%.`;
+  if (st.state === 'champion') return `They ${st.text}.`;
+  return `They are the ${st.league} ${st.seed} seed and ${st.text}. Every completed series keeps its real result and the series in progress starts from its real score. Across ${H.count(result.runs)} simulations of the rest of the postseason they win the World Series ${pct(p.champion, true)} of the time.`;
+}
+
 function teamPages(inp, result, shell) {
-  const pct = H.pctText;
+  const status = postseasonStatus(inp);
   const byAbbr = Object.fromEntries(inp.teams.map((t) => [t.espn_abbr, t]));
   const dayOf = (iso) => new Date(iso).toLocaleString('en-US', { timeZone: 'America/Los_Angeles', weekday: 'short', month: 'short', day: 'numeric' });
   const slug = (t) => H.slugOf(t.name);
   const out = [];
   for (const t of inp.teams) {
     const p = result.teams.find((x) => x.abbr === t.espn_abbr);
+    const pct = mlbPct(inp, status, t.espn_abbr);
+    const st = status && status[t.espn_abbr];
     const mine = inp.schedule.filter((g) => g.home === t.espn_abbr || g.away === t.espn_abbr);
     const done = mine.filter((g) => g.final && g.home_score != null);
     const left = mine.filter((g) => !g.final);
@@ -291,7 +443,7 @@ function teamPages(inp, result, shell) {
     const url = `/mlb-simulator/teams/${slug(t)}/`;
     const h1 = `${t.name} Simulator`;
     const title = `${t.name} Simulator ${inp.season} | Playoff Odds, Projected Wins and Schedule`;
-    const desc = `${t.name} ${inp.season}: ${t.w} and ${t.l}, ${H.UI_one(p.wins_mean)} projected wins, ${pct(p.playoffs)} playoff odds, ${pct(p.division_title)} to win the ${t.division} and ${pct(p.champion)} to win the World Series, with every game left simulated.`;
+    const desc = `${t.name} ${inp.season}: ${t.w} and ${t.l}, ${H.UI_one(p.wins_mean)} projected wins, ${pct(p.playoffs)} playoff odds, ${pct(p.division_title)} to win the ${t.division} and ${pct(p.champion, true)} to win the World Series, with every game left simulated.`;
     const sched = [...last10.map((g) => {
       const r = res(g);
       return `<tr><td>${esc(dayOf(g.date))}</td><td>${r.home ? 'vs' : 'at'} <a href="/mlb-simulator/teams/${slug(r.opp)}/">${esc(r.opp.name)}</a></td><td class="r"><span class="${r.won ? 'w' : 'l'}">${r.won ? 'W' : 'L'} ${r.us} to ${r.them}</span></td></tr>`;
@@ -300,8 +452,8 @@ function teamPages(inp, result, shell) {
       return `<tr><td>${esc(dayOf(g.date))}</td><td>${home ? 'vs' : 'at'} <a href="/mlb-simulator/teams/${slug(opp)}/">${esc(opp.name)}</a></td><td class="r">${Math.round(probFor(g) * 100)}% to win</td></tr>`;
     })].join('');
     const faqs = [
-      [`What are the ${t.name}' playoff odds?`, `They reach the ${inp.season} postseason in ${pct(p.playoffs)} of ${H.count(result.runs)} simulated finishes, win the ${t.division} in ${pct(p.division_title)}, earn a first round bye in ${pct(p.direct)} and win the World Series in ${pct(p.champion)}.`],
-      [`How many games will the ${t.name} win?`, `They are ${t.w} and ${t.l} with ${left.length} games left. The model expects about ${H.UI_one(expLeft)} more wins, and eight of every ten simulated finishes end between ${p.wins_p10} and ${p.wins_p90} wins.`],
+      [`What are the ${t.name}' playoff odds?`, st ? postseasonAnswer(inp, t, st, p, pct, result) : `They reach the ${inp.season} postseason in ${pct(p.playoffs)} of ${H.count(result.runs)} simulated finishes, win the ${t.division} in ${pct(p.division_title)}, earn a first round bye in ${pct(p.direct)} and win the World Series in ${pct(p.champion, true)}.`],
+      [`How many games will the ${t.name} win?`, left.length ? `They are ${t.w} and ${t.l} with ${left.length} games left. The model expects about ${H.UI_one(expLeft)} more wins, and eight of every ten simulated finishes end between ${p.wins_p10} and ${p.wins_p90} wins.` : `They finished the ${inp.season} regular season ${t.w} and ${t.l}.`],
       [`How are the ${t.short} rated?`, `From runs scored and allowed: ${t.rs} scored and ${t.ra} allowed, a run differential of ${rd > 0 ? '+' : ''}${rd}, turned into a Pythagorean record and pulled toward .500 by ${REGRESS_GAMES} games of average play. That rates them as a .${String(Math.round(t.strength * 1000)).padStart(3, '0')} team, and each game uses log5 with a home field edge.`],
     ];
     const faq = H.faqBlock(faqs);
@@ -346,12 +498,12 @@ ${shell.head}
   </nav>
   <section class="hero lsim-hero">
     <h1><img class="tlogo" src="${esc(t.logo)}" alt="" width="52" height="52">${esc(h1)}</h1>
-    <p>The ${esc(t.name)} are ${t.w} and ${t.l} with a run differential of ${rd > 0 ? '+' : ''}${rd}${last10.length ? `, ${l10w} and ${last10.length - l10w} over their last ${last10.length}` : ''}. With ${left.length} games left, ${H.count(result.runs)} simulated finishes put them at ${H.UI_one(p.wins_mean)} wins.</p>
+    <p>${st ? esc(postseasonLead(inp, t, st, rd)) : `The ${esc(t.name)} are ${t.w} and ${t.l} with a run differential of ${rd > 0 ? '+' : ''}${rd}${last10.length ? `, ${l10w} and ${last10.length - l10w} over their last ${last10.length}` : ''}. With ${left.length} games left, ${H.count(result.runs)} simulated finishes put them at ${H.UI_one(p.wins_mean)} wins.`}</p>
     <div class="kpis">
       <div class="kpi"><b>${pct(p.playoffs)}</b><span>make the playoffs</span></div>
       <div class="kpi"><b>${pct(p.division_title)}</b><span>win the ${esc(t.division)}</span></div>
       <div class="kpi"><b>${pct(p.direct)}</b><span>first round bye</span></div>
-      <div class="kpi"><b>${pct(p.champion)}</b><span>win the World Series</span></div>
+      <div class="kpi"><b>${pct(p.champion, true)}</b><span>win the World Series</span></div>
     </div>
   </section>
   <section class="panel">
@@ -362,7 +514,7 @@ ${shell.head}
   <section class="panel">
     <h2>The ${esc(t.division)} race</h2>
     <div class="linkgrid">
-      ${divMates.map((m) => `<a href="/mlb-simulator/teams/${slug(m.t)}/">${esc(m.t.name)}<small>${m.t.w} and ${m.t.l}, ${pct(m.p.division_title)} division, ${pct(m.p.playoffs)} playoffs</small></a>`).join('\n      ')}
+      ${divMates.map((m) => `<a href="/mlb-simulator/teams/${slug(m.t)}/">${esc(m.t.name)}<small>${m.t.w} and ${m.t.l}, ${mlbPct(inp, status, m.t.espn_abbr)(m.p.division_title)} division, ${mlbPct(inp, status, m.t.espn_abbr)(m.p.playoffs)} playoffs</small></a>`).join('\n      ')}
     </div>
   </section>
   <section class="panel">
@@ -425,7 +577,9 @@ function patchSitemap(urls) {
   return add.length;
 }
 
-(async () => {
+module.exports = { buildInputs, postseasonState, postseasonStatus, mlbPct, strength, homeWin };
+
+if (require.main === module) (async () => {
   const inp = await buildInputs();
   const seed = Number(inp.generated_at.slice(0, 10).replace(/-/g, '')) || 1;
   const result = E.project(inp, RUNS, seed);

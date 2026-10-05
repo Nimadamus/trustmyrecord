@@ -279,13 +279,66 @@
     return { winner: wh === need ? hi : lo, loser: wh === need ? lo : hi, games: games, hi: hi.abbr, lo: lo.abbr, score: [Math.max(wh, wl), Math.min(wh, wl)] };
   }
 
+  /* MLB_POSTSEASON_STATE_CANDIDATE (lab, not deployed): once the regular season
+     is over the payload can carry inputs.postseason = { seeds: { <league>:
+     [6 abbrs, official seeds 1 to 6] }, series: [ { round: 'F'|'D'|'L'|'W',
+     a, b, wins: { <abbr>: n }, homes: [abbr per game number] } ] }. Official
+     seeds replace the simulated seeding, a series already under way starts from
+     its real wins and remaining home parks, a decided series is decided, and only
+     what is left is simulated with the same per game model. */
+  function psSeries(inputs, round, x, y) {
+    var ps = inputs.postseason;
+    if (!ps || !ps.series) return null;
+    for (var i = 0; i < ps.series.length; i++) {
+      var k = ps.series[i];
+      if (k.round === round && ((k.a === x && k.b === y) || (k.a === y && k.b === x))) return k;
+    }
+    return null;
+  }
+
+  /* Higher seed under MLB rules: the better seed in the Wild Card, Division and
+     League Championship Series; the better regular season record in the World
+     Series. Seed lists are per league. */
+  function psHigher(inputs, a, b, round) {
+    var seeds = inputs.postseason.seeds;
+    if (round !== 'W') {
+      var sa = seeds[a.conference].indexOf(a.abbr), sb = seeds[b.conference].indexOf(b.abbr);
+      return sa <= sb ? a : b;
+    }
+    return better('mlb', a, b);
+  }
+
+  function seriesFrom(inputs, a, b, rng, length, round) {
+    var hi = psHigher(inputs, a, b, round), lo = hi === a ? b : a;
+    var len = length, need = (len + 1) / 2;
+    var pat = MLB_PATTERN[len];
+    var known = psSeries(inputs, round, hi.abbr, lo.abbr);
+    var wh = known && known.wins ? (known.wins[hi.abbr] || 0) : 0;
+    var wl = known && known.wins ? (known.wins[lo.abbr] || 0) : 0;
+    var games = wh + wl;
+    while (wh < need && wl < need) {
+      var host = known && known.homes && known.homes[games];
+      var atHi = host ? host === hi.abbr : pat[games] === 1;
+      var winner = atHi ? playGame(inputs, hi, lo, rng) : playGame(inputs, lo, hi, rng);
+      if (winner === hi) wh++; else wl++;
+      games++;
+    }
+    return { winner: wh === need ? hi : lo, loser: wh === need ? lo : hi, games: games, hi: hi.abbr, lo: lo.abbr, score: [Math.max(wh, wl), Math.min(wh, wl)] };
+  }
+
   /* MLB (12 team format): in each league the three division winners by record
      take seeds 1 to 3, the three best remaining records seeds 4 to 6. Seeds 1
      and 2 skip the Wild Card Series. */
-  function seedMlb(recs, rng) {
+  function seedMlb(recs, rng, inputs) {
     var confs = byConference(recs), out = {};
+    var official = inputs && inputs.postseason && inputs.postseason.seeds;
     Object.keys(confs).sort().forEach(function (conf) {
       var ranked = order('mlb', confs[conf], rng);
+      if (official && official[conf] && official[conf].length === 6) {
+        var os = official[conf].map(function (ab) { return recs[ab]; });
+        out[conf] = { ranked: ranked, seeds: os, divisionWinners: os.slice(0, 3), wildcards: os.slice(3) };
+        return;
+      }
       var seen = {}, winners = [], rest = [];
       ranked.forEach(function (r) {
         if (!seen[r.division]) { seen[r.division] = true; winners.push(r); } else rest.push(r);
@@ -301,7 +354,14 @@
     var confNames = Object.keys(seeding).sort();
     confNames.forEach(function (conf) {
       var s = seeding[conf], r1 = [], r2 = [], cf;
-      if (sport === 'mlb') {
+      if (sport === 'mlb' && inputs.postseason) {
+        var qs = s.seeds;
+        var c36 = seriesFrom(inputs, qs[2], qs[5], rng, 3, 'F');
+        var c45 = seriesFrom(inputs, qs[3], qs[4], rng, 3, 'F');
+        r1.push(c36, c45);
+        r2.push(seriesFrom(inputs, qs[0], c45.winner, rng, 5, 'D'));
+        r2.push(seriesFrom(inputs, qs[1], c36.winner, rng, 5, 'D'));
+      } else if (sport === 'mlb') {
         var ms = s.seeds;
         var w36 = series(inputs, ms[2], ms[5], rng, 3);
         var w45 = series(inputs, ms[3], ms[4], rng, 3);
@@ -324,13 +384,15 @@
           r2.push(series(inputs, a1.winner, a2.winner, rng));
         });
       }
-      cf = series(inputs, r2[0].winner, r2[1].winner, rng);
+      cf = sport === 'mlb' && inputs.postseason ? seriesFrom(inputs, r2[0].winner, r2[1].winner, rng, 7, 'L')
+        : series(inputs, r2[0].winner, r2[1].winner, rng);
       rounds[0] = rounds[0].concat(r1.map(tag(conf)));
       rounds[1] = rounds[1].concat(r2.map(tag(conf)));
       rounds[2].push(tag(conf)(cf));
       champs[conf] = cf.winner;
     });
-    var fin = series(inputs, champs[confNames[0]], champs[confNames[1]], rng);
+    var fin = sport === 'mlb' && inputs.postseason ? seriesFrom(inputs, champs[confNames[0]], champs[confNames[1]], rng, 7, 'W')
+      : series(inputs, champs[confNames[0]], champs[confNames[1]], rng);
     rounds[3].push(fin);
     return { rounds: rounds, champion: fin.winner };
   }
@@ -342,7 +404,7 @@
   function runOnce(inputs, rng, opts) {
     var recs = simulateSeason(inputs, rng, opts);
     var seeding = inputs.sport === 'nba' ? seedNba(recs, rng, inputs, rng)
-      : inputs.sport === 'mlb' ? seedMlb(recs, rng) : seedNhl(recs, rng);
+      : inputs.sport === 'mlb' ? seedMlb(recs, rng, inputs) : seedNhl(recs, rng);
     var po = playoffs(inputs, seeding, rng);
     return { records: recs, seeding: seeding, playoffs: po };
   }
