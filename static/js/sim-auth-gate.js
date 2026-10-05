@@ -609,12 +609,21 @@
         track('simulator_anon_free_run', meta || {});
     }
 
+    /* SIM_GATE_SINGLE_CHECK_20261005: one click can reach requireAuth more than
+       once (an adapter check plus authorizeRun, or the capture guard plus the
+       adapter). The free run this page view just granted stays granted for that
+       same action, so a repeated check can never spend it and then gate the
+       visitor on their first simulation. */
+    var ANON_SAME_ACTION_MS = 3000;
+    var anonGrantedAt = 0;
+
     function requireAuth(meta) {
         noteRunAttempt(meta);
         if (FLAGS.gate === false) return true;
         if (!cfg) return true;
         if (isLoggedIn()) return true;
-        if (anonFreeRunAvailable()) { useAnonFreeRun(meta); return true; }
+        if (anonGrantedAt && Date.now() - anonGrantedAt < ANON_SAME_ACTION_MS) return true;
+        if (anonFreeRunAvailable()) { useAnonFreeRun(meta); anonGrantedAt = Date.now(); return true; }
 
         writeStore({
             v: 1,

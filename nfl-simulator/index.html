@@ -1906,8 +1906,11 @@ function installSimGate(){
      daily free run / TMR meter. A re-run that carries the shown result's seed
      is the same simulation with a setting changed, so it is not charged. */
   const _authorizeRun=(meta,seed)=>{
-    if(!window.TMRSimGate.requireAuth(meta))return Promise.resolve(false);
-    if(seed!=null||!window.TMRSimGate.authorizeRun)return Promise.resolve(true);
+    /* SIM_GATE_SINGLE_CHECK_20261005: ONE gate check per click. authorizeRun
+       already runs requireAuth, so calling both spent a new visitor's free run
+       on the first check and then gated the same click on the second. A same
+       seed rerun still skips the member meter, as before. */
+    if(seed!=null||!window.TMRSimGate.authorizeRun)return Promise.resolve(window.TMRSimGate.requireAuth(meta));
     return window.TMRSimGate.authorizeRun(meta);
   };
   runScheduled=function(ref,seed){
