@@ -170,7 +170,7 @@
       /*FMENU mlb*/ ['/handicapping/mlb/dodgers-vs-braves-849819/', 'MLB', '/matchup-of-the-day/mlb/'],
       /* Added 2026-09-29 with the NHL Featured Game of the Day
          (scripts/nhl_featured_game.py, cloud workflow nhl-featured-game.yml). */
-      /*FMENU nhl*/ ['/nhl/senators-bruins-giroux-vs-kastelic/', 'NHL', '/matchup-of-the-day/nhl/'],
+      /*FMENU nhl*/ ['/nhl/hurricanes-canadiens-aho-vs-suzuki/', 'NHL', '/matchup-of-the-day/nhl/'],
       /* Added 2026-09-07 with the tennis section. Same stable-door pattern:
          /matchup-of-the-day/tennis/ bakes with the newest tennis Game File. */
       /*FMENU tennis*/ ['/tennis/zarazua-han-opening-round/', 'Tennis', '/matchup-of-the-day/tennis/'],
