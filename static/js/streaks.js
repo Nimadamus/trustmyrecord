@@ -97,6 +97,8 @@
         ['second_half_', 'second_half'],
         ['first_half_', 'first_half'],
         ['f5_', 'first_five'],
+        ['f3_', 'first_three'],
+        ['f7_', 'first_seven'],
         ['period_1_', 'period_1'],
         ['period_2_', 'period_2'],
         ['period_3_', 'period_3'],
@@ -136,7 +138,7 @@
        services/canonicalStreak.js. */
     const PERIOD_RANK = {
         first_inning: 10, period_1: 10, set_1: 10,
-        first_five: 20, first_half: 20, period_2: 20, set_2: 20,
+        first_three: 15, first_five: 20, first_seven: 25, first_half: 20, period_2: 20, set_2: 20,
         period_3: 30, set_3: 30,
         second_half: 40, period_4: 40,
         full_game: 100

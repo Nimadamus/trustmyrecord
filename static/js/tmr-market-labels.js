@@ -27,6 +27,9 @@
         [/^(second_half|2nd_half|half_2|h2|2h)_/, '2nd Half'],
         [/^(first_half|1st_half|half_1|h1|1h)_/, '1st Half'],
         [/^(first_five_innings|first_five|first5|f5)_/, 'First 5'],
+        /* FIRST_3_7_INNINGS_20261006: FanDuel First 3 / First 7 innings. */
+        [/^(first_three_innings|first_three|f3)_/, 'First 3 Innings'],
+        [/^(first_seven_innings|first_seven|f7)_/, 'First 7 Innings'],
         [/^(first_inning|1st_inning|inning_1|f1)_/, '1st Inning'],
         [/^(period_1|p1|1st_period)_/, '1st Period'],
         [/^(period_2|p2|2nd_period)_/, '2nd Period'],
@@ -165,6 +168,8 @@
         }
         /* Football's period_1 is the 1st Quarter, not a hockey period. */
         if (seg === '1st Period' && /football|^nfl$|^ncaaf$/i.test(text(sportKey))) seg = '1st Quarter';
+        /* The F3 / F7 result is three way (Tie is an outcome): never "Moneyline". */
+        if ((seg === 'First 3 Innings' || seg === 'First 7 Innings') && key === 'h2h') return seg + ' Result';
         if (seg) {
             var g = gameLabel(key, sportKey);
             if (g) return seg + ' ' + g;

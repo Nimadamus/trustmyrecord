@@ -423,8 +423,17 @@
      * with a real 2H price, the tally counts only 2H prices, and a card's
      * market count and expanded panel show only its 2H markets. */
     var STRICT_CATS = {
-        second_half: { second_half_h2h: 1, second_half_spreads: 1, second_half_totals: 1 }
+        second_half: { second_half_h2h: 1, second_half_spreads: 1, second_half_totals: 1 },
+        // FIRST_3_7_INNINGS_20261006: FanDuel First 3 / First 7 innings. Same
+        // fail closed rule: only the exact segment market types belong, so an
+        // F5 or full game price can never be shown or submitted as F3 / F7.
+        first_3: { f3_h2h: 1, f3_spreads: 1, f3_totals: 1 },
+        first_7: { f7_h2h: 1, f7_spreads: 1, f7_totals: 1 }
     };
+    /* The F3 / F7 result is THREE WAY (Tie is a real outcome, a club pick loses
+     * on a tie), so its column says Result, never Moneyline, and every chip
+     * carries the feed's own label ("First 3 Innings Result: Tie"). */
+    var INNING_CATS = { first_3: 1, first_7: 1 };
     function strictItems(key, items) {
         var allow = STRICT_CATS[key];
         if (!allow) return items;
@@ -1385,13 +1394,13 @@
     // Nothing here is invented: a category appears only when at least one game
     // carries that group_key, and its long name is the feed's own group_label.
     var CAT_ORDER = ['game_lines', 'alt_spreads', 'alt_totals', 'team_totals', 'player_props',
-        'first_5', 'first_inning', 'first_half', 'second_half',
+        'first_3', 'first_5', 'first_7', 'first_inning', 'first_half', 'second_half',
         'period_1', 'period_2', 'period_3', 'period_4'];
     // Shorter tab captions for our own long labels. The full feed label is kept
     // as the tab's title attribute and as the drawer heading.
     var CAT_SHORT = {
         alt_spreads: 'Alt Lines', alt_totals: 'Alt Totals', team_totals: 'Team Totals',
-        player_props: 'Player Props', first_5: 'First 5', first_inning: '1st Inning',
+        player_props: 'Player Props', first_3: 'First 3', first_5: 'First 5', first_7: 'First 7', first_inning: '1st Inning',
         first_half: '1st Half', second_half: '2nd Half'
     };
     var LINE_GROUPS = { full_game: 1, spread: 1, total: 1 };   // folded into Game Lines
@@ -1526,22 +1535,23 @@
         var fixed = cat.key === 'game_lines' && !!FIXED_LINE_SPORTS[state.sport];
         var sp = findSel(m.spread, team), ml = findSel(m.h2h, team), to = findSide(m.total, isAway);
         var gl = cat.long, bk = m.book;
+        var own = !!INNING_CATS[cat.key];
         var cell = {};
         cell.spread = sp && oddsOk(cat, sp.odds)
             ? chip({ top: fixed ? fmtOdds(sp.odds) : fmtLine(sp.line, true),
                 bottom: fixed ? fmtLine(sp.line, true) : fmtOdds(sp.odds), botLine: fixed,
                 sel: isSel(g, sp.marketType || 'spreads', team, sp.line),
-                data: pickData(g, sp.marketType || 'spreads', team, team + ' ' + fmtLine(sp.line, true), sp.line, sp.odds, gl, bk) })
+                data: pickData(g, sp.marketType || 'spreads', team, own && sp.label ? sp.label : team + ' ' + fmtLine(sp.line, true), sp.line, sp.odds, gl, own && sp.book ? sp.book : bk) })
             : chip({ disabled: true });
         cell.total = to && oddsOk(cat, to.odds)
             ? chip({ top: (isAway ? 'O ' : 'U ') + fmtLine(to.line), bottom: fmtOdds(to.odds),
                 sel: isSel(g, to.marketType || 'totals', isAway ? 'Over' : 'Under', to.line),
-                data: pickData(g, to.marketType || 'totals', isAway ? 'Over' : 'Under', (isAway ? 'Over ' : 'Under ') + fmtLine(to.line), to.line, to.odds, gl, bk) })
+                data: pickData(g, to.marketType || 'totals', isAway ? 'Over' : 'Under', own && to.label ? to.label : (isAway ? 'Over ' : 'Under ') + fmtLine(to.line), to.line, to.odds, gl, own && to.book ? to.book : bk) })
             : chip({ disabled: true });
         cell.h2h = ml && oddsOk(cat, ml.odds)
             ? chip({ top: fmtOdds(ml.odds), single: true,
                 sel: isSel(g, ml.marketType || 'h2h', team, null),
-                data: pickData(g, ml.marketType || 'h2h', team, team + ' ML', null, ml.odds, gl, bk) })
+                data: pickData(g, ml.marketType || 'h2h', team, own && ml.label ? ml.label : team + ' ML', null, ml.odds, gl, own && ml.book ? ml.book : bk) })
             : chip({ disabled: true });
         return cols.map(function (c) { return cell[c]; }).join('');
     }
@@ -1553,16 +1563,19 @@
      * side. The chip carries exactly the data the drawer's Draw chip carries. */
     function drawRow(g, cat, cols, sp) {
         var m = catLines(g, cat.key);
-        var ml = m && findSel(m.h2h, 'Draw');
+        // Soccer posts the third outcome as "Draw", FanDuel's F3 / F7 result as "Tie".
+        var ml = m && (findSel(m.h2h, 'Draw') || findSel(m.h2h, 'Tie'));
         if (!ml || !oddsOk(cat, ml.odds)) return '';
+        var word = ml.selection;
+        var own = !!INNING_CATS[cat.key];
         var spacer = (crest(g.away) || crest(g.home)) ? '<span class="sbn-crest" aria-hidden="true"></span>' : '';
         var cells = cols.map(function (c) {
             if (c !== 'h2h') return '<span class="sbn-drawgap" aria-hidden="true"></span>';
             return chip({ top: fmtOdds(ml.odds), single: true,
-                sel: isSel(g, ml.marketType || 'h2h', 'Draw', null),
-                data: pickData(g, ml.marketType || 'h2h', 'Draw', 'Draw ML', null, ml.odds, cat.long, m.book) });
+                sel: isSel(g, ml.marketType || 'h2h', word, null),
+                data: pickData(g, ml.marketType || 'h2h', word, own && ml.label ? ml.label : word + ' ML', null, ml.odds, cat.long, own && ml.book ? ml.book : m.book) });
         }).join('');
-        return '<div class="sbn-trow sbn-trow--draw' + sp + '"><span class="sbn-tname">' + spacer + '<b>Draw</b></span>' + cells + '</div>';
+        return '<div class="sbn-trow sbn-trow--draw' + sp + '"><span class="sbn-tname">' + spacer + '<b>' + esc(word) + '</b></span>' + cells + '</div>';
     }
     function ouCells(g, cat, team) {
         var grp = g.groups[cat.key];
@@ -1828,6 +1841,7 @@
     function colHead(cat, cols) {
         if (cat.layout === 'strip' || cat.layout === 'ttgrid') return '';
         var names = cols.map(function (c) {
+            if (INNING_CATS[cat.key]) return c === 'spread' ? 'Run Line' : c === 'h2h' ? 'Result' : COL_NAME[c];
             return c === 'spread' && cat.key === 'game_lines' ? (SPREAD_LABEL[state.sport] || 'Spread') : COL_NAME[c];
         });
         return '<div class="sbn-colhead sbn-colhead--' + cat.layout + ' sbn-cols' + names.length + '"><span></span>' +
@@ -1896,7 +1910,7 @@
             var rank = function (side) {
                 if (side === g.away) return 0;
                 if (side === g.home) return 1;
-                if (side === 'Draw') return 2;
+                if (side === 'Draw' || side === 'Tie') return 2;
                 if (side === 'Over') return 3;
                 if (side === 'Under') return 4;
                 return 5;
@@ -1921,7 +1935,7 @@
                 // a moneyline has no line, and an empty left half reads as a
                 // broken cell in a panel this wide, so it says what it is
                 var top = ou ? ((side === 'Under' ? 'U ' : 'O ') + fmtLine(i.line))
-                    : (noLine ? 'ML' : fmtLine(i.line, !isOverUnder(mt, i.side)));
+                    : (noLine ? (INNING_CATS[key] ? 'Result' : 'ML') : fmtLine(i.line, !isOverUnder(mt, i.side)));
                 var bottom = fmtOdds(i.odds);
                 var sel = ou && key !== 'player_props' ? side : i.selection;
                 var label = i.label || (sel + (noLine ? '' : ' ' + fmtLine(i.line)));

@@ -136,6 +136,15 @@
             };
         }
 
+        /* FIRST_3_7_INNINGS_20261006: the F3 / F7 result is three way, so the
+           pick is the outcome itself ("Tie", "San Diego Padres"), never "ML". */
+        if (/^f[37]_h2h$/.test(market)) {
+            return {
+                pickLabel: stripLineSuffix(raw) || raw,
+                lineLabel: 'Result'
+            };
+        }
+
         if (isMoneyline(market)) {
             var mlTeam = stripLineSuffix(raw) || teamOf(pick, raw);
             return {
@@ -201,6 +210,8 @@
         { key: 'second_half', short: '2H', long: 'Second Half', test: /^second_half_/ },
         { key: 'first_half', short: '1H', long: 'First Half', test: /^first_half_/ },
         { key: 'first_five', short: 'F5', long: 'First 5 Innings', test: /^f5_/ },
+        { key: 'first_three', short: 'F3', long: 'First 3 Innings', test: /^f3_/ },
+        { key: 'first_seven', short: 'F7', long: 'First 7 Innings', test: /^f7_/ },
         { key: 'first_inning', short: '1st Inn', long: 'First Inning', test: /^first_inning_/ },
         { key: 'period_1', short: '1st', long: 'First Period', test: /^period_1_/ },
         { key: 'period_2', short: '2nd', long: 'Second Period', test: /^period_2_/ },
