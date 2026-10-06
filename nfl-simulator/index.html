@@ -31,7 +31,7 @@
 {"@type":"Question","name":"Can I simulate any two NFL teams, not just the schedule?","acceptedAnswer":{"@type":"Answer","text":"Yes. Custom Matchup mode lets you pick any two NFL teams and simulate them against each other with the same engine, rosters, injuries and box-score generation as scheduled games. You choose which team is home, or set a neutral field, and pick a kickoff window."}},
 {"@type":"Question","name":"Does it use current NFL rosters?","acceptedAnswer":{"@type":"Answer","text":"Yes. Current mode is built on current projected 2026 rosters and depth charts, so the quarterback, running backs, receivers, defensive lineup, and specialists reflect who is expected to play now, and their real player usage drives how touches and targets are shared. A player who is out is excluded."}},
 {"@type":"Question","name":"Does it generate player statistics and box scores?","acceptedAnswer":{"@type":"Answer","text":"Yes. Every simulation produces a full box score with realistic player statistics: passing, rushing, and receiving lines, defensive stats such as sacks and interceptions, kicking, and a play-by-play scoring summary. The box score is reconciled by construction, so passing, rushing, receiving, and scoring add up exactly to the team totals and the final score."}},
-{"@type":"Question","name":"How accurate are the simulations?","acceptedAnswer":{"@type":"Answer","text":"Across 285 held-out 2025 games, the model's calibrated win probabilities produced a Brier score of 0.2217, compared with 0.25 for a coin-flip baseline and 0.2491 for always selecting the home team. Its mean absolute margin error was 10.2 points. The model did not demonstrate a profitable advantage against the spread or game totals in this test. Player-level box-score accuracy has not yet been validated. Results are shown as ranges, not guarantees, and this is not betting advice or a prediction of exact future results."}},
+{"@type":"Question","name":"How accurate are the simulations?","acceptedAnswer":{"@type":"Answer","text":"Across 285 held-out 2025 games, the current model's calibrated win probabilities produced a Brier score of 0.2177, compared with about 0.25 for a coin flip, 0.2481 for always selecting the home team and 0.2104 for the closing market favourite. Its mean absolute margin error was 10.0 points. The model did not demonstrate a profitable advantage against the spread or game totals in this test. Player-level box-score accuracy has not yet been validated. Results are shown as ranges, not guarantees, and this is not betting advice or a prediction of exact future results."}},
 {"@type":"Question","name":"Is the NFL simulator free?","acceptedAnswer":{"@type":"Answer","text":"Yes, free with a TrustMyRecord account. Creating one takes a moment and needs no card. With it you can simulate any matchup, review the projected score, win probability, player stats and box score, and keep your runs, then track real, verified betting records separately on TrustMyRecord."}},
 {"@type":"Question","name":"Can this simulate an NFL score or any matchup?","acceptedAnswer":{"@type":"Answer","text":"Yes. This page is the NFL game simulator, score simulator and matchup simulator. Pick a scheduled game or any two teams, run it, and read the projected score, win probability and box score. Season standings are on the NFL Season Simulator, and the bracket is on the NFL Playoff Simulator."}}
 ]}
@@ -465,19 +465,20 @@
   <h2 id="accuracy">Measured accuracy</h2>
   <p>The model is scored on a strict chronological split. It was fitted on the 2021, 2022 and 2023 seasons, its win-probability calibration was chosen on 2024, and 2025 was held back and scored once. Nothing in the 2025 test informed a coefficient, a calibration knot or a choice, and an automated check reports no lookahead violations in either the team ratings or the simulation outputs.</p>
   <div class="acc">
-    <table>
-      <caption>Model nfl-sim-drive-v1. Training 2021 to 2023, validation 2024, holdout test 2025, 285 games.</caption>
-      <tr><th scope="row">Brier score, calibrated win probability</th><td class="n">0.2217</td></tr>
-      <tr><th scope="row">Brier score, coin-flip baseline</th><td class="n">0.2500</td></tr>
-      <tr><th scope="row">Brier score, always select the home team</th><td class="n">0.2491</td></tr>
-      <tr><th scope="row">Winner accuracy</th><td class="n">63.86%</td></tr>
-      <tr><th scope="row">Mean absolute margin error</th><td class="n">10.2 points</td></tr>
-      <tr><th scope="row">Against the spread, 284 games</th><td class="n">47.89%</td></tr>
-      <tr><th scope="row">Game totals, 285 games</th><td class="n">48.07%</td></tr>
+    <table id="nflAccHold">
+      <caption id="nflAccHoldCap">Model nfl-sim-drive-v1 as it runs today, regraded October 6, 2026. Training 2021 to 2023, validation 2024, holdout test 2025, 285 games.</caption>
+      <tr><th scope="row">Brier score, calibrated win probability</th><td class="n" data-k="model.brier">0.2177</td></tr>
+      <tr><th scope="row">Log loss, calibrated win probability</th><td class="n" data-k="model.log_loss">0.6265</td></tr>
+      <tr><th scope="row">Brier score, coin-flip baseline</th><td class="n" data-k="coin_flip.brier">0.2491</td></tr>
+      <tr><th scope="row">Brier score, always select the home team</th><td class="n" data-k="home_team.brier">0.2481</td></tr>
+      <tr><th scope="row">Winner accuracy</th><td class="n" data-k="model.winner_accuracy">63.38%</td></tr>
+      <tr><th scope="row">Mean absolute margin error</th><td class="n" data-k="model.margin_mae">10.0 points</td></tr>
+      <tr><th scope="row">Against the spread, 284 games</th><td class="n" data-k="model.ats_accuracy">50.35%</td></tr>
+      <tr><th scope="row">Game totals, 285 games</th><td class="n" data-k="model.totals_accuracy">52.63%</td></tr>
       <tr><th scope="row">Break-even rate at standard pricing</th><td class="n">52.38%</td></tr>
-      <tr><th scope="row">Brier score, closing market favourite (no vig moneyline)</th><td class="n">0.2104</td></tr>
-      <tr><th scope="row">Winner accuracy, closing market favourite, 283 decided games</th><td class="n">66.08%</td></tr>
-      <tr><th scope="row">Mean absolute margin error, closing spread</th><td class="n">9.7 points</td></tr>
+      <tr><th scope="row">Brier score, closing market favourite (no vig moneyline)</th><td class="n" data-k="market_favourite.brier">0.2104</td></tr>
+      <tr><th scope="row">Winner accuracy, closing market favourite, 283 decided games</th><td class="n" data-k="market_favourite.winner_accuracy">66.08%</td></tr>
+      <tr><th scope="row">Mean absolute margin error, closing spread</th><td class="n" data-k="market_favourite.margin_mae">9.7 points</td></tr>
     </table>
   </div>
   <div class="acc" id="nflAccYtd" hidden></div>
@@ -489,8 +490,12 @@
      closing market favourite scored on the same games. */
   (function(){
     var box=document.getElementById('nflAccYtd');if(!box||!window.fetch)return;
-    fetch('/nfl-simulator/accuracy-ytd.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null}).then(function(d){
+    // ACCURACY_AUTOMATION_20261006: the automated report from the API (refreshed
+    // every Tuesday and Wednesday morning), with the committed file as fallback.
+    var get=function(u){return fetch(u,{cache:'no-cache'}).then(function(r){return r.ok?r.json():null})};
+    get('https://trustmyrecord-api.onrender.com/api/nfl/public/accuracy').catch(function(){return null}).then(function(d){return d&&d.ytd?d:get('/nfl-simulator/accuracy-ytd.json')}).then(function(d){
       if(!d||!d.ytd||!d.ytd.model||!d.games||!d.games.length)return;
+      if(d.holdout&&d.holdout.model){var ht=document.getElementById('nflAccHold');if(ht){[].forEach.call(ht.querySelectorAll('[data-k]'),function(td){var k=td.getAttribute('data-k').split('.'),v=d.holdout[k[0]]&&d.holdout[k[0]][k[1]];if(v==null)return;td.textContent=/accuracy/.test(k[1])?(v*100).toFixed(2)+'%':(k[1]==='margin_mae'?v.toFixed(1)+' points':v.toFixed(4))});}}
       var M=d.ytd.model,K=d.ytd.market_favourite||{};
       var e=function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})};
       var pc=function(v){return v==null?'n/a':(v*100).toFixed(1)+'%'};
@@ -501,6 +506,7 @@
       var h='<table><caption>'+e(d.season)+' season to date, '+d.games.length+' completed games through Week '+e(d.through_week)+'. Each game simulated as of its kickoff and graded against the final score and the closing line. Updated '+e(when)+'.</caption>'
         +'<tr><th scope="col">Measure</th><th scope="col" class="n">Model</th><th scope="col" class="n">Closing market favourite</th></tr>'
         +row('Brier score, win probability',br(M.brier),br(K.brier))
+        +(M.log_loss!=null?row('Log loss, win probability',M.log_loss.toFixed(4),K.log_loss!=null?K.log_loss.toFixed(4):'n/a'):'')
         +row('Winner accuracy',pc(M.winner_accuracy),pc(K.winner_accuracy))
         +row('Mean absolute margin error',pt(M.margin_mae),pt(K.margin_mae))
         +row('Against the spread, '+M.ats_n+' games',pc(M.ats_accuracy),'n/a')
@@ -515,11 +521,14 @@
           var mark=function(t){return won&&t===won?' ✓':''};
           return '<tr><td>'+e(x.week)+'</td><td>'+e(x.away)+' at '+e(x.home)+'</td><td class="n">'+e(x.final.away)+' to '+e(x.final.home)+'</td><td>'+e(mp)+(x.model?mark(x.model.pick):'')+'</td><td>'+e(mk)+mark(mk)+'</td></tr>'}).join('')
         +'</table></details>';
-      box.innerHTML=h+(lead?'<p class="acc-note">'+lead+'</p>':'')+gl;box.hidden=false;
+      var cal='';var cb=(d.holdout&&d.holdout.model&&d.holdout.model.calibration)||[];
+      if(cb.length){cal='<details style="margin-top:10px"><summary style="cursor:pointer;color:var(--ink)">Calibration, 2025 holdout: stated favourite probability against how often the favourite won</summary><table><tr><th scope="col">Stated</th><th scope="col" class="n">Games</th><th scope="col" class="n">Average stated</th><th scope="col" class="n">Favourite won</th></tr>'
+        +cb.map(function(b){return '<tr><td>'+Math.round(b.range[0]*100)+' to '+Math.round(b.range[1]*100)+'%</td><td class="n">'+b.n+'</td><td class="n">'+pc(b.predicted)+'</td><td class="n">'+pc(b.actual)+'</td></tr>'}).join('')+'</table></details>';}
+      box.innerHTML=h+(lead?'<p class="acc-note">'+lead+'</p>':'')+gl+cal;box.hidden=false;
     }).catch(function(){});
   })();
   </script>
-  <p class="acc-note">Both market results sit below the break-even rate, so this is not a proven betting edge and should not be used as one. Player-level box-score accuracy has not yet been validated: the box score is reconciled by construction and checked against league-wide distributions, but individual player lines have not been graded against real results. Home-score and away-score accuracy are not reported because those figures have not been computed.</p>
+  <p class="acc-note">Neither market result is a statistically meaningful edge over the break-even rate on a sample this size, so this is not a proven betting edge and should not be used as one. Player-level box-score accuracy has not yet been validated: the box score is reconciled by construction and checked against league-wide distributions, but individual player lines have not been graded against real results. Home-score and away-score accuracy are not reported because those figures have not been computed.</p>
 
   <h2>Limitations and responsible use</h2>
   <p>This is a model projection, not a guarantee, and not betting or financial advice. A single NFL game carries a lot of variance, so single-game margins can miss by around a touchdown and a half even when the model is well calibrated, which is why every result is shown as a range. The projection reflects current projected rosters, so it shifts as depth charts, roles, and availability change. Use the output as one research input alongside lineups, weather, and market prices. On TrustMyRecord, simulations are a research tool, while real picks are locked before game time, auto-graded, and counted toward a public, tamper-proof record.</p>
@@ -539,7 +548,7 @@
     <details><summary>Can I simulate any two NFL teams?</summary><p>Yes. Custom Matchup mode lets you pick any two NFL teams and simulate them with the same engine, rosters, injuries and box-score generation as scheduled games. You choose which team is home, or set a neutral field, and pick a kickoff window.</p></details>
     <details><summary>Does it use current NFL rosters?</summary><p>Yes. Current mode is built on current projected 2026 rosters and depth charts, so the quarterback, running backs, receivers, defensive lineup, and specialists reflect who is expected to play now, and their real player usage drives how touches and targets are shared. A player who is out is excluded.</p></details>
     <details><summary>Does it generate player statistics and box scores?</summary><p>Yes. Every simulation produces a full box score with realistic player statistics: passing, rushing, and receiving lines, defensive stats such as sacks and interceptions, kicking, and a play-by-play scoring summary. The box score is reconciled by construction, so passing, rushing, receiving, and scoring add up exactly to the team totals and the final score.</p></details>
-    <details><summary>How accurate are the simulations?</summary><p>Across 285 held-out 2025 games, the model's calibrated win probabilities produced a Brier score of 0.2217, compared with 0.25 for a coin-flip baseline and 0.2491 for always selecting the home team. Its mean absolute margin error was 10.2 points. The model did not demonstrate a profitable advantage against the spread or game totals in this test. Player-level box-score accuracy has not yet been validated. Results are shown as ranges, not guarantees, and this is not betting advice or a prediction of exact future results.</p></details>
+    <details><summary>How accurate are the simulations?</summary><p>Across 285 held-out 2025 games, the current model's calibrated win probabilities produced a Brier score of 0.2177, compared with about 0.25 for a coin flip, 0.2481 for always selecting the home team and 0.2104 for the closing market favourite. Its mean absolute margin error was 10.0 points. The model did not demonstrate a profitable advantage against the spread or game totals in this test. Player-level box-score accuracy has not yet been validated. Results are shown as ranges, not guarantees, and this is not betting advice or a prediction of exact future results.</p></details>
     <details><summary>Is the NFL simulator free?</summary><p>Yes, free with a TrustMyRecord account. Creating one takes a moment and needs no card, and it is what lets your runs be saved to come back to. With it you can simulate any matchup and review the projected score, win probability, player stats and box score, then track real, verified betting records separately on TrustMyRecord.</p></details>
     <details><summary>Can this simulate an NFL score or any matchup?</summary><p>Yes. This page is the NFL game simulator, score simulator and matchup simulator. Pick a scheduled game or any two teams, run it, and read the projected score, win probability and box score. Season standings are on the <a href="/nfl-season-simulator/">NFL Season Simulator</a>, and the bracket is on the <a href="/nfl-playoff-simulator/">NFL Playoff Simulator</a>.</p></details>
   </div>
