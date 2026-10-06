@@ -462,6 +462,9 @@
     var sec = el('section', 'panel');
     sec.id = 'bracket';
     sec.appendChild(el('h2', null, 'The bracket'));
+    // PLAYOFF_CONTRADICTIONS_20261006: two brackets sit on this page with different
+    // 1 seeds. Say which one this is.
+    sec.appendChild(el('p', 'bye-note', 'Seeded from the standings and your picks: with no picks made, this is the field if the season ended today. The bracket builder further down starts from the projected field instead.'));
     var wrap = el('div', 'brackets');
     var champions = {};
     ['AFC', 'NFC'].forEach(function (c) {
@@ -510,7 +513,7 @@
       });
       sb.appendChild(card);
       sb.appendChild(el('p', 'bye-note',
-        'Neither club is marked as the winner. Nothing on this page projects a Super Bowl.'));
+        'This bracket advances the better seed and does not pick the Super Bowl winner. Each club’s Super Bowl chances are in the playoff odds below.'));
       sec.appendChild(sb);
     }
 
