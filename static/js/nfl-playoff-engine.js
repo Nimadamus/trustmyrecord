@@ -6,6 +6,9 @@
  * That is deliberate: a tiebreaker engine nobody can unit test is a tiebreaker
  * engine nobody should trust, and a wrong seed is publicly checkable.
  *
+ * TIEBREAK_OFFICIAL_20261006: division-first wild-card places, sweep rule, no
+ * division common-games minimum, net points in conference games at wild-card step 9.
+ *
  * THE TWO RULES THAT ARE EASY TO GET WRONG, AND ARE HANDLED FIRST
  *
  *   1. ONLY THE HIGHEST-RANKED CLUB IN A DIVISION IS WILD-CARD ELIGIBLE, and
