@@ -387,4 +387,96 @@ ok('GUARANTEE: the same seed gives the same run, a different seed does not', () 
   assert.notDeepStrictEqual(a1.probabilities, b1.probabilities);
 });
 
+
+/* ------------------------------ TIEBREAK_OFFICIAL_20261006: official order */
+
+const AFC_POOL = TEAMS.filter((t) => t.conference === 'AFC').map((t) => t.id);
+const LEAGUE = TEAMS.map((t) => t.id);
+
+ok('OFFICIAL: wild-card step 1, a club never takes a wild card ahead of a higher-ranked club of its own division', () => {
+  // AE2, AE3 and AN2 all finish 2-2. AE3 has the best conference record of the
+  // three, but AE2 finished ahead of AE3 in the AFC East, so AE3 cannot be
+  // considered until AE2 is placed.
+  const games = [
+    game('AE3', 'AN1', 30, 0), game('AE3', 'AS1', 30, 0), game('AE3', 'NE2', 0, 30), game('AE3', 'NE3', 0, 30),
+    game('AE2', 'NE1', 30, 0), game('AE2', 'AS2', 0, 30), game('AE2', 'NE4', 30, 0), game('AE2', 'NN2', 0, 30),
+    game('AN2', 'NN1', 30, 0), game('AN2', 'AS3', 0, 30), game('AN2', 'NN3', 30, 0), game('AN2', 'NN4', 0, 30),
+  ];
+  const st = E.buildStandings(TEAMS, E.resolveResults(games, {}, null));
+  const ctx = { confPool: AFC_POOL, leaguePool: LEAGUE, divRank: { AE2: 1, AE3: 2, AN2: 1 } };
+  const r = E.rankPool('wildcard', st, ['AE3', 'AE2', 'AN2'], ctx);
+  assert.ok(r.order.indexOf('AE2') < r.order.indexOf('AE3'), `AE3 jumped its own division-mate: ${r.order.join(',')}`);
+});
+
+ok('OFFICIAL: three-club wild-card head-to-head is the sweep rule (one club beat both, the other two never met)', () => {
+  // AE1 beat AN1 and AS1; AN1 and AS1 never met. All 2-1. AS1 has the best
+  // conference record, but AE1's sweep settles it first.
+  const games = [
+    game('AE1', 'AN1', 20, 10), game('AE1', 'AS1', 20, 10), game('AE1', 'NE1', 0, 20),
+    game('AN1', 'NN1', 20, 10), game('AN1', 'NS1', 20, 10),
+    game('AS1', 'AW1', 20, 10), game('AS1', 'AW2', 20, 10),
+  ];
+  const st = E.buildStandings(TEAMS, E.resolveResults(games, {}, null));
+  const ctx = { confPool: AFC_POOL, leaguePool: LEAGUE, divRank: { AE1: 0, AN1: 0, AS1: 0 } };
+  const r = E.rankPool('wildcard', st, ['AS1', 'AN1', 'AE1'], ctx);
+  assert.strictEqual(r.order[0], 'AE1', r.order.join(','));
+  assert.strictEqual(r.notes[0].resolvedBy, 'head-to-head (sweep)');
+});
+
+ok('OFFICIAL: a club swept by the other two is eliminated first', () => {
+  assert.deepStrictEqual(E.h2hSweep({
+    A: { h2h: { B: { w: 0, l: 1, t: 0 }, C: { w: 0, l: 1, t: 0 } } },
+    B: { h2h: { A: { w: 1, l: 0, t: 0 } } },
+    C: { h2h: { A: { w: 1, l: 0, t: 0 } } },
+  }, ['A', 'B', 'C']), { loser: 'A' });
+});
+
+ok('OFFICIAL: a partial head-to-head among three clubs is not a sweep', () => {
+  const st = { A: { h2h: { B: { w: 1, l: 0, t: 0 } } }, B: { h2h: { A: { w: 0, l: 1, t: 0 } } }, C: { h2h: {} } };
+  assert.strictEqual(E.h2hSweep(st, ['A', 'B', 'C']), null);
+});
+
+ok('OFFICIAL: step order for division and wild-card ties', () => {
+  const st = E.buildStandings(TEAMS, E.resolveResults([game('AE1', 'AN1', 20, 10), game('AE2', 'AN1', 20, 10)], {}, null));
+  const tail = ['strength of victory', 'strength of schedule',
+    'combined ranking among conference clubs in points scored and allowed',
+    'combined ranking among all clubs in points scored and allowed'];
+  const div = E.steps('division', { st, ids: ['AE1', 'AE2'], confPool: AFC_POOL, leaguePool: LEAGUE }).map((x) => x.name);
+  assert.deepStrictEqual(div, ['head-to-head', 'division record', 'common games', 'conference record']
+    .concat(tail, ['net points in common games', 'net points in all games']));
+  const wc2 = E.steps('wildcard', { st, ids: ['AE1', 'AN2'], confPool: AFC_POOL, leaguePool: LEAGUE }).map((x) => x.name);
+  assert.deepStrictEqual(wc2, ['head-to-head', 'conference record', 'common games (minimum four)']
+    .concat(tail, ['net points in conference games', 'net points in all games']));
+  const wc3 = E.steps('wildcard', { st, ids: ['AE1', 'AN2', 'AS2'], confPool: AFC_POOL, leaguePool: LEAGUE }).map((x) => x.name);
+  assert.strictEqual(wc3[0], 'head-to-head (sweep)');
+});
+
+ok('OFFICIAL: division common games have no minimum; wild-card common games need four', () => {
+  const st = E.buildStandings(TEAMS, E.resolveResults([game('AE1', 'AN1', 20, 10), game('AE2', 'AN1', 20, 10)], {}, null));
+  const div = E.steps('division', { st, ids: ['AE1', 'AE2'], confPool: AFC_POOL, leaguePool: LEAGUE });
+  assert.strictEqual(div.find((x) => x.name === 'common games').applies, true);
+  const wc = E.steps('wildcard', { st, ids: ['AE1', 'AE2'], confPool: AFC_POOL, leaguePool: LEAGUE });
+  assert.strictEqual(wc.find((x) => x.name === 'common games (minimum four)').applies, false);
+});
+
+ok('OFFICIAL: full-season seeding never lists a club ahead of a higher-ranked club of its own division', () => {
+  for (let k = 1; k < 32; k += 2) {
+    const rank = {}; TEAMS.forEach((t, i) => { rank[t.id] = (i * k) % 32; });
+    const s = E.seedAll(TEAMS, fullSeason((h, a) => rank[h] < rank[a]), {}, null);
+    ['AFC', 'NFC'].forEach((c) => {
+      const st = s.standings;
+      const order = {};
+      DIVS[c].forEach((d) => {
+        const ids = TEAMS.filter((t) => t.conference === c && t.division === d).map((t) => t.id);
+        E.rankPool('division', st, ids, { confPool: [], leaguePool: [] }).order.forEach((id, i) => { order[id] = i; });
+      });
+      const seeds = s[c].seeds;
+      seeds.forEach((id, i) => seeds.slice(i + 1).forEach((later) => {
+        if (st[id].team.division !== st[later].team.division) return;
+        assert.ok(order[id] < order[later], `${c} k=${k}: ${later} seeded behind ${id} but ranks ahead in the division`);
+      }));
+    });
+  }
+});
+
 console.log(`\nnfl-playoff-engine: ${passed} passed${process.exitCode === 1 ? ', FAILURES' : ', 0 failed'}`);

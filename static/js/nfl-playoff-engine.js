@@ -145,6 +145,32 @@
     return true;
   }
 
+  /**
+   * TIEBREAK_OFFICIAL_20261006. The wild-card head-to-head step for THREE OR MORE
+   * clubs is the SWEEP rule: it applies only if one club beat each of the others
+   * (that club advances) or one club lost to each of the others (that club is
+   * eliminated). Returns { winner } or { loser } or null.
+   */
+  function h2hSweep(st, ids) {
+    function beatAll(id) {
+      return ids.every(function (o) {
+        if (o === id) return true;
+        var x = st[id].h2h[o];
+        return !!x && x.w > 0 && x.l === 0 && x.t === 0;
+      });
+    }
+    function lostAll(id) {
+      return ids.every(function (o) {
+        if (o === id) return true;
+        var x = st[id].h2h[o];
+        return !!x && x.l > 0 && x.w === 0 && x.t === 0;
+      });
+    }
+    for (var i = 0; i < ids.length; i++) if (beatAll(ids[i])) return { winner: ids[i] };
+    for (var j = 0; j < ids.length; j++) if (lostAll(ids[j])) return { loser: ids[j] };
+    return null;
+  }
+
   function commonOpponents(st, ids) {
     var sets = ids.map(function (id) {
       var s = {};
@@ -209,17 +235,31 @@
     if (kind === 'division') {
       list.push({ name: 'head-to-head', applies: true, score: function (id) { return pct(h2hAmong(st, ids, id)); } });
       list.push({ name: 'division record', applies: true, score: function (id) { return pct(st[id].division); } });
-    } else {
+    } else if (ids.length === 2) {
+      // Two clubs: head-to-head if they met.
       list.push({
-        name: 'head-to-head (swept)',
+        name: 'head-to-head',
         applies: h2hApplies(st, ids),
         score: function (id) { return pct(h2hAmong(st, ids, id)); },
       });
       list.push({ name: 'conference record', applies: true, score: function (id) { return pct(st[id].conference); } });
+    } else {
+      // Three or more clubs: the sweep rule, never a head-to-head percentage.
+      var sweep = h2hSweep(st, ids);
+      list.push({
+        name: 'head-to-head (sweep)',
+        applies: !!sweep,
+        score: function (id) {
+          if (sweep.winner) return id === sweep.winner ? 1 : 0;
+          return id === sweep.loser ? 0 : 1;
+        },
+      });
+      list.push({ name: 'conference record', applies: true, score: function (id) { return pct(st[id].conference); } });
     }
+    // Common games: no minimum inside a division, minimum four for a wild card.
     list.push({
-      name: 'common games (minimum four)',
-      applies: common.length >= 4,
+      name: kind === 'division' ? 'common games' : 'common games (minimum four)',
+      applies: kind === 'division' ? common.length > 0 : common.length >= 4,
       score: function (id) { return pct(recordVs(st, id, common)); },
     });
     if (kind === 'division') {
@@ -237,11 +277,21 @@
       applies: true,
       score: function (id) { return -combinedRank(st, id, leaguePool); },
     });
-    list.push({
-      name: 'net points in common games',
-      applies: common.length > 0,
-      score: function (id) { var r = recordVs(st, id, common); return r.pf - r.pa; },
-    });
+    // Step 9 differs: division ties use net points in common games, wild-card
+    // ties use net points in conference games.
+    if (kind === 'division') {
+      list.push({
+        name: 'net points in common games',
+        applies: common.length > 0,
+        score: function (id) { var r = recordVs(st, id, common); return r.pf - r.pa; },
+      });
+    } else {
+      list.push({
+        name: 'net points in conference games',
+        applies: true,
+        score: function (id) { return st[id].conference.pf - st[id].conference.pa; },
+      });
+    }
     list.push({
       name: 'net points in all games',
       applies: true,
@@ -302,7 +352,9 @@
     Object.keys(groups).sort(function (a, b) { return Number(b) - Number(a); }).forEach(function (k) {
       var g = groups[k];
       if (g.length === 1) { order.push(g[0]); return; }
-      var res = breakTie(kind, st, g, ctx, 0);
+      var res = (kind === 'wildcard' && ctx.divRank)
+        ? rankWildcardGroup(st, g, ctx)
+        : breakTie(kind, st, g, ctx, 0);
       if (res.reason) {
         notes.push({
           teams: g.slice(), resolvedBy: res.reason,
@@ -314,12 +366,56 @@
     return { order: order, notes: notes };
   }
 
+  /**
+   * TIEBREAK_OFFICIAL_20261006. A wild-card tie is settled ONE PLACE AT A TIME.
+   * Step 1 every time: only the highest-ranked club of each division in the group
+   * (by that division's own final order, which never changes) may take the place.
+   * The wild-card sequence then picks the top club among those; it is removed and
+   * the procedure repeats, which is how the next club of the same division
+   * becomes eligible.
+   */
+  function rankWildcardGroup(st, ids, ctx) {
+    var left = ids.slice();
+    var order = [];
+    var first = null;
+    while (left.length) {
+      if (left.length === 1) { order.push(left[0]); break; }
+      var best = {};
+      left.forEach(function (id) {
+        var d = st[id].team.conference + '|' + st[id].team.division;
+        if (!(d in best) || ctx.divRank[id] < ctx.divRank[best[d]]) best[d] = id;
+      });
+      var eligible = left.filter(function (id) {
+        return best[st[id].team.conference + '|' + st[id].team.division] === id;
+      });
+      var pick;
+      var step;
+      if (eligible.length === 1) {
+        pick = eligible[0];
+        step = { reason: 'division tiebreaker', unresolved: false, remaining: null };
+      } else {
+        var r = breakTie('wildcard', st, eligible, ctx, 0);
+        pick = r.order[0];
+        step = { reason: r.reason, unresolved: !!r.unresolved, remaining: r.remaining || null };
+      }
+      if (!first) first = step;
+      order.push(pick);
+      left.splice(left.indexOf(pick), 1);
+    }
+    return {
+      order: order,
+      reason: first ? first.reason : null,
+      unresolved: first ? first.unresolved : false,
+      remaining: first ? first.remaining : null,
+    };
+  }
+
   /* ------------------------------------------------------------- seeding */
 
   function seedConference(teams, st, conference) {
     var pool = teams.filter(function (t) { return t.conference === conference; }).map(function (t) { return t.id; });
     var leaguePool = teams.map(function (t) { return t.id; });
-    var ctx = { confPool: pool, leaguePool: leaguePool };
+    var ctx = { confPool: pool, leaguePool: leaguePool, divRank: {} };
     var notes = [];
 
     // Division winners first.
@@ -334,6 +430,7 @@
       var r = rankPool('division', st, divisions[d], ctx);
       notes = notes.concat(r.notes);
       winners.push(r.order[0]);
+      r.order.forEach(function (id, i) { ctx.divRank[id] = i; });
       // RULE: only the top club in a division is wild-card eligible. This is the
       // line that has to run BEFORE the wild-card sequence.
       runnersUp = runnersUp.concat(r.order.slice(1));
@@ -500,7 +597,7 @@
   return {
     emptyRec: emptyRec, pct: pct, recLabel: recLabel,
     resolveResults: resolveResults, buildStandings: buildStandings,
-    breakTie: breakTie, rankPool: rankPool,
+    breakTie: breakTie, rankPool: rankPool, steps: steps, h2hSweep: h2hSweep, rankWildcardGroup: rankWildcardGroup,
     seedConference: seedConference, seedAll: seedAll,
     bracket: bracket, clinchStatus: clinchStatus,
     simulateSeason: simulateSeason, mulberry32: mulberry32,
