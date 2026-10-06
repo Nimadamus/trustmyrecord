@@ -51,6 +51,9 @@ jobs:
       - run: xvfb-run --auto-servernum npm run verify:sportsbook-live:browser-proof
         env:
           TMR_SPORTSBOOK_URL: https://trustmyrecord.com/sportsbook/
+          # The one permanent QA account. The proof logs in; it never signs up.
+          TMR_QA_USERNAME: ${{ secrets.TMR_QA_USERNAME }}
+          TMR_QA_PASSWORD: ${{ secrets.TMR_QA_PASSWORD }}
       - uses: actions/upload-artifact@v4
         if: always()
         with:

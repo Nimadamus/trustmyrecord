@@ -72,22 +72,21 @@ async function main() {
     args: ['--window-size=1440,1200', '--no-sandbox'],
   });
   const page = await browser.newPage({ viewport: { width: 1360, height: 1040 } });
-  const unique = 'tmrverify_f5_live_' + Date.now();
-  const signupResponse = await page.request.post('https://trustmyrecord-api.onrender.com/api/auth/signup', {
-    headers: { 'Accept': 'application/json' },
-    data: {
-      username: unique,
-      email: unique + '@test.com',
-      // Generated per run. A literal here is a plaintext credential in a
-      // PUBLIC repository, and this account is created fresh every time
-      // anyway, so nothing needs to know it afterwards.
-      password: 'Qa!' + Math.random().toString(36).slice(2, 10) + '#' + Date.now(),
-      displayName: 'test_internal_f5_live_proof'
-    }
+  // ONE permanent QA account, logged into every run (Nima 2026-10-06). This
+  // proof used to sign up a fresh tmrverify_f5_live_<timestamp> account on
+  // every run and left ~150 of them in production. Never sign up from here.
+  const unique = process.env.TMR_QA_USERNAME;
+  const qaPassword = process.env.TMR_QA_PASSWORD;
+  if (!unique || !qaPassword) {
+    throw new Error('TMR_QA_USERNAME / TMR_QA_PASSWORD are not set. This proof logs into the one permanent QA account; it never creates accounts.');
+  }
+  const signupResponse = await page.request.post('https://trustmyrecord-api.onrender.com/api/auth/login', {
+    headers: { 'Accept': 'application/json', 'X-TMR-Automation': 'tests/sportsbook-live-browser-proof.js' },
+    data: { login: unique, password: qaPassword }
   });
   const signupData = await signupResponse.json();
   if (!signupResponse.ok() || !signupData.accessToken) {
-    throw new Error('Live signup failed: ' + signupResponse.status() + ' ' + JSON.stringify(signupData));
+    throw new Error('Live QA login failed: ' + signupResponse.status() + ' ' + JSON.stringify(signupData));
   }
   const rawUser = signupData.user || {};
   const proofUser = {
@@ -136,22 +135,41 @@ async function main() {
     return board && board.innerText.length > 200 && card && card.dataset.scope === 'f5' && f5Button;
   }, null, { timeout: 30000 });
 
-  await page.evaluate(() => {
-    const card = Array.from(document.querySelectorAll('#gamesListContainer .tmr-market-card[data-market-filter="first-5"]')).find((candidate) => (
+  // The permanent QA account keeps its earlier proof picks, so remember them:
+  // the new pick must be one that did not exist before this run, and it must
+  // go on a game the account has no pending pick on (duplicate pick guard).
+  const pendingBefore = await page.evaluate(async () => {
+    const token = localStorage.getItem('trustmyrecord_token') || localStorage.getItem('accessToken');
+    const response = await fetch('https://trustmyrecord-api.onrender.com/api/picks/pending?limit=100', {
+      headers: { 'Accept': 'application/json', 'Authorization': 'Bearer ' + token }
+    });
+    if (!response.ok) throw new Error('pending picks lookup failed: ' + response.status);
+    const data = await response.json();
+    const picks = Array.isArray(data.picks) ? data.picks : [];
+    return { ids: picks.map((p) => String(p.id)), gameIds: picks.map((p) => String(p.game_id)) };
+  });
+  const pickedCard = await page.evaluate(async (takenGameIds) => {
+    const cards = Array.from(document.querySelectorAll('#gamesListContainer .tmr-market-card[data-market-filter="first-5"]')).filter((candidate) => (
       candidate.dataset.scope === 'f5' &&
       candidate.querySelector('.tmr-group[data-category="first-5"] .tmr-option-btn:not([disabled])')
     ));
-    if (!card) throw new Error('No live F5 card found');
-    card.classList.add('open');
-    card.classList.add('secondary-open');
-    card.scrollIntoView({ block: 'center', inline: 'nearest' });
-  });
-  await page.waitForTimeout(300);
-  await page.evaluate(() => {
-    const button = document.querySelector('#gamesListContainer .tmr-market-card.open.secondary-open[data-market-filter="first-5"] .tmr-group[data-category="first-5"] .tmr-option-btn:not([disabled])');
-    if (!button) throw new Error('No visible F5 option found');
-    button.click();
-  });
+    if (!cards.length) throw new Error('No live F5 card found');
+    for (const card of cards) {
+      card.classList.add('open');
+      card.classList.add('secondary-open');
+      card.scrollIntoView({ block: 'center', inline: 'nearest' });
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      const button = card.querySelector('.tmr-group[data-category="first-5"] .tmr-option-btn:not([disabled])');
+      if (!button) continue;
+      button.click();
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      const selected = window.TMR && window.TMR.currentSelectedPick;
+      const gameId = selected && (selected.gameId || selected.game_id || (selected.game && selected.game.id));
+      if (gameId && !takenGameIds.includes(String(gameId))) return { card: card.id, game_id: String(gameId) };
+      card.classList.remove('open', 'secondary-open');
+    }
+    throw new Error('Every live F5 game already has a pending pick on the QA account');
+  }, pendingBefore.gameIds);
   await page.locator('.tmr-slip-panel:visible, #pickDetails:visible, aside:has-text("Pick Slip"):visible').first().waitFor({ state: 'visible', timeout: 15000 });
   await page.waitForFunction(() => {
     const board = document.querySelector('#gamesListContainer') || document.querySelector('main article');
@@ -178,7 +196,7 @@ async function main() {
     }
     await window.__tmrProductionLockInPick();
   });
-  const submitProof = await pollLiveProof(page, () => page.evaluate(async (selectedMarketType) => {
+  const submitProof = await pollLiveProof(page, () => page.evaluate(async ({ selectedMarketType, beforeIds }) => {
     const token = localStorage.getItem('trustmyrecord_token') || localStorage.getItem('accessToken');
     if (!token || !/^f5/i.test(String(selectedMarketType || ''))) return null;
     const response = await fetch('https://trustmyrecord-api.onrender.com/api/picks/pending?limit=100', {
@@ -189,6 +207,7 @@ async function main() {
     const picks = Array.isArray(data.picks) ? data.picks : [];
     const found = picks.find((pick) => (
       pick
+      && !beforeIds.includes(String(pick.id))
       && String(pick.market_type || '').indexOf('f5_') === 0
       && String(pick.status || '').toLowerCase() === 'pending'
       && /F5|First 5|f5_/i.test((pick.selection || '') + ' ' + (pick.market_type || ''))
@@ -207,7 +226,7 @@ async function main() {
       pending_count: picks.length,
       selected_market_type: selectedMarketType
     };
-  }, selectedBeforeSubmit.market_type), { timeout: 30000, label: 'authenticated F5 pending pick' });
+  }, { selectedMarketType: selectedBeforeSubmit.market_type, beforeIds: pendingBefore.ids }), { timeout: 30000, label: 'authenticated F5 pending pick' });
 
   if (!submitProof || !submitProof.pick_id) {
     throw new Error('Authenticated F5 submit did not return a pending pick proof');
@@ -257,6 +276,7 @@ async function main() {
   const report = {
     live_url: LIVE_URL,
     account,
+    picked_card: pickedCard,
     selected_before_submit: selectedBeforeSubmit,
     submitted_pick: submitProof,
     post_refresh: postRefreshProof,
