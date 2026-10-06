@@ -1545,6 +1545,25 @@
             : chip({ disabled: true });
         return cols.map(function (c) { return cell[c]; }).join('');
     }
+    /* SOCCER_DRAW_ROW_20261006. A three way moneyline (soccer, and a soccer
+     * half) has a third outcome that is neither club. The board only drew one
+     * row per club, so the Draw price was reachable only inside All markets.
+     * It now gets its own row under the clubs: the Draw price in the Moneyline
+     * column and nothing in the handicap or total columns, which have no Draw
+     * side. The chip carries exactly the data the drawer's Draw chip carries. */
+    function drawRow(g, cat, cols, sp) {
+        var m = catLines(g, cat.key);
+        var ml = m && findSel(m.h2h, 'Draw');
+        if (!ml || !oddsOk(cat, ml.odds)) return '';
+        var spacer = (crest(g.away) || crest(g.home)) ? '<span class="sbn-crest" aria-hidden="true"></span>' : '';
+        var cells = cols.map(function (c) {
+            if (c !== 'h2h') return '<span class="sbn-drawgap" aria-hidden="true"></span>';
+            return chip({ top: fmtOdds(ml.odds), single: true,
+                sel: isSel(g, ml.marketType || 'h2h', 'Draw', null),
+                data: pickData(g, ml.marketType || 'h2h', 'Draw', 'Draw ML', null, ml.odds, cat.long, m.book) });
+        }).join('');
+        return '<div class="sbn-trow sbn-trow--draw' + sp + '"><span class="sbn-tname">' + spacer + '<b>Draw</b></span>' + cells + '</div>';
+    }
     function ouCells(g, cat, team) {
         var grp = g.groups[cat.key];
         var pick = function (over) {
@@ -1782,7 +1801,8 @@
         } else {
             var sp = state.sport === 'MLB' ? ' sbn-trow--sp' : '';
             body = '<div class="sbn-trow' + sp + '">' + tnameCell(g, g.away, true) + linesCells(g, cat, g.away, true, cols) + '</div>' +
-                '<div class="sbn-trow' + sp + '">' + tnameCell(g, g.home, false) + linesCells(g, cat, g.home, false, cols) + '</div>';
+                '<div class="sbn-trow' + sp + '">' + tnameCell(g, g.home, false) + linesCells(g, cat, g.home, false, cols) + '</div>' +
+                drawRow(g, cat, cols, sp);
         }
         var ncol = cat.layout === 'ttgrid' ? 2 : (cols ? cols.length : 3);
         // INLINE_EXPAND_20260909. Deeper markets open inside the card, under the
@@ -1865,8 +1885,31 @@
             if (!buckets[side]) { buckets[side] = []; order.push(side); }
             buckets[side].push(i);
         });
+        /* SOCCER_DRAW_ROW_20261006. Rows came out in feed order and cells were
+         * sorted by line with a moneyline read as line 0, so a club taking +0.5
+         * showed ML then handicap while the club laying -0.5 showed handicap
+         * then ML, the Draw sat under Over and Under, and the columns did not
+         * line up. Rows now read like the board (away, home, Draw, Over,
+         * Under, then anything else in feed order) and every row leads with
+         * its moneyline, so the ML column is the same column on every row. */
+        if (key !== 'player_props') {
+            var rank = function (side) {
+                if (side === g.away) return 0;
+                if (side === g.home) return 1;
+                if (side === 'Draw') return 2;
+                if (side === 'Over') return 3;
+                if (side === 'Under') return 4;
+                return 5;
+            };
+            order = order.map(function (side, idx) { return { side: side, idx: idx }; })
+                .sort(function (a, b) { return (rank(a.side) - rank(b.side)) || (a.idx - b.idx); })
+                .map(function (x) { return x.side; });
+        }
         var body = order.map(function (side) {
-            var list = buckets[side].slice().sort(function (a, b) { return (a.line || 0) - (b.line || 0); });
+            var list = buckets[side].slice().sort(function (a, b) {
+                var ha = isH2H(String(a.marketType || '')) ? 0 : 1, hb = isH2H(String(b.marketType || '')) ? 0 : 1;
+                return (ha - hb) || ((a.line || 0) - (b.line || 0));
+            });
             var cells = list.map(function (i) {
                 var mt = i.marketType;
                 var ou = /^(Over|Under)$/.test(side);
