@@ -163,7 +163,8 @@ for (const page of SIM_PAGES) {
         .forEach(([path, sport]) => {
             const html = read(path);
             ok(path + ' loads the run gate adapter for ' + sport,
-                html.indexOf('sim-run-gate.js" data-sport="' + sport + '"') > -1);
+                // Asset refs carry a content hash (?v=...) since the 2026-09-14 build.
+                new RegExp('sim-run-gate\\.js(\\?v=[0-9a-f]+)?" data-sport="' + sport + '"').test(html));
             ok(path + ' loads the gate core before the adapter',
                 html.indexOf('sim-auth-gate.js') > -1 && html.indexOf('sim-auth-gate.js') < html.indexOf('sim-run-gate.js'));
         });
