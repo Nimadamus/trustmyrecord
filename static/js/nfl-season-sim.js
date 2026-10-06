@@ -49,7 +49,7 @@
         return r.json();
       })).then(function (d) {
         cached = d;
-        var n = Number(runs && runs.value) || 2000;
+        var n = Number(runs && runs.value) || 10000;   // SIM_DEFAULT_20261006: matches the published 10,000-season tables
         status.textContent = 'Playing ' + n.toLocaleString('en-US') + ' seasons';
         var seed = (Math.random() * 4294967295) >>> 0;
         runOff('nfl', { inputs: d, n: n, seed: seed }, function () {
