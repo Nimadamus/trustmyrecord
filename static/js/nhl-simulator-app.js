@@ -1467,7 +1467,10 @@
    */
   (function darkCrests() {
     var swap = function (img) {
-      if (img && img.src && img.src.indexOf('/teamlogos/nhl/500/') >= 0) img.src = img.src.replace('/teamlogos/nhl/500/', '/teamlogos/nhl/500-dark/');
+      if (!img || !img.src || img.src.indexOf('/teamlogos/nhl/500/') < 0) return;
+      // Hold the rendered box so the swap can never move the layout.
+      if (img.width && img.height) { img.style.width = img.width + 'px'; img.style.height = img.height + 'px'; }
+      img.src = img.src.replace('/teamlogos/nhl/500/', '/teamlogos/nhl/500-dark/');
     };
     var all = function (root) { Array.prototype.forEach.call((root || document).querySelectorAll('img'), swap); };
     all(document);
