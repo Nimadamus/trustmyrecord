@@ -2120,10 +2120,6 @@ a.tkact-welcome:hover .tkact-mem b{color:#fff}
 <link rel="stylesheet" href="/static/css/tmr-concept-a.css?v=9cf96346a923">
 </head>
 <body class="tmr-ds">
-<!-- THE TICKER IS THE TOP OF THE PAGE (Nima, 2026-10-06: "Put the TMR ticker at
-     the top of the page"). It sits above the nav; the nav reservation script
-     below puts the injected nav directly under it. -->
-<div class="ticker"><div class="ticker-in"><span class="tlbl"><span class="bl"></span>Today</span><button type="button" class="tk-nav tk-prev" aria-label="Previous games" hidden>&lsaquo;</button><div class="ticker-games" data-slate-date="" aria-busy="true"><div class="ticker-track"><div class="ticker-page"><span class="gm is-skel" aria-hidden="true"><i class="sk a"></i><i class="sk b"></i><i class="sk c"></i></span><span class="gm is-skel" aria-hidden="true"><i class="sk a"></i><i class="sk b"></i><i class="sk c"></i></span><span class="gm is-skel" aria-hidden="true"><i class="sk a"></i><i class="sk b"></i><i class="sk c"></i></span><span class="gm is-skel" aria-hidden="true"><i class="sk a"></i><i class="sk b"></i><i class="sk c"></i></span><span class="gm is-skel" aria-hidden="true"><i class="sk a"></i><i class="sk b"></i><i class="sk c"></i></span><span class="sr-only" role="status">Loading today&rsquo;s MLB slate&hellip;</span></div></div></div><div class="tkcenter"><a class="tkcontest" href="/premium/#watchdog" role="status"><span class="tkc-ic" aria-hidden="true"><img src="/static/media/web-watchdog-icon.webp" srcset="/static/media/web-watchdog-icon.webp 2x, /static/media/web-watchdog-icon@3x.webp 3x" width="44" height="44" alt="" decoding="async"></span><span class="tkc-msg"><b>Web Watchdog</b><span id="tkWdMsg">Every handicapper claim, checked</span></span></a></div><div class="tkact" id="tmrActivity"><span class="tkact-lbl"><span class="bl"></span>Live on TMR</span><div class="tkact-slot"></div></div><button type="button" class="tk-nav tk-next" aria-label="Next games" hidden>&rsaquo;</button></div></div></div>
 <!-- Nav height reservation. There is no static <nav> in this document —
      tmr-ds-nav.js builds one and inserts it as body.firstChild a few hundred
      milliseconds in. Until then the page painted with nothing above the ticker
@@ -2136,18 +2132,7 @@ a.tkact-welcome:hover .tkact-mem b{color:#fff}
 (function(){
   var slot = document.getElementById('tmrNavReserve');
   if (!slot) return;
-  function drop(){ place(); if (slot && slot.parentNode) { slot.parentNode.removeChild(slot); slot = null; } }
-  /* tmr-ds-nav.js inserts the nav as body.firstChild, which is above the
-     ticker. Put it straight under the ticker instead. This runs from the
-     MutationObserver callback, before the browser paints, so the nav is never
-     seen above the ticker. */
-  function place(){
-    var nav = document.querySelector('.ds-nav');
-    var tk = document.querySelector('body > .ticker');
-    if (nav && tk && nav.parentNode === document.body && tk.nextSibling !== nav) {
-      document.body.insertBefore(nav, tk.nextSibling);
-    }
-  }
+  function drop(){ if (slot && slot.parentNode) { slot.parentNode.removeChild(slot); slot = null; } }
   if (document.querySelector('.ds-nav')) return drop();
   if ('MutationObserver' in window) {
     var mo = new MutationObserver(function(){
@@ -2356,6 +2341,7 @@ a.tkact-welcome:hover .tkact-mem b{color:#fff}
 
 
 
+<div class="ticker"><div class="ticker-in"><span class="tlbl"><span class="bl"></span>Today</span><button type="button" class="tk-nav tk-prev" aria-label="Previous games" hidden>&lsaquo;</button><div class="ticker-games" data-slate-date="" aria-busy="true"><div class="ticker-track"><div class="ticker-page"><span class="gm is-skel" aria-hidden="true"><i class="sk a"></i><i class="sk b"></i><i class="sk c"></i></span><span class="gm is-skel" aria-hidden="true"><i class="sk a"></i><i class="sk b"></i><i class="sk c"></i></span><span class="gm is-skel" aria-hidden="true"><i class="sk a"></i><i class="sk b"></i><i class="sk c"></i></span><span class="gm is-skel" aria-hidden="true"><i class="sk a"></i><i class="sk b"></i><i class="sk c"></i></span><span class="gm is-skel" aria-hidden="true"><i class="sk a"></i><i class="sk b"></i><i class="sk c"></i></span><span class="sr-only" role="status">Loading today&rsquo;s MLB slate&hellip;</span></div></div></div><div class="tkcenter"><a class="tkcontest" href="/premium/#watchdog" role="status"><span class="tkc-ic" aria-hidden="true"><img src="/static/media/web-watchdog-icon.webp" srcset="/static/media/web-watchdog-icon.webp 2x, /static/media/web-watchdog-icon@3x.webp 3x" width="44" height="44" alt="" decoding="async"></span><span class="tkc-msg"><b>Web Watchdog</b><span id="tkWdMsg">Every handicapper claim, checked</span></span></a></div><div class="tkact" id="tmrActivity"><span class="tkact-lbl"><span class="bl"></span>Live on TMR</span><div class="tkact-slot"></div></div><button type="button" class="tk-nav tk-next" aria-label="Next games" hidden>&rsaquo;</button></div></div></div>
 
 <section class="hero"><div class="hero-bg" aria-hidden="true"></div>
   <div class="grain"></div>

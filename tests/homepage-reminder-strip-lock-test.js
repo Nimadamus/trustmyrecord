@@ -163,19 +163,13 @@ ok('a failed status call no longer removes a cached strip',
 // ------------------------------------------------------------ 5. supporting
 ok('API preconnect is present so the answer can beat first paint',
   html.includes('<link rel="preconnect" href="https://trustmyrecord-api.onrender.com" crossorigin>'));
-// UPDATED 2026-10-06: the ticker moved to the very top of the page, above the
-// nav (Nima: "Put the TMR ticker at the top of the page"). The strip sits under
-// the nav, so the only content it can push down is the hero.
-ok('early block runs before the hero markup',
-  html.indexOf('TMRFirstPickEarly') < html.indexOf('<section class="hero">'),
+ok('early block runs before the ticker and hero markup',
+  html.indexOf('TMRFirstPickEarly') < html.indexOf('<div class="ticker">'),
   'the early block must be above the content it would otherwise push down');
-ok('the ticker is the first thing on the page, above the nav reservation',
-  html.indexOf('<div class="ticker">') > html.indexOf('<body class="tmr-ds">')
-  && html.indexOf('<div class="ticker">') < html.indexOf('id="tmrNavReserve"'));
 ok('early block runs after the nav reservation it anchors to',
   html.indexOf('id="tmrNavReserve"') < html.indexOf('TMRFirstPickEarly'));
 
-const total = 42;
+const total = 41;
 if (failures) {
   console.log(`\nhomepage reminder-strip lock FAILED (${failures} problem${failures === 1 ? '' : 's'})\n`);
   process.exit(1);
