@@ -10,6 +10,10 @@ echo ---- %DATE% %TIME% >> "%LOG%"
 
 git fetch origin -q                                        || goto :fail
 git reset -q --hard origin/main                            >> "%LOG%" 2>&1 || goto :fail
+REM NHL_PAGE_DATA_20261006: the NHL matchup and team pages from a fresh NHL
+REM snapshot (injuries, goalies, this season). Never fails the bake: any error
+REM leaves those pages exactly as committed. See scripts\refresh_nhl_sim_pages.py.
+call :nhl_pages
 node scripts\build_league_sim_pages.js                     >> "%LOG%" 2>&1 || goto :fail
 node scripts\build_nfl_season_page.js                      >> "%LOG%" 2>&1 || goto :fail
 node scripts\build_nfl_team_pages.js                       >> "%LOG%" 2>&1 || goto :fail
@@ -39,3 +43,21 @@ exit /b 0
 echo FAILED, nothing published >> "%LOG%"
 git rebase --abort >nul 2>&1
 exit /b 1
+
+:nhl_pages
+set BE=C:\Users\BL\tmrbe-sim-bake
+set NODE_PATH=C:\Users\BL\tmr-be-master\node_modules
+set PY=C:\Users\BL\AppData\Local\Programs\Python\Python310\python.exe
+if not exist "%BE%\.git" (echo nhl pages: no backend worktree, skipped >> "%LOG%" & exit /b 0)
+git -C "%BE%" fetch origin -q                              >> "%LOG%" 2>&1 || exit /b 0
+git -C "%BE%" reset -q --hard origin/master                >> "%LOG%" 2>&1 || exit /b 0
+node "%BE%\scripts\build_nhl_snapshot.js"                 >> "%LOG%" 2>&1 || (echo nhl pages: snapshot failed, kept >> "%LOG%" & exit /b 0)
+node scripts\build_sim_matchup_pages.js --backend "%BE%"   >> "%LOG%" 2>&1 || goto :nhl_undo
+node scripts\build_sim_team_pages.js --backend "%BE%"      >> "%LOG%" 2>&1 || goto :nhl_undo
+git checkout -q -- nba-simulator nhl-simulator/index.html scripts/sim-matchup-urls.txt scripts/sim-team-urls.txt >> "%LOG%" 2>&1
+"%PY%" scripts\refresh_nhl_sim_pages.py                    >> "%LOG%" 2>&1 || goto :nhl_undo
+exit /b 0
+:nhl_undo
+echo nhl pages: refresh failed, kept as committed >> "%LOG%"
+git checkout -q -- nba-simulator nhl-simulator scripts/sim-matchup-urls.txt scripts/sim-team-urls.txt >> "%LOG%" 2>&1
+exit /b 0
