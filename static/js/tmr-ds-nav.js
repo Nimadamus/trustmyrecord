@@ -167,10 +167,10 @@
          its own Game Files this entry and the NCAAF one both landed on whichever
          piece happened to be newest. Each entry now points at its own sport's
          stable door, so the two can never collapse onto the same page again. */
-      /*FMENU mlb*/ ['/handicapping/mlb/brewers-vs-padres-849826/', 'MLB', '/matchup-of-the-day/mlb/'],
+      /*FMENU mlb*/ ['/matchup-of-the-day/yankees-rays-schlittler-is-missing-bats/', 'MLB', '/matchup-of-the-day/mlb/'],
       /* Added 2026-09-29 with the NHL Featured Game of the Day
          (scripts/nhl_featured_game.py, cloud workflow nhl-featured-game.yml). */
-      /*FMENU nhl*/ ['/matchup-of-the-day/golden-knights-kraken-the-goaltending-gap/', 'NHL', '/matchup-of-the-day/nhl/'],
+      /*FMENU nhl*/ ['/nhl/penguins-capitals-carlile-vs-chychrun/', 'NHL', '/matchup-of-the-day/nhl/'],
       /* Added 2026-09-07 with the tennis section. Same stable-door pattern:
          /matchup-of-the-day/tennis/ bakes with the newest tennis Game File. */
       /*FMENU tennis*/ ['/tennis/cilic-fery-opening-round/', 'Tennis', '/matchup-of-the-day/tennis/'],
