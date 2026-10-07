@@ -332,6 +332,7 @@ ${shell.head}
     ${split}
     <div class="lsim-run">
       <label>Seasons <select id="lsimRuns"><option value="1000">1,000</option><option value="2000" selected>2,000</option><option value="5000">5,000</option><option value="10000">10,000</option></select></label>
+      <span class="small dim">The published figures come from ${count(result.runs)} seasons; a run of 2,000 moves each percentage by about a point.</span>
       <button class="btn primary" type="button" id="runSim">Run ${mode === 'season' ? 'the season' : 'the playoffs'}</button>
       <span id="lsimStatus" role="status" aria-live="polite"></span>
     </div>
@@ -590,6 +591,7 @@ ${shell.head}
     <p>How often each club reaches each round across ${count(result.runs)} simulated ${esc(season)} seasons and postseasons. Press Run to play a fresh set from today's schedule and results.</p>
     <div class="lsim-run">
       <label>Seasons <select id="lsimRuns"><option value="1000">1,000</option><option value="2000" selected>2,000</option><option value="5000">5,000</option><option value="10000">10,000</option></select></label>
+      <span class="small dim">The published figures come from ${count(result.runs)} seasons; a run of 2,000 moves each percentage by about a point.</span>
       <button class="btn primary" type="button" id="runSim">Run the playoffs</button>
       <span id="lsimStatus" role="status" aria-live="polite"></span>
     </div>
@@ -951,7 +953,12 @@ function patchTeams(sport, inputs, result) {
       let cell;
       if (g.final && g.home_score != null) {
         const us = home ? g.home_score : g.away_score, them = home ? g.away_score : g.home_score;
-        cell = `<b style="color:${us > them ? '#34d399' : '#f87171'}">${us > them ? 'W' : 'L'} ${us} to ${them}</b>`;
+        // An NHL loss in overtime or a shootout is not a regulation loss: it earns a
+        // point and the league records it as OTL.
+        // A shootout loss is SOL once the inputs carry the flag; until then every
+        // extra-time loss reads OTL (both earn the point).
+        const tag = us > them ? 'W' : (sport === 'nhl' && g.extra_time ? (g.shootout ? 'SOL' : 'OTL') : 'L');
+        cell = `<b style="color:${us > them ? '#34d399' : (tag === 'L' ? '#f87171' : '#fbbf24')}">${tag} ${us} to ${them}</b>`;
       } else {
         const c = inputs.matchups[g.home] && inputs.matchups[g.home][g.away];
         cell = c ? `${Math.round((home ? c.p : 1 - c.p) * 100)}% to win` : '';
