@@ -279,8 +279,12 @@
 
   /* ---------------------------------------------------------------- series */
 
+  /* LAB_PLAYOFFS_20261007: series games are playoff games. Where the inputs
+     carry a playoff probability (NHL: no 3-on-3, no shootout) it is used. */
   function playGame(inputs, home, away, rng) {
-    return rng() < prob(inputs, home.abbr, away.abbr).p ? home : away;
+    var c = prob(inputs, home.abbr, away.abbr);
+    var p = (c.pp !== undefined && c.pp !== null) ? c.pp : c.p;
+    return rng() < p ? home : away;
   }
 
   function better(sport, a, b) {
