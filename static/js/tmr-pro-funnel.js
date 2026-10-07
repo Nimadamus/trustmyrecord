@@ -452,10 +452,9 @@
         } else if (path === '/around-the-web/' || path === '/around-the-web') mountAtw();
         else if (path.indexOf('/leaderboards') === 0) mountLeaderboards();
         else if (/^\/around-the-web\/[^/]+\/?$/.test(path)) mountAtwProfile();
-        else if (path.indexOf('/sports-simulators') === 0 || /^\/(mlb|nfl|nba|nhl)-simulator\/?$/.test(path)) {
-            var hs = document.querySelector('main h1, h1');
-            if (hs) mountContext('simulator', hs.closest('header, section, div') || hs, 'tpfCtx');
-        }
+        /* NO_SIM_BANNERS_20261007 (Nima): no Watchdog line on the simulator pages.
+           It mounted on /sports-simulators and the MLB, NFL, NBA and NHL hubs and
+           showed an unrelated (often college football) consensus. Removed. */
     }
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 })();
