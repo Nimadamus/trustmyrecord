@@ -1338,8 +1338,11 @@
         d.meta.neutral_site ? 'Neutral ice' : home.name + ' at home']);
     var pts = hero.querySelectorAll('.mh-team .pts');
     var wps = hero.querySelectorAll('.mh-team .wp');
+    // Whole percents that add to 100: the home side is rounded, the away side is the rest.
+    var homeWhole = Math.round(p.win_probability.home * 100);
+    var shown = [(100 - homeWhole) + '%', homeWhole + '%'];
     [[p.win_probability.away, 0], [p.win_probability.home, 1]].forEach(function (pair) {
-      if (pts[pair[1]]) pts[pair[1]].textContent = wholePct(pair[0]);
+      if (pts[pair[1]]) pts[pair[1]].textContent = shown[pair[1]];
       if (wps[pair[1]]) wps[pair[1]].textContent = 'won ' + Math.round(pair[0] * n).toLocaleString()
         + ' of ' + n.toLocaleString();
     });
