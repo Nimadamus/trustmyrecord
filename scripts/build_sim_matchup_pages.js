@@ -434,6 +434,22 @@ function nhlNickname(team) {
   return parts[parts.length - 1];
 }
 
+/*
+ * REVERSE_PAIR_LINKS_20261007 (Nima: strengthen the stronger URL of each reverse
+ * pair, keep both URLs). Chosen on Search Console impressions, Jul 9 to Oct 6,
+ * 2026; Avalanche/Golden Knights tied on impressions and went to the better
+ * average position. The weaker page gets one plain link to the stronger one.
+ */
+const NHL_PREFERRED = {
+  'rangers-vs-bruins': 'bruins-vs-rangers',
+  'penguins-vs-flyers': 'flyers-vs-penguins',
+  'maple-leafs-vs-canadiens': 'canadiens-vs-maple-leafs',
+  'avalanche-vs-golden-knights': 'golden-knights-vs-avalanche',
+  'flames-vs-oilers': 'oilers-vs-flames',
+  'panthers-vs-lightning': 'lightning-vs-panthers',
+  'blackhawks-vs-red-wings': 'red-wings-vs-blackhawks',
+};
+
 function nhlPage(awayAbbr, homeAbbr, cssHash, siblings) {
   const model = nhlModel();
   const away = model.byAbbr.get(awayAbbr);
@@ -558,8 +574,10 @@ function nhlPage(awayAbbr, homeAbbr, cssHash, siblings) {
   <h2>Run it yourself</h2>
   <p>The projection above is a pinned run so the page stays stable. The live simulator is not: every press of <b>Simulate again</b> is a new random draw, so the same two teams give a different score, different goal scorers and a different goaltender line each time. <a href="/nhl-simulator/?away=${away.abbr}&amp;home=${home.abbr}">Open ${esc(an)} vs ${esc(hn)} in the live simulator</a> for period-by-period scoring, shots on goal, goals and assists, power-play results, penalty minutes, hits, blocked shots and both goaltenders' save totals.</p>
 
-  <h2>Is this a prediction?</h2>
-  <p>No. It is a model simulation of a hypothetical game between these two teams, built on last completed season production and current rosters. It is not a forecast of a scheduled game, it does not know tonight's starter, line combinations, or who is unavailable, and it is not betting advice. Use it as one research input. On TrustMyRecord, real picks are locked before game time, auto-graded and counted toward a public record that cannot be edited afterwards.</p>
+${NHL_PREFERRED[slug] ? `  <p>Home ice the other way round: <a href="/nhl-simulator/${NHL_PREFERRED[slug]}/">${esc(hn)} at ${esc(an)}, simulated</a>.</p>
+
+` : ''}  <h2>Is this a prediction?</h2>
+  <p>No. It is a model simulation of a hypothetical game between these two teams, built on current rosters, the players listed out and the projected starting goaltenders. It is not a forecast of a scheduled game, it does not know line combinations or a goaltender change announced on the day, and it is not betting advice. Use it as one research input. On TrustMyRecord, real picks are locked before game time, auto-graded and counted toward a public record that cannot be edited afterwards.</p>
 
   <hr class="divider" />
   <h2>More NHL matchups to simulate</h2>

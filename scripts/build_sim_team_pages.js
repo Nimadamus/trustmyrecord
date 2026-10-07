@@ -468,6 +468,9 @@ ${(() => {
     <p>${esc(t.name)} play in the <strong>${esc(al.division)} Division</strong> of the
     <strong>${esc(al.conference)} Conference</strong>. ${esc(al.note)}</p>
     <p>Division opponents: ${rivalLinks}.</p>
+    <p>For the whole season, the <a href="/nhl-season-simulator/">NHL Season Simulator</a> plays every remaining game
+    thousands of times and shows where the ${esc(t.nickname)} finish in the ${esc(al.division)}, and the
+    <a href="/nhl-playoff-simulator/">NHL Playoff Simulator</a> lets you build the bracket through the Stanley Cup Final.</p>
   </section>
 `;
     })()}
