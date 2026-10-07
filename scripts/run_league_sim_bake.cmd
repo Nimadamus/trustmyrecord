@@ -37,10 +37,10 @@ git push -q origin HEAD:main                               >> "%LOG%" 2>&1 || (
 )
 echo pushed >> "%LOG%"
 :done
-echo OK >> "%LOG%"
+echo OK finished %DATE% %TIME% >> "%LOG%"
 exit /b 0
 :fail
-echo FAILED, nothing published >> "%LOG%"
+echo FAILED at %DATE% %TIME%, nothing published (see the lines above for the failing step) >> "%LOG%"
 git rebase --abort >nul 2>&1
 exit /b 1
 
