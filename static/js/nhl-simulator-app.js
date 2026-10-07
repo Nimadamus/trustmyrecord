@@ -798,7 +798,9 @@
     var tail = ' ' + f.label;
     if (d.meta.data_source) tail += '. Source: ' + d.meta.data_source;
     if (d.meta.season) tail += '. Season ' + d.meta.season;
-    else if (d.meta.stats_season) tail += '. Stats ' + d.meta.stats_season;
+    else if (d.meta.stats_season) tail += d.meta.inputs_basis === 'blend' && d.meta.current_season
+      ? '. Stats: ' + d.meta.stats_season + ' blended with ' + d.meta.current_season + ' so far'
+      : '. Stats ' + d.meta.stats_season;
     box.appendChild(el('span', '', tail + '.'));
     return box;
   }
@@ -1272,6 +1274,14 @@
 
   function wholePct(v) { return Math.round(v * 100) + '%'; }
 
+  /** On a phone the club nickname fits where the full name would be cut mid-word. */
+  function shortNames(header, away, home) {
+    if (window.innerWidth >= 560) return;
+    var nms = header.querySelectorAll('.mh-team .nm');
+    if (nms[0] && away.common) nms[0].textContent = away.common;
+    if (nms[1] && home.common) nms[1].textContent = home.common;
+  }
+
   /** A team colour that shows on the dark page: black or navy falls back to the alternate. */
   function visibleColor(team, side) {
     var fallback = side === 'home' ? '#22d3ee' : '#38bdf8';
@@ -1346,6 +1356,7 @@
       if (wps[pair[1]]) wps[pair[1]].textContent = 'won ' + Math.round(pair[0] * n).toLocaleString()
         + ' of ' + n.toLocaleString();
     });
+    shortNames(hero, away, home);
     box.appendChild(hero);
 
     var top = (p.most_common_scores || [])[0];
@@ -1444,9 +1455,45 @@
       + '.nhl-market-t th:first-child{text-align:left}'
       + '.nhl-market-t th{background:transparent;font-weight:600}'
       + '.nhl-sample .mh-team .wp{display:none}'
-      + '.nhl-sample-head{margin:18px 0 6px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;opacity:.75}';
+      + '.nhl-sample-head{margin:18px 0 6px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;opacity:.75}'
+      + '.mh-team .nm{white-space:normal;overflow:visible;text-overflow:clip;word-break:normal;overflow-wrap:normal}';
     document.head.appendChild(st);
   }
+
+  /*
+   * NHL_DARK_CRESTS_20261007. ESPN's standard crests for navy and black clubs
+   * (Washington, Pittsburgh, ...) all but vanish on this dark page. ESPN
+   * publishes a 500-dark set for every NHL club; every crest on the page uses it.
+   */
+  (function darkCrests() {
+    var swap = function (img) {
+      if (img && img.src && img.src.indexOf('/teamlogos/nhl/500/') >= 0) img.src = img.src.replace('/teamlogos/nhl/500/', '/teamlogos/nhl/500-dark/');
+    };
+    var all = function (root) { Array.prototype.forEach.call((root || document).querySelectorAll('img'), swap); };
+    all(document);
+    if (window.MutationObserver) {
+      new MutationObserver(function (list) {
+        list.forEach(function (m) {
+          Array.prototype.forEach.call(m.addedNodes || [], function (n) {
+            if (n.nodeType !== 1) return;
+            if (n.tagName === 'IMG') swap(n); else all(n);
+          });
+        });
+      }).observe(document.documentElement, { childList: true, subtree: true });
+    }
+  })();
+
+  /*
+   * NHL_RESULT_SPACE_20261007. The result is thousands of pixels tall and
+   * arrives a second or more after Run, which pushed everything under it down
+   * (layout shift 0.95 on desktop). Space is reserved the moment the visitor
+   * asks for a run, inside the input window, so the result fills it.
+   */
+  document.addEventListener('click', function (e) {
+    var t = e.target && e.target.closest ? e.target.closest('#runBtn, #games button, #games .game') : null;
+    var r = document.getElementById('result');
+    if (t && r) r.style.minHeight = Math.round(window.innerHeight * 2.5) + 'px';
+  }, true);
 
   function render(app, d, box) {
     /* SHARE_YOUR_TAKE_20260927: static/js/tmr-take.js places its composer after this box. */
@@ -1486,6 +1533,7 @@
         d.meta.neutral_site ? 'Neutral ice' : home.name + ' at home'],
     );
     if (projected) gameHeader.classList.add('nhl-sample');
+    shortNames(gameHeader, away, home);
     box.appendChild(gameHeader);
 
     if (d.recap || (d.result.three_stars || []).length) {
