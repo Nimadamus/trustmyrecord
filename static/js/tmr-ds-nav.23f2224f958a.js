@@ -167,7 +167,7 @@
          its own Game Files this entry and the NCAAF one both landed on whichever
          piece happened to be newest. Each entry now points at its own sport's
          stable door, so the two can never collapse onto the same page again. */
-      /*FMENU mlb*/ ['/matchup-of-the-day/dodgers-braves-sale-is-missing-bats/', 'MLB', '/matchup-of-the-day/mlb/'],
+      /*FMENU mlb*/ ['/handicapping/mlb/brewers-vs-padres-849826/', 'MLB', '/matchup-of-the-day/mlb/'],
       /* Added 2026-09-29 with the NHL Featured Game of the Day
          (scripts/nhl_featured_game.py, cloud workflow nhl-featured-game.yml). */
       /*FMENU nhl*/ ['/nhl/hurricanes-canadiens-aho-vs-suzuki/', 'NHL', '/matchup-of-the-day/nhl/'],
