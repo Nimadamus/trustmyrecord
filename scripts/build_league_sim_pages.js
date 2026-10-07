@@ -95,6 +95,37 @@ function ptDate(iso, withTime) {
 const pctText = (v) => (v >= 0.995 ? 'better than 99%' : v < 0.005 ? 'under 1%' : Math.round(v * 100) + '%');
 const count = (n) => Number(n).toLocaleString('en-US');
 
+/**
+ * WHERE THE SEASON IS, from the schedule itself. Copy that names the season's
+ * timing is derived from this on every bake, never typed in: the opener line
+ * once read "opens September 29" for a week after the season had started.
+ *
+ * The schedule carries regular season games with a final flag, so it can tell
+ * not published / preseason / in progress / regular season complete. It cannot
+ * see the playoffs, so once every game is final the copy says only that the
+ * regular season ended, and never claims a playoff or offseason state it has
+ * not read.
+ */
+function seasonState(schedule, now) {
+  const reg = (schedule || []).filter((g) => g && g.date).slice().sort((a, b) => String(a.date).localeCompare(String(b.date)));
+  const total = reg.length;
+  const final = reg.filter((g) => g.final).length;
+  if (!total) return { phase: 'unpublished', total, final };
+  const first = reg[0];
+  const last = reg[total - 1];
+  if (!final && now < Date.parse(first.date)) return { phase: 'preseason', total, final, first, last };
+  if (final < total) return { phase: 'regular', total, final, first, last };
+  return { phase: 'complete', total, final, first, last };
+}
+
+function seasonStateLine(season, schedule, now) {
+  const st = seasonState(schedule, now);
+  if (st.phase === 'unpublished') return `The ${season} schedule is not published yet`;
+  if (st.phase === 'preseason') return `The ${season} regular season opens ${ptDate(st.first.date)}`;
+  if (st.phase === 'regular') return `The ${season} regular season is underway, with ${count(st.final)} of ${count(st.total)} games played and the last one scheduled for ${ptDate(st.last.date)}`;
+  return `The ${season} regular season is complete, all ${count(st.total)} games played through ${ptDate(st.last.date)}`;
+}
+
 function facts(sport, inputs, result) {
   const L = LEAGUE[sport];
   const confs = [...new Set(inputs.teams.map((t) => t.conference))].sort();
@@ -195,7 +226,7 @@ function page(sport, mode, inputs, result, shell) {
     : `${L.label} Playoff Simulator ${season} | ${nba ? 'Postseason Predictor and Bracket' : 'Stanley Cup Predictor'}`;
   const h1 = `${L.label} ${mode === 'season' ? 'Season' : 'Playoff'} Simulator`;
   const fav = F.fav, fav2 = F.fav2;
-  const openerLine = F.opener ? `The ${season} regular season opens ${ptDate(F.opener.date)}` : `The ${season} schedule is not published yet`;
+  const openerLine = seasonStateLine(season, inputs.schedule, Date.now());
   const desc = mode === 'season'
     ? `Simulate the ${season} ${L.label} season ${count(result.runs)} times for projected ${L.unit}, an 80% range and standings for all ${F.teamCount} teams. A season predictor from the games already played.`
     : `Free ${L.label} playoff simulator for ${season}. ${nba ? 'Simulate the play-in, the seeds and the bracket through the NBA title.' : 'Simulate wild cards, seeds and the bracket through the Stanley Cup.'}`;
@@ -487,7 +518,7 @@ function playoffPage(sport, inputs, result, shell) {
       { '@type': 'ListItem', position: 3, name: `${sportName} Simulator`, item: SITE + L.hub },
       { '@type': 'ListItem', position: 4, name: h1, item: SITE + url }] },
   ];
-  const openerLine = F.opener ? `The ${season} regular season opens ${ptDate(F.opener.date)}` : `The ${season} schedule is not published yet`;
+  const openerLine = seasonStateLine(season, inputs.schedule, Date.now());
   const favC = cfg.teams[favChamp];
 
   return `<!doctype html>
@@ -1032,7 +1063,7 @@ function patchMatchups(sport, inputs, result) {
   return n;
 }
 
-module.exports = { shellAssets, CSS, faqBlock, ptDate, pctText, count, slugOf, esc, UI_one, pickPanel };
+module.exports = { shellAssets, CSS, faqBlock, ptDate, pctText, count, slugOf, esc, UI_one, pickPanel, seasonState, seasonStateLine };
 
 if (require.main === module) (async () => {
   const shell = shellAssets();
