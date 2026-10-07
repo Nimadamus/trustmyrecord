@@ -266,7 +266,52 @@
       host.innerHTML = '';
       var c = d.combined;
 
-      host.appendChild(kpis([
+      /* ACCURACY_REPORT_20261007: where the API carries a season-by-season
+         report, it leads, and the market sits beside the model on the same
+         games. The pooled four-season figures it replaces flattered the latest
+         season, so they are not shown when the report is there. */
+      if (d.report && d.report.by_season && d.report.by_season.length) {
+        var R = d.report;
+        var tbl = el('table', 'acc-report');
+        var head = el('tr');
+        ['Season', 'Games', 'Winner called', 'Always home', 'Brier', 'Log loss', 'Goal margin error'].forEach(function (h) { head.appendChild(el('th', '', h)); });
+        tbl.appendChild(head);
+        R.by_season.forEach(function (s) {
+          var tr = el('tr');
+          [s.label + ' (' + s.from + ' to ' + s.to + ')', s.games.toLocaleString(), pct(s.winner_accuracy, 1),
+            pct(s.always_home_accuracy, 1), s.brier.toFixed(4), s.log_loss.toFixed(4), s.margin_mae.toFixed(2)]
+            .forEach(function (v, i) { tr.appendChild(el(i ? 'td' : 'th', '', v)); });
+          tbl.appendChild(tr);
+        });
+        var wrapT = el('div', 'acc-scroll');
+        wrapT.appendChild(tbl);
+        host.appendChild(wrapT);
+        host.appendChild(el('p', 'dim', 'Brier is the squared error of the stated probability: 0.2500 is a coin flip and lower is better. '
+          + R.method));
+        var mk = null;
+        R.by_season.forEach(function (s) { if (s.market) mk = { s: s, m: s.market }; });
+        if (mk) {
+          var m = mk.m;
+          var inside = m.brier_gap_95[0] < 0 && m.brier_gap_95[1] > 0;
+          host.appendChild(kpis([
+            { k: 'Model, ' + mk.s.label, v: m.model_brier.toFixed(4), s: 'Brier on ' + m.games.toLocaleString() + ' games with a price' },
+            { k: 'Market, same games', v: m.market_brier.toFixed(4), s: 'Moneyline with the vig removed' },
+            { k: 'Model minus market', v: (m.brier_gap_model_minus_market >= 0 ? '+' : '') + m.brier_gap_model_minus_market.toFixed(4),
+              s: '95% range ' + m.brier_gap_95[0].toFixed(4) + ' to ' + m.brier_gap_95[1].toFixed(4)
+                + (inside ? ': not distinguishable from the market' : (m.brier_gap_model_minus_market > 0 ? ': the market was better' : ': the model was better')) },
+            { k: 'Winner called', v: pct(m.model_accuracy, 1), s: 'Market ' + pct(m.market_accuracy, 1) + ' on the same games' },
+          ]));
+          host.appendChild(el('p', 'dim', 'Market source: ' + R.market_source + '.'));
+        }
+        if (!document.getElementById('acc-report-css')) {
+          var st = document.createElement('style');
+          st.id = 'acc-report-css';
+          st.textContent = '.acc-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}.acc-report{width:100%;border-collapse:collapse;font-size:14px;min-width:620px}'
+            + '.acc-report th,.acc-report td{padding:7px 8px;text-align:right;border-bottom:1px solid rgba(148,163,184,.18);white-space:nowrap}'
+            + '.acc-report th:first-child{text-align:left}.acc-report tr:first-child th{background:transparent;font-weight:600}';
+          document.head.appendChild(st);
+        }
+      } else host.appendChild(kpis([
         { k: 'Games measured', v: c.games.toLocaleString(),
           s: (d.seasons ? d.seasons.length + ' seasons, ' : '') + 'each projected before it was played' },
         { k: 'Winner called correctly', v: pct(c.accuracy, 1),
