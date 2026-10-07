@@ -1203,6 +1203,248 @@
     return bits.join(' · ');
   }
 
+  /*
+   * NHL_PROJECTION_HERO_20261007. The result opens on the full set of simulated
+   * games, not on one of them. Every number here is read off the same simulated
+   * distribution the rest of the page uses (the API's headline is the share of
+   * simulated games each side won), so nothing in the hero can disagree with the
+   * panels under it. The single game the engine plays out shift by shift follows
+   * as "One simulated game", labelled as one draw.
+   */
+  var _boardPromise = null;
+  function nhlBoard() {
+    if (!_boardPromise) {
+      _boardPromise = fetch(S.API_HOST + '/api/games/board/icehockey_nhl', { credentials: 'omit' })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .catch(function () { return null; });
+    }
+    return _boardPromise;
+  }
+
+  function americanToProb(a) {
+    a = Number(a);
+    if (!isFinite(a) || a === 0) return null;
+    return a > 0 ? 100 / (a + 100) : -a / (-a + 100);
+  }
+
+  /** The market for this exact game, vig removed, or null. Never guessed. */
+  function marketFor(board, d) {
+    if (!board || !board.games || d.meta.neutral_site) return null;
+    var home = d.matchup.home.name;
+    var away = d.matchup.away.name;
+    var now = Date.now();
+    var g = board.games.filter(function (x) {
+      return x.home_team === home && x.away_team === away && Date.parse(x.commence_time) > now;
+    }).sort(function (a, b) { return Date.parse(a.commence_time) - Date.parse(b.commence_time); })[0];
+    if (!g || !g.bookmakers || !g.bookmakers.length) return null;
+    var bk = g.bookmakers[0];
+    var mk = function (key) { return (bk.markets || []).filter(function (m) { return m.key === key; })[0]; };
+    var out = { book: bk.title, updated: bk.last_update || g.updated_at, start: g.commence_time };
+    var h2h = mk('h2h');
+    if (h2h) {
+      var ph = null; var pa = null;
+      h2h.outcomes.forEach(function (o) {
+        if (o.name === home) ph = americanToProb(o.price);
+        if (o.name === away) pa = americanToProb(o.price);
+      });
+      if (ph && pa) out.homeWin = ph / (ph + pa);
+    }
+    var tot = mk('totals');
+    if (tot) {
+      var ov = tot.outcomes.filter(function (o) { return o.name === 'Over'; })[0];
+      var un = tot.outcomes.filter(function (o) { return o.name === 'Under'; })[0];
+      if (ov && un && ov.point === un.point) {
+        var po = americanToProb(ov.price); var pu = americanToProb(un.price);
+        if (po && pu) out.total = { line: ov.point, over: po / (po + pu) };
+      }
+    }
+    var sp = mk('spreads');
+    if (sp) {
+      var fav = sp.outcomes.filter(function (o) { return o.point === -1.5; })[0];
+      var dog = sp.outcomes.filter(function (o) { return o.point === 1.5; })[0];
+      if (fav && dog) {
+        var pf = americanToProb(fav.price); var pd = americanToProb(dog.price);
+        if (pf && pd) out.puck = { team: fav.name, cover: pf / (pf + pd) };
+      }
+    }
+    return (out.homeWin != null || out.total || out.puck) ? out : null;
+  }
+
+  function wholePct(v) { return Math.round(v * 100) + '%'; }
+
+  /** A team colour that shows on the dark page: black or navy falls back to the alternate. */
+  function visibleColor(team, side) {
+    var fallback = side === 'home' ? '#22d3ee' : '#38bdf8';
+    var lum = function (hex) {
+      var m = /^#?([0-9a-f]{6})$/i.exec(String(hex || ''));
+      if (!m) return -1;
+      var n = parseInt(m[1], 16);
+      var c = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map(function (v) {
+        v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+      });
+      return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+    };
+    if (lum(team.color) >= 0.06) return team.color;
+    if (lum(team.altColor) >= 0.06) return team.altColor;
+    return fallback;
+  }
+
+  /** How the simulated games ended, by margin, away on the left. */
+  function marginStrip(d) {
+    var p = d.projection;
+    var buckets = p.distributions && p.distributions.margin;
+    if (!buckets || !buckets.length) return null;
+    var n = p.simulations;
+    var groups = [
+      { lab: d.matchup.away.abbr + ' by 3+', test: function (m) { return m <= -3; }, side: 'away' },
+      { lab: d.matchup.away.abbr + ' by 2', test: function (m) { return m === -2; }, side: 'away' },
+      { lab: d.matchup.away.abbr + ' by 1', test: function (m) { return m === -1; }, side: 'away' },
+      { lab: d.matchup.home.abbr + ' by 1', test: function (m) { return m === 1; }, side: 'home' },
+      { lab: d.matchup.home.abbr + ' by 2', test: function (m) { return m === 2; }, side: 'home' },
+      { lab: d.matchup.home.abbr + ' by 3+', test: function (m) { return m >= 3; }, side: 'home' },
+    ];
+    groups.forEach(function (g) {
+      g.share = buckets.filter(function (b) { return g.test(b.bucket); })
+        .reduce(function (t, b) { return t + b.count; }, 0) / n;
+    });
+    var wrap = el('div', 'nhl-strip');
+    var bar = el('div', 'nhl-strip-bar');
+    var legend = el('div', 'nhl-strip-legend');
+    groups.forEach(function (g, i) {
+      var seg = el('i');
+      seg.style.flex = String(Math.max(g.share, 0.001));
+      seg.style.background = visibleColor(d.matchup[g.side], g.side);
+      seg.style.opacity = String(i === 2 || i === 3 ? 1 : (i === 1 || i === 4 ? 0.75 : 0.5));
+      seg.title = g.lab + ': ' + wholePct(g.share);
+      bar.appendChild(seg);
+      var li = el('span', '', g.lab + ' ');
+      li.appendChild(el('b', '', wholePct(g.share)));
+      legend.appendChild(li);
+    });
+    wrap.appendChild(el('div', 'k', 'How the ' + n.toLocaleString() + ' games ended'));
+    wrap.appendChild(bar);
+    wrap.appendChild(legend);
+    return wrap;
+  }
+
+  function projectionHero(app, d, box) {
+    var p = d.projection;
+    var away = d.matchup.away;
+    var home = d.matchup.home;
+    var n = p.simulations;
+    var hero = S.matchupHeader(away, home, Math.round(p.win_probability.away * 100),
+      Math.round(p.win_probability.home * 100), p.win_probability.away, p.win_probability.home,
+      ['Win probability', n.toLocaleString() + ' simulations',
+        d.meta.neutral_site ? 'Neutral ice' : home.name + ' at home']);
+    var pts = hero.querySelectorAll('.mh-team .pts');
+    var wps = hero.querySelectorAll('.mh-team .wp');
+    [[p.win_probability.away, 0], [p.win_probability.home, 1]].forEach(function (pair) {
+      if (pts[pair[1]]) pts[pair[1]].textContent = wholePct(pair[0]);
+      if (wps[pair[1]]) wps[pair[1]].textContent = 'won ' + Math.round(pair[0] * n).toLocaleString()
+        + ' of ' + n.toLocaleString();
+    });
+    box.appendChild(hero);
+
+    var top = (p.most_common_scores || [])[0];
+    var oneGoal = (p.distributions && p.distributions.margin || [])
+      .filter(function (b) { return Math.abs(b.bucket) === 1; })
+      .reduce(function (t, b) { return t + b.count; }, 0) / n;
+    box.appendChild(S.kpis([
+      { k: 'Average score', v: n2(p.projected_score.away) + ' - ' + n2(p.projected_score.home),
+        s: away.abbr + ' at ' + home.abbr + ', mean of every run' },
+      { k: 'Most common final', v: top ? (top.away + ' - ' + top.home) : '--',
+        s: top ? ('Only ' + wholePct(top.share) + ' of runs: no single score is likely') : '' },
+      { k: 'Total goals', v: n2(p.total.mean),
+        s: 'Half of runs between ' + p.total.p25 + ' and ' + p.total.p75 },
+      { k: 'Decided by one goal', v: wholePct(oneGoal),
+        s: wholePct(p.overtime_share) + ' reach overtime' },
+    ]));
+
+    var strip = marginStrip(d);
+    if (strip) {
+      var sp = el('div', 'panel');
+      sp.appendChild(strip);
+      box.appendChild(sp);
+    }
+
+    // What the run assumed: tonight's goaltenders and who is out.
+    var sg = d.matchup.starting_goalies || {};
+    var av = (d.meta && d.meta.availability) || {};
+    var ap = el('div', 'panel nhl-assume');
+    ap.appendChild(el('div', 'sechead', 'What this run assumes'));
+    [[away, sg.away, av.away], [home, sg.home, av.home]].forEach(function (t) {
+      var row = el('div', 'sub');
+      var g = t[1];
+      var names = (t[2] && t[2].names) || [];
+      row.appendChild(el('b', '', t[0].abbr + ': '));
+      row.appendChild(document.createTextNode(
+        (g ? g.name + ' in goal (' + (g.status === 'selected' ? 'your pick'
+          : (g.status === 'confirmed' ? 'confirmed' : 'projected, not confirmed')) + ')' : 'goaltender unknown')
+        + (names.length ? '; out: ' + names.join(', ') : '; nobody listed out')));
+      ap.appendChild(row);
+    });
+    box.appendChild(ap);
+
+    // The market for this game, when the board carries it. Omitted otherwise.
+    var mp = el('div', 'panel nhl-market');
+    mp.style.display = 'none';
+    box.appendChild(mp);
+    nhlBoard().then(function (board) {
+      var m = marketFor(board, d);
+      if (!m) return;
+      mp.appendChild(el('div', 'sechead', 'Simulator and the market'));
+      var rows = [];
+      if (m.homeWin != null) {
+        rows.push([home.abbr + ' to win', wholePct(p.win_probability.home), wholePct(m.homeWin)]);
+      }
+      if (m.puck) {
+        var simCover = m.puck.team === home.name ? p.puckline.home_minus_1_5
+          : (m.puck.team === away.name ? p.puckline.away_minus_1_5 : null);
+        var ab = m.puck.team === home.name ? home.abbr : away.abbr;
+        if (simCover != null) rows.push([ab + ' -1.5', wholePct(simCover), wholePct(m.puck.cover)]);
+      }
+      if (m.total) {
+        var curve = (p.distributions && p.distributions.totalCurve) || [];
+        var c = curve.filter(function (x) { return x.line === m.total.line; })[0];
+        if (c) rows.push(['Over ' + m.total.line, wholePct(c.over), wholePct(m.total.over)]);
+      }
+      if (!rows.length) return;
+      var tbl = el('table', 'nhl-market-t');
+      var thead = el('tr');
+      ['', 'Simulator', m.book + ', vig removed'].forEach(function (h) { thead.appendChild(el('th', '', h)); });
+      tbl.appendChild(thead);
+      rows.forEach(function (r) {
+        var tr = el('tr');
+        r.forEach(function (c, i) { tr.appendChild(el(i ? 'td' : 'th', '', c)); });
+        tbl.appendChild(tr);
+      });
+      mp.appendChild(tbl);
+      var when = m.updated ? new Date(m.updated).toLocaleString('en-US', { timeZone: 'America/Los_Angeles', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) + ' PT' : '';
+      mp.appendChild(el('div', 'sub', 'Market prices from the TrustMyRecord board' + (when ? ', updated ' + when : '')
+        + '. A gap is a disagreement, not a pick.'));
+      mp.style.display = '';
+    });
+  }
+
+  function ensureHeroCss() {
+    if (document.getElementById('nhl-hero-css')) return;
+    var st = document.createElement('style');
+    st.id = 'nhl-hero-css';
+    st.textContent = '.nhl-strip .k{font-size:12px;text-transform:uppercase;letter-spacing:.06em;opacity:.75;margin-bottom:8px}'
+      + '.nhl-strip-bar{display:flex;height:18px;border-radius:9px;overflow:hidden;gap:2px}'
+      + '.nhl-strip-bar i{display:block;min-width:2px}'
+      + '.nhl-strip-legend{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px;font-size:13px;opacity:.9}'
+      + '.nhl-strip-legend b{margin-left:2px}'
+      + '.nhl-assume .sub{margin-top:6px;line-height:1.45}'
+      + '.nhl-market-t{width:100%;border-collapse:collapse;margin:6px 0 4px;font-size:14px}'
+      + '.nhl-market-t th,.nhl-market-t td{text-align:right;padding:6px 8px;border-bottom:1px solid rgba(148,163,184,.18)}'
+      + '.nhl-market-t th:first-child{text-align:left}'
+      + '.nhl-market-t th{background:transparent;font-weight:600}'
+      + '.nhl-sample .mh-team .wp{display:none}'
+      + '.nhl-sample-head{margin:18px 0 6px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;opacity:.75}';
+    document.head.appendChild(st);
+  }
+
   function render(app, d, box) {
     /* SHARE_YOUR_TAKE_20260927: static/js/tmr-take.js places its composer after this box. */
     try {
@@ -1225,19 +1467,29 @@
 
     box.appendChild(resultBar(app, d));
 
-    box.appendChild(S.matchupHeader(
+    var projected = p.sample_supports_projection !== false;
+    if (projected) {
+      ensureHeroCss();
+      projectionHero(app, d, box);
+      box.appendChild(el('div', 'nhl-sample-head', 'One simulated game, played out shift by shift'));
+    }
+
+    var gameHeader = S.matchupHeader(
       away, home,
       d.result.final.away, d.result.final.home,
       p.win_probability.away, p.win_probability.home,
-      [decided, d.meta.simulations.toLocaleString() + ' simulations',
+      [decided, projected ? 'One of ' + d.meta.simulations.toLocaleString() + ' runs'
+        : d.meta.simulations.toLocaleString() + ' simulations',
         d.meta.neutral_site ? 'Neutral ice' : home.name + ' at home'],
-    ));
+    );
+    if (projected) gameHeader.classList.add('nhl-sample');
+    box.appendChild(gameHeader);
 
     if (d.recap || (d.result.three_stars || []).length) {
       box.appendChild(S.panel('How it played out', recapPanel(d)));
     }
 
-    box.appendChild(S.kpis(p.sample_supports_projection === false ? [
+    if (!projected) box.appendChild(S.kpis(p.sample_supports_projection === false ? [
       { k: 'Final', v: d.result.final.away + ' - ' + d.result.final.home,
         s: 'One game, played out shift by shift'
           + (d.result.decided_in && d.result.decided_in !== 'regulation'
