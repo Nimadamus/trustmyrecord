@@ -383,8 +383,8 @@ ${shell.head}
   </section>
 </main>
 <div class="foot wrap">TrustMyRecord ${esc(h1)} &middot; a model projection, not betting advice &middot; <a href="${url}#faq">FAQ</a></div>
-<script defer src="/static/js/league-season-engine.js"></script>
-<script defer src="/static/js/league-season-sim.js"></script>
+<script defer src="/static/js/league-season-engine.js?v=${LS_ENGINE_V}"></script>
+<script defer src="/static/js/league-season-sim.js?v=${LS_SIM_V}"></script>
 <script defer src="/static/js/sim-run-gate.js" data-sport="${sport}_${mode}"></script>
 ${shell.tail}
 </body>
@@ -638,8 +638,8 @@ ${shell.head}
   </section>
 </main>
 <div class="foot wrap">TrustMyRecord ${esc(h1)} &middot; a model projection, not betting advice &middot; <a href="${url}#faq">FAQ</a></div>
-<script defer src="/static/js/league-season-engine.js"></script>
-<script defer src="/static/js/league-season-sim.js"></script>
+<script defer src="/static/js/league-season-engine.js?v=${LS_ENGINE_V}"></script>
+<script defer src="/static/js/league-season-sim.js?v=${LS_SIM_V}"></script>
 <script defer src="/static/js/playoff-bracket.js?v=${PB_JS_V}"></script>
 <script defer src="/static/js/sim-run-gate.js" data-sport="${sport}_playoff"></script>
 ${shell.tail}
@@ -658,6 +658,12 @@ function assetV(rel) {
   }
 }
 const PB_JS_V = assetV('static/js/playoff-bracket.js');
+/* SEASON_ENGINE_VERSIONING_20261007: the season and playoff pages loaded the
+   engine and its UI with no version, so a browser kept a 4-hour cached copy after
+   a deploy and Run could use an older engine than the published tables. Bake
+   commits skip CI, so the bake pins them itself, the same 12 characters CI uses. */
+const LS_ENGINE_V = assetV('static/js/league-season-engine.js');
+const LS_SIM_V = assetV('static/js/league-season-sim.js');
 const PB_CSS_V = assetV('static/css/tmr-playoff-bracket.css');
 
 /* PICK THE NEXT GAMES, the NFL Playoff Simulator's interaction for NBA and NHL.
