@@ -57,10 +57,40 @@
     };
   }
 
+  /* LAB_UNCERTAINTY_20261007: nobody knows a club's true strength, so each
+     simulated NHL season draws one strength offset per club (goals, normal with
+     sd SIGMA) and every game that season, regular or playoff, uses it. Without
+     it the favourites' odds were too concentrated: backtested from Oct 15 of
+     three seasons, the 80% points ranges held 67% of final totals; with sd 0.3
+     they held 83% and playoff-odds log loss fell from 0.620 to 0.580.
+     The sd shrinks as the season is played: 0.31 x sqrt(share of games left),
+     never below half of that (0.155) because strength is never known exactly. */
+  var NOISE = null;
+  var LOGIT_PER_GOAL = 0.778;   // the calibration slope: one goal of margin in logit units
+  function nhlSigma(inputs) {
+    var total = inputs.schedule.length, left = 0;
+    for (var i = 0; i < total; i++) if (!inputs.schedule[i].final) left++;
+    var frac = total ? left / total : 0;
+    return 0.31 * Math.sqrt(Math.max(frac, 0.25));
+  }
+  function shift(p, d) {
+    if (!d) return p;
+    var q = Math.min(0.998, Math.max(0.002, p));
+    var z = Math.log(q / (1 - q)) + d;
+    return 1 / (1 + Math.exp(-z));
+  }
+
   function prob(inputs, home, away) {
     var row = inputs.matchups[home];
     var c = row && row[away];
-    return c || { p: 0.5, ot: inputs.sport === 'nhl' ? 0.22 : 0 };
+    c = c || { p: 0.5, ot: inputs.sport === 'nhl' ? 0.22 : 0 };
+    if (NOISE && inputs.sport === 'nhl') {
+      var d = LOGIT_PER_GOAL * ((NOISE[home] || 0) - (NOISE[away] || 0));
+      var out = { p: shift(c.p, d), ot: c.ot };
+      if (c.pp !== undefined && c.pp !== null) out.pp = shift(c.pp, d);
+      return out;
+    }
+    return c;
   }
 
   /* ---------------------------------------------------------------- season */
@@ -428,8 +458,20 @@
         playoffs: 0, round2: 0, conf_final: 0, final: 0, champion: 0, seeds: {} };
     });
     var sample = null;
+    var useNoise = sport === 'nhl' && !(opts && opts.uncertainty === false);
+    var sigma = useNoise ? nhlSigma(inputs) : 0;
+    var noiseRng = mulberry32(((seed || 1) ^ 0x9e3779b9) >>> 0);
+    var gauss = function () {
+      var u = 0; while (u === 0) u = noiseRng();
+      return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * noiseRng());
+    };
     for (var i = 0; i < n; i++) {
-      var one = runOnce(inputs, rng, opts);
+      if (useNoise) {
+        NOISE = {};
+        inputs.teams.forEach(function (t) { NOISE[t.espn_abbr] = sigma * gauss(); });
+      }
+      var one;
+      try { one = runOnce(inputs, rng, opts); } finally { NOISE = null; }
       if (i === 0) sample = one;
       Object.keys(one.records).forEach(function (k) {
         var a = acc[k], r = one.records[k];
