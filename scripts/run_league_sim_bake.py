@@ -48,9 +48,21 @@ def now():
     return dt.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
 
+LOG_LOCK = threading.Lock()
+
+
 def log(msg):
-    with open(LOG, 'a', encoding='utf-8') as f:
+    with LOG_LOCK, open(LOG, 'a', encoding='utf-8') as f:
         f.write(msg + '\n')
+
+
+def pump(stream):
+    """Copy a step's output into the log line by line. A child given the log file as
+    its stdout writes at its own file offset on Windows and overwrote the runner's
+    heartbeat lines (17:26 run: one heartbeat survived of about eight)."""
+    for raw in iter(stream.readline, b''):
+        log(raw.decode('utf-8', 'replace').rstrip('\r\n'))
+    stream.close()
 
 
 def save(**kw):
@@ -78,21 +90,24 @@ def run(stage, cmd, fatal=True):
     save(stage=stage, stage_started=now())
     log('[stage] %s start %s' % (stage, now()))
     t0 = time.time()
-    with open(LOG, 'a', encoding='utf-8') as out:
-        p = subprocess.Popen(cmd, cwd=ROOT, stdout=out, stderr=subprocess.STDOUT, creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
-        last_beat = t0
-        while True:
-            try:
-                rc = p.wait(timeout=5)
-                break
-            except subprocess.TimeoutExpired:
-                if time.time() - START > BUDGET_S:
-                    p.kill()
-                    p.wait()
-                    raise Stop('TIMEOUT')
-                if time.time() - last_beat >= HEARTBEAT_S:
-                    last_beat = time.time()
-                    log('[heartbeat] %s still running after %ds (run %ds)' % (stage, int(time.time() - t0), int(time.time() - START)))
+    p = subprocess.Popen(cmd, cwd=ROOT, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
+    reader = threading.Thread(target=pump, args=(p.stdout,), daemon=True)
+    reader.start()
+    last_beat = t0
+    while True:
+        try:
+            rc = p.wait(timeout=5)
+            break
+        except subprocess.TimeoutExpired:
+            if time.time() - START > BUDGET_S:
+                p.kill()
+                p.wait()
+                reader.join(10)
+                raise Stop('TIMEOUT')
+            if time.time() - last_beat >= HEARTBEAT_S:
+                last_beat = time.time()
+                log('[heartbeat] %s still running after %ds (run %ds)' % (stage, int(time.time() - t0), int(time.time() - START)))
+    reader.join(30)
     log('[stage] %s end rc=%d %ds' % (stage, rc, int(time.time() - t0)))
     if rc != 0 and fatal:
         raise Stop('FAILED')
@@ -179,8 +194,10 @@ def main():
                     break
             if not pushed:
                 raise Stop('FAILED')
-            save(published=True)
-            log('pushed')
+            sha = subprocess.run([GIT, 'rev-parse', '--short=11', 'HEAD'], cwd=ROOT, capture_output=True, text=True).stdout.strip()
+            files = subprocess.run([GIT, 'show', '--name-only', '--format=', 'HEAD'], cwd=ROOT, capture_output=True, text=True).stdout.split()
+            save(published=True, commit=sha, files_changed=len(files))
+            log('pushed %s, %d files changed' % (sha, len(files)))
     except Stop as e:
         result = str(e)
         subprocess.run([GIT, 'rebase', '--abort'], cwd=ROOT, capture_output=True)
