@@ -75,6 +75,11 @@
         <div id="msg" class="msg"></div>
 
         <section class="panel">
+            <h2>Real money readiness at a glance</h2>
+            <div id="glance" class="grid"></div>
+        </section>
+
+        <section class="panel">
             <h2>System state</h2>
             <p class="note">Redemption stays off until the flag is on, every decision below is recorded, a payout rail is enabled and the reserve covers it. Every action needs a reason and is logged permanently.</p>
             <div id="state" class="state off">Loading</div>
@@ -89,6 +94,18 @@
                 <button class="danger" data-act="pause-on">Emergency pause</button>
                 <button data-act="pause-off">Resume</button>
             </div>
+        </section>
+
+        <section class="panel">
+            <h2>Waiting for a second admin</h2>
+            <p class="note">Rule changes, KYC and unfreeze, reserve credits, turning the kill switch off and resuming all need a second admin. The admin who proposed a change cannot confirm it.</p>
+            <table><thead><tr><th>#</th><th>Change</th><th>Details</th><th>Reason</th><th>Proposed</th><th></th></tr></thead><tbody id="proposals"></tbody></table>
+        </section>
+
+        <section class="panel">
+            <h2>Card payment flags</h2>
+            <p class="note">Disputes, partial refunds and refunds that could not be taken back. An open flag blocks that member from redeeming.</p>
+            <table><thead><tr><th>#</th><th>Member</th><th>Kind</th><th>Reference</th><th>Recorded</th><th></th></tr></thead><tbody id="flags"></tbody></table>
         </section>
 
         <section class="panel">
@@ -127,10 +144,10 @@
 
         <section class="panel">
             <h2>Rules and limits</h2>
-            <p class="note">Change any rule as JSON, for example {"min_redemption_coins": 500}. Money is in cents, the redemption price in micro dollars per TMR (10000 = $0.01). These are business and legal decisions.</p>
+            <p class="note">Propose a rule change as JSON, for example {"min_redemption_coins": 500}; a second admin confirms it above. Money is in cents, the redemption price in micro dollars per TMR (10000 = $0.01). These are business and legal decisions.</p>
             <pre id="config" style="white-space:pre-wrap;font-size:12px;color:var(--muted);max-height:320px;overflow:auto"></pre>
             <textarea id="changes" placeholder='{"field": value}'></textarea>
-            <div class="row"><button data-act="config">Save rule change</button></div>
+            <div class="row"><button data-act="config">Propose rule change</button></div>
         </section>
     </main>
     <script src="/static/js/config.js?v=430b4bba7b37"></script>
@@ -170,6 +187,20 @@
             el('exposure').innerHTML = d.exposure.length ? d.exposure.map(function (x) { return '<tr><td>' + x.user_id + '</td><td>' + num(x.eligible_coins) + '</td><td>' + usd(x.eligible_cents) + '</td><td>' + usd(x.open_cents) + '</td></tr>'; }).join('') : '<tr><td colspan="4" style="color:var(--muted)">No member holds redeemable TMR (nothing is eligible).</td></tr>';
             el('daily').innerHTML = d.daily_volume.length ? d.daily_volume.map(function (x) { return '<tr><td>' + esc(x.day) + '</td><td>' + num(x.n) + '</td><td>' + usd(x.cents) + '</td></tr>'; }).join('') : '<tr><td colspan="3" style="color:var(--muted)">No payouts.</td></tr>';
             el('config').textContent = JSON.stringify(d.config, null, 1);
+            var g = d.at_a_glance;
+            tiles('glance', [['Total TMR supply', num(g.total_supply)], ['Potentially redeemable', num(g.potentially_redeemable_supply)],
+                ['Max dollar liability (all TMR)', usd(g.maximum_dollar_liability_cents)], ['Reserve', usd(g.reserve_cents)],
+                ['Coverage', g.coverage_bps == null ? 'n/a' : (g.coverage_bps / 100).toFixed(1) + '%'], ['Pending withdrawals', usd(g.pending_withdrawals_cents)],
+                ['Payout volume 30d', usd(g.payout_volume_30d_cents)], ['Frozen members', num(g.frozen_users)], ['Suspicious requests', num(g.suspicious_requests)],
+                ['Unknown payout outcomes', num(g.unknown_payout_outcomes)], ['Open card flags', num(g.open_payment_flags)],
+                ['Kill switch', g.kill_switch ? 'ON' : 'off'], ['Paused', g.paused ? 'yes' : 'no']]);
+            el('proposals').innerHTML = (d.proposals || []).length ? d.proposals.map(function (p) {
+                return '<tr><td>' + p.id + '</td><td>' + esc(p.action) + '</td><td><code>' + esc(JSON.stringify(p.payload)) + '</code></td><td>' + esc(p.reason) + '</td><td>admin ' + p.proposed_by + ', ' + when(p.proposed_at) + '</td><td>' +
+                    '<button data-prop="' + p.id + '" data-op="confirm">Confirm</button> <button class="danger" data-prop="' + p.id + '" data-op="cancel">Cancel</button></td></tr>';
+            }).join('') : '<tr><td colspan="6" style="color:var(--muted)">Nothing waiting.</td></tr>';
+            el('flags').innerHTML = (d.payment_flags || []).length ? d.payment_flags.map(function (f) {
+                return '<tr><td>' + f.id + '</td><td>' + esc(f.username) + ' (' + f.user_id + ')</td><td>' + esc(f.kind) + '</td><td>' + esc(f.source_ref) + '</td><td>' + when(f.created_at) + '</td><td><button data-flag="' + f.id + '">Resolve</button></td></tr>';
+            }).join('') : '<tr><td colspan="6" style="color:var(--muted)">No open flags.</td></tr>';
             await loadRequests();
         }
 
@@ -180,6 +211,7 @@
                 var acts = [];
                 if (q.status === 'review_required') acts.push('approve', 'reject');
                 if (q.status === 'approved' || q.status === 'failed') acts.push('process', 'reject');
+                if (q.status === 'processing' || q.status === 'failed') acts.push('reconcile');
                 if (q.status === 'paid') acts.push('reverse');
                 return '<tr><td>' + q.id + '</td><td>' + esc(q.username) + ' (' + q.user_id + ')</td><td>' + esc(q.status) + '</td><td>' + num(q.amount_coins) + '</td><td>' + usd(q.payout_cents) + '</td><td>' + esc((q.review_reasons || []).join(', ')) + '</td><td>' + when(q.created_at) + '</td><td>' +
                     acts.map(function (a) { return '<button data-req="' + q.id + '" data-op="' + a + '"' + (a === 'reject' || a === 'reverse' ? ' class="danger"' : '') + '>' + a + '</button>'; }).join(' ') + '</td></tr>';
@@ -203,14 +235,17 @@
             else if (op === 'reject') await post('/requests/' + id + '/reject', { reason: reason() });
             else if (op === 'process') await post('/requests/' + id + '/process', {});
             else if (op === 'reverse') await post('/requests/' + id + '/reverse', { reason: reason(), providerEvidence: el('evidence').value.trim() });
+            else if (op === 'reconcile') await post('/requests/' + id + '/reconcile', {});
         }
         document.addEventListener('click', async function (e) {
             var b = e.target.closest('button'); if (!b) return;
             try {
                 if (b.dataset.act) await act(b.dataset.act);
                 else if (b.dataset.req) await reqAct(b.dataset.req, b.dataset.op);
+                else if (b.dataset.prop) await post('/proposals/' + b.dataset.prop + '/' + b.dataset.op, b.dataset.op === 'cancel' ? { reason: reason() } : {});
+                else if (b.dataset.flag) await post('/payment-flags/' + b.dataset.flag + '/resolve', { reason: reason() });
                 else return;
-                say('Done.', 'ok'); await load();
+                say('Done. Changes that need a second admin are listed under "Waiting for a second admin".', 'ok'); await load();
             } catch (err) { say((err && err.message) || String(err), 'err'); }
         });
         el('statusFilter').addEventListener('change', function () { loadRequests().catch(function (e) { say(e.message, 'err'); }); });

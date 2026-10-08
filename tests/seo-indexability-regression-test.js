@@ -261,6 +261,14 @@ console.log('\nnoindex allowlist');
     // SEO_INDEXING_PROTOCOL.md section 2 carve-out for genuinely private,
     // gated surfaces. Public TMR pages are still never noindex.
     SITE + '/admin/tmr-analytics/',
+    // Admin-only TMR cash redemption console (reserve, liability, payout queue, kill switch).
+    // Same private, login gated surface as the consoles above: linked only from /admin/ and the
+    // economy console, answers 401 without an admin session. Added 2026-10-08 per section 2.
+    SITE + '/admin/tmr-cashout/',
+    // Member cash redemption screen, built HIDDEN on the site owner's order (2026-10-08: "users
+    // must not see or access live redemption yet"). Linked from nowhere; it shows only "TMR has
+    // no cash value" until the backend reports LIVE. Remove from this list when it launches.
+    SITE + '/wallet/redeem/',
     SITE + '/betlegend-pro/app/',
     // The service worker's offline fallback for the page above. Same private,
     // per-account surface, and it is not a page anyone navigates to: it is

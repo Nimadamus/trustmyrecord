@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redeem TMR | TrustMyRecord</title>
+    <meta name="description" content="Redeem TMR on TrustMyRecord.">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=859cacfb660e">
+    <script defer src="/static/js/tmr-terminology.js?v=366f6ce637b4"></script>
+    <script defer src="/static/js/tmr-sitewide.js?v=f6e5ffff16ba"></script>
+    <style>
+        :root {
+            --page-bg: #02050A;
+            --panel: #0E1620;
+            --panel-2: #0E1620;
+            --line: #D2DEEA;
+            --text: #07182A;
+            --muted: #2E4459;
+            --gold: #8A6206;
+            --green: #0B6B3E;
+            --red: #BC372E;
+            --teal: #0B4FA8;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background:
+                radial-gradient(circle at 14% 0%, rgba(185,133,5,0.1), transparent 30%),
+                linear-gradient(180deg, #02050A 0%, var(--page-bg) 44%, #02050A 100%);
+            color: var(--text);
+            font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+        .wallet-page { width: min(1080px, calc(100% - 32px)); margin: 0 auto; padding: 112px 0 72px; }
+        .wallet-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 22px; margin-bottom: 20px; flex-wrap: wrap; }
+        .wallet-kicker { margin: 0 0 10px; color: var(--gold); font-size: 12px; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; }
+        h1 { margin: 0; font-family: Barlow, Inter, sans-serif; font-size: clamp(34px, 5vw, 56px); line-height: 0.95; }
+        .wallet-subtitle { margin: 12px 0 0; max-width: 640px; color: var(--muted); font-size: 14.5px; line-height: 1.55; }
+        .wallet-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+        .btn { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 16px; border-radius: 8px; border: 1px solid rgba(11, 79, 168,.28); color: #DCE7F4; background: #0E1620; text-decoration: none; font-weight: 800; font-size: 13px; cursor: pointer; font-family: inherit; }
+        .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+        .btn-primary { border-color: rgba(185,133,5,.30); background: rgba(185,133,5,0.14); color: var(--gold); }
+        .btn-sm { min-height: 34px; padding: 0 13px; font-size: 12.5px; }
+
+        /* Balance header -- the three numbers that matter, in a financial hierarchy:
+           what you can use now, what is committed, what you have ever earned. */
+        .balance-grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 14px; margin-bottom: 22px; }
+        .balance-card { padding: 24px 26px; border: 1px solid rgba(185,133,5,.30); border-radius: 12px; background: linear-gradient(180deg, #0E1620, #0B121B); }
+        .balance-card.sub { border-color: var(--line); background: linear-gradient(180deg, #0E1620, #0B121B); }
+        .balance-label { margin: 0 0 8px; color: var(--muted); font-size: 11px; font-weight: 800; letter-spacing: 0.13em; text-transform: uppercase; display: flex; align-items: center; gap: 7px; }
+        .balance-value { margin: 0; font-family: Barlow, Inter, sans-serif; font-size: clamp(34px, 5vw, 52px); color: var(--gold); font-weight: 800; line-height: 1; }
+        .balance-card.sub .balance-value { font-size: clamp(24px, 3.4vw, 32px); color: var(--text); }
+        .balance-hint { margin: 10px 0 0; color: var(--muted); font-size: 12.5px; line-height: 1.5; }
+        .tmr-coin-icon { width: 16px; height: 16px; vertical-align: -3px; }
+
+        .disclaimer { margin: 0 0 22px; padding: 12px 16px; border: 1px solid rgba(185,133,5,.30); background: rgba(185,133,5,0.08); border-radius: 8px; color: #8A6206; font-size: 13px; line-height: 1.5; }
+        .frozen-banner { margin: 0 0 18px; padding: 14px 16px; border: 1px solid rgba(188,55,46,.28); background: rgba(188,55,46,0.1); border-radius: 8px; color: #BC372E; font-size: 14px; font-weight: 700; }
+        [hidden] { display: none !important; }
+
+        /* Lifetime figures */
+        .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 26px; }
+        .stat { padding: 14px 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+        .stat-label { margin: 0 0 6px; color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+        .stat-value { margin: 0; font-family: Barlow, Inter, sans-serif; font-size: 22px; font-weight: 800; }
+
+        /* Tabs */
+        .tabs { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 18px; border-bottom: 1px solid var(--line); padding-bottom: 12px; }
+        .tab { border: 1px solid var(--line); background: var(--panel-2); color: var(--muted); border-radius: 999px; padding: 9px 16px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+        .tab.on { border-color: rgba(185,133,5,.30); background: rgba(185,133,5,0.14); color: var(--gold); }
+        .tab-badge { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 999px; background: rgba(188,55,46,0.14); color: #BC372E; font-size: 11px; font-weight: 800; }
+
+        section.pane { margin-bottom: 10px; }
+        .pane h2 { margin: 0 0 6px; font-family: Barlow, Inter, sans-serif; font-size: 22px; }
+        .pane p.lead { margin: 0 0 16px; color: var(--muted); font-size: 13.5px; line-height: 1.6; max-width: 68ch; }
+
+        /* Tables + mobile cards */
+        .table-wrap { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--panel); }
+        table { width: 100%; border-collapse: collapse; }
+        thead th { text-align: left; padding: 10px 12px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); border-bottom: 1px solid var(--line); }
+        tbody td { padding: 12px; font-size: 13.5px; border-bottom: 1px solid var(--line); }
+        .amt-pos { color: var(--green); font-weight: 800; }
+        .amt-neg { color: var(--red); font-weight: 800; }
+        .mobile-cards { display: none; }
+        .mc-card { border: 1px solid var(--line); border-radius: 10px; background: var(--panel); padding: 13px 14px; margin-bottom: 10px; }
+        .mc-row { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; font-size: 13px; }
+        .mc-row + .mc-row { margin-top: 6px; color: var(--muted); font-size: 12.5px; }
+
+        .toolbar { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 14px; }
+        .chip { border: 1px solid var(--line); background: var(--panel-2); color: var(--muted); border-radius: 999px; padding: 7px 14px; font-size: 12.5px; font-weight: 700; cursor: pointer; font-family: inherit; }
+        .chip.on { border-color: rgba(185,133,5,.30); background: rgba(185,133,5,0.14); color: var(--gold); }
+
+        /* Forms */
+        .form-card { padding: 20px 22px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); max-width: 520px; }
+        .field { margin-bottom: 14px; }
+        .field label { display: block; margin-bottom: 6px; font-size: 12px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+        .field input, .field textarea, .field select {
+            width: 100%; min-height: 44px; padding: 10px 12px; border-radius: 8px;
+            border: 1px solid var(--line); background: #0B121B; color: var(--text);
+            font-family: inherit; font-size: 15px;
+        }
+        .field .hint { margin: 6px 0 0; color: var(--muted); font-size: 12px; }
+        .confirm-box { margin: 14px 0; padding: 14px 16px; border: 1px solid rgba(11, 79, 168,.28); border-radius: 10px; background: #0E1620; font-size: 13.5px; line-height: 1.7; }
+        .confirm-box strong { color: var(--teal); }
+        .msg { margin: 12px 0 0; padding: 11px 14px; border-radius: 8px; font-size: 13px; line-height: 1.5; }
+        .msg.err { border: 1px solid rgba(188,55,46,.28); background: rgba(188,55,46,0.1); color: #BC372E; }
+        .msg.ok { border: 1px solid rgba(10,139,78,.28); background: rgba(10,139,78,0.1); color: #0A8B4E; }
+
+        .locked-notice { padding: 18px 20px; border: 1px dashed var(--line); border-radius: 10px; background: rgba(7,24,42,0.048); color: var(--muted); font-size: 13.5px; line-height: 1.6; }
+        .locked-notice strong { color: var(--text); }
+
+        .empty-state { padding: 34px 20px; text-align: center; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+        .empty-state h3 { margin: 0 0 6px; font-family: Barlow, Inter, sans-serif; font-size: 18px; }
+        .empty-state p { margin: 0; color: var(--muted); font-size: 13.5px; }
+
+        .earn-list, .spend-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+        .earn-list li, .spend-list li { padding: 14px 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+        .earn-item-head { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; flex-wrap: wrap; }
+        .earn-coins { font-family: Barlow, Inter, sans-serif; font-size: 18px; font-weight: 800; color: var(--green); min-width: 40px; }
+        .earn-title { font-weight: 800; font-size: 14.5px; }
+        .earn-desc { margin: 0 0 10px; color: var(--muted); font-size: 13px; line-height: 1.5; }
+
+        .ch-card { padding: 16px 18px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); margin-bottom: 12px; }
+        .ch-top { display: flex; justify-content: space-between; gap: 14px; align-items: baseline; flex-wrap: wrap; }
+        .ch-stake { font-family: Barlow, Inter, sans-serif; font-size: 20px; font-weight: 800; color: var(--gold); }
+        .ch-status { font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); }
+        .ch-status.won { border-color: rgba(10,139,78,.28); color: #0A8B4E; }
+        .ch-status.lost { border-color: rgba(188,55,46,.28); color: #BC372E; }
+        .ch-meta { margin: 8px 0 0; color: var(--muted); font-size: 13px; line-height: 1.55; }
+        .ch-actions { margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; }
+
+        .skeleton .sk-line { height: 14px; border-radius: 6px; background: linear-gradient(90deg, #121C28, #121C28, #121C28); margin-bottom: 12px; }
+        .sk-block { background: linear-gradient(90deg, #121C28, #121C28, #121C28); }
+        .auth-state { padding: 40px 20px; text-align: center; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+        .auth-state h2 { margin: 0 0 8px; font-family: Barlow, Inter, sans-serif; }
+        .auth-state p { margin: 0 0 16px; color: var(--muted); }
+
+        /* ------------------------------------------------------------------
+           Sitewide-CSS override guard.
+
+           tmr-sitewide.css applies `!important` typography to every `p`, `li`,
+           `td`, `th` and `label` under `body.tmr-site-shell` -- e.g.
+           `.tmr-site-shell p { color: rgb(169,184,202) !important }`. That
+           silently flattened this page's numbers: the balance rendered at
+           15.2px in muted grey instead of 34px+ in gold, verified live on
+           production with getComputedStyle.
+
+           Specificity alone cannot win against `!important`, so the page's own
+           intent is restated here with `!important` and scoped to `.wallet-page`
+           so it can never leak into the shared shell. Everything below is a
+           re-assertion of a value already declared above -- if you change one
+           of those, change it here too.
+           ------------------------------------------------------------------ */
+        .wallet-page h1 { font-size: clamp(34px, 5vw, 56px) !important; line-height: 0.95 !important; color: var(--text) !important; }
+        .wallet-page .wallet-kicker { font-size: 12px !important; color: var(--gold) !important; }
+        .wallet-page .wallet-subtitle { font-size: 14.5px !important; color: var(--muted) !important; }
+        .wallet-page .disclaimer { font-size: 13px !important; color: #8A6206 !important; }
+        .wallet-page .balance-value { font-size: clamp(34px, 5vw, 52px) !important; color: var(--gold) !important; }
+        .wallet-page .balance-card.sub .balance-value { font-size: clamp(24px, 3.4vw, 32px) !important; color: var(--text) !important; }
+        .wallet-page .balance-label { font-size: 11px !important; color: var(--muted) !important; }
+        .wallet-page .balance-hint { font-size: 12.5px !important; color: var(--muted) !important; }
+        .wallet-page .stat-value { font-size: 22px !important; color: var(--text) !important; }
+        .wallet-page .stat-label { font-size: 11px !important; color: var(--muted) !important; }
+        .wallet-page .pane p.lead { font-size: 13.5px !important; color: var(--muted) !important; }
+        .wallet-page .earn-desc { font-size: 13px !important; color: var(--muted) !important; }
+        .wallet-page .ch-meta { font-size: 13px !important; color: var(--muted) !important; }
+        .wallet-page thead th { font-size: 11px !important; color: var(--muted) !important; }
+        .wallet-page tbody td { font-size: 13.5px !important; color: var(--text) !important; }
+        .wallet-page tbody td .amt-pos { color: var(--green) !important; }
+        .wallet-page tbody td .amt-neg { color: var(--red) !important; }
+        .wallet-page .field label { font-size: 12px !important; color: var(--muted) !important; }
+        .wallet-page .field .hint { font-size: 12px !important; color: var(--muted) !important; }
+        .wallet-page .empty-state p { font-size: 13.5px !important; color: var(--muted) !important; }
+        .wallet-page .auth-state p { color: var(--muted) !important; }
+        .wallet-page .frozen-banner { color: #BC372E !important; }
+        .wallet-page .msg.err { color: #BC372E !important; }
+        .wallet-page .msg.ok { color: #0A8B4E !important; }
+
+        @media (max-width: 860px) {
+            .balance-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 720px) {
+            .wallet-page { padding-top: 92px; }
+            .table-wrap { display: none; }
+            .mobile-cards { display: block; }
+            .form-card { max-width: none; padding: 16px 15px; }
+            .tabs { overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; padding-bottom: 12px; }
+            .tab { flex: 0 0 auto; }
+        }
+    </style>
+<link rel="stylesheet" href="/static/css/tmr-ds.d4d41a955166.css">
+<link rel="stylesheet" href="/static/css/tmr-ds-header.cc364e352e74.css">
+<link rel="stylesheet" href="/static/css/tmr-light.css?v=21433b023833">
+<!-- The one approved navbar: the shared header component (tmr-ds-nav.js)
+     plus the homepage's own navbar rules, so every page renders the same bar. -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap">
+<link rel="stylesheet" href="/static/css/tmr-navbar.css?v=68ec3081d29a">
+</head>
+<body class="tmr-ds-shell tmr-light">
+    <main class="wallet-page">
+        <header class="wallet-head">
+            <div>
+                <p class="wallet-kicker">TMR Wallet</p>
+                <h1>Redeem TMR</h1>
+                <p class="wallet-subtitle" id="rdIntro">Checking availability.</p>
+            </div>
+            <div class="wallet-actions"><a class="btn" href="/wallet/">Back to wallet</a></div>
+        </header>
+
+        <!-- CASH_REDEMPTION_20261007: everything below stays hidden unless the server reports LIVE. -->
+        <section id="rdLive" hidden>
+            <div class="balance-grid">
+                <div class="balance-card"><p class="balance-label">Redeemable TMR</p><p class="balance-value" id="rdEligible">0</p><p class="balance-hint" id="rdEligibleValue"></p></div>
+                <div class="balance-card sub"><p class="balance-label">Not redeemable</p><p class="balance-value" id="rdNonEligible">0</p><p class="balance-hint">Promotional and other TMR you can spend on the site but not redeem.</p></div>
+                <div class="balance-card sub"><p class="balance-label">Pending redemption</p><p class="balance-value" id="rdPending">0</p><p class="balance-hint">Held until the payout settles.</p></div>
+            </div>
+
+            <div class="stats">
+                <div class="stat"><p class="stat-label">Buy price</p><p class="stat-value" id="rdBuy"></p></div>
+                <div class="stat"><p class="stat-label">Redemption value</p><p class="stat-value" id="rdRate"></p></div>
+                <div class="stat"><p class="stat-label">Minimum</p><p class="stat-value" id="rdMin"></p></div>
+                <div class="stat"><p class="stat-label">Limits</p><p class="stat-value rd-limits" id="rdLimits"></p></div>
+            </div>
+
+            <section class="panel rd-panel">
+                <h2>Request a redemption</h2>
+                <p class="rd-note">Every request is reviewed before it is paid. The buy price and the redemption value are different numbers.</p>
+                <form id="rdForm" class="rd-form">
+                    <label>Amount (TMR)<input id="rdAmount" type="number" min="1" step="1" required></label>
+                    <label>Payout method<select id="rdDest" required></select></label>
+                    <p class="rd-quote" id="rdQuote"></p>
+                    <button class="btn btn-primary" type="submit">Request redemption</button>
+                    <p class="rd-msg" id="rdMsg"></p>
+                </form>
+            </section>
+
+            <section class="panel rd-panel">
+                <h2>History</h2>
+                <table class="rd-table"><thead><tr><th>Requested</th><th>TMR</th><th>Payout</th><th>Method</th><th>Status</th><th></th></tr></thead><tbody id="rdHistory"></tbody></table>
+            </section>
+        </section>
+    </main>
+    <style>
+        .balance-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin: 24px 0; }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 18px; }
+        .stat-value { margin: 0; font-weight: 800; font-size: 18px; color: var(--text); }
+        .stat-value.rd-limits { font-size: 13.5px !important; line-height: 1.5; font-weight: 700; }
+        #rdLive .balance-card.sub .balance-value { color: #E8EEF5 !important; }
+        .rd-panel { border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; margin-bottom: 18px; background: #fff; }
+        .rd-panel h2 { margin: 0 0 6px; font-size: 17px; }
+        .rd-note { margin: 0 0 14px; color: var(--muted); font-size: 13.5px; line-height: 1.5; }
+        .rd-form { display: grid; gap: 12px; max-width: 420px; }
+        .rd-form label { display: grid; gap: 6px; font-size: 13px; font-weight: 700; color: var(--muted); }
+        .rd-form input, .rd-form select { padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; font: inherit; color: var(--text); background: #fff; }
+        .rd-quote { margin: 0; font-size: 13.5px; color: var(--text); }
+        .rd-msg { margin: 0; font-size: 13px; }
+        .rd-msg.err { color: var(--red); } .rd-msg.ok { color: var(--green); }
+        .rd-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+        .rd-table th, .rd-table td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); }
+        .rd-table th { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+        @media (max-width: 640px) {
+            .rd-table, .rd-table thead, .rd-table tbody, .rd-table tr, .rd-table td { display: block; }
+            .rd-table thead { display: none; }
+            .rd-table tr { border: 1px solid var(--line); border-radius: 8px; padding: 8px; margin-bottom: 10px; }
+            .rd-table td { border: none; padding: 3px 0; }
+        }
+    </style>
+    <script src="/static/js/config.js?v=430b4bba7b37"></script>
+    <script src="/static/js/backend-api.js?v=9f19902f1579"></script>
+    <script>
+    (function () {
+        'use strict';
+        var el = function (id) { return document.getElementById(id); };
+        var BASE = '/tmr-coin/cash-redemption';
+        function esc(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]; }); }
+        function n(v) { return (Number(v) || 0).toLocaleString('en-US'); }
+        function usd(c) { return '$' + (Number(c) / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+        function when(iso) { return iso ? new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''; }
+        var STATUS = { review_required: 'In review', approved: 'Approved', processing: 'Paying out', paid: 'Paid', failed: 'Payout failed, in review', rejected: 'Not approved', cancelled: 'Cancelled', reversed: 'Returned by bank' };
+        var rate = null;
+
+        function notAvailable() {
+            el('rdIntro').textContent = 'TMR cannot be redeemed for money. It has no cash value. You can spend it on tools, picks and contests on TrustMyRecord.';
+        }
+
+        async function load() {
+            if (!(window.api && window.api.isLoggedIn())) { notAvailable(); return; }
+            var s;
+            try { s = await window.api.request(BASE + '/status'); } catch (e) { notAvailable(); return; }
+            if (!s || s.system_state !== 'LIVE') { notAvailable(); return; }
+            rate = s.prices.redemption_value.usd_per_tmr;
+            el('rdIntro').textContent = 'Turn redeemable TMR into money. Every request is reviewed before it is paid.';
+            el('rdEligible').textContent = n(s.redeemable_coins);
+            el('rdEligibleValue').textContent = 'Worth ' + usd(Math.floor(s.redeemable_coins * rate * 100)) + ' at the redemption value';
+            el('rdNonEligible').textContent = n(s.non_redeemable_coins);
+            el('rdPending').textContent = n(s.pending_coins);
+            el('rdBuy').textContent = '$' + s.prices.buy_price.usd_per_tmr + ' per TMR';
+            el('rdRate').textContent = '$' + rate + ' per TMR';
+            el('rdMin').textContent = n(s.limits.min_coins) + ' TMR';
+            el('rdLimits').textContent = 'Up to ' + n(s.limits.max_coins) + ' TMR per request; ' + usd(s.limits.daily_cents) + ' a day, ' + usd(s.limits.weekly_cents) + ' a week, ' + usd(s.limits.monthly_cents) + ' a month';
+            el('rdAmount').min = s.limits.min_coins; el('rdAmount').max = s.limits.max_coins;
+            var d = await window.api.request(BASE + '/destinations');
+            el('rdDest').innerHTML = (d.destinations || []).length
+                ? d.destinations.map(function (x) { return '<option value="' + x.id + '">' + esc(x.label || x.provider) + '</option>'; }).join('')
+                : '<option value="">No payout method yet</option>';
+            await history();
+            el('rdLive').hidden = false;
+        }
+
+        async function history() {
+            var h = await window.api.request(BASE + '/requests');
+            var rows = h.requests || [];
+            el('rdHistory').innerHTML = rows.length ? rows.map(function (r) {
+                var cancel = (r.status === 'review_required' || r.status === 'approved') ? '<button class="btn" data-cancel="' + r.id + '">Cancel</button>' : '';
+                return '<tr><td>' + when(r.created_at) + '</td><td>' + n(r.amount_coins) + '</td><td>' + usd(r.payout_cents) + '</td><td>' + esc(r.provider) + '</td><td>' + esc(STATUS[r.status] || r.status) + '</td><td>' + cancel + '</td></tr>';
+            }).join('') : '<tr><td colspan="6">No redemptions yet.</td></tr>';
+        }
+
+        el('rdAmount').addEventListener('input', function () {
+            var a = Number(el('rdAmount').value) || 0;
+            el('rdQuote').textContent = rate == null || !a ? '' : n(a) + ' TMR pays ' + usd(Math.floor(a * rate * 100)) + ' if approved.';
+        });
+        el('rdForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            var m = el('rdMsg');
+            try {
+                var id = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2);
+                var r = await window.api.request(BASE + '/requests', { method: 'POST', body: JSON.stringify({ amount: Number(el('rdAmount').value), destinationId: Number(el('rdDest').value), requestId: id }) });
+                m.className = 'rd-msg ok'; m.textContent = 'Request received. It is in review.';
+                await load();
+            } catch (err) { m.className = 'rd-msg err'; m.textContent = (err && err.message) || 'Request failed.'; }
+        });
+        document.addEventListener('click', async function (e) {
+            var b = e.target.closest('button[data-cancel]'); if (!b) return;
+            try { await window.api.request(BASE + '/requests/' + b.dataset.cancel + '/cancel', { method: 'POST', body: '{}' }); await load(); } catch (err) { el('rdMsg').textContent = err.message; }
+        });
+        load();
+    })();
+    </script>
+<script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-ds-nav.b62d84b78baa.js"></script>
+</body>
+</html>
