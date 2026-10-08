@@ -215,7 +215,7 @@
         });
         el('statusFilter').addEventListener('change', function () { loadRequests().catch(function (e) { say(e.message, 'err'); }); });
 
-        if (!(window.api && window.api.isLoggedIn())) { say('Admin login required.', 'err'); return; }
+        if (!(window.api && window.api.isLoggedIn())) { say('Admin login required.', 'err'); el('state').textContent = 'Sign in as an admin to view'; return; }
         load().catch(function (e) { say('Failed to load (admin login required): ' + (e.message || e), 'err'); });
     })();
     </script>
