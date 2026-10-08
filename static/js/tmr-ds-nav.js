@@ -156,7 +156,7 @@
          rotation. The href is the current article. The third field is the
          stable door, so the browser can move the row when the game changes.
          The footer link to /nfl-game-of-the-week/ stays the section. */
-      /*FMENU nfl-gotw*/ ['/handicapping/nfl/tampa-bay-lost-4-straight-vs-cowboys/', 'NFL Game of the Week', '/nfl-game-of-the-week/'],
+      /*FMENU nfl-gotw*/ ['/matchup-of-the-day/tampa-bay-dallas-one-offense-keeps-chains-moving/', 'NFL Game of the Week', '/nfl-game-of-the-week/'],
       /* Added 2026-09-03, the day college football got its first Game File.
          /matchup-of-the-day/ncaaf/ is a stable door scoped to one sport: baked
          with the newest NCAAF Game File, canonicalised to it, and out of the
@@ -184,7 +184,7 @@
       /* Added 2026-09-09, the day the NFL lane published its first Game File.
          Same stable-door pattern: /matchup-of-the-day/nfl/ bakes with the newest
          NFL Game File and is canonicalised to it. */
-      /*FMENU nfl*/ ['/handicapping/nfl/tampa-bay-lost-4-straight-vs-cowboys/', 'NFL', '/matchup-of-the-day/nfl/']
+      /*FMENU nfl*/ ['/matchup-of-the-day/tampa-bay-dallas-one-offense-keeps-chains-moving/', 'NFL', '/matchup-of-the-day/nfl/']
     ]],
     /* HANDICAPPING HUB, 2026-09-08. 'MLB Matchups Today' used to sit here as a
        SIBLING of 'Handicapping Hub', and that read as two separate sections
