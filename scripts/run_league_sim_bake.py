@@ -122,7 +122,7 @@ def nhl_pages():
         log('nhl pages: no backend worktree, skipped')
         return
     os.environ['NODE_PATH'] = r'C:\Users\BL\tmr-be-master\node_modules'
-    steps = [('nhl: backend fetch', [GIT, '-C', be, 'fetch', 'origin', '-q']),
+    steps = [('nhl: backend fetch', [GIT, '-C', be, 'fetch', '-q', '--no-tags', 'origin', 'master']),
              ('nhl: backend reset', [GIT, '-C', be, 'reset', '-q', '--hard', 'origin/master']),
              ('nhl: snapshot', [NODE, os.path.join(be, 'scripts', 'build_nhl_snapshot.js')]),
              ('nhl: matchup pages', [NODE, r'scripts\build_sim_matchup_pages.js', '--backend', be]),
@@ -169,7 +169,8 @@ def main():
     save(started=now(), pid=os.getpid(), stage='start', published=False, result=None)
     result = 'OK'
     try:
-        run('fetch', [GIT, 'fetch', 'origin', '-q'])
+        # Only main, no tags: fetching all 90 branches took 45 s to 7 min on this repo (20:12 run).
+        run('fetch', [GIT, 'fetch', '-q', '--no-tags', 'origin', 'main'])
         run('reset', [GIT, 'reset', '-q', '--hard', 'origin/main'])
         nhl_pages()
         run('league pages', [NODE, r'scripts\build_league_sim_pages.js'])
@@ -187,7 +188,7 @@ def main():
             run('commit', [GIT, 'commit', '-q', '-m', 'chore(sims): bake NBA and NHL season and playoff simulators [skip ci]'])
             pushed = False
             for attempt in (1, 2):
-                run('fetch before push', [GIT, 'fetch', 'origin', '-q'])
+                run('fetch before push', [GIT, 'fetch', '-q', '--no-tags', 'origin', 'main'])
                 run('rebase', [GIT, 'rebase', 'origin/main'])
                 if run('push attempt %d' % attempt, [GIT, 'push', '-q', 'origin', 'HEAD:main'], fatal=False) == 0:
                     pushed = True
