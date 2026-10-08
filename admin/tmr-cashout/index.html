@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TMR Cash Redemption | TrustMyRecord</title>
+    <link rel="icon" type="image/png" href="/static/favicon.png">
+    <style>
+        :root { color-scheme: dark; --bg:#060b12; --panel:#0b111b; --panel2:#101826; --line:rgba(148,163,184,0.16); --text:#f8fafc; --muted:#9aa8ba; --cyan:#1D7FE8; --gold:#facc15; --red:#f87171; --green:#4ade80; }
+        * { box-sizing: border-box; }
+        body { margin: 0; background: var(--bg); color: var(--text); font-family: Inter, system-ui, sans-serif; }
+        .bar { padding: 16px 20px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .bar h1 { font-size: 18px; margin: 0; color: var(--cyan); }
+        .bar .badge { padding: 3px 9px; border-radius: 999px; background: rgba(248,113,113,0.16); border: 1px solid rgba(248,113,113,0.45); color: #fecaca; font-size: 10.5px; font-weight: 800; letter-spacing: 0.08em; }
+        .bar a { color: var(--muted); font-size: 12.5px; text-decoration: none; }
+        main { padding: 20px; max-width: 1080px; margin: 0 auto; }
+        .msg { margin-bottom: 14px; font-size: 13px; }
+        .msg.err { color: var(--red); }
+        .msg.ok { color: var(--green); }
+        .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 18px 20px; margin-bottom: 18px; }
+        .panel h2 { margin: 0 0 4px; font-size: 15px; }
+        .panel p.note { margin: 0 0 14px; color: var(--muted); font-size: 12.5px; line-height: 1.6; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+        th { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; }
+        input, textarea, select { background: var(--panel2); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-family: inherit; font-size: 13px; }
+        input[type=number] { width: 130px; }
+        input.wide, textarea { width: 100%; }
+        textarea { min-height: 48px; resize: vertical; }
+        button { background: var(--panel2); color: var(--text); border: 1px solid rgba(29, 127, 232,0.3); border-radius: 8px; padding: 7px 12px; font-weight: 700; font-size: 12.5px; cursor: pointer; font-family: inherit; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        button.danger { border-color: rgba(248,113,113,0.45); color: #fecaca; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+        .tile { border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; background: var(--panel2); }
+        .tile .k { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; margin: 0 0 5px; }
+        .tile .v { margin: 0; font-size: 21px; font-weight: 800; }
+        .tile .v.gold { color: var(--gold); }
+        .ok-pill { color: var(--green); font-weight: 800; }
+        .bad-pill { color: var(--red); font-weight: 800; }
+        .flag-row { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: start; padding: 12px 0; border-bottom: 1px solid var(--line); }
+        .flag-row:last-child { border-bottom: none; }
+        .flag-name { font-weight: 800; font-size: 13.5px; }
+        .flag-alias { color: var(--muted); font-size: 11.5px; font-family: ui-monospace, monospace; }
+        .flag-state { font-size: 12px; margin-top: 5px; }
+        .flag-signoff { margin-top: 8px; }
+        .group-title { margin: 18px 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+        .state { font-size: 22px; font-weight: 900; }
+        .state.off { color: var(--muted); } .state.paused { color: var(--red); } .state.live { color: var(--green); }
+        .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 10px; }
+        ul.missing { margin: 8px 0 0; padding-left: 18px; color: var(--muted); font-size: 12.5px; columns: 2; }
+        @media (max-width: 700px) { ul.missing { columns: 1; } }
+        @media (max-width: 700px) {
+            table, thead, tbody, th, td, tr { display: block; }
+            thead { display: none; }
+            tr { border: 1px solid var(--line); border-radius: 8px; margin-bottom: 10px; padding: 8px; }
+            td { border: none; padding: 5px 4px; }
+        }
+    </style>
+<!-- The one approved navbar: the shared header component (tmr-ds-nav.js)
+     plus the homepage's own navbar rules, so every page renders the same bar. -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap">
+<link rel="stylesheet" href="/static/css/tmr-navbar.css?v=68ec3081d29a">
+    <link rel="stylesheet" href="/static/css/tmr-ds.d4d41a955166.css">
+<link rel="stylesheet" href="/static/css/tmr-ds-header.cc364e352e74.css">
+</head>
+<body class="tmr-theme-a tmr-ds-shell">
+    <div class="bar">
+        <h1>TMR Cash Redemption</h1>
+        <span class="badge">ADMIN</span>
+        <a href="/admin/tmr-economy/">Economy control center</a>
+        <a href="/admin/tmr-coin/ledger/">Ledger audit</a>
+    </div>
+    <main>
+        <div id="msg" class="msg"></div>
+
+        <section class="panel">
+            <h2>System state</h2>
+            <p class="note">Redemption stays off until the flag is on, every decision below is recorded, a payout rail is enabled and the reserve covers it. Every action needs a reason and is logged permanently.</p>
+            <div id="state" class="state off">Loading</div>
+            <div id="stateDetail" class="flag-state"></div>
+            <ul id="missing" class="missing"></ul>
+            <div class="row">
+                <input id="reason" class="wide" placeholder="Reason (required for every action)">
+            </div>
+            <div class="row">
+                <button class="danger" data-act="kill-on">Kill switch ON</button>
+                <button data-act="kill-off">Kill switch off</button>
+                <button class="danger" data-act="pause-on">Emergency pause</button>
+                <button data-act="pause-off">Resume</button>
+            </div>
+        </section>
+
+        <section class="panel">
+            <h2>TMR outstanding by type</h2>
+            <div id="totals" class="grid"></div>
+        </section>
+
+        <section class="panel">
+            <h2>Reserve and liability</h2>
+            <p class="note">Coverage is reserve divided by eligible plus pending liability. Coverage below the minimum pauses redemptions automatically.</p>
+            <div id="reserve" class="grid"></div>
+        </section>
+
+        <section class="panel">
+            <h2>Requests by status</h2>
+            <table><thead><tr><th>Status</th><th>Requests</th><th>TMR</th><th>Payout</th></tr></thead><tbody id="byStatus"></tbody></table>
+        </section>
+
+        <section class="panel">
+            <h2>Requests</h2>
+            <div class="row"><select id="statusFilter"><option value="">All</option><option>review_required</option><option>approved</option><option>processing</option><option>failed</option><option>paid</option><option>reversed</option><option>rejected</option><option>cancelled</option></select>
+            <input id="evidence" placeholder="Provider evidence (reversals only)"></div>
+            <table><thead><tr><th>#</th><th>Member</th><th>Status</th><th>TMR</th><th>Payout</th><th>Flags</th><th>Created</th><th></th></tr></thead><tbody id="requests"></tbody></table>
+        </section>
+
+        <section class="panel">
+            <h2>Per member exposure</h2>
+            <table><thead><tr><th>Member id</th><th>Eligible TMR</th><th>Eligible value</th><th>Open requests</th></tr></thead><tbody id="exposure"></tbody></table>
+            <div class="row"><input id="freezeUser" type="number" placeholder="Member id"><button class="danger" data-act="freeze">Freeze member</button><button data-act="unfreeze">Unfreeze</button></div>
+        </section>
+
+        <section class="panel">
+            <h2>Daily redemption volume (30 days, Pacific)</h2>
+            <table><thead><tr><th>Day</th><th>Payouts</th><th>Amount</th></tr></thead><tbody id="daily"></tbody></table>
+        </section>
+
+        <section class="panel">
+            <h2>Rules and limits</h2>
+            <p class="note">Change any rule as JSON, for example {"min_redemption_coins": 500}. Money is in cents, the redemption price in micro dollars per TMR (10000 = $0.01). These are business and legal decisions.</p>
+            <pre id="config" style="white-space:pre-wrap;font-size:12px;color:var(--muted);max-height:320px;overflow:auto"></pre>
+            <textarea id="changes" placeholder='{"field": value}'></textarea>
+            <div class="row"><button data-act="config">Save rule change</button></div>
+        </section>
+    </main>
+    <script src="/static/js/config.js?v=430b4bba7b37"></script>
+    <script src="/static/js/backend-api.js?v=9f19902f1579"></script>
+    <script>
+    (function () {
+        'use strict';
+        var el = function (id) { return document.getElementById(id); };
+        var msg = el('msg');
+        function esc(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]; }); }
+        function num(v) { return v == null ? 'not set' : (Number(v) || 0).toLocaleString('en-US'); }
+        function usd(c) { return c == null ? 'not set' : '$' + (Number(c) / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+        function when(iso) { if (!iso) return ''; var d = new Date(iso); return d.toLocaleString('en-US', { timeZone: 'America/Los_Angeles', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) + ' PT'; }
+        function say(t, k) { msg.textContent = t; msg.className = 'msg ' + (k || 'ok'); }
+        function req(path, options) { return window.api.request('/admin/tmr-cashout' + path, options); }
+        function post(path, body) { return req(path, { method: 'POST', body: JSON.stringify(body || {}) }); }
+        function reason() { var r = el('reason').value.trim(); if (!r) throw new Error('Enter a reason first.'); return r; }
+        function tiles(target, rows) {
+            el(target).innerHTML = rows.map(function (r) { return '<div class="tile"><p class="k">' + esc(r[0]) + '</p><p class="v">' + esc(r[1]) + '</p></div>'; }).join('');
+        }
+
+        async function load() {
+            var d = await req('/dashboard');
+            var s = d.system;
+            var cls = s.state === 'LIVE' ? 'live' : (s.state === 'PAUSED' ? 'paused' : 'off');
+            el('state').className = 'state ' + cls;
+            el('state').textContent = s.state;
+            el('stateDetail').textContent = 'Flag ' + (s.flag_on ? 'on' : 'off') + ' · kill switch ' + (s.kill_switch ? 'ON' : 'off') + ' · ' + (s.paused ? 'paused: ' + (s.pause_reason || '') : 'not paused');
+            el('missing').innerHTML = (s.missing || []).length ? s.missing.map(function (m) { return '<li>' + esc(m) + '</li>'; }).join('') : '<li>Nothing missing</li>';
+            var t = d.totals;
+            tiles('totals', [['All TMR', num(t.outstanding_coins)], ['Purchased', num(t.purchased)], ['Earned', num(t.earned)], ['Promotional', num(t.promotional)], ['Admin adjustment', num(t.admin_adjustment)], ['Deposited', num(t.deposited)]]);
+            var r = d.reserve;
+            tiles('reserve', [['Reserve', usd(r.reserve_cents)], ['Potential liability (all TMR)', usd(r.potential_liability_cents)], ['Eligible liability', usd(r.eligible_liability_cents)],
+                ['Pending liability', usd(r.pending_liability_cents)], ['In flight', usd(r.in_flight_cents)], ['Coverage', r.coverage_bps == null ? 'n/a' : (r.coverage_bps / 100).toFixed(1) + '%'],
+                ['Minimum coverage', r.min_coverage_bps == null ? 'not set' : (r.min_coverage_bps / 100).toFixed(1) + '%'], ['Max safe today', usd(r.max_safe_daily_cents)], ['Paid last 24h', usd(r.paid_24h_cents)]]);
+            el('byStatus').innerHTML = d.requests_by_status.length ? d.requests_by_status.map(function (x) { return '<tr><td>' + esc(x.status) + '</td><td>' + num(x.n) + '</td><td>' + num(x.coins) + '</td><td>' + usd(x.cents) + '</td></tr>'; }).join('') : '<tr><td colspan="4" style="color:var(--muted)">No requests.</td></tr>';
+            el('exposure').innerHTML = d.exposure.length ? d.exposure.map(function (x) { return '<tr><td>' + x.user_id + '</td><td>' + num(x.eligible_coins) + '</td><td>' + usd(x.eligible_cents) + '</td><td>' + usd(x.open_cents) + '</td></tr>'; }).join('') : '<tr><td colspan="4" style="color:var(--muted)">No member holds redeemable TMR (nothing is eligible).</td></tr>';
+            el('daily').innerHTML = d.daily_volume.length ? d.daily_volume.map(function (x) { return '<tr><td>' + esc(x.day) + '</td><td>' + num(x.n) + '</td><td>' + usd(x.cents) + '</td></tr>'; }).join('') : '<tr><td colspan="3" style="color:var(--muted)">No payouts.</td></tr>';
+            el('config').textContent = JSON.stringify(d.config, null, 1);
+            await loadRequests();
+        }
+
+        async function loadRequests() {
+            var st = el('statusFilter').value;
+            var rows = await req('/requests' + (st ? '?status=' + encodeURIComponent(st) : ''));
+            el('requests').innerHTML = rows.length ? rows.map(function (q) {
+                var acts = [];
+                if (q.status === 'review_required') acts.push('approve', 'reject');
+                if (q.status === 'approved' || q.status === 'failed') acts.push('process', 'reject');
+                if (q.status === 'paid') acts.push('reverse');
+                return '<tr><td>' + q.id + '</td><td>' + esc(q.username) + ' (' + q.user_id + ')</td><td>' + esc(q.status) + '</td><td>' + num(q.amount_coins) + '</td><td>' + usd(q.payout_cents) + '</td><td>' + esc((q.review_reasons || []).join(', ')) + '</td><td>' + when(q.created_at) + '</td><td>' +
+                    acts.map(function (a) { return '<button data-req="' + q.id + '" data-op="' + a + '"' + (a === 'reject' || a === 'reverse' ? ' class="danger"' : '') + '>' + a + '</button>'; }).join(' ') + '</td></tr>';
+            }).join('') : '<tr><td colspan="8" style="color:var(--muted)">No requests.</td></tr>';
+        }
+
+        async function act(a) {
+            if (a === 'kill-on' || a === 'kill-off') await post('/kill-switch', { on: a === 'kill-on', reason: reason() });
+            else if (a === 'pause-on' || a === 'pause-off') await post('/pause', { on: a === 'pause-on', reason: reason() });
+            else if (a === 'freeze' || a === 'unfreeze') {
+                var u = Number(el('freezeUser').value); if (!u) throw new Error('Enter a member id.');
+                var rs = reason();
+                await post('/users/' + u + '/controls', { fields: a === 'freeze' ? { frozen: true, frozen_reason: rs } : { frozen: false }, reason: rs });
+            } else if (a === 'config') {
+                var ch; try { ch = JSON.parse(el('changes').value); } catch (e) { throw new Error('Rule change must be valid JSON.'); }
+                await post('/config', { changes: ch, reason: reason() });
+            }
+        }
+        async function reqAct(id, op) {
+            if (op === 'approve') await post('/requests/' + id + '/approve', { note: el('reason').value.trim() || null });
+            else if (op === 'reject') await post('/requests/' + id + '/reject', { reason: reason() });
+            else if (op === 'process') await post('/requests/' + id + '/process', {});
+            else if (op === 'reverse') await post('/requests/' + id + '/reverse', { reason: reason(), providerEvidence: el('evidence').value.trim() });
+        }
+        document.addEventListener('click', async function (e) {
+            var b = e.target.closest('button'); if (!b) return;
+            try {
+                if (b.dataset.act) await act(b.dataset.act);
+                else if (b.dataset.req) await reqAct(b.dataset.req, b.dataset.op);
+                else return;
+                say('Done.', 'ok'); await load();
+            } catch (err) { say((err && err.message) || String(err), 'err'); }
+        });
+        el('statusFilter').addEventListener('change', function () { loadRequests().catch(function (e) { say(e.message, 'err'); }); });
+
+        if (!(window.api && window.api.isLoggedIn())) { say('Admin login required.', 'err'); return; }
+        load().catch(function (e) { say('Failed to load (admin login required): ' + (e.message || e), 'err'); });
+    })();
+    </script>
+<script src="/static/js/tmr-ds-nav.b62d84b78baa.js"></script>
+</body>
+</html>
