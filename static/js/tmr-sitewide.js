@@ -34,7 +34,7 @@
             /*FMENU mlb*/ ["/matchup-of-the-day/guardians-white-sox-bullpens-are-lights-out/", "MLB", "/matchup-of-the-day/mlb/"],
             /*FMENU nhl*/ ["/nhl/penguins-blue-jackets-novak-vs-knies/", "NHL", "/matchup-of-the-day/nhl/"],
             /*FMENU tennis*/ ["/tennis/kalieva-okamura-semifinals/", "Tennis", "/matchup-of-the-day/tennis/"],
-            /*FMENU soccer*/ ["/matchup-of-the-day/inter-miami-cf-columbus-crew-the-table-says-one-side/", "Soccer", "/matchup-of-the-day/soccer/"]
+            /*FMENU soccer*/ ["/matchup-of-the-day/werder-borussia-the-table-says-one-side/", "Soccer", "/matchup-of-the-day/soccer/"]
         ]],
         // Each row lands on that league's research page, and each of those
         // pages opens on today's board for its league. All seven leagues since
