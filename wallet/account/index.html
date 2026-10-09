@@ -90,6 +90,24 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
     </div>
   </section>
 
+  <section class="acct-card" id="creditsCard">
+    <h2>What your balance is made of</h2>
+    <div class="grid" id="creditsGrid"><div class="skel">Loading…</div></div>
+    <p class="note" id="creditsOrder" style="margin-top:12px"></p>
+    <h2 style="margin-top:18px">Simulator</h2>
+    <div class="grid" id="simGrid"></div>
+    <h2 style="margin-top:18px">Your purchases</h2>
+    <div class="scroll">
+      <table id="buyTable">
+        <thead><tr><th>Date</th><th>Reference</th><th class="num">TMR</th><th class="num">Paid</th></tr></thead>
+        <tbody><tr><td colspan="4" class="skel">Loading…</td></tr></tbody>
+      </table>
+    </div>
+    <h2 style="margin-top:18px">What TMR can do right now</h2>
+    <div class="grid" id="capGrid"></div>
+    <ul id="creditsDisclosures" style="margin:14px 0 0;padding-left:18px;font-size:13px;line-height:1.55;color:var(--acct-muted)"></ul>
+  </section>
+
   <section class="acct-card">
     <h2>Activity</h2>
     <div class="grid" id="activityGrid"><div class="skel">Loading…</div></div>
@@ -428,9 +446,47 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
     }
   }
 
+  // CREDIT_BREAKDOWN_20261009: where the balance came from, simulator spend, purchases and plain disclosures.
+  function escH(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return '&#' + c.charCodeAt(0) + ';'; }); }
+  async function loadCredits() {
+    var d = await window.api.request('/wallet/credits');
+    var c = d.credits || {}, s = d.simulator || {}, cap = d.capabilities || {};
+    var tile = function (k, v, cls) { return '<div class="tile ' + (cls || '') + '"><div class="k">' + k + '</div><div class="v">' + v + '</div></div>'; };
+    $('creditsGrid').innerHTML = [
+      tile('Purchased credits', fmt(c.purchased), 'gold'),
+      tile('Free and reward credits', fmt(c.promotional), 'pos'),
+      tile('Earned TMR', fmt(c.earned), 'blue'),
+      tile('From your own wallet', fmt(c.withdrawable), '')
+    ].join('');
+    $('creditsOrder').textContent = d.spendOrder || '';
+    $('simGrid').innerHTML = [
+      tile('Cost per run', fmt(s.costPerRunTmr) + ' TMR', ''),
+      tile('Free runs', s.freeRunsPerSimPerDay + ' per simulator a day', ''),
+      tile('Paid runs', fmt(s.paidRuns), ''),
+      tile('TMR spent on runs', fmt(s.tmrSpent), ''),
+      tile('Paid runs, last 30 days', fmt(s.paidRunsLast30Days), ''),
+      tile('Runs your balance covers', fmt(s.paidRunsAvailableNow), 'pos')
+    ].join('');
+    var p = d.purchases || [];
+    $('buyTable').querySelector('tbody').innerHTML = p.length ? p.map(function (o) {
+      return '<tr><td>' + new Date(o.paidAt).toLocaleDateString() + '</td><td>' + escH(o.reference) + (o.refunded ? ' <span class="tag">Refunded</span>' : '') +
+        '</td><td class="num">' + fmt(o.tmr) + '</td><td class="num">$' + Number(o.amountUsd).toFixed(2) + '</td></tr>';
+    }).join('') : '<tr><td colspan="4" class="skel">No purchases yet.</td></tr>';
+    var yn = function (k, on) { return tile(k, on ? 'Yes' : 'No', on ? 'pos' : 'neg'); };
+    $('capGrid').innerHTML = [
+      yn('Spend on TrustMyRecord', cap.spendOnSite),
+      yn('Withdraw to your wallet', cap.withdrawToWallet),
+      yn('Deposit from your wallet', cap.depositFromWallet),
+      yn('Sell TMR Coin on the market now', cap.sellOnMarketNow),
+      yn('Cash out for money', cap.cashOutForMoney)
+    ].join('');
+    $('creditsDisclosures').innerHTML = (cap.disclosures || []).map(function (t) { return '<li>' + escH(t) + '</li>'; }).join('');
+  }
+
   $('btnMore').onclick = function () { loadTx(true).catch(function (e) { say(e.message, true); }); };
 
   (async function init() {
+    loadCredits().catch(function () { $('creditsCard').style.display = 'none'; });
     try { await loadAccount(); await loadTx(false); }
     catch (e) {
       if (String(e && e.message).match(/401|unauth/i)) {

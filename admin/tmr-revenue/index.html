@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TMR Revenue and Liquidity | TrustMyRecord</title>
+    <link rel="icon" type="image/png" href="/static/favicon.png">
+    <style>
+        :root { color-scheme: dark; --bg:#060b12; --panel:#0b111b; --panel2:#101826; --line:rgba(148,163,184,0.16); --text:#f8fafc; --muted:#9aa8ba; --cyan:#1D7FE8; --gold:#facc15; --red:#f87171; --green:#4ade80; }
+        * { box-sizing: border-box; }
+        body { margin: 0; background: var(--bg); color: var(--text); font-family: Inter, system-ui, sans-serif; }
+        .bar { padding: 16px 20px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .bar h1 { font-size: 18px; margin: 0; color: var(--cyan); }
+        .bar .badge { padding: 3px 9px; border-radius: 999px; background: rgba(248,113,113,0.16); border: 1px solid rgba(248,113,113,0.45); color: #fecaca; font-size: 10.5px; font-weight: 800; letter-spacing: 0.08em; }
+        .bar a { color: var(--muted); font-size: 12.5px; text-decoration: none; }
+        main { padding: 20px; max-width: 1080px; margin: 0 auto; }
+        .msg { margin-bottom: 14px; font-size: 13px; }
+        .msg.err { color: var(--red); }
+        .msg.ok { color: var(--green); }
+        .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 18px 20px; margin-bottom: 18px; }
+        .panel h2 { margin: 0 0 4px; font-size: 15px; }
+        .panel p.note { margin: 0 0 14px; color: var(--muted); font-size: 12.5px; line-height: 1.6; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+        th { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; }
+        input, textarea, select { background: var(--panel2); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-family: inherit; font-size: 13px; }
+        input[type=number] { width: 130px; }
+        input.wide, textarea { width: 100%; }
+        textarea { min-height: 48px; resize: vertical; }
+        button { background: var(--panel2); color: var(--text); border: 1px solid rgba(29, 127, 232,0.3); border-radius: 8px; padding: 7px 12px; font-weight: 700; font-size: 12.5px; cursor: pointer; font-family: inherit; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        button.danger { border-color: rgba(248,113,113,0.45); color: #fecaca; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+        .tile { border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; background: var(--panel2); }
+        .tile .k { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; margin: 0 0 5px; }
+        .tile .v { margin: 0; font-size: 21px; font-weight: 800; }
+        .tile .v.gold { color: var(--gold); }
+        .ok-pill { color: var(--green); font-weight: 800; }
+        .bad-pill { color: var(--red); font-weight: 800; }
+        .flag-row { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: start; padding: 12px 0; border-bottom: 1px solid var(--line); }
+        .flag-row:last-child { border-bottom: none; }
+        .flag-name { font-weight: 800; font-size: 13.5px; }
+        .flag-alias { color: var(--muted); font-size: 11.5px; font-family: ui-monospace, monospace; }
+        .flag-state { font-size: 12px; margin-top: 5px; }
+        .flag-signoff { margin-top: 8px; }
+        .group-title { margin: 18px 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+        @media (max-width: 700px) {
+            table, thead, tbody, th, td, tr { display: block; }
+            thead { display: none; }
+            tr { border: 1px solid var(--line); border-radius: 8px; margin-bottom: 10px; padding: 8px; }
+            td { border: none; padding: 5px 4px; }
+        }
+    </style>
+<!-- The one approved navbar: the shared header component (tmr-ds-nav.js)
+     plus the homepage's own navbar rules, so every page renders the same bar. -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap">
+<link rel="stylesheet" href="/static/css/tmr-navbar.css?v=68ec3081d29a">
+    <link rel="stylesheet" href="/static/css/tmr-ds.d4d41a955166.css">
+<link rel="stylesheet" href="/static/css/tmr-ds-header.cc364e352e74.css">
+<style>
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
+  .tile .v { font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; word-break: break-word; }
+  .tile .s { color: var(--muted); font-size: 11.5px; margin-top: 4px; line-height: 1.45; }
+  .tag-real, .tag-sim { display: inline-block; font-size: 10.5px; font-weight: 800; letter-spacing: .08em; padding: 3px 8px; border-radius: 999px; margin-left: 8px; vertical-align: middle; }
+  .tag-real { background: rgba(74,222,128,.12); color: var(--green); }
+  .tag-sim { background: rgba(250,204,21,.12); color: var(--gold); }
+  .warn-list { margin: 0; padding-left: 18px; line-height: 1.6; font-size: 13px; color: var(--gold); }
+  .panel.sim { border-style: dashed; border-color: rgba(250,204,21,.35); }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body class="tmr-theme-a tmr-ds-shell">
+    <div class="bar">
+        <h1>TMR Revenue and Liquidity</h1>
+        <span class="badge">ADMIN</span>
+        <a href="/admin/tmr-economy/">Economy control center →</a>
+        <a href="/admin/tmr-coin/">On-chain panel →</a>
+    </div>
+    <main>
+        <div id="msg" class="msg"></div>
+
+        <div class="panel">
+            <h2>Warnings</h2>
+            <ul class="warn-list" id="warnings"><li>Loading…</li></ul>
+        </div>
+
+        <div class="panel">
+            <h2>Actual money <span class="tag-real">REAL</span></h2>
+            <p class="note">Card sales of TMR credits, from the store orders. Read only. This page moves no money and changes no setting.</p>
+            <div class="grid" id="actual"></div>
+        </div>
+
+        <div class="panel">
+            <h2>Liquidity right now <span class="tag-real">REAL</span></h2>
+            <p class="note">Read from the Base pool. Funded liquidity is only what is actually in the pool.</p>
+            <div class="grid" id="pool"></div>
+        </div>
+
+        <div class="panel sim">
+            <h2>Reserve scenarios <span class="tag-sim">SIMULATION</span></h2>
+            <p class="note" id="simBasis"></p>
+            <table>
+                <thead><tr><th>Share of proceeds</th><th class="num">To date</th><th class="num">Per month at the current rate</th></tr></thead>
+                <tbody id="sims"></tbody>
+            </table>
+        </div>
+
+        <div class="panel">
+            <h2>Simulator runs, last 60 days (Pacific) <span class="tag-real">REAL</span></h2>
+            <table>
+                <thead><tr><th>Day</th><th class="num">Paid runs</th><th class="num">Free runs</th><th class="num">TMR spent</th></tr></thead>
+                <tbody id="simDaily"></tbody>
+            </table>
+        </div>
+
+        <div class="panel">
+            <h2>Revenue ledger <span class="tag-real">REAL</span></h2>
+            <p class="note">Append only. One row per sale, refund or chargeback. Fees marked * are estimates until reconciled with Stripe.</p>
+            <table>
+                <thead><tr><th>When</th><th>Order</th><th>Kind</th><th class="num">Gross</th><th class="num">Fee</th><th class="num">Net</th><th class="num">TMR</th></tr></thead>
+                <tbody id="ledger"></tbody>
+            </table>
+        </div>
+    </main>
+
+    <script src="/static/js/config.js?v=430b4bba7b37"></script>
+    <script src="/static/js/backend-api.js?v=e4eaeea31d19"></script>
+    <script>
+    (function () {
+        'use strict';
+        var el = function (id) { return document.getElementById(id); };
+        function esc(v) {
+            return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) {
+                return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
+            });
+        }
+        function usd(c) { if (c == null) return 'Not set'; var n = Number(c) / 100; return (n < 0 ? '−$' : '$') + Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+        function num(v) { return (Number(v) || 0).toLocaleString('en-US'); }
+        function pt(iso) { if (!iso) return '—'; return new Date(iso).toLocaleString('en-US', { timeZone: 'America/Los_Angeles', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) + ' PT'; }
+        function tile(k, v, s, cls) { return '<div class="tile"><div class="k">' + esc(k) + '</div><div class="v ' + (cls || '') + '">' + esc(v) + '</div>' + (s ? '<div class="s">' + esc(s) + '</div>' : '') + '</div>'; }
+
+        function render(d) {
+            var a = d.actual || {}, p = d.pool || {}, sm = d.simulation || {};
+            el('warnings').innerHTML = (d.warnings || []).map(function (w) { return '<li>' + esc(w) + '</li>'; }).join('') || '<li>None.</li>';
+            el('actual').innerHTML = [
+                tile('Gross card sales', usd(a.gross_cents), a.sales + ' sales by ' + a.buyers + ' buyers'),
+                tile('Card fees', usd(a.fees_cents), a.fees_estimated ? 'Estimated' : 'From Stripe'),
+                tile('Net proceeds', usd(a.net_cents), a.refunds + ' refunds, ' + a.chargebacks + ' chargebacks'),
+                tile('Restricted: unused purchased credits', usd(a.restricted_unused_credits_cents), num(a.restricted_unused_credits_tmr) + ' TMR still owed as service', 'gold'),
+                tile('Available after restricted', usd(a.available_after_restricted_cents), 'Before tax and costs'),
+                tile('Tax reserve', a.tax_reserve_pct == null ? 'Not set' : a.tax_reserve_pct + '%', a.tax_reserve_cents == null ? 'Needs your number' : usd(a.tax_reserve_cents)),
+                tile('Operating costs to date', usd(a.operating_costs_cents), a.operating_costs_cents == null ? 'Needs your number' : ''),
+                tile('Eligible net proceeds', a.eligible_net_cents == null ? 'Unknown' : usd(a.eligible_net_cents), a.eligible_net_cents == null ? 'Set tax and costs first' : ''),
+                tile('Approved reserve share', a.approved_pct == null ? 'None' : a.approved_pct + '%', 'Committed ' + usd(a.committed_reserve_cents)),
+                tile('TMR sold', num(a.tmr_sold), 'First ' + pt(a.first_sale) + ', last ' + pt(a.last_sale))
+            ].join('');
+            el('pool').innerHTML = [
+                tile('Pool', p.address ? p.address.slice(0, 6) + '…' + p.address.slice(-4) : 'Not found', p.fee_tier_bps ? (p.fee_tier_bps / 100) + '% fee tier' : ''),
+                tile('ETH in the pool', p.weth == null ? 'Unknown' : String(p.weth), Number(p.weth) > 0 ? 'Sales can execute' : 'No ETH: no sale can execute', Number(p.weth) > 0 ? '' : 'bad-pill'),
+                tile('TMR in the pool', p.tmr == null ? 'Unknown' : num(Math.round(p.tmr))),
+                tile('Quoted price', p.price_usd == null ? '—' : '$' + Number(p.price_usd).toPrecision(3), 'A quote, not an executable sale price'),
+                tile('Liquidity locked', p.liquidity_locked ? 'Yes' : 'No', ''),
+                tile('Funded by revenue', usd(a.funded_liquidity_cents), 'Changes only when you approve and fund it')
+            ].join('');
+            el('simBasis').textContent = 'Basis: ' + (sm.basis || '') + ', ' + usd(sm.basis_cents) + '. These are what each share WOULD be. No percentage is committed and nothing is set aside.';
+            var pm = {}; (sm.scenarios_per_month || []).forEach(function (x) { pm[x.pct] = x.reserve_cents_per_month; });
+            el('sims').innerHTML = (sm.scenarios || []).map(function (x) {
+                return '<tr><td>' + x.pct + '%</td><td class="num">' + usd(x.reserve_cents) + '</td><td class="num">' + usd(pm[x.pct]) + '</td></tr>';
+            }).join('');
+            el('simDaily').innerHTML = (d.simulator_daily || []).slice().reverse().map(function (r) {
+                return '<tr><td>' + esc(r.d) + '</td><td class="num">' + num(r.paid) + '</td><td class="num">' + num(r.free) + '</td><td class="num">' + num(r.tmr) + '</td></tr>';
+            }).join('') || '<tr><td colspan="4">No runs.</td></tr>';
+            el('ledger').innerHTML = (d.ledger || []).map(function (r) {
+                return '<tr><td>' + pt(r.occurred_at) + '</td><td>' + esc(r.order_ref) + '</td><td>' + esc(r.kind) + '</td><td class="num">' + usd(r.gross_cents) +
+                    '</td><td class="num">' + usd(r.fee_cents) + (r.fee_source === 'estimate' ? '*' : '') + '</td><td class="num">' + usd(r.net_cents) + '</td><td class="num">' + num(r.tmr) + '</td></tr>';
+            }).join('') || '<tr><td colspan="7">No sales yet.</td></tr>';
+        }
+
+        window.api.request('/admin/tmr-revenue').then(render).catch(function (e) {
+            el('msg').className = 'msg err';
+            el('msg').textContent = /401|403|unauth|admin/i.test(String(e && e.message)) ? 'Admin sign in required.' : 'Could not load: ' + (e && e.message);
+        });
+    })();
+    </script>
+<script src="/static/js/tmr-ds-nav.32d787b6f5ca.js"></script>
+</body>
+</html>
