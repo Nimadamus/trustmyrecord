@@ -166,7 +166,20 @@ ALLOWED_IMAGE_PREFIXES = ("/static/", SITE + "/static/", "https://trustmyrecord-
 # and committed, so a published piece has no third-party dependency at render
 # time and cannot have an image change or disappear underneath it later.
 ALLOWED_FETCH_HOSTS = ("https://midfield.mlbstatic.com/", "https://www.mlbstatic.com/",
-                       "https://a.espncdn.com/")
+                       "https://a.espncdn.com/", "https://trustmyrecord-api.onrender.com/api/share/og/")
+
+# MOTD_OG_CARD_20261008. Facebook's crawler will not take an og:image from the
+# API host (the Sharing Debugger fell back to a logo on the page), so the API's
+# share card is baked into the site like every other article image and the page
+# points at the trustmyrecord.com copy.
+API_OG = "https://trustmyrecord-api.onrender.com/api/share/og/"
+
+
+def og_local(article):
+    """The /static/ path an API share card is baked to, or None."""
+    if str(article.get("og_image_url") or "").startswith(API_OG):
+        return "/static/media/matchups/og/%s.png" % article["slug"]
+    return None
 
 # A downloaded file has to actually be the kind of image it claims to be. Size
 # alone is not a check: an error page is several KB of perfectly valid bytes.
@@ -874,6 +887,9 @@ def collect_media(articles):
 
     for a in articles:
         walk(a.get("body_json") or [])
+        local = og_local(a)
+        if local:
+            wanted[local] = a["og_image_url"]
     return wanted
 
 
@@ -896,13 +912,23 @@ def fetch_media(wanted):
         if os.path.exists(path) and os.path.getsize(path) > 0:
             continue
 
-        try:
-            req = urllib.request.Request(remote, headers={"User-Agent": "TrustMyRecord/1.0 (+%s)" % SITE})
-            with urllib.request.urlopen(req, timeout=45) as r:
-                blob = r.read()
-        except Exception as err:                        # noqa: BLE001
-            sys.exit("ABORT: could not download %s (%s). Nothing written; the "
-                     "last good bake stays live." % (remote, err))
+        blob = None
+        # the API's share card endpoint allows 60 requests a minute; pace it and
+        # back off on 429 rather than abort the whole bake
+        tries = 6 if remote.startswith(API_OG) else 1
+        for attempt in range(tries):
+            if remote.startswith(API_OG):
+                import time
+                time.sleep(1.2 if attempt == 0 else 15 * attempt)
+            try:
+                req = urllib.request.Request(remote, headers={"User-Agent": "TrustMyRecord/1.0 (+%s)" % SITE})
+                with urllib.request.urlopen(req, timeout=45) as r:
+                    blob = r.read()
+                break
+            except Exception as err:                    # noqa: BLE001
+                if attempt == tries - 1:
+                    sys.exit("ABORT: could not download %s (%s). Nothing written; the "
+                             "last good bake stays live." % (remote, err))
 
         ext = os.path.splitext(path)[1].lower()
         expected = MAGIC.get(ext)
@@ -984,7 +1010,7 @@ def render_article(article, provenance, neighbours):
     url = article_abs(article)
     matchup = "%s vs. %s" % (article["away_team"], article["home_team"])
 
-    og_image = absolute(check_image(article.get("og_image_url"), "og_image_url"))
+    og_image = absolute(check_image(og_local(article) or article.get("og_image_url"), "og_image_url"))
     # The hero artwork is now RENDERED, not merely recorded. Phase 1 validated
     # hero_image_alt and then never emitted an <img>, so every article carried
     # alt text for a picture that was not on the page.
