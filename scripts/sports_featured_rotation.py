@@ -25,6 +25,7 @@ import unicodedata
 
 import nfl_featured_rotation as nfl
 import dateless_slug
+import featured_og
 from schema_event import event_status, place_node
 
 SOURCE = "rotation"
@@ -731,12 +732,12 @@ def _clock_line(game):
 OG_IMAGE = SITE + "/static/og/og-home.png"
 
 
-def featured_ld(event, name, description, canonical, published):
+def featured_ld(event, name, description, canonical, published, image=None):
     """Article + BreadcrumbList + SportsEvent graph for one featured page."""
     org = {"@type": "Organization", "name": "TrustMyRecord", "url": SITE + "/"}
     return {"@context": "https://schema.org", "@graph": [
         {"@type": "Article", "headline": name[:110], "description": description,
-         "url": canonical, "mainEntityOfPage": canonical, "image": OG_IMAGE,
+         "url": canonical, "mainEntityOfPage": canonical, "image": image or OG_IMAGE,
          "datePublished": published, "dateModified": published,
          "author": org, "publisher": org},
         {"@type": "BreadcrumbList", "itemListElement": [
@@ -796,8 +797,16 @@ def _write_page(root, sport, game, spec, href, headline, lede, when_line, body=N
     place = place_node(game.get("venue") or game.get("city"), game.get("venue_address"))
     if place:
         event["location"] = place
+    # MOTD_OG_CARD_20261008: the page's own card (both marks, matchup, start,
+    # angle) instead of the site wide og-home card. scripts/featured_og.py.
+    card = featured_og.build(root, href.strip("/").split("/")[-1], {
+        "sport": sport, "away": a_disp, "home": h_disp, "start": game["kickoff"],
+        "time_valid": game.get("time_valid", True), "angle": headline,
+        "flags": [game["away"].get("logo"), game["home"].get("logo")] if sport == "tennis" else None,
+    })
+    og_image = SITE + card if card else OG_IMAGE
     ld = featured_ld(event, title.replace(" | TrustMyRecord", ""), description, canonical,
-                     dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"))
+                     dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), image=og_image)
     nav = _asset(root, "static/js/tmr-ds-nav.js")
     css = _asset(root, "static/css/tmr-ds.css")
     header = _asset(root, "static/css/tmr-ds-header.css")
@@ -815,6 +824,8 @@ def _write_page(root, sport, game, spec, href, headline, lede, when_line, body=N
 <meta property="og:description" content="%s">
 <meta property="og:url" content="%s">
 <meta property="og:image" content="%s">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 <link rel="icon" type="image/png" href="/static/favicon.png">
 <link rel="stylesheet" href="%s">
 <link rel="stylesheet" href="/static/css/tmr-navbar.css">
@@ -849,7 +860,7 @@ def _write_page(root, sport, game, spec, href, headline, lede, when_line, body=N
 """ % (
         html.escape(title), html.escape(description), html.escape(canonical),
         html.escape(headline), html.escape(description), html.escape(canonical),
-        OG_IMAGE,
+        og_image,
         html.escape(css), html.escape(header),
         json.dumps(ld, indent=2),
         MARK, html.escape(sport), html.escape(game["id"]),

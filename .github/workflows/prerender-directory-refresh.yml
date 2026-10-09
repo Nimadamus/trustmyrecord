@@ -63,6 +63,12 @@ jobs:
       - run: npx playwright install --with-deps chromium
         continue-on-error: true
 
+      # MOTD_OG_CARD_20261008: scripts/featured_og.py draws each rotation Matchup
+      # of the Day page's own Open Graph card with Pillow. Without it a new page
+      # would fall back to the site wide card, so the install is not optional.
+      - name: Install Pillow for featured game share cards
+        run: python -m pip install --quiet --disable-pip-version-check pillow
+
       - name: Rebuild every prerendered page (isolated per stage, page, validator and gate)
         id: run
         # Stages, in order: directory (/handicappers/, /leaderboards/), homepage
@@ -94,7 +100,7 @@ jobs:
           # pathspec makes `git add` exit 128, so every run since 2026-09-24
           # baked correctly and then published nothing. Only existing paths are added.
           PUBLISH=""
-          for p in handicappers/index.html leaderboards/index.html index.html u forum sitemap.xml static/prerender matchup-of-the-day data/featured-matchups.json data/featured-urls.json nfl ncaaf mlb soccer tennis nfl-game-of-the-week; do
+          for p in handicappers/index.html leaderboards/index.html index.html u forum sitemap.xml static/prerender matchup-of-the-day data/featured-matchups.json data/featured-urls.json static/og/featured nfl ncaaf mlb soccer tennis nfl-game-of-the-week; do
             if [ -e "$p" ]; then PUBLISH="$PUBLISH $p"; fi
           done
           git add -A $PUBLISH
