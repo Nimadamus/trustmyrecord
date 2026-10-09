@@ -133,7 +133,9 @@ def when_lines(start_utc, time_valid=True):
     day = "%s, %s %d" % (kick.strftime("%A"), kick.strftime("%B"), kick.day)
     et = start_utc.astimezone(ZoneInfo("America/New_York"))
     fmt = lambda d: d.strftime("%I:%M %p").lstrip("0")
-    return day, "%s ET  |  %s PT" % (fmt(et), fmt(kick))
+    # the day line is Pacific; when Eastern is already the next day, say so
+    et_txt = fmt(et) + (" %s" % et.strftime("%a") if et.date() != kick.date() else "")
+    return day, "%s ET  |  %s PT" % (et_txt, fmt(kick))
 
 
 def render(ctx):
@@ -156,7 +158,9 @@ def render(ctx):
         info = None if sport == "tennis" else team(sport, disp)
         if sport == "tennis":
             mark = _mark((ctx.get("flags") or [None, None])[0 if key == "away" else 1])
-            short = disp.split()[-1]
+            # full names: "Shi Han", "Zheng Qinwen" lead with the family name, so
+            # a last word is not a surname (it printed HAN VS QINWEN)
+            short = disp
         else:
             mark = _mark(info["logo"]) if info else None
             short = (info["location"] if sport in ("ncaaf", "ncaab") else info["short"]) if info else disp
