@@ -156,7 +156,7 @@
                 tile('TMR sold', num(a.tmr_sold), 'First ' + pt(a.first_sale) + ', last ' + pt(a.last_sale))
             ].join('');
             el('pool').innerHTML = [
-                tile('Pool', p.address ? p.address.slice(0, 6) + '…' + p.address.slice(-4) : 'Not found', p.fee_tier_bps ? (p.fee_tier_bps / 100) + '% fee tier' : ''),
+                tile('Pool', p.address ? p.address.slice(0, 6) + '…' + p.address.slice(-4) : 'Not found', p.fee_tier_bps ? (p.fee_tier_bps / 10000) + '% fee tier' : ''),
                 tile('ETH in the pool', p.weth == null ? 'Unknown' : String(p.weth), Number(p.weth) > 0 ? 'Sales can execute' : 'No ETH: no sale can execute', Number(p.weth) > 0 ? '' : 'bad-pill'),
                 tile('TMR in the pool', p.tmr == null ? 'Unknown' : num(Math.round(p.tmr))),
                 tile('Quoted price', p.price_usd == null ? '—' : '$' + Number(p.price_usd).toPrecision(3), 'A quote, not an executable sale price'),
