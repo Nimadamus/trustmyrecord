@@ -32,7 +32,7 @@
             /*FMENU nfl-gotw*/ ["/matchup-of-the-day/tampa-bay-dallas-one-offense-keeps-chains-moving/", "NFL Game of the Week", "/nfl-game-of-the-week/"],
             /*FMENU ncaaf*/ ["/ncaaf/hawkeyes-huskies-brown-vs-williams/", "NCAAF", "/matchup-of-the-day/ncaaf/"],
             /*FMENU mlb*/ ["/handicapping/mlb/rays-vs-yankees-849837/", "MLB", "/matchup-of-the-day/mlb/"],
-            /*FMENU nhl*/ ["/nhl/stars-sabres-heiskanen-vs-power/", "NHL", "/matchup-of-the-day/nhl/"],
+            /*FMENU nhl*/ ["/nhl/penguins-blue-jackets-novak-vs-knies/", "NHL", "/matchup-of-the-day/nhl/"],
             /*FMENU tennis*/ ["/tennis/kalieva-sasnovich-quarterfinals/", "Tennis", "/matchup-of-the-day/tennis/"],
             /*FMENU soccer*/ ["/matchup-of-the-day/inter-miami-cf-columbus-crew-the-table-says-one-side/", "Soccer", "/matchup-of-the-day/soccer/"]
         ]],
