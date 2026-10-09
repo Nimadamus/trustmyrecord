@@ -83,14 +83,18 @@ const listen = (app) => new Promise((r) => { const s = app.listen(0, '127.0.0.1'
       const ctx = await browser.newContext();
       const page = await ctx.newPage();
       await page.route('**/*', async (route) => {
-        const url = route.request().url();
-        if (url.startsWith(site)) return route.continue();
-        if (url.startsWith(PROD_API)) {
-          if (route.request().method() === 'OPTIONS') return route.fulfill({ status: 204, headers: cors });
-          const r = await route.fetch({ url: url.replace(PROD_API, apiBase) });
-          return route.fulfill({ response: r, headers: { ...r.headers(), ...cors } });
-        }
-        return route.abort(); // nothing else leaves this machine
+        // Requests still in flight when a test closes its page are dropped
+        // quietly instead of crashing the run.
+        try {
+          const url = route.request().url();
+          if (url.startsWith(site)) return await route.continue();
+          if (url.startsWith(PROD_API)) {
+            if (route.request().method() === 'OPTIONS') return await route.fulfill({ status: 204, headers: cors });
+            const r = await route.fetch({ url: url.replace(PROD_API, apiBase) });
+            return await route.fulfill({ response: r, headers: { ...r.headers(), ...cors } });
+          }
+          return await route.abort(); // nothing else leaves this machine
+        } catch (_) { /* page closed mid request */ }
       });
       return { ctx, page };
     }
