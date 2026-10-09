@@ -20,12 +20,18 @@ async function directBackendLoginFallback(usernameOrEmail, password, rememberMe)
         })
     });
 
-    const data = await response.json().catch(() => ({}));
+    let data = await response.json().catch(() => ({}));
     if (!response.ok) {
         const error = new Error(data.error || data.message || 'Login failed');
         error.code = data.code;
         error.data = data;
         throw error;
+    }
+    if (data && data.mfaRequired) {
+        if (typeof api === 'undefined' || typeof api.completeTwoFactorLogin !== 'function') {
+            throw new Error('Two-factor sign in could not start. Reload the page and try again.');
+        }
+        data = await api.completeTwoFactorLogin(data);
     }
 
     if (typeof api !== 'undefined' && typeof api.saveTokens === 'function') {
