@@ -265,6 +265,11 @@ console.log('\nnoindex allowlist');
     // Same private, login gated surface as the consoles above: linked only from /admin/ and the
     // economy console, answers 401 without an admin session. Added 2026-10-08 per section 2.
     SITE + '/admin/tmr-cashout/',
+    // Admin-only revenue and liquidity page (accounting, fee tiers). Same private, login gated
+    // surface as the consoles above: the page ships no figures, its data comes from an admin API
+    // that refuses anyone without an admin session ("Admin sign in required"). Authorised by the
+    // site owner on 2026-10-09 for this one route, per SEO_INDEXING_PROTOCOL.md section 2.
+    SITE + '/admin/tmr-revenue/',
     // Member cash redemption screen, built HIDDEN on the site owner's order (2026-10-08: "users
     // must not see or access live redemption yet"). Linked from nowhere; it shows only "TMR has
     // no cash value" until the backend reports LIVE. Remove from this list when it launches.
