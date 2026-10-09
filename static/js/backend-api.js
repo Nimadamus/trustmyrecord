@@ -492,13 +492,104 @@ class TrustMyRecordAPI {
         }
     }
 
+    // ==================== ADMIN TWO-FACTOR (ADMIN_2FA_20261009) ====================
+    // An admin with two-factor on gets { mfaRequired, mfaToken } from /auth/login
+    // instead of tokens. Ask for the code, exchange it at /auth/2fa/login, and
+    // return the normal login answer so every login path keeps working unchanged.
+    async completeTwoFactorLogin(first) {
+        if (!first || !first.mfaRequired || !first.mfaToken) return first;
+        const base = String(this.baseUrl || 'https://trustmyrecord-api.onrender.com/api').replace(/\/+$/, '');
+        let note = '';
+        for (;;) {
+            const code = await TrustMyRecordAPI.askTwoFactorCode(note);
+            if (code === null) {
+                const cancelled = new Error('Sign in cancelled.');
+                cancelled.code = 'MFA_CANCELLED';
+                throw cancelled;
+            }
+            let response;
+            try {
+                response = await fetch(base + '/auth/2fa/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    body: JSON.stringify({ mfaToken: first.mfaToken, code })
+                });
+            } catch (networkError) {
+                note = 'Could not reach the server. Check your connection and try again.';
+                continue;
+            }
+            const data = await response.json().catch(() => ({}));
+            if (response.ok && data.accessToken) {
+                this.saveTokens(data.accessToken, data.refreshToken);
+                if (data.user && typeof data.user === 'object') this._cachedUser = data.user;
+                return data;
+            }
+            if (data.code === 'TOTP_INVALID') { note = 'That code is not right. Try again.'; continue; }
+            if (data.code === 'TOTP_REPLAY') { note = 'That code was already used. Wait for the next one.'; continue; }
+            const error = new Error(data.code === 'MFA_TOKEN_INVALID'
+                ? 'The sign in timed out. Enter your password again.'
+                : (data.error || 'Two-factor sign in failed.'));
+            error.code = data.code;
+            error.status = response.status;
+            throw error;
+        }
+    }
+
+    // A small self contained dialog (no page CSS needed). Resolves to the code,
+    // or null if the person cancels.
+    static askTwoFactorCode(note) {
+        return new Promise((resolve) => {
+            const overlay = document.createElement('div');
+            overlay.id = 'tmr-2fa-dialog';
+            overlay.setAttribute('role', 'dialog');
+            overlay.setAttribute('aria-modal', 'true');
+            overlay.setAttribute('aria-labelledby', 'tmr-2fa-title');
+            overlay.style.cssText = 'position:fixed;inset:0;z-index:2147483000;background:rgba(2,6,12,.72);display:flex;align-items:center;justify-content:center;padding:16px;';
+            overlay.innerHTML =
+                '<form id="tmr-2fa-form" style="width:100%;max-width:380px;background:#0b111b;color:#f8fafc;border:1px solid rgba(148,163,184,.25);border-radius:14px;padding:22px;font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;box-shadow:0 20px 60px rgba(0,0,0,.5)">' +
+                '<h2 id="tmr-2fa-title" style="margin:0 0 6px;font-size:20px;font-weight:800">Two-factor code</h2>' +
+                '<p style="margin:0 0 14px;color:#9aa8ba;font-size:14px;line-height:1.5">Enter the 6 digit code from your authenticator app, or one of your recovery codes.</p>' +
+                '<input id="tmr-2fa-code" name="code" autocomplete="one-time-code" inputmode="text" maxlength="11" spellcheck="false" autocapitalize="off" ' +
+                'style="width:100%;box-sizing:border-box;font-size:22px;letter-spacing:.2em;text-align:center;padding:12px;border-radius:10px;border:1px solid rgba(148,163,184,.35);background:#060b12;color:#f8fafc;outline:none" />' +
+                '<p id="tmr-2fa-error" role="alert" style="min-height:20px;margin:8px 0 0;color:#f87171;font-size:13px"></p>' +
+                '<div style="display:flex;gap:10px;margin-top:10px">' +
+                '<button type="button" id="tmr-2fa-cancel" style="flex:1;padding:11px;border-radius:10px;border:1px solid rgba(148,163,184,.35);background:transparent;color:#f8fafc;font-weight:700;cursor:pointer">Cancel</button>' +
+                '<button type="submit" id="tmr-2fa-submit" style="flex:1;padding:11px;border-radius:10px;border:0;background:#2dd4bf;color:#061018;font-weight:800;cursor:pointer">Verify</button>' +
+                '</div></form>';
+            document.body.appendChild(overlay);
+            const input = overlay.querySelector('#tmr-2fa-code');
+            const err = overlay.querySelector('#tmr-2fa-error');
+            err.textContent = note || '';
+            const done = (value) => {
+                document.removeEventListener('keydown', onKey, true);
+                overlay.remove();
+                resolve(value);
+            };
+            const onKey = (e) => { if (e.key === 'Escape') { e.preventDefault(); done(null); } };
+            document.addEventListener('keydown', onKey, true);
+            overlay.querySelector('#tmr-2fa-cancel').addEventListener('click', () => done(null));
+            overlay.querySelector('#tmr-2fa-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const code = String(input.value || '').replace(/\s+/g, '');
+                if (!/^(\d{6}|[0-9a-fA-F]{5}-?[0-9a-fA-F]{5})$/.test(code)) {
+                    err.textContent = 'Enter the 6 digit code, or a recovery code like ab12c-3d45e.';
+                    input.focus();
+                    return;
+                }
+                done(code);
+            });
+            setTimeout(() => input.focus(), 0);
+        });
+    }
+
     // ==================== AUTH ROUTES ====================
 
     async login(usernameOrEmail, password, rememberMe = true) {
-        const data = await this.request('/auth/login', {
+        let data = await this.request('/auth/login', {
             method: 'POST',
             body: { login: usernameOrEmail, password, rememberMe }
         });
+        if (data && data.mfaRequired) data = await this.completeTwoFactorLogin(data);
         
         // Handle different response formats
         const tokens = data.tokens || data;
