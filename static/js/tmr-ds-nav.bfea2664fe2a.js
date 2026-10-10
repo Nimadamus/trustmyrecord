@@ -161,7 +161,7 @@
          /matchup-of-the-day/ncaaf/ is a stable door scoped to one sport: baked
          with the newest NCAAF Game File, canonicalised to it, and out of the
          sitemap so search consolidates on the article's own URL. */
-      /*FMENU ncaaf*/ ['/ncaaf/hawkeyes-huskies-brown-vs-williams/', 'NCAAF', '/matchup-of-the-day/ncaaf/'],
+      /*FMENU ncaaf*/ ['/ncaaf/broncos-bulldogs-madsen-vs-mandal/', 'NCAAF', '/matchup-of-the-day/ncaaf/'],
       /* Repointed 2026-09-04 from /today/ to /matchup-of-the-day/mlb/. /today/ is
          newest-wins across every sport, so once college football started publishing
          its own Game Files this entry and the NCAAF one both landed on whichever
@@ -173,7 +173,7 @@
       /*FMENU nhl*/ ['/nhl/red-wings-canadiens-debrincat-vs-suzuki/', 'NHL', '/matchup-of-the-day/nhl/'],
       /* Added 2026-09-07 with the tennis section. Same stable-door pattern:
          /matchup-of-the-day/tennis/ bakes with the newest tennis Game File. */
-      /*FMENU tennis*/ ['/tennis/parks-ito-opening-round/', 'Tennis', '/matchup-of-the-day/tennis/'],
+      /*FMENU tennis*/ ['/tennis/tormo-gibson-opening-round/', 'Tennis', '/matchup-of-the-day/tennis/'],
       /* Added 2026-09-08, the day the soccer lane published its first Game
          File. The row went in only once /matchup-of-the-day/soccer/ was baked
          and serving: a menu entry pointing at a door that does not exist yet
