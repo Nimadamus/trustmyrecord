@@ -180,7 +180,7 @@
          is a dead link, and this one waited for the page rather than the other
          way round. Seven competitions feed it: the Premier League, LaLiga,
          Bundesliga, Serie A, Ligue 1, the Champions League and MLS. */
-      /*FMENU soccer*/ ['/matchup-of-the-day/werder-borussia-the-table-says-one-side/', 'Soccer', '/matchup-of-the-day/soccer/'],
+      /*FMENU soccer*/ ['/matchup-of-the-day/bayern-munich-fc-the-table-says-one-side/', 'Soccer', '/matchup-of-the-day/soccer/'],
       /* Added 2026-09-09, the day the NFL lane published its first Game File.
          Same stable-door pattern: /matchup-of-the-day/nfl/ bakes with the newest
          NFL Game File and is canonicalised to it. */
