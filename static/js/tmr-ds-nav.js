@@ -170,10 +170,10 @@
       /*FMENU mlb*/ ['/matchup-of-the-day/guardians-white-sox-bullpens-are-lights-out/', 'MLB', '/matchup-of-the-day/mlb/'],
       /* Added 2026-09-29 with the NHL Featured Game of the Day
          (scripts/nhl_featured_game.py, cloud workflow nhl-featured-game.yml). */
-      /*FMENU nhl*/ ['/matchup-of-the-day/ducks-jets-the-goaltending-gap/', 'NHL', '/matchup-of-the-day/nhl/'],
+      /*FMENU nhl*/ ['/nhl/red-wings-canadiens-debrincat-vs-suzuki/', 'NHL', '/matchup-of-the-day/nhl/'],
       /* Added 2026-09-07 with the tennis section. Same stable-door pattern:
          /matchup-of-the-day/tennis/ bakes with the newest tennis Game File. */
-      /*FMENU tennis*/ ['/tennis/kalieva-okamura-semifinals/', 'Tennis', '/matchup-of-the-day/tennis/'],
+      /*FMENU tennis*/ ['/tennis/parks-ito-opening-round/', 'Tennis', '/matchup-of-the-day/tennis/'],
       /* Added 2026-09-08, the day the soccer lane published its first Game
          File. The row went in only once /matchup-of-the-day/soccer/ was baked
          and serving: a menu entry pointing at a door that does not exist yet
