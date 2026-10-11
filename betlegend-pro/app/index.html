@@ -768,6 +768,17 @@
     skin.rel = 'stylesheet';
     skin.href = '/betlegend-pro/app/electric.20261011a.css';
     root.appendChild(skin);
+    // PREVIEW_V2 (2026-10-11): the full redesign loads only with ?preview=v2,
+    // so it can be reviewed on the live data before it replaces anything.
+    try {
+        if (new URLSearchParams(location.search).get('preview') === 'v2') {
+            var v2 = document.createElement('link');
+            v2.rel = 'stylesheet';
+            v2.href = '/betlegend-pro/app/electric-v2.20261011a.css';
+            root.appendChild(v2);
+            host.classList.add('is-v2');
+        }
+    } catch (e) { /* no preview */ }
     root.appendChild(document.getElementById('blpMarkup').content.cloneNode(true));
 
     // Reveal only once the sheet has resolved, so the tool never flashes
@@ -2628,8 +2639,19 @@
                 + ' title="Sort by ' + c[0].toLowerCase() + '">'
                 + '<span>' + c[0] + '</span><i class="th-arrow" aria-hidden="true"></i></th>';
         }).join('');
+        // PREVIEW_V2: a form strip, oldest to newest, one square per listed
+        // meeting from the first team's side. Hidden unless the v2 preview
+        // sheet is loaded; it reads the same rows the table prints.
+        var strip = games.length > 1
+            ? '<div class="formstrip" data-v2 hidden><span class="formstrip-l">' + esc(d.team_1) + ', oldest to newest</span><div class="formstrip-row">'
+                + games.slice().reverse().map(function (g) {
+                    var k = g.result === 'W' ? 'w' : (g.result === 'L' ? 'l' : 't');
+                    return '<i class="fs fs-' + k + '" title="' + esc((g.date || '') + ': ' + g.team_score + '-' + g.opponent_score
+                        + ' ' + (k === 'w' ? 'win' : k === 'l' ? 'loss' : 'tie')) + '"></i>';
+                }).join('') + '</div></div>'
+            : '';
         var body = rows
-            ? '<div class="tablewrap"><table class="games is-sortable">'
+            ? strip + '<div class="tablewrap"><table class="games is-sortable">'
                 + '<caption class="sr">Qualifying meetings between ' + esc(d.team_1) + ' and ' + esc(d.team_2)
                 + ', with the situations each one satisfied. Column headers sort the list; '
                 + 'the records and averages above always cover every qualifying meeting.</caption>'
@@ -2660,8 +2682,9 @@
         // tone: 'pos' / 'neg' colours a figure that is a result for one side
         // (more wins than losses, units up or down). Never on neutral readings
         // such as averages or the over/under split.
-        var kpi = function (label, value, hint, tone) {
+        var kpi = function (label, value, hint, tone, pctFill) {
             return '<div class="kpi' + (tone ? ' is-' + tone : '') + '"><span>' + esc(label) + '</span><strong>' + value + '</strong>'
+                + (pctFill != null ? '<b class="kbar" data-v2 hidden><i style="width:' + Math.max(0, Math.min(100, pctFill)) + '%"></i></b>' : '')
                 + (hint ? '<em>' + esc(hint) + '</em>' : '') + '</div>';
         };
         var toneWL = function (w, l) { w = Number(w) || 0; l = Number(l) || 0; return w > l ? 'pos' : l > w ? 'neg' : ''; };
@@ -2693,8 +2716,8 @@
                     + 'shown as an answer. Please report this query.</p>' : '')
             + '<div class="kpis">'
             + kpi('Meetings', fmtInt(m.qualifying_games), 'games that met every condition')
-            + kpi(t1 + ' record', rec(m.team_1), pct(m.team_1.win_pct), toneWL(m.team_1.wins, m.team_1.losses))
-            + kpi(t2 + ' record', rec(m.team_2), pct(m.team_2.win_pct), toneWL(m.team_2.wins, m.team_2.losses))
+            + kpi(t1 + ' record', rec(m.team_1), pct(m.team_1.win_pct), toneWL(m.team_1.wins, m.team_1.losses), m.team_1.win_pct)
+            + kpi(t2 + ' record', rec(m.team_2), pct(m.team_2.win_pct), toneWL(m.team_2.wins, m.team_2.losses), m.team_2.win_pct)
             + ((ats && ats.eligible_games > 0)
                 ? kpi(t1 + ' ATS', esc(ats.wins != null ? ats.wins + '-' + ats.losses + '-' + (ats.pushes || 0) : (ats.record || '')),
                       (ats.cover_pct == null ? '' : ats.cover_pct + '% · ') + ats.eligible_games + ' of '
@@ -2900,7 +2923,10 @@
                     + '<table class="trail"><thead><tr><th>Condition</th><th class="n">Before</th>'
                     + '<th class="n">After</th><th class="n">Removed</th></tr></thead><tbody>'
                     + trail.map(function (t) {
-                        return '<tr><td>' + esc(t.filter) + '</td><td class="n">' + fmtInt(t.games_before)
+                        var keep = t.games_before ? Math.round(100 * t.games_after / t.games_before) : 0;
+                        return '<tr><td>' + esc(t.filter)
+                            + '<span class="nbar" data-v2 hidden><i style="width:' + keep + '%"></i></span>'
+                            + '</td><td class="n">' + fmtInt(t.games_before)
                             + '</td><td class="n">' + fmtInt(t.games_after) + '</td><td class="n">'
                             + (t.removed ? '−' + fmtInt(t.removed) : '0') + '</td></tr>';
                     }).join('')

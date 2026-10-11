@@ -1,0 +1,219 @@
+/* ==========================================================================
+   BetLegend Pro: Electric v2 PREVIEW, 2026-10-11.
+   Loaded only with ?preview=v2, after console + electric sheets. Carries the
+   premium treatment through every lower section: report header, query
+   restatement, sample narrowing, notes, game log, lifetime card, team total,
+   other tools, library, loading / empty / error states. Presentation only.
+   ========================================================================== */
+:host {
+    --glass: linear-gradient(180deg, rgba(255, 255, 255, .045), rgba(255, 255, 255, .012));
+    --hair: rgba(140, 170, 230, .14);
+    --num: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+/* v2-only markup the JS ships hidden. */
+[data-v2][hidden] { display: block !important; }
+.kbar[data-v2][hidden], .nbar[data-v2][hidden] { display: block !important; }
+
+/* -- page rhythm ----------------------------------------------------------- */
+.shell { padding-bottom: 72px; }
+.card, .rcard { border-radius: 20px; }
+.card + .card, .rcard + .rcard { margin-top: 16px; }
+.card-head, .rcard-head { position: relative; }
+
+/* Section titles get an electric tick and a hairline that runs to the edge. */
+.rcard-head { padding-bottom: 12px; margin-bottom: 16px; border-bottom: 1px solid var(--hair); }
+.rcard-head h3, .rcard-head h2 { display: flex; align-items: center; gap: 10px; font-size: 17px; letter-spacing: -.005em; }
+.rcard-head h3::before, .rcard-head h2::before {
+    content: ""; width: 4px; height: 18px; border-radius: 4px;
+    background: linear-gradient(180deg, var(--cyan), var(--elec));
+    box-shadow: 0 0 12px rgba(58, 214, 255, .55);
+}
+.rcard-head .range {
+    padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line-2);
+    background: rgba(255, 255, 255, .03); font-size: 11.5px; color: var(--ink-2);
+}
+
+/* -- result header bar ------------------------------------------------------ */
+.resultbar {
+    padding: 18px 22px; border-radius: 20px;
+    background:
+        radial-gradient(60% 140% at 100% 0%, rgba(58, 214, 255, .16), transparent 60%),
+        radial-gradient(70% 140% at 0% 100%, rgba(47, 123, 255, .28), transparent 60%),
+        linear-gradient(135deg, #10224a, #0a1530);
+    border-color: rgba(110, 165, 255, .45);
+    box-shadow: 0 24px 50px -28px rgba(47, 123, 255, .9);
+}
+.resulttitle { font-size: 20px; letter-spacing: -.01em; }
+
+/* -- KPI tiles: win-rate bars --------------------------------------------- */
+.kbar { height: 5px; margin: 8px 0 6px; border-radius: 99px; background: rgba(255, 255, 255, .08); overflow: hidden; }
+.kbar i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--elec), var(--cyan)); }
+.kpi.is-pos .kbar i { background: linear-gradient(90deg, #1fb87a, var(--win)); }
+.kpi.is-neg .kbar i { background: linear-gradient(90deg, #e04848, var(--loss)); }
+.kpi span { font-size: 10.5px; letter-spacing: .09em; }
+.kpi em { display: block; margin-top: 2px; font-style: normal; line-height: 1.4; }
+
+/* -- the restatement card (rcard.is-head) --------------------------------- */
+.rcard.is-head {
+    background:
+        radial-gradient(80% 120% at 100% 0%, rgba(47, 123, 255, .12), transparent 60%),
+        linear-gradient(180deg, #0f1a31, #0a1325);
+}
+.facts { grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
+.fact { position: relative; padding: 14px 16px; border-radius: 14px; background: var(--glass); border-color: var(--hair); }
+.fact::after {
+    content: ""; position: absolute; left: 16px; right: 16px; top: 0; height: 2px; border-radius: 2px;
+    background: linear-gradient(90deg, var(--elec), transparent);
+}
+.fact strong { font-size: 15px; }
+.verify {
+    margin-top: 16px; padding: 16px 18px; border-radius: 16px;
+    border: 1px solid rgba(96, 160, 255, .3);
+    background: linear-gradient(135deg, rgba(47, 123, 255, .14), rgba(47, 123, 255, .03));
+}
+.verify-text { color: var(--ink); font-size: 14.5px; line-height: 1.6; }
+.verify-span { color: var(--accent-2); }
+.verify-list { color: var(--ink-2); }
+.verify-list b, .verify-list strong { color: var(--ink); }
+.tags { margin-top: 12px; gap: 7px; }
+.tag { padding: 5px 11px; font-size: 11px; letter-spacing: .03em; text-transform: uppercase; }
+
+/* Notes become framed panels with a coloured spine instead of grey boxes. */
+.block-note {
+    position: relative; margin-top: 14px; padding: 14px 16px 14px 18px; border-radius: 14px;
+    background: var(--glass); border: 1px solid var(--hair);
+}
+.block-note::before {
+    content: ""; position: absolute; left: 0; top: 12px; bottom: 12px; width: 3px; border-radius: 3px;
+    background: linear-gradient(180deg, var(--elec), var(--cyan));
+}
+.block-note.is-warn::before { background: linear-gradient(180deg, #ffb020, #ffd36b); }
+.block-note > strong { font-size: 13px; letter-spacing: .01em; margin-bottom: 8px; }
+.block-note ul { padding-left: 18px; }
+.block-note li + li { margin-top: 4px; }
+.block-note li::marker { color: var(--accent); }
+
+/* -- sample narrowing: a funnel, not a spreadsheet ------------------------ */
+.trailwrap { margin-top: 4px; border: 0; background: none; }
+table.trail { width: 100%; border-collapse: separate; border-spacing: 0 6px; background: none; border: 0; box-shadow: none; }
+table.trail th {
+    padding: 0 12px 2px; background: none; border: 0;
+    font: 800 10px/1.2 var(--sans); letter-spacing: .09em; text-transform: uppercase; color: var(--ink-3);
+}
+table.trail td {
+    padding: 11px 12px; border: 0; background: rgba(255, 255, 255, .035); color: var(--ink);
+    font-size: 13px;
+}
+table.trail td:first-child { border-radius: 12px 0 0 12px; border-left: 3px solid var(--accent); }
+table.trail td:last-child { border-radius: 0 12px 12px 0; color: var(--loss); font-weight: 700; }
+table.trail td.n { font-family: var(--num); font-variant-numeric: tabular-nums; text-align: right; }
+.nbar { height: 4px; margin-top: 8px; border-radius: 99px; background: rgba(255, 255, 255, .07); overflow: hidden; max-width: 340px; }
+.nbar i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--elec), var(--cyan)); box-shadow: 0 0 10px rgba(58, 214, 255, .5); }
+
+/* -- game log --------------------------------------------------------------- */
+.formstrip {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin: 0 0 14px;
+    padding: 12px 14px; border-radius: 14px; background: var(--glass); border: 1px solid var(--hair);
+}
+.formstrip-l { font: 800 10px/1.2 var(--sans); letter-spacing: .09em; text-transform: uppercase; color: var(--ink-3); }
+.formstrip-row { display: flex; flex-wrap: wrap; gap: 4px; }
+.fs { width: 14px; height: 14px; border-radius: 4px; display: inline-block; }
+.fs-w { background: var(--win); box-shadow: 0 0 8px rgba(61, 220, 151, .45); }
+.fs-l { background: var(--loss); box-shadow: 0 0 8px rgba(255, 107, 107, .4); }
+.fs-t { background: #7d8aa5; }
+
+.tablewrap { border-radius: 16px; border: 1px solid var(--hair); background: #070e1c; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .03); }
+table.games { font-size: 13px; }
+table.games thead th {
+    position: sticky; top: 0; z-index: 1;
+    background: linear-gradient(180deg, #13213d, #0f1b33); color: var(--ink-2);
+    font: 800 10.5px/1.2 var(--sans); letter-spacing: .08em; text-transform: uppercase;
+    padding: 12px 12px; border-bottom: 1px solid var(--line-2);
+}
+table.games th.th-sort:hover { color: #fff; }
+table.games th[aria-sort="ascending"], table.games th[aria-sort="descending"] { color: var(--cyan); }
+table.games td { padding: 12px 12px; border-bottom: 1px solid rgba(140, 170, 230, .08); color: var(--ink-2); vertical-align: top; }
+table.games td:first-child { color: var(--ink); font-weight: 600; white-space: nowrap; }
+table.games td.n { font-family: var(--num); font-size: 12.5px; color: var(--ink); }
+table.games tbody tr { transition: background .12s ease; }
+table.games tbody tr:hover td { background: rgba(77, 148, 255, .08); }
+table.games td.why { color: var(--accent-2); font-size: 12px; }
+.res { display: inline-block; padding: 3px 9px; border-radius: 999px; font-weight: 700; font-size: 12px; white-space: nowrap; }
+
+/* -- lifetime card: deliberately quieter than the answer ------------------- */
+.rcard:last-of-type .kpis .kpi { background: rgba(255, 255, 255, .025); }
+
+/* -- receipts, pills, method -------------------------------------------------- */
+.receipt { color: var(--ink-3); }
+.pill { padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+.method { color: var(--ink-3); }
+
+/* -- other tools ------------------------------------------------------------ */
+#panel-ask .card, #panel-sim .card, #panel-trends .card, #panel-library .card { padding-bottom: 6px; }
+.chips { gap: 8px; }
+.chipbtn {
+    padding: 7px 13px; border-radius: 999px; border: 1px solid var(--line-2);
+    background: #08101f; color: var(--ink-2); transition: all .12s ease;
+}
+.chipbtn:hover { border-color: var(--accent); color: #fff; background: var(--accent-soft); }
+.ta { border-radius: 14px; min-height: 120px; }
+.lib-item { border-radius: 14px; transition: border-color .15s ease, transform .15s ease; }
+.lib-item:hover { border-color: var(--accent-line); transform: translateY(-1px); }
+.lib-title { color: #fff; }
+.lib-meta { color: var(--ink-3); }
+
+/* -- empty, loading, error -------------------------------------------------- */
+.empty {
+    padding: 36px 20px; border-radius: 20px; border: 1px dashed rgba(110, 165, 255, .35);
+    background: radial-gradient(60% 100% at 50% 0%, rgba(47, 123, 255, .12), transparent 70%), #0a1324;
+}
+.empty-ico {
+    background: linear-gradient(145deg, var(--elec-2), var(--cyan)); color: #fff;
+    box-shadow: 0 10px 28px -10px rgba(47, 123, 255, .9);
+}
+.empty h3 { color: #fff; }
+.empty p { color: var(--ink-2); }
+.skel-line, .skel-box { animation: blpShimmer 1.4s ease-in-out infinite; }
+@keyframes blpShimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+.note.is-err, .err-line { border-radius: 12px; }
+#authGate { border-radius: 20px; }
+
+/* -- the sample counter as a live instrument ------------------------------- */
+#trail.trail { border-radius: 20px; }
+.trail-n { font-family: var(--display); font-size: 34px; }
+.trail-list > li { padding: 8px 0; }
+
+/* -- phones and tablets ------------------------------------------------------- */
+@media (max-width: 899px) {
+    .facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .resultbar { padding: 14px 16px; }
+}
+@media (max-width: 560px) {
+    .facts { grid-template-columns: 1fr; }
+    table.trail td { padding: 10px; font-size: 12.5px; }
+    .rcard-head { flex-direction: column; align-items: flex-start; gap: 6px; }
+    .fs { width: 12px; height: 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .skel-line, .skel-box { animation: none; }
+    .lib-item:hover { transform: none; }
+}
+
+/* -- v2 polish pass 2 -- */
+.block-note ul.cover { background: none; border: 0; padding: 0 0 0 18px; margin: 0; }
+table.games td:nth-child(2) { min-width: 170px; }
+table.games td:nth-child(3) { min-width: 120px; }
+table.games td.n:nth-child(9) { font-family: var(--sans); font-size: 12px; min-width: 170px; color: var(--ink-2); }
+table.games td.n:nth-child(7) { font-family: var(--sans); font-size: 12.5px; white-space: nowrap; }
+table.games td.why { min-width: 170px; }
+table.games td, table.games thead th { padding-left: 10px; padding-right: 10px; }
+@media (max-width: 560px) {
+    /* "Before" is the row above's "After": on a phone the funnel keeps After and Removed. */
+    table.trail th:nth-child(2), table.trail td:nth-child(2) { display: none; }
+    table.trail { min-width: 0; }
+    .nbar { max-width: 100%; }
+    table.trail th, table.trail td { padding-left: 8px; padding-right: 8px; }
+    .trailwrap { overflow-x: auto; }
+    .block-note { padding-left: 14px; padding-right: 12px; }
+}
