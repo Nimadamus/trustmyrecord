@@ -173,14 +173,14 @@
       /*FMENU nhl*/ ['/matchup-of-the-day/kraken-capitals-one-side-is-far-better/', 'NHL', '/matchup-of-the-day/nhl/'],
       /* Added 2026-09-07 with the tennis section. Same stable-door pattern:
          /matchup-of-the-day/tennis/ bakes with the newest tennis Game File. */
-      /*FMENU tennis*/ ['/tennis/okamura-sramkova-a-final-is/', 'Tennis', '/matchup-of-the-day/tennis/'],
+      /*FMENU tennis*/ ['/tennis/fernandez-alexandrova-opening-round/', 'Tennis', '/matchup-of-the-day/tennis/'],
       /* Added 2026-09-08, the day the soccer lane published its first Game
          File. The row went in only once /matchup-of-the-day/soccer/ was baked
          and serving: a menu entry pointing at a door that does not exist yet
          is a dead link, and this one waited for the page rather than the other
          way round. Seven competitions feed it: the Premier League, LaLiga,
          Bundesliga, Serie A, Ligue 1, the Champions League and MLS. */
-      /*FMENU soccer*/ ['/matchup-of-the-day/bayern-munich-fc-the-table-says-one-side/', 'Soccer', '/matchup-of-the-day/soccer/'],
+      /*FMENU soccer*/ ['/matchup-of-the-day/manchester-city-liverpool-the-table-says-one-side/', 'Soccer', '/matchup-of-the-day/soccer/'],
       /* Added 2026-09-09, the day the NFL lane published its first Game File.
          Same stable-door pattern: /matchup-of-the-day/nfl/ bakes with the newest
          NFL Game File and is canonicalised to it. */
