@@ -472,6 +472,15 @@ On the Handicappers page, Total Members means all registered/public users, Activ
 - **Verification is NOT "the dropdowns exist."** Any change to this page's filter/calc logic MUST be verified against REAL graded-pick data: pull a known heavy member (e.g. BetLegend) from the live API, recompute the combos below with the page's own functions, and confirm they equal the backend `/users/<u>/metrics` for All/All. Required test combos: All/All, All/Total, MLB/Team Total, MLB/Run Line, MLB/Moneyline. HTTP 200 + markup presence is insufficient.
 - Combined Sport + Wager filtering, plus column sorting, must keep working together. Any future leaderboard work preserves this capability.
 
+## Find Handicappers "Trading desk" design (Oct 10, 2026) — HARD RULE
+
+Nima approved Option 1 "Trading desk" for `/handicappers/` on 2026-10-10. It replaces the May 28 plain-row leaderboard style rules for this page.
+
+- The look lives ONLY in `static/css/tmr-hc-electric.css` + `static/js/tmr-hc-electric.js`, linked last in `handicappers/index.html`. Additive layer: no markup, URL, meta, canonical or schema changes.
+- The JS is presentation only: it reads the rendered DOM (rank, record, units, ROI, win %, streak, last active) and adds medals, arrows, TOP tags, streak pills, win % meters, verified marks and KPI icons. It never fetches, never computes a new stat and never touches sorting, filtering, ranking or bindings. Keep it that way.
+- Style: one navy panel with hairline rows, gold/silver/bronze medals for ranks 1 to 3, tinted Units/ROI chips with direction arrows, compact ghost Picks + "View" actions, electric blue accents kept subtle. No horizontal scroll at 390, 820 or 1440.
+- Change it only with Nima's approval. The local preview kit for future work is `C:\Users\BL\tmr_handicappers_redesign_preview\`.
+
 ## Global Nav Make Picks / Sportsbook Standard (May 22, 2026) — HARD RULE
 
 The public top-of-page navigation on every TMR page MUST always preserve a visible, obvious entry point to the sportsbook / pick entry flow (label: "Make Picks" or "Sportsbook"). This link is a core product function — picks, contests, and locked records all depend on it.
