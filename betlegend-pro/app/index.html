@@ -1178,6 +1178,8 @@
         return (library.groups || []).map(function (g) {
             var specs = (g.filters || []).filter(function (f) {
                 if (STRUCTURAL[f.id]) return false;
+                // Across-seasons twins are a switch on the streak row, not a second entry.
+                if (STREAK_TWIN[f.id] && /_all$/.test(f.id)) return false;
                 var isGame = f.applies_to === 'game';
                 if (bucket === 'game' ? !isGame : isGame) return false;
                 return matches(f);
@@ -1379,13 +1381,32 @@
      *  in words. "4+" means at least four, the way a streak is asked. */
     var STREAK_WORDS = {
         su_streak: ['won', 'lost'],
+        su_streak_all: ['won', 'lost'],
         opp_su_streak: ['won', 'lost'],
+        opp_su_streak_all: ['won', 'lost'],
         ats_streak: ['covered', 'failed to cover'],
         ou_streak: ['gone over', 'gone under']
     };
     var STREAK_PRESETS = [3, 4, 5];
+    /** SEASON_STREAKS_20261011: a win/loss streak counts this season's games
+     *  by default (playoffs continue the run; an opener starts at 0). Each
+     *  has an across-seasons twin, reached from the row's scope switch rather
+     *  than listed twice in the picker. */
+    var STREAK_TWIN = {
+        su_streak: 'su_streak_all', su_streak_all: 'su_streak',
+        opp_su_streak: 'opp_su_streak_all', opp_su_streak_all: 'opp_su_streak'
+    };
+    function streakScope(id) {
+        return !STREAK_TWIN[id] ? '' : (/_all$/.test(id) ? ' (across seasons)' : ' (this season)');
+    }
     function streakReading(spec, v) {
-        var w = STREAK_WORDS[spec.id], who = spec.id === 'opp_su_streak' ? 'Opponent had ' : 'Had ';
+        var who = /^opp_/.test(spec.id) ? 'Opponent had ' : 'Had ';
+        var said = streakPhrase(spec, v, who);
+        // Phrased readings carry the scope; label-based ones already do.
+        return said.indexOf(who) === 0 ? said + streakScope(spec.id) : said;
+    }
+    function streakPhrase(spec, v, who) {
+        var w = STREAK_WORDS[spec.id];
         var lo = v.min, hi = v.max;
         function run(n) { return n === 1 ? 'the previous game' : n + ' straight'; }
         if (lo != null && hi != null && lo === hi) {
@@ -1409,10 +1430,22 @@
                 + ' aria-pressed="' + on + '">' + esc(text) + '</button>';
         }
         var cap = function (s) { return s.charAt(0).toUpperCase() + s.slice(1); };
+        var twin = STREAK_TWIN[spec.id], scope = '';
+        if (twin) {
+            var all = /_all$/.test(spec.id);
+            var sb = function (isAll, text) {
+                var on = isAll === all;
+                return '<button type="button" class="fpreset' + (on ? ' is-on' : '') + '"'
+                    + (on ? '' : ' data-scope="' + esc(key) + '" data-to="' + esc(twin) + '"')
+                    + ' aria-pressed="' + on + '">' + esc(text) + '</button>';
+            };
+            scope = '<span class="fpresets" aria-label="Count the streak">'
+                + sb(false, 'This season only') + sb(true, 'Across seasons') + '</span>';
+        }
         return '<span class="fpresets">'
             + STREAK_PRESETS.map(function (n) { return btn(n, null, cap(w[0]) + ' ' + n + '+'); }).join('')
             + STREAK_PRESETS.map(function (n) { return btn(null, -n, cap(w[1]) + ' ' + n + '+'); }).join('')
-            + '</span>';
+            + '</span>' + scope;
     }
 
     function chipFor(spec, v) {
@@ -1888,6 +1921,19 @@
         var rm = t.closest && t.closest('[data-remove]');
         if (rm) {
             delete filters[rm.getAttribute('data-remove')];
+            renderConditions();
+            return;
+        }
+        var sc = t.closest && t.closest('[data-scope]');
+        if (sc) {
+            // Swap the id in place so the row keeps its position and value.
+            var from = sc.getAttribute('data-scope'), to = fkey(bktOf(from), sc.getAttribute('data-to'));
+            var next = {};
+            Object.keys(filters).forEach(function (k) {
+                if (k === from) next[to] = filters[k];
+                else if (k !== to) next[k] = filters[k];
+            });
+            filters = next;
             renderConditions();
             return;
         }
