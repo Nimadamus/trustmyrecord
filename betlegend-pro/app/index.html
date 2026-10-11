@@ -1504,6 +1504,14 @@
      *  and a four-digit year are the only values that travel. */
     var PERIOD_LOADING = '__loading';
     var SEASON_RE = /^\d{4}$/;
+    /** SEASON_LABELS_20261011: a season's value is the year it starts (what
+     *  the engine filters on); NBA and NHL name it by both years, so "2025"
+     *  is shown as 2025-26. NFL and MLB keep one year. */
+    function seasonLabel(sport, y) {
+        if (y == null || !/^(NBA|NHL)$/.test(sport)) return y == null ? '' : String(y);
+        var n = Number(y);
+        return n + '-' + String((n + 1) % 100).padStart(2, '0');
+    }
     function periodReady() {
         var tf = mTimeframe.value;
         if (mTimeframe.disabled || tf === PERIOD_LOADING) return false;
@@ -1717,7 +1725,7 @@
                 + (on ? ' aria-current="true"' : '') + '>'
                 + '<b>' + esc(r.sport) + '</b>'
                 + '<span class="cover-years">' + (known
-                    ? esc(r.earliest_season) + '\u2013' + esc(r.latest_season)
+                    ? esc(seasonLabel(r.sport, r.earliest_season)) + ' to ' + esc(seasonLabel(r.sport, r.latest_season))
                     : fmtInt(r.games) + ' games') + '</span>'
                 + (known ? '<i>' + fmtInt(r.games) + ' games</i>' : '') + '</li>';
         }).join('');
@@ -1726,7 +1734,7 @@
         [].slice.call(mSport.options).forEach(function (o) {
             var r = rows.filter(function (x) { return x.sport === o.value; })[0];
             o.textContent = r && r.earliest_season != null
-                ? o.value + ' \u00b7 ' + r.earliest_season + '\u2013' + r.latest_season
+                ? o.value + ' \u00b7 ' + seasonLabel(o.value, r.earliest_season) + ' to ' + seasonLabel(o.value, r.latest_season)
                 : o.value;
         });
         paintSportPick();
@@ -1745,7 +1753,7 @@
                 + esc(mine.sport) + ' games on file. Sign in to search them.';
         }
         if (since && mine && mine.earliest_season != null) {
-            since.textContent = 'since ' + mine.earliest_season;
+            since.textContent = 'since ' + seasonLabel(mine.sport, mine.earliest_season);
         }
     }
 
@@ -1782,7 +1790,8 @@
             return;
         }
         line.innerHTML = '<strong>' + esc(mSport.value) + ' database coverage: '
-            + esc(coverage.earliest_season) + ' to ' + esc(coverage.latest_season) + '</strong>'
+            + esc(seasonLabel(mSport.value, coverage.earliest_season)) + ' to '
+            + esc(seasonLabel(mSport.value, coverage.latest_season)) + '</strong>'
             + ' <span class="cover-sub">· ' + fmtInt(coverage.games) + ' games on file</span>';
         meta.textContent = coverage.earliest_date + ' → ' + coverage.latest_date;
     }
@@ -1794,11 +1803,18 @@
     function buildPeriodOptions() {
         var keep = mTimeframe.value;
         var first = coverage && coverage.earliest_season, last = coverage && coverage.latest_season;
+        var sp = mSport.value;
         var opts = ['<option value="all">All available history'
-            + (first ? ', since ' + first : '') + '</option>'];
-        if (first && last) {
-            for (var y = last; y >= first; y--) opts.push('<option value="' + y + '">' + y + '</option>');
+            + (first ? ', since ' + seasonLabel(sp, first) : '') + '</option>'];
+        // The server lists every season that has games (a cancelled one, NHL
+        // 2004-05, is not offered); the year range is the fallback.
+        var list = (coverage && coverage.seasons) ? coverage.seasons.map(function (x) { return x.season; }) : [];
+        if (!list.length && first && last) {
+            for (var y = last; y >= first; y--) list.push(y);
         }
+        list.forEach(function (y) {
+            opts.push('<option value="' + y + '">' + esc(seasonLabel(sp, y)) + '</option>');
+        });
         opts.push('<option value="custom">Custom date range\u2026</option>');
         mTimeframe.innerHTML = opts.join('');
         // Keep the user's choice across a re-render; a season the new sport
@@ -2235,10 +2251,10 @@
         }
         if (v === 'all') {
             return (coverage && coverage.earliest_season)
-                ? 'all available history since ' + coverage.earliest_season
+                ? 'all available history since ' + seasonLabel(mSport.value, coverage.earliest_season)
                 : 'all available history';
         }
-        return 'the ' + v + ' season';
+        return 'the ' + seasonLabel(mSport.value, v) + ' season';
     }
 
     /** The matchup in a full sentence. "at" is standard notation, but it must
@@ -2573,7 +2589,8 @@
         };
         return '<div class="facts">'
             + fact('Database coverage', (cov && cov.earliest_season != null)
-                ? esc(d.sport) + ' ' + esc(cov.earliest_season) + ' to ' + esc(cov.latest_season)
+                ? esc(d.sport) + ' ' + esc(seasonLabel(d.sport, cov.earliest_season)) + ' to '
+                    + esc(seasonLabel(d.sport, cov.latest_season))
                     + ' <em>(' + fmtInt(cov.games) + ' games)</em>'
                 : DASH)
             + fact('Report period', per ? prose(per.label) : 'All available history')
