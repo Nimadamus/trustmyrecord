@@ -920,3 +920,17 @@ html:root body.tmr-ds .hm-member-row.x-medal:hover {
   html body.tmr-ds .hm-member-row { transition: none; }
   
 }
+
+/* ======================= LIVE HELP LAUNCHER (this page only) =======================
+   The site-wide launcher announces itself with a wide "Live help" label for 6s, which sat
+   on the featured cards. Here it stays a bubble (label still opens on hover/focus), and
+   where the side gutter is narrower than the bubble it becomes a slim tab flush with the
+   right edge so it never covers ranks, stats or buttons. Opening the chat is unchanged. */
+html body.tmr-ds .tmr-lc-launcher.is-wide:not(:hover):not(:focus-visible) .tmr-lc-label { max-width: 0; opacity: 0; margin: 0; }
+@media (max-width: 1365px) {
+  html body.tmr-ds .tmr-lc:not(.is-open) { right: 0; bottom: 16px; }
+  html body.tmr-ds .tmr-lc-launcher { padding: 12px 3px 12px 4px; border-radius: 14px 0 0 14px; border-right: 0; }
+  html body.tmr-ds .tmr-lc-launcher .tmr-lc-avatar { width: 24px; height: 24px; }
+  html body.tmr-ds .tmr-lc-launcher .tmr-lc-avatar svg { width: 15px; height: 15px; }
+  html body.tmr-ds .tmr-lc-launcher .tmr-lc-dot { width: 8px; height: 8px; border-width: 1.5px; }
+}
