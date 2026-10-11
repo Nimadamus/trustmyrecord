@@ -761,7 +761,7 @@
     sheet.rel = 'stylesheet';
 // A new NAME per build, not a new query string: the edge caches this sheet
     // for four hours and ignores the query string, so `?v=` never reached it.
-    sheet.href = '/betlegend-pro/app/console.20260929a.css';
+    sheet.href = '/betlegend-pro/app/console.20261011a.css';
     root.appendChild(sheet);
     root.appendChild(document.getElementById('blpMarkup').content.cloneNode(true));
 
@@ -1232,7 +1232,8 @@
             + '<input class="fnum" type="number" data-fid="' + esc(key) + '" data-bound="max" placeholder="Max"'
             + attrs + (r.max != null ? ' value="' + esc(r.max) + '"' : '') + '>'
             + (spec.unit ? '<span class="funit">' + esc(spec.unit) + '</span>' : '')
-            + '</span>';
+            + '</span>'
+            + streakPresets(spec, key, r);
     }
 
     /** The conditions the user has added, as rows. Nothing is on screen until
@@ -1356,6 +1357,48 @@
         toggleArea(null, false);
     }
 
+    /** Streak readings are signed: +4 is four straight wins going in, -4
+     *  four straight losses. Typed as a bare min/max that is easy to get
+     *  wrong, so these rows offer the common asks as one click and read back
+     *  in words. "4+" means at least four, the way a streak is asked. */
+    var STREAK_WORDS = {
+        su_streak: ['won', 'lost'],
+        opp_su_streak: ['won', 'lost'],
+        ats_streak: ['covered', 'failed to cover'],
+        ou_streak: ['gone over', 'gone under']
+    };
+    var STREAK_PRESETS = [3, 4, 5];
+    function streakReading(spec, v) {
+        var w = STREAK_WORDS[spec.id], who = spec.id === 'opp_su_streak' ? 'Opponent had ' : 'Had ';
+        var lo = v.min, hi = v.max;
+        function run(n) { return n === 1 ? 'the previous game' : n + ' straight'; }
+        if (lo != null && hi != null && lo === hi) {
+            return lo > 0 ? who + w[0] + ' exactly ' + run(lo) + ' going in'
+                : lo < 0 ? who + w[1] + ' exactly ' + run(-lo) + ' going in'
+                : spec.label + ' of 0 (no run going in)';
+        }
+        if (lo != null && lo > 0 && hi == null) return who + w[0] + ' ' + (lo === 1 ? 'the previous game' : lo + ' or more straight') + ' going in';
+        if (hi != null && hi < 0 && lo == null) return who + w[1] + ' ' + (hi === -1 ? 'the previous game' : (-hi) + ' or more straight') + ' going in';
+        if (lo != null && hi != null) return spec.label + ' between ' + lo + ' and ' + hi + ' (+ ' + w[0] + ', − ' + w[1] + ')';
+        if (lo != null) return spec.label + ' of ' + lo + ' or more (+ ' + w[0] + ', − ' + w[1] + ')';
+        return spec.label + ' of ' + hi + ' or less (+ ' + w[0] + ', − ' + w[1] + ')';
+    }
+    function streakPresets(spec, key, r) {
+        var w = STREAK_WORDS[spec.id];
+        if (!w) return '';
+        function btn(min, max, text) {
+            var on = r.min === min && r.max === max;
+            return '<button type="button" class="fpreset' + (on ? ' is-on' : '') + '" data-preset="' + esc(key)
+                + '" data-min="' + (min == null ? '' : min) + '" data-max="' + (max == null ? '' : max) + '"'
+                + ' aria-pressed="' + on + '">' + esc(text) + '</button>';
+        }
+        var cap = function (s) { return s.charAt(0).toUpperCase() + s.slice(1); };
+        return '<span class="fpresets">'
+            + STREAK_PRESETS.map(function (n) { return btn(n, null, cap(w[0]) + ' ' + n + '+'); }).join('')
+            + STREAK_PRESETS.map(function (n) { return btn(null, -n, cap(w[1]) + ' ' + n + '+'); }).join('')
+            + '</span>';
+    }
+
     function chipFor(spec, v) {
         if (spec.kind === 'bool') return spec.label;
         if (spec.kind === 'enum') {
@@ -1366,6 +1409,7 @@
             }
             return spec.label + ': ' + v;
         }
+        if (spec.kind === 'range' && STREAK_WORDS[spec.id]) return streakReading(spec, v);
         if (spec.kind === 'range') {
             if (v.min != null && v.max != null) {
                 return v.min === v.max ? spec.label + ' of exactly ' + v.min
@@ -1701,12 +1745,13 @@
             var cur = (filters[fid] && typeof filters[fid] === 'object') ? filters[fid] : {};
             var next = { min: cur.min, max: cur.max };
             next[bound] = (raw === '' || raw == null) ? null : Number(raw);
-            if (next.min == null && next.max == null) delete filters[fid];
-            else filters[fid] = next;
+            // Clearing the box keeps the row listed and unset (which blocks
+            // the run) instead of dropping the key while the row stays on
+            // screen, which sent a query without a situation the reader saw.
+            filters[fid] = next;
             return;
         }
-        if (raw === '' || raw == null || raw === false) delete filters[fid];
-        else filters[fid] = raw;
+        filters[fid] = (raw == null) ? '' : raw;
     }
 
     /** Repaint only the parts of a condition row that a keystroke changes. A
@@ -1798,6 +1843,14 @@
         var rm = t.closest && t.closest('[data-remove]');
         if (rm) {
             delete filters[rm.getAttribute('data-remove')];
+            renderConditions();
+            return;
+        }
+        var pre = t.closest && t.closest('[data-preset]');
+        if (pre) {
+            var pk = pre.getAttribute('data-preset');
+            var pmin = pre.getAttribute('data-min'), pmax = pre.getAttribute('data-max');
+            filters[pk] = { min: pmin === '' ? null : Number(pmin), max: pmax === '' ? null : Number(pmax) };
             renderConditions();
             return;
         }
@@ -2232,6 +2285,22 @@
         // A situation whose number the engine would refuse must not reach it.
         // 9999 days rest can never match and -5 can never narrow; both used to
         // run, quietly, and cost the reader a report.
+        // An added situation with no value was withheld from the query while
+        // the report still ran, and the report then said, truthfully, that no
+        // optional filters were applied: the reader had asked for a 4-game
+        // win streak and got every meeting at that venue (live 2026-10-11,
+        // 49ers at Seahawks, 57 -> 30 by venue only). A listed situation is
+        // part of the search or it is removed; it never rides along unsent.
+        if (!err && bothPicked) {
+            var unset = Object.keys(filters).filter(function (k) {
+                var sp = specById(idOf(k));
+                return sp && sp.available !== false && !isSet(filters[k]);
+            })[0];
+            if (unset) {
+                var us = specById(idOf(unset)), ut = teamName(bktOf(unset));
+                err = (ut ? ut + ' ' : '') + us.label + ' has no value yet. Set one, or remove it with ×, before running.';
+            }
+        }
         if (!err) {
             var bad = situationValueErrors()[0];
             if (bad) {
