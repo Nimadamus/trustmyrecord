@@ -1509,6 +1509,18 @@
         }
     }
 
+    /** A trail step names the reading ("Win/loss streak"), not whose it is or
+     *  what was asked. When exactly one listed situation carries that id, the
+     *  step says both: "San Francisco 49ers: Had won 4 or more straight going
+     *  in". Two sides asking the same reading keep the server's label. */
+    function trailLabel(st) {
+        var keys = Object.keys(filters).filter(function (k) { return idOf(k) === st.id && isSet(filters[k]); });
+        var spec = specById(st.id);
+        if (keys.length !== 1 || !spec) return st.filter;
+        var team = teamName(bktOf(keys[0]));
+        return (team ? team + ': ' : '') + chipFor(spec, filters[keys[0]]);
+    }
+
     function paintTrail(pv) {
         var host = $('trail');
         if (!host || !pv) return;
@@ -1516,7 +1528,7 @@
         var rows = '<li><span>All ' + esc(pv.team_1) + ' vs ' + esc(pv.team_2) + ' meetings</span>'
             + '<b>' + fmtInt(pv.total_meetings) + '</b></li>'
             + steps.map(function (st) {
-                return '<li><span>' + esc(st.filter) + '</span><b>' + fmtInt(st.games_after)
+                return '<li><span>' + esc(trailLabel(st)) + '</span><b>' + fmtInt(st.games_after)
                     + (st.removed > 0 ? '<i>&minus;' + fmtInt(st.removed) + '</i>' : '') + '</b></li>';
             }).join('');
         var span = (pv.first_game && pv.last_game)
