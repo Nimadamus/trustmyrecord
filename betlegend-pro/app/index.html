@@ -1525,6 +1525,14 @@
      *  step says both: "San Francisco 49ers: Had won 4 or more straight going
      *  in". Two sides asking the same reading keep the server's label. */
     function trailLabel(st) {
+        // Steps from the API carry the team and the setting they applied
+        // (NARROW_LABELS_20261011), so the label holds even for a saved report
+        // whose conditions no longer match the ones on screen.
+        if (st && st.value !== undefined && st.value !== null) {
+            var own = specById(st.id);
+            var reading = own ? chipFor(own, st.value) : (st.description || st.filter);
+            return (st.team ? st.team + ': ' : '') + reading;
+        }
         var keys = Object.keys(filters).filter(function (k) { return idOf(k) === st.id && isSet(filters[k]); });
         var spec = specById(st.id);
         if (keys.length !== 1 || !spec) return st.filter;
@@ -1840,7 +1848,12 @@
     // The zero-result card's one-click ways out. Delegated on the report
     // host because the card is re-rendered with every report.
     document.addEventListener('click', function (ev) {
-        var btn = ev.target.closest && ev.target.closest('[data-zero-action]');
+        // The console lives in a shadow root: at document level ev.target is
+        // the host, so look along the composed path for the button.
+        var path = ev.composedPath ? ev.composedPath() : [ev.target], btn = null;
+        for (var pi = 0; pi < path.length && !btn; pi++) {
+            if (path[pi].getAttribute && path[pi].hasAttribute('data-zero-action')) btn = path[pi];
+        }
         if (!btn) return;
         var action = btn.getAttribute('data-zero-action');
         if (action === 'clear_filters') {
@@ -1848,7 +1861,11 @@
         } else if (action === 'remove_filter') {
             var id = btn.getAttribute('data-zero-filter');
             if (!id) return;
-            clearFilterId(id);
+            // The button names one team's condition; remove only that one.
+            var team = btn.getAttribute('data-zero-team');
+            var own = team ? ['t1', 't2'].filter(function (b) { return teamName(b) === team; }) : [];
+            if (own.length) own.forEach(function (b) { delete filters[fkey(b, id)]; });
+            else clearFilterId(id);
         } else {
             return;
         }
@@ -2887,16 +2904,36 @@
         // A zero is an answer, not an error. It names the condition that
         // emptied the sample, because "remove a filter" is useless advice
         // without saying which one.
+        var zeroEmptied = null, zeroCostliest = null, zeroK = 0;
+        trail.forEach(function (st) {
+            if (!zeroEmptied && st.games_after === 0) zeroEmptied = st;
+            if (!zeroCostliest || (st.removed || 0) > (zeroCostliest.removed || 0)) zeroCostliest = st;
+        });
+        var zeroSteps = [zeroEmptied].concat(zeroCostliest !== zeroEmptied && zeroCostliest && zeroCostliest.removed > 0
+            ? [zeroCostliest] : []).filter(Boolean);
         var zero = d.zero_result
             ? '<div class="block-note is-warn zero"><strong>' + esc(d.zero_result.message) + '</strong>'
                 + (d.zero_result.narrowest_filter
-                    ? '<p>' + prose(d.zero_result.narrowest_filter.filter) + ' was the narrowest part of this query: '
+                    ? '<p>' + prose(trailLabel(d.zero_result.narrowest_filter)) + ' was the narrowest part of this query: '
                         + fmtInt(d.zero_result.narrowest_filter.games_before) + ' qualified before it, '
                         + fmtInt(d.zero_result.narrowest_filter.games_after) + ' after.</p>' : '')
                 + '<div class="zero-acts">' + (d.zero_result.actions || []).map(function (a) {
+                    var label = a.label, team = '';
+                    if (a.action === 'remove_filter') {
+                        // Same pick the API made: the step that emptied the
+                        // sample, then the costliest one if it is a different
+                        // step. Named from the step, so "Remove Win/loss
+                        // streak" says whose streak and which reading.
+                        var step = zeroSteps[zeroK++];
+                        if (step && step.id === a.filter_id) {
+                            label = 'Remove “' + trailLabel(step) + '”';
+                            team = step.team || '';
+                        }
+                    }
                     return '<button type="button" class="zero-act" data-zero-action="' + esc(a.action) + '"'
-                        + (a.filter_id ? ' data-zero-filter="' + esc(a.filter_id) + '"' : '') + '>'
-                        + '<b>' + esc(a.label) + '</b><span>' + esc(a.detail) + '</span></button>';
+                        + (a.filter_id ? ' data-zero-filter="' + esc(a.filter_id) + '"' : '')
+                        + (team ? ' data-zero-team="' + esc(team) + '"' : '') + '>'
+                        + '<b>' + esc(label) + '</b><span>' + esc(a.detail) + '</span></button>';
                 }).join('') + '</div></div>'
             : '';
 
@@ -2909,7 +2946,10 @@
             + verify + zero
             + '<div class="tags">'
             + (applied.length
-                ? applied.map(function (a) { return '<span class="tag">' + esc(a) + '</span>'; }).join('')
+                ? (trail.length === applied.length ? trail.map(trailLabel) : applied)
+                    // Step labels name the team and reading, so they can run
+                    // longer than a phone is wide: let them wrap.
+                    .map(function (a) { return '<span class="tag" style="max-width:100%;white-space:normal">' + esc(a) + '</span>'; }).join('')
                 : '<span class="tag">No situations: every completed game</span>')
             + '</div>'
             + (declined.length
@@ -2924,7 +2964,7 @@
                     + '<th class="n">After</th><th class="n">Removed</th></tr></thead><tbody>'
                     + trail.map(function (t) {
                         var keep = t.games_before ? Math.round(100 * t.games_after / t.games_before) : 0;
-                        return '<tr><td>' + esc(t.filter)
+                        return '<tr><td>' + esc(trailLabel(t))
                             + '<span class="nbar" data-v2 hidden><i style="width:' + keep + '%"></i></span>'
                             + '</td><td class="n">' + fmtInt(t.games_before)
                             + '</td><td class="n">' + fmtInt(t.games_after) + '</td><td class="n">'
@@ -3250,7 +3290,7 @@
             blpTrack('betlegend_paywall_view', { component: 'blp_matchup_paywall' });
         var pv = lastPreview, steps = (pv && pv.games_after_each_filter) || [];
         var insight = steps.filter(function (st) { return st.removed > 0; }).slice(0, 2).map(function (st) {
-            return '<li>' + esc(st.filter) + ' narrows it to <b>' + fmtInt(st.games_after) + '</b> games</li>'; }).join('');
+            return '<li>' + esc(trailLabel(st)) + ' narrows it to <b>' + fmtInt(st.games_after) + '</b> games</li>'; }).join('');
         var locked = '';
         for (var li = 0; li < 4; li++) locked += '<div style="display:flex;gap:10px;padding:9px 12px;border-top:1px solid var(--line, #e3e8ef)">&#128274;<span style="flex:1;height:9px;border-radius:5px;background:rgba(127,127,127,.2)"></span><span style="width:20%;height:9px;border-radius:5px;background:rgba(127,127,127,.15)"></span></div>';
         target.innerHTML = '<div class="rcard" style="border:2px solid #F5C542"><div class="rcard-head"><h2>Your free analysis for today is complete</h2></div>'
