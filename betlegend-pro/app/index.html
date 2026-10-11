@@ -774,7 +774,7 @@
         if (new URLSearchParams(location.search).get('preview') === 'v2') {
             var v2 = document.createElement('link');
             v2.rel = 'stylesheet';
-            v2.href = '/betlegend-pro/app/electric-v2.20261011a.css';
+            v2.href = '/betlegend-pro/app/electric-v2.20261011b.css';
             root.appendChild(v2);
             host.classList.add('is-v2');
         }
@@ -804,6 +804,16 @@
        history — since 1966"). prose() escapes like esc() and swaps those for
        plain punctuation. Used only on read-only sentences, never on a value that is
        sent back to the API, so no query can change because of it. */
+    /** A Team Trends item is saved as "NFL · Team · home_favorite"; the last
+     *  part is the situation's key. Show it as words, the way the live result
+     *  names it. */
+    function libTitle(title, kind) {
+        if (kind !== 'inquiry' || !title) return title;
+        return String(title).replace(/([a-z0-9]+(?:_[a-z0-9]+)+)\s*$/, function (key) {
+            var w = key.replace(/_/g, ' ');
+            return w.charAt(0).toUpperCase() + w.slice(1);
+        });
+    }
     function prose(v) {
         return esc(v).replace(/\s*—\s*/g, ', ').replace(/(\d)\s*–\s*(\d)/g, '$1 to $2').replace(/\s*–\s*/g, ', ');
     }
@@ -1385,16 +1395,20 @@
         opp_su_streak: ['won', 'lost'],
         opp_su_streak_all: ['won', 'lost'],
         ats_streak: ['covered', 'failed to cover'],
-        ou_streak: ['gone over', 'gone under']
+        ats_streak_all: ['covered', 'failed to cover'],
+        ou_streak: ['gone over', 'gone under'],
+        ou_streak_all: ['gone over', 'gone under']
     };
     var STREAK_PRESETS = [3, 4, 5];
-    /** SEASON_STREAKS_20261011: a win/loss streak counts this season's games
-     *  by default (playoffs continue the run; an opener starts at 0). Each
-     *  has an across-seasons twin, reached from the row's scope switch rather
-     *  than listed twice in the picker. */
+    /** SEASON_STREAKS_20261011: a win/loss, ATS or O/U streak counts this
+     *  season's games by default (playoffs continue the run; an opener starts
+     *  at 0). Each has an across-seasons twin, reached from the row's scope
+     *  switch rather than listed twice in the picker. */
     var STREAK_TWIN = {
         su_streak: 'su_streak_all', su_streak_all: 'su_streak',
-        opp_su_streak: 'opp_su_streak_all', opp_su_streak_all: 'opp_su_streak'
+        opp_su_streak: 'opp_su_streak_all', opp_su_streak_all: 'opp_su_streak',
+        ats_streak: 'ats_streak_all', ats_streak_all: 'ats_streak',
+        ou_streak: 'ou_streak_all', ou_streak_all: 'ou_streak'
     };
     function streakScope(id) {
         return !STREAK_TWIN[id] ? '' : (/_all$/.test(id) ? ' (across seasons)' : ' (this season)');
@@ -3841,8 +3855,8 @@
             list.innerHTML = '<div class="lib">' + items.map(function (it) {
                 var when = it.created_at ? new Date(it.created_at).toLocaleString() : '';
                 return '<div class="lib-item"><span class="lib-kind">' + esc(KIND[it.kind] || it.kind) + '</span>'
-                    + '<div class="lib-main"><div class="lib-title" title="' + prose(it.title || '') + '">'
-                    + prose(it.title || 'Untitled') + '</div><div class="lib-meta">' + esc(when)
+                    + '<div class="lib-main"><div class="lib-title" title="' + prose(libTitle(it.title, it.kind) || '') + '">'
+                    + prose(libTitle(it.title, it.kind) || 'Untitled') + '</div><div class="lib-meta">' + esc(when)
                     + (it.ledger_entry_id ? ' · receipt #' + esc(it.ledger_entry_id) : ' · included in plan')
                     + '</div></div><button class="btn" data-lib-id="' + esc(it.id) + '" type="button">Open</button></div>';
             }).join('') + '</div>';
@@ -3886,7 +3900,11 @@
                     + '</div></section>';
             } else {
                 var s = (d.result && d.result.summary) || {};
-                body = '<section class="rcard"><div class="rcard-head"><h2>' + prose(d.title || 'Saved item') + '</h2></div>'
+                var inp = d.input || {};
+                var named = (d.kind === 'inquiry' && d.result && d.result.situation)
+                    ? [inp.sport, (inp.team ? inp.team + ': ' : '') + d.result.situation].filter(Boolean).join(' · ')
+                    : libTitle(d.title, d.kind);
+                body = '<section class="rcard"><div class="rcard-head"><h2>' + prose(named || 'Saved item') + '</h2></div>'
                     + '<div class="kpis-lg">' + [[s.su_record, 'Straight up'], [s.ats_record, 'Against the spread'], [s.ou_record, 'Over / under']]
                         .filter(function (k) { return k[0]; })
                         .map(function (k) { return '<div class="kpi-lg"><div class="kpi-v">' + esc(k[0]) + '</div><div class="kpi-l">' + esc(k[1]) + '</div></div>'; }).join('')
