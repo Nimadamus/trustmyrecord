@@ -463,3 +463,13 @@ table.games td.why { min-width: 150px; }
 }
 .sit-search .search, input.search { min-width: min(100%, 340px); }
 .kpi span { white-space: normal; overflow-wrap: anywhere; }
+/* Scroll shadows: a wide game log on a phone shows that it scrolls sideways. */
+.tablewrap {
+    background:
+        linear-gradient(90deg, #070e1c 30%, rgba(7, 14, 28, 0)) left center / 28px 100% no-repeat local,
+        linear-gradient(270deg, #070e1c 30%, rgba(7, 14, 28, 0)) right center / 28px 100% no-repeat local,
+        radial-gradient(farthest-side at 0 50%, rgba(58, 214, 255, .35), transparent) left center / 12px 100% no-repeat scroll,
+        radial-gradient(farthest-side at 100% 50%, rgba(58, 214, 255, .35), transparent) right center / 12px 100% no-repeat scroll,
+        #070e1c;
+}
+table.games tbody td { background-color: transparent; }
