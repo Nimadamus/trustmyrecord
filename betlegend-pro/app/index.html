@@ -48,10 +48,10 @@
            panels and unreadable text back on this screen. A shadow boundary
            ends it: site CSS cannot reach in and this tool cannot leak out.
            The global nav and footer are outside the boundary, unchanged. */
-        html { background: #eef2f7; }
+        html { background: #060b16; }
         body.tmr-site-shell[data-blp-console] {
-            background: #eef2f7 !important;
-            color-scheme: light;
+            background: #060b16 !important;
+            color-scheme: dark;
         }
         #blpConsole { display: block; visibility: hidden; }
         #blpConsole.is-ready { visibility: visible; }
@@ -763,6 +763,11 @@
     // for four hours and ignores the query string, so `?v=` never reached it.
     sheet.href = '/betlegend-pro/app/console.20261011a.css';
     root.appendChild(sheet);
+    // Electric skin (2026-10-11): presentation only, loaded after the base sheet.
+    var skin = document.createElement('link');
+    skin.rel = 'stylesheet';
+    skin.href = '/betlegend-pro/app/electric.20261011a.css';
+    root.appendChild(skin);
     root.appendChild(document.getElementById('blpMarkup').content.cloneNode(true));
 
     // Reveal only once the sheet has resolved, so the tool never flashes
@@ -2640,10 +2645,15 @@
     function matchupSummary(d) {
         var m = d.matchup_summary;
         if (!m || !m.qualifying_games) return '';
-        var kpi = function (label, value, hint) {
-            return '<div class="kpi"><span>' + esc(label) + '</span><strong>' + value + '</strong>'
+        // tone: 'pos' / 'neg' colours a figure that is a result for one side
+        // (more wins than losses, units up or down). Never on neutral readings
+        // such as averages or the over/under split.
+        var kpi = function (label, value, hint, tone) {
+            return '<div class="kpi' + (tone ? ' is-' + tone : '') + '"><span>' + esc(label) + '</span><strong>' + value + '</strong>'
                 + (hint ? '<em>' + esc(hint) + '</em>' : '') + '</div>';
         };
+        var toneWL = function (w, l) { w = Number(w) || 0; l = Number(l) || 0; return w > l ? 'pos' : l > w ? 'neg' : ''; };
+        var toneU = function (u) { return u == null ? '' : u > 0 ? 'pos' : u < 0 ? 'neg' : ''; };
         var pct = function (v) { return v == null ? '' : v + '%'; };
         var rec = function (t) { return esc(t.wins + '-' + t.losses + (m.ties ? '-' + m.ties : '')); };
         var sc = m.scoring, mk = m.market || null, st = m.streaks;
@@ -2671,12 +2681,12 @@
                     + 'shown as an answer. Please report this query.</p>' : '')
             + '<div class="kpis">'
             + kpi('Meetings', fmtInt(m.qualifying_games), 'games that met every condition')
-            + kpi(t1 + ' record', rec(m.team_1), pct(m.team_1.win_pct))
-            + kpi(t2 + ' record', rec(m.team_2), pct(m.team_2.win_pct))
+            + kpi(t1 + ' record', rec(m.team_1), pct(m.team_1.win_pct), toneWL(m.team_1.wins, m.team_1.losses))
+            + kpi(t2 + ' record', rec(m.team_2), pct(m.team_2.win_pct), toneWL(m.team_2.wins, m.team_2.losses))
             + ((ats && ats.eligible_games > 0)
                 ? kpi(t1 + ' ATS', esc(ats.wins != null ? ats.wins + '-' + ats.losses + '-' + (ats.pushes || 0) : (ats.record || '')),
                       (ats.cover_pct == null ? '' : ats.cover_pct + '% · ') + ats.eligible_games + ' of '
-                      + fmtInt(m.qualifying_games) + ' had a closing spread')
+                      + fmtInt(m.qualifying_games) + ' had a closing spread', toneWL(ats.wins, ats.losses))
                 : kpi(t1 + ' ATS', DASH, 'no closing spread on file'))
             + ((ou && ou.graded_games > 0)
                 ? kpi('Over / under', esc(ou.overs != null ? ou.overs + '-' + ou.unders + '-' + (ou.pushes || 0) : (ou.record || '')),
@@ -2717,19 +2727,19 @@
         var markets = '<section class="rcard">'
             + '<div class="rcard-head"><h3>Historical betting markets</h3>'
             + '<span class="range">Genuine stored lines only</span></div>'
-            + '<div class="kpis">'
+            + '<div class="kpis is-market">'
             + (ml
                 ? kpi('Moneyline, ' + ml.team_1.team, esc(ml.team_1.record),
                       pct(ml.team_1.win_pct) + ' · ' + units(ml.team_1.units) + ' flat · '
-                      + ml.team_1.eligible_games + ' priced')
+                      + ml.team_1.eligible_games + ' priced', toneU(ml.team_1.units))
                   + kpi('Moneyline, ' + ml.team_2.team, esc(ml.team_2.record),
                       pct(ml.team_2.win_pct) + ' · ' + units(ml.team_2.units) + ' flat · '
-                      + ml.team_2.eligible_games + ' priced')
+                      + ml.team_2.eligible_games + ' priced', toneU(ml.team_2.units))
                 : '')
             + (atsN > 0
                 ? kpi('Against the spread, ' + m.team_1.team, esc(mk.ats.record),
                       pct(mk.ats.cover_pct) + ' · ' + atsN + ' of ' + fmtInt(m.qualifying_games)
-                      + ' carried a real closing spread')
+                      + ' carried a real closing spread', toneWL(mk.ats.wins, mk.ats.losses))
                 : '')
             + (ouN > 0
                 ? kpi('Over / under', esc(mk.over_under.record),
