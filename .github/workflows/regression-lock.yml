@@ -51,6 +51,8 @@ jobs:
       # noindex, a redirect stub leaking into the sitemap, a /u/ profile that
       # stops baking its record (soft 404), or an internal link to a dead URL.
       - run: npm run test:seo
+      # FEATURED_TRUE_LEADER_20261011: every /handicappers/ award card shows its category's real #1.
+      - run: node tests/handicappers-featured-true-leader-test.js
       - run: npx playwright install --with-deps chromium
       - run: npm run verify:regression
       - uses: actions/upload-artifact@v4

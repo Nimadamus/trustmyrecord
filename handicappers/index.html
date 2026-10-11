@@ -2417,10 +2417,9 @@
         const MIN_STREAK_LENGTH = 2;
         // Most Active: official picks submitted or graded in the last 30 days.
         const MIN_ACTIVE_PICKS_30D = 5;
-        // Featured grid is strictly one card per user: selection walks each
-        // category's ranked qualifiers (in display-priority order) and takes the
-        // highest-ranked member whose stable user id has not already claimed a
-        // card. A user is never duplicated to fill a slot.
+        // Award cards always show their category's true #1 (see
+        // FEATURED_TRUE_LEADER_20261011 in renderFeaturedLeaders). Only the Most
+        // Active filler skips members who already hold a card.
         const HOT_INFO = 'Best net units over the last 30 days. Requires 10+ graded picks in that window, at least one graded pick in the last 7 days, a public profile, and settled (graded) picks only. Pending picks excluded. Ties: higher ROI, then more graded picks, then higher win %.';
 
         // Settlement/graded timestamp for a pick - the date the pick was decided,
@@ -2563,15 +2562,18 @@
 
             // Six-card grid. Slots 1-4 are fixed categories; slot 5 is Best
             // Current Streak and slot 6 is Hottest Last 30 Days, each falling
-            // back to Most Active. Every card is a unique user: selection dedupes
-            // by stable user id while choosing (not after rendering), so a leader
-            // who tops multiple categories keeps the highest-priority card and
-            // the next eligible member takes the later category.
+            // back to Most Active. FEATURED_TRUE_LEADER_20261011: every award
+            // card shows the real #1 of its category, even when that member
+            // already holds another card. The old one-card-per-user dedupe
+            // handed "Most Graded Picks" to MoneyMakers (657) while BetLegend
+            // (944) held Units Leader, and "Hottest Last 30 Days" to the #3
+            // because the #1 held Best Current Streak. Only the Most Active
+            // FILLER still skips members who are already featured.
             const cards = [];
             const selectedUserIds = new Set();
             const selectionLog = [];
-            const addCard = (category, ranked, memberOf, build) => {
-                const entry = pickFeatured(ranked, selectedUserIds, memberOf);
+            const addCard = (category, ranked, memberOf, build, opts) => {
+                const entry = opts && opts.filler ? pickFeatured(ranked, selectedUserIds, memberOf) : (ranked[0] || null);
                 if (!entry) {
                     console.info('[Handicappers] featured: "' + category + '" unfilled - ' +
                         (ranked.length ? ranked.length + ' qualifier(s), all already hold a featured card' : 'no qualifiers'));
@@ -2603,7 +2605,7 @@
                         { label: 'ROI', value: formatPercent(entry.member.stats.roi, gradedCount(entry.member) > 0), cls: statClass(entry.member.stats.roi) },
                         { label: 'Units', value: formatUnits(entry.member.stats.units, true), cls: statClass(entry.member.stats.units) }
                     ]
-                }));
+                }), { filler: true });
 
             const streakAdded = addCard('Best Current Streak', rankedStreakLeaders(qualified), e => e, member =>
                 featuredCardHtml({
