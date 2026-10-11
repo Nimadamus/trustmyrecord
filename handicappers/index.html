@@ -905,7 +905,7 @@
 <!-- TMR Concept A theme. Additive: one stylesheet, no markup or script changes. -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:ital,wght@0,600;0,700;0,800;0,900;1,600;1,700;1,800;1,900&display=swap">
 <link rel="stylesheet" href="/static/css/tmr-theme-a.css?v=20cb11591ac0">
-<link rel="stylesheet" href="/static/css/tmr-hc-electric.css?v=98b045555322">
+<link rel="stylesheet" href="/static/css/tmr-hc-electric.css?v=9c8e7ff14109">
 </head>
 <body class="tmr-ds">
     <main class="hm-page">
@@ -2324,7 +2324,19 @@
             setTabCount('all', eligibleCount != null ? eligibleCount : totalMembersCount);
             setTabCount('verified', verifiedCount);
             setTabCount('pickmakers', eligibleCount != null ? eligibleCount : pickMakersCount);
-            setTabCount('active', activeWeekCount);
+            // Recently Active counts the rows that tab lists (same eligibility,
+            // minimum, tier and 7-day cutoff as applyFilters). The site-wide
+            // active_this_week metric also counts members with no graded pick
+            // yet, who never appear in the directory; it stays on the header card.
+            const activeView = TIER_VIEWS.active;
+            const activeCutoff = Date.now() - (activeView.activeDays * 24 * 60 * 60 * 1000);
+            const activeEligibleCount = membersAreFresh ? members.filter(member =>
+                isDirectoryEligible(member) &&
+                meetsLeaderboardMinimum(member, activeView) &&
+                activeView.tiers.includes(tierOf(member)) &&
+                lastPickTime(member) >= activeCutoff
+            ).length : null;
+            setTabCount('active', activeEligibleCount != null ? activeEligibleCount : activeWeekCount);
             setTabCount('following', getCurrentUser() ? members.filter(member => member.isFollowing).length : null);
             renderFeaturedLeaders();
         }
@@ -3424,6 +3436,6 @@
    control behind author text, leaving the chosen value invisible. Drawn by the page instead. */
 select#hmMinGraded, select#hmRecordStatus, select#hmSort, select#hmSport, select#hmWager { -webkit-appearance: none !important; appearance: none !important; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23C3D6EA' stroke-width='2'/%3E%3C/svg%3E") !important; background-repeat: no-repeat !important; background-position: right 12px center !important; background-size: 12px 8px !important; padding-right: 34px !important; }
 </style>
-<script src="/static/js/tmr-hc-electric.js?v=cfdb824d243b" defer></script>
+<script src="/static/js/tmr-hc-electric.js?v=82a7dbad367f" defer></script>
 </body>
 </html>

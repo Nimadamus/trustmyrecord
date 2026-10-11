@@ -355,6 +355,9 @@ html body.tmr-ds .hm-feat-id a {
   display: inline-flex; align-items: center; gap: 6px;
 }
 html body.tmr-ds .hm-feat-id a:hover { color: var(--x-blue-hi); }
+html body.tmr-ds .hm-feat-id a { max-width: 100%; min-width: 0; overflow: visible; }
+html body.tmr-ds .hm-feat-id a .x-nm { font: inherit; color: inherit; letter-spacing: inherit; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+html body.tmr-ds .hm-feat-id a .x-verified { flex: 0 0 auto; }
 html body.tmr-ds .hm-feat-id span { font-size: 0.76rem; color: var(--x-muted); }
 html body.tmr-ds .x-verified { width: 16px; height: 16px; flex: none; color: var(--x-blue-hi); filter: drop-shadow(0 0 4px rgba(47, 140, 255, 0.6)); }
 
@@ -933,4 +936,15 @@ html body.tmr-ds .tmr-lc-launcher.is-wide:not(:hover):not(:focus-visible) .tmr-l
   html body.tmr-ds .tmr-lc-launcher .tmr-lc-avatar { width: 24px; height: 24px; }
   html body.tmr-ds .tmr-lc-launcher .tmr-lc-avatar svg { width: 15px; height: 15px; }
   html body.tmr-ds .tmr-lc-launcher .tmr-lc-dot { width: 8px; height: 8px; border-width: 1.5px; }
+}
+/* Signed-in Follow button on phones: a little tighter so the name and verified mark keep their room. */
+@media (max-width: 480px) {
+  html body.tmr-ds .hm-feat-follow { padding: 0 10px; min-height: 30px; }
+  html body.tmr-ds .hm-feat-card.x-podium .hm-feat-user:has(.hm-feat-follow) { gap: 10px; }
+  html body.tmr-ds .hm-feat-card.x-podium .hm-feat-user:has(.hm-feat-follow) .hm-feat-avatar { width: 48px; height: 48px; }
+  html body.tmr-ds .hm-feat-user:has(.hm-feat-follow) .hm-feat-id a { font-size: 1rem; }
+}
+/* Best Current Streak lists Streak before Record, so its wide column is the second one. */
+@media (min-width: 769px) {
+  html body.tmr-ds .hm-feat-card.x-cat-streak .hm-feat-stats { grid-template-columns: 0.8fr 1.6fr 1fr 1fr; }
 }

@@ -76,6 +76,13 @@
         var gc = statCell(card, 'Graded');
         var g = gc ? num(gc.textContent) : (rec ? graded(rec.textContent) : null);
         var a = card.querySelector('.hm-feat-id a');
+        // Name in its own span so a long name truncates with an ellipsis and the verified mark stays visible.
+        if (a && a.firstChild && a.firstChild.nodeType === 3) {
+          var nm = document.createElement('span');
+          nm.className = 'x-nm';
+          a.insertBefore(nm, a.firstChild);
+          nm.appendChild(nm.nextSibling);
+        }
         if (a && g >= VERIFIED_MIN) a.insertAdjacentHTML('beforeend', CHECK);
       }
       if (card.querySelector('.x-headline')) return;
