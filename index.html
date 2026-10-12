@@ -1261,7 +1261,12 @@ box-shadow:none !important;color:#7f8ea6 !important}
    padding, all of it moved to the top. The card's height does not change - it
    stays the 89px every other card measures, so the row is still one height -
    and the badge gets a clear 12px band above the team row. */
-.ticker .gm.gm--gf { padding-top: 18px; padding-bottom: 0; }
+/* Nima, 2026-10-12 ("the top of the tmr homepage is fucked"): with a two-line
+   live strip the 18px/0 split left the second line sitting ON the bottom
+   border. The badge only needs the band above the team row (it ends 15px down),
+   so 2px comes off the top, 4px off the two gaps, and all 6px go to the bottom.
+   Same total height. */
+.ticker .gm.gm--gf { padding-top: 16px; padding-bottom: 6px; gap: 3px; }
 
 /* The pulse: a slow, premium breathing glow (Nima, 2026-08-13). The hard 2s
    border flash existed to compete with the call-out bar below the strip; that
