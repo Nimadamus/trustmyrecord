@@ -28,7 +28,7 @@
   }).then(function (d) {
     var src = d.sources || [];
     var vals = {
-      accounts: d.accounts_discovered ? d.accounts_discovered : d.accounts != null ? d.accounts : src.reduce(function (a, s) { return a + (s.accounts || 0); }, 0),
+      accounts: d.accounts != null ? d.accounts : src.reduce(function (a, s) { return a + (s.accounts || 0); }, 0),
       graded_picks: d.graded_picks != null ? d.graded_picks : src.reduce(function (a, s) { return a + (s.graded_picks || 0); }, 0),
       pending_picks: d.pending_picks != null ? d.pending_picks : src.reduce(function (a, s) { return a + (s.pending_picks || 0); }, 0),
       platforms: d.platforms != null ? d.platforms : src.length

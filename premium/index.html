@@ -1771,7 +1771,7 @@
         function netStats(n) {
             if (!n) return [];
             var out = [], d = n.directory || {}, src = n.sources || [];
-            if (d.accounts_discovered || d.accounts) out.push(['<b>' + Number(d.accounts_discovered || d.accounts).toLocaleString('en-US') + '</b> handicapper accounts tracked', '']);
+            if (d.accounts) out.push(['<b>' + Number(d.accounts).toLocaleString('en-US') + '</b> accounts monitored', '']);
             if (d.with_record) out.push(['<b>' + Number(d.with_record).toLocaleString('en-US') + '</b> handicappers with graded records', '']);
             if (d.graded) out.push(['<b>' + Number(d.graded).toLocaleString('en-US') + '</b> graded picks', '']);
             if (n.picks_harvested_24h != null) out.push(['<b>' + Number(n.picks_harvested_24h).toLocaleString('en-US') + '</b> picks collected in the last 24 hours', '']);
@@ -1857,19 +1857,10 @@
             var note = document.getElementById('wdxNote');
             if (note && sum === d.accounts) note.innerHTML = '<b>' + src.map(function (s) { return wdxFmt(s.accounts); }).join(' + ') + ' = ' + wdxFmt(d.accounts) + ' accounts.</b> ' + note.textContent.replace(/^[^.]*=[^.]*accounts\.\s*/, '');
         }
-        /* Oct 12 (Nima): the headline is every handicapper account the Watchdog tracks (discovered),
-           not only the ones on the fast monitoring rotation. */
-        function wdxTracked(d) {
-            if (!d || !d.accounts_discovered) return d;
-            d.accounts = d.accounts_discovered;
-            (d.sources || []).forEach(function (s) { if (s.accounts_discovered) s.accounts = s.accounts_discovered; });
-            return d;
-        }
         function loadWdx() {
             if (!document.getElementById('watchdog')) return;
             fetch(API + '/pro/watchdog/stats', { cache: 'no-store' }).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
                 .then(function (d) {
-                    d = wdxTracked(d);
                     var el = document.getElementById('watchdog');
                     if (wdxSeen || !('IntersectionObserver' in window)) { paintWdx(d, !wdxSeen); wdxSeen = true; return; }
                     paintWdx(d, 'defer');
@@ -2016,9 +2007,9 @@
         else start();
     })();
     </script>
-<script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-ds-nav.051cb7201497.js"></script>
+<script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-ds-nav.c884d7f0b596.js"></script>
     <script src="/static/js/tmr-live-chat.js?v=816ec6f0a118"></script>
-    <script src="/static/js/tmr-pro-hero.6e75ae8f3c7c.js" defer></script>
+    <script src="/static/js/tmr-pro-hero.008435732044.js" defer></script>
 <style id="dark-text-fix-20260913">
 /* DARK_TEXT_ON_DARK_20260913: the light theme pass recoloured this text navy but left its
    surface dark, so it read navy on navy on every device. Light text restored. */
