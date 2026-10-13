@@ -72,7 +72,8 @@
         .rr-table{width:100%;border-collapse:collapse;font-size:14px;margin-top:12px;}
         .rr-table th,.rr-table td{text-align:left;padding:9px 10px;border-bottom:1px solid #D2DEEA;}
         .rr-table th{font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--tmrp-text-muted);}
-        .rr-table td.num{text-align:right;font-variant-numeric:tabular-nums;}
+        .rr-table td.num,.rr-table th.num{text-align:right;font-variant-numeric:tabular-nums;}
+        .rr-table .k{display:none;}
         .rr-table a{color:#0C4F58;font-weight:700;}
         .rr-list{list-style:none;padding:0;margin:12px 0 0;}
         .rr-list li{padding:10px 0 10px 26px;position:relative;font-size:14.5px;line-height:1.6;color:var(--tmrp-text-secondary);border-bottom:1px solid #D2DEEA;}
@@ -84,11 +85,14 @@
         @media (max-width: 560px){
             .rr-steps{grid-template-columns:1fr;}
             .rr-metrics{grid-template-columns:1fr 1fr;}
+            .rr-metric:last-child:nth-child(odd){grid-column:1/-1;}
+            .rr-table,.rr-table tbody{display:block;width:100%;min-width:0 !important;}
             .rr-table thead{display:none;}
-            .rr-table tr{display:block;border:1px solid #D2DEEA;border-radius:8px;margin-bottom:10px;padding:6px 8px;}
-            .rr-table td{display:flex;justify-content:space-between;gap:10px;border:none;padding:4px 2px;}
-            .rr-table td::before{content:attr(data-k);font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--tmrp-text-muted);}
-            .rr-table td.num{text-align:right;}
+            .rr-table tr{display:block;border:1px solid #D2DEEA;border-radius:8px;margin-bottom:10px;padding:6px 10px;}
+            .rr-table td,.rr-table td.num{display:flex;justify-content:space-between;align-items:baseline;gap:12px;border:none;padding:5px 0;text-align:right;}
+            .rr-table .k{display:inline;font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--tmrp-text-muted);text-align:left;}
+            .rr-table .v{min-width:0;overflow-wrap:anywhere;}
+            .rr-table td.empty{display:none;}
         }
     </style>
     <link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=b088fdc7f9d5">
@@ -175,7 +179,12 @@
     function num(n, d) { return Number(n || 0).toLocaleString('en-US', { maximumFractionDigits: d == null ? 0 : d }); }
     function pt(iso) { return iso ? new Date(iso).toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles', month: 'short', day: 'numeric', year: 'numeric' }) : ''; }
     var LABEL = { conversion: 'Converted to ETH', bid_placed: 'Bid placed', bid_harvested: 'Filled bid moved to reserve', bid_withdrawn: 'Bid withdrawn', transfer_in: 'TMR into reserve', adjustment: 'Adjustment' };
-    function td(k, v, cls) { var c = document.createElement('td'); c.setAttribute('data-k', k); if (cls) c.className = cls; if (v instanceof Node) c.appendChild(v); else c.textContent = v; return c; }
+    function td(k, v, cls) {
+        var c = document.createElement('td'); c.className = (cls || '') + (v === '' ? ' empty' : '');
+        var a = document.createElement('span'); a.className = 'k'; a.textContent = k; c.appendChild(a);
+        var b = document.createElement('span'); b.className = 'v'; if (v instanceof Node) b.appendChild(v); else b.textContent = v; c.appendChild(b);
+        return c;
+    }
 
     fetch(API + '/tmr-coin/revenue-reserve', { headers: { Accept: 'application/json' } }).then(function (r) {
         if (!r.ok) throw new Error('HTTP ' + r.status);
