@@ -29,6 +29,7 @@
         .ca { color: var(--gold); font-weight: 800; font-size: 11px; }
         @media (max-width: 700px) { table, thead, tbody, th, td, tr { display: block; } thead { display: none; } tr { border: 1px solid var(--line); border-radius: 8px; margin-bottom: 10px; padding: 8px; } td { border: none; padding: 5px 4px; } }
     </style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap">
 <link rel="stylesheet" href="/static/css/tmr-navbar.css?v=68ec3081d29a">
 <link rel="stylesheet" href="/static/css/tmr-ds.d4d41a955166.css">
 <link rel="stylesheet" href="/static/css/tmr-ds-header.cc364e352e74.css">
@@ -43,7 +44,8 @@
         <div id="msg" class="msg"></div>
         <div class="panel">
             <h2>Queue</h2>
-            <p class="note" id="info">Refunds of unused purchased credits at the price paid, newest order first. Approving debits the credits and pays one card refund per order; it needs the payouts flag. A California request under the threshold is a legal right (Civil Code 1749.5): reject only a duplicate or an error.</p>
+            <p class="note">Refunds of unused purchased credits at the price paid, newest order first. Approving debits the credits and pays one card refund per order; it needs the payouts flag. A California request under the threshold is a legal right (Civil Code 1749.5): reject only a duplicate or an error.</p>
+            <p class="note" id="info"></p>
             <table><thead><tr><th>Requested</th><th>Member</th><th>Reference</th><th class="num">TMR</th><th class="num">Amount</th><th>Basis</th><th>Status</th><th>Action</th></tr></thead><tbody id="rows"></tbody></table>
         </div>
     </main>
@@ -65,7 +67,7 @@
         }
         function load() {
             return window.api.request(BASE).then(function (d) {
-                el('info').textContent += ' Payouts flag: ' + d.flag + '. California threshold: $' + (d.ca_threshold_cents / 100).toFixed(2) + '.';
+                el('info').textContent = 'Payouts flag: ' + d.flag + '. California threshold: $' + (d.ca_threshold_cents / 100).toFixed(2) + '.';
                 el('rows').innerHTML = (d.queue || []).map(function (r) {
                     return '<tr><td>' + pt(r.created_at) + '</td><td>' + esc(r.username || r.user_id) + '</td><td>' + esc(r.ref) + '</td><td class="num">' + Number(r.tmr).toLocaleString('en-US') +
                         '</td><td class="num">$' + (r.cents / 100).toFixed(2) + '</td><td>' + (r.legal_basis === 'ca_civ_1749_5' ? '<span class="ca">CA 1749.5</span>' : 'Discretionary') +
