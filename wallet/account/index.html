@@ -122,7 +122,7 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
     <p class="note" id="refundMsg" style="margin-top:10px"></p>
     <div class="scroll" id="refundListWrap" hidden>
       <table id="refundTable">
-        <thead><tr><th>Date</th><th>Reference</th><th class="num">TMR</th><th class="num">Amount</th><th>Status</th><th></th></tr></thead>
+        <thead><tr><th>Date</th><th class="num">TMR</th><th class="num">Amount</th><th>Status</th><th></th></tr></thead>
         <tbody></tbody>
       </table>
     </div>
@@ -518,7 +518,7 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
     else if (!(q.tmr > 0)) refundSay('You have no unused purchased TMR to refund.');
     $('refundListWrap').hidden = !list.length;
     $('refundTable').querySelector('tbody').innerHTML = list.map(function (r) {
-      return '<tr><td>' + new Date(r.created_at).toLocaleDateString() + '</td><td>' + escH(r.ref) + '</td><td class="num">' + fmt(r.tmr) +
+      return '<tr title="' + escH(r.ref) + '"><td>' + new Date(r.created_at).toLocaleDateString() + '</td><td class="num">' + fmt(r.tmr) +
         '</td><td class="num">$' + (r.cents / 100).toFixed(2) + '</td><td>' + escH(REFUND_STATUS[r.status] || r.status) + '</td><td>' +
         (r.status === 'requested' ? '<button type="button" class="btn" data-cancel="' + escH(r.ref) + '">Cancel</button>' : '') + '</td></tr>';
     }).join('');
