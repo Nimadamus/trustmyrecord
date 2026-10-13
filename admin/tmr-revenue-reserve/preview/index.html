@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reserve Design Preview | TrustMyRecord</title>
+    <link rel="icon" type="image/png" href="/static/favicon.png">
+    <style>
+        :root { color-scheme: dark; --bg:#060b12; --panel:#0b111b; --panel2:#101826; --line:rgba(148,163,184,0.16); --text:#f8fafc; --muted:#9aa8ba; --cyan:#1D7FE8; --gold:#facc15; --red:#f87171; --green:#4ade80; }
+        * { box-sizing: border-box; }
+        body { margin: 0; background: var(--bg); color: var(--text); font-family: Inter, system-ui, sans-serif; }
+        .bar { padding: 16px 20px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .bar h1 { font-size: 18px; margin: 0; color: var(--cyan); }
+        .bar .badge { padding: 3px 9px; border-radius: 999px; background: rgba(248,113,113,0.16); border: 1px solid rgba(248,113,113,0.45); color: #fecaca; font-size: 10.5px; font-weight: 800; letter-spacing: 0.08em; }
+        .bar a { color: var(--muted); font-size: 12.5px; text-decoration: none; }
+        main { padding: 20px; max-width: 1080px; margin: 0 auto; }
+        .msg { margin-bottom: 14px; font-size: 13px; min-height: 18px; }
+        .msg.err { color: var(--red); } .msg.ok { color: var(--green); }
+        .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 18px 20px; margin-bottom: 18px; }
+        .panel h2 { margin: 0 0 4px; font-size: 15px; }
+        .panel p.note { margin: 0 0 14px; color: var(--muted); font-size: 12.5px; line-height: 1.6; }
+        .panel.sim { border-style: dashed; border-color: rgba(250,204,21,.35); }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+        th { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; }
+        td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+        input, select { background: var(--panel2); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-family: inherit; font-size: 13px; }
+        button { background: var(--panel2); color: var(--text); border: 1px solid rgba(29,127,232,0.3); border-radius: 8px; padding: 7px 12px; font-weight: 700; font-size: 12.5px; cursor: pointer; font-family: inherit; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
+        .tile { border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; background: var(--panel2); }
+        .tile .k { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; margin: 0 0 5px; }
+        .tile .v { margin: 0; font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; word-break: break-word; }
+        .tile .s { color: var(--muted); font-size: 11.5px; margin-top: 4px; line-height: 1.45; }
+        .form { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; align-items: end; }
+        .form label { display: block; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 4px; }
+        .form input, .form select { width: 100%; }
+        .tag-real, .tag-sim, .tag-off { display: inline-block; font-size: 10.5px; font-weight: 800; letter-spacing: .08em; padding: 3px 8px; border-radius: 999px; margin-left: 8px; vertical-align: middle; }
+        .tag-real { background: rgba(74,222,128,.12); color: var(--green); } .tag-sim { background: rgba(250,204,21,.12); color: var(--gold); } .tag-off { background: rgba(248,113,113,.12); color: var(--red); }
+        pre { background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 10px; font-size: 12px; overflow-x: auto; }
+        @media (max-width: 700px) {
+            table, thead, tbody, th, td, tr { display: block; } thead { display: none; }
+            tr { border: 1px solid var(--line); border-radius: 8px; margin-bottom: 10px; padding: 8px; } td { border: none; padding: 5px 4px; }
+        }
+        .banner { border-radius: 10px; padding: 12px 16px; margin-bottom: 14px; font-size: 13px; line-height: 1.55; }
+        .banner.halt { background: rgba(248,113,113,.08); border: 1px solid rgba(248,113,113,.4); color: #fecaca; }
+        .banner.sim { background: rgba(250,204,21,.07); border: 1px dashed rgba(250,204,21,.45); color: #fde68a; font-weight: 700; }
+        .tabs { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 14px; }
+        .tabs button[aria-pressed="true"] { background: rgba(29,127,232,.18); border-color: var(--cyan); color: #fff; }
+        .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+        ul.list { margin: 6px 0 0; padding-left: 18px; color: #dbe4ee; font-size: 13px; line-height: 1.6; }
+        ul.list li { margin-bottom: 4px; }
+        .sev-error { color: var(--red); font-weight: 700; } .sev-warn { color: var(--gold); font-weight: 700; } .sev-info { color: var(--muted); font-weight: 700; }
+        .cmp th[scope="row"] { color: var(--text); text-transform: none; letter-spacing: 0; font-size: 12.5px; width: 150px; }
+        .cmp td { vertical-align: top; }
+        .cmp ul { margin: 0; padding-left: 16px; font-size: 12.5px; line-height: 1.55; color: #dbe4ee; }
+        #auditTiles { grid-template-columns: repeat(3, 1fr); }
+        h3 { font-size: 13px; margin: 14px 0 4px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+        @media (max-width: 700px) { td[data-label]::before { content: attr(data-label); display: block; color: var(--muted); font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 2px; } td.num { text-align: left; } .cmp th[scope="row"] { display: block; padding: 4px; font-size: 13px; color: var(--cyan); } }
+        @media (max-width: 760px) { .row2 { grid-template-columns: 1fr; } #auditTiles { grid-template-columns: 1fr 1fr; } main { padding: 16px; } .cmp th[scope="row"] { width: auto; } }
+    </style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap">
+<link rel="stylesheet" href="/static/css/tmr-navbar.css?v=68ec3081d29a">
+<link rel="stylesheet" href="/static/css/tmr-ds.d4d41a955166.css">
+<link rel="stylesheet" href="/static/css/tmr-ds-header.cc364e352e74.css">
+</head>
+<body class="tmr-theme-a tmr-ds-shell">
+    <div class="bar">
+        <h1>Reserve Design Preview</h1>
+        <span class="badge">ADMIN</span>
+        <span class="tag-sim">SIMULATED</span>
+        <a href="/admin/tmr-revenue-reserve/">Reserve admin &rarr;</a>
+        <a href="/admin/tmr-credit-refunds/">Credit refunds &rarr;</a>
+    </div>
+    <main>
+        <div id="msg" class="msg"></div>
+        <div class="banner halt" id="halt">The live reserve is halted.</div>
+        <div class="banner sim" id="watermark">SIMULATED DATA. No money has moved, and no TMR has been bought, sold, transferred or locked.</div>
+
+        <section class="panel">
+            <h2>Credit accounting audit <span class="tag-real">READ ONLY</span></h2>
+            <p class="note">Checks the TMR ledger, wallets, store orders and revenue ledger against each other. It runs inside a read only transaction and names members only as m1, m2 and so on.</p>
+            <div class="grid" id="auditTiles"></div>
+            <h3>Findings</h3>
+            <table><thead><tr><th>Severity</th><th>Check</th><th>Member</th><th>Detail</th></tr></thead><tbody id="findings"></tbody></table>
+        </section>
+
+        <section class="panel sim">
+            <h2>Public report preview <span class="tag-sim">SIMULATED</span></h2>
+            <p class="note">What the public reserve page would show under each candidate design. "To date" uses the real credit use above with a simulated split; the other scenarios are made up volumes.</p>
+            <div class="tabs" id="designs" role="group" aria-label="Design"></div>
+            <div class="form" style="margin-bottom:14px"><div><label for="scenario">Scenario</label><select id="scenario"></select></div></div>
+            <p class="note" id="designSummary"></p>
+            <div class="grid" id="reportTiles"></div>
+            <h3>By period</h3>
+            <table><thead><tr><th>Period</th><th class="num">Used credits, net</th><th class="num">Business</th><th class="num">Reserve</th><th class="num">Reserve total</th><th class="num">TMR earmarked</th><th>Proof</th></tr></thead><tbody id="periods"></tbody></table>
+            <div class="row2">
+                <div><h3>Public wording</h3><ul class="list" id="disclosures"></ul></div>
+                <div><h3>What proves it</h3><ul class="list" id="proofs"></ul></div>
+            </div>
+        </section>
+
+        <section class="panel">
+            <h2>Design comparison</h2>
+            <p class="note">Legal and accounting requirements for each design, for the design decision. Nothing here is switched on.</p>
+            <table class="cmp"><thead><tr><th></th><th>A. Cash</th><th>B. Cash + earmarked TMR</th><th>C. Cash + locked TMR</th></tr></thead><tbody id="cmp"></tbody></table>
+        </section>
+    </main>
+
+    <script src="/static/js/config.js?v=430b4bba7b37"></script>
+    <script src="/static/js/backend-api.js?v=e4eaeea31d19"></script>
+    <script>
+    (function () {
+        'use strict';
+        var BASE = '/admin/tmr-revenue-reserve';
+        var el = function (id) { return document.getElementById(id); };
+        function esc(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]; }); }
+        function money(n) { n = Number(n || 0); return (n < 0 ? '-$' : '$') + Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+        function cents(c) { return money(Number(c || 0) / 100); }
+        function num(n) { return Number(n || 0).toLocaleString('en-US'); }
+        function tile(k, v, s) { return '<div class="tile"><div class="k">' + esc(k) + '</div><div class="v">' + esc(v) + '</div>' + (s ? '<div class="s">' + esc(s) + '</div>' : '') + '</div>'; }
+        function say(text, isErr) { el('msg').className = 'msg ' + (isErr ? 'err' : 'ok'); el('msg').textContent = text; }
+        function li(a) { return (a || []).map(function (t) { return '<li>' + esc(t) + '</li>'; }).join(''); }
+        var state = { design: 'usd', scenario: 'to_date' };
+        var DESIGNS = [['usd', 'A. Cash'], ['treasury_tmr', 'B. Cash + earmarked TMR'], ['lock', 'C. Cash + locked TMR']];
+
+        function renderAudit(a) {
+            var by = {};
+            (a.findings || []).forEach(function (f) { by[f.severity] = (by[f.severity] || 0) + 1; });
+            var p = a.purchases || {}, s = p.simulated_split || {};
+            el('auditTiles').innerHTML = [
+                tile('Result', a.ok ? 'Pass' : 'Needs attention', (by.error || 0) + ' errors, ' + (by.warn || 0) + ' warnings, ' + (by.info || 0) + ' notes'),
+                tile('Checked', num(a.checked.ledger_rows) + ' rows', num(a.checked.members) + ' members, ' + num(a.checked.orders) + ' orders'),
+                tile('Simulator runs', num(a.simulator.charged_runs) + ' paid', num(a.simulator.free_runs) + ' free, ' + num(a.simulator.tmr_spent) + ' TMR spent'),
+                tile('Purchased TMR', num(p.tmr_used) + ' used', num(p.tmr_unused) + ' of ' + num(p.tmr_bought) + ' unused (refundable)'),
+                tile('Net from used credits', cents(p.used_net_cents), 'From ' + num(p.orders) + ' paid orders, ' + cents(p.gross_cents) + ' gross'),
+                tile('Split if it were on', cents(s.owner_cents) + ' / ' + cents(s.reserve_cents), 'Business / reserve, simulated')
+            ].join('');
+            var rows = (a.findings || []).slice(0, 80);
+            el('findings').innerHTML = rows.length ? rows.map(function (f) {
+                return '<tr><td data-label="Severity" class="sev-' + esc(f.severity) + '">' + esc(f.severity) + '</td><td data-label="Check">' + esc(f.check) + '</td><td data-label="Member">' + esc(f.member || '') + '</td><td data-label="Detail">' + esc(f.detail) + '</td></tr>';
+            }).join('') : '<tr><td colspan="4">No findings.</td></tr>';
+        }
+
+        function renderReport(d) {
+            var r = d.report, t = r.totals;
+            el('halt').textContent = 'The live reserve is halted (' + d.halted.code + '): ' + d.halted.reason + '. This page changes nothing.';
+            el('watermark').textContent = r.watermark;
+            el('designSummary').textContent = r.design.summary + (r.earmark_rate_usd ? ' Earmark rate: $' + r.earmark_rate_usd.toFixed(2) + ' per TMR, set by the company, not a market price.' : '');
+            var tiles = [tile('Used credits, net', money(t.used_net_usd), r.scenario.label), tile('To the business', money(t.to_business_usd), r.owner_percent + '%'), tile('To the reserve, USD', money(t.reserve_usd), r.reserve_percent + '%')];
+            if (r.design.holds_tmr) tiles.push(tile(r.design.locks ? 'TMR locked' : 'TMR earmarked', num(t.tmr_earmarked), (t.share_of_supply_pct || 0).toFixed(4) + '% of supply, already owned, not bought'));
+            el('reportTiles').innerHTML = tiles.join('');
+            el('periods').innerHTML = r.periods.map(function (p) {
+                return '<tr><td data-label="Period">' + esc(p.period) + '</td><td data-label="Used credits, net" class="num">' + money(p.used_net_usd) + '</td><td data-label="Business" class="num">' + money(p.to_business_usd) + '</td><td data-label="Reserve" class="num">' + money(p.to_reserve_usd) + '</td><td data-label="Reserve total" class="num">' + money(p.reserve_usd_total) + '</td><td data-label="TMR earmarked" class="num">' + (r.design.holds_tmr ? num(p.tmr_earmarked) : 'none') + '</td><td data-label="Proof">' + esc(p.proof) + '</td></tr>';
+            }).join('');
+            el('disclosures').innerHTML = li(r.disclosures);
+            el('proofs').innerHTML = li(r.proofs);
+            var c = d.compare;
+            var row = function (label, f) { return '<tr><th scope="row">' + esc(label) + '</th>' + c.map(function (x) { return '<td data-label="' + esc(x.label) + '">' + f(x) + '</td>'; }).join('') + '</tr>'; };
+            el('cmp').innerHTML = [
+                row('Holds', function (x) { return esc(x.locks ? 'USD, plus TMR in a lock' : x.holds_tmr ? 'USD, plus TMR in the reserve Safe' : 'USD only'); }),
+                row('"Never sold" enforced by', function (x) { return esc(x.never_sold_enforced_by); }),
+                row('Legal requirements', function (x) { return '<ul>' + li(x.legal) + '</ul>'; }),
+                row('Accounting', function (x) { return '<ul>' + li(x.accounting) + '</ul>'; }),
+                row('Proof published', function (x) { return '<ul>' + li(x.proofs) + '</ul>'; })
+            ].join('');
+            if (!el('scenario').options.length) {
+                el('scenario').innerHTML = d.scenarios.map(function (s) { return '<option value="' + esc(s.key) + '">' + esc(s.label) + '</option>'; }).join('');
+                el('scenario').value = state.scenario;
+            }
+            el('designs').innerHTML = DESIGNS.map(function (x) { return '<button type="button" data-design="' + x[0] + '" aria-pressed="' + (x[0] === state.design) + '">' + esc(x[1]) + '</button>'; }).join('');
+        }
+
+        function loadReport() {
+            return window.api.request(BASE + '/report-preview?design=' + encodeURIComponent(state.design) + '&scenario=' + encodeURIComponent(state.scenario))
+                .then(renderReport).catch(function (e) { say('Preview failed: ' + (e && e.message), true); });
+        }
+        el('designs').addEventListener('click', function (e) {
+            var b = e.target.closest('button[data-design]'); if (!b) return;
+            state.design = b.getAttribute('data-design'); loadReport();
+        });
+        el('scenario').addEventListener('change', function () { state.scenario = el('scenario').value; loadReport(); });
+        window.api.request(BASE + '/credit-audit').then(renderAudit).catch(function (e) { say('Audit failed: ' + (e && e.message), true); });
+        loadReport();
+    })();
+    </script>
+<script src="/static/js/tmr-ds-nav.5f874d06b872.js"></script>
+</body>
+</html>
