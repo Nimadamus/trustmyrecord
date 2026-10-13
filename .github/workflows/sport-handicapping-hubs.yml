@@ -79,6 +79,17 @@ jobs:
             git config user.name "tmr-sport-hubs-bot"
             git config user.email "github-actions[bot]@users.noreply.github.com"
             git commit -m "chore(handicapping): refresh sport hubs from the board [skip ci]"
-            git push origin HEAD:main
-            git show --stat --oneline HEAD
+            # Other bake jobs push to main while this one runs (10-13: two runs rejected
+            # with "fetch first"). Rebase and retry; a real conflict fails loudly, never --force.
+            for attempt in 1 2 3 4 5; do
+              if git push origin HEAD:main; then
+                git show --stat --oneline HEAD
+                exit 0
+              fi
+              echo "push rejected (attempt $attempt), rebasing onto origin/main and retrying"
+              git pull --rebase origin main || { git rebase --abort; echo "::error::rebase onto main conflicted; this run's bake was not published"; exit 1; }
+              sleep $((attempt * 5))
+            done
+            echo "::error::push to main failed five times; this run's bake was not published"
+            exit 1
           fi
