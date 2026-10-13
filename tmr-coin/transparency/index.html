@@ -5,10 +5,10 @@
     <link rel="canonical" href="https://trustmyrecord.com/tmr-coin/transparency/">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TMR Coin Transparency | TrustMyRecord</title>
-    <meta name="description" content="Live TMR Coin figures read from Base and from the TrustMyRecord ledger: price, liquidity, supply, holders, transfers, and what members earned and spent. Including the numbers that are zero.">
+    <meta name="description" content="Live TMR Coin figures read from Base and from the TrustMyRecord ledger: liquidity, supply, holders, transfers, and what members earned and spent. Including the numbers that are zero.">
     <meta name="robots" content="index, follow">
     <meta property="og:title" content="TMR Coin Transparency">
-    <meta property="og:description" content="Live figures read from Base and from the ledger: price, liquidity, supply, holders, transfers and member activity. Including the numbers that are zero.">
+    <meta property="og:description" content="Live figures read from Base and from the ledger: liquidity, supply, holders, transfers and member activity. Including the numbers that are zero.">
     <meta property="og:url" content="https://trustmyrecord.com/tmr-coin/transparency/">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="TrustMyRecord">
@@ -26,7 +26,7 @@
       "@id": "https://trustmyrecord.com/tmr-coin/transparency/",
       "url": "https://trustmyrecord.com/tmr-coin/transparency/",
       "name": "TMR Coin Transparency",
-      "description": "Live TMR Coin figures read from Base and from the TrustMyRecord ledger on every page load: price, liquidity, supply, holders, transfers and member activity, together with a plain statement of what is live now and what is not.",
+      "description": "Live TMR Coin figures read from Base and from the TrustMyRecord ledger on every page load: liquidity, supply, holders, transfers and member activity, together with a plain statement of what is live now and what is not.",
       "isPartOf": { "@id": "https://trustmyrecord.com/#website" }
     },
     {
@@ -85,7 +85,7 @@
         .tcoin-sub{font-family:'Barlow',sans-serif;font-size:1rem;font-weight:800;margin:20px 0 2px;color:var(--tmrp-text-primary);}
         .tcoin-hidden{display:none;}
         @media (max-width: 860px){ .tcoin-three{grid-template-columns:1fr;} }
-        @media (max-width: 560px){ .tcoin-info-grid{grid-template-columns:1fr;} .tcoin-metrics{grid-template-columns:1fr 1fr;} }
+        @media (max-width: 560px){ .tcoin-info-grid{grid-template-columns:1fr;} .tcoin-metrics{grid-template-columns:1fr 1fr;} .tcoin-metric:last-child:nth-child(odd){grid-column:1/-1;} }
     </style>
     <link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=b088fdc7f9d5">
     <script defer src="/static/js/tmr-linkhub.js?v=680cc4084d87"></script>
@@ -113,14 +113,12 @@
 
     <section class="tmr-glass">
         <h2 class="tmr-h2">Market</h2>
-        <p>Price and liquidity come from the Uniswap v3 pool on Base. If the pool cannot be read, this panel shows nothing at all rather than a stale price.</p>
+        <p>Liquidity comes from the Uniswap v3 pool on Base. If the pool cannot be read, this panel shows nothing at all rather than a stale figure.</p>
+        <p>No price or market value is shown here. TrustMyRecord provides all of the liquidity in this pool, so a quoted price would only reflect our own position, not a market.</p>
         <div id="tcoin-market-state" class="tcoin-state is-loading">Reading the pool on Base&hellip;</div>
         <div id="tcoin-market-body" class="tcoin-hidden">
             <div class="tcoin-metrics">
-                <div class="tcoin-metric"><div class="tcoin-metric-label">Price</div><div class="tcoin-metric-val" id="m-price">&hellip;</div><div class="tcoin-metric-sub" id="m-price-sub">per TMR</div></div>
-                <div class="tcoin-metric"><div class="tcoin-metric-label">Pool liquidity</div><div class="tcoin-metric-val" id="m-tvl">&hellip;</div><div class="tcoin-metric-sub" id="m-tvl-sub">both sides</div></div>
                 <div class="tcoin-metric"><div class="tcoin-metric-label">Cash side of the pool</div><div class="tcoin-metric-val" id="m-cash">&hellip;</div><div class="tcoin-metric-sub">the most that can come out</div></div>
-                <div class="tcoin-metric"><div class="tcoin-metric-label">Fully diluted value</div><div class="tcoin-metric-val" id="m-fdv">&hellip;</div><div class="tcoin-metric-sub">price times total supply</div></div>
                 <div class="tcoin-metric"><div class="tcoin-metric-label">Tradable supply</div><div class="tcoin-metric-val" id="m-liquid">&hellip;</div><div class="tcoin-metric-sub" id="m-liquid-sub">sitting in the pool</div></div>
                 <div class="tcoin-metric"><div class="tcoin-metric-label">Liquidity custody</div><div class="tcoin-metric-val" id="m-lock">&hellip;</div><div class="tcoin-metric-sub" id="m-lock-sub">&nbsp;</div></div>
             </div>
@@ -294,10 +292,7 @@
     // --- market -------------------------------------------------------------
     get('/tmr-coin/market').then(function (m) {
         if (!m || m.live !== true) throw new Error('not live');
-        set('m-price', usd(m.price_usd), 'per TMR');
-        set('m-tvl', usd(m.tvl_usd), num(m.pool_tmr) + ' TMR and ' + Number(m.pool_weth).toFixed(6) + ' WETH');
         set('m-cash', usd(m.pool_weth_usd));
-        set('m-fdv', usd(m.fdv_usd));
         set('m-liquid', num(m.liquid_supply), Number(m.liquid_supply_percent).toFixed(3) + '% of supply');
         set('m-lock', m.liquidity_locked ? 'Locked' : 'Not locked', m.liquidity_custody || '');
         var depth = document.getElementById('m-depth');
@@ -319,7 +314,7 @@
         hide('tcoin-market-state');
         show('tcoin-market-body');
     }).catch(function () {
-        down('tcoin-market-state', 'The pool on Base could not be read right now, so no price or liquidity figure is shown. Nothing here is cached, so a stale number is never displayed instead.');
+        down('tcoin-market-state', 'The pool on Base could not be read right now, so no liquidity figure is shown. Nothing here is cached, so a stale number is never displayed instead.');
     });
 
     // --- participation ------------------------------------------------------
