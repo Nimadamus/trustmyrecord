@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TMR Revenue Reserve Admin | TrustMyRecord</title>
+    <link rel="icon" type="image/png" href="/static/favicon.png">
+    <style>
+        :root { color-scheme: dark; --bg:#060b12; --panel:#0b111b; --panel2:#101826; --line:rgba(148,163,184,0.16); --text:#f8fafc; --muted:#9aa8ba; --cyan:#1D7FE8; --gold:#facc15; --red:#f87171; --green:#4ade80; }
+        * { box-sizing: border-box; }
+        body { margin: 0; background: var(--bg); color: var(--text); font-family: Inter, system-ui, sans-serif; }
+        .bar { padding: 16px 20px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .bar h1 { font-size: 18px; margin: 0; color: var(--cyan); }
+        .bar .badge { padding: 3px 9px; border-radius: 999px; background: rgba(248,113,113,0.16); border: 1px solid rgba(248,113,113,0.45); color: #fecaca; font-size: 10.5px; font-weight: 800; letter-spacing: 0.08em; }
+        .bar a { color: var(--muted); font-size: 12.5px; text-decoration: none; }
+        main { padding: 20px; max-width: 1080px; margin: 0 auto; }
+        .msg { margin-bottom: 14px; font-size: 13px; min-height: 18px; }
+        .msg.err { color: var(--red); } .msg.ok { color: var(--green); }
+        .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 18px 20px; margin-bottom: 18px; }
+        .panel h2 { margin: 0 0 4px; font-size: 15px; }
+        .panel p.note { margin: 0 0 14px; color: var(--muted); font-size: 12.5px; line-height: 1.6; }
+        .panel.sim { border-style: dashed; border-color: rgba(250,204,21,.35); }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+        th { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; }
+        td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+        input, select { background: var(--panel2); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-family: inherit; font-size: 13px; }
+        button { background: var(--panel2); color: var(--text); border: 1px solid rgba(29,127,232,0.3); border-radius: 8px; padding: 7px 12px; font-weight: 700; font-size: 12.5px; cursor: pointer; font-family: inherit; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
+        .tile { border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; background: var(--panel2); }
+        .tile .k { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; margin: 0 0 5px; }
+        .tile .v { margin: 0; font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; word-break: break-word; }
+        .tile .s { color: var(--muted); font-size: 11.5px; margin-top: 4px; line-height: 1.45; }
+        .form { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; align-items: end; }
+        .form label { display: block; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 4px; }
+        .form input, .form select { width: 100%; }
+        .tag-real, .tag-sim, .tag-off { display: inline-block; font-size: 10.5px; font-weight: 800; letter-spacing: .08em; padding: 3px 8px; border-radius: 999px; margin-left: 8px; vertical-align: middle; }
+        .tag-real { background: rgba(74,222,128,.12); color: var(--green); } .tag-sim { background: rgba(250,204,21,.12); color: var(--gold); } .tag-off { background: rgba(248,113,113,.12); color: var(--red); }
+        pre { background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 10px; font-size: 12px; overflow-x: auto; }
+        @media (max-width: 700px) {
+            table, thead, tbody, th, td, tr { display: block; } thead { display: none; }
+            tr { border: 1px solid var(--line); border-radius: 8px; margin-bottom: 10px; padding: 8px; } td { border: none; padding: 5px 4px; }
+        }
+    </style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap">
+<link rel="stylesheet" href="/static/css/tmr-navbar.css?v=68ec3081d29a">
+<link rel="stylesheet" href="/static/css/tmr-ds.d4d41a955166.css">
+<link rel="stylesheet" href="/static/css/tmr-ds-header.cc364e352e74.css">
+</head>
+<body class="tmr-theme-a tmr-ds-shell">
+    <div class="bar">
+        <h1>TMR Revenue Reserve</h1>
+        <span class="badge">ADMIN</span>
+        <a href="/admin/tmr-revenue/">Revenue and liquidity &rarr;</a>
+        <a href="/tmr-coin/revenue-reserve/">Public record &rarr;</a>
+    </div>
+    <main>
+        <div id="msg" class="msg"></div>
+
+        <div class="panel">
+            <h2>State <span id="liveTag"></span></h2>
+            <p class="note">The split counts only purchased credits that have been used. This server holds no reserve key and sends no transaction: every conversion, bid and harvest is done from the reserve Safe and recorded here with its reference.</p>
+            <div class="grid" id="state"></div>
+        </div>
+
+        <div class="panel" id="simPanel" hidden>
+            <h2>If it were on today <span class="tag-sim">SIMULATION</span></h2>
+            <p class="note">What the used credits to date would allocate under the configured split. Nothing is written while the reserve is off.</p>
+            <div class="grid" id="sim"></div>
+        </div>
+
+        <div class="panel">
+            <h2>Totals <span class="tag-real">LEDGER</span></h2>
+            <div class="grid" id="totals"></div>
+        </div>
+
+        <div class="panel">
+            <h2>Plan the next bid</h2>
+            <p class="note">Reads the live pool and returns an ETH only range above the current tick (TMR 3% to 30% below spot). It refuses any range over the treasury position. Planning only.</p>
+            <div class="form">
+                <div><label for="budgetEth">Budget (ETH)</label><input id="budgetEth" type="text" inputmode="decimal" placeholder="0.01"></div>
+                <div><button id="planBtn" type="button">Plan bid</button></div>
+            </div>
+            <pre id="planOut" hidden></pre>
+        </div>
+
+        <div class="panel">
+            <h2>Record a reserve action</h2>
+            <p class="note">A conversion needs the exchange receipt reference. Bids, harvests and transfers need the Base transaction hash and are then verified against the chain. Records cannot be edited or deleted.</p>
+            <div class="form">
+                <div><label for="aKind">Kind</label><select id="aKind"><option>conversion</option><option>bid_placed</option><option>bid_harvested</option><option>bid_withdrawn</option><option>transfer_in</option><option>adjustment</option></select></div>
+                <div><label for="aUsd">USD cents</label><input id="aUsd" type="number" min="0" step="1"></div>
+                <div><label for="aEth">ETH (wei)</label><input id="aEth" type="text" inputmode="numeric" placeholder="0"></div>
+                <div><label for="aTmr">TMR (wei)</label><input id="aTmr" type="text" inputmode="numeric" placeholder="0"></div>
+                <div><label for="aPos">Position id</label><input id="aPos" type="text"></div>
+                <div><label for="aTx">Tx hash</label><input id="aTx" type="text" placeholder="0x&hellip;"></div>
+                <div><label for="aRef">Exchange receipt</label><input id="aRef" type="text"></div>
+                <div><label for="aNote">Note</label><input id="aNote" type="text"></div>
+                <div><button id="recordBtn" type="button">Record</button></div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h2>Actions</h2>
+            <table><thead><tr><th>When</th><th>Kind</th><th class="num">USD</th><th class="num">ETH</th><th class="num">TMR</th><th>Tx / receipt</th><th>Verified</th></tr></thead><tbody id="actions"></tbody></table>
+        </div>
+
+        <div class="panel">
+            <h2>Allocations</h2>
+            <p class="note">Append only. Baseline rows mark use before activation at zero cents; reversal rows give back a refunded or charged back order's share.</p>
+            <table><thead><tr><th>When</th><th>Order</th><th>Kind</th><th class="num">TMR used</th><th class="num">Net</th><th class="num">Business</th><th class="num">Reserve</th></tr></thead><tbody id="allocs"></tbody></table>
+        </div>
+
+        <div class="panel">
+            <h2>Configuration</h2>
+            <p class="note">The split and the Safe address lock once the reserve is active. Activation also needs the coin_reserve_enabled flag on the economy control center. Type ACTIVATE to switch it on.</p>
+            <div class="form">
+                <div><label for="cOwner">Business share %</label><input id="cOwner" type="number" min="0" max="100" step="1"></div>
+                <div><label for="cSafe">Reserve Safe address</label><input id="cSafe" type="text" placeholder="0x&hellip;"></div>
+                <div><label for="cConfirm">Activate (type ACTIVATE)</label><input id="cConfirm" type="text"></div>
+                <div><button id="saveBtn" type="button">Save</button></div>
+            </div>
+        </div>
+    </main>
+
+    <script src="/static/js/config.js?v=430b4bba7b37"></script>
+    <script src="/static/js/backend-api.js?v=e4eaeea31d19"></script>
+    <script>
+    (function () {
+        'use strict';
+        var BASE = '/admin/tmr-revenue-reserve';
+        var el = function (id) { return document.getElementById(id); };
+        function esc(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]; }); }
+        function usd(c) { var n = Number(c || 0) / 100; return (n < 0 ? '-$' : '$') + Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+        function eth(w) { try { return (Number(BigInt(String(w).split('.')[0])) / 1e18).toLocaleString('en-US', { maximumFractionDigits: 6 }); } catch (_) { return '0'; } }
+        function tmr(w) { try { return Math.round(Number(BigInt(String(w).split('.')[0])) / 1e18).toLocaleString('en-US'); } catch (_) { return '0'; } }
+        function pt(iso) { return iso ? new Date(iso).toLocaleString('en-US', { timeZone: 'America/Los_Angeles', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) + ' PT' : ''; }
+        function tile(k, v, s) { return '<div class="tile"><div class="k">' + esc(k) + '</div><div class="v">' + esc(v) + '</div>' + (s ? '<div class="s">' + esc(s) + '</div>' : '') + '</div>'; }
+        function say(text, isErr) { el('msg').className = 'msg ' + (isErr ? 'err' : 'ok'); el('msg').textContent = text; }
+        function post(path, body) { return window.api.request(BASE + path, { method: 'POST', body: JSON.stringify(body) }); }
+
+        function render(d) {
+            var c = d.config || {}, t = d.totals || {};
+            el('liveTag').className = d.live ? 'tag-real' : 'tag-off';
+            el('liveTag').textContent = d.live ? 'ON' : 'OFF';
+            el('state').innerHTML = [
+                tile('Split', c.owner_pct + '% business / ' + (100 - c.owner_pct) + '% reserve', c.active ? 'Locked while active' : 'Editable while off'),
+                tile('Active', c.active ? 'Yes' : 'No', c.activated_at ? 'Since ' + pt(c.activated_at) : 'Never activated'),
+                tile('Reserve Safe', c.safe_address ? c.safe_address.slice(0, 6) + '…' + c.safe_address.slice(-4) : 'Not set', ''),
+                tile('Policy', c.policy_version || '', '')
+            ].join('');
+            el('cOwner').value = c.owner_pct; el('cSafe').value = c.safe_address || '';
+            if (d.simulation) {
+                el('simPanel').hidden = false;
+                el('sim').innerHTML = [tile('Net from used credits', usd(d.simulation.net_cents_from_used_credits)), tile('Business', usd(d.simulation.owner_cents)), tile('Reserve', usd(d.simulation.reserve_cents))].join('');
+            } else el('simPanel').hidden = true;
+            el('totals').innerHTML = [
+                tile('Net counted', usd(t.allocated_net_cents), (t.purchased_tmr_used || 0).toLocaleString('en-US') + ' purchased TMR used'),
+                tile('Business', usd(t.owner_cents)), tile('Reserve', usd(t.reserve_cents), t.reversals + ' reversals'),
+                tile('Converted', usd(t.converted_cents), usd(t.reserve_owed_cents) + ' still to convert'),
+                tile('ETH in bids', eth(t.eth_bid_wei)), tile('TMR acquired', tmr(t.tmr_acquired_wei)),
+                tile('Actions verified', (t.actions_verified || 0) + ' of ' + (t.actions || 0))
+            ].join('');
+            el('actions').innerHTML = (d.actions || []).map(function (a) {
+                var ref = a.tx_hash ? '<a href="https://basescan.org/tx/' + esc(a.tx_hash) + '" target="_blank" rel="noopener">' + esc(a.tx_hash.slice(0, 12)) + '…</a>' : esc(a.external_ref || '');
+                var ver = a.verified ? 'block ' + esc(a.verified_block) : (a.tx_hash ? '<button type="button" data-verify="' + esc(a.id) + '">Verify</button>' : 'n/a');
+                return '<tr><td>' + pt(a.created_at) + '</td><td>' + esc(a.kind) + '</td><td class="num">' + usd(a.usd_cents) + '</td><td class="num">' + eth(a.eth_wei) + '</td><td class="num">' + tmr(a.tmr_wei) + '</td><td>' + ref + '</td><td>' + ver + '</td></tr>';
+            }).join('') || '<tr><td colspan="7">No actions yet.</td></tr>';
+            el('allocs').innerHTML = (d.allocations || []).map(function (r) {
+                return '<tr><td>' + pt(r.created_at) + '</td><td>' + esc(r.order_ref) + '</td><td>' + esc(r.kind) + '</td><td class="num">' + Number(r.delta_tmr).toLocaleString('en-US') + '</td><td class="num">' + usd(r.net_cents) + '</td><td class="num">' + usd(r.owner_cents) + '</td><td class="num">' + usd(r.reserve_cents) + '</td></tr>';
+            }).join('') || '<tr><td colspan="7">No allocations yet.</td></tr>';
+        }
+        function load() {
+            return window.api.request(BASE).then(render).catch(function (e) {
+                say(/401|403|unauth|admin/i.test(String(e && e.message)) ? 'Admin sign in required.' : 'Could not load: ' + (e && e.message), true);
+            });
+        }
+        el('planBtn').addEventListener('click', function () {
+            window.api.request(BASE + '/plan?budgetEth=' + encodeURIComponent(el('budgetEth').value || '0')).then(function (p) {
+                el('planOut').hidden = false; el('planOut').textContent = JSON.stringify(p, null, 2);
+            }).catch(function (e) { say('Plan refused: ' + (e && e.message), true); });
+        });
+        el('recordBtn').addEventListener('click', function () {
+            post('/actions', { kind: el('aKind').value, usdCents: Number(el('aUsd').value || 0), ethWei: el('aEth').value || '0', tmrWei: el('aTmr').value || '0',
+                positionId: el('aPos').value || null, txHash: el('aTx').value || null, externalRef: el('aRef').value || null, note: el('aNote').value })
+                .then(function () { say('Recorded.'); load(); }).catch(function (e) { say('Not recorded: ' + (e && e.message), true); });
+        });
+        el('actions').addEventListener('click', function (ev) {
+            var id = ev.target && ev.target.getAttribute('data-verify'); if (!id) return;
+            post('/actions/' + id + '/verify', {}).then(function () { say('Verified on Base.'); load(); }).catch(function (e) { say('Not verified: ' + (e && e.message), true); });
+        });
+        el('saveBtn').addEventListener('click', function () {
+            var body = { ownerPct: Number(el('cOwner').value), safeAddress: el('cSafe').value || null };
+            if (el('cConfirm').value === 'ACTIVATE') body.activate = true;
+            post('/config', body).then(function () { say('Saved.'); el('cConfirm').value = ''; load(); }).catch(function (e) { say('Not saved: ' + (e && e.message), true); });
+        });
+        load();
+    })();
+    </script>
+<script src="/static/js/tmr-ds-nav.5f874d06b872.js"></script>
+</body>
+</html>

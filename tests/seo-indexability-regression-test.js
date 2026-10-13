@@ -270,6 +270,8 @@ console.log('\nnoindex allowlist');
     // that refuses anyone without an admin session ("Admin sign in required"). Authorised by the
     // site owner on 2026-10-09 for this one route, per SEO_INDEXING_PROTOCOL.md section 2.
     SITE + '/admin/tmr-revenue/',
+    // Admin view of the 50/50 revenue reserve (RESERVE_20261012). Admin only, same as tmr-revenue.
+    SITE + '/admin/tmr-revenue-reserve/',
     // Member cash redemption screen, built HIDDEN on the site owner's order (2026-10-08: "users
     // must not see or access live redemption yet"). Linked from nowhere; it shows only "TMR has
     // no cash value" until the backend reports LIVE. Remove from this list when it launches.
