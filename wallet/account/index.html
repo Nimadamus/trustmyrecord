@@ -108,6 +108,26 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
     <ul id="creditsDisclosures" style="margin:14px 0 0;padding-left:18px;font-size:13px;line-height:1.55;color:var(--acct-muted)"></ul>
   </section>
 
+  <!-- CREDIT_REFUND_20261012: refunds of unused purchased credits -->
+  <section class="acct-card" id="refund">
+    <h2>Refund unused purchased TMR</h2>
+    <p class="note">Purchased TMR never expires. You can ask for a refund of the purchased TMR you have not used, at the price you paid; the money goes back to the card you paid with. TMR you have used, and free or reward TMR, cannot be refunded. California residents get a cash refund of a balance under $15 on request.</p>
+    <div class="grid" id="refundGrid"><div class="skel">Loading…</div></div>
+    <div id="refundForm" hidden style="margin-top:12px">
+      <label style="display:flex;gap:8px;align-items:center;font-size:14px"><input type="checkbox" id="refundCa"> I live in California</label>
+      <label for="refundReason" style="display:block;font-size:13px;margin-top:10px;color:var(--acct-muted)">Reason (optional)</label>
+      <input id="refundReason" type="text" maxlength="500" style="width:100%;margin-top:4px">
+      <button type="button" class="btn" id="refundBtn" style="margin-top:10px">Request refund</button>
+    </div>
+    <p class="note" id="refundMsg" style="margin-top:10px"></p>
+    <div class="scroll" id="refundListWrap" hidden>
+      <table id="refundTable">
+        <thead><tr><th>Date</th><th>Reference</th><th class="num">TMR</th><th class="num">Amount</th><th>Status</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
   <section class="acct-card">
     <h2>Activity</h2>
     <div class="grid" id="activityGrid"><div class="skel">Loading…</div></div>
@@ -478,15 +498,51 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
       yn('Withdraw to your wallet', cap.withdrawToWallet),
       yn('Deposit from your wallet', cap.depositFromWallet),
       yn('Sell TMR Coin on the market now', cap.sellOnMarketNow),
-      yn('Cash out for money', cap.cashOutForMoney)
+      yn('Cash out for money', cap.cashOutForMoney),
+      yn('Refund unused purchased TMR', true)
     ].join('');
     $('creditsDisclosures').innerHTML = (cap.disclosures || []).map(function (t) { return '<li>' + escH(t) + '</li>'; }).join('');
   }
+
+  // CREDIT_REFUND_20261012
+  var REFUND_STATUS = { requested: 'Requested', processing: 'Being paid', refunded: 'Refunded', failed: 'Being reviewed', rejected: 'Declined', cancelled: 'Cancelled' };
+  function refundSay(t, bad) { var m = $('refundMsg'); m.textContent = t || ''; m.style.color = bad ? 'var(--acct-neg, #b42318)' : ''; }
+  async function loadRefund() {
+    var d = await window.api.request('/tmr-credit-refunds');
+    var q = d.quote || {}, list = d.requests || [];
+    var tile = function (k, v) { return '<div class="tile"><div class="k">' + k + '</div><div class="v">' + v + '</div></div>'; };
+    $('refundGrid').innerHTML = tile('Unused purchased TMR', fmt(q.tmr || 0)) + tile('Refund value', '$' + ((q.cents || 0) / 100).toFixed(2));
+    var open = list.some(function (r) { return r.status === 'requested' || r.status === 'processing' || r.status === 'failed'; });
+    $('refundForm').hidden = !(q.tmr > 0) || open;
+    if (open) refundSay('Your refund request is open. You can follow it below.');
+    else if (!(q.tmr > 0)) refundSay('You have no unused purchased TMR to refund.');
+    $('refundListWrap').hidden = !list.length;
+    $('refundTable').querySelector('tbody').innerHTML = list.map(function (r) {
+      return '<tr><td>' + new Date(r.created_at).toLocaleDateString() + '</td><td>' + escH(r.ref) + '</td><td class="num">' + fmt(r.tmr) +
+        '</td><td class="num">$' + (r.cents / 100).toFixed(2) + '</td><td>' + escH(REFUND_STATUS[r.status] || r.status) + '</td><td>' +
+        (r.status === 'requested' ? '<button type="button" class="btn" data-cancel="' + escH(r.ref) + '">Cancel</button>' : '') + '</td></tr>';
+    }).join('');
+  }
+  $('refundBtn').onclick = async function () {
+    $('refundBtn').disabled = true;
+    try {
+      await window.api.request('/tmr-credit-refunds', { method: 'POST', body: { caResident: $('refundCa').checked, reason: $('refundReason').value || null } });
+      refundSay('Refund requested.');
+      await loadRefund();
+    } catch (e) { refundSay(e && e.message ? e.message : 'Could not request the refund.', true); }
+    $('refundBtn').disabled = false;
+  };
+  $('refundTable').addEventListener('click', async function (ev) {
+    var ref = ev.target && ev.target.getAttribute('data-cancel'); if (!ref) return;
+    try { await window.api.request('/tmr-credit-refunds/' + encodeURIComponent(ref) + '/cancel', { method: 'POST', body: {} }); refundSay('Request cancelled.'); await loadRefund(); }
+    catch (e) { refundSay(e && e.message ? e.message : 'Could not cancel.', true); }
+  });
 
   $('btnMore').onclick = function () { loadTx(true).catch(function (e) { say(e.message, true); }); };
 
   (async function init() {
     loadCredits().catch(function () { $('creditsCard').style.display = 'none'; });
+    loadRefund().catch(function () { $('refund').style.display = 'none'; });
     try { await loadAccount(); await loadTx(false); }
     catch (e) {
       if (String(e && e.message).match(/401|unauth/i)) {

@@ -648,6 +648,8 @@
        the run is charged when the page reports a finished result
        (markCompleted / runSucceeded) and never when it fails or is abandoned. */
     var METER_COST = 5;
+    /* CREDIT_DISCLOSURE_20261012: show the dollar price wherever credits are spent ($5 = 250 TMR). */
+    var METER_USD = '$' + (METER_COST * 5 / 250).toFixed(2);
     var meterAutoPay = false;   // the member said yes once on this page view
     var meterPending = null;    // one decision at a time; extra clicks wait on it
     var openRun = null;         // the started, not yet settled, metered run
@@ -671,7 +673,7 @@
         return meterRequest('/simulator-runs/start', { method: 'POST', body: body }).then(null, function (e) {
             if (!(e && e.status === 404)) throw e;
             return meterRequest('/simulator-runs/charge', { method: 'POST', body: body }).then(function (d) {
-                if (d && d.charged) toast(fmtTmr(d.charged) + ' TMR used for this run. Your balance is ' + fmtTmr(d.balance) + ' TMR.');
+                if (d && d.charged) toast(fmtTmr(d.charged) + ' TMR ($' + (Number(d.charged) * 5 / 250).toFixed(2) + ') used for this run. Your balance is ' + fmtTmr(d.balance) + ' TMR.');
                 return d && d.runId ? d : Object.assign({}, d || {}, { runId: null });
             });
         });
@@ -683,7 +685,7 @@
             .then(function (d) {
                 openRun = d && d.metered && d.runId ? { id: d.runId, isFree: !!d.isFree, cost: d.cost } : null;
                 if (d && d.metered && d.isFree) {
-                    toast('This is your free ' + label + ' run for today. Extra runs cost ' + METER_COST + ' TMR.');
+                    toast('This is your free ' + label + ' run for today. Extra runs cost ' + METER_COST + ' TMR (' + METER_USD + ').');
                 }
                 track('simulator_run_metered', { charged: d && d.metered && !d.isFree ? 'yes' : 'no', simulator: meterKey() });
                 return true;
@@ -712,7 +714,7 @@
         meterRequest(path, { method: 'POST', body: ok ? {} : { reason: String(reason || 'run failed').slice(0, 180) } })
             .then(function (d) {
                 if (ok && d && d.charged) {
-                    toast(fmtTmr(d.charged) + ' TMR used for this run. Your balance is ' + fmtTmr(d.balance) + ' TMR.');
+                    toast(fmtTmr(d.charged) + ' TMR ($' + (Number(d.charged) * 5 / 250).toFixed(2) + ') used for this run. Your balance is ' + fmtTmr(d.balance) + ' TMR.');
                 }
             }, function () { /* the server settles an unreported run with no charge */ });
     }
@@ -745,19 +747,19 @@
                     ? 'You have used your free ' + esc(label) + ' run for today'
                     : 'You need TMR for another ' + esc(label) + ' run') + '</h2>' +
                 '<p>Every member gets one free run a day on each simulator, and your free run comes back at ' +
-                'midnight Pacific. Until then, each extra run costs <b>' + METER_COST + ' TMR</b>.</p>' +
+                'midnight Pacific. Until then, each extra run costs <b>' + METER_COST + ' TMR (' + METER_USD + ')</b>.</p>' +
                 (hasBalance ? '<div class="tsg-bal"><span>Your TMR balance</span><b>' + fmtTmr(st.balance) + ' TMR</b></div>' +
-                    '<div class="tsg-cost"><span>This run</span><b>' + METER_COST + ' TMR</b></div>' : '') +
+                    '<div class="tsg-cost"><span>This run</span><b>' + METER_COST + ' TMR (' + METER_USD + ')</b></div>' : '') +
                 '<div class="tsg-actions">' +
                 (canAfford
-                    ? '<button type="button" class="tsg-btn is-primary" id="tsgMeterPay">Run it for ' + METER_COST + ' TMR</button>' +
+                    ? '<button type="button" class="tsg-btn is-primary" id="tsgMeterPay">Run it for ' + METER_COST + ' TMR (' + METER_USD + ')</button>' +
                       '<button type="button" class="tsg-btn is-ghost" id="tsgMeterBuy">Buy more TMR</button>'
                     : '<button type="button" class="tsg-btn is-primary" id="tsgMeterBuy">Buy TMR</button>') +
                 '</div>' +
                 '<a class="tsg-btn is-ghost" id="tsgMeterPro" href="/premium/" style="margin-top:10px">Go unlimited with TMR Pro</a>' +
                 '<p class="tsg-note" style="margin-top:6px">TMR Pro includes unlimited runs on every simulator plus BetLegend Pro, $49.99/month or $500/year.</p>' +
                 '<button type="button" class="tsg-later" id="tsgMeterLater">Not right now</button>' +
-                '<p class="tsg-note">Pay by card. TMR goes straight into your TrustMyRecord wallet. $5 buys 250 TMR.</p>' +
+                '<p class="tsg-note">Pay by card. TMR goes straight into your TrustMyRecord wallet. $5 buys 250 TMR. Purchased TMR never expires, and unused purchased TMR can be refunded from your <a href="/wallet/account/#refund">wallet</a>.</p>' +
                 '</div>';
             document.body.appendChild(overlay);
             modalEl = overlay;

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TMR Credit Refunds Admin | TrustMyRecord</title>
+    <link rel="icon" type="image/png" href="/static/favicon.png">
+    <style>
+        :root { color-scheme: dark; --bg:#060b12; --panel:#0b111b; --panel2:#101826; --line:rgba(148,163,184,0.16); --text:#f8fafc; --muted:#9aa8ba; --cyan:#1D7FE8; --gold:#facc15; --red:#f87171; --green:#4ade80; }
+        * { box-sizing: border-box; }
+        body { margin: 0; background: var(--bg); color: var(--text); font-family: Inter, system-ui, sans-serif; }
+        .bar { padding: 16px 20px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .bar h1 { font-size: 18px; margin: 0; color: var(--cyan); }
+        .bar .badge { padding: 3px 9px; border-radius: 999px; background: rgba(248,113,113,0.16); border: 1px solid rgba(248,113,113,0.45); color: #fecaca; font-size: 10.5px; font-weight: 800; letter-spacing: 0.08em; }
+        .bar a { color: var(--muted); font-size: 12.5px; text-decoration: none; }
+        main { padding: 20px; max-width: 1080px; margin: 0 auto; }
+        .msg { margin-bottom: 14px; font-size: 13px; min-height: 18px; }
+        .msg.err { color: var(--red); } .msg.ok { color: var(--green); }
+        .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 18px 20px; margin-bottom: 18px; }
+        .panel h2 { margin: 0 0 4px; font-size: 15px; }
+        .panel p.note { margin: 0 0 14px; color: var(--muted); font-size: 12.5px; line-height: 1.6; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+        th { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; }
+        td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+        input { background: var(--panel2); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; font-family: inherit; font-size: 12.5px; width: 100%; margin-top: 6px; }
+        button { background: var(--panel2); color: var(--text); border: 1px solid rgba(29,127,232,0.3); border-radius: 8px; padding: 6px 10px; font-weight: 700; font-size: 12px; cursor: pointer; font-family: inherit; margin: 4px 4px 0 0; }
+        .ca { color: var(--gold); font-weight: 800; font-size: 11px; }
+        @media (max-width: 700px) { table, thead, tbody, th, td, tr { display: block; } thead { display: none; } tr { border: 1px solid var(--line); border-radius: 8px; margin-bottom: 10px; padding: 8px; } td { border: none; padding: 5px 4px; } }
+    </style>
+<link rel="stylesheet" href="/static/css/tmr-navbar.css?v=68ec3081d29a">
+<link rel="stylesheet" href="/static/css/tmr-ds.d4d41a955166.css">
+<link rel="stylesheet" href="/static/css/tmr-ds-header.cc364e352e74.css">
+</head>
+<body class="tmr-theme-a tmr-ds-shell">
+    <div class="bar">
+        <h1>TMR Credit Refunds</h1>
+        <span class="badge">ADMIN</span>
+        <a href="/admin/tmr-revenue/">Revenue and liquidity &rarr;</a>
+    </div>
+    <main>
+        <div id="msg" class="msg"></div>
+        <div class="panel">
+            <h2>Queue</h2>
+            <p class="note" id="info">Refunds of unused purchased credits at the price paid, newest order first. Approving debits the credits and pays one card refund per order; it needs the payouts flag. A California request under the threshold is a legal right (Civil Code 1749.5): reject only a duplicate or an error.</p>
+            <table><thead><tr><th>Requested</th><th>Member</th><th>Reference</th><th class="num">TMR</th><th class="num">Amount</th><th>Basis</th><th>Status</th><th>Action</th></tr></thead><tbody id="rows"></tbody></table>
+        </div>
+    </main>
+    <script src="/static/js/config.js?v=430b4bba7b37"></script>
+    <script src="/static/js/backend-api.js?v=e4eaeea31d19"></script>
+    <script>
+    (function () {
+        'use strict';
+        var BASE = '/admin/tmr-credit-refunds';
+        var el = function (id) { return document.getElementById(id); };
+        function esc(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]; }); }
+        function pt(iso) { return iso ? new Date(iso).toLocaleString('en-US', { timeZone: 'America/Los_Angeles', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) + ' PT' : ''; }
+        function say(t, bad) { el('msg').className = 'msg ' + (bad ? 'err' : 'ok'); el('msg').textContent = t; }
+        function actions(r) {
+            var id = esc(r.ref);
+            if (r.status === 'requested') return '<button data-act="approve" data-ref="' + id + '">Approve and pay</button><button data-act="reject" data-ref="' + id + '">Reject</button><input id="note-' + id + '" placeholder="Reason (needed to reject)">';
+            if (r.status === 'failed') return '<button data-act="approve" data-ref="' + id + '">Retry payout</button><button data-act="cancel-failed" data-ref="' + id + '">Restore credits</button><input id="note-' + id + '" placeholder="Note"><div style="color:var(--red);font-size:12px">' + esc(r.failure) + '</div>';
+            return '';
+        }
+        function load() {
+            return window.api.request(BASE).then(function (d) {
+                el('info').textContent += ' Payouts flag: ' + d.flag + '. California threshold: $' + (d.ca_threshold_cents / 100).toFixed(2) + '.';
+                el('rows').innerHTML = (d.queue || []).map(function (r) {
+                    return '<tr><td>' + pt(r.created_at) + '</td><td>' + esc(r.username || r.user_id) + '</td><td>' + esc(r.ref) + '</td><td class="num">' + Number(r.tmr).toLocaleString('en-US') +
+                        '</td><td class="num">$' + (r.cents / 100).toFixed(2) + '</td><td>' + (r.legal_basis === 'ca_civ_1749_5' ? '<span class="ca">CA 1749.5</span>' : 'Discretionary') +
+                        '</td><td>' + esc(r.status) + '</td><td>' + actions(r) + '</td></tr>';
+                }).join('') || '<tr><td colspan="8">No refund requests.</td></tr>';
+            }).catch(function (e) { say(/401|403|unauth|admin/i.test(String(e && e.message)) ? 'Admin sign in required.' : 'Could not load: ' + (e && e.message), true); });
+        }
+        el('rows').addEventListener('click', function (ev) {
+            var act = ev.target.getAttribute('data-act'), ref = ev.target.getAttribute('data-ref'); if (!act) return;
+            var noteEl = document.getElementById('note-' + ref);
+            ev.target.disabled = true;
+            window.api.request(BASE + '/' + encodeURIComponent(ref) + '/' + act, { method: 'POST', body: { note: noteEl ? noteEl.value : '' } })
+                .then(function (r) { say(ref + ': ' + (r.request && r.request.status)); return load(); })
+                .catch(function (e) { say(ref + ': ' + (e && e.message), true); ev.target.disabled = false; });
+        });
+        load();
+    })();
+    </script>
+<script src="/static/js/tmr-ds-nav.5f874d06b872.js"></script>
+</body>
+</html>

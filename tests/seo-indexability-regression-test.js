@@ -272,6 +272,8 @@ console.log('\nnoindex allowlist');
     SITE + '/admin/tmr-revenue/',
     // Admin view of the 50/50 revenue reserve (RESERVE_20261012). Admin only, same as tmr-revenue.
     SITE + '/admin/tmr-revenue-reserve/',
+    // Admin queue for refunds of unused purchased credits (CREDIT_REFUND_20261012). Admin only.
+    SITE + '/admin/tmr-credit-refunds/',
     // Member cash redemption screen, built HIDDEN on the site owner's order (2026-10-08: "users
     // must not see or access live redemption yet"). Linked from nowhere; it shows only "TMR has
     // no cash value" until the backend reports LIVE. Remove from this list when it launches.

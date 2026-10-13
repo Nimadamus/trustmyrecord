@@ -126,14 +126,19 @@
                 straight into your wallet.</p>
             <div class="gt-packs" id="packs"></div>
             <p class="gt-msg" id="buyMsg"></p>
+            <p class="sub" id="refundTerms" style="margin-top:12px">Refund terms: purchased TMR never expires. You can ask for a refund of
+                unused purchased TMR, at the price you paid, from <a href="/wallet/account/#refund">your wallet</a>. Refunds go back to the
+                card you paid with. California residents get a cash refund of a balance under $15 on request. TMR you have already used, and
+                free or reward TMR, cannot be refunded.</p>
         </div>
     </section>
 
     <section class="gt-card">
         <h2>About buying TMR</h2>
         <div class="gt-notice">TMR you buy is for use on TrustMyRecord: simulator runs, BetLegend Pro reports,
-            tips and the other features listed above. It stays in your TrustMyRecord wallet and cannot be cashed
-            out. It is not an investment and we make no claim about what it is worth.</div>
+            tips and the other features listed above. It stays in your TrustMyRecord wallet and cannot be sold,
+            transferred or withdrawn; the only way back to money is a refund of unused purchased TMR (see the refund terms above).
+            Every TMR you buy costs $0.02, so a 5 TMR simulator run costs $0.10. It is not an investment and we make no claim about what it is worth.</div>
     </section>
 
     <section class="gt-card" id="ordersCard" hidden>
@@ -183,7 +188,7 @@
         ];
         $('reach').innerHTML = items.map(function (i) {
             var can = balance >= i.cost;
-            return '<li><span>' + esc(i.label) + ' (' + n(i.cost) + ' TMR)</span><span class="' +
+            return '<li><span>' + esc(i.label) + ' (' + n(i.cost) + ' TMR, $' + (i.cost * 5 / 250).toFixed(2) + ')</span><span class="' +
                    (can ? 'yes">within reach' : 'no">' + n(i.cost - balance) + ' TMR short') + '</span></li>';
         }).join('');
     }
