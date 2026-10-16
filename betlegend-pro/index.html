@@ -49,8 +49,7 @@
       ],
       "offers": [
         { "@type": "Offer", "name": "Monthly", "price": "49.00", "priceCurrency": "USD" },
-        { "@type": "Offer", "name": "Annual", "price": "99.00", "priceCurrency": "USD" },
-        { "@type": "Offer", "name": "Lifetime", "price": "349.00", "priceCurrency": "USD" }
+        { "@type": "Offer", "name": "Annual", "price": "399.00", "priceCurrency": "USD" }
       ]
     }
     </script>
@@ -898,7 +897,7 @@
         <a class="blp-btn blp-btn--primary blp-btn--lg" href="/premium/">See TMR Pro <span class="arw" aria-hidden="true">&rarr;</span></a>
     </section>
     <p style="text-align:center;font-weight:700;margin:0 0 14px">BetLegend Pro only</p>
-    <section class="blp-plans">
+    <section class="blp-plans" style="max-width:680px;margin-left:auto;margin-right:auto">
         <article class="blp-plan">
             <div class="blp-plan-name">Monthly</div>
             <div class="blp-price"><span class="price-amt">$49</span><span class="blp-price-per">/month</span></div>
@@ -913,35 +912,22 @@
             <p class="blp-plan-foot">Renews at $49/month until you cancel.</p>
         </article>
 
-        <article class="blp-plan blp-plan--featured">
+        <!-- BLP_ANNUAL_399_20261016: shown only once the live plan catalog says annual is $399, so the page can never show a price the checkout does not charge. -->
+        <article class="blp-plan blp-plan--featured" data-plan-card="annual" hidden>
             <span class="blp-plan-badge">Best Value</span>
             <div class="blp-plan-name">Annual</div>
-            <div class="blp-price"><span class="price-amt">$99</span><span class="blp-price-per">/year</span></div>
-            <p class="blp-price-sub">Works out to <strong>$8.25/month</strong>, <span class="save">saving $489 a year</span> versus monthly.</p>
+            <div class="blp-price"><span class="price-amt">$399</span><span class="blp-price-per">/year</span></div>
+            <p class="blp-price-sub">Works out to <strong>$33.25/month</strong>, <span class="save">saving $189 a year</span> versus monthly.</p>
             <ul class="blp-plan-feats">
                 <li><span class="tick">&#10003;</span> Everything in Monthly</li>
-                <li><span class="tick">&#10003;</span> Ten months free versus paying monthly</li>
+                <li><span class="tick">&#10003;</span> Almost four months free versus paying monthly</li>
                 <li><span class="tick">&#10003;</span> One charge a year, not twelve</li>
                 <li><span class="tick">&#10003;</span> Cancel anytime from your account</li>
             </ul>
             <button class="blp-btn blp-btn--primary blp-btn--block" data-buy="annual" type="button">Choose Annual</button>
-            <p class="blp-plan-foot">Renews at $99/year until you cancel.</p>
+            <p class="blp-plan-foot">Renews at $399/year until you cancel.</p>
         </article>
 
-        <article class="blp-plan blp-plan--launch">
-            <span class="blp-plan-badge">Limited launch offer</span>
-            <div class="blp-plan-name">Lifetime</div>
-            <div class="blp-price"><span class="price-amt">$349</span><span class="blp-price-per">once</span></div>
-            <p class="blp-price-sub">One payment, no renewal. Offered during launch; it won't be part of the permanent line-up.</p>
-            <ul class="blp-plan-feats">
-                <li><span class="tick">&#10003;</span> Everything in Annual</li>
-                <li><span class="tick">&#10003;</span> Access never expires</li>
-                <li><span class="tick">&#10003;</span> Nothing to cancel, ever</li>
-                <li><span class="tick">&#10003;</span> Cheaper than Annual from year three on</li>
-            </ul>
-            <button class="blp-btn blp-btn--block" data-buy="lifetime" type="button">Choose Lifetime</button>
-            <p class="blp-plan-foot">Single charge. No recurring billing.</p>
-        </article>
     </section>
 
     <div class="blp-note blp-note--err" id="buyError" hidden style="max-width:680px;margin:20px auto 0"></div>
@@ -964,8 +950,8 @@
         <details class="blp-sec"><summary>What data is it actually using?</summary><div class="blp-sec-body"><p>A database of graded games across MLB, NBA, NFL and NHL with source-backed closing numbers. Estimated totals and synthetic lines are excluded from results. Soccer, first-half/quarter/first-five-inning markets and NRFI/YRFI are not covered because there is no historical data for them here.</p></div></details>
         <details class="blp-sec"><summary>Why is a filter switched off for my sport?</summary><div class="blp-sec-body"><p>Because it would lie if it were on. MLB and NHL have no varying spread, because the run line and puck line are fixed at ±1.5, so a spread-range condition cannot separate anything there. NFL roof, surface, rest and quarterback readings only exist from 1999 on. In each case the tool states which of those it is rather than quietly returning zero games.</p></div></details>
         <details class="blp-sec"><summary>How current is it?</summary><div class="blp-sec-body"><p>The database covers completed, graded games and is refreshed on a schedule. It is a historical research tool, not a live odds feed. It will not price tonight's game for you.</p></div></details>
-        <details class="blp-sec"><summary>What's the difference between the plans?</summary><div class="blp-sec-body"><p>Nothing but the billing. Monthly, annual and lifetime all unlock the same unlimited access to all four tools and the full report library. Annual is the cheapest per month; lifetime is a single payment offered during launch.</p></div></details>
-        <details class="blp-sec"><summary>Can I cancel?</summary><div class="blp-sec-body"><p>Yes. Monthly and annual can be cancelled at any time from your account. You keep access until the end of the period you already paid for, and are not billed again. Lifetime has no recurring billing, so there is nothing to cancel.</p></div></details>
+        <details class="blp-sec"><summary>What's the difference between the plans?</summary><div class="blp-sec-body"><p>Nothing but the billing. Monthly and annual unlock the same unlimited access to all four tools and the full report library. Annual is the cheaper per month.</p></div></details>
+        <details class="blp-sec"><summary>Can I cancel?</summary><div class="blp-sec-body"><p>Yes. Monthly and annual can be cancelled at any time from your account. You keep access until the end of the period you already paid for, and are not billed again.</p></div></details>
         <details class="blp-sec"><summary>Do I need TMR Coin?</summary><div class="blp-sec-body"><p>No. Plans are bought with a card through Stripe. TMR Coin is the free on-ramp instead: you get one free report every day, and beyond that each report costs 5 TMR Coin if you'd rather not subscribe. Subscribers are never charged coin.</p></div></details>
         <details class="blp-sec"><summary>Is this gambling?</summary><div class="blp-sec-body"><p>No. TrustMyRecord is not a sportsbook, no real money is wagered here, and BetLegend Pro is an analysis tool. If betting has stopped being fun, <a href="https://www.ncpgambling.org/help-treatment/" rel="noopener" target="_blank">help is available</a>.</p></div></details>
     </section>
@@ -1150,6 +1136,18 @@
     }
 
     // ------------------------------------------------------- checkout
+
+    // BLP_ANNUAL_399_20261016: reveal the annual card only when the live
+    // catalog prices it at $399. Lifetime is no longer sold.
+    (async function () {
+        try {
+            var cat = await window.api.getBetLegendProPlans();
+            var annual = cat && cat.plans && cat.plans.find(function (p) { return p.key === 'annual'; });
+            if (annual && annual.price_cents === 39900 && annual.configured) {
+                document.querySelectorAll('[data-plan-card="annual"]').forEach(function (el) { el.hidden = false; });
+            }
+        } catch (e) { /* monthly stays on offer */ }
+    })();
 
     document.querySelectorAll('[data-buy]').forEach(function (btn) {
         btn.addEventListener('click', async function () {

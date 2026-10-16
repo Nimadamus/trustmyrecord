@@ -118,16 +118,16 @@ test.describe('a new visitor', () => {
     expect(shown, 'the headline dataset size must be a real six-figure count')
       .toBeGreaterThan(100000);
 
-    // $49 / $99 / $349, the same three figures betlegendpicks.com quotes and
-    // the same three the Stripe prices behind these buttons carry (4900, 9900,
-    // 34900 in both accounts). This assertion still said $19 and $149 long
-    // after the page and the billing API moved, so it was pointing at the old
-    // offer and would have argued for putting it back.
-    for (const price of ['$49', '$99', '$349']) {
-      await expect(page.getByText(price, { exact: false }).first()).toBeVisible();
+    // 2026-10-16 (Nima): monthly $49, annual $399, no lifetime. The annual
+    // card appears only once the live catalog prices annual at $399.
+    await expect(page.getByText('$49', { exact: false }).first()).toBeVisible();
+    await expect(page.locator('[data-buy="lifetime"]')).toHaveCount(0);
+    const annualCard = page.locator('[data-plan-card="annual"]');
+    if (await annualCard.isVisible()) {
+      await expect(annualCard.getByText('$399', { exact: false }).first()).toBeVisible();
+      // Derived, so the marketing can never drift from what is charged.
+      await expect(page.getByText('$33.25/month')).toBeVisible();
     }
-    // Derived, so the marketing can never drift from what is charged.
-    await expect(page.getByText('$8.25/month')).toBeVisible();
   });
 
   test('the app itself is gated, with no way past it from the client', async ({ page }) => {
