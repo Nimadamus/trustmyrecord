@@ -937,6 +937,13 @@ def _sync_sitemap(root, store):
         loc = SITE + href
         if not href or not os.path.exists(page) or loc in seen:
             continue
+        # SUPERSEDED_SITEMAP_20261016: a featured page later rebuilt as a copy canonicalised TO another URL (Notre Dame at
+        # BYU, Oct 16: the Matchup of the Day piece took over /ncaaf/irish-cougars-carr-vs-bachmeier/) stays served but
+        # leaves the sitemap, the same contract build_matchup_articles.py keeps for its superseded pages.
+        with open(page, encoding="utf-8", errors="replace") as fh:
+            canon = re.search(r"<link[^>]+rel=[\"']canonical[\"'][^>]*href=[\"']([^\"']+)", fh.read(), re.I)
+        if canon and canon.group(1).rstrip("/") != loc.rstrip("/"):
+            continue
         seen.add(loc)
         rows.append("  <url><loc>%s</loc><lastmod>%s</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>" % (loc, today))
     block = SITEMAP_BEGIN + "\n" + ("\n".join(rows) + "\n" if rows else "") + SITEMAP_END
