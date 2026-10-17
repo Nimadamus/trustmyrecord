@@ -118,6 +118,17 @@
     var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
     var odds = function (o) { return o == null ? '' : (o > 0 ? '+' + o : String(o)); };
     var signed = function (n) { return n == null ? 'n/a' : (n > 0 ? '+' : '') + Number(n).toFixed(2); };
+    /* SPORTSBOOK_PROOF_20261016 (Nima): the proven group's combined graded record on a game,
+       straight from /pro/watchdog/games. Shown as it is, good or bad, with its window. */
+    var WINDOW = { since: 'Sep 14' };
+    function n0(v) { return Number(v || 0).toLocaleString('en-US'); }
+    function proofText(g) {
+        var r = g && g.proven_record;
+        if (!r || !g.proven) return '';
+        var u = Number(g.proven_units || 0);
+        return 'The ' + g.proven + ' proven handicapper' + (g.proven === 1 ? '' : 's') + ' on this game: combined ' + n0(r.w) + '-' + n0(r.l) + (r.p ? '-' + n0(r.p) : '')
+            + ', ' + (u > 0 ? '+' : u < 0 ? '&minus;' : '') + Math.abs(u).toFixed(1) + 'u since ' + WINDOW.since + ' (1u per pick, graded by TMR)';
+    }
     function kick(iso) { try { return new Date(iso).toLocaleString('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' }) + ' PT'; } catch (e) { return ''; } }
 
     /* ------------------------------------------------------------ styles */
@@ -131,6 +142,9 @@
             '.tpf-chipline{display:block;width:100%;padding:0 12px 6px;box-sizing:border-box}',
             '.tpf-chipline .tpf-chip{margin:2px 0 4px;max-width:100%;white-space:normal}',
             '.tpf-chip b{color:#fff}',
+            '.tpf-proof{display:block;margin-top:3px;font-weight:600;font-size:11.5px;color:#cbd8e6}',
+            '.tpf-sbhead{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;margin:0 0 12px;padding:10px 14px;border-radius:12px;border:1px solid rgba(245,197,66,.45);background:rgba(245,197,66,.08);color:#dce8f5;text-decoration:none;font:600 14px/1.45 Inter,system-ui,sans-serif}',
+            '.tpf-sbhead b{color:#fff}.tpf-sbhead u{color:#F5C542;font-weight:800}.tpf-sbhead:hover{border-color:#F5C542}',
             '.tpf-ov{position:fixed;inset:0;z-index:99990;background:rgba(3,10,20,.72);display:flex;align-items:center;justify-content:center;padding:16px}',
             '.tpf-card{width:min(560px,100%);max-height:calc(100vh - 32px);overflow:auto;background:#0b1a2e;color:#dce8f5;border:1px solid rgba(140,196,255,.25);border-radius:16px;padding:22px;box-shadow:0 30px 80px -20px rgba(0,0,0,.8);font:15px/1.5 Inter,system-ui,sans-serif}',
             '.tpf-card h3{margin:0 0 6px;font:800 21px/1.2 Barlow,Inter,sans-serif;color:#fff}',
@@ -188,7 +202,7 @@
         document.body.appendChild(ov);
         return ov;
     }
-    function proHref(component, hash) { return '/premium/?from=' + encodeURIComponent(component || 'unknown') + (hash || '#pricing'); }
+    function proHref(component, hash) { var c = encodeURIComponent(component || 'unknown'); return '/premium/?from=' + c + '&src=' + c + (hash || '#pricing'); }
     function proCta(component, label) {
         return '<a class="tpf-btn gold" data-tpf-cta="' + esc(component) + '" href="' + proHref(component) + '">' + esc(label || 'Unlock Handicapper Watchdog') + '</a>';
     }
@@ -236,10 +250,24 @@
         var count = g ? g.handicappers : (opts.pending || 1);
         var head = '<div class="tpf-k">Handicapper Watchdog &middot; live</div><h3>' + what + '</h3>'
             + '<p class="tpf-muted">' + (g ? count + ' handicapper' + (count === 1 ? ' outside TMR has a' : 's outside TMR have') + ' pending pick' + (g.picks === 1 ? '' : 's') + ' on this game' + (g.proven ? ', ' + g.proven + ' of them proven (25+ graded picks)' : '') + '.'
-                : count + ' pending pick' + (count === 1 ? '' : 's') + ' right now.') + ' Collected from Covers, X, Reddit and other public sources, with each handicapper&#39;s graded record.</p>';
+                : count + ' pending pick' + (count === 1 ? '' : 's') + ' right now.') + ' Collected from Covers, X, Reddit and other public sources, with each handicapper&#39;s graded record.</p>'
+            + (g && proofText(g) ? '<p class="tpf-muted" style="margin-top:-2px">' + proofText(g) + '.</p>' : '');
         var ov = openModal(head + '<div id="tpfBody"><p class="tpf-muted">Loading&hellip;</p></div>');
         var body = ov.querySelector('#tpfBody');
         myStatus().then(function (st) {
+            if (st.pro && g) {
+                /* PRO_INLINE_20261016: a Pro member sees every pending pick on the game. */
+                return authGet('/pro/pending-board').then(function (b) {
+                    var rows = [];
+                    (b.handicappers || []).forEach(function (c) {
+                        (c.picks || []).forEach(function (p) {
+                            if (findGame([{ home: p.home, away: p.away }], g.home, g.away)) rows.push(revealCard({ handicapper: c, pick: p }));
+                        });
+                    });
+                    body.innerHTML = (rows.length ? rows.join('') : '<p>No pending pick is open for this game right now.</p>')
+                        + '<div class="tpf-row"><a class="tpf-btn gold" href="' + proHref(comp, '#board') + '">Open the full Watchdog board</a></div>';
+                });
+            }
             if (st.pro) {
                 return authPost('/pro/watchdog/reveal', g ? { home: g.home, away: g.away, source: comp } : { key: opts.key, source: comp }).then(function (r) {
                     body.innerHTML = r.reveal ? revealCard(r.reveal) + '<div class="tpf-row"><a class="tpf-btn gold" href="' + proHref(comp, '#board') + '">Open the full Watchdog board</a></div>'
@@ -304,7 +332,9 @@
                     var btn = document.createElement('button');
                     btn.type = 'button';
                     btn.className = 'tpf-chip';
-                    btn.innerHTML = '<span>&#128274; <b>' + g.handicappers + '</b> handicapper' + (g.handicappers === 1 ? ' outside TMR has a pending pick' : 's outside TMR have pending picks') + ' on this game' + (g.proven ? ' &middot; <b>' + g.proven + ' proven</b> (25+ graded picks)' : '') + ' &middot; <u>See who and what they picked</u></span>';
+                    var proof = proofText(g);
+                    btn.innerHTML = '<span>&#128274; <b>' + g.handicappers + '</b> handicapper' + (g.handicappers === 1 ? ' outside TMR has a pending pick' : 's outside TMR have pending picks') + ' on this game' + (g.proven ? ' &middot; <b>' + g.proven + ' proven</b> (25+ graded picks)' : '') + ' &middot; <u>See who and what they picked</u>'
+                        + (proof ? '<small class="tpf-proof">' + proof + '</small>' : '') + '</span>';
                     btn.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); preview({ game: g, component: 'picks_board_game' }); });
                     var wrap = document.createElement('div');
                     wrap.className = 'tpf-chipline';
@@ -315,9 +345,28 @@
                 });
             }
             paint();
+            mountBoardHeader(host);
             new MutationObserver(function () { clearTimeout(paint.t); paint.t = setTimeout(paint, 250); }).observe(host.parentNode || host, { childList: true, subtree: true });
         }).catch(function () { });
         return true;
+    }
+
+    /* SPORTSBOOK_HEADER_20261016 (Nima): one text line above the board, live count, no price. */
+    function mountBoardHeader(host) {
+        if (document.getElementById('tpfSbHead')) return;
+        getJSON('/pro/pending-board/summary').then(function (sm) {
+            var n = sm && sm.handicappers;
+            if (!n || document.getElementById('tpfSbHead')) return;
+            var a = document.createElement('a');
+            a.id = 'tpfSbHead';
+            a.className = 'tpf-sbhead';
+            a.href = proHref('sportsbook_header', '#board');
+            a.setAttribute('data-tpf-cta', 'sportsbook_header');
+            a.innerHTML = '<span class="tpf-dot"></span><b>' + n0(n) + '</b> handicapper' + (n === 1 ? ' outside TMR has a pick' : 's outside TMR have picks') + ' up on games that haven&#39;t started. <u>See the Watchdog board</u>';
+            host.parentNode.insertBefore(a, host);
+            wireCtas(a.parentNode);
+            once('tmr_pro_impression', { component: 'sportsbook_header' });
+        }).catch(function () { });
     }
 
     /* ------------------------------------------------------------ homepage */
