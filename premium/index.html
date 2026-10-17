@@ -884,7 +884,7 @@
                         <div class="pxh-stat"><strong>24/7</strong><span>monitored in the cloud</span></div>
                         <div class="pxh-stat"><strong data-pxh="platforms">&nbsp;</strong><span>sources watched</span></div>
                     </div>
-                    <p class="pxh-panel-foot">Updated <b data-pxh-ago="last_capture_at">moments ago</b>. Every number is read live from the Watchdog database.</p>
+                    <p class="pxh-panel-foot">Updated <b data-pxh-ago="last_capture_at">&hellip;</b> Every number is read live from the Watchdog database.</p>
                 </aside>
             </div>
 
@@ -1222,6 +1222,21 @@
         </section>
 
         <!-- ================================================== the pricing -->
+        <!-- PRO_PERFORMANCE_20261016: graded record of the proven handicappers. Hidden unless
+             /api/pro/watchdog/performance answers (public only once Nima approves the numbers).
+             Every figure is read from the API; nothing is typed here. -->
+        <section class="pro-section" id="performance" hidden>
+            <div class="pro-wrap">
+                <div class="pro-section-head">
+                    <span class="pxs-k">The record, as graded</span>
+                    <h2>How the proven handicappers on the board have done</h2>
+                    <p>Every graded pick by a handicapper who already had 25 or more graded picks before that game. Winners and losers, nothing filtered out. 1 unit risked per pick.</p>
+                </div>
+                <div class="pperf-grid" id="pperfGrid"></div>
+                <p class="pperf-note" id="pperfNote"></p>
+            </div>
+        </section>
+
         <section class="pro-section" id="pricing">
             <div class="pro-wrap">
                 <div class="pro-section-head">
@@ -2009,7 +2024,7 @@
     </script>
 <script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-ds-nav.9d13a2b56a0c.js"></script>
     <script src="/static/js/tmr-live-chat.js?v=816ec6f0a118"></script>
-    <script src="/static/js/tmr-pro-hero.008435732044.js" defer></script>
+    <script src="/static/js/tmr-pro-hero.9ab0ca7f824c.js" defer></script>
 <style id="dark-text-fix-20260913">
 /* DARK_TEXT_ON_DARK_20260913: the light theme pass recoloured this text navy but left its
    surface dark, so it read navy on navy on every device. Light text restored. */
@@ -2053,5 +2068,91 @@ body.tmr-light .wdx .px-explore { background: #FFFFFF !important; color: #07182A
 body.tmr-light .px-watch .pro-cta { background: #F5C542 !important; border-color: #F5C542 !important; color: #1A1400 !important; }
 </style>
 <link rel="stylesheet" href="/static/css/tmr-pro-redesign.f5af58ae59a9.css">
+<style>
+/* PRO_PAGE_COMPACT_20261016 + PRO_PERFORMANCE_20261016 */
+.pperf-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;max-width:880px;margin:0 auto}
+.pperf-card{border:1px solid rgba(15,35,70,.12);border-radius:16px;padding:20px;background:#fff;box-shadow:0 10px 30px -18px rgba(10,30,60,.35)}
+.pperf-card h3{margin:0 0 4px;font:800 13px/1.2 Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5b6b80}
+.pperf-rec{font:800 34px/1.1 Barlow,Inter,sans-serif;color:#0b1a2e;font-variant-numeric:tabular-nums;margin:6px 0}
+.pperf-row{display:flex;flex-wrap:wrap;gap:6px 16px;font:600 14px/1.5 Inter,system-ui,sans-serif;color:#33465e}
+.pperf-row b{color:#0b1a2e}.pperf-row b.pperf-neg{color:#b42318}.pperf-row b.pperf-pos{color:#067647}
+.pperf-note{max-width:880px;margin:14px auto 0;text-align:center;color:#5b6b80;font:13px/1.55 Inter,system-ui,sans-serif}
+.pcx-more{display:none}
+@media (max-width:640px){
+  .pperf-grid{grid-template-columns:1fr}
+  .pcx .pcx-hide{display:none}
+  .pcx .px-list li.pcx-x,.pcx .pro-list li.pcx-x{display:none}
+  .pcx .is-open li.pcx-x{display:revert}
+  .pcx .pcx-more{display:inline-flex;margin:8px 0 2px;padding:8px 12px;border-radius:10px;border:1px solid rgba(140,196,255,.35);background:transparent;color:#8cc4ff;font:700 13px Inter,system-ui,sans-serif;cursor:pointer}
+  .pcx .px-card .pcx-more{color:#1d4ed8;border-color:rgba(29,78,216,.3)}
+  .pcx .is-open > .pcx-more{display:none}
+}
+</style>
+<script>
+(function () {
+  'use strict';
+  var API = 'https://trustmyrecord-api.onrender.com/api';
+  try { if (window.TMR_SESSION && window.TMR_SESSION.api) API = window.TMR_SESSION.api; } catch (e) {}
+  function ev(name, p) { try { if (typeof window.gtag === 'function') window.gtag('event', name, p || {}); } catch (e) {} }
+  /* Compact mobile layout: same content stays in the DOM (nothing removed for crawlers);
+     long detail is folded behind a button on phones only. */
+  function compact() {
+    if (!window.matchMedia || !window.matchMedia('(max-width:640px)').matches) return;
+    document.body.classList.add('pcx');
+    function moreBtn(label, host) {
+      var b = document.createElement('button'); b.type = 'button'; b.className = 'pcx-more'; b.textContent = label;
+      b.addEventListener('click', function () { host.classList.add('is-open'); ev('pro_page_expand', { section: label }); });
+      return b;
+    }
+    /* The Watchdog detail blocks (how it works, sources, inside a profile) fold into one button;
+       the free vs Pro comparison stays open. */
+    var blocks = [].filter.call(document.querySelectorAll('#tools .wdx-block'), function (blk) { return !blk.querySelector('.pro-split'); });
+    if (blocks.length) {
+      var holder = document.createElement('div');
+      var btn = moreBtn('How the Watchdog works, its sources and what is in every profile', holder);
+      btn.style.display = 'inline-flex';
+      btn.addEventListener('click', function () { blocks.forEach(function (x) { x.classList.remove('pcx-hide'); }); btn.parentNode.removeChild(btn); });
+      blocks.forEach(function (x) { x.classList.add('pcx-hide'); });
+      blocks[0].parentNode.insertBefore(btn, blocks[0]);
+    }
+    [].forEach.call(document.querySelectorAll('#tools .px-list, #tools .pro-list'), function (ul) {
+      var lis = ul.querySelectorAll('li');
+      if (lis.length <= 3) return;
+      for (var i = 3; i < lis.length; i++) lis[i].classList.add('pcx-x');
+      ul.parentNode.insertBefore(moreBtn('Show all ' + lis.length, ul.parentNode), ul.nextSibling);
+    });
+  }
+  /* Graded performance: shown exactly as the API returns it, losing or winning. */
+  function n0(v) { return Number(v || 0).toLocaleString('en-US'); }
+  function sgn(v, d) { v = Number(v || 0); return (v > 0 ? '+' : v < 0 ? '\u2212' : '') + Math.abs(v).toFixed(d); }
+  function card(title, w) {
+    if (!w || !w.picks) return '';
+    var cls = w.units > 0 ? 'pperf-pos' : w.units < 0 ? 'pperf-neg' : '';
+    return '<div class="pperf-card"><h3>' + title + '</h3>'
+      + '<div class="pperf-rec">' + n0(w.w) + '-' + n0(w.l) + (w.p ? '-' + n0(w.p) : '') + '</div>'
+      + '<div class="pperf-row"><span>Units <b class="' + cls + '">' + sgn(w.units, 1) + 'u</b></span><span>ROI <b class="' + cls + '">' + sgn(w.roi_pct, 2) + '%</b></span><span>Win rate <b>' + (w.win_pct == null ? 'n/a' : Number(w.win_pct).toFixed(1) + '%') + '</b></span></div>'
+      + '<div class="pperf-row" style="margin-top:6px"><span><b>' + n0(w.picks) + '</b> graded picks</span><span><b>' + n0(w.handicappers) + '</b> handicappers</span></div></div>';
+  }
+  function perf() {
+    var sec = document.getElementById('performance');
+    if (!sec) return;
+    fetch(API + '/pro/watchdog/performance', { cache: 'no-store' }).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); }).then(function (d) {
+      var a = d.last_30_days, b = d.since_tracking;
+      if (!a || !a.picks) return;
+      var since = new Date(d.method.tracking_since + 'T12:00:00Z').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      document.getElementById('pperfGrid').innerHTML = card('Last 30 days', a) + card('Since tracking began, ' + since, b);
+      var asof = new Date(d.generated_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' });
+      document.getElementById('pperfNote').innerHTML = 'Graded by the TMR Watchdog. Settled picks only: ' + n0(d.pending && d.pending.picks)
+        + ' pending picks are not graded yet and are not in these numbers. Graded at the price the handicapper posted where the source gives one ('
+        + n0(a.at_posted_price) + ' of the last 30 days), otherwise at TMR&#39;s reference price (' + n0(a.at_reference_price)
+        + '). Past results do not predict future results. Updated ' + asof + ' PT.';
+      sec.hidden = false;
+      ev('tmr_pro_impression', { component: 'pro_performance' });
+    }).catch(function () { });
+  }
+  function start() { compact(); perf(); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+})();
+</script>
 </body>
 </html>
