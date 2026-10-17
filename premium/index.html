@@ -419,6 +419,8 @@
         .pro-welcome { margin-top: 16px; padding: 16px; border-radius: 14px; border: 1px solid #1D7A46; background: var(--pro-surface); text-align: left; }
         .pro-welcome h2 { margin: 0 0 6px; font-size: 1.3rem; color: var(--pro-ink); }
         .pro-welcome p { margin: 0 0 12px; color: var(--pro-body); }
+.pd-onboard li[data-k] a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+.pd-onboard li.pd-onboard-lead { font-weight: 600; }
         .pro-links { display: flex; flex-wrap: wrap; gap: 8px; }
         .pro-links a { padding: 8px 12px; border-radius: 10px; border: 1px solid var(--pro-line); background: var(--pro-page); color: var(--pro-ink); font-weight: 700; font-size: .9rem; text-decoration: none; }
         .pro-links a:hover { border-color: var(--pro-brand); }
@@ -902,11 +904,11 @@
                     <p id="proWelcomeText">Everything in TMR Pro is unlocked on your account. Open any tool below.</p>
                 </div>
                 <ol class="pd-onboard" id="pdOnboard" hidden>
-                    <li><b>Open the Watchdog</b> to see the pending picks outside handicappers have posted for upcoming games.</li>
-                    <li><b>Use Bet Legend Pro</b> for deep historical matchup and situation research.</li>
-                    <li><b>Run the simulators</b> as often as you like. There is no daily limit on your account.</li>
-                    <li><b>Open TrendSpotter</b> to see the units, ROI and prices behind any trend.</li>
-                    <li><b>Build models</b> in Model Builder and track up to 15 at once.</li>
+                    <li data-k="watchdog"><a href="#board"><b>Open the Watchdog</b></a> to see the pending picks outside handicappers have posted for upcoming games.</li>
+                    <li data-k="blp"><a href="/betlegend-pro/app/"><b>Use Bet Legend Pro</b></a> for deep historical matchup and situation research.</li>
+                    <li data-k="sims"><a href="/sports-simulators/"><b>Run the simulators</b></a> as often as you like. There is no daily limit on your account.</li>
+                    <li data-k="trends"><a href="/trendspotter/"><b>Open TrendSpotter</b></a> to see the units, ROI and prices behind any trend.</li>
+                    <li data-k="models"><a href="/model-builder/"><b>Build models</b></a> in Model Builder and track up to 15 at once.</li>
                     <li class="pd-onboard-x"><button type="button" id="pdOnboardDone">Got it</button></li>
                 </ol>
                 <div class="pd-grid">
@@ -1469,6 +1471,9 @@
         function ga(name, params) {
             var p = params || {};
             try { var fs = JSON.parse(localStorage.getItem('tmr_funnel_src') || 'null'); if (fs && Date.now() - fs.at < 7 * 864e5) { p.funnel_source = fs.src; p.funnel_page = fs.page; } } catch (e) { }
+            if (name === 'pro_checkout_click' || name === 'purchase') {
+                try { var ft = JSON.parse(localStorage.getItem('tmr_first_touch') || 'null'); if (ft && ft.landing) p.first_landing = String(ft.landing).split('?')[0].slice(0, 100); } catch (e) { }
+            }
             window.dataLayer = window.dataLayer || [];
             if (typeof window.gtag !== 'function') window.gtag = function () { window.dataLayer.push(arguments); };
             try { window.gtag('event', name, p); if (FUNNEL_ALIAS[name]) window.gtag('event', FUNNEL_ALIAS[name], Object.assign({ component: 'pro_page' }, p)); } catch (e) { }
@@ -1765,12 +1770,28 @@
         document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closePanel(); });
         document.addEventListener('click', function (e) { var p = document.getElementById('wdPanel'); if (p && !p.hidden && e.target === p) closePanel(); });
         /* First Pro visit (or right after purchase): a five step start list, dismissed once. */
+        function onboardLead() {
+            var src = '', land = '';
+            try { var fs = JSON.parse(localStorage.getItem('tmr_funnel_src') || 'null'); if (fs && fs.src) src = String(fs.src); } catch (e) { }
+            try { var ft = JSON.parse(localStorage.getItem('tmr_first_touch') || 'null'); if (ft && ft.landing) land = String(ft.landing); } catch (e) { }
+            if (/^sim_/.test(src) || (!src && /simulator/.test(land))) return 'sims';
+            if (src) return 'watchdog';
+            return '';
+        }
         function showOnboarding(force) {
             var el = document.getElementById('pdOnboard');
             if (!el) return;
             var seen = false;
             try { seen = localStorage.getItem('tmr_pro_onboarded') === '1'; } catch (e) { }
             if (seen && !force) return;
+            var lead = onboardLead();
+            var first = lead && el.querySelector('li[data-k="' + lead + '"]');
+            if (first && first !== el.firstElementChild) el.insertBefore(first, el.firstElementChild);
+            if (first) first.classList.add('pd-onboard-lead');
+            [].forEach.call(el.querySelectorAll('li[data-k] a'), function (a, i) {
+                a.addEventListener('click', function () { ga('pro_onboard_click', { step: a.parentNode.getAttribute('data-k'), position: i + 1, lead: lead || 'none', fresh: force ? 'yes' : 'no' }); });
+            });
+            ga('pro_onboard_view', { lead: lead || 'none', fresh: force ? 'yes' : 'no' });
             el.hidden = false;
             var b = document.getElementById('pdOnboardDone');
             if (b) b.onclick = function () { el.hidden = true; try { localStorage.setItem('tmr_pro_onboarded', '1'); } catch (e) { } };
