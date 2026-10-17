@@ -1232,7 +1232,7 @@
                 <div class="pro-section-head">
                     <span class="pxs-k">The record, as graded</span>
                     <h2>How the proven handicappers on the board have done</h2>
-                    <p>Every graded pick by a handicapper who already had 25 or more graded picks before that game. Winners and losers, nothing filtered out. 1 unit risked per pick.</p>
+                    <p>Every graded pick by a handicapper outside TMR, tracked by the Watchdog, who already had 25 or more graded picks on games before that one. Winners and losers, nothing filtered out. 1 unit risked per pick. This is a record of what already happened, not a forecast.</p>
                 </div>
                 <div class="pperf-grid" id="pperfGrid"></div>
                 <p class="pperf-note" id="pperfNote"></p>
@@ -2162,7 +2162,9 @@ body.tmr-light .px-watch .pro-cta { background: #F5C542 !important; border-color
       var a = d.last_30_days, b = d.since_tracking;
       if (!a || !a.picks) return;
       var since = new Date(d.method.tracking_since + 'T12:00:00Z').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      document.getElementById('pperfGrid').innerHTML = card('Last 30 days', a) + card('Since tracking began, ' + since, b);
+      var md = function (t) { return new Date(t).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'America/Los_Angeles' }); };
+      var gen = Date.parse(d.generated_at);
+      document.getElementById('pperfGrid').innerHTML = card('Last 30 days, ' + md(gen - 30 * 864e5) + ' to ' + md(gen), a) + card('Since tracking began, ' + since + ' to ' + md(gen), b);
       var asof = new Date(d.generated_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' });
       document.getElementById('pperfNote').innerHTML = 'Graded by the TMR Watchdog. Settled picks only: ' + n0(d.pending && d.pending.picks)
         + ' pending picks are not graded yet and are not in these numbers. Graded at the price the handicapper posted where the source gives one ('
