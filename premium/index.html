@@ -2151,6 +2151,7 @@ body.tmr-light .px-watch .pro-cta { background: #F5C542 !important; border-color
     var cls = w.units > 0 ? 'pperf-pos' : w.units < 0 ? 'pperf-neg' : '';
     return '<div class="pperf-card"><h3>' + title + '</h3>'
       + '<div class="pperf-rec">' + n0(w.w) + '-' + n0(w.l) + (w.p ? '-' + n0(w.p) : '') + '</div>'
+      + '<div class="pperf-row"><span>Net result <b class="' + cls + '">' + (w.units < 0 ? 'a loss of ' + Math.abs(w.units).toFixed(1) + ' units' : w.units > 0 ? 'a profit of ' + w.units.toFixed(1) + ' units' : 'break even') + '</b></span></div>'
       + '<div class="pperf-row"><span>Units <b class="' + cls + '">' + sgn(w.units, 1) + 'u</b></span><span>ROI <b class="' + cls + '">' + sgn(w.roi_pct, 2) + '%</b></span><span>Win rate <b>' + (w.win_pct == null ? 'n/a' : Number(w.win_pct).toFixed(1) + '%') + '</b></span></div>'
       + '<div class="pperf-row" style="margin-top:6px"><span><b>' + n0(w.picks) + '</b> graded picks</span><span><b>' + n0(w.handicappers) + '</b> handicappers</span></div></div>';
   }
