@@ -2097,6 +2097,7 @@ body.tmr-light .px-watch .pro-cta { background: #F5C542 !important; border-color
 .pperf-rec{font:800 34px/1.1 Barlow,Inter,sans-serif;color:#0b1a2e;font-variant-numeric:tabular-nums;margin:6px 0}
 .pperf-row{display:flex;flex-wrap:wrap;gap:6px 16px;font:600 14px/1.5 Inter,system-ui,sans-serif;color:#33465e}
 .pperf-row b{color:#0b1a2e}.pperf-row b.pperf-neg{color:#b42318}.pperf-row b.pperf-pos{color:#067647}
+.pperf-stale{display:block;margin-top:6px;color:#b54708}
 .pperf-note{max-width:880px;margin:14px auto 0;text-align:center;color:#5b6b80;font:13px/1.55 Inter,system-ui,sans-serif}
 .pcx-more{display:none}
 @media (max-width:640px){
@@ -2160,16 +2161,19 @@ body.tmr-light .px-watch .pro-cta { background: #F5C542 !important; border-color
     if (!sec) return;
     fetch(API + '/pro/watchdog/performance', { cache: 'no-store' }).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); }).then(function (d) {
       var a = d.last_30_days, b = d.since_tracking;
-      if (!a || !a.picks) return;
+      if (!a || !a.picks || !d.verified_at) return;          /* only reconciled figures are ever shown */
       var since = new Date(d.method.tracking_since + 'T12:00:00Z').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
       var md = function (t) { return new Date(t).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'America/Los_Angeles' }); };
       var gen = Date.parse(d.generated_at);
-      document.getElementById('pperfGrid').innerHTML = card('Last 30 days, ' + md(gen - 30 * 864e5) + ' to ' + md(gen), a) + card('Since tracking began, ' + since + ' to ' + md(gen), b);
-      var asof = new Date(d.generated_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' });
+      var wn = (d.windows && d.windows.last_30_days) || { from: gen - 30 * 864e5, to: gen };
+      document.getElementById('pperfGrid').innerHTML = card('Last 30 days, ' + md(wn.from) + ' to ' + md(wn.to), a) + card('Since tracking began, ' + since + ' to ' + md(gen), b);
+      var ts = function (t) { return new Date(t).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' }); };
+      var asof = ts(d.verified_at);
       document.getElementById('pperfNote').innerHTML = 'Graded by the TMR Watchdog. Settled picks only: ' + n0(d.pending && d.pending.picks)
         + ' pending picks are not graded yet and are not in these numbers. Graded at the price the handicapper posted where the source gives one ('
         + n0(a.at_posted_price) + ' of the last 30 days), otherwise at TMR&#39;s reference price (' + n0(a.at_reference_price)
-        + '). Past results do not predict future results. Updated ' + asof + ' PT.';
+        + '). Every figure is recounted independently before it is published. Past results do not predict future results. Verified '
+        + asof + ' PT.' + (d.stale ? ' <b class="pperf-stale">These are the last verified figures. The newest update has not passed verification yet.</b>' : '');
       sec.hidden = false;
       ev('tmr_pro_impression', { component: 'pro_performance' });
     }).catch(function () { });
