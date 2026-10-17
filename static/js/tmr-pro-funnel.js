@@ -142,6 +142,9 @@
             '.tpf-chipline{display:block;width:100%;padding:0 12px 6px;box-sizing:border-box}',
             '.tpf-chipline .tpf-chip{margin:2px 0 4px;max-width:100%;white-space:normal}',
             '.tpf-chip b{color:#fff}',
+            '.tpf-simline{margin:14px 0 6px}.tpf-simline .tpf-chip{max-width:100%;white-space:normal;border-radius:14px}',
+            '.tpf-simlink{display:block;padding:10px 14px;border-radius:12px;border:1px solid rgba(140,196,255,.25);background:rgba(140,196,255,.06);color:inherit;text-decoration:none;font:500 13.5px/1.5 Inter,system-ui,sans-serif}',
+            '.tpf-simlink u{color:#F5C542;font-weight:800}.tpf-simlink:hover{border-color:#F5C542}',
             '.tpf-proof{display:block;margin-top:3px;font-weight:600;font-size:11.5px;color:#cbd8e6}',
             '.tpf-sbhead{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;margin:0 0 12px;padding:10px 14px;border-radius:12px;border:1px solid rgba(245,197,66,.45);background:rgba(245,197,66,.08);color:#dce8f5;text-decoration:none;font:600 14px/1.45 Inter,system-ui,sans-serif}',
             '.tpf-sbhead b{color:#fff}.tpf-sbhead u{color:#F5C542;font-weight:800}.tpf-sbhead:hover{border-color:#F5C542}',
@@ -369,6 +372,92 @@
         }).catch(function () { });
     }
 
+    /* SIM_POSTRUN_20261016 (Nima): our one paying member came through the simulators. After a
+       simulation finishes, one quiet line under the result: if outside handicappers have pending
+       picks on the game just simulated, the same game line as the Picks Board (opens the same
+       preview); otherwise a plain text link to TMR Pro. Never before a run, never a banner, never
+       on the simulator landing state (NO_SIM_BANNERS_20261007 stands). */
+    var SIMS = {
+        '/mlb-simulator/': { sport: 'mlb', result: '#resultCard', away: '#awayTeamSelect', home: '#homeTeamSelect' },
+        '/nfl-simulator/': { sport: 'nfl', result: '#result', away: '#t1', home: '#t2' },
+        '/nba-simulator/': { sport: 'nba', result: '#result', away: '#awayTeam', home: '#homeTeam' },
+        '/nhl-simulator/': { sport: 'nhl', result: '#result', away: '#awayTeam', home: '#homeTeam' }
+    };
+    function optText(sel) {
+        var el = document.querySelector(sel);
+        if (!el || el.tagName !== 'SELECT' || el.selectedIndex < 0) return '';
+        return (el.options[el.selectedIndex].text || el.value || '').replace(/\(.*?\)/g, ' ').trim();
+    }
+    function sameTeam(a, b) {
+        var x = norm(a), y = norm(b);
+        if (!x || !y) return false;
+        return x === y || x.indexOf(y) >= 0 || y.indexOf(x) >= 0;
+    }
+    function gameFor(games, a, b) {
+        var now = Date.now();
+        for (var i = 0; i < games.length; i++) {
+            var g = games[i];
+            if (Date.parse(g.start) <= now) continue;
+            if ((sameTeam(g.home, a) && sameTeam(g.away, b)) || (sameTeam(g.home, b) && sameTeam(g.away, a))) return g;
+        }
+        return null;
+    }
+    function mountSimPostRun(cfg) {
+        var comp = 'sim_postrun_' + cfg.sport;
+        var shownFor = null;
+        /* Only after a run this page view: a Run click, or the simulator reporting a finished run.
+           A result card already on screen at load (a saved or sample result) never counts. */
+        var ranAt = 0, before = null;
+        function resText() { var el = document.querySelector(cfg.result); return el ? el.textContent : ''; }
+        document.addEventListener('click', function (e) {
+            var t = e.target && e.target.closest && e.target.closest('button, input[type="submit"], [role="button"]');
+            if (t && /simulat|run/i.test(t.textContent || t.value || '') && !/tpf-/.test(t.className || '')) { ranAt = Date.now(); before = resText(); shownFor = null; }
+        }, true);
+        (function hookGate(n) {
+            var G = window.TMRSimGate;
+            if (G && !G.__tpf) {
+                G.__tpf = 1;
+                ['markCompleted', 'runSucceeded'].forEach(function (m) {
+                    var f = G[m]; if (typeof f !== 'function') return;
+                    G[m] = function () { if (!ranAt) { ranAt = Date.now(); before = null; } return f.apply(this, arguments); };
+                });
+            } else if (!G && n < 40) setTimeout(function () { hookGate(n + 1); }, 500);
+        })(0);
+        function render() {
+            if (!ranAt) return;
+            var res = document.querySelector(cfg.result);
+            if (!res || res.hidden || !res.offsetParent || !res.textContent.trim()) return;
+            if (before !== null && res.textContent === before) return;
+            var a = optText(cfg.away), b = optText(cfg.home);
+            var sig = a + '|' + b;
+            if (!a || !b || sig === shownFor) return;
+            shownFor = sig;
+            injectStyle();
+            var old = document.getElementById('tpfSimLine'); if (old) old.parentNode.removeChild(old);
+            getJSON('/pro/watchdog/games').catch(function () { return { games: [] }; }).then(function (d) {
+                if (shownFor !== sig) return;
+                var g = gameFor(d.games || [], a, b);
+                var wrap = document.createElement('div');
+                wrap.id = 'tpfSimLine';
+                wrap.className = 'tpf-simline';
+                if (g) {
+                    var proof = proofText(g);
+                    wrap.innerHTML = '<button type="button" class="tpf-chip"><span>&#128274; <b>' + g.handicappers + '</b> handicapper' + (g.handicappers === 1 ? ' outside TMR has a pending pick' : 's outside TMR have pending picks')
+                        + ' on ' + esc(g.away) + ' at ' + esc(g.home) + (g.proven ? ' &middot; <b>' + g.proven + ' proven</b>' : '') + ' &middot; <u>See who and what they picked</u>'
+                        + (proof ? '<small class="tpf-proof">' + proof + '</small>' : '') + '</span></button>';
+                    wrap.querySelector('button').addEventListener('click', function () { preview({ game: g, component: comp }); });
+                } else {
+                    wrap.innerHTML = '<a class="tpf-simlink" data-tpf-cta="' + comp + '" href="' + proHref(comp, '#top') + '">Your simulation is free. TMR Pro adds the pending picks of graded handicappers outside TMR, game by game, before kickoff. <u>See what Pro includes</u></a>';
+                    wireCtas(wrap);
+                }
+                res.parentNode.insertBefore(wrap, res.nextSibling);
+                track('tmr_pro_impression', { component: comp, matched_game: g ? 'yes' : 'no' });
+            });
+        }
+        new MutationObserver(function () { clearTimeout(render.t); render.t = setTimeout(render, 400); })
+            .observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['hidden', 'style', 'class'] });
+    }
+
     /* ------------------------------------------------------------ homepage */
     function mountHome() {
         var hero = document.querySelector('section.hero');
@@ -501,6 +590,7 @@
         } else if (path === '/around-the-web/' || path === '/around-the-web') mountAtw();
         else if (path.indexOf('/leaderboards') === 0) mountLeaderboards();
         else if (/^\/around-the-web\/[^/]+\/?$/.test(path)) mountAtwProfile();
+        else if (SIMS[path] || SIMS[path + '/']) mountSimPostRun(SIMS[path] || SIMS[path + '/']);
         /* NO_SIM_BANNERS_20261007 (Nima): no Watchdog line on the simulator pages.
            It mounted on /sports-simulators and the MLB, NFL, NBA and NHL hubs and
            showed an unrelated (often college football) consensus. Removed. */
