@@ -23,7 +23,10 @@
     }
     requestAnimationFrame(step);
   }
-  fetch(api + '/pro/watchdog/stats', { cache: 'no-store' }).then(function (r) {
+  /* 2026-10-16: never sit on blank numbers. No answer in 12s hides the panel. */
+  var opts = { cache: 'no-store' };
+  try { if (window.AbortSignal && AbortSignal.timeout) opts.signal = AbortSignal.timeout(12000); } catch (e) {}
+  fetch(api + '/pro/watchdog/stats', opts).then(function (r) {
     if (!r.ok) throw new Error(r.status); return r.json();
   }).then(function (d) {
     var src = d.sources || [];
@@ -40,7 +43,7 @@
       if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) el.textContent = fmt(v);
       else count(el, v);
     });
-    panel.querySelectorAll('[data-pxh-ago]').forEach(function (el) { el.textContent = ago(d[el.getAttribute('data-pxh-ago')]); });
+    panel.querySelectorAll('[data-pxh-ago]').forEach(function (el) { el.textContent = ago(d[el.getAttribute('data-pxh-ago')]) + '.'; });
     panel.classList.add('is-live');
   }).catch(function () { panel.hidden = true; });
 })();
