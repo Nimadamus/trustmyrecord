@@ -419,6 +419,14 @@
         .pro-welcome { margin-top: 16px; padding: 16px; border-radius: 14px; border: 1px solid #1D7A46; background: var(--pro-surface); text-align: left; }
         .pro-welcome h2 { margin: 0 0 6px; font-size: 1.3rem; color: var(--pro-ink); }
         .pro-welcome p { margin: 0 0 12px; color: var(--pro-body); }
+.pd-recap { margin: 14px 0; padding: 14px 16px; border: 1px solid rgba(15,35,70,.12); border-radius: 14px; background: var(--pro-surface, #fff); }
+.pd-recap h3 { margin: 0 0 8px; font-size: 1.05rem; color: var(--pro-ink); }
+.pd-recap-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.pd-recap-list li { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; font-size: .95rem; color: var(--pro-body); }
+.pd-recap-list b { color: var(--pro-ink); }
+.pd-recap-hit { color: #067647; font-weight: 700; }
+.pd-recap-miss { color: #b42318; font-weight: 700; }
+.pd-recap-note { margin: 10px 0 0; font-size: .85rem; color: var(--pro-body); }
 .pd-onboard li[data-k] a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
 .pd-onboard li.pd-onboard-lead { font-weight: 600; }
         .pro-links { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -911,6 +919,13 @@
                     <li data-k="models"><a href="/model-builder/"><b>Build models</b></a> in Model Builder and track up to 15 at once.</li>
                     <li class="pd-onboard-x"><button type="button" id="pdOnboardDone">Got it</button></li>
                 </ol>
+                <!-- SIM_RECAP_20261017: the member's own simulations from yesterday next to the final scores.
+                     Hidden unless /api/sim-archive/mine/recap answers with at least one game. -->
+                <section class="pd-recap" id="pdRecap" hidden>
+                    <h3>Your simulations from yesterday</h3>
+                    <ul class="pd-recap-list" id="pdRecapList"></ul>
+                    <p class="pd-recap-note" id="pdRecapNote"></p>
+                </section>
                 <div class="pd-grid">
                     <a class="pd-card pd-card-lead" href="#board">
                         <span class="pd-card-k">Handicapper Watchdog</span>
@@ -1561,6 +1576,7 @@
                     document.getElementById('proWelcomeTitle').textContent = fresh ? 'Welcome to TMR Pro' : 'Your TMR Pro';
                     document.getElementById('proWelcomeText').textContent = (fresh ? 'Your membership is active. ' : '') + line;
                     showOnboarding(fresh);
+                    loadRecap();
                 }
                 var cta = document.getElementById('proHeroCta');
                 if (cta) { cta.textContent = 'Open the pending picks'; cta.setAttribute('href', '#board'); }
@@ -1770,6 +1786,29 @@
         document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closePanel(); });
         document.addEventListener('click', function (e) { var p = document.getElementById('wdPanel'); if (p && !p.hidden && e.target === p) closePanel(); });
         /* First Pro visit (or right after purchase): a five step start list, dismissed once. */
+        /* SIM_RECAP_20261017: yesterday's simulations next to the final scores, member's own runs only. */
+        function loadRecap() {
+            var box = document.getElementById('pdRecap');
+            if (!box || !S || !S.authFetch) return;
+            S.authFetch(API + '/sim-archive/mine/recap').then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
+                if (!d || !d.games || !d.games.length) return;
+                var esc = function (t) { return String(t == null ? '' : t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+                document.getElementById('pdRecapList').innerHTML = d.games.map(function (g) {
+                    var L = g.latest || {}, wp = L.win_probability || {};
+                    var fav = L.favored, favPct = wp.home != null ? Math.round(100 * (fav === g.home ? wp.home : wp.away)) : null;
+                    var res = g.final ? (esc(g.away) + ' ' + g.final.away + ', ' + esc(g.home) + ' ' + g.final.home) : 'Not final yet';
+                    var verdict = g.favored_won === true ? '<span class="pd-recap-hit">Favorite won</span>' : g.favored_won === false ? '<span class="pd-recap-miss">Favorite lost</span>' : '';
+                    return '<li><b>' + esc(g.away) + ' at ' + esc(g.home) + '</b><span>Your sim: ' + esc(fav) + (favPct != null ? ' ' + favPct + '% to win' : '')
+                        + (L.simulations ? ' over ' + Number(L.simulations).toLocaleString('en-US') + ' simulations' : '')
+                        + (L.sampling_margin_pts != null ? ' (\u00b1' + L.sampling_margin_pts + ' pts from run to run)' : '') + '</span>'
+                        + '<span>Final: ' + res + '</span>' + verdict + '</li>';
+                }).join('');
+                var s2 = d.summary || {};
+                document.getElementById('pdRecapNote').textContent = (s2.decided ? 'The favorite in your simulations won ' + s2.favored_won + ' of ' + s2.decided + ' finished games. ' : '') + (d.note || '');
+                box.hidden = false;
+                ga('pro_recap_view', { games: d.games.length });
+            }).catch(function () { });
+        }
         function onboardLead() {
             var src = '', land = '';
             try { var fs = JSON.parse(localStorage.getItem('tmr_funnel_src') || 'null'); if (fs && fs.src) src = String(fs.src); } catch (e) { }
