@@ -69,13 +69,24 @@ function fixture(n, sport, slug, when) {
   };
 }
 
+/* MOTD_QUALITY_GATE_20261019 fails any tennis page that shows an initials
+   badge, so a tennis fixture carries both players' own pictures, exactly like
+   a real tennis Game File's showdown block. */
+const PROBE_FACE = 'static/media/tennis/door-probe-face.png';
+function withFaces(article) {
+  const photo = (side) => ({ src: '/' + PROBE_FACE, alt: `${side} probe player` });
+  article.body_json.push({ module: 'showdown', heading: 'Showdown',
+    blocks: [{ type: 'showdown', away: { photo: photo('Away') }, home: { photo: photo('Home') } }] });
+  return article;
+}
+
 /* THE EXACT SHAPE THAT USED TO PRODUCE THE INDEX PAGE: three tennis pieces on
    one day, newest first, plus a single-piece sport alongside to prove the door
    for a quiet sport is unchanged. */
 const ARTICLES = [
-  fixture(1, 'tennis', 'door-tennis-newest', `${TODAY_ISO}T18:00:00.000Z`),
-  fixture(2, 'tennis', 'door-tennis-middle', `${TODAY_ISO}T17:00:00.000Z`),
-  fixture(3, 'tennis', 'door-tennis-oldest', `${TODAY_ISO}T16:00:00.000Z`),
+  withFaces(fixture(1, 'tennis', 'door-tennis-newest', `${TODAY_ISO}T18:00:00.000Z`)),
+  withFaces(fixture(2, 'tennis', 'door-tennis-middle', `${TODAY_ISO}T17:00:00.000Z`)),
+  withFaces(fixture(3, 'tennis', 'door-tennis-oldest', `${TODAY_ISO}T16:00:00.000Z`)),
   fixture(4, 'mlb', 'door-mlb-only', `${TODAY_ISO}T15:00:00.000Z`),
 ];
 
@@ -101,6 +112,9 @@ fs.writeFileSync(path.join(tmp, 'sitemap.xml'),
   '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n</urlset>\n');
 fs.writeFileSync(path.join(tmp, 'index.html'),
   '<!DOCTYPE html><html><body>\n<!--MK:motdCover--><!--/MK:motdCover-->\n</body></html>\n');
+
+fs.mkdirSync(path.dirname(path.join(tmp, PROBE_FACE)), { recursive: true });
+fs.copyFileSync(path.join(ROOT, 'static/og/matchups/g1000.png'), path.join(tmp, PROBE_FACE));
 
 const file = path.join(tmp, 'doors.json');
 fs.writeFileSync(file, JSON.stringify({
