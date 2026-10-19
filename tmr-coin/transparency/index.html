@@ -292,14 +292,22 @@
     // --- market -------------------------------------------------------------
     get('/tmr-coin/market').then(function (m) {
         if (!m || m.live !== true) throw new Error('not live');
-        set('m-price', usd(m.price_usd), 'per TMR');
-        set('m-tvl', usd(m.tvl_usd), num(m.pool_tmr) + ' TMR and ' + Number(m.pool_weth).toFixed(6) + ' WETH');
+        // MARKET_STATUS_20261019: price, pool value and FDV are market figures only when a holder could sell.
+        var ms = m.market_status, market = !ms || ms.show_price;
+        if (market) {
+            set('m-price', usd(m.price_usd), 'per TMR');
+            set('m-tvl', usd(m.tvl_usd), num(m.pool_tmr) + ' TMR and ' + Number(m.pool_weth).toFixed(6) + ' WETH');
+            set('m-fdv', usd(m.fdv_usd));
+        } else {
+            set('m-price', 'No market yet', 'last pool price $' + Number(m.price_usd).toPrecision(3) + ' is not a sale price');
+            set('m-tvl', usd(m.pool_weth_usd) + ' ETH side', num(m.pool_tmr) + ' TMR on the company side');
+            set('m-fdv', 'Not shown', 'no functioning market');
+        }
         set('m-cash', usd(m.pool_weth_usd));
-        set('m-fdv', usd(m.fdv_usd));
         set('m-liquid', num(m.liquid_supply), Number(m.liquid_supply_percent).toFixed(3) + '% of supply');
         set('m-lock', m.liquidity_locked ? 'Locked' : 'Not locked', m.liquidity_custody || '');
         var depth = document.getElementById('m-depth');
-        if (depth) depth.textContent = m.depth_warning || '';
+        if (depth) depth.textContent = (ms && !ms.genuine ? ms.text + ' ' : '') + (m.depth_warning || '');
         var links = document.getElementById('m-links');
         if (links && m.links) {
             var defs = [['trade', 'Trade on Uniswap'], ['chart', 'Live chart'], ['pool_explorer', 'Pool on Basescan']];

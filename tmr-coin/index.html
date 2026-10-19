@@ -527,16 +527,19 @@
                 return;
             }
 
-            document.getElementById('tcoin-price').textContent = '$' + Number(m.price_usd).toPrecision(4);
-            document.getElementById('tcoin-price-eth').textContent = Number(m.price_eth).toExponential(3) + ' ETH per TMR';
-            document.getElementById('tcoin-tvl').textContent = money(m.tvl_usd, 2);
+            // MARKET_STATUS_20261019: a quoted price with no buyers behind it is not shown as a price.
+            var ms = m.market_status, market = !ms || ms.show_price;
+            document.getElementById('tcoin-price').textContent = market ? '$' + Number(m.price_usd).toPrecision(4) : 'No market yet';
+            document.getElementById('tcoin-price-eth').textContent = market ? Number(m.price_eth).toExponential(3) + ' ETH per TMR'
+                : 'last pool price $' + Number(m.price_usd).toPrecision(3) + ' is not a sale price';
+            document.getElementById('tcoin-tvl').textContent = market ? money(m.tvl_usd, 2) : money(m.pool_weth_usd, 2) + ' ETH side';
             document.getElementById('tcoin-tvl-sub').textContent = whole(m.pool_tmr) + ' TMR + ' + Number(m.pool_weth).toFixed(6) + ' WETH';
             document.getElementById('tcoin-liquid').textContent = whole(m.liquid_supply);
             document.getElementById('tcoin-liquid-sub').textContent = Number(m.liquid_supply_percent).toFixed(4) + '% of total supply';
             document.getElementById('tcoin-dex').textContent = m.dex;
             document.getElementById('tcoin-dex-sub').textContent = m.fee_percent + '% fee tier on Base';
             document.getElementById('tcoin-pool-addr').textContent = m.pool_address;
-            document.getElementById('tcoin-depth').textContent = m.depth_warning + ' ' + m.liquidity_custody;
+            document.getElementById('tcoin-depth').textContent = (ms && !ms.genuine ? ms.text + ' ' : '') + m.depth_warning + ' ' + m.liquidity_custody;
             document.getElementById('tcoin-trade-link').href = m.links.trade;
             document.getElementById('tcoin-chart-link').href = m.links.chart;
             document.getElementById('tcoin-pool-link').href = m.links.pool_explorer;
