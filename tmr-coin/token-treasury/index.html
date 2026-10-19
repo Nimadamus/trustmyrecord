@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="canonical" href="https://trustmyrecord.com/tmr-coin/token-treasury/">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TMR Token Treasury | TrustMyRecord</title>
+    <meta name="description" content="Where the TMR token treasury gets its money, every release, conversion and bid with its proof on Base, and what TMR is really worth when someone sells it.">
+    <!-- DRAFT (TOKEN_TREASURY_WORDING_20261019_D1): stays noindex until the owner approves the wording. -->
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="theme-color" content="#050a14">
+    <link rel="icon" type="image/png" href="/static/favicon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/tmr-ds.d4d41a955166.css">
+    <link rel="stylesheet" href="/static/css/tmr-ds-header.cc364e352e74.css">
+    <link rel="stylesheet" href="/static/css/tmr-navbar.css?v=68ec3081d29a">
+    <style>
+        :root { --cr-bg:#050a14; --cr-panel:#0a1322; --cr-panel2:#0e1a2e; --cr-line:rgba(96,165,250,.16); --cr-text:#eef4ff; --cr-muted:#94a7c2;
+                --cr-blue:#1D7FE8; --cr-glow:#38bdf8; --cr-green:#4ade80; --cr-gold:#facc15; --cr-red:#f87171; }
+        body.cr-page { margin:0; background: radial-gradient(1100px 520px at 12% -10%, rgba(29,127,232,.22), transparent 60%),
+                       radial-gradient(900px 480px at 100% 0%, rgba(56,189,248,.10), transparent 55%), var(--cr-bg);
+                       color: var(--cr-text); font-family: Inter, system-ui, sans-serif; }
+        .cr-wrap { max-width: 1080px; margin: 0 auto; padding: 28px 16px 56px; }
+        .cr-hero { display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:16px; padding: 18px 0 22px; border-bottom: 1px solid var(--cr-line); }
+        .cr-eyebrow { color: var(--cr-glow); font-size: 12px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; margin: 0 0 8px; }
+        .cr-hero h1 { font-family: 'Barlow Condensed', Inter, sans-serif; font-size: clamp(34px, 6vw, 56px); line-height: .95; margin: 0; letter-spacing: .01em;
+                      background: linear-gradient(90deg, #ffffff, #9fd2ff 70%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .cr-lede { color: var(--cr-muted); font-size: 16px; line-height: 1.6; max-width: 620px; margin: 12px 0 0; }
+        .cr-chip { display:inline-flex; align-items:center; gap:8px; padding: 7px 12px; border-radius: 999px; font-size: 12px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
+                   border: 1px solid rgba(250,204,21,.45); background: rgba(250,204,21,.08); color: #fde68a; white-space: nowrap; }
+        .cr-chip::before { content:''; width:8px; height:8px; border-radius:50%; background: currentColor; box-shadow: 0 0 10px currentColor; }
+        .cr-chip.live { border-color: rgba(74,222,128,.5); background: rgba(74,222,128,.08); color: var(--cr-green); }
+        .cr-section { margin-top: 30px; }
+        .cr-section h2 { font-family: 'Barlow Condensed', Inter, sans-serif; font-size: 26px; letter-spacing: .02em; margin: 0 0 12px; }
+        .cr-three { display:grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+        .cr-card { position: relative; background: linear-gradient(180deg, rgba(29,127,232,.10), rgba(29,127,232,.02)); border: 1px solid var(--cr-line); border-radius: 14px; padding: 18px; }
+        .cr-card .tag { display:inline-block; font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--cr-glow); margin-bottom: 8px; }
+        .cr-card h3 { margin: 0 0 8px; font-size: 18px; }
+        .cr-card p { margin: 0; color: var(--cr-muted); font-size: 14.5px; line-height: 1.6; }
+        .cr-card.cash { border-color: rgba(56,189,248,.45); box-shadow: 0 0 0 1px rgba(56,189,248,.12), 0 18px 40px -24px rgba(56,189,248,.6); }
+        .cr-steps { display:grid; grid-template-columns: repeat(3, 1fr); gap: 14px; counter-reset: s; }
+        .cr-step { background: var(--cr-panel); border: 1px solid var(--cr-line); border-radius: 12px; padding: 16px 18px; }
+        .cr-step::before { counter-increment: s; content: counter(s); display:inline-flex; width: 26px; height: 26px; border-radius: 50%; align-items:center; justify-content:center;
+                           background: var(--cr-blue); color: #fff; font-weight: 800; font-size: 13px; margin-bottom: 10px; box-shadow: 0 0 14px rgba(29,127,232,.7); }
+        .cr-step p { margin: 0; color: var(--cr-muted); font-size: 14.5px; line-height: 1.6; }
+        .cr-split { display:flex; height: 12px; border-radius: 999px; overflow: hidden; border: 1px solid var(--cr-line); margin: 16px 0 8px; }
+        .cr-split span { display:block; height:100%; }
+        .cr-split .biz { background: #1e3a5f; width: 50%; } .cr-split .res { background: linear-gradient(90deg, var(--cr-blue), var(--cr-glow)); width: 50%; }
+        .cr-legend { display:flex; gap: 18px; flex-wrap: wrap; color: var(--cr-muted); font-size: 13px; }
+        .cr-legend b { color: var(--cr-text); }
+        .cr-panel { background: var(--cr-panel); border: 1px solid var(--cr-line); border-radius: 14px; padding: 18px; }
+        .cr-state { padding: 14px 16px; border-radius: 10px; border: 1px dashed rgba(250,204,21,.4); background: rgba(250,204,21,.05); color: #fde68a; font-weight: 600; font-size: 14.5px; line-height: 1.6; }
+        .cr-state.down { border-color: rgba(248,113,113,.45); background: rgba(248,113,113,.06); color: #fecaca; }
+        .cr-kpis { display:grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 14px; }
+        .cr-kpi { background: var(--cr-panel2); border: 1px solid var(--cr-line); border-radius: 12px; padding: 14px; }
+        .cr-kpi .k { color: var(--cr-muted); font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+        .cr-kpi .v { font-size: 24px; font-weight: 800; margin-top: 6px; font-variant-numeric: tabular-nums; }
+        table.cr-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        .cr-table th, .cr-table td { padding: 10px; border-bottom: 1px solid var(--cr-line); text-align: left; }
+        .cr-table th { color: var(--cr-muted); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
+        .cr-table td.num, .cr-table th.num { text-align: right; font-variant-numeric: tabular-nums; }
+        .cr-table code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; color: #bfdbfe; }
+        .st { display:inline-block; padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 800; letter-spacing: .05em; }
+        .st.ok { background: rgba(74,222,128,.12); color: var(--cr-green); } .st.carry { background: rgba(56,189,248,.12); color: var(--cr-glow); }
+        .st.pend { background: rgba(250,204,21,.12); color: var(--cr-gold); } .st.bad { background: rgba(248,113,113,.14); color: var(--cr-red); }
+        .cr-not { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+        .cr-not li { position: relative; padding: 12px 14px 12px 44px; background: var(--cr-panel); border: 1px solid var(--cr-line); border-radius: 10px; color: var(--cr-muted); font-size: 14.5px; line-height: 1.6; }
+        .cr-not li::before { content: ''; position: absolute; left: 16px; top: 18px; width: 14px; height: 2px; background: var(--cr-red); box-shadow: 0 0 8px rgba(248,113,113,.8); }
+        .cr-two { display:grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .cr-two p { color: var(--cr-muted); font-size: 14.5px; line-height: 1.65; margin: 0 0 8px; }
+        .cr-foot { margin-top: 34px; color: var(--cr-muted); font-size: 12.5px; line-height: 1.6; border-top: 1px solid var(--cr-line); padding-top: 16px; }
+        .cr-foot a { color: #9fd2ff; }
+        .cr-hidden { display: none !important; }
+        @media (max-width: 900px) { .cr-three, .cr-steps { grid-template-columns: 1fr; } .cr-kpis { grid-template-columns: 1fr 1fr; } .cr-two { grid-template-columns: 1fr; } }
+        @media (max-width: 560px) {
+            .cr-table thead { display: none; } .cr-table, .cr-table tbody, .cr-table tr { display: block; width: 100%; }
+            .cr-table tr { border: 1px solid var(--cr-line); border-radius: 10px; margin-bottom: 10px; padding: 6px 10px; }
+            .cr-table td, .cr-table td.num { display: flex; justify-content: space-between; gap: 12px; border: none; padding: 6px 0; text-align: right; }
+            .cr-table td::before { content: attr(data-k); color: var(--cr-muted); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; text-align: left; }
+            .cr-kpi .v { font-size: 20px; }
+            .cr-table td:empty { display: none; }
+        }
+
+        .tt-addr { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12.5px; color: #bfdbfe; word-break: break-all; }
+        .tt-addr a { color: #9fd2ff; }
+        .tt-facts { display:grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+        .tt-note { color: var(--cr-muted); font-size: 13px; line-height: 1.6; margin: 10px 0 0; }
+        .cr-table a { color: #9fd2ff; font-weight: 600; }
+        .cr-state.ok { border-style: solid; border-color: rgba(74,222,128,.45); background: rgba(74,222,128,.06); color: var(--cr-green); }
+        @media (max-width: 900px) { .tt-facts { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body class="tmr-ds-shell cr-page">
+<main class="cr-wrap">
+    <header class="cr-hero">
+        <div>
+            <p class="cr-eyebrow">TMR Coin &middot; Token treasury</p>
+            <h1>The token treasury</h1>
+            <p class="cr-lede">Money released from the cash reserve can become ETH bids in the public TMR pool on Base. Every release, conversion and bid is listed here with its proof, and the record is checked against the chain.</p>
+        </div>
+        <span id="tt-chip" class="cr-chip">Not started</span>
+    </header>
+
+    <section class="cr-section" aria-labelledby="h-worth">
+        <h2 id="h-worth">What TMR is worth</h2>
+        <div class="tt-facts">
+            <article class="cr-card"><span class="tag">Market</span><h3>Set by buyers and sellers</h3>
+                <p>TMR is worth what someone will pay for it in the market. TrustMyRecord does not set that price, support it or promise it.</p></article>
+            <article class="cr-card cash"><span class="tag">Sell value</span><h3>The number we use</h3>
+                <p>When TMR is accepted as payment, it counts for the ETH the pool would really pay for it at that moment. If nobody in the pool would buy it, it is not accepted.</p></article>
+            <article class="cr-card"><span class="tag">Site credits</span><h3>Not a TMR price</h3>
+                <p>Site credits are priced in US dollars in the store. That store price is not a price for TMR, and TMR is never valued at it.</p></article>
+        </div>
+        <div class="cr-panel" style="margin-top:14px;">
+            <div class="cr-kpis">
+                <div class="cr-kpi"><div class="k">Last pool price</div><div class="v" id="k-spot">n/a</div></div>
+                <div class="cr-kpi"><div class="k">ETH in the pool</div><div class="v" id="k-pooleth">n/a</div></div>
+                <div class="cr-kpi"><div class="k">Treasury bids</div><div class="v" id="k-bids">0 ETH</div></div>
+                <div class="cr-kpi"><div class="k">Chain check</div><div class="v" id="k-check">n/a</div></div>
+            </div>
+            <p class="tt-note" id="tt-market-note">The last pool price is where TrustMyRecord's own liquidity would sell TMR. It does not mean anyone would buy TMR at that price. Only ETH in the pool can buy TMR from a holder.</p>
+        </div>
+    </section>
+
+    <section class="cr-section" aria-labelledby="h-flow">
+        <h2 id="h-flow">How money reaches the treasury</h2>
+        <div class="cr-steps">
+            <div class="cr-step"><p>A share of the net revenue from site credits that members have used goes to the cash reserve, a US dollar bank account. Credits not yet used are never counted.</p></div>
+            <div class="cr-step"><p>A release from the reserve is converted to ETH at an exchange and sent to the treasury Safe on Base. The bank reference, the exchange receipt and the transfer are listed below.</p></div>
+            <div class="cr-step"><p>The Safe places ETH bids below the market price. A bid buys TMR only when someone chooses to sell at that price. Collected TMR stays in the Safe and is shown here.</p></div>
+        </div>
+    </section>
+
+    <section class="cr-section" aria-labelledby="h-record">
+        <h2 id="h-record">The record</h2>
+        <div class="cr-panel">
+            <div id="tt-state" class="cr-state">Loading the record.</div>
+            <div id="tt-body" class="cr-hidden">
+                <div class="cr-kpis">
+                    <div class="cr-kpi"><div class="k">Released</div><div class="v" id="k-rel">$0.00</div></div>
+                    <div class="cr-kpi"><div class="k">Converted</div><div class="v" id="k-conv">$0.00</div></div>
+                    <div class="cr-kpi"><div class="k">ETH received</div><div class="v" id="k-eth">0</div></div>
+                    <div class="cr-kpi"><div class="k">TMR collected</div><div class="v" id="k-tmr">0</div></div>
+                </div>
+                <p class="tt-note">Treasury Safe: <span class="tt-addr" id="tt-safe">n/a</span></p>
+                <table class="cr-table">
+                    <thead><tr><th>Date</th><th>What</th><th class="num">Dollars</th><th class="num">ETH</th><th class="num">TMR</th><th>Proof</th></tr></thead>
+                    <tbody id="tt-rows"></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <section class="cr-section" aria-labelledby="h-pay">
+        <h2 id="h-pay">Paying with TMR</h2>
+        <div class="cr-panel">
+            <div id="pay-state" class="cr-state">Paying with TMR is not open.</div>
+            <p class="tt-note" id="pay-note">When it opens, members can pay for TMR Pro with TMR from their own linked wallet. The amount of TMR is fixed for 15 minutes and is worked out from what the pool would pay for it. TMR received this way is listed here by month.</p>
+            <table class="cr-table cr-hidden" id="pay-table">
+                <thead><tr><th>Month (Pacific)</th><th class="num">Payments</th><th class="num">TMR received</th><th class="num">Dollar value when paid</th></tr></thead>
+                <tbody id="pay-rows"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="cr-section" aria-labelledby="h-not">
+        <h2 id="h-not">What it does not do</h2>
+        <ul class="cr-not">
+            <li>The treasury does not set, support or promise any TMR price, and nothing here says TMR will rise in value.</li>
+            <li>Bids are liquidity. If the price moves back through a bid before it is collected, the bid sells that TMR again.</li>
+            <li>The treasury never trades against TrustMyRecord's own liquidity: its bids may not overlap the company's own ranges.</li>
+            <li>Site credits cannot be exchanged for TMR or for money through the treasury.</li>
+            <li>It is not an investment. It pays nothing to members, and holding TMR gives no share of TrustMyRecord or any claim on revenue.</li>
+        </ul>
+    </section>
+
+    <p class="cr-foot">This is a business policy, and we can change it. Any change is posted here, with its date, before it takes effect.
+        <span id="tt-version"></span> &middot; <a href="/tmr-coin/">TMR Coin</a> &middot; <a href="/tmr-coin/revenue-reserve/">Cash reserve</a> &middot; <a href="/tmr-coin/transparency/">Transparency</a></p>
+</main>
+
+<script>
+(function () {
+    'use strict';
+    var API = 'https://trustmyrecord-api.onrender.com/api';
+    function $(id) { return document.getElementById(id); }
+    function usd(n) { var v = Number(n || 0); return (v < 0 ? '-$' : '$') + Math.abs(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+    function num(n, d) { var v = Number(n || 0); return v.toLocaleString('en-US', { maximumFractionDigits: d == null ? 4 : d }); }
+    function small(n) { var v = Number(n); if (!isFinite(v) || v <= 0) return 'n/a'; return '$' + (v < 0.01 ? v.toPrecision(3) : v.toFixed(4)); }
+    function day(s) { var d = new Date(s); return isNaN(d) ? '' : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'America/Los_Angeles' }); }
+    function monthName(p) { var a = String(p).split('-'); return new Date(Date.UTC(+a[0], +a[1] - 1, 15)).toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' }); }
+    var KIND = { reserve_release: 'Released from the cash reserve', conversion: 'Converted to ETH', transfer_in: 'ETH arrived at the Safe',
+                 liquidity_add: 'Bid placed', liquidity_collect: 'Bid collected', liquidity_remove: 'Bid closed', adjustment: 'Correction' };
+    function td(k, v, cls) { var c = document.createElement('td'); c.setAttribute('data-k', k); if (cls) c.className = cls; if (v instanceof Node) c.appendChild(v); else c.textContent = v; return c; }
+    function link(href, text) { var a = document.createElement('a'); a.href = href; a.textContent = text; a.rel = 'noopener'; a.target = '_blank'; return a; }
+
+    fetch(API + '/tmr-coin/token-treasury', { headers: { Accept: 'application/json' } }).then(function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status); return r.json();
+    }).then(function (d) {
+        if (d.wording_version) $('tt-version').textContent = 'Wording ' + d.wording_version;
+        if (d.market) {
+            $('k-spot').textContent = small(d.market.price_usd); $('k-pooleth').textContent = num(d.market.pool_eth, 4) + ' ETH';
+            var ms = d.market.market_status;
+            if (ms && !ms.genuine) $('tt-market-note').textContent = ms.text;
+        }
+        if (!d.live) { $('tt-state').textContent = d.status_note || 'The token treasury has not started. Nothing has been released, converted or placed.'; return; }
+        $('tt-chip').textContent = 'Recording'; $('tt-chip').classList.add('live');
+        var t = d.totals || {};
+        $('k-rel').textContent = usd(t.released_usd); $('k-conv').textContent = usd(t.converted_usd);
+        $('k-eth').textContent = num(t.eth_received, 4); $('k-tmr').textContent = num(t.tmr_collected, 0);
+        if (d.chain_check) { $('k-bids').textContent = num(d.chain_check.bid_eth, 4) + ' ETH'; $('k-check').textContent = d.chain_check.ok ? 'Matches' : 'Needs review'; }
+        if (d.safe_address) { $('tt-safe').textContent = ''; $('tt-safe').appendChild(link(d.explorer + '/address/' + d.safe_address, d.safe_address)); }
+        var rows = $('tt-rows');
+        if (!(d.actions || []).length) { var tr0 = document.createElement('tr'); tr0.appendChild(td('Record', 'Nothing has been recorded yet.')); rows.appendChild(tr0); }
+        (d.actions || []).slice().reverse().forEach(function (a) {
+            var tr = document.createElement('tr');
+            tr.appendChild(td('Date', day(a.at)));
+            tr.appendChild(td('What', KIND[a.kind] || a.kind));
+            tr.appendChild(td('Dollars', a.usd ? usd(a.usd) : '', 'num'));
+            tr.appendChild(td('ETH', Number(a.eth) ? num(a.eth, 6) : '', 'num'));
+            tr.appendChild(td('TMR', Number(a.tmr) ? num(a.tmr, 0) : '', 'num'));
+            tr.appendChild(td('Proof', a.tx ? link(a.tx, 'View on Base') : (a.kind === 'reserve_release' ? 'Bank, ' + monthName(a.period) : 'Exchange receipt')));
+            rows.appendChild(tr);
+        });
+        $('tt-state').classList.add('cr-hidden'); $('tt-body').classList.remove('cr-hidden');
+    }).catch(function () { $('tt-state').textContent = 'The record could not be loaded right now.'; $('tt-state').classList.add('down'); });
+
+    fetch(API + '/tmr-coin/token-checkout', { headers: { Accept: 'application/json' } }).then(function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status); return r.json();
+    }).then(function (d) {
+        if (d.open) {
+            $('pay-state').textContent = 'Paying with TMR is open for TMR Pro.'; $('pay-state').classList.add('ok');
+            $('pay-note').textContent = 'Members can pay for TMR Pro with TMR from their own linked wallet. The amount of TMR is fixed for 15 minutes and is worked out from what the pool would pay for it. TMR received this way is listed here by month.';
+        }
+        var m = (d.received && d.received.months) || [];
+        if (!m.length) return;
+        var rows = $('pay-rows');
+        m.slice().reverse().forEach(function (x) {
+            var tr = document.createElement('tr');
+            tr.appendChild(td('Month', monthName(x.month))); tr.appendChild(td('Payments', String(x.payments), 'num'));
+            tr.appendChild(td('TMR received', num(x.tmr, 0), 'num')); tr.appendChild(td('Dollar value when paid', usd(x.usd_value_at_payment), 'num'));
+            rows.appendChild(tr);
+        });
+        $('pay-table').classList.remove('cr-hidden');
+    }).catch(function () { /* closed stays closed */ });
+}());
+</script>
+<script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-ds-nav.2ed68fc6746c.js"></script>
+</body>
+</html>
