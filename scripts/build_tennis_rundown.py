@@ -132,13 +132,14 @@ def match_html(m):
 
     return (
         '<article class="rd-m" id="m-%s">'
-        '<p class="rd-meta"><span class="rd-surf %s">%s</span>%s</p>'
+        '<p class="rd-meta">%s%s</p>'
         '<div class="rd-ps2">%s%s</div>'
         '%s<div class="rd-copy">%s</div>'
         '<p class="rd-where">%s</p>'
         '</article>' % (
             esc(m.get("match_id")),
-            esc(str(surface or "").lower()), esc(surface or "Surface unlisted"), esc(" · " + meta if meta else ""),
+            ('<span class="rd-surf %s">%s</span>' % (esc(str(surface).lower()), esc(surface)) if surface else ""),
+            esc((" · " if surface else "") + meta if meta else ""),
             player_cell(m["players"][0], surface), player_cell(m["players"][1], surface),
             price, lines, esc(where)))
 

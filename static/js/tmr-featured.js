@@ -28,7 +28,8 @@
   var DEFAULT_GRACE_MINUTES = 210;
   /* A sport with selection "schedule" resolves only the entries the schedule
      rotation wrote (nfl_featured_rotation.py for the NFL, sports_featured_rotation.py
-     for every other sport). A game_state below is never live: status retires a
+     for every other sport). A sport with selection "editorial" resolves only the
+     written Matchup of the Day articles (source game-file or page). A game_state below is never live: status retires a
      game, and grace_minutes is only the safety cap. Same as featured_matchups.py. */
   var ENDED_STATES = ['final', 'postponed', 'canceled'];
   var pending = null;
@@ -75,6 +76,7 @@
     var s = reg && reg.sports && reg.sports[sport];
     if (!s) return null;
     var scheduled = s.selection === 'schedule';
+    var editorial = s.selection === 'editorial';
     var best = null, bestK = null;
     var list = s.features || [];
     for (var i = 0; i < list.length; i++) {
@@ -82,6 +84,7 @@
       if (!f || typeof f !== 'object' || (f.status || 'active') !== 'active') continue;
       if (!f.href) continue;
       if (scheduled && f.source !== 'rotation') continue;
+      if (editorial && f.source !== 'game-file' && f.source !== 'page') continue;
       if (f.game_state === 'postponed' || f.game_state === 'canceled') continue;
       var k = t(f.kickoff_utc);
       if (k === null) continue;
@@ -99,6 +102,7 @@
     if (!s) return null;
     var grace = graceMinutes(reg, sport) * 60000;
     var scheduled = s.selection === 'schedule';
+    var editorial = s.selection === 'editorial';
     var best = null, bestK = null;
     var list = s.features || [];
     for (var i = 0; i < list.length; i++) {
@@ -106,6 +110,7 @@
       if (!f || typeof f !== 'object' || (f.status || 'active') !== 'active') continue;
       if (!f.href) continue;
       if (scheduled && f.source !== 'rotation') continue;
+      if (editorial && f.source !== 'game-file' && f.source !== 'page') continue;
       if (ENDED_STATES.indexOf(f.game_state) !== -1) continue;
       var k = t(f.kickoff_utc);
       if (k === null) continue;

@@ -74,14 +74,19 @@ CATALOG = {
 
 
 def catalog_for(reg):
-    """Feeds for sports the registry actually features. NFL stays on its own."""
+    """Feeds for sports the registry actually features. NFL stays on its own.
+    A sport whose selection is "editorial" never rotates: its door belongs to
+    the written Matchup of the Day article (tennis, Nima 2026-10-19, after the
+    rotation filled the tennis door with qualifier pages all day)."""
     out = {}
     sports = (reg or {}).get("sports") or {}
     for sport, cfg in CATALOG.items():
-        if sport in sports:
+        if sport in sports and (sports[sport] or {}).get("selection") != "editorial":
             out[sport] = cfg
     for sport, spec in sports.items():
         if sport == "nfl" or sport in out:
+            continue
+        if isinstance(spec, dict) and spec.get("selection") == "editorial":
             continue
         feed = spec.get("feed") if isinstance(spec, dict) else None
         if isinstance(feed, dict) and feed.get("boards") and feed.get("kind") in ("days", "weeks"):
@@ -479,7 +484,7 @@ def _round_angle(name):
         return ("the-quarterfinals", "This match is in the quarterfinals",
                 "The draw has reached the quarterfinals, and the winner plays for a place in the final.")
     if re.search(r"\bfinal\b", text):
-        return ("a-final-is-on", "A final is on",
+        return ("the-final", "This is the final",
                 "This is the final. One match decides the event.")
     if "16" in text or "sixteen" in text:
         return ("the-round-of-sixteen", "The draw is in the round of sixteen",
@@ -1025,7 +1030,7 @@ PREVIEW_REFRESH = dt.timedelta(hours=6)
 PREVIEW_FINAL_AFTER = dt.timedelta(hours=4)
 
 
-def enrich_pages(root, store, now=None, get=None, build=None):
+def enrich_pages(root, store, now=None, get=None, build=None, force=False):
     """Write or refresh the research preview on every rotation page. Returns the
     number of pages written. A feed error leaves that page exactly as it is."""
     import featured_preview as fp
@@ -1048,7 +1053,7 @@ def enrich_pages(root, store, now=None, get=None, build=None):
         found = re.search(r'"startDate":\s*"([^"]+)"', text)
         kickoff = nfl.parse_utc(found.group(1)) if found else None
         mark = re.search(r'data-fp-state="(\w+)" data-fp-updated="([^"]+)"', text)
-        if mark:
+        if mark and not force:
             state, updated = mark.group(1), nfl.parse_utc(mark.group(2))
             if state == "post":
                 continue

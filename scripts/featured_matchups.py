@@ -120,6 +120,10 @@ def parse_utc(value):
     return t.astimezone(dt.timezone.utc)
 
 
+# Written Matchup of the Day articles, as opposed to schedule rotation pages.
+EDITORIAL_SOURCES = ("game-file", "page")
+
+
 def now_utc():
     return dt.datetime.now(dt.timezone.utc)
 
@@ -131,9 +135,11 @@ def resolve(reg, sport, now=None):
 
     A sport with "selection": "schedule" resolves only the entries the schedule
     rotation wrote (nfl_featured_rotation.py for the NFL, sports_featured_rotation.py
-    for every other sport). An entry whose game_state is final, postponed or
-    canceled is never live, so game status retires a game and the clock is only
-    a safety cap."""
+    for every other sport). A sport with "selection": "editorial" resolves only
+    the written Matchup of the Day articles (source game-file or page), so a
+    schedule rotation can never put an auto page behind that sport's door. An
+    entry whose game_state is final, postponed or canceled is never live, so
+    game status retires a game and the clock is only a safety cap."""
     now = now or now_utc()
     if sport == "*":
         return resolve_any(reg, now)[1]
@@ -148,6 +154,7 @@ def resolve_latest(reg, sport, now=None):
     if not s:
         return None
     scheduled = s.get("selection") == "schedule"
+    editorial = s.get("selection") == "editorial"
     best, best_k = None, None
     for f in s.get("features") or []:
         if not isinstance(f, dict) or (f.get("status") or "active") != "active":
@@ -155,6 +162,8 @@ def resolve_latest(reg, sport, now=None):
         if not f.get("href"):
             continue
         if scheduled and f.get("source") != "rotation":
+            continue
+        if editorial and f.get("source") not in EDITORIAL_SOURCES:
             continue
         if f.get("game_state") in ("postponed", "canceled"):
             continue
@@ -179,6 +188,7 @@ def resolve_live(reg, sport, now=None):
         return None
     grace = dt.timedelta(minutes=grace_minutes(reg, sport))
     scheduled = s.get("selection") == "schedule"
+    editorial = s.get("selection") == "editorial"
     best, best_k = None, None
     for f in s.get("features") or []:
         if not isinstance(f, dict) or (f.get("status") or "active") != "active":
@@ -186,6 +196,8 @@ def resolve_live(reg, sport, now=None):
         if not f.get("href"):
             continue
         if scheduled and f.get("source") != "rotation":
+            continue
+        if editorial and f.get("source") not in EDITORIAL_SOURCES:
             continue
         if f.get("game_state") in ENDED_STATES:
             continue
