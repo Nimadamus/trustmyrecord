@@ -832,6 +832,7 @@ def _write_page(root, sport, game, spec, href, headline, lede, when_line, body=N
 <link rel="stylesheet" href="%s">
 <link rel="stylesheet" href="/static/css/tmr-navbar.css">
 <link rel="stylesheet" href="%s">
+<link rel="stylesheet" href="/static/css/tmr-theme-a.css">
 <script type="application/ld+json">
 %s
 </script>
