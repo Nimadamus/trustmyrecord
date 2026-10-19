@@ -123,6 +123,12 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
     </div>
   </section>
 
+  <section class="acct-card" id="tkcCard">
+    <h2>Pay for TMR Pro with TMR</h2>
+    <div id="tkcBox"><div class="skel">Loading…</div></div>
+    <div class="note">TMR is counted at what the TMR pool on Base would pay for it when you ask for a quote, never at the store price of site credits. The amount is fixed for 15 minutes and must come from your linked wallet.</div>
+  </section>
+
   <section class="acct-card">
     <h2>Your Base wallet</h2>
     <div id="walletBox"><div class="skel">Loading…</div></div>
@@ -487,10 +493,43 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
     $('creditsDisclosures').innerHTML = (cap.disclosures || []).map(function (t) { return '<li>' + escH(t) + '</li>'; }).join('');
   }
 
+  // TOKEN_CHECKOUT_20261019: TMR Pro paid with TMR at the pool's sell value.
+  async function loadTokenCheckout() {
+    var box = $('tkcBox');
+    var c = await window.api.request('/tmr-coin/token-checkout');
+    var p = (c.products || []).filter(function (x) { return x.product === 'pro_30d'; })[0];
+    if (!c.open || !p || p.usd == null) {
+      box.innerHTML = '<p style="margin:0;font-size:13.5px;color:var(--acct-muted)">Not open yet. Paying with TMR opens only while the TMR pool on Base has buyers, so TMR is never accepted at a value nobody would pay.</p>';
+      return;
+    }
+    box.innerHTML = '<div class="row"><span style="font-size:13.5px">30 days of TMR Pro for $' + Number(p.usd).toFixed(2) + ' worth of TMR</span>' +
+      '<button class="btn" id="tkcQuote">Get a TMR quote</button></div><div id="tkcQ"></div>';
+    $('tkcQuote').onclick = function () {
+      $('tkcQuote').disabled = true;
+      window.api.request('/tmr-coin/token-checkout/quote', { method: 'POST', body: { product: 'pro_30d' } }).then(function (q) {
+        var exp = new Date(q.expires_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' });
+        $('tkcQ').innerHTML = '<dl class="kv" style="margin-top:12px">' +
+          '<dt>Send exactly</dt><dd>' + escH(Number(q.tmr).toLocaleString('en-US')) + ' TMR</dd>' +
+          '<dt>To</dt><dd>' + escH(q.pay_to) + '</dd>' +
+          '<dt>From your wallet</dt><dd>' + escH(q.from_wallet) + '</dd>' +
+          '<dt>Mined before</dt><dd>' + escH(exp) + ' PT</dd></dl>' +
+          '<div class="row" style="margin-top:12px"><input id="tkcTx" placeholder="Transaction hash (0x...)" style="flex:1;min-width:220px;padding:9px 11px;border-radius:9px;border:1px solid rgba(255,255,255,.18);background:transparent;color:inherit;font:inherit">' +
+          '<button class="btn" id="tkcSettle">Confirm payment</button></div><div class="note" id="tkcMsg"></div>';
+        $('tkcSettle').onclick = function () {
+          $('tkcSettle').disabled = true; $('tkcMsg').textContent = 'Checking the payment on Base…';
+          window.api.request('/tmr-coin/token-checkout/settle', { method: 'POST', body: { ref: q.ref, txHash: String($('tkcTx').value || '').trim() } }).then(function (r) {
+            $('tkcMsg').textContent = 'Paid. TMR Pro is active until ' + new Date(r.pro_until).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'America/Los_Angeles' }) + '.';
+          }).catch(function (e) { $('tkcMsg').textContent = e && e.message ? e.message : String(e); $('tkcSettle').disabled = false; });
+        };
+      }).catch(function (e) { $('tkcQ').innerHTML = '<div class="note">' + escH(e && e.message ? e.message : String(e)) + '</div>'; $('tkcQuote').disabled = false; });
+    };
+  }
+
   $('btnMore').onclick = function () { loadTx(true).catch(function (e) { say(e.message, true); }); };
 
   (async function init() {
     loadCredits().catch(function () { $('creditsCard').style.display = 'none'; });
+    loadTokenCheckout().catch(function () { $('tkcCard').style.display = 'none'; });
     try { await loadAccount(); await loadTx(false); }
     catch (e) {
       if (String(e && e.message).match(/401|unauth/i)) {
