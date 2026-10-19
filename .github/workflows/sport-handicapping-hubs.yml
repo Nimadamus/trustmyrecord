@@ -55,6 +55,13 @@ jobs:
         with:
           python-version: '3.12'
 
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: SEO baseline (problems already on main, before the bake writes anything)
+        run: bash scripts/seo_gate_new_only.sh baseline
+
       - name: Bake the sport hubs and their matchup pages
         env:
           BETLEGEND_PRO_SERVICE_KEY: ${{ secrets.BETLEGEND_PRO_SERVICE_KEY }}
@@ -67,8 +74,8 @@ jobs:
       # THE GATE, before the commit step and never after: a gate that runs after
       # the push is decorative. If it fails the bake is discarded and the last
       # good pages stay live.
-      - name: Gate - site-wide SEO indexability
-        run: node tests/seo-indexability-regression-test.js
+      - name: Gate - site-wide SEO indexability (fails on problems this bake adds)
+        run: bash scripts/seo_gate_new_only.sh gate
 
       - name: Commit only if the bake changed something
         run: |

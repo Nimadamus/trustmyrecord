@@ -52,6 +52,13 @@ jobs:
         with:
           python-version: '3.12'
 
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: SEO baseline (problems already on main, before the bake writes anything)
+        run: bash scripts/seo_gate_new_only.sh baseline
+
       - name: Bake the MLB matchup pages and the hub slate block
         # The script is fail-closed: it renders every page into memory first and
         # writes nothing at all if the schedule cannot be read or any page fails
@@ -77,8 +84,8 @@ jobs:
       - name: Gate - MLB matchup page contract
         run: node tests/mlb-matchup-pages-contract-test.js
 
-      - name: Gate - site-wide SEO indexability
-        run: node tests/seo-indexability-regression-test.js
+      - name: Gate - site-wide SEO indexability (fails on problems this bake adds)
+        run: bash scripts/seo_gate_new_only.sh gate
 
       - name: Commit only if the bake changed something
         run: |
