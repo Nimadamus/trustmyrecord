@@ -125,9 +125,10 @@
     function proofText(g) {
         var r = g && g.proven_record;
         if (!r || !g.proven) return '';
-        var u = Number(g.proven_units || 0);
+        /* PRICE_SANITY_20261019: units are withheld (null) while some Watchdog grades carry futures prices */
+        var u = g.proven_units == null ? null : Number(g.proven_units);
         return 'The ' + g.proven + ' proven handicapper' + (g.proven === 1 ? '' : 's') + ' on this game: combined ' + n0(r.w) + '-' + n0(r.l) + (r.p ? '-' + n0(r.p) : '')
-            + ', ' + (u > 0 ? '+' : u < 0 ? '&minus;' : '') + Math.abs(u).toFixed(1) + 'u since ' + WINDOW.since + ' (1u per pick, graded by TMR)';
+            + (u == null ? ' record' : ', ' + (u > 0 ? '+' : u < 0 ? '&minus;' : '') + Math.abs(u).toFixed(1) + 'u') + ' since ' + WINDOW.since + ' (graded by TMR)';
     }
     function kick(iso) { try { return new Date(iso).toLocaleString('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' }) + ' PT'; } catch (e) { return ''; } }
 

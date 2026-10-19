@@ -1624,7 +1624,7 @@
                 false, !!(me && me.can_manage_billing));
             foundingFull = !!(me && me.founding && me.founding.seats_left === 0);
             paintButtons(false);
-            loadBoard(false);
+            loadBoard(false, true);
             var intent = mode === 'buy' ? takeIntent() : null;
             if (intent) { ga('pro_intent_resumed', { plan: intent }); startCheckout(intent); }
         }
@@ -1983,8 +1983,23 @@
         }
         loadWdx();
         setInterval(function () { if (!document.hidden) loadWdx(); }, 5 * 60 * 1000);
-        function loadBoard(isPro) {
+        function loadBoard(isPro, signedIn) {
             if (!boardEl) return;
+            /* PRO_SUNDAY_FREE_20261019: on Sundays from 8 AM ET until the first NFL kickoff the API
+               may open the board to signed in free members (flag PRO_SUNDAY_FREE_BOARD). The page
+               says so plainly, with the exact closing time, and only when the API says so. */
+            if (!isPro && signedIn && S && S.authFetch) {
+                S.authFetch(API + '/pro/pending-board').then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
+                    if (!d || d.access !== 'sunday_free') return;
+                    boardData = d; drawBoard();
+                    var until = d.free_until ? new Date(d.free_until).toLocaleString('en-US', { weekday: 'long', hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' }) + ' PT' : 'the first NFL kickoff';
+                    var note = document.createElement('p');
+                    note.className = 'pro-teaser';
+                    note.textContent = 'Free Sunday board: open to every signed in member until ' + until + ', the first NFL kickoff today. After that the full board is part of TMR Pro again.';
+                    boardEl.parentNode.insertBefore(note, boardEl);
+                    ga('pro_sunday_free_view', { component: 'pro_page_board' });
+                }).catch(function () { });
+            }
             fetch(API + '/pro/pending-board/summary', { cache: 'no-store' }).then(function (r) { return r.json(); })
                 .then(function (sm) { paintNet(sm && sm.network); if (!isPro) teaser(sm); })
                 .catch(function () { if (!isPro) teaser(null); });
@@ -2248,7 +2263,9 @@ body.tmr-light .px-watch .pro-cta { background: #F5C542 !important; border-color
       document.getElementById('pperfNote').innerHTML = 'Graded by the TMR Watchdog. Settled picks only: ' + n0(d.pending && d.pending.picks)
         + ' pending picks are not graded yet and are not in these numbers. Graded at the price the handicapper posted where the source gives one ('
         + n0(a.at_posted_price) + ' of the last 30 days), otherwise at TMR&#39;s reference price (' + n0(a.at_reference_price)
-        + '). Every figure is recounted independently before it is published. Past results do not predict future results, and these figures are not an edge or a promise of profit. Verified '
+        + ')' + (a.graded_without_price ? '; ' + n0(a.graded_without_price) + ' picks posted without any price count in the record but not in units' : '')
+        + (a.excluded_price_check ? '; ' + n0(a.excluded_price_check) + ' picks graded at prices no single game offers (longer than +1000, futures or parlay prices) are left out' : '')
+        + '. Every figure is recounted independently before it is published. Past results do not predict future results, and these figures are not an edge or a promise of profit. Verified '
         + asof + ' PT.' + (d.stale ? ' <b class="pperf-stale">These are the last verified figures. The newest update has not passed verification yet.</b>' : '');
       sec.hidden = false;
       ev('tmr_pro_impression', { component: 'pro_performance' });

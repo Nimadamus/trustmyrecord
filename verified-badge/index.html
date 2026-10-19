@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, follow">
+    <title>Verified Handicapper Badge | TrustMyRecord</title>
+    <meta name="description" content="Get the embed code for your verified TrustMyRecord handicapper badge, showing your graded record from the TMR Watchdog.">
+    <link rel="icon" type="image/png" href="/static/favicon.png">
+    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=859cacfb660e">
+    <script defer src="/static/js/tmr-sitewide.js?v=2ababa0bfc78"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+      body{background:#070b14;color:#e2e8f0;font-family:Inter,system-ui,sans-serif;margin:0}
+      .vb{max-width:760px;margin:0 auto;padding:40px 16px 80px}
+      .vb h1{font-family:Barlow,Inter,sans-serif;font-weight:900;font-size:clamp(28px,6vw,40px);margin:0 0 8px;color:#f8fafc}
+      .vb p{line-height:1.7;color:#cbd5e1}
+      .vb form{display:flex;gap:8px;flex-wrap:wrap;margin:20px 0}
+      .vb input{flex:1 1 220px;min-width:0;padding:12px 14px;border-radius:10px;border:1px solid #334155;background:#0f172a;color:#f8fafc;font-size:16px}
+      .vb button{padding:12px 18px;border-radius:10px;border:0;background:#22c55e;color:#06210f;font-weight:800;cursor:pointer}
+      .vb .card{background:#0f172a;border:1px solid #1e293b;border-radius:14px;padding:20px;margin:18px 0}
+      .vb .card img{max-width:100%;height:auto;display:block}
+      .vb dl{display:grid;grid-template-columns:max-content 1fr;gap:6px 16px;margin:16px 0 0}
+      .vb dt{color:#94a3b8}.vb dd{margin:0;color:#f8fafc;font-weight:600}
+      .vb label{display:block;margin:16px 0 6px;color:#94a3b8;font-size:14px}
+      .vb textarea{width:100%;box-sizing:border-box;min-height:84px;padding:10px;border-radius:10px;border:1px solid #334155;background:#020617;color:#e2e8f0;font:13px/1.5 ui-monospace,Consolas,monospace}
+      .vb .copy{margin-top:6px;background:#1e293b;color:#e2e8f0;font-weight:700;padding:8px 14px}
+      .vb .note{font-size:14px;color:#94a3b8}
+      .vb a{color:#4ade80}
+    </style>
+</head>
+<body>
+<main class="vb">
+  <h1>Verified Handicapper Badge</h1>
+  <p>Handicappers the TMR Watchdog tracks on Covers, X, Reddit, TheRX and other platforms earn a verified badge once they have at least 25 graded picks. The badge shows the graded record exactly as the Watchdog holds it and links to the full profile on TrustMyRecord.</p>
+  <form id="vbForm">
+    <input id="vbHandle" type="text" autocomplete="off" placeholder="Your Around the Web profile name, for example sharpjoe" aria-label="Profile name">
+    <button type="submit">Get my badge</button>
+  </form>
+  <div id="vbOut" aria-live="polite"></div>
+  <p class="note">Records count every graded pick since the Watchdog began grading, at 1 unit risk per pick. A record is history, not a forecast of future results.</p>
+</main>
+<script>
+(function () {
+  var API = 'https://trustmyrecord-api.onrender.com/api/pro/watchdog/badge/';
+  var out = document.getElementById('vbOut');
+  var input = document.getElementById('vbHandle');
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function clean(v) {
+    v = String(v || '').trim();
+    var m = v.match(/around-the-web\/([^\/?#]+)/i);
+    if (m) v = m[1];
+    return v.toLowerCase().replace(/[^a-z0-9:._-]/g, '');
+  }
+  function box(label, id, text) {
+    return '<label for="' + id + '">' + label + '</label><textarea id="' + id + '" readonly>' + esc(text) + '</textarea>' +
+      '<button type="button" class="copy" data-for="' + id + '">Copy</button>';
+  }
+  function show(h) {
+    if (!h) { out.innerHTML = ''; return; }
+    out.innerHTML = '<div class="card"><p>Loading the live record.</p></div>';
+    fetch(API + encodeURIComponent(h) + '.json').then(function (r) { return r.json().then(function (b) { return { ok: r.ok, b: b }; }); })
+      .then(function (x) {
+        if (!x.ok || !x.b.badge) {
+          out.innerHTML = '<div class="card"><p>No verified badge for that name yet. The badge appears once the Watchdog has graded at least 25 picks from an outside platform account.</p></div>';
+          return;
+        }
+        var b = x.b.badge, e = x.b.embed, rec = b.record.w + '-' + b.record.l + (b.record.p ? '-' + b.record.p : '');
+        var units = b.units == null ? 'n/a' : (b.units > 0 ? '+' : '') + b.units.toFixed(1) + 'u';
+        out.innerHTML = '<div class="card"><img src="' + esc(e.image_url) + '" width="400" height="120" alt="Verified on TrustMyRecord: ' + esc(b.name) + '">' +
+          '<dl><dt>Handicapper</dt><dd>' + esc(b.name) + (b.source ? ' on ' + esc(b.source) : '') + '</dd>' +
+          '<dt>Graded record</dt><dd>' + esc(rec) + ' (' + esc(b.graded) + ' graded)</dd>' +
+          (b.units == null ? '' : '<dt>Units</dt><dd>' + esc(units) + '</dd>') +
+          '<dt>Window</dt><dd>Since ' + esc(b.window.since) + ', ' + esc(b.basis) + '</dd>' +
+          '<dt>Profile</dt><dd><a href="' + esc(b.profile_url) + '">' + esc(b.profile_url) + '</a></dd></dl>' +
+          box('Embed on a website (HTML)', 'vbHtml', e.html) + box('Forums and README files (Markdown)', 'vbMd', e.markdown) +
+          box('Link for a bio or post', 'vbLink', e.link) + '</div>';
+      })
+      .catch(function () { out.innerHTML = '<div class="card"><p>Please try again in a minute.</p></div>'; });
+  }
+  out.addEventListener('click', function (ev) {
+    var id = ev.target && ev.target.getAttribute('data-for');
+    if (!id) return;
+    var t = document.getElementById(id);
+    t.select();
+    try { navigator.clipboard.writeText(t.value); } catch (e) { document.execCommand('copy'); }
+    ev.target.textContent = 'Copied';
+  });
+  document.getElementById('vbForm').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var h = clean(input.value);
+    try { history.replaceState(null, '', '?h=' + encodeURIComponent(h)); } catch (e) {}
+    show(h);
+  });
+  var q = new URLSearchParams(location.search).get('h');
+  if (q) { input.value = q; show(clean(q)); }
+})();
+</script>
+</body>
+</html>
