@@ -20,6 +20,7 @@ build(sport, league, event_id, kickoff, get) returns (html, state) or None.
 
 import datetime as dt
 import html
+import os
 import re
 
 import nfl_featured_rotation as nfl
@@ -45,9 +46,69 @@ CSS = """/*FEATURED_PREVIEW_CSS*/
   .fp .fp-src{color:#8A97A8;font-size:.9rem;margin-top:26px}
   main{max-width:46rem}
   .fp .fp-final{background:#0f1726;border:1px solid #1d2636;border-radius:12px;padding:14px 16px}
+  .fp .fp-card{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:12px;margin:22px 0 26px;padding:20px 16px;background:linear-gradient(180deg,#0f1726,#0a111c);border:1px solid #1d2636;border-radius:16px}
+  .fp .fp-side{display:flex;flex-direction:column;align-items:center;text-align:center;min-width:0}
+  .fp .fp-mark{width:88px;height:88px;object-fit:contain;border-radius:50%}
+  .fp .fp-mark--face{object-fit:cover;object-position:center 18%;background:#1A2533;border:2px solid rgba(255,255,255,.18)}
+  .fp .fp-mark--none{display:block;background:#1A2533}
+  .fp .fp-name{font:800 1.05rem/1.25 Inter,system-ui,sans-serif;margin:10px 0 2px;color:#fff}
+  .fp .fp-line{font:600 .85rem/1.3 Inter,system-ui,sans-serif;margin:0;color:#93a4bb}
+  .fp .fp-vs{font:800 .8rem/1 Inter,system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#8A97A8}
+  @media (max-width:520px){.fp .fp-mark{width:64px;height:64px}.fp .fp-name{font-size:.95rem}}
   @media (max-width:520px){.fp th,.fp td{padding:6px 5px;font-size:.85rem}}
 /*/FEATURED_PREVIEW_CSS*/
 """
+
+
+# ---------------------------------------------------------------- matchup card
+
+def _flag_local(href):
+    """An ESPN country flag cached under static/media/matchups/flags/, or ''."""
+    m = re.search(r"/countries/500/([a-z]{2,4})\.png", href or "")
+    if not m:
+        return ""
+    import team_logos as tl
+    rel = "/static/media/matchups/flags/%s-500.png" % m.group(1)
+    disk = os.path.join(tl.ROOT, rel.lstrip("/"))
+    if not os.path.exists(disk):
+        try:
+            import urllib.request
+            req = urllib.request.Request(href, headers=tl.UA)
+            with urllib.request.urlopen(req, timeout=25) as r:
+                blob = r.read()
+            if len(blob) < 512:
+                return ""
+            os.makedirs(os.path.dirname(disk), exist_ok=True)
+            with open(disk, "wb") as f:
+                f.write(blob)
+        except Exception:  # noqa: BLE001 - no flag is a missing picture, not a failure
+            return ""
+    return rel
+
+
+def _mark(sport, name, flag_href=""):
+    """(src, face) for one side of the card: a team's own logo, a tennis
+    player's headshot, else the flag the player represents."""
+    import team_logos as tl
+    if sport == "tennis":
+        got = tl.tennis_headshot(name)
+        if got:
+            return got[0], True
+        return _flag_local(flag_href), True
+    mark = tl.team_logo(sport, full_name=name)
+    return mark.get("src") or "", False
+
+
+def _card(sport, sides):
+    """The two sides at the top of the preview, picture, name and one line."""
+    cells = []
+    for i, (name, line, src, face) in enumerate(sides):
+        img = ('<img class="fp-mark%s" src="%s" alt="%s" width="88" height="88" decoding="async">'
+               % (" fp-mark--face" if face else "", esc(src), esc(name))) if src else '<span class="fp-mark fp-mark--none"></span>'
+        cells.append('<div class="fp-side fp-side--%s">%s<p class="fp-name">%s</p>%s</div>' % (
+            "a" if i == 0 else "h", img, esc(name), '<p class="fp-line">%s</p>' % esc(line) if line else ""))
+    return '<div class="fp-card">%s<span class="fp-vs">%s</span>%s</div>' % (
+        cells[0], "vs" if sport == "tennis" else "at", cells[1])
 
 
 # ---------------------------------------------------------------- helpers
@@ -976,6 +1037,7 @@ def _tennis(sport_league, event_id, kickoff, get):
         ath = comp.get("athlete") or {}
         players.append({"id": str(comp.get("id") or ""), "name": ath.get("displayName") or "",
                         "country": (ath.get("flag") or {}).get("alt") or "", "winner": comp.get("winner"),
+                        "flag": (ath.get("flag") or {}).get("href") or "",
                         "sets": [(_num(l.get("value")), l.get("tiebreak")) for l in comp.get("linescores") or []]})
     if len(players) != 2:
         return None
@@ -1052,6 +1114,7 @@ def _tennis(sport_league, event_id, kickoff, get):
                                                 "opp": (opp.get("athlete") or {}).get("displayName") or "",
                                                 "won": me.get("winner") is True, "sets": sets})
     bios = {}
+    flags = {}
     for p in players:
         b = (_get(get, "%stennis/%s/athletes/%s" % (WEB, tour, p["id"])) or {}).get("athlete") or {}
         st = _get(get, "%stennis/leagues/%s/athletes/%s/statistics" % (CORE, tour, p["id"])) or {}
@@ -1059,12 +1122,19 @@ def _tennis(sport_league, event_id, kickoff, get):
         for cat in ((st.get("splits") or {}).get("categories") or []):
             for s in cat.get("stats") or []:
                 gen[s.get("name")] = _num(s.get("value"))
+        flags[p["id"]] = (b.get("flag") or {}).get("href") or ""
         bios[p["id"]] = {"age": b.get("age"), "height": b.get("displayHeight"),
                          "hand": ((b.get("hand") or {}).get("displayValue") if isinstance(b.get("hand"), dict) else b.get("hand")) or "",
                          "exp": b.get("displayExperience") or "", "won": gen.get("singlesWon"),
                          "lost": gen.get("singlesLost"), "titles": gen.get("singlesTitles")}
     p1, p2 = players
     names = {"away": p1["name"], "home": p2["name"]}
+    card_sides = []
+    for p in players:
+        rank = ranks.get(p["id"])
+        line = " · ".join(x for x in ("No. %s" % rank[0] if rank else "", p.get("country") or "") if x)
+        src, face = _mark("tennis", p["name"], p.get("flag") or flags.get(p["id"], ""))
+        card_sides.append((p["name"], line, src, face))
     edges = Edges(p1["name"], p2["name"])
     parts = []
     tourney = ev.get("name") or ""
@@ -1177,7 +1247,7 @@ def _tennis(sport_league, event_id, kickoff, get):
                     nxt += " That made %s the champion here." % w["name"]
             final = '<div class="fp-final"><h2>How it played out</h2>%s</div>' % _p(
                 "%s beat %s %s.%s%s" % (w["name"], l["name"], ", ".join(sets), note, nxt))
-    return final + "".join(parts), state, "ESPN tennis feed and the current %s rankings" % sport_league
+    return _card("tennis", card_sides) + final + "".join(parts), state, "ESPN tennis feed and the current %s rankings" % sport_league
 
 
 def _round_phrase(rnd):
@@ -1254,7 +1324,9 @@ def build(sport, league, event_id, kickoff=None, get=None, now=None):
                 return None
             shared, _ = _shared(get, summary, sides, kickoff, state, path, edges, unit)
             market, odds, pred, fair = _market(summary, sides, edges, sport)
-            body = (_final(summary, sides, sport, state) + "".join(parts) + "".join(shared) + market
+            card = _card(sport, [(sides[k]["name"], sides[k]["record"].get("total") or sides[k]["record"].get("overall") or "",
+                                  *_mark(sport, sides[k]["name"])) for k in ("away", "home")])
+            body = (card + _final(summary, sides, sport, state) + "".join(parts) + "".join(shared) + market
                     + _key_factors(edges) + _read(sides, edges, odds, pred, fair, state))
             source = "ESPN game feed, season to date"
     except Exception:  # noqa: BLE001 - a malformed feed keeps the page as it is

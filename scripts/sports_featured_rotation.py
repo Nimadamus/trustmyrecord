@@ -846,7 +846,7 @@ def _write_page(root, sport, game, spec, href, headline, lede, when_line, body=N
   .links a{color:#04101c;background:#35E0CB;text-decoration:none;font-weight:800;border-radius:999px;padding:8px 14px}
 </style>
 </head>
-<body>
+<body class="tmr-ds tmr-ds--dark">
 <!-- %s %s %s -->
 <main>
 <p class="eyebrow">%s Featured Matchup</p>

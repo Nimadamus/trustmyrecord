@@ -731,8 +731,8 @@
      would silently degrade to a plain link to /notifications/. Load the same
      chain the homepage loads, in order, and only what is actually missing. */
   var NOTIF_CHAIN = [
-    '/static/js/config.js?v=430b4bba7b37',
-    '/static/js/backend-api.js?v=e4eaeea31d19',
+    '/static/js/config.js?v=42d35ea6f99d',
+    '/static/js/backend-api.js?v=710d81ffac0b',
     '/static/js/auth-persistent.js?v=d479be477169',
     '/static/js/notifications.js?v=76df0ede5da6'
   ];
@@ -938,7 +938,7 @@
      (MLB, NCAAF, NFL, tennis, soccer, desktop and mobile) opens today's article
      itself, never the /matchup-of-the-day/<sport>/ door. tmr-featured.js reads
      data/featured-matchups.json and points each door link at its article. */
-  loadChain(['/static/js/tmr-featured.js?v=89407293e640']);
+  loadChain(['/static/js/tmr-featured.js?v=5486114a5043']);
 
   /* TMR PRO FUNNEL (2026-09-29, Nima: show the paid products where the traffic already
      is). Live Handicapper Watchdog counts on the Picks Board, homepage, Around the Web

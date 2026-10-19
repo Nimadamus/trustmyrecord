@@ -24,7 +24,7 @@
     function ensureGA() {
         if (typeof window.gtag === 'function' || document.querySelector('script[src*="tmr-analytics"]')) return;
         var s = document.createElement('script');
-        s.src = '/static/js/tmr-analytics.js?v=d9a28154fb06';
+        s.src = '/static/js/tmr-analytics.js?v=e5f8c49903da';
         s.async = true;
         document.head.appendChild(s);
     }
