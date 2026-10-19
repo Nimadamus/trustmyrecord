@@ -1476,8 +1476,8 @@
     // they fetch in parallel; any already present on the page already ran
     // before this deferred script, so they're skipped.
     [
-        ["/static/js/config.js?v=42d35ea6f99d", "config.js"],
-        ["/static/js/backend-api.js?v=710d81ffac0b", "backend-api.js"],
+        ["/static/js/config.js?v=430b4bba7b37", "config.js"],
+        ["/static/js/backend-api.js?v=e4eaeea31d19", "backend-api.js"],
         ["/static/js/auth-persistent.js?v=d479be477169", "auth-persistent.js"],
         ["/static/js/notifications.js?v=76df0ede5da6", "notifications.js"]
     ].forEach(([src, name]) => {
@@ -1777,7 +1777,7 @@
 (function () {
     if (window.TMRFeatured || document.querySelector('script[src^="/static/js/tmr-featured"]')) return;
     var s = document.createElement('script');
-    s.src = '/static/js/tmr-featured.js?v=5486114a5043';
+    s.src = '/static/js/tmr-featured.js?v=89407293e640';
     s.defer = true;
     (document.head || document.documentElement).appendChild(s);
 })();

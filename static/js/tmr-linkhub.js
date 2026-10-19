@@ -850,7 +850,7 @@
     var go = function () {
         var s = document.createElement('script');
         s.async = true;
-        s.src = '/static/js/tmr-ads.js?v=17cc33ec27b7?h=' + Math.floor(Date.now() / 3600000);
+        s.src = '/static/js/tmr-ads.js?v=71ad0e525eab?h=' + Math.floor(Date.now() / 3600000);
         document.head.appendChild(s);
     };
     var idle = function () { (window.requestIdleCallback || setTimeout)(go, { timeout: 3000 }); };
@@ -863,7 +863,7 @@
 (function () {
     if (window.TMRFeatured || document.querySelector('script[src^="/static/js/tmr-featured"]')) return;
     var s = document.createElement('script');
-    s.src = '/static/js/tmr-featured.js?v=5486114a5043';
+    s.src = '/static/js/tmr-featured.js?v=89407293e640';
     s.defer = true;
     (document.head || document.documentElement).appendChild(s);
 })();

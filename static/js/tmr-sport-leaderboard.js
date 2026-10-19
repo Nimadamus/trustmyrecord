@@ -17,7 +17,7 @@
     var sc = document.createElement('script');
     sc.id = 'tmr-drill-js';
     sc.defer = true;
-    sc.src = '/static/js/tmr-drill.js?v=c8ea84f1d00f';
+    sc.src = '/static/js/tmr-drill.js?v=c68f34eb6d14';
     document.head.appendChild(sc);
   }
   function render(el, rows, label) {
