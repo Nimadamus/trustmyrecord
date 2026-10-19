@@ -285,6 +285,9 @@ console.log('\nnoindex allowlist');
     SITE + '/betlegend-pro/app/offline.html',
     SITE + '/mlb-simulator/simulations/matchup/',
     SITE + '/mlb-simulator/simulations/run/',
+    // Badge grab page committed 10-19 as STAGING (TMR Pro sales push, awaiting
+    // Nima's approval); it stays noindex until he approves it, then comes off this list.
+    SITE + '/verified-badge/',
   ]);
   for (const file of htmlFiles) {
     const html = read(file);
