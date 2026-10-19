@@ -730,6 +730,17 @@ def _collapse_team_name(city, nick):
     cf, nf = cl.split()[0], nl.split()[0]
     if len(cf) >= 4 and len(nf) >= 4 and (cf.startswith(nf) or nf.startswith(cf)):
         return "", n
+    # A short form of the same club printed under the long one read as
+    # "Manchester City / Man City", "Paris Saint-Germain / PSG" and
+    # "Red Bull New York / Red Bull NY" (2026-10-19). Same first word, same
+    # last word with a prefixed first word, or initials: one line, long name.
+    cw, nw = re.split(r"[\s-]+", cl), re.split(r"[\s-]+", nl)
+    initials = "".join(w[0] for w in cw if w)
+    longer = c if len(c) >= len(n) else n
+    if (cw[0] == nw[0]
+            or (cw[-1] == nw[-1] and (cw[0].startswith(nw[0]) or nw[0].startswith(cw[0])))
+            or nl.replace(" ", "") in (initials, initials[:len(nl)])):
+        return "", longer
     return c, n
 
 
@@ -1196,8 +1207,22 @@ def render_article(article, provenance, neighbours):
             authored=authored,
             color=hero.get("%s_color" % side))
 
+    def player_photo(side):
+        """A tennis side's own picture from the showdown block: the ESPN
+        headshot, else the flag the player represents. Never initials."""
+        for module in article.get("body_json") or []:
+            for block in module.get("blocks") or []:
+                if (block or {}).get("type") != "showdown":
+                    continue
+                photo = ((block.get(side) or {}).get("photo")) or {}
+                src = str(photo.get("src") or "")
+                if src.startswith("/") and os.path.exists(os.path.join(ROOT, src.lstrip("/"))):
+                    return {"src": src, "alt": photo.get("alt") or article.get("%s_team" % side) or "",
+                            "w": 480, "h": 480, "kind": "face"}
+        return None
+
     def club_mark(side):
-        mark = club_logo(side)
+        mark = (player_photo(side) if sport == "tennis" else None) or club_logo(side)
         check_image(mark["src"], "%s club logo" % side)
         # Fail closed, the same way a bad API read does. team_logos writes even
         # its fallback badge to disk, so a src with no file behind it means the
@@ -1210,9 +1235,10 @@ def render_article(article, provenance, neighbours):
         # The rendered box is fixed and square so the two sides of the strip are
         # symmetrical whatever shape the league drew its mark in; the asset
         # itself stays 500px so it is sharp at 2x and 3x.
-        return ('<img class="ed-team-logo" src="%s" alt="%s" width="%d" height="%d" '
+        face = " ed-team-logo--face" if mark.get("kind") in ("face", "headshot") else ""
+        return ('<img class="ed-team-logo%s" src="%s" alt="%s" width="%d" height="%d" '
                 'fetchpriority="high" decoding="async">' % (
-                    esc(mark["src"]), esc(mark["alt"]), mark["w"], mark["h"]))
+                    face, esc(mark["src"]), esc(mark["alt"]), mark["w"], mark["h"]))
 
     away_logo_html = club_mark("away")
     home_logo_html = club_mark("home")
@@ -1245,7 +1271,8 @@ def render_article(article, provenance, neighbours):
     # words did, which is the only way to add imagery without adding scroll.
     logo_bits = ""
     for side in ("away", "home"):
-        logo_bits += ";--ed-%s-logo:url('%s')" % (side, esc(club_logo(side)["src"]))
+        mark = (player_photo(side) if sport == "tennis" else None) or club_logo(side)
+        logo_bits += ";--ed-%s-logo:url('%s')" % (side, esc(mark["src"]))
 
     def hero_faces_html():
         """The two starters, in the hero, beside the headline.
@@ -1273,7 +1300,9 @@ def render_article(article, provenance, neighbours):
             for side, p in shots)
         return '<div class="ed-hero-faces" aria-hidden="false">%s</div>' % cells
 
-    faces_html = hero_faces_html()
+    # Tennis puts each player's picture in the card itself, so the separate
+    # portrait pair under it would only repeat them.
+    faces_html = "" if sport == "tennis" else hero_faces_html()
 
     # The ballpark plate is generated and checked, but it is no longer PLACED.
     # It burns the venue name into the artwork at a fixed 52px in a 1040-wide

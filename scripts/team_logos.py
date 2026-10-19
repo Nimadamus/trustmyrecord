@@ -223,6 +223,64 @@ def _initials(city, nick, abbr):
     return (words[0][0] + words[-1][0]).upper()
 
 
+TENNIS_DIR_REL = "/static/media/tennis/players"
+TENNIS_DIR = os.path.join(ROOT, "static", "media", "tennis", "players")
+TENNIS_SEARCH = "https://site.web.api.espn.com/apis/search/v2?query=%s&limit=5"
+TENNIS_SHOT = "https://a.espncdn.com/i/headshots/tennis/players/full/%s.png"
+
+
+def tennis_headshot(name):
+    """The player's ESPN headshot for a tennis Game File, cached under
+    static/media/tennis/players/<espn id>-<slug>.png, or None.
+
+    A tennis "club" is a person, so the initials badge put "DP" and "AE" in
+    the hero where the two players belong (Nima, 2026-10-19). Resolved by name
+    through ESPN search once; after that the file on disk is the cache.
+    """
+    slug = slugify(name)
+    if not slug:
+        return None
+    try:
+        for fn in os.listdir(TENNIS_DIR):
+            if fn.endswith("-%s.png" % slug) and os.path.getsize(os.path.join(TENNIS_DIR, fn)) > 2048:
+                return "%s/%s" % (TENNIS_DIR_REL, fn), os.path.join(TENNIS_DIR, fn)
+    except OSError:
+        pass
+    if not FETCH:
+        return None
+    try:
+        q = urllib.request.quote(name)
+        req = urllib.request.Request(TENNIS_SEARCH % q, headers=UA)
+        with urllib.request.urlopen(req, timeout=25) as r:
+            data = json.loads(r.read().decode("utf-8"))
+        pid = None
+        for group in data.get("results") or []:
+            if group.get("type") != "player":
+                continue
+            for c in group.get("contents") or []:
+                uid = str(c.get("uid") or "")
+                if uid.startswith("s:850~") and slugify(c.get("displayName")) == slug:
+                    m = re.search(r"~a:(\d+)", uid)
+                    pid = m and m.group(1)
+                    break
+            if pid:
+                break
+        if not pid:
+            return None
+        req = urllib.request.Request(TENNIS_SHOT % pid, headers=UA)
+        with urllib.request.urlopen(req, timeout=25) as r:
+            blob = r.read()
+        if len(blob) < 2048 or blob[1:4] != b"PNG":
+            return None
+        os.makedirs(TENNIS_DIR, exist_ok=True)
+        fn = "%s-%s.png" % (pid, slug)
+        with open(os.path.join(TENNIS_DIR, fn), "wb") as f:
+            f.write(blob)
+        return "%s/%s" % (TENNIS_DIR_REL, fn), os.path.join(TENNIS_DIR, fn)
+    except Exception:                                             # noqa: BLE001
+        return None
+
+
 def team_logo(sport, city=None, nick=None, full_name=None, authored=None,
               color=None):
     """The mark to print for one side of a fixture. Never returns None.
@@ -233,6 +291,12 @@ def team_logo(sport, city=None, nick=None, full_name=None, authored=None,
     """
     sport = (sport or "").lower()
     label = (full_name or ("%s %s" % (city or "", nick or ""))).strip() or "Team"
+    if sport == "tennis":
+        got = tennis_headshot(label)
+        if got:
+            rel, disk = got
+            w, h = _png_size(disk)
+            return {"src": rel, "alt": label, "w": w, "h": h, "kind": "headshot"}
     team = lookup(sport, full_name, "%s %s" % (city or "", nick or ""), city, nick)
 
     if team:

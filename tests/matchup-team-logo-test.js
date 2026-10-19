@@ -116,7 +116,10 @@ for (const dir of dirs) {
   }
 
   for (const block of sides) {
-    const img = block.match(/<img class="ed-team-logo" src="([^"]+)" alt="([^"]*)"/);
+    /* Tennis cards carry the player's headshot or flag (ed-team-logo--face,
+       2026-10-19); a player has no club mark to name-match. */
+    const img = block.match(/<img class="ed-team-logo(?: ed-team-logo--face)?" src="([^"]+)" alt="([^"]*)"/);
+    const isFace = /ed-team-logo--face/.test(block);
     const city = decode((block.match(/ed-team-city">([^<]*)/) || [])[1]);
     const nick = decode((block.match(/ed-team-nick">([^<]*)/) || [])[1]);
     const name = (city + ' ' + nick).trim();
@@ -149,6 +152,7 @@ for (const dir of dirs) {
 
     const isFallback = src.indexOf('/logos/fallback/') !== -1;
     if (!isFallback) official++;
+    if (isFace && sport === 'tennis') continue;
 
     /* The mark must belong to the club the card names. A logo pointing at the
        wrong team is the one failure worse than no logo at all. */

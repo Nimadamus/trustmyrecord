@@ -3507,3 +3507,12 @@ html body.tmr-theme-a{
   --tmr-teal:#4DA3FF; --tmr-accent:#4DA3FF; --tmr-action:#4DA3FF;
   --tmr-green:#3FD08A; --tmr-gold:#FFC93C; --tmr-red:#F1867C;
 }
+
+/* Game File hero on the dark theme (2026-10-19). tmr-article.css paints the hero
+   scrim toward #F4F7FA, its light theme ground, which on this theme put a white
+   band behind white headline type on every Matchup of the Day. */
+html body.tmr-ds .ed-hero::after{
+  background:linear-gradient(180deg, rgba(2,5,10,.62) 0%, rgba(2,5,10,.86) 58%, var(--ed-bg, #02050A) 100%) !important;
+}
+html body.tmr-ds .ed-hero-art{opacity:.24 !important;filter:brightness(.6) saturate(.85)}
+html body.tmr-ds .ed-title{text-shadow:0 2px 18px rgba(0,0,0,.55)}
