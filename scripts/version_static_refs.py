@@ -68,7 +68,7 @@ def sync_featured():
         print("FEATURED: surfaces not synced (%s)" % exc)
 
 
-def run(check_only):
+def run(check_only, _no_sync=False):
     if not check_only:
         sync_featured()
     changed, missing = [], set()
@@ -134,7 +134,8 @@ def run(check_only):
         # (CI_SYNC_MAIN_20260902, see scripts/ci_sync_main.py). No-op locally.
         sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
         from ci_sync_main import sync_to_origin_main
-        sync_to_origin_main("prerender bake")
+        if not _no_sync:
+            sync_to_origin_main("prerender bake", rerun=lambda: run(False, _no_sync=True))
 
 if __name__ == "__main__":
     run("--check" in sys.argv)
