@@ -4,7 +4,7 @@
 window.TMR_TERMINOLOGY = {
   full: 'TMR Coin',
   short: 'coins',
-  disclaimer: 'TMR Coin is the platform currency of TrustMyRecord. Every new member receives TMR Coin when they sign up, and members can earn more through verified platform participation such as posting picks and forum threads. TMR Coin can currently be spent on BetLegend Pro reports. Additional ways to earn, and any tipping, marketplace, or contest-reward features, are planned but not live today.',
+  disclaimer: 'Your TrustMyRecord balance is TMR credits: site credits you earn, receive at sign up or buy by card, and spend on the site. Credits are not the TMR token on Base, cannot be sent to a wallet, sold or exchanged for tokens.',
 };
 
 document.addEventListener('DOMContentLoaded', () => {

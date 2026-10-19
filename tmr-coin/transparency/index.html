@@ -120,8 +120,8 @@
                 <div class="tcoin-metric"><div class="tcoin-metric-label">Price</div><div class="tcoin-metric-val" id="m-price">&hellip;</div><div class="tcoin-metric-sub" id="m-price-sub">per TMR</div></div>
                 <div class="tcoin-metric"><div class="tcoin-metric-label">Pool liquidity</div><div class="tcoin-metric-val" id="m-tvl">&hellip;</div><div class="tcoin-metric-sub" id="m-tvl-sub">both sides</div></div>
                 <div class="tcoin-metric"><div class="tcoin-metric-label">Cash side of the pool</div><div class="tcoin-metric-val" id="m-cash">&hellip;</div><div class="tcoin-metric-sub">the most that can come out</div></div>
-                <div class="tcoin-metric"><div class="tcoin-metric-label">Fully diluted value</div><div class="tcoin-metric-val" id="m-fdv">&hellip;</div><div class="tcoin-metric-sub">price times total supply</div></div>
-                <div class="tcoin-metric"><div class="tcoin-metric-label">Tradable supply</div><div class="tcoin-metric-val" id="m-liquid">&hellip;</div><div class="tcoin-metric-sub" id="m-liquid-sub">sitting in the pool</div></div>
+                <div class="tcoin-metric"><div class="tcoin-metric-label">Fully diluted value</div><div class="tcoin-metric-val" id="m-fdv">&hellip;</div><div class="tcoin-metric-sub" id="m-fdv-sub">shown only when a market exists</div></div>
+                <div class="tcoin-metric"><div class="tcoin-metric-label">Supply in the pool</div><div class="tcoin-metric-val" id="m-liquid">&hellip;</div><div class="tcoin-metric-sub" id="m-liquid-sub">sitting in the pool</div></div>
                 <div class="tcoin-metric"><div class="tcoin-metric-label">Liquidity custody</div><div class="tcoin-metric-val" id="m-lock">&hellip;</div><div class="tcoin-metric-sub" id="m-lock-sub">&nbsp;</div></div>
             </div>
             <div class="tcoin-depth" id="m-depth"></div>
@@ -299,7 +299,7 @@
         if (market) {
             set('m-price', usd(m.price_usd), 'per TMR');
             set('m-tvl', usd(m.tvl_usd), num(m.pool_tmr) + ' TMR and ' + Number(m.pool_weth).toFixed(6) + ' WETH');
-            set('m-fdv', usd(m.fdv_usd));
+            set('m-fdv', usd(m.fdv_usd), 'last price times total supply, not what holders could sell for');
         } else {
             set('m-price', 'No market yet', 'last pool price $' + Number(m.price_usd).toPrecision(3) + ' is not a sale price');
             set('m-tvl', usd(m.pool_weth_usd) + ' ETH side', num(m.pool_tmr) + ' TMR on the company side');
