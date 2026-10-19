@@ -154,6 +154,12 @@
             '.tpf-k{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#F5C542}',
             '.tpf-x{float:right;background:none;border:0;color:#9fb5cc;font-size:24px;cursor:pointer;line-height:1}',
             '.tpf-muted{color:#9fb5cc;font-size:13px}',
+            '.tpf-cap{display:block;margin:8px 0 10px;padding:10px 14px;border-radius:12px;border:1px solid rgba(140,196,255,.25);background:rgba(140,196,255,.06);color:inherit;font:500 13.5px/1.5 Inter,system-ui,sans-serif;box-sizing:border-box;max-width:100%;position:relative}',
+            '.tpf-cap b{display:block;margin-bottom:6px}.tpf-cap-row{display:flex;gap:8px;flex-wrap:wrap}',
+            '.tpf-cap input[type=email]{flex:1 1 200px;min-width:0;padding:8px 10px;border-radius:8px;border:1px solid rgba(140,196,255,.4);background:#fff;color:#0b1a2e;font:500 14px Inter,system-ui,sans-serif}',
+            '.tpf-cap button{padding:8px 14px;border-radius:8px;border:1px solid #F5C542;background:transparent;color:inherit;font:700 13.5px Inter,system-ui,sans-serif;cursor:pointer}',
+            '.tpf-cap label{display:flex;gap:8px;align-items:flex-start;margin-top:8px;font-size:12px;opacity:.85}.tpf-cap label input{margin-top:3px}',
+            '.tpf-cap .tpf-hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}.tpf-cap-msg{display:block;margin-top:6px;font-size:12.5px}',
             '.tpf-lock{display:flex;gap:10px;align-items:center;padding:10px 12px;border-top:1px solid rgba(140,196,255,.14)}',
             '.tpf-lock span{flex:1;height:9px;border-radius:5px;background:rgba(140,196,255,.18)}',
             '.tpf-box{margin:14px 0;border:1px solid rgba(140,196,255,.2);border-radius:12px;overflow:hidden}',
@@ -322,6 +328,7 @@
         var host = document.getElementById('sbnBoardRows') || document.getElementById('sbnBoard');
         if (!host) return false;
         injectStyle();
+        mountSportsbookCapture(host);
         getJSON('/pro/watchdog/games').then(function (d) {
             var games = d.games || [];
             if (!games.length) return;
@@ -402,6 +409,52 @@
         }
         return null;
     }
+    /* CONSENSUS_CAPTURE_20261019 (Phase 9): text only email capture on the sportsbook and inside
+       the simulator post run note. Explicit consent checkbox (unticked), honeypot, posts to
+       /api/pro/consensus-signup which stores only; nothing is sent from there. Hidden for the
+       rest of the visit once this browser signs up. */
+    var CAP_CONSENT = 'I agree to receive the proven handicapper consensus and TrustMyRecord updates by email. Unsubscribe anytime.';
+    function capDone() { try { return localStorage.getItem('tpf_cap_done') === '1'; } catch (e) { return false; } }
+    function captureForm(source) {
+        if (capDone()) return null;
+        var f = document.createElement('form');
+        f.className = 'tpf-cap';
+        f.setAttribute('novalidate', '');
+        f.innerHTML = '<b>Get tonight&#39;s proven handicapper consensus free.</b>'
+            + '<div class="tpf-cap-row"><input type="email" name="email" autocomplete="email" placeholder="you@example.com" aria-label="Email address" required>'
+            + '<button type="submit">Send it to me</button></div>'
+            + '<input class="tpf-hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">'
+            + '<label><input type="checkbox" name="consent"> <span>' + esc(CAP_CONSENT) + '</span></label>'
+            + '<span class="tpf-cap-msg" role="status" aria-live="polite"></span>';
+        var msg = f.querySelector('.tpf-cap-msg');
+        f.addEventListener('submit', function (e) {
+            e.preventDefault();
+            var email = f.elements.email.value.trim();
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { msg.textContent = 'Enter a valid email address.'; return; }
+            if (!f.elements.consent.checked) { msg.textContent = 'Tick the box to agree to receive the email.'; return; }
+            var btn = f.querySelector('button'); btn.disabled = true; msg.textContent = 'Saving...';
+            fetch(api() + '/pro/consensus-signup', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: email, consent: true, source: source, website: f.elements.website.value }) })
+                .then(function (r) { return r.json().catch(function () { return {}; }).then(function (b) { return { ok: r.ok, b: b }; }); })
+                .then(function (x) {
+                    if (x.ok) {
+                        try { localStorage.setItem('tpf_cap_done', '1'); } catch (e2) { }
+                        f.innerHTML = '<b>You are on the list.</b><span class="tpf-cap-msg">Unsubscribe anytime from any email we send.</span>';
+                        track('tmr_consensus_signup', { component: source });
+                    } else { btn.disabled = false; msg.textContent = (x.b && x.b.error) || 'Signup did not go through. Try again in a minute.'; }
+                }).catch(function () { btn.disabled = false; msg.textContent = 'Signup did not go through. Try again in a minute.'; });
+        });
+        once('tmr_consensus_capture_impression', { component: source });
+        return f;
+    }
+    function mountSportsbookCapture(host) {
+        if (document.getElementById('tpfCapSb')) return;
+        var f = captureForm('sportsbook');
+        if (!f) return;
+        f.id = 'tpfCapSb';
+        host.parentNode.insertBefore(f, host);
+    }
+
     function mountSimPostRun(cfg) {
         var comp = 'sim_postrun_' + cfg.sport;
         var shownFor = null;
@@ -450,6 +503,8 @@
                     wrap.innerHTML = '<a class="tpf-simlink" data-tpf-cta="' + comp + '" href="' + proHref(comp, '#top') + '">Your simulation is free. TMR Pro adds the pending picks of graded handicappers outside TMR, game by game, before kickoff. <u>See what Pro includes</u></a>';
                     wireCtas(wrap);
                 }
+                var cap = captureForm('sim_' + cfg.sport);
+                if (cap) wrap.appendChild(cap);
                 res.parentNode.insertBefore(wrap, res.nextSibling);
                 track('tmr_pro_impression', { component: comp, matched_game: g ? 'yes' : 'no' });
             });
