@@ -402,9 +402,6 @@ def specific_story(game):
                 else:
                     lines.append("%s starts %s." % (club, arm["name"]))
             body = [" ".join(lines)]
-            rec = _record_sentence(game)
-            if rec:
-                body.append(rec)
             if not DATE_IN_TITLE.search(headline):
                 return angle, headline, body
     passers = game.get("passers") or {}
@@ -414,9 +411,9 @@ def specific_story(game):
         headline = "%s vs %s Preview: %s Faces %s" % (away["name"], home["name"], pa, ph)
         body = ["The passing leader for %s is %s. The passing leader for %s is %s."
                 % (away["display"], pa, home["display"], ph)]
-        rec = _record_sentence(game)
-        if rec:
-            body.append(rec)
+        # No season record in the lede: it is frozen when the page is minted and
+        # went stale before kickoff (Pitt "5 wins and 0 losses" at 5-2, 2026-10-19).
+        # The live records sit in the preview body.
         if not DATE_IN_TITLE.search(headline):
             return angle, headline, body
     if game.get("sport") == "tennis":
