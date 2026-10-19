@@ -30,10 +30,10 @@
         // the product.
         ["@sub", "Featured Matchups", [
             /*FMENU nfl-gotw*/ ["/matchup-of-the-day/washington-san-francisco-one-offense-keeps-chains-moving/", "NFL Game of the Week", "/nfl-game-of-the-week/"],
-            /*FMENU ncaaf*/ ["/ncaaf/panthers-hurricanes-heintschel-vs-mensah/", "NCAAF", "/matchup-of-the-day/ncaaf/"],
+            /*FMENU ncaaf*/ ["/matchup-of-the-day/notre-dame-byu-visiting-offense-has-the-edge/", "NCAAF", "/matchup-of-the-day/ncaaf/"],
             /*FMENU mlb*/ ["/matchup-of-the-day/rays-guardians-martinez-is-pounding-the-zone/", "MLB", "/matchup-of-the-day/mlb/"],
             /*FMENU nhl*/ ["/nhl/ducks-rangers-sennecke-vs-lafreniere/", "NHL", "/matchup-of-the-day/nhl/"],
-            /*FMENU tennis*/ ["/tennis/jones-li-opening-round/", "Tennis", "/matchup-of-the-day/tennis/"],
+            /*FMENU tennis*/ ["/matchup-of-the-day/parry-eala-the-games-say-something-else/", "Tennis", "/matchup-of-the-day/tennis/"],
             /*FMENU soccer*/ ["/matchup-of-the-day/rayo-vallecano-getafe-home-and-road-split-them/", "Soccer", "/matchup-of-the-day/soccer/"]
         ]],
         // Each row lands on that league's research page, and each of those
@@ -1777,7 +1777,7 @@
 (function () {
     if (window.TMRFeatured || document.querySelector('script[src^="/static/js/tmr-featured"]')) return;
     var s = document.createElement('script');
-    s.src = '/static/js/tmr-featured.js?v=6d1832cc9f86';
+    s.src = '/static/js/tmr-featured.js?v=89407293e640';
     s.defer = true;
     (document.head || document.documentElement).appendChild(s);
 })();

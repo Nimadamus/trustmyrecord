@@ -341,6 +341,7 @@ SOURCE_SHORT = {
     "espn": "ESPN Data",
     "draftkings": "DraftKings",
     "tmr-derived": "TMR Calculation",
+    "trustmyrecord": "TrustMyRecord",
 }
 
 SOURCE_LABEL = {
@@ -354,6 +355,7 @@ SOURCE_LABEL = {
     "espn": "ESPN public data APIs (scoreboard, team record, team statistics)",
     "draftkings": "DraftKings odds board",
     "tmr-derived": "TrustMyRecord calculation from the sourced inputs shown",
+    "trustmyrecord": "TrustMyRecord calculation from the sourced inputs shown",
 }
 
 
@@ -728,6 +730,17 @@ def _collapse_team_name(city, nick):
     cf, nf = cl.split()[0], nl.split()[0]
     if len(cf) >= 4 and len(nf) >= 4 and (cf.startswith(nf) or nf.startswith(cf)):
         return "", n
+    # A short form of the same club printed under the long one read as
+    # "Manchester City / Man City", "Paris Saint-Germain / PSG" and
+    # "Red Bull New York / Red Bull NY" (2026-10-19). Same first word, same
+    # last word with a prefixed first word, or initials: one line, long name.
+    cw, nw = re.split(r"[\s-]+", cl), re.split(r"[\s-]+", nl)
+    initials = "".join(w[0] for w in cw if w)
+    longer = c if len(c) >= len(n) else n
+    if (cw[0] == nw[0]
+            or (cw[-1] == nw[-1] and (cw[0].startswith(nw[0]) or nw[0].startswith(cw[0])))
+            or nl.replace(" ", "") in (initials, initials[:len(nl)])):
+        return "", longer
     return c, n
 
 
@@ -739,6 +752,40 @@ def _nick_line(city, nick):
     return _collapse_team_name(city, nick)[1]
 
 
+# The backend writer stamped every comparison chart with baseball copy whatever
+# the sport: an "MLB Data" badge, "the two clubs", and a note about ERA bars on
+# a tennis or soccer page (167 pages on 2026-10-19). The words are corrected at
+# render time so every published Game File bakes clean without a database edit.
+LOW_BETTER_LABELS = ("Staff ERA", "Bullpen ERA", "Points allowed", "Goals against", "Goals conceded")
+PLAYER_SPORTS = {"tennis"}
+# NO_INTERNAL_DISCLAIMERS_20260909: a visitor is never told what the feed lacks.
+FEED_DISCLAIMER = ("Serve and return rates are not published here because the feed "
+                   "behind this page does not measure them.")
+
+
+def sport_copy(block, sport):
+    """The block with its chart copy made true for `sport`. Numbers untouched."""
+    if not isinstance(block, dict):
+        return block
+    b = dict(block)
+    if sport != "mlb" and b.get("source") == "statsapi":
+        b["source"] = "espn"
+    unit = "player" if sport in PLAYER_SPORTS else "club"
+    if b.get("type") == "bars" and b.get("title") == "Where the two clubs actually separate":
+        b["title"] = "Where the two %ss actually separate" % unit
+        low = [r.get("key") for r in b.get("rows") or [] if r.get("key") in LOW_BETTER_LABELS]
+        note = "Bar length is each %s's share of the pair, so the ratio is visible; "                "the printed figure is the real value." % unit
+        if low:
+            note += " Lower is better on %s, so %s inverted." % (
+                " and ".join(low), "that bar is" if len(low) == 1 else "those bars are")
+        b["note"] = note
+    if isinstance(b.get("note"), str) and FEED_DISCLAIMER in b["note"]:
+        b["note"] = " ".join(b["note"].replace(FEED_DISCLAIMER, "").split())
+    if b.get("type") == "form" and b.get("title") == "How each club arrives" and unit == "player":
+        b["title"] = "How each player arrives"
+    return b
+
+
 def render_body(article):
     """Render the sections, the jump nav, the hero rail and the hero lines.
 
@@ -747,7 +794,13 @@ def render_body(article):
     numbers and demands provenance for them.
     """
     out, nav, rail, hero = [], [], "", {}
-    for index, module in enumerate(article.get("body_json") or []):
+    sport = article.get("sport")
+    modules = []
+    for module in article.get("body_json") or []:
+        if isinstance(module, dict) and module.get("blocks"):
+            module = dict(module, blocks=[sport_copy(b, sport) for b in module["blocks"]])
+        modules.append(module)
+    for index, module in enumerate(modules):
         if module.get("module") == "hero-rail":
             for b in module.get("blocks") or []:
                 if (b or {}).get("type") == "herolines":
@@ -1154,8 +1207,22 @@ def render_article(article, provenance, neighbours):
             authored=authored,
             color=hero.get("%s_color" % side))
 
+    def player_photo(side):
+        """A tennis side's own picture from the showdown block: the ESPN
+        headshot, else the flag the player represents. Never initials."""
+        for module in article.get("body_json") or []:
+            for block in module.get("blocks") or []:
+                if (block or {}).get("type") != "showdown":
+                    continue
+                photo = ((block.get(side) or {}).get("photo")) or {}
+                src = str(photo.get("src") or "")
+                if src.startswith("/") and os.path.exists(os.path.join(ROOT, src.lstrip("/"))):
+                    return {"src": src, "alt": photo.get("alt") or article.get("%s_team" % side) or "",
+                            "w": 480, "h": 480, "kind": "face"}
+        return None
+
     def club_mark(side):
-        mark = club_logo(side)
+        mark = (player_photo(side) if sport == "tennis" else None) or club_logo(side)
         check_image(mark["src"], "%s club logo" % side)
         # Fail closed, the same way a bad API read does. team_logos writes even
         # its fallback badge to disk, so a src with no file behind it means the
@@ -1168,9 +1235,10 @@ def render_article(article, provenance, neighbours):
         # The rendered box is fixed and square so the two sides of the strip are
         # symmetrical whatever shape the league drew its mark in; the asset
         # itself stays 500px so it is sharp at 2x and 3x.
-        return ('<img class="ed-team-logo" src="%s" alt="%s" width="%d" height="%d" '
+        face = " ed-team-logo--face" if mark.get("kind") in ("face", "headshot") else ""
+        return ('<img class="ed-team-logo%s" src="%s" alt="%s" width="%d" height="%d" '
                 'fetchpriority="high" decoding="async">' % (
-                    esc(mark["src"]), esc(mark["alt"]), mark["w"], mark["h"]))
+                    face, esc(mark["src"]), esc(mark["alt"]), mark["w"], mark["h"]))
 
     away_logo_html = club_mark("away")
     home_logo_html = club_mark("home")
@@ -1203,7 +1271,8 @@ def render_article(article, provenance, neighbours):
     # words did, which is the only way to add imagery without adding scroll.
     logo_bits = ""
     for side in ("away", "home"):
-        logo_bits += ";--ed-%s-logo:url('%s')" % (side, esc(club_logo(side)["src"]))
+        mark = (player_photo(side) if sport == "tennis" else None) or club_logo(side)
+        logo_bits += ";--ed-%s-logo:url('%s')" % (side, esc(mark["src"]))
 
     def hero_faces_html():
         """The two starters, in the hero, beside the headline.
@@ -1231,7 +1300,9 @@ def render_article(article, provenance, neighbours):
             for side, p in shots)
         return '<div class="ed-hero-faces" aria-hidden="false">%s</div>' % cells
 
-    faces_html = hero_faces_html()
+    # Tennis puts each player's picture in the card itself, so the separate
+    # portrait pair under it would only repeat them.
+    faces_html = "" if sport == "tennis" else hero_faces_html()
 
     # The ballpark plate is generated and checked, but it is no longer PLACED.
     # It burns the venue name into the artwork at a fixed 52px in a 1040-wide

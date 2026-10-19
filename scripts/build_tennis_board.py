@@ -145,9 +145,9 @@ def match_row(m):
     elif m.get("start_utc"):
         meta.append(et_clock(m["start_utc"]))
     surf = str(m.get("surface") or "")
-    pills = ('<span class="tn-pill %s">%s</span><span class="tn-pill">%s</span>'
-             % (esc(surf.lower()), esc(surf or "Surface unlisted"),
-                esc(str(m.get("tour") or "").upper())))
+    # NO_INTERNAL_DISCLAIMERS_20260909: an unknown surface drops its pill.
+    pills = (('<span class="tn-pill %s">%s</span>' % (esc(surf.lower()), esc(surf)) if surf else "")
+             + '<span class="tn-pill">%s</span>' % esc(str(m.get("tour") or "").upper()))
     return ('<article class="tn-row"><div class="tn-rowhead"><div>'
             '<div class="tn-rowmeta">%s<span class="m">%s</span></div>%s%s</div></div></article>'
             % (pills, esc(" · ".join([x for x in meta if x])),
@@ -306,7 +306,7 @@ def featured_html(slate):
 
     m = sorted(pool, key=score)[0]
     surf = str(m.get("surface") or "")
-    pills = ['<span class="tn-pill %s">%s</span>' % (esc(surf.lower()), esc(surf or "Surface unlisted")),
+    pills = (['<span class="tn-pill %s">%s</span>' % (esc(surf.lower()), esc(surf))] if surf else []) + [
              '<span class="tn-pill">%s</span>' % esc(str(m.get("tour") or "").upper()),
              '<span class="tn-pill">%s</span>' % esc(m.get("event") or ""),
              '<span class="tn-pill">%s</span>' % esc(m.get("round") or "")]

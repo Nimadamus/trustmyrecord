@@ -906,7 +906,7 @@ def _read(sides, edges, odds, pred, fair, state, single=False):
     else:
         paras.append("The measured areas split evenly, which usually means the price and the starting assignments decide it.")
     if lead and total <= 2:
-        paras[-1] = "There is not much separating these two on paper. The clearest difference: %s" % edges.bullets(1)[0]
+        paras[-1] = "The clearest difference on paper: %s" % edges.bullets(1)[0]
     if fair and lead:
         pct = fair[lead] * 100
         if pct >= 65:
@@ -1120,7 +1120,7 @@ def _tennis(sport_league, event_id, kickoff, get):
             continue
         body.append("<h3>%s</h3>" % esc(p["name"]))
         body.append(_table(["Round", "Opponent", "Result"], [
-            (r["round"], r["opp"], ("Won " if r["won"] else "Lost ") + " ".join(r["sets"])) for r in runs]))
+            (r["round"], r["opp"], _result(r["won"], r["sets"])) for r in runs]))
         dropped = sum(1 for r in runs if r["won"] for s in r["sets"] if _set_lost(s))
         wins = sum(1 for r in runs if r["won"])
         if wins:
@@ -1137,7 +1137,7 @@ def _tennis(sport_league, event_id, kickoff, get):
         body.append("<h3>%s</h3>" % esc(p["name"]))
         body.append(_p("Across the most recent tour matches before this event, %s went %d and %d." % (p["name"], w_, len(runs) - w_)))
         body.append(_table(["Event", "Round", "Opponent", "Result"], [
-            (r["event"], r["round"], r["opp"], ("Won " if r["won"] else "Lost ") + " ".join(r["sets"])) for r in reversed(runs)]))
+            (r["event"], r["round"], r["opp"], _result(r["won"], r["sets"])) for r in reversed(runs)]))
     if body:
         parts.append(_section("Form coming in", "".join(body)))
         d = {}
@@ -1185,6 +1185,23 @@ def _round_phrase(rnd):
     if not rnd:
         return "in the next round"
     return "in %s" % rnd.lower() if re.match(r"(?i)round \d", rnd) else "in the %s" % rnd.lower()
+
+
+def _result(won, sets):
+    """'Won 6-0' read as a finished match when the opponent retired after one
+    set. Fewer than two sets to the winner means the match did not go the
+    distance, so it says so."""
+    winner_sets = 0
+    for score in sets:
+        m = re.match(r"^(\d+)-(\d+)", score or "")
+        if not m:
+            continue
+        mine, theirs = int(m.group(1)), int(m.group(2))
+        w, l = (mine, theirs) if won else (theirs, mine)
+        if (w >= 6 and w - l >= 2) or w == 7:
+            winner_sets += 1
+    tail = " (ret.)" if sets and winner_sets < 2 else ""
+    return ("Won " if won else "Lost ") + " ".join(sets) + tail
 
 
 def _set_lost(score):
