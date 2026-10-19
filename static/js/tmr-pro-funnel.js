@@ -158,7 +158,7 @@
             '.tpf-cap b{display:block;margin-bottom:6px}.tpf-cap-row{display:flex;gap:8px;flex-wrap:wrap}',
             '.tpf-cap input[type=email]{flex:1 1 200px;min-width:0;padding:8px 10px;border-radius:8px;border:1px solid rgba(140,196,255,.4);background:#fff;color:#0b1a2e;font:500 14px Inter,system-ui,sans-serif}',
             '.tpf-cap button{padding:8px 14px;border-radius:8px;border:1px solid #F5C542;background:transparent;color:inherit;font:700 13.5px Inter,system-ui,sans-serif;cursor:pointer}',
-            '.tpf-cap label{display:flex;gap:8px;align-items:flex-start;margin-top:8px;font-size:12px;opacity:.85}.tpf-cap label input{margin-top:3px}',
+            '.tpf-cap label{display:flex;gap:8px;align-items:flex-start;margin-top:8px;font-size:12px;opacity:.85;text-align:left}.tpf-cap label input[type=checkbox]{width:16px!important;height:16px!important;min-width:16px;flex:0 0 16px;margin:2px 0 0!important;padding:0!important;appearance:auto;-webkit-appearance:checkbox}',
             '.tpf-cap .tpf-hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}.tpf-cap-msg{display:block;margin-top:6px;font-size:12.5px}',
             '.tpf-lock{display:flex;gap:10px;align-items:center;padding:10px 12px;border-top:1px solid rgba(140,196,255,.14)}',
             '.tpf-lock span{flex:1;height:9px;border-radius:5px;background:rgba(140,196,255,.18)}',
