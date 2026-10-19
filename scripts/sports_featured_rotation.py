@@ -829,6 +829,9 @@ def _write_page(root, sport, game, spec, href, headline, lede, when_line, body=N
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <link rel="icon" type="image/png" href="/static/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&amp;family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet">
 <link rel="stylesheet" href="%s">
 <link rel="stylesheet" href="/static/css/tmr-navbar.css">
 <link rel="stylesheet" href="%s">
