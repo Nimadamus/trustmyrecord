@@ -786,6 +786,26 @@ def sport_copy(block, sport):
     return b
 
 
+def page_defects(sport, page):
+    """MOTD_QUALITY_GATE_20261019. What the tennis Matchup of the Day shipped
+    with for weeks: initials instead of players, baseball copy on a tennis page,
+    a feed disclaimer. Any of these on a rendered Game File fails the whole bake
+    before a byte is written, on every runner, bot and hand run."""
+    out = []
+    if sport != "mlb":
+        for bad in ('data-s="statsapi"', "Lower is better on ERA", "Staff ERA rank"):
+            if bad in page:
+                out.append("baseball copy on a %s page (%s)" % (sport, bad))
+    if sport == "tennis":
+        if "/logos/fallback/" in page:
+            out.append("initials badge where a player belongs")
+        if "two clubs" in page or "How each club arrives" in page:
+            out.append("club wording on a tennis page")
+    if FEED_DISCLAIMER in page or "Surface unlisted" in page:
+        out.append("internal disclaimer shown to readers")
+    return out
+
+
 def render_body(article):
     """Render the sections, the jump nav, the hero rail and the hero lines.
 
@@ -1878,6 +1898,10 @@ def main():
                 render_article(a, prov, (prev_a, next_a)))
         except Exception as err:                        # noqa: BLE001
             sys.exit("ABORT: %s failed to render: %s" % (a["slug"], err))
+        problems = page_defects(a.get("sport"), rendered[a["slug"]][1])
+        if problems:
+            sys.exit("ABORT: %s would publish broken: %s. Nothing written."
+                     % (a["slug"], "; ".join(problems)))
 
     # ---- artwork -----------------------------------------------------------
     # Generated for every published article on every bake. Output is

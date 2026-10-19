@@ -20,10 +20,14 @@ Never fails the bake: if main cannot be fast-forwarded (a local commit exists,
 which the bakes never create) the tree is left exactly as it was and the push
 step decides, as before.
 
-Conflict rule: if the stash cannot be re-applied cleanly, the freshly generated
-file wins for the files this bake produces (they are rebuilt from live data on
-every run; the next run regenerates any block another bot owns), and anything
-else keeps the version that just landed on main.
+Conflict rule (changed 2026-10-19): if the stash cannot be re-applied cleanly,
+the version that just landed on main wins and the caller's `rerun` (if given)
+re-applies this bot's transform on top of it. The old rule kept the bot's copy,
+and the bot's copy is the WHOLE FILE as it was when the run checked out: on
+2026-10-19 the asset re-pin restored 99 featured preview pages to their state of
+an hour earlier, erasing a human push that had landed during the run. A bake's
+output is rebuilt every run, so losing one run's copy costs nothing; losing the
+newer commit on main is a silent revert.
 """
 import os
 import subprocess
@@ -35,7 +39,7 @@ def _git(*args, check=True):
                           capture_output=True).stdout.strip()
 
 
-def sync_to_origin_main(label="bake"):
+def sync_to_origin_main(label="bake", rerun=None):
     if os.environ.get("GITHUB_ACTIONS") != "true":
         return
     try:
@@ -67,12 +71,15 @@ def sync_to_origin_main(label="bake"):
         if pop.returncode != 0:
             conflicted = [p for p in _git("diff", "--name-only", "--diff-filter=U").splitlines() if p]
             for path in conflicted:
-                # `--theirs` in a stash apply is the stash: the output this run just built.
-                _git("checkout", "--theirs", "--", path, check=False)
+                # `--ours` in a stash apply is HEAD: the commit that just landed on main.
+                _git("checkout", "--ours", "--", path, check=False)
                 _git("add", "--", path, check=False)
+            _git("reset", "--quiet", check=False)
             _git("stash", "drop", "--quiet", check=False)
-            print("[ci-sync] re-applied the %s output over %d new commit(s); kept this run's version of %d conflicted file(s): %s"
+            print("[ci-sync] re-applied the %s output over %d new commit(s); kept main's version of %d conflicted file(s): %s"
                   % (label, behind, len(conflicted), ", ".join(conflicted[:8])))
+            if rerun:
+                rerun()
             return
     print("[ci-sync] fast-forwarded onto origin/main (%d new commit(s) landed during the %s); output re-applied."
           % (behind, label))
