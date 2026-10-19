@@ -167,7 +167,9 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
   async function loadAccount() {
     var d = await window.api.request('/wallet/account');
     state.account = d;
-    var b = d.balance, a = d.activity, price = d.market && d.market.price_usd;
+    // MARKET_STATUS_20261019: no dollar value from a pool price nobody can sell at.
+    var ms = d.market && d.market.market_status;
+    var b = d.balance, a = d.activity, price = d.market && (!ms || ms.show_price) ? d.market.price_usd : null;
 
     $('hBalance').innerHTML = fmt(b.total) + '<small>TMR</small>';
     $('hFiat').textContent = usd(b.total, price);
@@ -382,7 +384,9 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
       ['Contract', '<a href="' + t.explorerUrl + '" target="_blank" rel="noopener">' + t.contract + '</a>'],
       ['Maximum supply', Number(t.maxSupply).toLocaleString() + ' TMR (fixed, no new TMR can be created)']
     ];
-    if (m && m.price_usd) {
+    if (m && m.market_status && !m.market_status.show_price) {
+      rows.push(['Market price', 'No functioning market yet. The last pool price ($' + Number(m.price_usd).toPrecision(3) + ') is not a price anyone can sell at.']);
+    } else if (m && m.price_usd) {
       rows.push(['Market price', '$' + Number(m.price_usd).toFixed(8) + ' per TMR']);
       rows.push(['Traded on', (m.dex || 'Uniswap') + ' — <a href="' + t.tradeUrl + '" target="_blank" rel="noopener">view market</a>']);
     }
