@@ -83,10 +83,13 @@
 
   /* A locked metric tile. Same shape as metric(), so the grid does not
      reflow, with the value replaced by what it would take to see it. */
+  /* Phase 4 (2026-10-19): every TrendSpotter lock links to the Pro page tagged
+     src=trendspotter_lock so the funnel can count it. */
+  var PRO_LOCK_HREF = '/premium/?from=trendspotter_lock&src=trendspotter_lock#pricing';
   function proMetric(label, sub) {
     return '<div class="ts-metric ts-metric-pro">' +
       '<dt>' + esc(label) + '</dt>' +
-      '<dd><a class="ts-pro-value" href="/premium/">TMR Pro</a>' +
+      '<dd><a class="ts-pro-value" href="' + PRO_LOCK_HREF + '">TMR Pro</a>' +
       (sub ? '<small>' + esc(sub) + '</small>' : '') + '</dd></div>';
   }
   var chartData = null;
@@ -959,8 +962,12 @@
     return '<p class="ts-pro-note">' +
       '<strong>Units, ROI, average price, the market-implied rate and the profitability chart are part of TMR Pro.</strong> ' +
       'The record, the sample, the win rate, the season splits and every qualifying game are free, so you can check this trend yourself. ' +
-      '<a href="/premium/">See what TMR Pro includes</a>' +
+      'TMR Pro unlocks units, ROI and average price on every trend, plus the full Handicapper Watchdog board, Bet Legend Pro, 15 Model Builder models and unlimited simulations. ' +
+      '<a href="' + PRO_LOCK_HREF + '">See what TMR Pro includes</a>' +
       (signedIn ? '' : ' · <a href="/login/?next=/trendspotter/">Sign in</a>') +
+      /* Live Watchdog count, filled by tmr-pro-funnel.js from the public summary. Stays hidden
+         when the count is 0 or the API does not answer. */
+      '<span class="ts-pro-live" data-tpf-live="trendspotter_lock" hidden></span>' +
       '</p>';
   }
 

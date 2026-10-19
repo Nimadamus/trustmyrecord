@@ -117,6 +117,33 @@
     return Boolean(api() && api().token);
   }
 
+  /* Phase 4 (2026-10-19): the 3rd model lock. Free members track 2 models at a time and the
+     server answers "Active model limit reached". Say plainly what TMR Pro unlocks, link to the
+     Pro page tagged src=modelbuilder_lock, and leave a hidden slot for the live Watchdog count
+     (filled by tmr-pro-funnel.js, hidden when 0 or when the API fails). Not shown at the Pro
+     ceiling, where upgrading would not help. */
+  function isModelLimit(e) {
+    var lim = e && e.data && Number(e.data.limit);
+    return /model limit reached/i.test(String((e && e.message) || '')) && !(lim >= 15);
+  }
+  function showModelLock(e) {
+    var m = el('builderMessage');
+    if (!m || !m.parentNode) return;
+    var lim = e && e.data && Number(e.data.limit);
+    var box = document.getElementById('mbProLock');
+    if (!box) {
+      box = document.createElement('p');
+      box.id = 'mbProLock';
+      box.className = 'notice';
+      m.parentNode.insertBefore(box, m.nextSibling);
+    }
+    box.innerHTML = 'Free members track ' + (lim > 0 ? lim : 2) + ' models at a time. '
+      + '<strong>TMR Pro tracks up to 15 models</strong> and adds the full Handicapper Watchdog board, Bet Legend Pro, '
+      + 'units, ROI and average price in TrendSpotter, and unlimited simulations. '
+      + '<a href="/premium/?from=modelbuilder_lock&src=modelbuilder_lock#pricing">See what TMR Pro includes</a>'
+      + '<span class="mb-pro-live" data-tpf-live="modelbuilder_lock" hidden></span>';
+  }
+
   function setMessage(text, kind) {
     var m = el('builderMessage');
     if (!m) return;
@@ -661,7 +688,7 @@
           var tr = await api().trackModel(newId, opts);
           tracking = true;
           taken = (tr && tr.board_picks_taken) || 0;
-        } catch (e) { trackError = (e && e.message) || ''; }
+        } catch (e) { trackError = (e && e.message) || ''; if (isModelLimit(e)) showModelLock(e); }
       }
       state.nameTouched = false;
       var stakeTxt = (el('stakeUnits') && el('stakeUnits').value) || '1';
@@ -934,7 +961,10 @@
       await api().trackModel(id);
       setMessage('Forward tracking started.', 'ok');
       await loadModels();
-    } catch (e) { setMessage((e && e.message) || 'Could not start tracking.', 'error'); }
+    } catch (e) {
+      setMessage((e && e.message) || 'Could not start tracking.', 'error');
+      if (isModelLimit(e)) showModelLock(e);
+    }
   }
 
   async function deleteModel(id) {

@@ -575,6 +575,36 @@
         });
     }
 
+    /* LOCK_LIVE_20261019 (Phase 4): one live text line under the TrendSpotter units/ROI/avg price
+       lock and the Model Builder 3rd model lock. The page script leaves a hidden
+       [data-tpf-live="<component>"] slot; this fills it with the count of proven handicappers
+       (25+ graded picks) whose picks are up on games that have not started, from the public
+       summary. Stays hidden when the count is 0 or the API fails. No price, no record. */
+    function fillLockLines() {
+        var els = [].filter.call(document.querySelectorAll('[data-tpf-live]'), function (el) { return !el.getAttribute('data-tpf-done'); });
+        if (!els.length) return;
+        els.forEach(function (el) { el.setAttribute('data-tpf-done', '1'); });
+        getJSON('/pro/pending-board/summary').then(function (sm) {
+            var n = Math.floor(Number(sm && sm.proven_handicappers) || 0);
+            if (n <= 0) return;
+            els.forEach(function (el) {
+                var comp = el.getAttribute('data-tpf-live');
+                el.style.display = 'block';
+                el.style.marginTop = '6px';
+                el.innerHTML = '<a data-tpf-cta="' + esc(comp) + '" href="' + proHref(comp, '#board') + '"><b>' + n0(n) + '</b> proven handicapper'
+                    + (n === 1 ? ' has picks' : 's have picks') + ' up on games that have not started. See the Watchdog board</a>';
+                el.hidden = false;
+                wireCtas(el);
+                once('tmr_pro_impression', { component: comp });
+            });
+        }).catch(function () { });
+    }
+    function mountLockLines() {
+        fillLockLines();
+        new MutationObserver(function () { clearTimeout(fillLockLines.t); fillLockLines.t = setTimeout(fillLockLines, 300); })
+            .observe(document.body, { childList: true, subtree: true });
+    }
+
     /* ------------------------------------------------------------ public API (BLP app, Pro page) */
     window.TMRFunnel = {
         track: track, setSrc: setSrc, src: src, preview: preview,
@@ -591,6 +621,7 @@
         else if (path.indexOf('/leaderboards') === 0) mountLeaderboards();
         else if (/^\/around-the-web\/[^/]+\/?$/.test(path)) mountAtwProfile();
         else if (SIMS[path] || SIMS[path + '/']) mountSimPostRun(SIMS[path] || SIMS[path + '/']);
+        else if (path.indexOf('/trendspotter') === 0 || path.indexOf('/model-builder') === 0) mountLockLines();
         /* NO_SIM_BANNERS_20261007 (Nima): no Watchdog line on the simulator pages.
            It mounted on /sports-simulators and the MLB, NFL, NBA and NHL hubs and
            showed an unrelated (often college football) consensus. Removed. */
