@@ -312,7 +312,7 @@
         if (depth) depth.textContent = (ms && !ms.genuine ? ms.text + ' ' : '') + (m.depth_warning || '');
         var links = document.getElementById('m-links');
         if (links && m.links) {
-            var defs = [['trade', 'Trade on Uniswap'], ['chart', 'Live chart'], ['pool_explorer', 'Pool on Basescan']];
+            var defs = [['trade', ms && !ms.genuine ? 'Pool on Uniswap (buy only)' : 'Trade on Uniswap'], ['chart', 'Live chart'], ['pool_explorer', 'Pool on Basescan']];
             defs.forEach(function (d) {
                 if (!m.links[d[0]]) return;
                 var a = document.createElement('a');

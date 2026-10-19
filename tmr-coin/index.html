@@ -541,6 +541,8 @@
             document.getElementById('tcoin-pool-addr').textContent = m.pool_address;
             document.getElementById('tcoin-depth').textContent = (ms && !ms.genuine ? ms.text + ' ' : '') + m.depth_warning + ' ' + m.liquidity_custody;
             document.getElementById('tcoin-trade-link').href = m.links.trade;
+            // MARKET_STATUS_20261019: no "Trade" call to action while a holder could not sell.
+            if (ms && !ms.genuine) document.getElementById('tcoin-trade-link').textContent = 'Pool on Uniswap (buy only: sales cannot fill yet) →';
             document.getElementById('tcoin-chart-link').href = m.links.chart;
             document.getElementById('tcoin-pool-link').href = m.links.pool_explorer;
             if (m.read_at) {
