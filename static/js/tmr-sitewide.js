@@ -32,7 +32,7 @@
             /*FMENU nfl-gotw*/ ["/matchup-of-the-day/washington-san-francisco-one-offense-keeps-chains-moving/", "NFL Game of the Week", "/nfl-game-of-the-week/"],
             /*FMENU ncaaf*/ ["/matchup-of-the-day/notre-dame-byu-visiting-offense-has-the-edge/", "NCAAF", "/matchup-of-the-day/ncaaf/"],
             /*FMENU mlb*/ ["/matchup-of-the-day/guardians-rays-bats-feast-on-righties/", "MLB", "/matchup-of-the-day/mlb/"],
-            /*FMENU nhl*/ ["/nhl/ducks-rangers-sennecke-vs-lafreniere/", "NHL", "/matchup-of-the-day/nhl/"],
+            /*FMENU nhl*/ ["/nhl/lightning-golden-knights-hagel-vs-stone/", "NHL", "/matchup-of-the-day/nhl/"],
             /*FMENU tennis*/ ["/matchup-of-the-day/parry-eala-the-games-say-something-else/", "Tennis", "/matchup-of-the-day/tennis/"],
             /*FMENU soccer*/ ["/matchup-of-the-day/rayo-vallecano-getafe-home-and-road-split-them/", "Soccer", "/matchup-of-the-day/soccer/"]
         ]],
