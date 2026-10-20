@@ -30,7 +30,7 @@
         // the product.
         ["@sub", "Featured Matchups", [
             /*FMENU nfl-gotw*/ ["/handicapping/nfl/new-england-won-7-last-10-vs-bears/", "NFL Game of the Week", "/nfl-game-of-the-week/"],
-            /*FMENU ncaaf*/ ["/matchup-of-the-day/notre-dame-byu-visiting-offense-has-the-edge/", "NCAAF", "/matchup-of-the-day/ncaaf/"],
+            /*FMENU ncaaf*/ ["/matchup-of-the-day/middle-tennessee-florida-international-one-offense-keeps-chains-moving/", "NCAAF", "/matchup-of-the-day/ncaaf/"],
             /*FMENU mlb*/ ["/matchup-of-the-day/guardians-rays-bats-feast-on-righties/", "MLB", "/matchup-of-the-day/mlb/"],
             /*FMENU nhl*/ ["/nhl/lightning-golden-knights-hagel-vs-stone/", "NHL", "/matchup-of-the-day/nhl/"],
             /*FMENU tennis*/ ["/matchup-of-the-day/parry-eala-the-games-say-something-else/", "Tennis", "/matchup-of-the-day/tennis/"],
