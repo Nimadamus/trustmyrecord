@@ -55,6 +55,8 @@ async function inputs() {
   throw last;
 }
 
+// NFL_SIM_UX_20261021: deep link into the simulator with a matchup preselected.
+const simLink = (away, home) => `/nfl-simulator/?away=${encodeURIComponent(away.abbr)}&amp;home=${encodeURIComponent(home.abbr)}`;
 const logo = (abbr) => `https://a.espncdn.com/i/teamlogos/nfl/500/${String(abbr).toLowerCase()}.png`;
 const pct = (v) => (v >= 0.995 ? 'better than 99%' : v < 0.005 ? 'under 1%' : Math.round(v * 100) + '%');
 const dateOf = (iso) => new Date(iso).toLocaleString('en-US', { timeZone: 'America/Los_Angeles', weekday: 'short', month: 'short', day: 'numeric' });
@@ -99,7 +101,7 @@ function shell(title, desc, url, crumbs, h1, bodyHtml, faqs, shellAssets, dateMo
 <meta property="og:description" content="${esc(desc)}" />
 <meta property="og:url" content="${SITE}${url}" />
 <meta property="og:site_name" content="TrustMyRecord" />
-<meta property="og:image" content="${SITE}/static/og/og-home.png" />
+<meta property="og:image" content="${SITE}/static/og/og-nfl-simulator.png" />
 <meta name="twitter:card" content="summary_large_image" />
 <link rel="icon" type="image/png" href="/static/favicon.png">
 ${ld.map((x) => `<script type="application/ld+json">${JSON.stringify(x)}</script>`).join('\n')}
@@ -211,8 +213,14 @@ function rivalryPage(d, a, b, proj, shellAssets) {
     const res = g.completed && g.home_score != null
       ? `Final: ${esc(away.nickname)} ${g.away_score}, ${esc(home.nickname)} ${g.home_score}`
       : typeof g.home_win_prob === 'number' ? `${esc(home.nickname)} ${Math.round(g.home_win_prob * 100)}%, ${esc(away.nickname)} ${100 - Math.round(g.home_win_prob * 100)}%` : 'not yet projected';
-    return `<tr><td>Week ${g.week}</td><td>${esc(dateOf(g.kickoff))}</td><td>${esc(away.name)} at ${esc(home.name)}</td><td class="r">${res}</td></tr>`;
+    return `<tr><td>Week ${g.week}</td><td>${esc(dateOf(g.kickoff))}</td><td><a href="${simLink(away, home)}">${esc(away.name)} at ${esc(home.name)}</a></td><td class="r">${res}</td></tr>`;
   }).join('');
+  // NFL_SIM_UX_20261021: the call to action opens the simulator with this
+  // matchup preselected (the next meeting, or the last one once both are played).
+  const nextMeet = meets.find((g) => !(g.completed && g.home_score != null)) || meets[meets.length - 1];
+  const cta = nextMeet
+    ? `Simulate <a href="${simLink(byId[nextMeet.away], byId[nextMeet.home])}">${esc(byId[nextMeet.away].nickname)} at ${esc(byId[nextMeet.home].nickname)}</a> play by play with a full box score in the NFL Simulator`
+    : `Simulate this matchup play by play with a full box score in the <a href="${simLink(a, b)}">NFL Simulator</a>`;
   const kp = (t, p) => `<div class="kpi"><b><img src="${logo(t.abbr)}" alt="" width="22" height="22"> ${H.UI_one(p.wins_mean)}</b><span>${esc(t.nickname)} projected wins, ${pct(p.division_title)} division, ${pct(p.playoffs)} playoffs</span></div>`;
   const body = `
   <section class="hero lsim-hero">
@@ -223,7 +231,7 @@ function rivalryPage(d, a, b, proj, shellAssets) {
   <section class="panel">
     <h2>${esc(a.nickname)} and ${esc(b.nickname)} meetings in ${d.season}</h2>
     <div class="tscroll"><table class="sched"><thead><tr><th>Week</th><th>Date</th><th>Game</th><th class="r">Result or model odds</th></tr></thead><tbody>${rows}</tbody></table></div>
-    <p>Simulate either game play by play with a full box score in the <a href="/nfl-simulator/">NFL Simulator</a>, or pick the result and see what it does to the seeds in the <a href="/nfl-playoff-simulator/">NFL Playoff Simulator</a>.</p>
+    <p>${cta}, or pick the result and see what it does to the seeds in the <a href="/nfl-playoff-simulator/">NFL Playoff Simulator</a>.</p>
   </section>
   <section class="panel">
     <h2>More</h2>

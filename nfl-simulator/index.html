@@ -225,7 +225,7 @@
   .faq summary{cursor:pointer;font-weight:640;color:var(--ink);list-style:none}
   .faq summary::-webkit-details-marker{display:none}
   .faq summary::before{content:"+";color:var(--accent);font-weight:800;margin-right:9px}
-  .faq details[open] summary::before{content:"–"}
+  .faq details[open] summary::before{content:"\2212"}
   .faq details[open] summary{margin-bottom:7px}
   .faq details p{margin:0}
   .seo .acc{border:1px solid var(--line);border-radius:12px;background:var(--card);padding:14px 16px;margin:12px 0;overflow-x:auto}
@@ -303,6 +303,50 @@
   .cmp th .x{background:none;border:none;color:var(--mut);cursor:pointer;font:inherit;padding:0 0 0 6px}
   .cmp .best{color:var(--good);font-weight:760}
   @media(max-width:420px){.prop .row{grid-template-columns:74px 1fr auto}.rcard{padding:14px}.rcard .tm .wp{font-size:1.25rem}}
+  /* NFL_SIM_UX_20261021: featured game hero, collapsed settings, explicit
+     Simulate buttons, progress state, one canonical headline. */
+  .feat{background:linear-gradient(180deg,#10203a,#0c1526);border:1px solid #1d3352;border-radius:16px;padding:16px 18px;margin:14px 0 0}
+  .feat[hidden]{display:none}
+  .feat-k{font-size:.7rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+  .feat-m{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:8px 0 2px;font-size:1.08rem;font-weight:720;min-width:0}
+  .feat-m .at{color:var(--dim);font-weight:600;font-size:.9rem}
+  .feat-m .tn{min-width:0;overflow-wrap:anywhere}
+  .feat-w{color:var(--mut);font-size:.84rem}
+  .feat-a{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px}
+  .btn.lg{font-size:1.02rem;font-weight:800;padding:13px 22px;border-radius:12px}
+  .btn:focus-visible,.g-sim:focus-visible,.adv summary:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+  .adv{margin-top:14px;border-top:1px solid var(--line);padding-top:10px}
+  .adv summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-weight:700;font-size:.9rem;color:var(--ink);min-height:36px}
+  .adv summary::-webkit-details-marker{display:none}
+  .adv summary::after{content:"";width:8px;height:8px;border-right:2px solid var(--mut);border-bottom:2px solid var(--mut);transform:rotate(45deg);margin-left:auto;transition:transform .15s}
+  .adv[open] summary::after{transform:rotate(225deg)}
+  .adv summary .chip{font-weight:600}
+  .adv .setgrid{margin-top:10px}
+  .g-sim{align-self:flex-start;background:rgba(56,189,248,.12);border:1px solid #1f4566;color:var(--ink);font:inherit;font-weight:750;font-size:.8rem;padding:6px 12px;border-radius:9px;cursor:pointer;min-height:32px}
+  .game:hover .g-sim,.game.sel .g-sim{background:var(--accent);color:#04121f;border-color:var(--accent)}
+  .g-meta{justify-content:flex-start;gap:8px;flex-wrap:wrap}
+  .g-meta .g-sim{margin-left:auto}
+  #result{scroll-margin-top:84px}
+  #result:empty{display:none}
+  .prog{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px 18px;text-align:center}
+  .prog .t{font-weight:720;font-size:1rem;color:var(--ink)}
+  .prog .s{color:var(--mut);font-size:.86rem;margin-top:4px;min-height:1.3em}
+  .prog .bar{height:6px;border-radius:6px;background:var(--line);overflow:hidden;margin:14px auto 0;max-width:420px;position:relative}
+  .prog .bar i{position:absolute;top:0;bottom:0;width:38%;border-radius:6px;background:linear-gradient(90deg,var(--accent),var(--accent2));animation:progslide 1.25s ease-in-out infinite}
+  @keyframes progslide{0%{left:-38%}100%{left:100%}}
+  @media (prefers-reduced-motion:reduce){.prog .bar i{animation:none;left:0;width:100%;opacity:.5}.spin{animation:none}}
+  .hl-h{font-size:1.5rem;font-weight:800;letter-spacing:-.015em;margin:0 0 12px;color:var(--ink);outline:none;position:relative}
+  .hl-h:focus-visible{outline:3px solid var(--accent);outline-offset:4px;border-radius:6px}
+  .hl-meta{margin-top:12px;color:var(--mut);font-size:.8rem;text-align:center;position:relative}
+  .hl-meta b{color:var(--ink);font-weight:700}
+  .hl-final{margin-top:8px;text-align:center;font-size:.84rem;color:#cdd8e8;position:relative}
+  #simConvertPanel h3{margin:0 0 4px}
+  .cv-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .cv-row .btn{font-size:1rem;padding:12px 18px;font-weight:800}
+  .cv-sign{margin:12px 0 0;font-size:.88rem;color:#cdd8e8}
+  .cv-sign a{font-weight:750}
+  .simmsg{border:1px solid #1f4566;background:rgba(56,189,248,.06);border-radius:12px;padding:14px 16px;color:#cdd8e8}
+  @media(max-width:640px){.hl-h{font-size:1.25rem}.feat{padding:14px}.feat-m{font-size:1rem}.mh{padding:16px 12px}}
 </style>
 <link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=282f1f70cb51">
 <script defer src="/static/js/tmr-linkhub.js?v=7be5e93e0626"></script>
@@ -325,8 +369,8 @@
      window.TMR_FUNNEL_FLAGS = { enabled: false }. -->
 <script defer src="/static/js/tmr-activation-funnel.js?v=1e4bb9d262f6"></script>
 <!-- SHELL MIGRATION 2026-08-14: design system in SHELL-ONLY mode. The page keeps
-     its own dark tool styling (hybrid surface model); only the chrome — nav and
-     footer — comes from the shared system, replacing the page-local text-link
+     its own dark tool styling (hybrid surface model); only the chrome (nav and
+     footer) comes from the shared system, replacing the page-local text-link
      header that matched nothing else on the site. -->
 <link rel="stylesheet" href="/static/css/tmr-ds.d4d41a955166.css">
 <link rel="stylesheet" href="/static/css/tmr-ds-header.cc364e352e74.css">
@@ -349,7 +393,18 @@
   </nav>
   <section class="hero">
     <h1>NFL Game Simulator</h1>
-    <p>An NFL game simulator for scores and matchups in the 2026 season. Simulate any NFL game thousands of times from real drive data and current projected rosters, for a projected score, a calibrated win probability, spread and total analysis, and a full player box score. Pick the schedule or build your own matchup, choose your simulation count, set the venue and kickoff window. Free with a TrustMyRecord account, no card needed. A model projection, not betting advice.</p>
+    <p>Simulate any 2026 NFL game for a projected score, win probability and full box score, built from real drive data and current rosters. Free with a TrustMyRecord account, no card needed.</p>
+  </section>
+
+  <!-- NFL_SIM_UX_20261021: the next game, one tap from a result. Filled by renderFeatured(). -->
+  <section class="feat" id="featured" aria-labelledby="featTitle" hidden>
+    <div class="feat-k" id="featKicker">Next game</div>
+    <h2 class="feat-m" id="featTitle"></h2>
+    <div class="feat-w" id="featWhen"></div>
+    <div class="feat-a">
+      <button type="button" class="btn lg" id="featBtn">Simulate this game</button>
+      <a href="#games" class="dim" id="featAlt">or pick another game</a>
+    </div>
   </section>
 
   <!-- ===== setup / controls ===== -->
@@ -363,7 +418,7 @@
     <div class="setgrid" id="weeklyControls">
       <label class="f"><span>Season</span><select id="season"></select></label>
       <label class="f"><span>Week</span><select id="week"></select></label>
-      <span class="dim" id="pickHint" style="align-self:center">Tap a game below to simulate it.</span>
+      <span class="dim" id="pickHint" style="align-self:center">Tap any game to simulate it.</span>
     </div>
 
     <!-- custom selectors -->
@@ -374,7 +429,9 @@
       <label class="fld" style="flex:1 1 220px"><span>Team 2</span><select id="t2"></select></label>
     </div>
 
-    <!-- shared: sim count / venue / kickoff -->
+    <!-- shared: sim count / venue / kickoff, collapsed by default -->
+    <details class="adv" id="advSettings">
+    <summary><span>Simulation settings</span><span class="chip" id="cSims"><b id="cSimsN">10,000</b>&nbsp;sims</span><span class="chip" id="cVenue">Home field</span><span class="chip" id="cWindow">Late afternoon</span></summary>
     <div class="setgrid">
       <div class="fld"><span>Simulations</span>
         <div class="seg" id="simSeg" role="group" aria-label="Simulation count">
@@ -402,22 +459,21 @@
         </div>
       </div>
     </div>
+    </details>
 
-    <!-- compact current-settings summary + run action -->
-    <div class="prerun">
+    <!-- current matchup + run action (custom mode) -->
+    <div class="prerun" id="prerun" style="display:none">
       <span class="chip" id="cSel">No matchup selected</span>
-      <span class="chip" id="cSims"><b id="cSimsN">10,000</b>&nbsp;sims</span>
-      <span class="chip" id="cVenue">Home field</span>
-      <span class="chip" id="cWindow">Late afternoon</span>
       <div class="runrow">
-        <button class="btn" id="runBtn" style="display:none">Run Simulation</button>
+        <button class="btn" id="runBtn" style="display:none">Simulate this matchup</button>
       </div>
     </div>
   </div>
 
+  <p class="sr-only" id="simStatus" role="status" aria-live="polite"></p>
+  <div id="result"></div>
   <p id="boardAimNote" hidden></p>
   <div id="games" class="games"></div>
-  <div id="result"></div>
 
   <div class="disc" id="globalDisc">Simulated model projections based on current available roster and injury data. Probability estimates, not guarantees, and not financial or betting advice.</div>
 <!--MK:blpCrossLink-->
@@ -672,8 +728,8 @@ const $=(s,r=document)=>r.querySelector(s);
 const $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const el=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e};
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const pct=(v,d=0)=>v==null?'—':(v*100).toFixed(d)+'%';
-const nz=v=>v==null?'—':v;
+const pct=(v,d=0)=>v==null?'n/a':(v*100).toFixed(d)+'%';
+const nz=v=>v==null?'n/a':v;
 const fmtN=n=>Number(n).toLocaleString();
 const TEAMCOL={ARI:'#97233F',ATL:'#A71930',BAL:'#241773',BUF:'#00338D',CAR:'#0085CA',CHI:'#0B162A',CIN:'#FB4F14',CLE:'#311D00',DAL:'#003594',DEN:'#FB4F14',DET:'#0076B6',GB:'#203731',HOU:'#03202F',IND:'#002C5F',JAX:'#006778',KC:'#E31837',LV:'#000000',LAC:'#0080C6',LA:'#003594',MIA:'#008E97',MIN:'#4F2683',NE:'#002244',NO:'#D3BC8D',NYG:'#0B2265',NYJ:'#125740',PHI:'#004C54',PIT:'#FFB612',SF:'#AA0000',SEA:'#002244',TB:'#D50A0A',TEN:'#0C2340',WAS:'#5A1414'};
 const col=a=>TEAMCOL[a]||'#334155';
@@ -697,7 +753,7 @@ async function nflApi(p){
      stay simple requests with no preflight. */
   const h={Accept:'application/json'};
   try{const t=/^\/simulate/.test(p)&&window.api&&window.api.token;if(t)h.Authorization='Bearer '+t}catch(e){}
-  let r; try{r=await fetch(API+p,{headers:h})}catch(e){throw{msg:'Network error — please try again.'}}
+  let r; try{r=await fetch(API+p,{headers:h})}catch(e){throw{msg:'Network error. Please try again.'}}
   /* API_HYGIENE_20260903: the busy path returns 503 {error:"sim_busy"}, not
      429, so this branch could never fire and the visitor got the generic
      "something went wrong" for a queue that clears in seconds. Both are handled
@@ -715,9 +771,17 @@ function loading(node,msg){node.innerHTML='';const s=el('div','state');s.innerHT
 function errNode(node,e){node.innerHTML='';const d=el('div','err',e.msg||'Something went wrong.');node.appendChild(d);try{window.TMRSimGate&&window.TMRSimGate.noteUiError(e&&e.msg||'sim error')}catch(_){}}
 
 const WINDOW_LABEL={early:'Early afternoon',late:'Late afternoon',night:'Night',intl:'Intl / morning'};
+/* NFL_SIM_UX_20261021: the ONE default simulation count. Measured Oct 21:
+   mean win probability error 1.21 points at 1,000 sims (max 3.85) against
+   0.44 at 10,000 (max 1.66), so the default stays 10,000 and never drops
+   below 5,000. The slow first result is a cold start, not the sim count
+   (cold 5,000 took 10.4s, warm 10,000 took 1.5s), and is handled with the
+   progress state. Every allowed count stays under Simulation settings. */
+const DEFAULT_SIMS=10000;
+const ALLOWED_SIMS=[100,1000,5000,10000,25000,50000];
 let STATE={mode:'weekly',season:null,week:null,games:[],weeksMeta:[],selRef:null,
   teams:[],t1:null,t2:null,
-  sims:10000,venue:'home',venueTouched:false,window:'late',
+  sims:DEFAULT_SIMS,venue:'home',venueTouched:false,window:'late',
   lastRun:null,
   /* NFL_SIM_WHATIF_20261001: players ruled out by the visitor, bound to one
      matchup (outKey) so they never leak into a different game. */
@@ -734,7 +798,12 @@ function shareUrl(){
   const u=new URL(location.origin+location.pathname);
   u.searchParams.set('seed',r.seed);
   u.searchParams.set('sims',r.sims||STATE.sims);
-  if(r.kind==='scheduled'){u.searchParams.set('ref',r.ref)}
+  if(r.kind==='scheduled'){u.searchParams.set('ref',r.ref);
+    /* NFL_SIM_UX_20261021: a scheduled run with a chosen venue or window now
+       carries them, so the link replays the game that was on screen. */
+    if(r.venue)u.searchParams.set('venue',r.venue);
+    if(r.window)u.searchParams.set('window',r.window);
+  }
   else{
     u.searchParams.set('home',r.home);u.searchParams.set('away',r.away);
     if(r.venue)u.searchParams.set('venue',r.venue);
@@ -763,38 +832,62 @@ async function copyShare(btn){
 async function runFromUrl(){
   let q;try{q=new URLSearchParams(location.search)}catch(e){return false}
   const seed=q.get('seed');
+  const seedN=seed&&/^\d{1,15}$/.test(seed)?Number(seed):null;
   const sims=Number(q.get('sims'));
-  if(sims&&[100,1000,5000,10000,25000,50000].includes(sims)){
+  if(sims&&ALLOWED_SIMS.includes(sims)){
     STATE.sims=sims;
-    const b=$$('#simSeg button').find(x=>+x.dataset.sims===sims);
-    if(b)segSet('#simSeg',b);
+    segSelect('#simSeg','sims',String(sims));
     const n=$('#cSimsN');if(n)n.textContent=fmtN(sims);
   }
   // A shared what if carries its ruled out players; they bind to the first run.
   const outQ=q.get('out');
   if(outQ){STATE.out=outQ.split(',').map(s=>s.trim()).filter(s=>/^[A-Za-z0-9_-]{1,64}$/.test(s)).slice(0,8).map(ref=>({ref}));STATE.outKey='*'}
+  const wq=q.get('window');const winOk=wq&&WINDOW_LABEL[wq]?wq:null;
+  const vq=q.get('venue');
+  /* NFL_SIM_UX_20261021: a reload of this tab's own run is shown from the copy
+     kept for the tab, so it is identical and costs no new run. */
+  const cached=seedN!=null?simCacheRead():null;
   const ref=q.get('ref');
-  if(ref){setMode('weekly');await runScheduled(ref,seed?Number(seed):null);return true}
+  if(ref){
+    setMode('weekly');
+    const g=STATE.games.find(x=>x.ref===ref)||null;
+    if(g){showGameWeek(g);STATE.selRef=ref;for(const c of $('#games').children)markCard(c,c.dataset.ref===ref)}
+    if(vq==='home'||vq==='away'||vq==='neutral'){STATE.venue=vq;STATE.venueTouched=true}
+    STATE.window=winOk||(g?defaultWindowFor(g):STATE.window);
+    segSelect('#windowSeg','window',STATE.window);
+    relabelVenue();segSelect('#venueSeg','venue',STATE.venue);updateChips();
+    if(g)renderFeatured({kind:'game',g,kicker:seedN!=null?'Shared simulation':'Selected game',src:'url'});
+    if(seedN==null&&g)return true;            // a game link preselects; Simulate runs it
+    if(cached){STATE.lastRun=cached.run;renderResult($('#result'),cached.d);simAfterRender($('#result'),cached.d);return true}
+    await runScheduled(ref,seedN);return true;
+  }
   const home=q.get('home'),away=q.get('away');
-  if(home&&away){
+  if(home!=null||away!=null){
+    if(!STATE.teams.length)return false;      // team list unavailable: ordinary page
+    const H=resolveTeam(home),A=resolveTeam(away);
+    if(!H||!A||H.ref===A.ref){
+      simLinkMessage(!H||!A
+        ?'That matchup link does not name two NFL teams we recognize. Pick a game below, or choose Custom Matchup to set up any two teams.'
+        :'A team cannot play itself. Pick a game below, or choose Custom Matchup to set up any two teams.');
+      return false;
+    }
     setMode('custom');
     // The link carries the HOST and the VISITOR; the picker carries team1 and
     // team2 plus a venue. Rebuild it as team1=visitor, team2=host so the
     // default "team2 at home" reproduces the shared game.
-    STATE.t1=away;STATE.t2=home;
-    const v=q.get('venue');
-    STATE.venue=v==='neutral'?'neutral':'team2';STATE.venueTouched=true;
-    const w=q.get('window');if(w)STATE.window=w;
+    STATE.t1=A.ref;STATE.t2=H.ref;
+    STATE.venue=vq==='neutral'?'neutral':'team2';STATE.venueTouched=true;
+    if(winOk)STATE.window=winOk;
     const s1=$('#t1'),s2=$('#t2');
     if(s1)s1.value=STATE.t1;
     if(s2)s2.value=STATE.t2;
-    const vb=$$('#venueSeg button').find(x=>x.dataset.venue===STATE.venue);
-    if(vb)segSet('#venueSeg',vb);
-    const wb=$$('#windowSeg button').find(x=>x.dataset.window===STATE.window);
-    if(wb)segSet('#windowSeg',wb);
-    relabelVenue();
+    segSelect('#windowSeg','window',STATE.window);
+    relabelVenue();segSelect('#venueSeg','venue',STATE.venue);
     updateChips();
-    await runCustom(seed?Number(seed):null);
+    renderFeatured({kind:'custom',a:A,h:H,neutral:STATE.venue==='neutral',kicker:seedN!=null?'Shared simulation':'Your matchup',src:'url'});
+    if(seedN==null)return true;
+    if(cached){STATE.lastRun=cached.run;renderResult($('#result'),cached.d);simAfterRender($('#result'),cached.d);return true}
+    await runCustom(seedN);
     return true;
   }
   return false;
@@ -818,7 +911,9 @@ async function boot(){
   markModeTabs(STATE.mode||'weekly');
 
   // mode
-  $$('#modebar button').forEach(b=>b.onclick=()=>setMode(b.dataset.mode));
+  /* A visitor switching mode leaves the shared run behind, so the address bar does too. */
+  $$('#modebar button').forEach(b=>b.onclick=()=>{setMode(b.dataset.mode);try{if(location.search)history.replaceState(history.state,'',location.pathname)}catch(e){}});
+  segSelect('#simSeg','sims',String(STATE.sims));$('#cSimsN').textContent=fmtN(STATE.sims);
   // sims
   $$('#simSeg button').forEach(b=>b.onclick=()=>{STATE.sims=+b.dataset.sims;segSet('#simSeg',b);$('#cSimsN').textContent=fmtN(STATE.sims);rerunIfShown()});
   // venue
@@ -861,6 +956,7 @@ function setMode(mode){
   $('#customControls').style.display=weekly?'none':'flex';
   $('#games').style.display=weekly?'':'none';
   $('#runBtn').style.display=weekly?'none':'';
+  $('#prerun').style.display=weekly?'none':'';
   // reset venue labels + selection defaults per mode
   STATE.venue = weekly?'home':'team2'; STATE.venueTouched=false;
   relabelVenue();
@@ -895,7 +991,7 @@ async function loadSchedule(pickDefaultWeek){
   try{
     const d=await nflApi(`/schedule?season=${STATE.season}`);
     STATE.games=d.games; STATE.weeksMeta=d.weeks;
-    if(!d.weeks.length){$('#games').innerHTML='';$('#games').appendChild(Object.assign(el('div','unavail'),{textContent:'No scheduled games for this season yet.'}));$('#week').innerHTML='<option>—</option>';return}
+    if(!d.weeks.length){$('#games').innerHTML='';$('#games').appendChild(Object.assign(el('div','unavail'),{textContent:'No scheduled games for this season yet.'}));$('#week').innerHTML='<option>No weeks</option>';return}
     $('#week').innerHTML=d.weeks.map(w=>{const l=w.season_type_code===3?('Playoffs '+w.week):('Week '+w.week);return `<option value="${w.season_type_code}:${w.week}">${l}</option>`}).join('');
     if(pickDefaultWeek){
       let target=null;
@@ -918,6 +1014,10 @@ async function loadSchedule(pickDefaultWeek){
     }
     STATE.week=$('#week').value;
     renderGames();
+    /* NFL_SIM_UX_20261021: the hero offers the next game until a shared link or the live board names a better one. */
+    if(!STATE.featSrc){const [stc,wk]=(STATE.week||'2:1').split(':').map(Number);
+      const nx=nextGameOf(d.games.filter(g=>g.week===wk&&g.is_postseason===(stc===3)))||nextGameOf(d.games);
+      if(nx)renderFeatured({kind:'game',g:nx,kicker:nx.status==='live'?'Live now':'Next game',src:'next'})}
   }catch(e){errNode($('#games'),e)}
 }
 function selectedGame(){return STATE.games.find(g=>g.ref===STATE.selRef)||null}
@@ -927,7 +1027,7 @@ function renderGames(){
   const games=STATE.games.filter(g=>g.week===wk&&g.is_postseason===(stc===3));
   const box=$('#games');box.innerHTML='';
   /* The grid is a single-select list, so it is announced as one. */
-  box.setAttribute('role','listbox');
+  box.setAttribute('role','list');
   box.setAttribute('aria-label','Games this week');
   if(!games.length){box.appendChild(Object.assign(el('div','unavail'),{textContent:'No games for this week.'}));return}
   {
@@ -954,23 +1054,20 @@ function renderGames(){
     c.appendChild(away);c.appendChild(home);
     const meta=el('div','g-meta');
     const dt=g.kickoff_utc?new Date(g.kickoff_utc):null;
-    meta.appendChild(Object.assign(el('span'),{textContent:dt?dt.toLocaleDateString(undefined,{month:'short',day:'numeric'}):''}));
+    meta.appendChild(Object.assign(el('span'),{textContent:dt?dt.toLocaleDateString('en-US',{timeZone:'America/Los_Angeles',month:'short',day:'numeric'}):''}));
     meta.appendChild(Object.assign(el('span','st '+g.status),{textContent:g.status}));
+    /* NFL_SIM_UX_20261021: an explicit Simulate button on every card (the
+       whole card stays tappable). The button is the keyboard and screen reader
+       control, so the card itself is a plain list item. */
+    const sb=el('button','g-sim','Simulate');sb.type='button';
+    sb.setAttribute('aria-label','Simulate '+g.away+' at '+g.home+(g.final?', final '+g.final.away+' to '+g.final.home:''));
+    sb.onclick=(e)=>{e.stopPropagation();pickGame(g)};
+    meta.appendChild(sb);
     c.appendChild(meta);
-    /* A11Y_20260903: these cards were plain divs with only a click handler, so
-       tab moved straight past the whole grid and a keyboard-only visitor could
-       not select any game in the default mode of the tool. Given a role, a tab
-       stop, a selected state and Enter/Space, the way the sortable table
-       headers further down this file already do it. */
-    c.setAttribute('role','option');
-    c.setAttribute('tabindex','0');
-    const on=STATE.selRef===g.ref;
-    c.classList.toggle('sel',on);
-    c.setAttribute('aria-selected',on?'true':'false');
-    if(on&&window.__simBoardGame)c.classList.add('on-board');
-    c.setAttribute('aria-label',g.away+' at '+g.home+(g.final?', final '+g.final.away+' to '+g.final.home:'')+', '+g.status);
+    c.setAttribute('role','listitem');
+    markCard(c,STATE.selRef===g.ref);
+    if(STATE.selRef===g.ref&&window.__simBoardGame)c.classList.add('on-board');
     c.onclick=()=>pickGame(g);
-    c.onkeydown=(e)=>{if(e.key==='Enter'||e.key===' '||e.key==='Spacebar'){e.preventDefault();pickGame(g)}};
     box.appendChild(c);
   }
 }
@@ -1025,13 +1122,12 @@ function highlightBoardGame(g,board){
   const box=$('#games');
   if(box)for(const c of box.children){
     const on=c.dataset.ref===g.ref;
-    c.classList.toggle('sel',on);
+    markCard(c,on);
     c.classList.toggle('on-board',on);
-    c.setAttribute('aria-selected',on?'true':'false');
     if(on){
       const meta=c.querySelector('.g-meta');
       if(meta&&!meta.querySelector('.on-board-tag'))
-        meta.appendChild(Object.assign(el('span','on-board-tag'),{textContent:'On the board'}));
+        meta.insertBefore(Object.assign(el('span','on-board-tag'),{textContent:'On the board'}),meta.querySelector('.g-sim'));
     }
   }
   if(!STATE.lastRun){STATE.window=defaultWindowFor(g);segSelect('#windowSeg','window',STATE.window)}
@@ -1042,6 +1138,7 @@ function highlightBoardGame(g,board){
     note.hidden=false;
     note.textContent='On the board: '+g.away+' at '+g.home+'. Tap to simulate.';
   }
+  if(STATE.featSrc!=='url')renderFeatured({kind:'game',g,kicker:'On the board',src:'board'});
 }
 async function aimAtLiveBoard(){
   if(STATE.mode!=='weekly')return;
@@ -1073,8 +1170,7 @@ function pickGame(g){
   /* A11Y_20260903: the selection was carried by a class alone, so a screen
      reader was never told which game is current. The listbox state moves with
      it here rather than only on the next full render. */
-  for(const c of $('#games').children){const on=c.dataset.ref===g.ref;
-    c.classList.toggle('sel',on);c.setAttribute('aria-selected',on?'true':'false')}
+  for(const c of $('#games').children)markCard(c,c.dataset.ref===g.ref);
   // sensible default kickoff window from the real game (unless user already chose)
   if(!STATE.lastRun){STATE.window=defaultWindowFor(g);segSelect('#windowSeg','window',STATE.window)}
   STATE.venue='home';STATE.venueTouched=false;
@@ -1115,7 +1211,7 @@ function swapCustom(){
 function updateChips(){
   const weekly=STATE.mode==='weekly';
   let selTxt='No matchup selected';
-  if(weekly){const g=selectedGame();if(g)selTxt=`${g.away_abbr} @ ${g.home_abbr}`}
+  if(weekly){const g=selectedGame();if(g)selTxt=`${g.away_abbr} at ${g.home_abbr}`}
   else{const a=teamByRef(STATE.t1),b=teamByRef(STATE.t2);if(a&&b)selTxt=`${a.abbr} vs ${b.abbr}`}
   $('#cSel').textContent=selTxt;
   $('#cSimsN').textContent=fmtN(STATE.sims);
@@ -1143,14 +1239,17 @@ function venueParamWeekly(){
    game on screen can always be re-run or shared. */
 async function runScheduled(ref,seed){
   STATE.selRef=ref;
-  const out=$('#result');out.scrollIntoView({behavior:'smooth',block:'nearest'});
-  loading(out,`Simulating ${fmtN(STATE.sims)} games…`);
+  const out=$('#result');
+  /* NFL_SIM_UX_20261021: the progress state is drawn first and THEN scrolled
+     to, so the visitor lands on something rather than an empty node. */
+  const g0=STATE.games.find(x=>x.ref===ref);
+  startProgress(out,`Simulating ${g0?g0.away_abbr+' at '+g0.home_abbr:'this game'}`);
   const q=new URLSearchParams();q.set('sims',STATE.sims);if(seed)q.set('seed',seed);
   const vp=venueParamWeekly();if(vp)q.set('venue',vp);
   if(STATE.window)q.set('window',STATE.window);
   const outRefs=whatIfParam(q,'g:'+ref);
-  STATE.lastRun={kind:'scheduled',ref,seed,sims:STATE.sims,out:outRefs};
-  try{const d=await nflApi(`/simulate/${ref}?${q.toString()}`);if(STATE.lastRun)STATE.lastRun.seed=(d.meta&&d.meta.seed)||seed;renderResult(out,d)}catch(e){errNode(out,e)}
+  STATE.lastRun={kind:'scheduled',ref,seed,sims:STATE.sims,out:outRefs,venue:vp||null,window:STATE.window||null};
+  try{const d=await nflApi(`/simulate/${ref}?${q.toString()}`);if(STATE.lastRun)STATE.lastRun.seed=(d.meta&&d.meta.seed)||seed;renderResult(out,d);simAfterRender(out,d)}catch(e){stopProgress();errNode(out,e);revealResult(out,null)}
 }
 async function runCustom(seed){
   const a=teamByRef(STATE.t1),b=teamByRef(STATE.t2);
@@ -1163,15 +1262,124 @@ async function runCustom(seed){
   if(STATE.venue==='team1'){host=a;visitor=b}
   else if(STATE.venue==='team2'){host=b;visitor=a}
   else if(neutral){host=a;visitor=b}
-  out.scrollIntoView({behavior:'smooth',block:'nearest'});
-  loading(out,`Simulating ${fmtN(STATE.sims)} games…`);
+  startProgress(out,`Simulating ${visitor.abbr} ${neutral?'vs':'at'} ${host.abbr}`);
   const q=new URLSearchParams();q.set('home',host.ref);q.set('away',visitor.ref);q.set('sims',STATE.sims);
   if(neutral)q.set('venue','neutral');if(STATE.window)q.set('window',STATE.window);if(seed)q.set('seed',seed);
   const outRefs=whatIfParam(q,'c:'+[host.ref,visitor.ref].sort().join('|'));
   STATE.lastRun={kind:'custom',seed,home:host.ref,away:visitor.ref,sims:STATE.sims,
     venue:neutral?'neutral':null,window:STATE.window,out:outRefs};
-  try{const d=await nflApi(`/simulate-custom?${q.toString()}`);if(STATE.lastRun)STATE.lastRun.seed=(d.meta&&d.meta.seed)||seed;renderResult(out,d)}catch(e){errNode(out,e)}
+  try{const d=await nflApi(`/simulate-custom?${q.toString()}`);if(STATE.lastRun)STATE.lastRun.seed=(d.meta&&d.meta.seed)||seed;renderResult(out,d);simAfterRender(out,d)}catch(e){stopProgress();errNode(out,e);revealResult(out,null)}
 }
+
+/* ===================== NFL_SIM_UX_20261021: progress, reveal, URL =====================
+   Progress is shown the instant a run starts, in the place the result will
+   appear. After the result renders the page scrolls to its headline, moves
+   keyboard focus there, announces it, writes the share URL into the address
+   bar and keeps the result for this tab so a reload shows the same run. */
+let PROG_TIMER=null;
+function simStatus(t){const n=$('#simStatus');if(n)n.textContent=t}
+function stopProgress(){if(PROG_TIMER){clearInterval(PROG_TIMER);PROG_TIMER=null}}
+function startProgress(out,label){
+  stopProgress();
+  out.innerHTML='';
+  const p=el('div','prog');p.id='simProgress';
+  p.innerHTML=`<div class="spin" aria-hidden="true"></div><div class="t">${esc(label)}</div><div class="s">Loading rosters, injuries and team ratings</div><div class="bar" aria-hidden="true"><i></i></div>`;
+  out.appendChild(p);
+  const t0=Date.now(),sub=$('.s',p),n=fmtN(STATE.sims);
+  PROG_TIMER=setInterval(()=>{
+    if(!sub.isConnected){stopProgress();return}
+    const sec=Math.floor((Date.now()-t0)/1000);
+    sub.textContent=sec<2?'Loading rosters, injuries and team ratings'
+      :(sec<8?`Playing out ${n} games, drive by drive (${sec}s)`:`Almost there, building the box score (${sec}s)`);
+  },500);
+  simStatus(label+', '+n+' simulations.');
+  revealResult(out,null);
+}
+function revealResult(out,focusEl){
+  let reduce=false;try{reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches}catch(e){}
+  try{out.scrollIntoView({behavior:reduce?'auto':'smooth',block:'start'})}catch(e){try{out.scrollIntoView(true)}catch(_){}}
+  if(focusEl){try{focusEl.focus({preventScroll:true})}catch(e){}}
+}
+const SIM_CACHE_KEY='tmr_nfl_sim_last_v1';
+const hereUrl=()=>location.origin+location.pathname+location.search;
+function simCacheWrite(d){try{const u=shareUrl();if(u)sessionStorage.setItem(SIM_CACHE_KEY,JSON.stringify({url:u,run:STATE.lastRun,d}))}catch(e){}}
+function simCacheRead(){try{const c=JSON.parse(sessionStorage.getItem(SIM_CACHE_KEY)||'null');return c&&c.d&&c.run&&c.url===hereUrl()?c:null}catch(e){return null}}
+function simAfterRender(out,d){
+  stopProgress();
+  if(!d||d.unavailable){revealResult(out,null);return}
+  // A shared link runs before the gate is installed; the conversion block still belongs under the headline.
+  try{if(!$('#simConvertPanel',out))simRenderConversion(out,d)}catch(e){}
+  const u=shareUrl();
+  if(u){try{history.replaceState(history.state,'',u)}catch(e){}simCacheWrite(d)}
+  const h=$('#resultHeading',out);
+  revealResult(out,h);
+  simStatus('Result ready. '+(h?h.textContent:''));
+}
+function simLinkMessage(msg){
+  const out=$('#result');if(!out)return;
+  out.innerHTML='';
+  const m=el('div','simmsg');m.setAttribute('role','alert');m.textContent=msg;
+  out.appendChild(m);
+}
+
+/* ===================== NFL_SIM_UX_20261021: team deep links =====================
+   /nfl-simulator/?away=NE&home=CHI preselects any pair. A team can be given
+   as its abbreviation (common aliases accepted), the API's opaque ref, a
+   nickname or a full name slug. Without a seed the link only preselects; the
+   visitor presses Simulate, so a landing never spends a free run. */
+const TEAM_ALIAS={LAR:'LA',STL:'LA',WSH:'WAS',JAC:'JAX',LVR:'LV',OAK:'LV',SD:'LAC',ARZ:'ARI',GNB:'GB',KAN:'KC',NWE:'NE',NOR:'NO',SFO:'SF',TAM:'TB',BLT:'BAL',CLV:'CLE',HST:'HOU'};
+const teamSlugOf=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+function resolveTeam(x){
+  if(x==null)return null;
+  const v=String(x).trim();if(!v||v.length>40)return null;
+  const T=STATE.teams||[];
+  let t=T.find(t=>t.ref===v);if(t)return t;
+  const up=v.toUpperCase();const ab=TEAM_ALIAS[up]||up;
+  t=T.find(t=>String(t.abbr).toUpperCase()===ab);if(t)return t;
+  const sl=teamSlugOf(v);if(!sl)return null;
+  return T.find(t=>teamSlugOf(t.name)===sl||teamSlugOf(String(t.name).split(' ').pop())===sl)||null;
+}
+
+/* ===================== NFL_SIM_UX_20261021: featured game hero ===================== */
+function kickoffPT(iso){try{return iso?new Date(iso).toLocaleString('en-US',{timeZone:'America/Los_Angeles',weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})+' PT':''}catch(e){return ''}}
+function showGameWeek(g){
+  if(!g)return;
+  if(STATE.mode!=='weekly')setMode('weekly');
+  const meta=(STATE.weeksMeta||[]).find(w=>w&&w.week===g.week&&g.is_postseason===(w.season_type_code===3));
+  const v=meta?(meta.season_type_code+':'+meta.week):((g.is_postseason?3:2)+':'+g.week);
+  const ws=$('#week');
+  if(ws&&ws.value!==v&&Array.from(ws.options).some(o=>o.value===v)){ws.value=v;STATE.week=v;renderGames()}
+}
+function nextGameOf(gs){
+  const now=Date.now()-3*60*60*1000;
+  const up=(gs||[]).filter(g=>(g.status==='upcoming'||g.status==='live')&&(!g.kickoff_utc||Date.parse(g.kickoff_utc)>=now));
+  up.sort((a,b)=>Date.parse(a.kickoff_utc||0)-Date.parse(b.kickoff_utc||0));
+  return up[0]||null;
+}
+function renderFeatured(o){
+  const box=$('#featured');if(!box)return;
+  if(!o){box.hidden=true;return}
+  let a,h,aN,hN,when='',btn='Simulate this game';
+  if(o.kind==='game'){const g=o.g;a=g.away_abbr;h=g.home_abbr;aN=g.away;hN=g.home;when=kickoffPT(g.kickoff_utc)}
+  else{a=o.a.abbr;h=o.h.abbr;aN=o.a.name;hN=o.h.name;btn='Simulate this matchup';when=o.neutral?'Neutral field':`${o.h.name} at home`}
+  $('#featKicker').textContent=o.kicker||'Next game';
+  const t=$('#featTitle');t.innerHTML='';
+  const side=(abbr,name)=>{const s=el('span','team');s.appendChild(teamMark(abbr,30));s.appendChild(Object.assign(el('span','tn'),{textContent:name}));return s};
+  t.appendChild(side(a,aN));t.appendChild(Object.assign(el('span','at'),{textContent:o.neutral?'vs':'at'}));t.appendChild(side(h,hN));
+  const w=$('#featWhen');w.textContent=when;w.hidden=!when;
+  const b=$('#featBtn');b.textContent=btn;b.setAttribute('aria-label',`${btn}: ${aN} ${o.neutral?'vs':'at'} ${hN}`);
+  b.onclick=()=>{
+    if(o.kind==='game'){showGameWeek(o.g);pickGame(o.g)}
+    else{if(STATE.mode!=='custom')setMode('custom');
+      STATE.t1=o.a.ref;STATE.t2=o.h.ref;$('#t1').value=STATE.t1;$('#t2').value=STATE.t2;
+      STATE.venue=o.neutral?'neutral':'team2';STATE.venueTouched=true;relabelVenue();segSelect('#venueSeg','venue',STATE.venue);updateChips();runCustom(null)}
+  };
+  const alt=$('#featAlt');if(alt)alt.textContent=o.kind==='game'?'or pick another game':'or build a different matchup';
+  if(alt)alt.setAttribute('href',o.kind==='game'?'#games':'#customControls');
+  box.hidden=false;
+  STATE.featSrc=o.src||STATE.featSrc||'next';
+}
+function markCard(c,on){c.classList.toggle('sel',on);if(on)c.setAttribute('aria-current','true');else c.removeAttribute('aria-current')}
 /* re-run the currently shown result with the SAME seed but updated settings */
 function rerunIfShown(){
   if(!STATE.lastRun)return;
@@ -1232,12 +1440,12 @@ function svgPointsByTeam(home,away,hAbbr,aAbbr,hName,aName){
 }
 function svgLikely(scores,hAbbr,aAbbr){
   if(!scores||!scores.length)return '';
-  const W=460,rowH=26,H=scores.length*rowH+6,maxP=Math.max(...scores.map(s=>s.prob))||1,barMax=W-150;
+  const W=460,rowH=26,H=scores.length*rowH+6,maxP=Math.max(...scores.map(s=>s.prob))||1,barMax=W-190;
   let rows='';
   scores.forEach((s,i)=>{const y=i*rowH;const w=(s.prob/maxP)*barMax;
-    rows+=`<text x="0" y="${y+17}" font-size="12" fill="#cdd8e8" font-family="ui-monospace,monospace">${s.away}–${s.home}</text>
-      <rect x="70" y="${y+4}" width="${w.toFixed(1)}" height="16" rx="3" fill="#38bdf8" opacity="0.8"/>
-      <text x="${(70+w+7).toFixed(1)}" y="${y+16}" font-size="11" fill="#94a3b8">${(s.prob*100).toFixed(1)}%</text>`;});
+    rows+=`<text x="0" y="${y+17}" font-size="12" fill="#cdd8e8" font-family="ui-monospace,monospace">${esc(aAbbr)} ${s.away}, ${esc(hAbbr)} ${s.home}</text>
+      <rect x="118" y="${y+4}" width="${w.toFixed(1)}" height="16" rx="3" fill="#38bdf8" opacity="0.8"/>
+      <text x="${(118+w+7).toFixed(1)}" y="${y+16}" font-size="11" fill="#94a3b8">${(s.prob*100).toFixed(1)}%</text>`;});
   return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Most likely scores">${rows}</svg>`;
 }
 function chartCard(title,svg,legend){
@@ -1262,10 +1470,25 @@ function renderResult(out,d){
      average is shown separately under its own label. */
   const rep=(d.box_score&&!d.box_score.unavailable&&d.box_score.representative)||null;
 
-  /* ---- premium matchup header ---- */
-  const mh=el('div','mh');
-  mh.style.borderTop=`2px solid ${col(homeWP>=awayWP?hAbbr:aAbbr)}`;
+  /* ---- NFL_SIM_UX_20261021: ONE canonical headline ----
+     The Oct 21 audit found three scores for one game (the sampled game on the
+     board, the average under it and the most likely score in the cards) and a
+     margin printed against the home team ("-3.3 Chicago Bears" with New England
+     favoured). The headline now states the model's side and margin, ONE
+     projected score (the average of every simulation) and the win probability.
+     The single sampled game lives in the Box Score tab, labelled as one
+     simulated game. Data attributes keep the sampled game for anything that
+     reads them. */
+  const mg=p.margin!=null?p.margin:p.median_margin;
+  const byTxt=v=>{if(v==null||!Number.isFinite(+v))return 'n/a';const n=Math.round(Math.abs(+v)*10)/10;return n<0.05?'even':`${+v>0?hAbbr:aAbbr} by ${n}`};
+  const favAbbr=homeWP>=awayWP?hAbbr:aAbbr;
+  const headTxt=(mg==null||!Number.isFinite(+mg))?`Model: ${favAbbr} ${pct(Math.max(homeWP,awayWP))} to win`
+    :(Math.abs(+mg)<0.05?'Model: even game':`Model: ${byTxt(mg)}`);
+  const mh=el('section','mh');mh.id='simHeadline';mh.setAttribute('aria-labelledby','resultHeading');
+  mh.style.borderTop=`2px solid ${col(favAbbr)}`;
   if(rep){mh.dataset.simAway=rep.away_score;mh.dataset.simHome=rep.home_score}
+  const hh=el('h2','hl-h',headTxt);hh.id='resultHeading';hh.tabIndex=-1;
+  mh.appendChild(hh);
   const grid=el('div','mh-grid');
   const side=(abbr,name,roleLabel,ptsv,wpv,won)=>{
     const s=el('div','mh-team');
@@ -1275,79 +1498,58 @@ function renderResult(out,d){
     const pt=Object.assign(el('div','pts'+(won===false?' l':'')),{textContent:nz(ptsv)});
     pt.style.borderBottomColor=col(abbr);
     s.appendChild(pt);
-    s.appendChild(Object.assign(el('div','wp'),{textContent:pct(wpv)+' win'}));
+    s.appendChild(Object.assign(el('div','wp'),{textContent:pct(wpv)+' to win'}));
     return s;
   };
   const neutral=env&&env.neutral;
-  const aPts=rep?rep.away_score:p.score.away, hPts=rep?rep.home_score:p.score.home;
-  const tie=rep&&rep.away_score===rep.home_score;
-  grid.appendChild(side(aAbbr,g.away,neutral?'Team A':'Away',aPts,awayWP,rep&&!tie?aPts>hPts:null));
+  const aPts=p.score.away, hPts=p.score.home;
+  const even=aPts===hPts;
+  grid.appendChild(side(aAbbr,g.away,neutral?'Team A':'Away',aPts,awayWP,even?null:aPts>hPts));
   const mid=el('div','mh-mid');
-  mid.innerHTML=`<div class="mh-scorelabel">${rep?`Simulated final score${rep.ot?' · OT':''}`:`Projected score from ${nSims} simulations`}</div><div class="at">${neutral?'vs':'@'}</div><div style="margin-top:6px">${g.status?esc(g.status):''}${g.final?` · actual ${g.final.away}-${g.final.home}`:''}</div>`;
+  mid.innerHTML=`<div class="mh-scorelabel">Projected score</div><div class="at">${neutral?'vs':'at'}</div>`;
   grid.appendChild(mid);
-  grid.appendChild(side(hAbbr,g.home,neutral?'Team B':'Home',hPts,homeWP,rep&&!tie?hPts>aPts:null));
+  grid.appendChild(side(hAbbr,g.home,neutral?'Team B':'Home',hPts,homeWP,even?null:hPts>aPts));
   mh.appendChild(grid);
-  const avg=el('div','mh-avg');
-  avg.innerHTML=(rep?`Projected score from ${nSims} simulations: ${esc(aAbbr)} <b>${nz(p.score.away)}</b> – ${esc(hAbbr)} <b>${nz(p.score.home)}</b> · `:'')
-    +`Win probability from all ${nSims} simulations: ${esc(aAbbr)} <b>${pct(awayWP)}</b> · ${esc(hAbbr)} <b>${pct(homeWP)}</b>`;
-  mh.appendChild(avg);
+  if(g.final){mh.appendChild(Object.assign(el('div','hl-final'),{textContent:`Actual final: ${aAbbr} ${g.final.away}, ${hAbbr} ${g.final.home}`}))}
+  let runAt='';try{runAt=new Date().toLocaleString('en-US',{timeZone:'America/Los_Angeles',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})+' PT'}catch(e){}
+  let kick='';try{if(g.kickoff_utc&&!g.is_custom)kick=new Date(g.kickoff_utc).toLocaleString('en-US',{timeZone:'America/Los_Angeles',weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})+' PT'}catch(e){}
+  const hm=el('div','hl-meta');hm.id='simMeta';
+  hm.innerHTML=[`<b>${nSims}</b> simulations`,d.meta&&d.meta.model?esc(d.meta.model):'',runAt?'Run '+esc(runAt):'',kick?'Kickoff '+esc(kick):''].filter(Boolean).join(' · ');
+  mh.appendChild(hm);
 
   /* environment summary strip */
   if(env){
     const strip=el('div','envstrip');
     const chips=[];
-    chips.push(`<span class="chip">🏟️ ${esc(env.summary.venue)}</span>`);
-    chips.push(`<span class="chip">🕑 ${esc(env.kickoff_window_label)}</span>`);
-    chips.push(`<span class="chip">${env.indoor?'🏛️ Indoor':'🌤️ Outdoor'}</span>`);
-    chips.push(`<span class="chip">🎲 <b>${fmtN(d.meta.simulations)}</b> sims</span>`);
+    chips.push(`<span class="chip">${esc(env.summary.venue)}</span>`);
+    chips.push(`<span class="chip">${esc(env.kickoff_window_label)}</span>`);
+    chips.push(`<span class="chip">${env.indoor?'Indoor':'Outdoor'}</span>`);
     if(env.weather&&env.weather.applied&&!env.indoor){
       const wb=[];if(env.weather.wind_mph!=null)wb.push(Math.round(env.weather.wind_mph)+' mph wind');if(env.weather.temp_f!=null)wb.push(Math.round(env.weather.temp_f)+'°F');
-      if(wb.length)chips.push(`<span class="chip">💨 ${esc(wb.join(', '))}</span>`);
+      if(wb.length)chips.push(`<span class="chip">${esc(wb.join(', '))}</span>`);
     }
     strip.innerHTML=chips.join('');
     mh.appendChild(strip);
   }
   /* simulate-again */
   const rerun=el('div');rerun.style.cssText='margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;position:relative';
-  const again=el('button','btn ghost','🎲 Simulate again');again.onclick=simulateAgain;
+  const again=el('button','btn ghost','Simulate again');again.type='button';again.onclick=simulateAgain;
   rerun.appendChild(again);
   // Share THIS run. The seed replays it exactly, so whoever opens the link sees
   // the same game rather than a fresh one with the same teams.
-  const share=el('button','btn ghost','🔗 Share this simulation');
+  const share=el('button','btn ghost','Copy share link');share.type='button';
   share.onclick=()=>copyShare(share);
   rerun.appendChild(share);
-  rerun.appendChild(Object.assign(el('span','dim'),{textContent:`fresh ${fmtN(d.meta.simulations)}-game variation · same teams, venue & kickoff`}));
+  rerun.appendChild(Object.assign(el('span','dim'),{textContent:'Simulate again draws a fresh set of games with the same teams, venue and kickoff.'}));
   mh.appendChild(rerun);
   out.appendChild(mh);
 
-  /* ---- win probability bar ---- */
-  const wpp=el('div','panel');
-  wpp.innerHTML=`<h3>Win probability · all ${nSims} simulations</h3><div style="height:12px;border-radius:8px;overflow:hidden;background:#0b1220;display:flex;border:1px solid var(--line)">
-    <i style="display:block;height:100%;width:${(awayWP*100).toFixed(1)}%;background:${col(aAbbr)}"></i>
-    <i style="display:block;height:100%;width:${(homeWP*100).toFixed(1)}%;background:${col(hAbbr)}"></i></div>
-    <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:.82rem"><span>${esc(g.away)} <b class="mono">${pct(awayWP)}</b></span><span><b class="mono">${pct(homeWP)}</b> ${esc(g.home)}</span></div>`;
-  out.appendChild(wpp);
-
-  /* ---- summary cards ---- */
+  /* ---- summary cards. The headline above already carries the score, the
+     margin, the win probability and the simulation count. ---- */
   const k=el('div','kpis');
   const cards=[
-    `<div class="kpi" data-kpi="avg"><div class="k">Projected score from ${nSims} simulations</div><div class="v">${nz(p.score.away)}–${nz(p.score.home)}</div><div class="s">${esc(aAbbr)} – ${esc(hAbbr)}</div></div>`,
-    // The average is the projection; THIS is a game. Both belong at the top,
-    // because a reader who only sees the average reasonably concludes the model
-    // thinks a seven-point favourite wins by seven. It does not: at the spread
-    // of outcomes this model produces, and the one the real NFL produces, a
-    // seven-point favourite loses outright about one game in four.
-    rep
-      ? `<div class="kpi" data-kpi="sim" data-sim-away="${rep.away_score}" data-sim-home="${rep.home_score}"><div class="k">Simulated final score</div><div class="v">${nz(rep.away_score)}–${nz(rep.home_score)}</div><div class="s">${esc(aAbbr)} – ${esc(hAbbr)} · the game on the scoreboard and in the Box Score${rep.ot?' · OT':''}</div></div>`
-      : '',
-    `<div class="kpi"><div class="k">Win probability</div><div class="v">${pct(homeWP)}</div><div class="s">${esc(g.home)} · all ${nSims} simulations</div></div>`,
-    (p.margin!=null
-      ? `<div class="kpi"><div class="k">Projected margin</div><div class="v">${p.margin>0?'+':''}${nz(p.margin)}</div><div class="s">${esc(g.home)}</div></div>`
-      : `<div class="kpi"><div class="k">Median margin</div><div class="v">${p.median_margin>0?'+':''}${nz(p.median_margin)}</div><div class="s">${esc(g.home)}</div></div>`),
     `<div class="kpi"><div class="k">Projected total</div><div class="v">${nz(p.projected_total)}</div><div class="s">combined points</div></div>`,
-    `<div class="kpi"><div class="k">Margin range</div><div class="v" style="font-size:1.05rem">${nz(p.confidence_range.margin_low)} … ${nz(p.confidence_range.margin_high)}</div><div class="s">80% of sims</div></div>`,
-    p.likely_scores&&p.likely_scores[0]?`<div class="kpi"><div class="k">Most likely score</div><div class="v" style="font-size:1.15rem">${p.likely_scores[0].away}–${p.likely_scores[0].home}</div><div class="s">${pct(p.likely_scores[0].prob,1)} of sims</div></div>`:'',
-    `<div class="kpi"><div class="k">Simulations</div><div class="v">${fmtN(d.meta.simulations)}</div><div class="s">runs averaged</div></div>`,
+    p.confidence_range?`<div class="kpi"><div class="k">Margin range</div><div class="v" style="font-size:1.05rem">${esc(byTxt(p.confidence_range.margin_low))} to ${esc(byTxt(p.confidence_range.margin_high))}</div><div class="s">8 in 10 simulations land here</div></div>`:'',
     env?`<div class="kpi"><div class="k">Venue</div><div class="v" style="font-size:1.05rem">${esc(env.neutral?'Neutral':(hAbbr+' home'))}</div><div class="s">${esc(env.kickoff_window_label)} · ${env.indoor?'indoor':'outdoor'}</div></div>`:'',
     d.market&&d.market.spread?(()=>{const hl=d.market.spread.home_line!=null?d.market.spread.home_line:-d.market.spread.line;return `<div class="kpi"><div class="k">${esc(hAbbr)} covers ${hl>0?'+':''}${hl}</div><div class="v">${pct(d.market.spread.home_cover_prob)}</div><div class="s">vs ${d.market.source==='current'?'current line'+(d.market.book?' ('+esc(d.market.book)+')':''):'closing line'}</div></div>`})():'',
     d.market&&d.market.total?`<div class="kpi"><div class="k">Over ${d.market.total.line}</div><div class="v">${pct(d.market.total.over_prob)}</div><div class="s">model total ${d.market.total.model_total!=null?nz(Math.round(d.market.total.model_total*10)/10):''} vs ${d.market.source==='current'?'current':'closing'} ${d.market.total.line}</div></div>`:'',
@@ -1472,11 +1674,11 @@ function groupedNotes(d){
   const env=(d.notes_grouped&&d.notes_grouped.environment)||(d.environment&&d.environment.notes)||[];
   const strength=(d.notes_grouped&&d.notes_grouped.team_strength)||d.personnel||[];
   if(env.length){
-    wrap.appendChild(Object.assign(el('h3'),{innerHTML:'🏟️ Environment effects'}));
+    wrap.appendChild(Object.assign(el('h3'),{textContent:'Environment effects'}));
     const c=el('div','notecards');c.innerHTML=env.map(n=>noteCard('env','•',n)).join('');wrap.appendChild(c);
   }
   if(strength.length){
-    wrap.appendChild(Object.assign(el('h3'),{innerHTML:'📋 Roster &amp; team strength'}));
+    wrap.appendChild(Object.assign(el('h3'),{textContent:'Roster and team strength'}));
     const c=el('div','notecards');c.innerHTML=strength.map(n=>noteCard('roster','•',n)).join('');wrap.appendChild(c);
   }
   return wrap;
@@ -1531,7 +1733,7 @@ function renderTab(body,id,d,g,hAbbr,aAbbr){
       +'and is the more honest single number for a stat with a long tail. Milestone columns are how often that line was cleared, '
       +'not a prediction that it will be.';
     body.appendChild(lead);
-    const pctTxt=(v)=>v==null?'—':(v<=0?'—':(v*100).toFixed(0)+'%');
+    const pctTxt=(v)=>v==null?'':(v<=0?'':(v*100).toFixed(0)+'%');
     for(const [side,abbr,name] of [['away',aAbbr,g.away],['home',hAbbr,g.home]]){
       const rows=bx.projections[side];
       if(!rows||!rows.length)continue;
@@ -1560,10 +1762,10 @@ function renderTab(body,id,d,g,hAbbr,aAbbr){
           // one. Printing 0 and a 0-0 range for those reads as a projection of
           // zero rather than as "this player does not do this".
           const none=!(v.p90>0)&&!(v.mean>0);
-          line.push(none?'—':String(v.p50));
-          line.push(none?'—':(v.p10+'–'+v.p90));
+          line.push(none?'':String(v.p50));
+          line.push(none?'':(v.p10+' to '+v.p90));
         });
-        if(showRec)line.push(r.rec>0?String(r.rec):'—');
+        if(showRec)line.push(r.rec>0?String(r.rec):'');
         mile.forEach(m=>line.push(pctTxt(r.milestones&&r.milestones[m[0]])));
         return line;
       });
@@ -1593,7 +1795,7 @@ function renderTab(body,id,d,g,hAbbr,aAbbr){
     const teamSide=(cls,abbr,name,won)=>{const s=el('div','board-team '+cls);s.appendChild(teamMark(abbr,44));const info=el('div','info');info.appendChild(Object.assign(el('div','tn'),{textContent:name}));const meta=el('div','tab');meta.textContent=abbr;info.appendChild(meta);if(won)info.appendChild(Object.assign(el('div','win'),{textContent:'▲ Winner'}));s.appendChild(info);return s};
     bt.appendChild(teamSide('away',aAbbr,g.away,awayWon));
     const mid=el('div','board-mid');
-    mid.innerHTML=`<div class="board-score"><span class="${awayWon?'w':'l'}">${rep.away_score}</span> <span class="l" style="font-size:1.4rem;vertical-align:middle">–</span> <span class="${homeWon?'w':'l'}">${rep.home_score}</span></div><div style="margin-top:6px">SIMULATED FINAL SCORE${rep.ot?' / OT':''}</div>`;
+    mid.innerHTML=`<div class="board-score"><span class="${awayWon?'w':'l'}">${rep.away_score}</span> <span class="l" style="font-size:1.1rem;vertical-align:middle;font-family:var(--sans);font-weight:600">to</span> <span class="${homeWon?'w':'l'}">${rep.home_score}</span></div><div style="margin-top:6px">ONE SIMULATED GAME${rep.ot?', OT':''}</div>`;
     bt.appendChild(mid);
     bt.appendChild(teamSide('home',hAbbr,g.home,homeWon));
     board.appendChild(bt);
@@ -1604,7 +1806,7 @@ function renderTab(body,id,d,g,hAbbr,aAbbr){
     ]));
     board.appendChild(ls);body.appendChild(board);
     const cta=el('div','callout');
-    cta.innerHTML=`<span style="font-size:1.1rem;line-height:1">🎲</span><span><b>This is one simulated game</b> — a single outcome drawn at random from the ${fmtN(d.meta.simulations)} simulations, shown play-by-play so the numbers reconcile. Simulate again and you get a different game: sometimes a blowout, sometimes an upset, at the rates the model actually produces them. The <b>Overview</b> tab is the opposite — probabilities and a projected score averaged across every run, so it barely moves.</span>`;
+    cta.innerHTML=`<span style="font-size:1.1rem;line-height:1">🎲</span><span><b>This is one simulated game</b>, a single outcome drawn at random from the ${fmtN(d.meta.simulations)} simulations and shown play by play so the numbers reconcile. Simulate again and you get a different game: sometimes a blowout, sometimes an upset, at the rates the model actually produces them. The projected score at the top is the opposite: the average of every run, so it barely moves.</span>`;
     body.appendChild(cta);
     const block=(title,tbl)=>{const b=el('div','statblock');b.appendChild(Object.assign(el('h3',null,title)));b.appendChild(tbl);return b};
     const grp=(a,bl)=>{const w=el('div','grp');w.appendChild(a);if(bl)w.appendChild(bl);return w};
@@ -1627,14 +1829,14 @@ function renderTab(body,id,d,g,hAbbr,aAbbr){
       const defT=side.defense?mkTable(['Defense (team)','Value'],[['Sacks',side.defense.sacks],['Interceptions',side.defense.interceptions],['Fumble recoveries',side.defense.fumble_recoveries],['Takeaways',side.defense.takeaways],['Defensive TD',side.defense.defensive_tds],['Safeties',side.defense.safeties]]):null;
       const st=side.special_teams;
       const kick=el('div');
-      kick.appendChild(block('',mkTable(['Kicking',''],[['Field goals',st.fg],['FG distances',(st.fg_distances&&st.fg_distances.length)?st.fg_distances.join(', '):'—'],['Extra points',st.xp],['Two-point',st.two_pt||'0/0']])));
+      kick.appendChild(block('',mkTable(['Kicking',''],[['Field goals',st.fg],['FG distances',(st.fg_distances&&st.fg_distances.length)?st.fg_distances.join(', '):'None'],['Extra points',st.xp],['Two-point',st.two_pt||'0/0']])));
       kick.appendChild(block('',mkTable(['Punting',''],[['Punts',st.punts],['Average',st.punt_avg],['Inside 20',st.punts_i20]])));
       wrap.appendChild(grp(defT?block('',defT):el('div'),kick));
       body.appendChild(wrap);
     }
     if(rep.scoring&&rep.scoring.length){
       const s=el('div');s.style.marginTop='22px';s.appendChild(Object.assign(el('div','sechead'),{textContent:'Scoring summary'}));
-      s.appendChild(mkTable(['Qtr','Clock','Team','Play','Pts','Score'],rep.scoring.map(x=>[typeof x.quarter==='number'?('Q'+x.quarter):x.quarter,x.clock||'—',x.team,x.type,x.pts,`${x.away_score}-${x.home_score}`])));
+      s.appendChild(mkTable(['Qtr','Clock','Team','Play','Pts','Score'],rep.scoring.map(x=>[typeof x.quarter==='number'?('Q'+x.quarter):x.quarter,x.clock||'',x.team,x.type,x.pts,`${x.away_score}-${x.home_score}`])));
       body.appendChild(s);
     }
     return;
@@ -1674,7 +1876,7 @@ function sortableTable(headers,rows,firstNumeric){
     const th=headers.map((h,i)=>`<th data-i="${i}" tabindex="0" role="columnheader" style="cursor:pointer;user-select:none"`
       +` aria-sort="${sortCol===i?((i>=firstNumeric)===(dir===1)?'descending':'ascending'):'none'}">${esc(h)}`
       +(sortCol===i?(((i>=firstNumeric)===(dir===1))?' ▾':' ▴'):'')+'</th>').join('');
-    const tb=body.map(r=>`<tr>${r.map(c=>`<td>${esc(c==null?'—':c)}</td>`).join('')}</tr>`).join('');
+    const tb=body.map(r=>`<tr>${r.map(c=>`<td>${esc(c==null?'':c)}</td>`).join('')}</tr>`).join('');
     w.innerHTML=`<table><thead><tr>${th}</tr></thead><tbody>${tb}</tbody></table>`;
     w.querySelectorAll('th').forEach(h=>{
       const go=()=>{const i=+h.dataset.i;if(i===sortCol)dir=-dir;else{sortCol=i;dir=1}draw()};
@@ -1690,7 +1892,7 @@ function mkTable(headers,rows){
   const w=el('div','tablewrap');
   const th=headers.map(h=>`<th>${esc(h)}</th>`).join('');
   const cell=(c)=>{
-    if(c==null)return '<td>—</td>';
+    if(c==null)return '<td></td>';
     if(typeof c==='object'&&'fin'in c)return `<td class="fin">${esc(c.fin)}</td>`;
     return `<td>${esc(c)}</td>`;
   };
@@ -1774,7 +1976,7 @@ async function simRestoreState(s){
     renderGames();
     if(s.selRef){
       STATE.selRef=s.selRef;
-      for(const c of $('#games').children)c.classList.toggle('sel',c.dataset.ref===s.selRef);
+      for(const c of $('#games').children)markCard(c,c.dataset.ref===s.selRef);
     }
   }else{
     if(s.t1&&$('#t1')){STATE.t1=s.t1;$('#t1').value=s.t1}
@@ -1879,17 +2081,22 @@ function simRenderConversion(out,d){
   if(!window.TMRSimGate)return;
   const g=d.game,p=d.projection;
   if(!g||!p||!p.win_probability)return;
+  if($('#simConvertPanel',out))return;
 
+  /* NFL_SIM_UX_20261021: the conversion block sits directly under the
+     headline result (it used to be appended after every tab and chart,
+     thousands of pixels below the score). */
   const panel=el('div','panel');
   panel.id='simConvertPanel';
-  panel.style.cssText='margin-top:14px;border:1px solid rgba(29, 127, 232,.35);background:linear-gradient(180deg,rgba(29, 127, 232,.07),transparent)';
+  panel.style.cssText='margin-top:12px;border:1px solid rgba(29, 127, 232,.35);background:linear-gradient(180deg,rgba(29, 127, 232,.07),transparent)';
+  const member=!!(window.TMRSimGate.isLoggedIn&&window.TMRSimGate.isLoggedIn());
   panel.innerHTML=
-    '<h3 style="margin-top:0">Take a side</h3>'+
+    '<h3>Take a side on TMR</h3>'+
     '<p class="muted" style="font-size:.9rem;margin:0 0 12px">The sim is research. Tap a team and the sportsbook opens that moneyline. Confirm there to put it on your public record.</p>'+
-    '<div id="simPickTeams" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px"></div>'+
-    '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">'+
-    '<a class="btn ghost" href="/sports-simulators/saved/">My Simulation History</a>'+
-    '<span class="dim" id="simSavedNote"></span></div>';
+    '<div id="simPickTeams" class="cv-row"></div>'+
+    (member
+      ?'<div class="cv-row" style="margin-top:12px"><a class="btn ghost" href="/sports-simulators/saved/">My Simulation History</a><span class="dim" id="simSavedNote"></span></div>'
+      :'<p class="cv-sign">Want to save this run and simulate more games? <a id="simSignupLink" href="/register/">Create a free account</a>, no card needed.</p>');
 
   const teams=$('#simPickTeams',panel);
   [g.away,g.home].forEach(name=>{
@@ -1897,12 +2104,16 @@ function simRenderConversion(out,d){
     b.type='button';
     b.setAttribute('data-sim-take-team',name);
     b.className='btn';
-    b.style.cssText='font-size:1rem;padding:12px 18px;font-weight:800';
     b.onclick=()=>simGoPick(name,g);
     teams.appendChild(b);
   });
+  const su=$('#simSignupLink',panel);
+  const signHref=()=>{try{const u=shareUrl();su.href='/register/?return='+encodeURIComponent(u?new URL(u).pathname+new URL(u).search:'/nfl-simulator/')}catch(e){}};
+  if(su){signHref();su.onclick=()=>{signHref();try{window.TMRSimGate.track('simulator_result_signup_clicked',{simulation_type:'nfl_game'})}catch(e){}}}
 
-  out.appendChild(panel);
+  const after=$('#nflScenario',out)||$('#simHeadline',out);
+  if(after&&after.parentNode===out)out.insertBefore(panel,after.nextSibling);
+  else out.appendChild(panel);
 }
 
 /* ---- install: wrap the run + render entry points, then register ---- */
@@ -2030,7 +2241,7 @@ function simRenderSavedCard(out,saved,why){
     const s=el('div','mh-team');s.appendChild(teamMark(abbr,48));
     s.appendChild(Object.assign(el('div','nm'),{textContent:name||abbr}));
     s.appendChild(Object.assign(el('div','role'),{textContent:role}));
-    const pt=Object.assign(el('div','pts'+(lost?' l':'')),{textContent:pts==null?'–':pts});pt.style.borderBottomColor=col(abbr);s.appendChild(pt);
+    const pt=Object.assign(el('div','pts'+(lost?' l':'')),{textContent:pts==null?'n/a':pts});pt.style.borderBottomColor=col(abbr);s.appendChild(pt);
     return s;
   };
   grid.appendChild(side(aAbbr,r.awayTeam,'Away',aPts,win==='h'));
@@ -2048,7 +2259,7 @@ function simRenderSavedCard(out,saved,why){
     card.appendChild(ls);
   }
   const facts=[];
-  if(simulated&&r.projectedAwayScore!=null)facts.push('Projected average'+(sims?' of '+sims+' simulations':'')+': '+esc(aAbbr)+' <b>'+esc(r.projectedAwayScore)+'</b> – '+esc(hAbbr)+' <b>'+esc(r.projectedHomeScore)+'</b>');
+  if(simulated&&r.projectedAwayScore!=null)facts.push('Projected average'+(sims?' of '+sims+' simulations':'')+': '+esc(aAbbr)+' <b>'+esc(r.projectedAwayScore)+'</b>, '+esc(hAbbr)+' <b>'+esc(r.projectedHomeScore)+'</b>');
   if(r.winner&&r.winProbability)facts.push('Projected winner '+esc(r.winner)+' ('+esc(r.winProbability)+')');
   if(facts.length){const f=el('div','mh-avg');f.innerHTML=facts.join(' · ');card.appendChild(f)}
   const note=el('p','muted');note.style.cssText='font-size:.86rem;margin:12px 0 0';
@@ -2061,7 +2272,7 @@ function simRenderSavedCard(out,saved,why){
   try{card.scrollIntoView({behavior:'smooth',block:'start'})}catch(e){}
 }
 
-/* /nfl-simulator/?savedId=N&mode=view|rerun — the return path from the
+/* /nfl-simulator/?savedId=N&mode=view|rerun: the return path from the
    member's simulation history (see static/js/mlb-sim-saved.js). Absent the
    parameter this is a no-op and the page is an ordinary simulator. */
 async function simHandleSavedId(hadResume){
@@ -2096,7 +2307,7 @@ async function simHandleSavedId(hadResume){
         }
       }
     }
-  }catch(e){SIM_VIEW=null;/* not found / not yours — page still works as a normal simulator */}
+  }catch(e){SIM_VIEW=null;/* not found / not yours, page still works as a normal simulator */}
   try{
     const u=new URL(location.href);u.searchParams.delete('savedId');u.searchParams.delete('mode');
     history.replaceState({},'',u.toString());
@@ -2286,7 +2497,7 @@ function applyWhatIf(list){
 function whatIfPanel(d,ctx){
   const det=el('details','panel wif');det.id='nflWhatIf';
   if(STATE.out&&STATE.out.length)det.open=true;
-  det.innerHTML=`<summary><span style="font-size:1.1rem">🩺</span><span>What if a player sits?</span><span class="dim" style="font-weight:500;font-size:.82rem">${STATE.out&&STATE.out.length?STATE.out.length+' ruled out':'Rule out QBs, backs, receivers or tight ends'}</span><span class="chev">▾</span></summary><div class="wifbody"></div>`;
+  det.innerHTML=`<summary><span>What if a player sits?</span><span class="dim" style="font-weight:500;font-size:.82rem">${STATE.out&&STATE.out.length?STATE.out.length+' ruled out':'Rule out QBs, backs, receivers or tight ends'}</span><span class="chev">▾</span></summary><div class="wifbody"></div>`;
   const body=$('.wifbody',det);
   let loaded=false;
   const sel=new Map((STATE.out||[]).map(o=>[o.ref,o]));
