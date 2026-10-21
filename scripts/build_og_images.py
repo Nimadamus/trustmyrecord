@@ -6,7 +6,7 @@ verified-records angle. No API calls. Static output to /static/og/.
 
 Run: python scripts/build_og_images.py
 """
-import os
+import os, sys
 from PIL import Image, ImageDraw, ImageFont
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -51,9 +51,12 @@ CARDS = {
     "og-transparent": ("Communities With Transparent Pick Tracking", "Locked picks. Auto-graded results. Public records nobody can fake."),
     "og-profile": ("Verified Sports Betting Record", "Every pick locked before the game and graded automatically on TrustMyRecord."),
     "og-trivia": ("Free Sports Trivia: NFL, NBA, MLB and NHL Quizzes", "Timed questions, scored on the server. Build streaks and climb the leaderboard."),
+    "og-nfl-simulator": ("Free NFL Game Simulator: Any Matchup, 10,000 Sims", "Win probability, projected score and total for every game on the schedule.", "FREE NFL SIMULATOR"),
+    "og-nba-simulator": ("Free NBA Game Simulator: Any Matchup, 10,000 Sims", "Win probability, projected score and total for every game tonight.", "FREE NBA SIMULATOR"),
+    "og-nhl-simulator": ("Free NHL Game Simulator: Any Matchup, 10,000 Sims", "Win probability, projected score, puck line and total for every game.", "FREE NHL SIMULATOR"),
 }
 
-def make(name, headline, sub):
+def make(name, headline, sub, pill="VERIFIED PUBLIC RECORDS"):
     W, H = 1200, 630
     img = Image.new("RGB", (W, H), BG)
     d = ImageDraw.Draw(img)
@@ -69,7 +72,6 @@ def make(name, headline, sub):
     img.paste(badge, (bx, by), badge)
     d.text((bx + 88, by + 14), "TrustMyRecord", font=font(True, 40), fill=WHITE)
     # green verified pill
-    pill = "VERIFIED PUBLIC RECORDS"
     pf = font(True, 22)
     pw = d.textlength(pill, font=pf)
     d.rounded_rectangle([80, 188, 80 + pw + 44, 188 + 46], radius=23, outline=GREEN, width=2)
@@ -92,7 +94,10 @@ def make(name, headline, sub):
     return name + ".png"
 
 if __name__ == "__main__":
-    for name, (hl, sub) in CARDS.items():
-        f = make(name, hl, sub)
+    only = set(sys.argv[1:])
+    for name, spec in CARDS.items():
+        if only and name not in only:
+            continue
+        f = make(name, *spec)
         p = os.path.join(OUT, f)
         print(f"wrote {f}  ({os.path.getsize(p)} bytes)")
