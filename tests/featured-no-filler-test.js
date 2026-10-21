@@ -20,7 +20,7 @@ const vm = require('vm');
 const { execFileSync } = require('child_process');
 
 const ROOT = path.resolve(__dirname, '..');
-const FILLER = /every game on the board|publishes ahead of its kickoff|publishes in the morning|next featured matchup|being prepared/i;
+const FILLER = /every game on the board|this match is on the board|publishes ahead of its kickoff|publishes in the morning|next featured matchup|being prepared/i;
 let failures = 0;
 const fail = (m) => { failures++; console.log('  FAIL  ' + m); };
 const pass = (m) => console.log('  ok    ' + m);

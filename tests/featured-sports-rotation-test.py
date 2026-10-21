@@ -147,6 +147,10 @@ def main():
         text = open(page, encoding="utf-8").read()
         check("<h1>" in text and "September" not in text.split("<h1>")[1].split("</h1>")[0],
               "minted page has an h1 with no date")
+        h1 = text.split("<h1>")[1].split("</h1>")[0]
+        check("Round 1 at the Chengdu Open" in h1 and "opening round" not in h1,
+              "tennis title names the event and the real round")
+        check("this match is on the board" not in text, "tennis page carries no on-the-board filler")
         check('rel="canonical"' in text and "noindex" not in text and "http-equiv=\"refresh\"" not in text,
               "minted page is indexable and self contained")
         text2 = text.replace("</h1>", "</h1><!--SENTINEL-->")
