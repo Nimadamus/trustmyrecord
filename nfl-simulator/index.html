@@ -31,7 +31,7 @@
 {"@type":"Question","name":"Can I simulate any two NFL teams, not just the schedule?","acceptedAnswer":{"@type":"Answer","text":"Yes. Custom Matchup mode lets you pick any two NFL teams and simulate them against each other with the same engine, rosters, injuries and box-score generation as scheduled games. You choose which team is home, or set a neutral field, and pick a kickoff window."}},
 {"@type":"Question","name":"Does it use current NFL rosters?","acceptedAnswer":{"@type":"Answer","text":"Yes. Current mode is built on current projected 2026 rosters and depth charts, so the quarterback, running backs, receivers, defensive lineup, and specialists reflect who is expected to play now, and their real player usage drives how touches and targets are shared. A player who is out is excluded."}},
 {"@type":"Question","name":"Does it generate player statistics and box scores?","acceptedAnswer":{"@type":"Answer","text":"Yes. Every simulation produces a full box score with realistic player statistics: passing, rushing, and receiving lines, defensive stats such as sacks and interceptions, kicking, and a play-by-play scoring summary. The box score is reconciled by construction, so passing, rushing, receiving, and scoring add up exactly to the team totals and the final score."}},
-{"@type":"Question","name":"How accurate are the simulations?","acceptedAnswer":{"@type":"Answer","text":"Across 285 held-out 2025 games, the current model's calibrated win probabilities produced a Brier score of 0.2177, compared with about 0.25 for a coin flip, 0.2481 for always selecting the home team and 0.2104 for the closing market favourite. Its mean absolute margin error was 10.0 points. The model did not demonstrate a profitable advantage against the spread or game totals in this test. Player-level box-score accuracy has not yet been validated. Results are shown as ranges, not guarantees, and this is not betting advice or a prediction of exact future results."}},
+{"@type":"Question","name":"How accurate are the simulations?","acceptedAnswer":{"@type":"Answer","text":"In a backtest on 285 held-out 2025 games (the model re-run with only data available before each kickoff, not the live predictions shown on the page), the current model's calibrated win probabilities produced a Brier score of 0.2177, compared with about 0.25 for a coin flip, 0.2481 for always selecting the home team and 0.2104 for the closing market favourite. The closing market was more accurate, and across the 2022 to 2025 seasons the model does not beat it. Its mean absolute margin error was 10.0 points. The model did not demonstrate a profitable advantage against the spread or game totals in this test. Player-level box-score accuracy has not yet been validated. Results are shown as ranges, not guarantees, and this is not betting advice or a prediction of exact future results."}},
 {"@type":"Question","name":"Is the NFL simulator free?","acceptedAnswer":{"@type":"Answer","text":"Yes, free with a TrustMyRecord account. Creating one takes a moment and needs no card. With it you can simulate any matchup, review the projected score, win probability, player stats and box score, and keep your runs, then track real, verified betting records separately on TrustMyRecord."}},
 {"@type":"Question","name":"Can this simulate an NFL score or any matchup?","acceptedAnswer":{"@type":"Answer","text":"Yes. This page is the NFL game simulator, score simulator and matchup simulator. Pick a scheduled game or any two teams, run it, and read the projected score, win probability and box score. Season standings are on the NFL Season Simulator, and the bracket is on the NFL Playoff Simulator."}}
 ]}
@@ -139,6 +139,8 @@
   .state{text-align:center;padding:34px 16px;color:var(--mut)}
   .spin{width:26px;height:26px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;margin:0 auto 12px;animation:sp .8s linear infinite}
   @keyframes sp{to{transform:rotate(360deg)}}
+  .err.simerr{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;color:#fecaca}
+  .err.simerr .btn{background:var(--ink);color:#04121f}
   .err{border:1px solid var(--bad);background:rgba(248,113,113,.06);color:var(--bad);border-radius:12px;padding:14px}
   .unavail{border:1px dashed var(--warn);background:rgba(251,191,36,.05);color:var(--warn);border-radius:12px;padding:14px}
   .disc{color:var(--dim);font-size:.76rem;border-left:3px solid var(--line);padding:8px 12px;margin-top:14px}
@@ -235,6 +237,8 @@
   .seo .acc td.n{font-family:var(--mono);text-align:right;white-space:nowrap;color:var(--ink)}
   .seo .acc tr:last-child th,.seo .acc tr:last-child td{border-bottom:0}
   .seo .acc caption{caption-side:top;text-align:left;color:var(--mut);font-size:.82rem;padding:0 10px 9px}
+  .seo .acc-prov{border-left:3px solid var(--warn);background:rgba(251,191,36,.06);padding:10px 14px;border-radius:8px;color:#e6d7ae;font-size:.9rem}
+  .seo .acc-prov b{color:var(--warn)}
   .seo .acc-note{color:var(--mut);font-size:.85rem;line-height:1.62;margin:10px 0 0}
   @media(max-width:560px){.seo .acc{padding:10px 8px}.seo .acc th,.seo .acc td{padding:6px 6px;font-size:.82rem}}
   .linkgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-top:10px}
@@ -493,7 +497,7 @@
 
   <h2>How the NFL simulator works</h2>
   <p>Every matchup is simulated the number of times you choose (10,000 by default, up to 50,000). Each simulation plays out a sequence of drives, and each drive's outcome is drawn from real NFL drive data rather than a smooth bell curve. That distribution is tilted by each team's opponent-adjusted points-per-drive rating, so a strong offense facing a weak defense scores more, and a good defense drags an opponent down. Because points come from real drive outcomes, the simulated margins naturally cluster on the football key numbers of 3 and 7 instead of landing on impossible or unrealistic scores.</p>
-  <p>The win probability is not raw model output. It is calibrated against a held-out set of games, so a projection of 70 percent is tuned to reflect roughly a 70 percent real hit rate. Every run is shown with the exact simulation count used, and you can re-run it to explore how the range holds up.</p>
+  <p>The win probability is not raw model output. It is calibrated against a held-out set of games, so that in backtests a projection of 70 percent won roughly 70 percent of the time. Every run is shown with the exact simulation count used, and you can re-run it to explore how the range holds up.</p>
 
   <h2>Game environment: home field, neutral site, and kickoff window</h2>
   <p>You control the game environment. Assign either team home-field advantage or set a neutral field, and pick a kickoff window. These feed a small, transparent adjustment layer: home-field advantage estimated from the data, a modest travel adjustment when the visitor crosses time zones, and a small body-clock effect for early or night kickoffs after a long trip. Indoor and dome venues carry no weather effect. Every adjustment is bounded, and the "Why the model moved" section explains exactly how the environment you selected changed the projection.</p>
@@ -518,11 +522,16 @@
     <li>Use <b>Simulate again</b> to run a fresh variation with the same teams, count, venue and kickoff window.</li>
   </ol>
 
-  <h2 id="accuracy">Measured accuracy</h2>
-  <p>The model is scored on a strict chronological split. It was fitted on the 2021, 2022 and 2023 seasons, its win-probability calibration was chosen on 2024, and 2025 was held back and scored once. Nothing in the 2025 test informed a model coefficient or the calibration, and every game is simulated with team ratings and quarterback ratings built only from games played before its kickoff. One exception: the points scored per drive outcome and the game-flow constants were measured on 2019 to 2025 drives, so 2025 is not fully clean for those. On the 2025 holdout the closing betting market was more accurate than the model.</p>
+  <h2 id="accuracy">Backtest accuracy</h2>
+  <!-- NFL_SIM_ACCURACY_LABELS_20261021: every figure in this section is a backtest
+       (the research model re-run after the fact), not a grade of the predictions
+       visitors were served. Do not reword it as live accuracy unless the API's
+       provenance field says the served runs were graded. -->
+  <p class="acc-prov" id="nflAccProv"><b>Backtest:</b> the model re-run after each game with only data available before kickoff. These are not the live predictions shown on this page.</p>
+  <p>The model is scored on a strict chronological split. It was fitted on the 2021, 2022 and 2023 seasons, its win-probability calibration was chosen on 2024, and 2025 was held back and scored once. Nothing in the 2025 test informed a model coefficient or the calibration, and every game is simulated with team ratings and quarterback ratings built only from games played before its kickoff. One exception: the points scored per drive outcome and the game-flow constants were measured on 2019 to 2025 drives, so 2025 is not fully clean for those. On the 2025 holdout the closing betting market was more accurate than the model, and across the 2022 to 2025 seasons the model does not beat the closing market.</p>
   <div class="acc">
     <table id="nflAccHold">
-      <caption id="nflAccHoldCap">Model nfl-sim-drive-v1 as it runs today, regraded October 6, 2026. Training 2021 to 2023, validation 2024, holdout test 2025, 285 games.</caption>
+      <caption id="nflAccHoldCap">Backtest. Model nfl-sim-drive-v1 as it runs today, re-run and regraded October 6, 2026. Training 2021 to 2023, validation 2024, holdout test 2025, 285 games.</caption>
       <tr><th scope="row">Brier score, calibrated win probability</th><td class="n" data-k="model.brier">0.2177</td></tr>
       <tr><th scope="row">Log loss, calibrated win probability</th><td class="n" data-k="model.log_loss">0.6265</td></tr>
       <tr><th scope="row">Brier score, coin-flip baseline</th><td class="n" data-k="coin_flip.brier">0.2491</td></tr>
@@ -559,7 +568,17 @@
       var pt=function(v){return v==null?'n/a':v.toFixed(1)+' points'};
       var when='';try{when=new Date(d.generated_at).toLocaleString('en-US',{timeZone:'America/Los_Angeles',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})+' PT'}catch(x){}
       var row=function(l,a,b){return '<tr><th scope="row">'+l+'</th><td class="n">'+a+'</td><td class="n">'+b+'</td></tr>'};
-      var h='<table><caption>'+e(d.season)+' season to date, '+d.games.length+' completed games through Week '+e(d.through_week)+'. Each game simulated as of its kickoff and graded against the final score and the closing line. Updated '+e(when)+'.</caption>'
+      /* NFL_SIM_ACCURACY_LABELS_20261021. The season to date figures are a
+         RECONSTRUCTION: the research model re-run after each game with data
+         available before its kickoff (scripts/nfl-sim-accuracy-ytd.js). They are
+         not the pre-kickoff runs visitors were shown. The label only changes to
+         live grading when the API says so in `provenance`; without the field the
+         table stays labelled a backtest. */
+      var P=(d.provenance&&typeof d.provenance==='object')?d.provenance:null;
+      var live=!!(P&&(P.live_graded===true||P.kind==='live'||P.type==='live'||P.source==='live'||P.source==='served'));
+      var lab=live?'Live predictions graded: the pre-kickoff simulations served on this page, graded against the final score and the closing line.'
+        :'Backtest: model re-run after each game with data available before kickoff. Not the live predictions shown on this page.';
+      var h='<table><caption>'+e(d.season)+' season to date, '+d.games.length+' completed games through Week '+e(d.through_week)+'. '+e(lab)+' Updated '+e(when)+'.</caption>'
         +'<tr><th scope="col">Measure</th><th scope="col" class="n">Model</th><th scope="col" class="n">Closing market favourite</th></tr>'
         +row('Brier score, win probability',br(M.brier),br(K.brier))
         +(M.log_loss!=null?row('Log loss, win probability',M.log_loss.toFixed(4),K.log_loss!=null?K.log_loss.toFixed(4):'n/a'):'')
@@ -568,9 +587,11 @@
         +row('Against the spread, '+M.ats_n+' games',pc(M.ats_accuracy),'n/a')
         +row('Game totals, '+M.totals_n+' games',pc(M.totals_accuracy),'n/a')
         +'</table>';
-      var lead=(M.brier!=null&&K.brier!=null)?(M.brier<=K.brier?'So far this season the model has matched or beaten the closing market favourite on Brier score.':'So far this season the closing market favourite has been more accurate than the model on Brier score.'):'';
+      // No "beats the market" sentence: a partial season gap either way is noise,
+      // and across 2022 to 2025 the closing market was the more accurate.
+      var lead='A partial season is a small sample, so a gap between the model and the closing market favourite in either direction is normal variation, not evidence of an edge. Across the 2022 to 2025 seasons the model does not beat the closing market.';
       var g=d.games.slice().sort(function(a,b){return (b.week-a.week)||String(a.kickoff_utc).localeCompare(String(b.kickoff_utc))});
-      var gl='<details style="margin-top:10px"><summary style="cursor:pointer;color:var(--ink)">Every graded game</summary><table><tr><th scope="col">Week</th><th scope="col">Game</th><th scope="col">Final</th><th scope="col">Model pick</th><th scope="col">Market favourite</th></tr>'
+      var gl='<details style="margin-top:10px"><summary style="cursor:pointer;color:var(--ink)">'+(live?'Every graded game':'Every backtested game')+'</summary><table><tr><th scope="col">Week</th><th scope="col">Game</th><th scope="col">Final</th><th scope="col">'+(live?'Model pick':'Backtest pick')+'</th><th scope="col">Market favourite</th></tr>'
         +g.map(function(x){var won=x.final.home>x.final.away?x.home:(x.final.away>x.final.home?x.away:null);
           var mp=x.model?x.model.pick+' '+pc(Math.max(x.model.home_win_prob,1-x.model.home_win_prob)):'n/a';
           var mk=x.market&&x.market.favourite?x.market.favourite:'n/a';
@@ -580,7 +601,7 @@
       var cal='';var cb=(d.holdout&&d.holdout.model&&d.holdout.model.calibration)||[];
       if(cb.length){cal='<details style="margin-top:10px"><summary style="cursor:pointer;color:var(--ink)">Calibration, 2025 holdout: stated favourite probability against how often the favourite won</summary><table><tr><th scope="col">Stated</th><th scope="col" class="n">Games</th><th scope="col" class="n">Average stated</th><th scope="col" class="n">Favourite won</th></tr>'
         +cb.map(function(b){return '<tr><td>'+Math.round(b.range[0]*100)+' to '+Math.round(b.range[1]*100)+'%</td><td class="n">'+b.n+'</td><td class="n">'+pc(b.predicted)+'</td><td class="n">'+pc(b.actual)+'</td></tr>'}).join('')+'</table></details>';}
-      box.innerHTML=h+(lead?'<p class="acc-note">'+lead+'</p>':'')+gl+cal;box.hidden=false;
+      box.innerHTML=h+(lead?'<p class="acc-note">'+lead+'</p>':'')+gl+cal;box.hidden=false;box.setAttribute('data-provenance',live?'live':'backtest');
     }).catch(function(){});
   })();
   </script>
@@ -604,7 +625,7 @@
     <details><summary>Can I simulate any two NFL teams?</summary><p>Yes. Custom Matchup mode lets you pick any two NFL teams and simulate them with the same engine, rosters, injuries and box-score generation as scheduled games. You choose which team is home, or set a neutral field, and pick a kickoff window.</p></details>
     <details><summary>Does it use current NFL rosters?</summary><p>Yes. Current mode is built on current projected 2026 rosters and depth charts, so the quarterback, running backs, receivers, defensive lineup, and specialists reflect who is expected to play now, and their real player usage drives how touches and targets are shared. A player who is out is excluded.</p></details>
     <details><summary>Does it generate player statistics and box scores?</summary><p>Yes. Every simulation produces a full box score with realistic player statistics: passing, rushing, and receiving lines, defensive stats such as sacks and interceptions, kicking, and a play-by-play scoring summary. The box score is reconciled by construction, so passing, rushing, receiving, and scoring add up exactly to the team totals and the final score.</p></details>
-    <details><summary>How accurate are the simulations?</summary><p>Across 285 held-out 2025 games, the current model's calibrated win probabilities produced a Brier score of 0.2177, compared with about 0.25 for a coin flip, 0.2481 for always selecting the home team and 0.2104 for the closing market favourite. Its mean absolute margin error was 10.0 points. The model did not demonstrate a profitable advantage against the spread or game totals in this test. Player-level box-score accuracy has not yet been validated. Results are shown as ranges, not guarantees, and this is not betting advice or a prediction of exact future results.</p></details>
+    <details><summary>How accurate are the simulations?</summary><p>In a backtest on 285 held-out 2025 games (the model re-run with only data available before each kickoff, not the live predictions shown on the page), the current model's calibrated win probabilities produced a Brier score of 0.2177, compared with about 0.25 for a coin flip, 0.2481 for always selecting the home team and 0.2104 for the closing market favourite. The closing market was more accurate, and across the 2022 to 2025 seasons the model does not beat it. Its mean absolute margin error was 10.0 points. The model did not demonstrate a profitable advantage against the spread or game totals in this test. Player-level box-score accuracy has not yet been validated. Results are shown as ranges, not guarantees, and this is not betting advice or a prediction of exact future results.</p></details>
     <details><summary>Is the NFL simulator free?</summary><p>Yes, free with a TrustMyRecord account. Creating one takes a moment and needs no card, and it is what lets your runs be saved to come back to. With it you can simulate any matchup and review the projected score, win probability, player stats and box score, then track real, verified betting records separately on TrustMyRecord.</p></details>
     <details><summary>Can this simulate an NFL score or any matchup?</summary><p>Yes. This page is the NFL game simulator, score simulator and matchup simulator. Pick a scheduled game or any two teams, run it, and read the projected score, win probability and box score. Season standings are on the <a href="/nfl-season-simulator/">NFL Season Simulator</a>, and the bracket is on the <a href="/nfl-playoff-simulator/">NFL Playoff Simulator</a>.</p></details>
   </div>
@@ -747,13 +768,21 @@ function teamMark(abbr,size){
    script becomes window.api and would clobber the sitewide backend client
    from static/js/backend-api.js, which the auth gate below needs to read
    login state. SIM_AUTH_GATE_20260808. */
+/* NFL_SIM_UX_20261021: a simulate call that has not answered in this long is
+   abandoned with a friendly message and a retry. A cold start measured 10.4s
+   on Oct 21, so the limit sits well above it. */
+const SIM_TIMEOUT_MS=(typeof window.__NFL_SIM_TIMEOUT_MS==='number'&&window.__NFL_SIM_TIMEOUT_MS>0)?window.__NFL_SIM_TIMEOUT_MS:45000;
 async function nflApi(p){
   /* SIM_ATTRIBUTION_20261001: a signed-in visitor's simulations carry their
      token so the run archive credits them (attribution only). Other reads
      stay simple requests with no preflight. */
   const h={Accept:'application/json'};
   try{const t=/^\/simulate/.test(p)&&window.api&&window.api.token;if(t)h.Authorization='Bearer '+t}catch(e){}
-  let r; try{r=await fetch(API+p,{headers:h})}catch(e){throw{msg:'Network error. Please try again.'}}
+  const isSim=/^\/simulate/.test(p);
+  let ac=null,tm=null;try{if(isSim&&window.AbortController){ac=new AbortController();tm=setTimeout(()=>ac.abort(),SIM_TIMEOUT_MS)}}catch(e){}
+  let r; try{r=await fetch(API+p,ac?{headers:h,signal:ac.signal}:{headers:h})}
+  catch(e){if(ac&&ac.signal.aborted)throw{msg:'This simulation is taking longer than usual. Please try again.',retry:true,timeout:true};throw{msg:'Network error. Please check your connection and try again.',retry:true}}
+  finally{if(tm)clearTimeout(tm)}
   /* API_HYGIENE_20260903: the busy path returns 503 {error:"sim_busy"}, not
      429, so this branch could never fire and the visitor got the generic
      "something went wrong" for a queue that clears in seconds. Both are handled
@@ -764,7 +793,7 @@ async function nflApi(p){
     throw{msg:(j&&j.message)||'A lot of people are simulating right now. Please wait a few seconds and retry.',retry:true};
   }
   const j=await r.json().catch(()=>({}));
-  if(!r.ok){throw{msg:(j&&j.message)||'Something went wrong.'}}
+  if(!r.ok){throw{msg:(j&&j.message)||'Something went wrong. Please try again.',retry:r.status>=500}}
   return j;
 }
 function loading(node,msg){node.innerHTML='';const s=el('div','state');s.innerHTML='<div class="spin"></div>'+esc(msg);node.appendChild(s)}
@@ -877,6 +906,10 @@ async function runFromUrl(){
     // default "team2 at home" reproduces the shared game.
     STATE.t1=A.ref;STATE.t2=H.ref;
     STATE.venue=vq==='neutral'?'neutral':'team2';STATE.venueTouched=true;
+    /* On a neutral field the picker sends team1 as the listed home side, so a
+       neutral link replays with the same home/away it was made with (the old
+       order mirrored the game and a seeded replay drew a different one). */
+    if(STATE.venue==='neutral'){STATE.t1=H.ref;STATE.t2=A.ref}
     if(winOk)STATE.window=winOk;
     const s1=$('#t1'),s2=$('#t2');
     if(s1)s1.value=STATE.t1;
@@ -948,6 +981,7 @@ function markModeTabs(mode){
     b.setAttribute('tabindex',on?'0':'-1')});
 }
 function setMode(mode){
+  simRunCancel();
   markModeTabs(mode);
   STATE.mode=mode;
   $$('#modebar button').forEach(b=>b.classList.toggle('on',b.dataset.mode===mode));
@@ -1240,6 +1274,9 @@ function venueParamWeekly(){
 async function runScheduled(ref,seed){
   STATE.selRef=ref;
   const out=$('#result');
+  const rk=simRunKey('g:'+ref,seed);
+  if(RUN_BUSY===rk)return;                  // the same run is already in flight: a second tap does nothing
+  const my=simRunBegin(rk);
   /* NFL_SIM_UX_20261021: the progress state is drawn first and THEN scrolled
      to, so the visitor lands on something rather than an empty node. */
   const g0=STATE.games.find(x=>x.ref===ref);
@@ -1249,7 +1286,9 @@ async function runScheduled(ref,seed){
   if(STATE.window)q.set('window',STATE.window);
   const outRefs=whatIfParam(q,'g:'+ref);
   STATE.lastRun={kind:'scheduled',ref,seed,sims:STATE.sims,out:outRefs,venue:vp||null,window:STATE.window||null};
-  try{const d=await nflApi(`/simulate/${ref}?${q.toString()}`);if(STATE.lastRun)STATE.lastRun.seed=(d.meta&&d.meta.seed)||seed;renderResult(out,d);simAfterRender(out,d)}catch(e){stopProgress();errNode(out,e);revealResult(out,null)}
+  try{const d=await nflApi(`/simulate/${ref}?${q.toString()}`);if(my!==RUN_SEQ)return;if(STATE.lastRun)STATE.lastRun.seed=(d.meta&&d.meta.seed)||seed;renderResult(out,d);simAfterRender(out,d)}
+  catch(e){if(my!==RUN_SEQ)return;stopProgress();simRunError(out,e,()=>RAW_RUN_SCHEDULED(ref,seed))}
+  finally{simRunEnd(my)}
 }
 async function runCustom(seed){
   const a=teamByRef(STATE.t1),b=teamByRef(STATE.t2);
@@ -1262,13 +1301,43 @@ async function runCustom(seed){
   if(STATE.venue==='team1'){host=a;visitor=b}
   else if(STATE.venue==='team2'){host=b;visitor=a}
   else if(neutral){host=a;visitor=b}
+  const rk=simRunKey(simCustomTarget(),seed);
+  if(RUN_BUSY===rk)return;
+  const my=simRunBegin(rk);
   startProgress(out,`Simulating ${visitor.abbr} ${neutral?'vs':'at'} ${host.abbr}`);
   const q=new URLSearchParams();q.set('home',host.ref);q.set('away',visitor.ref);q.set('sims',STATE.sims);
   if(neutral)q.set('venue','neutral');if(STATE.window)q.set('window',STATE.window);if(seed)q.set('seed',seed);
   const outRefs=whatIfParam(q,'c:'+[host.ref,visitor.ref].sort().join('|'));
   STATE.lastRun={kind:'custom',seed,home:host.ref,away:visitor.ref,sims:STATE.sims,
     venue:neutral?'neutral':null,window:STATE.window,out:outRefs};
-  try{const d=await nflApi(`/simulate-custom?${q.toString()}`);if(STATE.lastRun)STATE.lastRun.seed=(d.meta&&d.meta.seed)||seed;renderResult(out,d);simAfterRender(out,d)}catch(e){stopProgress();errNode(out,e);revealResult(out,null)}
+  try{const d=await nflApi(`/simulate-custom?${q.toString()}`);if(my!==RUN_SEQ)return;if(STATE.lastRun)STATE.lastRun.seed=(d.meta&&d.meta.seed)||seed;renderResult(out,d);simAfterRender(out,d)}
+  catch(e){if(my!==RUN_SEQ)return;stopProgress();simRunError(out,e,()=>RAW_RUN_CUSTOM(seed))}
+  finally{simRunEnd(my)}
+}
+/* The undecorated run functions, captured before the auth gate wraps them, so a
+   Try again after a failed run repeats THAT run instead of counting as a new one. */
+const RAW_RUN_SCHEDULED=runScheduled,RAW_RUN_CUSTOM=runCustom;
+
+/* NFL_SIM_UX_20261021: one run at a time per target. A repeat tap on the run
+   already in flight is ignored; a run for something else supersedes it and the
+   older answer is dropped when it lands. */
+let RUN_SEQ=0,RUN_BUSY=null;
+function simCustomTarget(){const v=STATE.venue;const h=(v==='team1'||v==='neutral')?STATE.t1:STATE.t2;return 'c:'+h+'|'+(h===STATE.t1?STATE.t2:STATE.t1)}
+function simRunKey(target,seed){return [target,STATE.sims,seed||'',STATE.venue,STATE.window,(STATE.out||[]).map(o=>o.ref).join(',')].join('|')}
+function simRunBegin(key){RUN_BUSY=key;const r=$('#result');if(r)r.setAttribute('aria-busy','true');return ++RUN_SEQ}
+function simRunEnd(my){if(my!==RUN_SEQ)return;RUN_BUSY=null;const r=$('#result');if(r)r.removeAttribute('aria-busy')}
+function simRunCancel(){RUN_SEQ++;RUN_BUSY=null;stopProgress();const r=$('#result');if(r)r.removeAttribute('aria-busy')}
+function simRunError(out,e,retry){
+  errNode(out,e);
+  const box=out.querySelector('.err');
+  if(box&&retry){
+    box.classList.add('simerr');
+    const b=el('button','btn','Try again');b.type='button';b.id='simRetry';
+    b.onclick=()=>retry();
+    box.appendChild(b);
+    revealResult(out,b);
+  }else revealResult(out,null);
+  simStatus((e&&e.msg)||'The simulation did not finish.');
 }
 
 /* ===================== NFL_SIM_UX_20261021: progress, reveal, URL =====================
@@ -1290,7 +1359,8 @@ function startProgress(out,label){
     if(!sub.isConnected){stopProgress();return}
     const sec=Math.floor((Date.now()-t0)/1000);
     sub.textContent=sec<2?'Loading rosters, injuries and team ratings'
-      :(sec<8?`Playing out ${n} games, drive by drive (${sec}s)`:`Almost there, building the box score (${sec}s)`);
+      :(sec<8?`Playing out ${n} games, drive by drive (${sec}s)`
+      :(sec<20?`Still simulating (${sec}s). A first run can take up to 20 seconds.`:`Taking longer than usual (${sec}s). Hang on, or try again in a moment.`));
   },500);
   simStatus(label+', '+n+' simulations.');
   revealResult(out,null);
@@ -1371,7 +1441,7 @@ function renderFeatured(o){
   b.onclick=()=>{
     if(o.kind==='game'){showGameWeek(o.g);pickGame(o.g)}
     else{if(STATE.mode!=='custom')setMode('custom');
-      STATE.t1=o.a.ref;STATE.t2=o.h.ref;$('#t1').value=STATE.t1;$('#t2').value=STATE.t2;
+      STATE.t1=o.neutral?o.h.ref:o.a.ref;STATE.t2=o.neutral?o.a.ref:o.h.ref;$('#t1').value=STATE.t1;$('#t2').value=STATE.t2;
       STATE.venue=o.neutral?'neutral':'team2';STATE.venueTouched=true;relabelVenue();segSelect('#venueSeg','venue',STATE.venue);updateChips();runCustom(null)}
   };
   const alt=$('#featAlt');if(alt)alt.textContent=o.kind==='game'?'or pick another game':'or build a different matchup';
@@ -2134,10 +2204,12 @@ function installSimGate(){
     return window.TMRSimGate.authorizeRun(meta);
   };
   runScheduled=function(ref,seed){
+    if(RUN_BUSY&&RUN_BUSY===simRunKey('g:'+ref,seed))return Promise.resolve();
     STATE.selRef=ref;
     return _authorizeRun({sim_mode:'weekly'},seed).then(ok=>ok?_runScheduled(ref,seed):undefined);
   };
   runCustom=function(seed){
+    if(RUN_BUSY&&RUN_BUSY===simRunKey(simCustomTarget(),seed))return Promise.resolve();
     return _authorizeRun({sim_mode:'custom'},seed).then(ok=>ok?_runCustom(seed):undefined);
   };
   renderResult=function(out,d){
