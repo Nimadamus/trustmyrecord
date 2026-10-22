@@ -982,8 +982,6 @@ def _read(sides, edges, odds, pred, fair, state, single=False):
             paras.append("The market has %s as the underdog at %.0f percent even though the underlying numbers lean their way, and that gap is the most interesting thing on this card." % (sides[lead]["short"], pct))
         else:
             paras.append("The market has %s as a modest favorite at %.0f percent, which is in line with what the numbers say." % (sides[lead]["short"], pct))
-    if state == "post":
-        paras.append("That is how the matchup profiled on the numbers. The final result is at the top of the page.")
     return _section("Our read", "".join(_p(p) for p in paras))
 
 
@@ -1015,27 +1013,125 @@ def _final(summary, sides, sport, state):
 
 # ---------------------------------------------------------------- tennis
 
-def _tennis(sport_league, event_id, kickoff, get):
+def _find_tennis_match(sport_league, event_id, kickoff, get, names=None):
+    """(event, competition, events) for one tennis match, or None.
+
+    A match id alone is not enough: ESPN has reused one id for different
+    matches (Birrell v Kartal's page was showing Kenin v Day), so a hit must
+    also start within three hours of the page's own start time. With `names`
+    (the two players on the page) a match under a different id is accepted when
+    both players are in it at that time."""
     code = TENNIS.get(sport_league, "atp")
     match = None
     events = []
     days = [None]
     if kickoff:
         days = [(nfl.et(kickoff).date() - dt.timedelta(days=i)).strftime("%Y%m%d") for i in (0, 1, 3, 6)]
-    for day in days:
-        url = "%stennis/%s/scoreboard%s" % (BASE, code, "?dates=%s" % day if day else "")
+    # With player names the other tour's board is searched too: a page minted
+    # from one board can have its match listed on the other.
+    boards = [code] + ([c for c in ("atp", "wta") if c != code] if names else [])
+    for day, board in [(d, b) for d in days for b in boards]:
+        if match:
+            break
+        url = "%stennis/%s/scoreboard%s" % (BASE, board, "?dates=%s" % day if day else "")
         data = _get(get, url)
         for ev in (data or {}).get("events") or []:
             for g in ev.get("groupings") or []:
                 for c in g.get("competitions") or []:
-                    if str(c.get("id")) == str(event_id):
+                    when = _parse(c.get("date"))
+                    near = not kickoff or (when is not None and abs(when - kickoff) <= dt.timedelta(hours=3))
+                    pair = sorted(((x.get("athlete") or {}).get("displayName") or "") for x in c.get("competitors") or [])
+                    if names and pair == sorted(names) and match is None:
+                        match = (ev, c)
+                    elif near and not names and str(c.get("id")) == str(event_id):
                         match = (ev, c)
             events.append(ev)
         if match:
             break
-    if not match:
+    return (match[0], match[1], events) if match else None
+
+
+# Single time zone countries only. A country that spans zones (USA, Australia,
+# Canada, Brazil, China, Russia) is looked up by city, and a venue that is in
+# neither table gets no local time line rather than a guessed one.
+_TZ_COUNTRY = {
+    "Belgium": "Europe/Brussels", "France": "Europe/Paris", "Germany": "Europe/Berlin",
+    "Italy": "Europe/Rome", "Spain": "Europe/Madrid", "Austria": "Europe/Vienna",
+    "Switzerland": "Europe/Zurich", "Netherlands": "Europe/Amsterdam", "Great Britain": "Europe/London",
+    "United Kingdom": "Europe/London", "England": "Europe/London", "Sweden": "Europe/Stockholm",
+    "Denmark": "Europe/Copenhagen", "Hungary": "Europe/Budapest", "Greece": "Europe/Athens",
+    "Portugal": "Europe/Lisbon", "Croatia": "Europe/Zagreb", "Serbia": "Europe/Belgrade",
+    "Czech Republic": "Europe/Prague", "Poland": "Europe/Warsaw", "Romania": "Europe/Bucharest",
+    "Turkey": "Europe/Istanbul", "Monaco": "Europe/Monaco", "Japan": "Asia/Tokyo",
+    "South Korea": "Asia/Seoul", "Korea": "Asia/Seoul", "Singapore": "Asia/Singapore",
+    "Thailand": "Asia/Bangkok", "Qatar": "Asia/Qatar", "UAE": "Asia/Dubai",
+    "United Arab Emirates": "Asia/Dubai", "Kazakhstan": "Asia/Almaty", "India": "Asia/Kolkata",
+    "New Zealand": "Pacific/Auckland", "Argentina": "America/Argentina/Buenos_Aires",
+    "Chile": "America/Santiago", "Colombia": "America/Bogota", "Peru": "America/Lima",
+    "Uruguay": "America/Montevideo", "Ecuador": "America/Guayaquil", "Morocco": "Africa/Casablanca",
+    "Tunisia": "Africa/Tunis", "South Africa": "Africa/Johannesburg", "Egypt": "Africa/Cairo",
+    "Slovakia": "Europe/Bratislava", "Slovenia": "Europe/Ljubljana", "Bulgaria": "Europe/Sofia",
+    "Finland": "Europe/Helsinki", "Norway": "Europe/Oslo", "Ireland": "Europe/Dublin",
+    "Israel": "Asia/Jerusalem", "Uzbekistan": "Asia/Tashkent", "Malaysia": "Asia/Kuala_Lumpur",
+    "Indonesia": "Asia/Jakarta", "Philippines": "Asia/Manila", "Taiwan": "Asia/Taipei",
+    "Hong Kong": "Asia/Hong_Kong", "Saudi Arabia": "Asia/Riyadh", "Mexico": "America/Mexico_City",
+}
+_TZ_CITY = {
+    "Beijing": "Asia/Shanghai", "Shanghai": "Asia/Shanghai", "Chengdu": "Asia/Shanghai",
+    "Wuhan": "Asia/Shanghai", "Zhuhai": "Asia/Shanghai", "Shenzhen": "Asia/Shanghai",
+    "Guangzhou": "Asia/Shanghai", "Tianjin": "Asia/Shanghai", "Hangzhou": "Asia/Shanghai",
+    "Melbourne": "Australia/Melbourne", "Sydney": "Australia/Sydney", "Brisbane": "Australia/Brisbane",
+    "Adelaide": "Australia/Adelaide", "Perth": "Australia/Perth", "Canberra": "Australia/Sydney",
+    "New York": "America/New_York", "Flushing": "America/New_York", "Cincinnati": "America/New_York",
+    "Washington": "America/New_York", "Atlanta": "America/New_York", "Miami": "America/New_York",
+    "Winston-Salem": "America/New_York", "Indian Wells": "America/Los_Angeles",
+    "Los Angeles": "America/Los_Angeles", "San Diego": "America/Los_Angeles", "Dallas": "America/Chicago",
+    "Houston": "America/Chicago", "Montreal": "America/Toronto", "Toronto": "America/Toronto",
+    "Moscow": "Europe/Moscow", "Saint Petersburg": "Europe/Moscow", "Sao Paulo": "America/Sao_Paulo",
+    "Rio de Janeiro": "America/Sao_Paulo",
+}
+
+
+def _venue_tz(venue):
+    """IANA zone for a 'City, Country' venue, or None when it is not certain."""
+    parts = [x.strip() for x in str(venue or "").split(",") if x.strip()]
+    if not parts:
         return None
-    ev, c = match
+    return _TZ_CITY.get(parts[0]) or (_TZ_COUNTRY.get(parts[-1]) if len(parts) > 1 else None)
+
+
+def start_lines(start, venue, played=False):
+    """'Starts 7:00 PM local (Tokyo), 3:00 AM PT, 6:00 AM ET on ...' from the feed's
+    start instant, or '' when the instant is missing. Local is omitted when the
+    venue's zone is not certain."""
+    if not start:
+        return ""
+    from zoneinfo import ZoneInfo
+    def fmt(zone):
+        t = start.astimezone(ZoneInfo(zone))
+        return t, t.strftime("%I:%M %p").lstrip("0")
+    pt, pt_s = fmt("America/Los_Angeles")
+    et, et_s = fmt("America/New_York")
+    zone = _venue_tz(venue)
+    bits = []
+    if zone:
+        lt, lt_s = fmt(zone)
+        bits.append("%s local" % lt_s)
+        day = lt
+    else:
+        day = pt
+    bits.append("%s PT" % pt_s)
+    bits.append("%s ET" % et_s)
+    return "%s: %s on %s." % ("Start time" if played else "Scheduled start", ", ".join(bits),
+                                      "%s, %s %d" % (day.strftime("%A"), day.strftime("%B"), day.day))
+
+
+def _tennis(sport_league, event_id, kickoff, get, now=None):
+    code = TENNIS.get(sport_league, "atp")
+    found = _find_tennis_match(sport_league, event_id, kickoff, get)
+    if not found:
+        return None
+    ev, c, events = found
     tid = c.get("tournamentId")
     draw = (c.get("type") or {}).get("slug")
     players = []
@@ -1048,6 +1144,14 @@ def _tennis(sport_league, event_id, kickoff, get):
     if len(players) != 2:
         return None
     state = _state(c)
+    # A preview is never written once the match has started. A finished match
+    # gets its recap; a live or overdue one keeps the page exactly as it was.
+    start_at = _parse(c.get("date")) or kickoff
+    now = now or dt.datetime.now(dt.timezone.utc)
+    if state == "pre" and (start_at is None or now >= start_at or c.get("timeValid") is False):
+        return None
+    if state not in ("pre", "post"):
+        return None
     # A combined event lists the women's draw on the ATP board. Rankings and
     # player records live on the tour the draw belongs to.
     tour = "wta" if str(draw or "").startswith("women") else "atp" if str(draw or "").startswith("men") else code
@@ -1153,6 +1257,9 @@ def _tennis(sport_league, event_id, kickoff, get):
         " in %s" % venue if venue else "")
     if court:
         setting += " The match is on %s." % court
+    when_text = start_lines(start_at, venue, played=state == "post")
+    if when_text:
+        setting += " " + when_text
     parts.append(_section("The setting", _p(setting)))
 
     rows = []
@@ -1186,6 +1293,27 @@ def _tennis(sport_league, event_id, kickoff, get):
         _compare(edges, "career", c1, c2, True, lambda v: "%.0f percent of career tour matches" % (v * 100), 0.06, names, "has won more often at tour level")
         prof.append("At tour level %s has won %d and lost %d, %s has won %d and lost %d." % (
             p1["name"], b1["won"], b1["lost"], p2["name"], b2["won"], b2["lost"]))
+    # Missing data blocks the page: without rankings or career records for both
+    # players there is nothing sourced to say about this match.
+    if not ((r1 and r2) or (b1.get("won") is not None and b2.get("won") is not None)):
+        return None
+    meetings = []
+    for src_id, other in ((p1["id"], p2), (p2["id"], p1)):
+        for r in path.get(src_id, []) + before.get(src_id, []):
+            if r.get("opp") and r["opp"] == other["name"] and r.get("won") is not None:
+                meetings.append((src_id, r))
+    seen_m = set()
+    for src_id, r in meetings:
+        key = (r.get("when"), r.get("round"))
+        if key in seen_m:
+            continue
+        seen_m.add(key)
+        winner = p1 if (src_id == p1["id"]) == r["won"] else p2
+        loser = p2 if winner is p1 else p1
+        prof.append("Their most recent meeting in the tour results: %s beat %s %s%s." % (
+            winner["name"], loser["name"], " ".join(r["sets"]),
+            " in %s" % (r.get("event") or "") if r.get("event") else ""))
+        break
     parts.append(_section("The players", _table(["Player", "Rank", "Country", "Age", "Plays", "Career W-L", "Win pct", "Titles"], rows),
                           "".join(_p(x) for x in prof)))
 
@@ -1298,7 +1426,7 @@ def build(sport, league, event_id, kickoff=None, get=None, now=None):
     now = now or dt.datetime.now(dt.timezone.utc)
     try:
         if sport == "tennis":
-            out = _tennis(league, event_id, kickoff, get)
+            out = _tennis(league, event_id, kickoff, get, now)
             if not out:
                 return None
             body, state, source = out

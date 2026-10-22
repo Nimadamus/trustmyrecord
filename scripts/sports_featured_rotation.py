@@ -333,6 +333,13 @@ def featurable(game, now):
         return False
     if game["state"] == "scheduled" and now - game["kickoff"] > dt.timedelta(hours=nfl.STALE_PRE_HOURS):
         return False
+    # Tennis: a Game File is only minted before the first ball, from a feed that
+    # gave a real start time and the tournament name. Anything else is blocked.
+    if game.get("sport") == "tennis":
+        if game["state"] != "scheduled" or now >= game["kickoff"]:
+            return False
+        if not game.get("time_valid", True) or not str(game.get("notes") or "").strip():
+            return False
     return True
 
 
@@ -422,8 +429,15 @@ def specific_story(game):
             return None
         piece = rnd[0].replace("the-", "")
         if _person(away["display"]) and _person(home["display"]) and not re.search(r"\d", piece):
-            headline = "%s vs %s Preview: %s" % (away["display"], home["display"], piece.replace("-", " "))
-            body = ["%s plays %s. %s" % (away["display"], home["display"], (rnd[2] if rnd else "Both players are in the draw."))]
+            # Name the event and the real round. "Preview: opening round" told a
+            # reader nothing (Jones vs Li, Japan Open round 1, 2026-10-19).
+            label = re.sub(r"\s+", " ", str(game.get("round") or "")).strip() or piece.replace("-", " ")
+            event = re.sub(r"\s+", " ", str(game.get("notes") or "")).strip()
+            where = "%s at the %s" % (label, event) if event else label
+            headline = "%s vs %s Preview: %s" % (away["display"], home["display"], where)
+            place = str(game.get("venue") or "").strip()
+            body = ["%s plays %s in %s%s." % (away["display"], home["display"], where,
+                                              ", in %s" % place if place else "")]
             if not DATE_IN_TITLE.search(headline):
                 return piece, headline, body
     return None
@@ -489,9 +503,12 @@ def _round_angle(name):
     if "32" in text or "thirty-two" in text or "thirty two" in text:
         return ("the-round-of-thirty-two", "The draw is in the round of thirty two",
                 "This match is in the round of thirty two.")
-    if any(bit in text for bit in ("64", "128", "qualif", "first round", "round 1", "r1")):
+    if "qualif" in text:
+        return ("the-opening-round", "This is a qualifying match",
+                "The winner moves a step closer to the main draw.")
+    if any(bit in text for bit in ("64", "128", "first round", "round 1", "r1")):
         return ("the-opening-round", "This is an opening round match",
-                "The event is in its opening rounds, and this match is on the board.")
+                "The winner moves on to the next round of the main draw.")
     return None
 
 
