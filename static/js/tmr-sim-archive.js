@@ -83,17 +83,17 @@
   }
   function commas(v) {
     var n = num(v);
-    if (n === null) return '—';
+    if (n === null) return 'n/a';
     return n.toLocaleString('en-US');
   }
   function dec(v, digits) {
     var n = num(v);
-    if (n === null) return '—';
+    if (n === null) return 'n/a';
     return n.toFixed(digits === undefined ? 2 : digits);
   }
   function pctText(v) {
     var n = num(v);
-    return n === null ? '—' : (n.toFixed(1) + '%');
+    return n === null ? 'n/a' : (n.toFixed(1) + '%');
   }
 
   /** "18 seconds ago", "1 minute ago", "3 hours ago", then a date. */
@@ -203,7 +203,7 @@
     var card = el('div', 'sa-metric' + (accent ? ' is-accent' : ''));
     card.appendChild(el('div', 'sa-metric-label', label));
     if (!matchup) {
-      card.appendChild(el('div', 'sa-metric-value', '—'));
+      card.appendChild(el('div', 'sa-metric-value', 'n/a'));
       card.appendChild(el('div', 'sa-metric-sub', 'No simulations yet'));
       return card;
     }
@@ -232,7 +232,7 @@
     if (awayImg) { awayImg.width = 22; awayImg.height = 22; score.appendChild(awayImg); }
     score.appendChild(el('b', awayWon ? 'sa-win' : null,
       (run.away.name || run.away.abbr) + ' ' + run.away.score));
-    score.appendChild(el('span', 'sa-dash', '—'));
+    score.appendChild(el('span', 'sa-dash', 'at'));
     var homeImg = logo(run.home.logo, run.home.name || run.home.abbr);
     if (homeImg) { homeImg.width = 22; homeImg.height = 22; score.appendChild(homeImg); }
     score.appendChild(el('b', homeWon ? 'sa-win' : null,
@@ -655,8 +655,8 @@
         metricCard((a.name || a.abbr) + ' wins', commas(a.wins), pctText(a.win_pct)),
         metricCard((b.name || b.abbr) + ' wins', commas(b.wins), pctText(b.win_pct)),
         metricCard('Average score',
-          dec(a.avg_score, 1) + ' – ' + dec(b.avg_score, 1),
-          (a.abbr) + ' – ' + (b.abbr)));
+          (a.abbr) + ' ' + dec(a.avg_score, 1) + ', ' + (b.abbr) + ' ' + dec(b.avg_score, 1),
+          'Average across every run'));
       container.appendChild(top);
 
       /* win share */
@@ -687,9 +687,9 @@
       append(extremes,
         statCell('Highest combined score', commas(agg.highest_total)),
         statCell('Lowest combined score', commas(agg.lowest_total)),
-        statCell('Most common final', agg.most_common_score ? agg.most_common_score.label : '—',
+        statCell('Most common final', agg.most_common_score ? agg.most_common_score.label : 'n/a',
           agg.most_common_score ? pctText(agg.most_common_score.pct) + ' of simulations' : null),
-        statCell('First simulated', agg.first_at ? ago(agg.first_at) : '—'));
+        statCell('First simulated', agg.first_at ? ago(agg.first_at) : 'n/a'));
       statsPanel.body.appendChild(extremes);
       container.appendChild(statsPanel.root);
 
@@ -791,7 +791,7 @@
           var left = el('div', null);
           append(left,
             el('div', 'sa-kick', String(data.league || sport).toUpperCase() + ' simulation results'),
-            el('h1', null, (t.name || t.abbr) + ' — simulation results'),
+            el('h1', null, (t.name || t.abbr) + ' simulation results'),
             el('p', 'sa-sub', commas(agg.simulations) + ' completed simulations featuring this club.'));
           row.appendChild(left);
           var img = logo(t.logo, t.name || t.abbr);
@@ -970,7 +970,7 @@
       tr.appendChild(el('td', null, side.abbr));
       for (var i = 0; i < away.length; i += 1) {
         var v = cells[i];
-        tr.appendChild(el('td', 'sa-num', v === null || v === undefined ? '—' : String(v)));
+        tr.appendChild(el('td', 'sa-num', v === null || v === undefined ? 'n/a' : String(v)));
       }
       tr.appendChild(el('td', 'sa-num is-total', String(side.score)));
       tbody.appendChild(tr);
@@ -1083,10 +1083,10 @@
   }
 
   function cellText(key, value) {
-    if (value === null || value === undefined || value === '') return '—';
-    if (typeof value === 'boolean') return value ? 'Yes' : '—';
+    if (value === null || value === undefined || value === '') return 'n/a';
+    if (typeof value === 'boolean') return value ? 'Yes' : 'No';
     if (typeof value !== 'number') return String(value);
-    if (!isFinite(value)) return '—';
+    if (!isFinite(value)) return 'n/a';
     if (CLOCK_KEYS[key]) return clockFrom(value);
     if (RATE_KEYS[key]) return value.toFixed(3).replace(/^0/, '');
     if (PERCENT_KEYS[key]) return value.toFixed(1) + '%';
@@ -1276,7 +1276,7 @@
     };
     keys.forEach(function (k) {
       var tr = el('tr');
-      var fmt = function (v) { return v === null || v === undefined ? '—' : String(v); };
+      var fmt = function (v) { return v === null || v === undefined ? 'n/a' : String(v); };
       append(tr,
         el('td', null, title(k)),
         el('td', 'sa-num', fmt(ts.away[k])),
@@ -1359,8 +1359,8 @@
       var starters = el('div', 'sa-statgrid');
       if (run.away.starter || run.home.starter) {
         append(starters,
-          statCell((meta.starter_label || 'Starter') + ' — ' + run.away.abbr, run.away.starter || '—'),
-          statCell((meta.starter_label || 'Starter') + ' — ' + run.home.abbr, run.home.starter || '—'));
+          statCell((meta.starter_label || 'Starter') + ', ' + run.away.abbr, run.away.starter || 'n/a'),
+          statCell((meta.starter_label || 'Starter') + ', ' + run.home.abbr, run.home.starter || 'n/a'));
         board.body.appendChild(starters);
       }
       container.appendChild(board.root);
@@ -1424,8 +1424,8 @@
       var grid = el('div', 'sa-statgrid');
       append(grid,
         statCell('Engine', run.engine_version),
-        statCell('Simulations run', run.n_sims ? commas(run.n_sims) : '—'),
-        statCell('Seed', run.seed || '—',
+        statCell('Simulations run', run.n_sims ? commas(run.n_sims) : 'n/a'),
+        statCell('Seed', run.seed || 'n/a',
           run.seed ? 'Passing this seed back reproduces this exact game' : null),
         statCell('Settings', run.scope === 'default' ? 'Default' :
           (run.scope === 'historical' ? 'Historical teams' : 'Custom')),
