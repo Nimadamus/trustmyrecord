@@ -333,6 +333,13 @@ def featurable(game, now):
         return False
     if game["state"] == "scheduled" and now - game["kickoff"] > dt.timedelta(hours=nfl.STALE_PRE_HOURS):
         return False
+    # Tennis: a Game File is only minted before the first ball, from a feed that
+    # gave a real start time and the tournament name. Anything else is blocked.
+    if game.get("sport") == "tennis":
+        if game["state"] != "scheduled" or now >= game["kickoff"]:
+            return False
+        if not game.get("time_valid", True) or not str(game.get("notes") or "").strip():
+            return False
     return True
 
 
@@ -428,7 +435,9 @@ def specific_story(game):
             event = re.sub(r"\s+", " ", str(game.get("notes") or "")).strip()
             where = "%s at the %s" % (label, event) if event else label
             headline = "%s vs %s Preview: %s" % (away["display"], home["display"], where)
-            body = ["%s plays %s in %s. %s" % (away["display"], home["display"], where, rnd[2])]
+            place = str(game.get("venue") or "").strip()
+            body = ["%s plays %s in %s%s." % (away["display"], home["display"], where,
+                                              ", in %s" % place if place else "")]
             if not DATE_IN_TITLE.search(headline):
                 return piece, headline, body
     return None
