@@ -31,7 +31,7 @@
         ["@sub", "Featured Matchups", [
             /*FMENU nfl-gotw*/ ["/handicapping/nfl/seattle-won-7-last-10-vs-chiefs/", "NFL Game of the Week", "/nfl-game-of-the-week/"],
             /*FMENU ncaaf*/ ["/matchup-of-the-day/james-madison-app-state-visiting-offense-has-the-edge/", "NCAAF", "/matchup-of-the-day/ncaaf/"],
-            /*FMENU mlb*/ ["/matchup-of-the-day/guardians-rays-bats-feast-on-righties/", "MLB", "/matchup-of-the-day/mlb/"],
+            /*FMENU mlb*/ ["/matchup-of-the-day/rays-brewers-two-aces-on-deck/", "MLB", "/matchup-of-the-day/mlb/"],
             /*FMENU nhl*/ ["/nhl/lightning-avalanche-hagel-vs-lehkonen/", "NHL", "/matchup-of-the-day/nhl/"],
             /*FMENU tennis*/ ["/matchup-of-the-day/michelsen-fils-one-closes-out-deciders/", "Tennis", "/matchup-of-the-day/tennis/"],
             /*FMENU soccer*/ ["/matchup-of-the-day/malaga-alaves-home-and-road-split-them/", "Soccer", "/matchup-of-the-day/soccer/"]
