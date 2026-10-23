@@ -931,6 +931,7 @@
                 <span id="proStatusText"></span>
                 <button type="button" class="pro-manage" id="proManage" hidden>Manage subscription</button>
                 <button type="button" class="pro-manage pro-cancel" id="proCancel" hidden>Cancel subscription</button>
+                <button type="button" class="pro-manage" id="proResume" hidden>Resume TMR Pro</button>
             </div>
             <!-- PRO_CANCEL_REASON_REQUIRED_20261023: a reason and a written answer before the cancel goes through. -->
             <dialog class="pro-cancel-dialog" id="proCancelDialog" aria-labelledby="pcdTitle">
@@ -1560,6 +1561,7 @@
         var textEl = document.getElementById('proStatusText');
         var manageEl = document.getElementById('proManage');
         var cancelEl = document.getElementById('proCancel');
+        var resumeEl = document.getElementById('proResume');
         var bannerEl = document.getElementById('proBanner');
         var monthlyNote = document.getElementById('proMonthlyNote');
         var renewNote = document.getElementById('proRenewNote');
@@ -1635,6 +1637,7 @@
             textEl.textContent = text;
             if (manageEl) manageEl.hidden = !canManage;
             if (cancelEl) cancelEl.hidden = true;
+            if (resumeEl) resumeEl.hidden = true;
             statusEl.classList.add('is-shown');
         }
 
@@ -1656,6 +1659,7 @@
                 }
                 paintStatus('TMR Pro', line, true, !!me.can_manage_billing);
                 if (cancelEl) cancelEl.hidden = !(me.can_manage_billing && sub.source === 'stripe' && !sub.cancel_at_period_end);
+                if (resumeEl) resumeEl.hidden = !(me.can_manage_billing && sub.source === 'stripe' && sub.cancel_at_period_end);
                 paintButtons(false);
                 loadBoard(true);
                 takeIntent();
@@ -2181,6 +2185,28 @@
                 }).catch(function () {
                     pcdErr.textContent = 'The cancellation did not go through. Please try again in a minute.';
                     pcdCheck();
+                });
+            });
+        }
+
+        if (resumeEl) {
+            resumeEl.addEventListener('click', function () {
+                resumeEl.disabled = true;
+                ga('pro_resume_click', {});
+                S.authFetch(API + '/premium/resume', { method: 'POST' }).then(function (r) {
+                    return r.json().catch(function () { return {}; }).then(function (b) { return { r: r, b: b }; });
+                }).then(function (x) {
+                    resumeEl.disabled = false;
+                    if (x.r.ok && x.b.ok) {
+                        ga('pro_resume_done', {});
+                        banner('Welcome back. TMR Pro will renew as normal.', 'good');
+                        loadMe().then(drawAccount).catch(function () {});
+                        return;
+                    }
+                    banner(x.b.error || 'TMR Pro could not be resumed right now. Please try again in a minute.', 'warn');
+                }).catch(function () {
+                    resumeEl.disabled = false;
+                    banner('TMR Pro could not be resumed right now. Please try again in a minute.', 'warn');
                 });
             });
         }
