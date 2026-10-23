@@ -42,6 +42,14 @@ def _git(*args, check=True):
 def sync_to_origin_main(label="bake", rerun=None):
     if os.environ.get("GITHUB_ACTIONS") != "true":
         return
+    # 2026-10-23: never move HEAD inside a prerender_run.py stage (it sets PRERENDER_REPORT_FILE).
+    # The runner snapshots the index before and after each stage and, when a stage or gate fails,
+    # reverses that stage's whole diff. A fast-forward here put every commit that landed during the
+    # bake into the asset_refs stage's diff, so a revert deleted them: the new Cash Reserve page
+    # (5a0f782ade) vanished in de618e3c64. The workflow's commit step rebases onto main instead.
+    if os.environ.get("PRERENDER_REPORT_FILE"):
+        print("[ci-sync] inside prerender_run; HEAD stays put, the commit step rebases onto main.")
+        return
     try:
         _git("fetch", "--quiet", "origin", "main")
         behind = int(_git("rev-list", "--count", "HEAD..origin/main") or "0")
