@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="canonical" href="https://trustmyrecord.com/tmr-coin/revenue-reserve/">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TMR Cash Reserve | TrustMyRecord</title>
+    <meta name="description" content="How TrustMyRecord sets aside half of the net revenue from used simulator credits in its business bank account, and how anyone can check it each month.">
+    <!-- RESERVE_A_WORDING_20261014_D4: published 2026-10-23 when the reserve started (Nima: do everything). -->
+    <meta name="robots" content="index, follow">
+    <meta name="theme-color" content="#050a14">
+    <link rel="icon" type="image/png" href="/static/favicon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/tmr-ds.d4d41a955166.css">
+    <link rel="stylesheet" href="/static/css/tmr-ds-header.cc364e352e74.css">
+    <link rel="stylesheet" href="/static/css/tmr-navbar.css?v=68ec3081d29a">
+    <style>
+        :root { --cr-bg:#050a14; --cr-panel:#0a1322; --cr-panel2:#0e1a2e; --cr-line:rgba(96,165,250,.16); --cr-text:#eef4ff; --cr-muted:#94a7c2;
+                --cr-blue:#1D7FE8; --cr-glow:#38bdf8; --cr-green:#4ade80; --cr-gold:#facc15; --cr-red:#f87171; }
+        body.cr-page { margin:0; background: radial-gradient(1100px 520px at 12% -10%, rgba(29,127,232,.22), transparent 60%),
+                       radial-gradient(900px 480px at 100% 0%, rgba(56,189,248,.10), transparent 55%), var(--cr-bg);
+                       color: var(--cr-text); font-family: Inter, system-ui, sans-serif; }
+        .cr-wrap { max-width: 1080px; margin: 0 auto; padding: 28px 16px 56px; }
+        .cr-hero { display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:16px; padding: 18px 0 22px; border-bottom: 1px solid var(--cr-line); }
+        .cr-eyebrow { color: var(--cr-glow); font-size: 12px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; margin: 0 0 8px; }
+        .cr-hero h1 { font-family: 'Barlow Condensed', Inter, sans-serif; font-size: clamp(34px, 6vw, 56px); line-height: .95; margin: 0; letter-spacing: .01em;
+                      background: linear-gradient(90deg, #ffffff, #9fd2ff 70%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .cr-lede { color: var(--cr-muted); font-size: 16px; line-height: 1.6; max-width: 620px; margin: 12px 0 0; }
+        .cr-chip { display:inline-flex; align-items:center; gap:8px; padding: 7px 12px; border-radius: 999px; font-size: 12px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
+                   border: 1px solid rgba(250,204,21,.45); background: rgba(250,204,21,.08); color: #fde68a; white-space: nowrap; }
+        .cr-chip::before { content:''; width:8px; height:8px; border-radius:50%; background: currentColor; box-shadow: 0 0 10px currentColor; }
+        .cr-chip.live { border-color: rgba(74,222,128,.5); background: rgba(74,222,128,.08); color: var(--cr-green); }
+        .cr-section { margin-top: 30px; }
+        .cr-section h2 { font-family: 'Barlow Condensed', Inter, sans-serif; font-size: 26px; letter-spacing: .02em; margin: 0 0 12px; }
+        .cr-three { display:grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+        .cr-card { position: relative; background: linear-gradient(180deg, rgba(29,127,232,.10), rgba(29,127,232,.02)); border: 1px solid var(--cr-line); border-radius: 14px; padding: 18px; }
+        .cr-card .tag { display:inline-block; font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--cr-glow); margin-bottom: 8px; }
+        .cr-card h3 { margin: 0 0 8px; font-size: 18px; }
+        .cr-card p { margin: 0; color: var(--cr-muted); font-size: 14.5px; line-height: 1.6; }
+        .cr-card.cash { border-color: rgba(56,189,248,.45); box-shadow: 0 0 0 1px rgba(56,189,248,.12), 0 18px 40px -24px rgba(56,189,248,.6); }
+        .cr-steps { display:grid; grid-template-columns: repeat(3, 1fr); gap: 14px; counter-reset: s; }
+        .cr-step { background: var(--cr-panel); border: 1px solid var(--cr-line); border-radius: 12px; padding: 16px 18px; }
+        .cr-step::before { counter-increment: s; content: counter(s); display:inline-flex; width: 26px; height: 26px; border-radius: 50%; align-items:center; justify-content:center;
+                           background: var(--cr-blue); color: #fff; font-weight: 800; font-size: 13px; margin-bottom: 10px; box-shadow: 0 0 14px rgba(29,127,232,.7); }
+        .cr-step p { margin: 0; color: var(--cr-muted); font-size: 14.5px; line-height: 1.6; }
+        .cr-split { display:flex; height: 12px; border-radius: 999px; overflow: hidden; border: 1px solid var(--cr-line); margin: 16px 0 8px; }
+        .cr-split span { display:block; height:100%; }
+        .cr-split .biz { background: #1e3a5f; width: 50%; } .cr-split .res { background: linear-gradient(90deg, var(--cr-blue), var(--cr-glow)); width: 50%; }
+        .cr-legend { display:flex; gap: 18px; flex-wrap: wrap; color: var(--cr-muted); font-size: 13px; }
+        .cr-legend b { color: var(--cr-text); }
+        .cr-panel { background: var(--cr-panel); border: 1px solid var(--cr-line); border-radius: 14px; padding: 18px; }
+        .cr-state { padding: 14px 16px; border-radius: 10px; border: 1px dashed rgba(250,204,21,.4); background: rgba(250,204,21,.05); color: #fde68a; font-weight: 600; font-size: 14.5px; line-height: 1.6; }
+        .cr-state.down { border-color: rgba(248,113,113,.45); background: rgba(248,113,113,.06); color: #fecaca; }
+        .cr-kpis { display:grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 14px; }
+        .cr-kpi { background: var(--cr-panel2); border: 1px solid var(--cr-line); border-radius: 12px; padding: 14px; }
+        .cr-kpi .k { color: var(--cr-muted); font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+        .cr-kpi .v { font-size: 24px; font-weight: 800; margin-top: 6px; font-variant-numeric: tabular-nums; }
+        table.cr-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        .cr-table th, .cr-table td { padding: 10px; border-bottom: 1px solid var(--cr-line); text-align: left; }
+        .cr-table th { color: var(--cr-muted); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
+        .cr-table td.num, .cr-table th.num { text-align: right; font-variant-numeric: tabular-nums; }
+        .cr-table code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; color: #bfdbfe; }
+        .st { display:inline-block; padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 800; letter-spacing: .05em; }
+        .st.ok { background: rgba(74,222,128,.12); color: var(--cr-green); } .st.carry { background: rgba(56,189,248,.12); color: var(--cr-glow); }
+        .st.pend { background: rgba(250,204,21,.12); color: var(--cr-gold); } .st.bad { background: rgba(248,113,113,.14); color: var(--cr-red); }
+        .cr-not { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+        .cr-not li { position: relative; padding: 12px 14px 12px 44px; background: var(--cr-panel); border: 1px solid var(--cr-line); border-radius: 10px; color: var(--cr-muted); font-size: 14.5px; line-height: 1.6; }
+        .cr-not li::before { content: ''; position: absolute; left: 16px; top: 18px; width: 14px; height: 2px; background: var(--cr-red); box-shadow: 0 0 8px rgba(248,113,113,.8); }
+        .cr-two { display:grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .cr-two p { color: var(--cr-muted); font-size: 14.5px; line-height: 1.65; margin: 0 0 8px; }
+        .cr-foot { margin-top: 34px; color: var(--cr-muted); font-size: 12.5px; line-height: 1.6; border-top: 1px solid var(--cr-line); padding-top: 16px; }
+        .cr-foot a { color: #9fd2ff; }
+        .cr-hidden { display: none !important; }
+        @media (max-width: 900px) { .cr-three, .cr-steps { grid-template-columns: 1fr; } .cr-kpis { grid-template-columns: 1fr 1fr; } .cr-two { grid-template-columns: 1fr; } }
+        @media (max-width: 560px) {
+            .cr-table thead { display: none; } .cr-table, .cr-table tbody, .cr-table tr { display: block; width: 100%; }
+            .cr-table tr { border: 1px solid var(--cr-line); border-radius: 10px; margin-bottom: 10px; padding: 6px 10px; }
+            .cr-table td, .cr-table td.num { display: flex; justify-content: space-between; gap: 12px; border: none; padding: 6px 0; text-align: right; }
+            .cr-table td::before { content: attr(data-k); color: var(--cr-muted); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; text-align: left; }
+            .cr-kpi .v { font-size: 20px; }
+        }
+    </style>
+</head>
+<body class="tmr-ds-shell cr-page">
+<main class="cr-wrap">
+    <header class="cr-hero">
+        <div>
+            <p class="cr-eyebrow">TMR Coin &middot; Revenue policy</p>
+            <h1>The cash reserve</h1>
+            <p class="cr-lede">Half of the net revenue from simulator credits that members use is set aside as a reserve in the TrustMyRecord business bank account. Each month is checked against the bank statement and posted here.</p>
+        </div>
+        <span id="cr-chip" class="cr-chip">Not started</span>
+    </header>
+
+    <section class="cr-section" aria-labelledby="h-three">
+        <h2 id="h-three">Three different things</h2>
+        <div class="cr-three">
+            <article class="cr-card"><span class="tag">Site credits</span><h3>For simulator use</h3>
+                <p>Site credits bought in the TrustMyRecord store pay for simulator runs. They are priced in US dollars, they are not money, and they can never be withdrawn or turned into TMR tokens.</p></article>
+            <article class="cr-card cash"><span class="tag">Cash reserve</span><h3>US dollars in a bank account</h3>
+                <p>The cash reserve is US dollars that TrustMyRecord sets aside in its own business bank account from credit revenue.</p></article>
+            <article class="cr-card"><span class="tag">TMR</span><h3>A cryptocurrency token</h3>
+                <p>TMR is a cryptocurrency token. Only TMR that members are awarded on the site can be withdrawn as the token, under the withdrawal rules and their waiting periods. The cash reserve is how TMR gets real backing: once a month has cleared the 120 day card dispute window, its reserve money can be released to the TMR token treasury, which uses it to bid for TMR in the public pool on Base. Every release is posted here before it happens.</p></article>
+        </div>
+    </section>
+
+    <section class="cr-section" aria-labelledby="h-fund">
+        <h2 id="h-fund">How the reserve is funded</h2>
+        <div class="cr-steps">
+            <div class="cr-step"><p>When a member uses simulator credits they bought, half of the net revenue from those credits is set aside. Net means after the card fees our card processor actually charged.</p></div>
+            <div class="cr-step"><p>Credits that have not been used are not counted. Unused purchased credits can be refunded on request, as the store terms describe.</p></div>
+            <div class="cr-step"><p>If a purchase is refunded, in full or in part, or a card dispute is lost, its share comes back out. A refund larger than the share for its month is carried into the following months.</p></div>
+        </div>
+        <div class="cr-split" role="img" aria-label="Split of net revenue from used credits"><span class="biz" id="cr-bar-biz"></span><span class="res" id="cr-bar-res"></span></div>
+        <div class="cr-legend"><span>Business <b id="cr-pct-biz">50%</b></span><span>Cash reserve <b id="cr-pct-res">50%</b></span></div>
+    </section>
+
+    <section class="cr-section" aria-labelledby="h-record">
+        <h2 id="h-record">The monthly record</h2>
+        <div class="cr-panel">
+            <div id="cr-state" class="cr-state">Loading the record.</div>
+            <div id="cr-body" class="cr-hidden">
+                <div class="cr-kpis">
+                    <div class="cr-kpi"><div class="k">Set aside</div><div class="v" id="k-owed">$0.00</div></div>
+                    <div class="cr-kpi"><div class="k">Deposited</div><div class="v" id="k-dep">$0.00</div></div>
+                    <div class="cr-kpi"><div class="k">Still to deposit</div><div class="v" id="k-carry">$0.00</div></div>
+                    <div class="cr-kpi"><div class="k">Expected balance</div><div class="v" id="k-close">$0.00</div></div>
+                </div>
+                <table class="cr-table">
+                    <thead><tr><th>Month (Pacific)</th><th class="num">Set aside</th><th class="num">Deposited</th><th class="num">Interest</th><th class="num">Bank balance</th><th>Statement fingerprint</th><th>Check</th></tr></thead>
+                    <tbody id="cr-rows"></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <section class="cr-section" aria-labelledby="h-not">
+        <h2 id="h-not">What it does not do</h2>
+        <ul class="cr-not" id="cr-not">
+            <li>The reserve does not buy, hold, sell or lock TMR, and it does not support or set any TMR price.</li>
+            <li>Nothing here is a promise that TMR, site credits or anything else will rise in value.</li>
+            <li>The reserve does not make TMR or site credits easier to sell, and nobody is promised a buyer.</li>
+            <li>Site credits cannot be exchanged for money from the reserve, and the reserve is not a fund anyone can withdraw from.</li>
+            <li>It is not an investment. It pays nothing to members, and it gives no member a share of revenue or any claim on it.</li>
+        </ul>
+    </section>
+
+    <section class="cr-section cr-two">
+        <div class="cr-panel"><h2>Who owns it, and what it may be used for</h2>
+            <p>The account and the money in it belong to TrustMyRecord. It is not held in trust or escrow for members, and members have no claim on it.</p>
+            <p>The money stays in the reserve account. It can be released only for a purpose TrustMyRecord approves separately, and any release is posted here before it happens.</p></div>
+        <div class="cr-panel"><h2>How you can check it</h2>
+            <p>Each month, closed on Pacific time, we post what was set aside, what was deposited, the closing bank balance, and whether they match.</p>
+            <p>For each bank statement we post a fingerprint (SHA 256). Anyone later shown that statement can confirm it is the same document.</p></div>
+    </section>
+
+    <p class="cr-foot">This is a business policy, and we can change it. Any change is posted here, with its date, before it takes effect.
+        <span id="cr-version"></span> &middot; <a href="/tmr-coin/">TMR Coin</a> &middot; <a href="/tmr-coin/token-treasury/">Token treasury</a> &middot; <a href="/tmr-coin/transparency/">Transparency</a></p>
+</main>
+
+<script>
+(function () {
+    'use strict';
+    var API = 'https://trustmyrecord-api.onrender.com/api';
+    function $(id) { return document.getElementById(id); }
+    function usd(n) { var v = Number(n || 0); return (v < 0 ? '-$' : '$') + Math.abs(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+    function monthName(p) { var a = String(p).split('-'); return new Date(Date.UTC(+a[0], +a[1] - 1, 15)).toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' }); }
+    var STATUS = { RECONCILED: ['Matches the bank', 'ok'], REVERSAL_CARRIED: ['Matches; refunds carried', 'carry'], PENDING: ['Statement not in yet', 'pend'] };
+    function td(k, v, cls) { var c = document.createElement('td'); c.setAttribute('data-k', k); if (cls) c.className = cls; if (v instanceof Node) c.appendChild(v); else c.textContent = v; return c; }
+
+    fetch(API + '/tmr-coin/revenue-reserve', { headers: { Accept: 'application/json' } }).then(function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+    }).then(function (d) {
+        var biz = Number(d.owner_percent), res = Number(d.reserve_percent);
+        if (!isNaN(biz) && !isNaN(res)) { $('cr-bar-biz').style.width = biz + '%'; $('cr-bar-res').style.width = res + '%'; $('cr-pct-biz').textContent = biz + '%'; $('cr-pct-res').textContent = res + '%'; }
+        if (d.wording_version) $('cr-version').textContent = 'Wording ' + d.wording_version;
+        if (!d.live) { $('cr-state').textContent = d.status_note || 'The cash reserve has not started. Nothing has been set aside or deposited.'; return; }
+        $('cr-chip').textContent = 'Recording'; $('cr-chip').classList.add('live');
+        var months = d.months || [], t = d.totals || {};
+        $('k-owed').textContent = usd((t.owed_cents || 0) / 100);
+        $('k-dep').textContent = usd((t.deposited_cents || 0) / 100);
+        $('k-carry').textContent = usd((t.carried_owed_cents || 0) / 100);
+        $('k-close').textContent = usd((t.closing_cents || 0) / 100);
+        var rows = $('cr-rows');
+        if (!months.length) { var tr0 = document.createElement('tr'); tr0.appendChild(td('Month', 'No month has closed yet.')); rows.appendChild(tr0); }
+        months.slice().reverse().forEach(function (m) {
+            var tr = document.createElement('tr');
+            var s = STATUS[m.status] || ['Needs review', 'bad'];
+            var chip = document.createElement('span'); chip.className = 'st ' + s[1]; chip.textContent = s[0];
+            var fp = document.createElement('code'); fp.textContent = m.statement_sha256 ? m.statement_sha256.slice(0, 12) + '…' : 'not in yet'; if (m.statement_sha256) fp.title = m.statement_sha256;
+            tr.appendChild(td('Month', monthName(m.period)));
+            tr.appendChild(td('Set aside', usd(m.owed_usd), 'num'));
+            tr.appendChild(td('Deposited', usd(m.deposited_usd), 'num'));
+            tr.appendChild(td('Interest', usd(m.interest_usd), 'num'));
+            tr.appendChild(td('Bank balance', m.closing_usd == null ? 'not in yet' : usd(m.closing_usd), 'num'));
+            tr.appendChild(td('Fingerprint', fp));
+            tr.appendChild(td('Check', chip));
+            rows.appendChild(tr);
+        });
+        $('cr-state').classList.add('cr-hidden');
+        $('cr-body').classList.remove('cr-hidden');
+    }).catch(function () {
+        // No figure without a record: the section closes up.
+        var sec = $('h-record').parentNode; sec.classList.add('cr-hidden');
+    });
+}());
+</script>
+<script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-ds-nav.2ed68fc6746c.js"></script>
+</body>
+</html>
