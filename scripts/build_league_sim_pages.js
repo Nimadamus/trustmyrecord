@@ -705,7 +705,96 @@ function pickPanel(sport, inputs) {
 }
 
 /* The hub block: links to the cluster plus the next real slate. */
-function hubBlock(sport, inputs, rivalries) {
+/* SIM_WEEK_20261023: the next seven days of games with the model's win
+   probability, the closest and most lopsided of them, the questions people ask
+   about them, and the projected leaders. Every number comes from the same inputs
+   and season projection the simulator runs; rebaked with the cluster block. */
+function weekBlock(sport, inputs, result) {
+  const L = LEAGUE[sport];
+  const now = Date.now();
+  const games = inputs.schedule.filter((g) => !g.final && Date.parse(g.date) >= now - 6 * 3600e3
+    && Date.parse(g.date) < now + 7 * 86400e3 && inputs.matchups[g.home] && inputs.matchups[g.home][g.away]);
+  if (games.length < 3) return '';
+  const team = (a) => inputs.teams.find((t) => t.espn_abbr === a) || { name: a, short: a };
+  const teamUrl = (t) => (fs.existsSync(path.join(ROOT, sport + '-simulator', 'teams', slugOf(t.name), 'index.html'))
+    ? `/${sport}-simulator/teams/${slugOf(t.name)}/` : null);
+  const link = (t) => { const u = teamUrl(t); return u ? `<a href="${u}">${esc(t.name)}</a>` : esc(t.name); };
+  const pairUrl = (a, h) => {
+    const slug = rivalrySlug(sport, a, h);
+    return fs.existsSync(path.join(ROOT, sport + '-simulator', slug, 'index.html')) ? `/${sport}-simulator/${slug}/` : null;
+  };
+  const dayOf = (iso) => new Date(iso).toLocaleString('en-US', { timeZone: 'America/Los_Angeles', weekday: 'long', month: 'long', day: 'numeric' });
+  const shortDay = (iso) => new Date(iso).toLocaleString('en-US', { timeZone: 'America/Los_Angeles', weekday: 'short', month: 'short', day: 'numeric' });
+  const time = (iso) => new Date(iso).toLocaleString('en-US', { timeZone: 'America/Los_Angeles', hour: 'numeric', minute: '2-digit' }) + ' PT';
+  const rows = games.map((g) => {
+    const h = team(g.home), a = team(g.away), ph = inputs.matchups[g.home][g.away].p;
+    const fav = ph >= 0.5 ? h : a, pf = ph >= 0.5 ? ph : 1 - ph;
+    return { g, h, a, ph, fav, dog: fav === h ? a : h, pf, favHome: fav === h };
+  });
+  const days = [...new Set(rows.map((r) => dayOf(r.g.date)))];
+  const tables = days.map((d) => `<h3>${esc(d)}</h3>
+    <div class="lsimw-wrap"><table class="lsimw-table">
+      <thead><tr><th>Game</th><th>Time</th><th>Simulator favorite</th></tr></thead>
+      <tbody>${rows.filter((r) => dayOf(r.g.date) === d).map((r) => {
+        const u = pairUrl(r.a, r.h);
+        return `<tr><td>${link(r.a)} at ${link(r.h)}${u ? ` <a class="lsimw-more" href="${u}">matchup</a>` : ''}</td><td>${esc(time(r.g.date))}</td><td>${esc(r.fav.short || r.fav.name)} ${Math.round(r.pf * 100)}%</td></tr>`;
+      }).join('')}</tbody>
+    </table></div>`).join('');
+  const line = (r) => `<li>${link(r.a)} at ${link(r.h)}, ${esc(shortDay(r.g.date))}: the ${esc(r.fav.name)} win ${Math.round(r.pf * 100)}% of simulations${r.favHome ? ' at home' : ' on the road'}.</li>`;
+  const closest = [...rows].sort((x, y) => x.pf - y.pf).slice(0, 5);
+  const biggest = [...rows].sort((x, y) => y.pf - x.pf).slice(0, 5);
+  const asks = rows.slice(0, 8).map((r) => {
+    const pct = Math.round(r.pf * 100);
+    const read = pct >= 65 ? 'a clear favorite' : pct >= 55 ? 'the favorite' : 'a slight favorite, close to a coin flip';
+    return `<div class="lsimw-q"><h3>Who will win ${esc(r.a.short || r.a.name)} vs ${esc(r.h.short || r.h.name)} on ${esc(shortDay(r.g.date))}?</h3>
+      <p>The simulator makes the ${esc(r.fav.name)} ${read}: they win ${pct}% of simulated games against the ${esc(r.dog.name)}${r.favHome ? ' at home' : ' on the road'} (${esc(time(r.g.date))}).</p></div>`;
+  }).join('');
+  const key = sport === 'nhl' ? 'points_mean' : 'wins_mean';
+  const leaders = [...(result.teams || [])].sort((x, y) => y[key] - x[key]).slice(0, 5);
+  const favs = [...(result.teams || [])].sort((x, y) => y.champion - x.champion).slice(0, 5);
+  const span = `${shortDay(rows[0].g.date)} to ${shortDay(rows[rows.length - 1].g.date)}`;
+  return `
+  <style>
+    .lsimw-wrap{overflow-x:auto;margin:6px 0 14px}
+    .lsimw-table{width:100%;border-collapse:collapse;font-size:.9rem}
+    .lsimw-table th,.lsimw-table td{padding:7px 8px;border-bottom:1px solid var(--line,#23324a);text-align:left;vertical-align:top}
+    .lsimw-table th{font-size:.75rem;text-transform:uppercase;letter-spacing:.04em;opacity:.7}
+    .lsimw-table td:nth-child(2),.lsimw-table td:nth-child(3){white-space:nowrap}
+    .lsimw-more{font-size:.75rem;opacity:.8;margin-left:4px}
+    .lsimw-cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:14px}
+    .lsimw-cols ul{margin:6px 0 0;padding-left:18px;line-height:1.55}
+    .lsimw-q h3{font-size:1rem;margin:14px 0 4px}
+    .lsimw-q p{margin:0}
+  </style>
+  <section class="panel" id="weekSims">
+    <h2>This week's ${L.label} simulations: ${esc(span)}</h2>
+    <p>Every ${L.label} game in the next seven days with the simulator's favorite and how often that team wins, from the same model the simulator above runs. The board is rebuilt several times a day, so new games and changed odds show up on their own.</p>
+    ${tables}
+  </section>
+  <section class="panel" id="weekStandouts">
+    <h2>Closest games and biggest favorites this week</h2>
+    <div class="lsimw-cols">
+      <div><h3>Closest to a coin flip</h3><ul>${closest.map(line).join('')}</ul></div>
+      <div><h3>Biggest favorites</h3><ul>${biggest.map(line).join('')}</ul></div>
+    </div>
+  </section>
+  <section class="panel" id="weekQuestions">
+    <h2>Who will win this week's ${L.label} games?</h2>
+    <p>Straight from the simulator's numbers. Pick any of these games in the simulator at the top of this page to play it out with a full box score.</p>
+    ${asks}
+  </section>
+  ${leaders.length ? `<section class="panel" id="projectedLeaders">
+    <h2>Projected ${esc(inputs.season_label)} ${L.label} leaders</h2>
+    <p>From ${count(result.runs)} simulated ${esc(inputs.season_label)} seasons, with every game already played counted at its real final score.</p>
+    <div class="lsimw-cols">
+      <div><h3>Most projected ${L.unit}</h3><ul>${leaders.map((t) => `<li>${link(t)}: ${UI_one(t[key])} ${L.unit} on average, playoffs ${pctText(t.playoffs)} of the time.</li>`).join('')}</ul></div>
+      <div><h3>${esc(L.trophy)} favorites</h3><ul>${favs.map((t) => `<li>${link(t)}: win the ${esc(L.trophy)} in ${pctText(t.champion)} of simulated seasons.</li>`).join('')}</ul></div>
+    </div>
+    <div class="linkgrid"><a href="/${sport}-season-simulator/">${L.label} Season Simulator<small>All ${inputs.teams.length} teams</small></a><a href="/${sport}-playoff-simulator/">${L.label} Playoff Simulator<small>Round by round odds</small></a></div>
+  </section>` : ''}`;
+}
+
+function hubBlock(sport, inputs, rivalries, result) {
   const L = LEAGUE[sport];
   const now = Date.now();
   const upcoming = inputs.schedule.filter((g) => !g.final && Date.parse(g.date) >= now - 6 * 3600e3);
@@ -742,6 +831,7 @@ function hubBlock(sport, inputs, rivalries) {
     <p>The percentage is each team's win probability from the same calibrated model this simulator runs. Choose the game in the simulator above to play it out with a full box score.</p>
     <div class="lsimh-games">${cards}</div>
   </section>` : ''}
+  ${result ? weekBlock(sport, inputs, result) : ''}
   <section class="panel" id="seasonPlayoffSims">
     <h2>${L.label} season and playoff simulators</h2>
     <div class="linkgrid">
@@ -766,10 +856,10 @@ function hubBlock(sport, inputs, rivalries) {
   <!--/MK:leagueSimCluster-->`;
 }
 
-function patchHub(sport, inputs, rivalries) {
+function patchHub(sport, inputs, rivalries, result) {
   const file = path.join(ROOT, sport + '-simulator', 'index.html');
   let html = fs.readFileSync(file, 'utf8');
-  const block = hubBlock(sport, inputs, rivalries);
+  const block = hubBlock(sport, inputs, rivalries, result);
   const re = /<!--MK:leagueSimCluster-->[\s\S]*?<!--\/MK:leagueSimCluster-->/;
   if (re.test(html)) html = html.replace(re, block);
   else html = html.replace(/(<div id="result"><\/div>)/, `$1\n  ${block}`);
@@ -1095,7 +1185,7 @@ if (require.main === module) (async () => {
       console.log(`wrote ${path.relative(ROOT, out)}`);
     }
     const rivalries = writeRivalries();
-    patchHub(sport, inputs, rivalries);
+    patchHub(sport, inputs, rivalries, result);
     console.log(`${sport}: ${patchTeams(sport, inputs, result)} team pages carry the projection`);
     console.log(`${sport}: ${patchMatchups(sport, inputs, result)} matchup pages carry both projections`);
     console.log(`patched ${sport}-simulator/index.html`);
