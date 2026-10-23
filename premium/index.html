@@ -398,6 +398,33 @@
             color: var(--pro-brand-dark);
             cursor: pointer;
         }
+        .pro-cancel { border-color: var(--pro-muted); color: var(--pro-body); }
+        .pro-cancel-dialog {
+            width: min(520px, calc(100vw - 32px));
+            border: 1px solid var(--pro-line);
+            border-radius: 14px;
+            padding: 22px;
+            background: var(--pro-surface);
+            color: var(--pro-ink);
+        }
+        .pro-cancel-dialog::backdrop { background: rgba(7, 24, 42, .55); }
+        .pro-cancel-dialog h2 { margin: 0 0 6px; font-size: 1.2rem; }
+        .pro-cancel-dialog p { margin: 0 0 14px; color: var(--pro-body); font-size: .92rem; line-height: 1.5; }
+        .pro-cancel-dialog fieldset { border: 0; margin: 0 0 14px; padding: 0; }
+        .pro-cancel-dialog legend, .pro-cancel-dialog .pcd-label { font-weight: 700; font-size: .92rem; margin-bottom: 8px; display: block; }
+        .pro-cancel-dialog label.pcd-opt { display: flex; gap: 8px; align-items: center; padding: 6px 0; font-size: .92rem; cursor: pointer; }
+        .pro-cancel-dialog textarea {
+            width: 100%; box-sizing: border-box; min-height: 90px; font: inherit; font-size: .92rem;
+            padding: 10px; border-radius: 10px; border: 1px solid var(--pro-line); resize: vertical;
+        }
+        .pro-cancel-dialog .pcd-err { color: #A5620A; font-size: .85rem; min-height: 1.2em; margin: 6px 0 0; }
+        .pro-cancel-dialog .pcd-actions { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; margin-top: 14px; }
+        .pro-cancel-dialog .pcd-actions button {
+            font: inherit; font-weight: 700; font-size: .9rem; padding: 9px 16px; border-radius: 999px; cursor: pointer;
+            border: 1px solid var(--pro-brand-dark); background: var(--pro-brand-dark); color: #fff;
+        }
+        .pro-cancel-dialog .pcd-actions button.pcd-keep { background: transparent; color: var(--pro-brand-dark); }
+        .pro-cancel-dialog .pcd-actions button:disabled { opacity: .45; cursor: not-allowed; }
         .pro-renew-note {
             margin: 14px auto 0;
             max-width: 720px;
@@ -903,7 +930,33 @@
                 <span class="pro-chip" id="proStatusChip">Free account</span>
                 <span id="proStatusText"></span>
                 <button type="button" class="pro-manage" id="proManage" hidden>Manage subscription</button>
+                <button type="button" class="pro-manage pro-cancel" id="proCancel" hidden>Cancel subscription</button>
             </div>
+            <!-- PRO_CANCEL_REASON_REQUIRED_20261023: a reason and a written answer before the cancel goes through. -->
+            <dialog class="pro-cancel-dialog" id="proCancelDialog" aria-labelledby="pcdTitle">
+                <form id="proCancelForm" method="dialog" novalidate>
+                    <h2 id="pcdTitle">Before you cancel</h2>
+                    <p>Tell us why so we can fix it. You keep TMR Pro until the end of the period you already paid for, and you will not be charged again.</p>
+                    <fieldset>
+                        <legend>Main reason (required)</legend>
+                        <label class="pcd-opt"><input type="radio" name="reason" value="too_expensive" required> It costs too much</label>
+                        <label class="pcd-opt"><input type="radio" name="reason" value="unused"> I did not use it enough</label>
+                        <label class="pcd-opt"><input type="radio" name="reason" value="missing_features"> It is missing something I need</label>
+                        <label class="pcd-opt"><input type="radio" name="reason" value="low_quality"> The picks or tools were not good enough</label>
+                        <label class="pcd-opt"><input type="radio" name="reason" value="too_complex"> It was hard to use</label>
+                        <label class="pcd-opt"><input type="radio" name="reason" value="switched_service"> I switched to another service</label>
+                        <label class="pcd-opt"><input type="radio" name="reason" value="customer_service"> Support did not help me</label>
+                        <label class="pcd-opt"><input type="radio" name="reason" value="other"> Something else</label>
+                    </fieldset>
+                    <label class="pcd-label" for="pcdComment">In a sentence, what would have made you stay? (required)</label>
+                    <textarea id="pcdComment" name="comment" maxlength="2000" required></textarea>
+                    <p class="pcd-err" id="pcdErr" role="alert"></p>
+                    <div class="pcd-actions">
+                        <button type="button" class="pcd-keep" id="pcdKeep">Keep TMR Pro</button>
+                        <button type="submit" id="pcdSubmit" disabled>Cancel subscription</button>
+                    </div>
+                </form>
+            </dialog>
             <div class="pro-banner" id="proBanner" role="status" hidden></div>
             <div class="pro-welcome pd" id="proWelcome" hidden>
                 <span id="dashboard" class="pd-anchor"></span>
@@ -1305,7 +1358,7 @@
                 </p>
                 <p class="pro-renew-note" id="proRenewNote" hidden>
                     Subscriptions renew automatically at the same price until you cancel.
-                    Cancel any time with Manage subscription on this page, and you keep
+                    Cancel any time with Cancel subscription on this page, and you keep
                     TMR Pro until the end of the period you already paid for. Payment is
                     handled by Stripe.
                 </p>
@@ -1406,7 +1459,7 @@
                     <details>
                         <summary>Can I cancel any time?</summary>
                         <p>
-                            Yes. Use Manage subscription on this page whenever you like. There is no
+                            Yes. Use Cancel subscription on this page whenever you like. There is no
                             contract and no cancellation fee.
                         </p>
                     </details>
@@ -1506,6 +1559,7 @@
         var chipEl = document.getElementById('proStatusChip');
         var textEl = document.getElementById('proStatusText');
         var manageEl = document.getElementById('proManage');
+        var cancelEl = document.getElementById('proCancel');
         var bannerEl = document.getElementById('proBanner');
         var monthlyNote = document.getElementById('proMonthlyNote');
         var renewNote = document.getElementById('proRenewNote');
@@ -1571,7 +1625,7 @@
             var open = mode === 'buy' || mode === 'signin' || mode === 'subscribed';
             if (renewNote) renewNote.hidden = !open;
             if (whenAnswer && open) {
-                whenAnswer.textContent = 'Now. Pick a plan above. Checkout is handled by Stripe, and you can cancel any time from Manage subscription on this page.';
+                whenAnswer.textContent = 'Now. Pick a plan above. Checkout is handled by Stripe, and you can cancel any time from Cancel subscription on this page.';
             }
         }
         function paintStatus(chip, text, isPro, canManage) {
@@ -1580,6 +1634,7 @@
             chipEl.classList.toggle('is-pro', !!isPro);
             textEl.textContent = text;
             if (manageEl) manageEl.hidden = !canManage;
+            if (cancelEl) cancelEl.hidden = true;
             statusEl.classList.add('is-shown');
         }
 
@@ -1600,6 +1655,7 @@
                     line = plan + '. Everything in TMR Pro is unlocked.' + (when ? ' Renews ' + when + '.' : '');
                 }
                 paintStatus('TMR Pro', line, true, !!me.can_manage_billing);
+                if (cancelEl) cancelEl.hidden = !(me.can_manage_billing && sub.source === 'stripe' && !sub.cancel_at_period_end);
                 paintButtons(false);
                 loadBoard(true);
                 takeIntent();
@@ -2075,6 +2131,56 @@
                 }).catch(function () {
                     manageEl.disabled = false;
                     banner('The billing page could not open right now. Please try again in a minute.', 'warn');
+                });
+            });
+        }
+
+        /* PRO_CANCEL_REASON_REQUIRED_20261023. The portal no longer cancels; this
+           form does, and its button stays off until a reason is picked and a
+           sentence is written. The server checks the same two things. */
+        var cancelDialog = document.getElementById('proCancelDialog');
+        var cancelForm = document.getElementById('proCancelForm');
+        if (cancelEl && cancelDialog && cancelForm) {
+            var pcdSubmit = document.getElementById('pcdSubmit');
+            var pcdComment = document.getElementById('pcdComment');
+            var pcdErr = document.getElementById('pcdErr');
+            var pcdReason = function () { var r = cancelForm.querySelector('input[name="reason"]:checked'); return r ? r.value : ''; };
+            var pcdValid = function () { return !!pcdReason() && pcdComment.value.trim().length >= 10; };
+            var pcdCheck = function () { pcdSubmit.disabled = !pcdValid(); };
+            cancelForm.addEventListener('input', pcdCheck);
+            cancelForm.addEventListener('change', pcdCheck);
+            document.getElementById('pcdKeep').addEventListener('click', function () { cancelDialog.close(); ga('pro_cancel_kept', {}); });
+            cancelEl.addEventListener('click', function () {
+                pcdErr.textContent = '';
+                pcdCheck();
+                ga('pro_cancel_open', {});
+                if (cancelDialog.showModal) cancelDialog.showModal(); else cancelDialog.setAttribute('open', '');
+            });
+            cancelForm.addEventListener('submit', function (ev) {
+                ev.preventDefault();
+                if (!pcdValid()) { pcdErr.textContent = 'Please pick a reason and write at least one sentence.'; return; }
+                pcdSubmit.disabled = true;
+                pcdErr.textContent = '';
+                S.authFetch(API + '/premium/cancel', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ reason: pcdReason(), comment: pcdComment.value.trim() })
+                }).then(function (r) {
+                    return r.json().catch(function () { return {}; }).then(function (b) { return { r: r, b: b }; });
+                }).then(function (x) {
+                    if (x.r.ok && x.b.ok) {
+                        ga('pro_cancel_done', { reason: pcdReason() });
+                        cancelDialog.close();
+                        var until = x.b.access_until ? fmtDate(x.b.access_until) : '';
+                        banner('Your subscription is cancelled. You keep TMR Pro until ' + (until || 'the end of the paid period') + ', and you will not be charged again. Thank you for telling us why.', 'good');
+                        loadMe().then(drawAccount).catch(function () {});
+                        return;
+                    }
+                    pcdErr.textContent = x.b.error || 'The cancellation did not go through. Please try again in a minute.';
+                    pcdCheck();
+                }).catch(function () {
+                    pcdErr.textContent = 'The cancellation did not go through. Please try again in a minute.';
+                    pcdCheck();
                 });
             });
         }
