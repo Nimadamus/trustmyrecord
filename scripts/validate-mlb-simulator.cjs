@@ -158,8 +158,11 @@ function checkIntegrity(A, H, g, viol) {
   // runs cannot exceed runners who reached (hits + walks + hit-by-pitch +
   // reach-on-error + extra-innings placed runners, who reach base without a
   // H/BB/HBP/E — 2020+ rule)
-  if (g.aRuns > accStat(A, 'h') + accStat(A, 'bb') + accStat(A, 'hbp') + g.hErr + (g.aPlaced || 0)) fail('awayRuns>reachers');
-  if (g.hRuns > accStat(H, 'h') + accStat(H, 'bb') + accStat(H, 'hbp') + g.aErr + (g.hPlaced || 0)) fail('homeRuns>reachers');
+  // Catcher's interference (BALK_WP_PB_CI_20260727) is a reach that is not a
+  // H/BB/HBP/E either; the fielding side counts it in .ci.
+  if (g.aRuns > accStat(A, 'h') + accStat(A, 'bb') + accStat(A, 'hbp') + g.hErr + (g.aPlaced || 0) + (H.ci || 0)) fail('awayRuns>reachers');
+  if (g.hRuns > accStat(H, 'h') + accStat(H, 'bb') + accStat(H, 'hbp') + g.aErr + (g.hPlaced || 0) + (A.ci || 0)) fail('homeRuns>reachers');
+  if (process.argv.includes('--why') && g.aRuns > accStat(A, 'h') + accStat(A, 'bb') + accStat(A, 'hbp') + g.hErr + (g.aPlaced || 0)) console.log('  reachers detail: runs', g.aRuns, 'ci', H.ci || 0, 'placed', g.aPlaced || 0);
   // per-batter sanity
   [A, H].forEach((s, si) => s.lineup.forEach(b => {
     const a = b.acc;

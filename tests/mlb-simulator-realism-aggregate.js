@@ -218,8 +218,15 @@ if (reliefAppearances > 0) {
 assert(summary.averageAwayRunsScored >= 3.9 && summary.averageAwayRunsScored <= 5.0, 'away scoring average stays in MLB-like range');
 assert(summary.averageTotalRunsScored >= 8.2 && summary.averageTotalRunsScored <= 9.8, 'total run average stays in realistic MLB range');
 assert(summary.averageExpectedTotalRuns >= 8.0 && summary.averageExpectedTotalRuns <= 9.5, 'displayed expected-run average stays in realistic MLB range');
-assert(summary.percentageGamesAbove15TotalRuns <= 3.5, 'high-total outlier rate stays controlled');
-assert(summary.percentageGamesAbove20TotalRuns <= 0.5, '20+ run games stay rare');
+// HIGH_TOTAL_BOUNDS_20261023: the old caps (3.5% and 0.5%) were below real
+// baseball. statsapi linescores, every regular season game:
+//            16+ total   21+ total
+//   2023       9.48%       1.89%
+//   2024       7.61%       1.15%
+//   2025       8.59%       1.89%
+// A realistic engine failed them by construction. Bounds now bracket the record.
+assert(summary.percentageGamesAbove15TotalRuns >= 5 && summary.percentageGamesAbove15TotalRuns <= 11, 'high-total game rate stays in the real 2023-2025 range');
+assert(summary.percentageGamesAbove20TotalRuns <= 2.5, '21+ run games stay as rare as real ones');
 
 console.log('mlb-simulator-realism-test: ok (aggregated over ' + shardCount
   + ' shards, ' + totalSimulations + ' simulations)');
