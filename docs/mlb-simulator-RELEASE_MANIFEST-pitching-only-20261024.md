@@ -155,9 +155,8 @@ calls fail from localhost because of CORS).
 
 ## 8. Close-out state
 
-All background jobs finished at 11:27 PDT; nothing of this work is still
-running except the two read-only preview servers (`_audit/serve.cjs` on ports
-8791 and 8792), which can be stopped at any time.
+All background jobs finished at 11:27 PDT and the two preview servers were
+stopped at 11:28 PDT; nothing from this work is still running.
 
 ## 9. Guarded deployment (only after the owner says yes)
 
