@@ -34,7 +34,7 @@
 <link rel="stylesheet" href="/static/css/tmr-light.css?v=21433b023833">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap">
 <link rel="stylesheet" href="/static/css/tmr-navbar.css?v=68ec3081d29a">
-<link rel="stylesheet" href="/static/css/tmr-ultimate.css?v=20261024f">
+<link rel="stylesheet" href="/static/css/tmr-ultimate.css?v=20261024g">
 </head>
 <body class="tmr-site-shell tmr-ds-shell tmr-light ult-page">
     <!-- Sitewide global nav is injected by tmr-sitewide.js -->
@@ -210,9 +210,9 @@
 
 <script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-ds-nav.a3e4af57631a.js"></script>
 <script src="/static/js/tmr-live-chat.js?v=816ec6f0a118"></script>
-<script src="/static/js/tmr-performance-intelligence.js?v=20261024c"></script>
-<script src="/static/js/tmr-ultimate-report.js?v=20261024d"></script>
-<script src="/static/js/tmr-ultimate-joe-public.js?v=20261024a" defer></script>
+<script src="/static/js/tmr-performance-intelligence.js?v=20261024g"></script>
+<script src="/static/js/tmr-ultimate-report.js?v=20261024g"></script>
+<script src="/static/js/tmr-ultimate-joe-public.js?v=20261024g" defer></script>
 <script>
 /* TMR_ULTIMATE_20261024. The demo runs the real engine on Joe's bundled
    fictional picks: no account, no network call, no model cost per view. */
@@ -228,6 +228,7 @@
     var picks = window.TMR_JOE_PUBLIC, PI = window.TMRPerformanceIntelligence, R = window.TMRUltimateReport;
     if (!picks || !PI || !R) return;
     var r = PI.analyze(picks, { planStartedAt: PLAN_START });
+    r.narrative = window.TMR_JOE_PUBLIC_NARRATIVE || null;
     var span = document.querySelector('[data-ult-span]');
     var d = function (x) { return new Date(x + 'T12:00:00Z').toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' }); };
     if (span) span.textContent = 'Sample handicapper profile · ' + r.overall.n + ' graded picks, ' + d(r.generated_from.first) + ' to ' + d(r.generated_from.last);
@@ -241,7 +242,7 @@
     var f = r.focus, top = r.strengths[0];
     var q = document.querySelector('[data-ult-peek-quote]');
     var M = '−', fu = function (x) { return (x >= 0 ? '+' : M) + Math.abs(x).toFixed(1) + 'u'; }, fp = function (x) { return (x >= 0 ? '+' : M) + Math.abs(x * 100).toFixed(1) + '%'; };
-    if (q && f) q.innerHTML = '<b>Priority review: ' + esc(f.category.key) + '.</b> ' + f.category.n + ' picks at ' + fp(f.category.roi) + ', beating the closing number only ' + Math.round(f.category.beat_close_pct * 100) + '% of the time. That points to pricing, not bad luck.';
+    if (q && f) q.innerHTML = '<b>Priority review: ' + esc(f.category.key) + '.</b> ' + f.category.n + ' picks at ' + fp(f.category.roi) + '. Where the total moved before first pitch, Joe beat the close only ' + Math.round(f.category.beat_close_pct * 100) + '% of the time: a pricing problem, not just bad luck.';
     var rows = document.querySelector('[data-ult-peek-rows]');
     if (rows) rows.innerHTML = r.categories.filter(function (c) { return ['NFL spreads', 'NBA moneylines', 'MLB totals', 'NHL props'].indexOf(c.key) !== -1; }).map(function (c) {
       return '<div class="ult-peek-row"><span>' + esc(c.key) + '</span><b class="' + (c.roi >= 0 ? 'up' : 'dn') + '">' + fp(c.roi) + ' ROI · ' + fu(c.net) + '</b></div>';

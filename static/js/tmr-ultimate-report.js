@@ -168,7 +168,7 @@
     }).join('') + '<p class="ult-muted">Splits are checked several ways, so one can look strong by chance. Treat each as a question to research, not a rule.</p>';
   }
 
-  function reviewHtml(v, featured) {
+  function reviewHtml(v, featured, who) {
     var head = '<div class="ult-revhead"><div><span class="ult-revdate">' + esc(fmtDate(v.date)) + ' · ' + esc(v.sport) + ' ' + esc(v.market) + '</span>' +
       '<h4>' + esc(v.selection) + (v.matchup ? ' <small>' + esc(v.matchup) + '</small>' : '') + '</h4></div>' +
       '<span class="ult-result ' + (v.result === 'won' ? 'is-pos' : v.result === 'lost' ? 'is-neg' : '') + '">' + (v.result === 'won' ? 'Won' : v.result === 'lost' ? 'Lost' : 'Push') + ' ' + esc(fu(v.net)) + '</span></div>';
@@ -176,21 +176,39 @@
     var read = '<ul class="ult-read">' + v.market_read.map(function (t) { return '<li>' + prose(t) + '</li>'; }).join('') + '</ul>';
     if (!featured) return '<article class="ult-review">' + head + before + read + '</article>';
     var ctx = v.recorded_inputs;
-    var factors = '<div class="ult-factors" role="table" aria-label="Pre-game factors">' + ctx.factors.map(function (f) {
+    var LEAN = { over: 'Pointed Over', under: 'Pointed Under', for: 'Favored the pick', against: 'Against the pick', neutral: 'No clear lean' };
+    var takenDir = v.market === 'total' ? (/^under/i.test(v.selection) ? 'under' : 'over') : 'for';
+    var factors = '<div class="ult-factors" role="table" aria-label="Pre-game inputs">' + ctx.factors.map(function (f) {
+      var cls = f.pointed === 'neutral' ? 'neutral' : f.pointed === takenDir ? 'with' : 'against';
       return '<div class="ult-factor" role="row"><span role="cell" class="ult-fname">' + esc(f.name) + '</span><span role="cell">' + prose(f.pre_game) +
-        '</span><span role="cell"><span class="ult-lean ult-lean--' + esc(f.pointed) + '">Pointed ' + (f.pointed === 'under' ? 'Under' : f.pointed === 'over' ? 'Over' : 'neither way') + '</span></span></div>';
+        '</span><span role="cell"><span class="ult-lean ult-lean--' + cls + '">' + esc(LEAN[f.pointed] || 'No clear lean') + '</span></span></div>';
     }).join('') + '</div>';
-    var est = ctx.analyst_estimate;
-    var price = '<div class="ult-price"><div class="ult-pricebar"><span>Needed to break even at ' + esc(odds(-110)) + '</span><div><i class="ult-need" style="width:' + (est.break_even_pct * 100).toFixed(1) + '%"></i></div><b>' + pc(est.break_even_pct, 1) + '</b></div>' +
-      '<div class="ult-pricebar"><span>Illustrative pre-game estimate for the Over</span><div><i class="ult-est" style="width:' + (est.fair_over_pct * 100).toFixed(1) + '%"></i></div><b>' + pc(est.fair_over_pct, 0) + '</b></div>' +
-      '<p>' + prose(est.note) + '</p></div>';
-    var approach = ctx.approach ? '<ol class="ult-steps">' + ctx.approach.map(function (s) { return '<li>' + prose(s) + '</li>'; }).join('') + '</ol>' : '';
-    var after = v.after_game ? '<div class="ult-after"><h5>After the game</h5><p><b>Final: ' + esc(v.after_game.score) + '</b> (' + v.after_game.total_runs + ' runs). ' + esc(v.after_game.note) + '</p></div>' : '';
+    var sm = v.inputs_summary;
+    var tally = '';
+    if (sm) {
+      var seg = function (k, cls, label) { return k ? '<i class="' + cls + '" style="flex:' + k + '" title="' + esc(label) + '"></i>' : ''; };
+      tally = '<div class="ult-tally" aria-hidden="true">' + seg(sm.with_pick, 'with', 'toward the side taken') + seg(sm.against_pick, 'against', 'toward the other side') +
+        seg(sm.total - sm.leaning, 'neutral', 'no clear lean') + '</div>' +
+        '<div class="ult-legend"><span><i class="ult-sw ult-sw--with"></i>Toward the side taken (' + sm.with_pick + ')</span><span><i class="ult-sw ult-sw--against"></i>Toward the other side (' + sm.against_pick + ')</span><span><i class="ult-sw ult-sw--neutral"></i>No clear lean (' + (sm.total - sm.leaning) + ')</span></div>' +
+        '<p>' + prose(sm.text) + '</p>';
+    }
+    var check = '<ul class="ult-check">' + (v.checklist || []).map(function (c) { return '<li>' + esc(c) + '</li>'; }).join('') + '</ul>';
+    var fin = v.after_game;
+    var after = fin ? '<div class="ult-after"><h5>After the game</h5><p><b>Final: ' + esc(fin.score) + '</b>' +
+      (v.market === 'total' && fin.total_runs != null ? ' (' + fin.total_runs + ' runs)' : '') + '. ' + esc(fin.note || 'Shown for completeness; nothing above uses it.') + '</p></div>' : '';
     return '<article class="ult-review ult-review--featured">' +
       '<span class="ult-flag">' + esc(ctx.label) + '</span>' + head +
-      '<div class="ult-revgrid"><div><h5>Before first pitch: the market</h5>' + before + read + '</div><div><h5>Did the information support the price?</h5>' + price + '</div></div>' +
-      '<h5>Before first pitch: the matchup</h5><p class="ult-muted">' + esc(ctx.venue) + '. These are the inputs recorded with the pick. TMR does not know which of them Joe looked at, and the review does not guess.</p>' + factors +
-      '<h5>How an analyst might have worked this game</h5>' + approach + after + '</article>';
+      '<div class="ult-revgrid"><div><h5>Before the game: the market</h5>' + before + read + '</div><div><h5>How the pre-game inputs leaned</h5>' + tally + '</div></div>' +
+      '<h5>Before the game: the matchup</h5><p class="ult-muted">' + esc(ctx.venue) + '. Every input below was available before first pitch. TMR does not know which of them ' + esc(who) + ' looked at, and the review does not guess.</p>' + factors +
+      '<h5>What a fuller read would also check</h5>' + check + after + '</article>';
+  }
+
+  function writtenHtml(n) {
+    if (!n || !n.summary) return '';
+    return '<div class="ult-written"><span class="ult-kicker">Written evaluation</span><p class="ult-lead">' + prose(n.summary) + '</p>' +
+      (n.priority ? '<h4>Your priority</h4><p>' + prose(n.priority) + '</p>' : '') +
+      (n.next_steps && n.next_steps.length ? '<h4>Next steps</h4><ul>' + n.next_steps.map(function (t) { return '<li>' + prose(t) + '</li>'; }).join('') + '</ul>' : '') +
+      '<span class="ult-byline">' + esc(n.byline || 'Written by AI from the figures in this report. Every number in it is checked against those figures before it is shown.') + '</span></div>';
   }
 
   function tabsHtml(tabs) {
@@ -232,7 +250,8 @@
     var tabs = [];
 
     tabs.push({ id: 'overall', label: 'Overall Analysis', html:
-      '<div class="ult-eval"><span class="ult-kicker">Overall handicapping evaluation</span>' + r.evaluation.map(function (p, i) { return '<p' + (i === 0 ? ' class="ult-lead"' : '') + '>' + prose(p) + '</p>'; }).join('') + '</div>' +
+      writtenHtml(r.narrative) +
+      '<div class="ult-eval"><span class="ult-kicker">' + (r.narrative ? 'The numbers behind it' : 'Overall handicapping evaluation') + '</span>' + r.evaluation.map(function (p, i) { return '<p' + (i === 0 ? ' class="ult-lead"' : '') + '>' + prose(p) + '</p>'; }).join('') + '</div>' +
       '<div class="ult-sw2"><div class="ult-swcol ult-swcol--pos"><h4>Strongest categories</h4>' + (r.strengths.length ? r.strengths.map(function (s) {
         return '<div class="ult-swrow"><b>' + esc(s.key) + '</b><span>' + esc(fp(s.roi)) + ' · ' + s.n + ' picks · ' + esc(fu(s.net)) + '</span>' + chip(s.verdict) + '</div>';
       }).join('') : '<p class="ult-muted">No category is positive yet.</p>') + '</div>' +
@@ -245,7 +264,7 @@
       tabs.push({ id: 'focus', label: f.category.key, html:
         '<div class="ult-focushead"><div><span class="ult-kicker">Priority review</span><h3>' + esc(f.category.key) + '</h3></div>' + chip(f.category.verdict) + '</div>' +
         statStrip(f.category) + '<h4>Is it real, or variance?</h4>' + pMeter(f.category) +
-        '<p>' + (f.category.beat_close_pct != null ? prose('The result alone is one piece of evidence. The closing line is another, and it does not depend on who won: ' + who + ' beat the closing number on ' + pc(f.category.beat_close_pct) + ' of these picks. ' + (f.category.beat_close_pct < 0.45 ? 'Consistently getting a worse number than the market settles on is the clearest sign the problem is in the pricing, not the luck.' : 'That is close to a sound process, so the results may be partly variance.')) : '') + '</p>' +
+        '<p>' + (f.category.beat_close_pct != null && f.category.clv_moved >= 20 ? prose('The result alone is one piece of evidence. The closing line is another, and it does not depend on who won: where the number moved before the game, ' + who + ' beat the close on ' + pc(f.category.beat_close_pct) + ' of these picks (' + f.category.clv_moved + ' picks). ' + (f.category.beat_close_pct < 0.45 ? 'Consistently getting a worse number than the market settles on is the clearest sign the problem is in the pricing, not the luck.' : f.category.beat_close_pct >= 0.55 ? 'That is a sound process, so part of the shortfall is likely variance.' : 'That is about what an average bettor gets, so the close neither clears nor condemns the process.')) : '') + '</p>' +
         '<h4>Where inside the category</h4>' + patternsHtml(f) });
     }
     if (top) {
@@ -253,7 +272,7 @@
         '<div class="ult-focushead"><div><span class="ult-kicker">Strongest category</span><h3>' + esc(top.key) + '</h3></div>' + chip(top.verdict) + '</div>' +
         statStrip(top) + '<h4>Is it real, or variance?</h4>' + pMeter(top) +
         '<p>' + prose(top.key + ' returned ' + fu(top.net) + ' at ' + fp(top.roi) + ' over ' + top.n + ' picks' +
-          (top.beat_close_pct != null ? ', and beat the closing number ' + pc(top.beat_close_pct) + ' of the time' : '') + '. ' +
+          (top.beat_close_pct != null && top.clv_moved >= 20 ? ', and beat the close on ' + pc(top.beat_close_pct) + ' of the ' + top.clv_moved + ' picks where the number moved' : '') + '. ' +
           (top.verdict.key === 'strength' ? 'The result is unlikely to be luck alone.' : 'The result alone does not rule out luck, which is why the closing line matters: ' + (top.beat_close_pct != null && top.beat_close_pct >= 0.55 ? 'beating it more often than not is independent evidence the edge is real.' : 'it does not yet confirm the edge either.'))) + '</p>' +
         '<p class="ult-muted">A strength is worth protecting deliberately: write down what goes into these picks so it is repeated on purpose, not by habit.</p>' });
     }
@@ -262,7 +281,7 @@
       var rest = f.reviews.filter(function (v) { return !v.recorded_inputs; });
       tabs.push({ id: 'reviews', label: 'Pick Reviews', html:
         '<p class="ult-intro">Each review separates what was knowable before the game from what happened after it. A loss that beat the closing line can be a good bet; a win at a price the market rejected can be a bad one.</p>' +
-        featured.map(function (v) { return reviewHtml(v, true); }).join('') +
+        featured.map(function (v) { return reviewHtml(v, true, who); }).join('') +
         (rest.length ? '<h4>More ' + esc(f.category.key) + ' reviews</h4><div class="ult-revlist">' + rest.map(function (v) { return reviewHtml(v, false); }).join('') + '</div>' : '') });
     }
     tabs.push({ id: 'plan', label: 'Coaching Recommendations', html: r.plan.length

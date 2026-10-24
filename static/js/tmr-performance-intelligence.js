@@ -30,9 +30,9 @@
 }(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
 
-  var VERSION = 'pi-1.0.0';
+  var VERSION = 'pi-1.1.0';
   var MIN_SAMPLE = 30;
-  var MARKET_LABEL = { spread: 'spreads', moneyline: 'moneylines', total: 'totals', prop: 'props', other: 'other markets' };
+  var MARKET_LABEL = { spread: 'spreads', moneyline: 'moneylines', total: 'totals', team_total: 'team totals', prop: 'props', other: 'other markets' };
 
   function round(x, d) { var f = Math.pow(10, d == null ? 2 : d); return Math.round(x * f) / f; }
   function implied(odds) {
@@ -52,24 +52,41 @@
   }
 
   /* Closing line value, positive = the member beat the close.
-       spread / total : points gained on the closing line
-       moneyline/prop : implied probability gained at the closing price
+       spread / total whose number moved : points gained on the closing line
+       everything else (and a spread or total that closed at the same number,
+       e.g. every MLB run line at 1.5) : implied probability gained at the
+       closing price
      null when the close was not recorded. */
-  function clv(p) {
-    if ((p.market === 'total' || p.market === 'spread') && p.line != null && p.closeLine != null) {
-      if (p.market === 'total') return p.side === 'under' ? p.line - p.closeLine : p.closeLine - p.line;
-      return p.line - p.closeLine;
+  function clvInfo(p) {
+    if ((p.market === 'total' || p.market === 'team_total' || p.market === 'spread') && p.line != null && p.closeLine != null
+      && Number(p.line) !== Number(p.closeLine)) {
+      var pts = p.market !== 'spread'
+        ? (p.side === 'under' ? p.line - p.closeLine : p.closeLine - p.line)
+        : p.line - p.closeLine;
+      return { v: pts, unit: 'pts' };
     }
     if (p.closeOdds != null) {
       var a = implied(p.odds), b = implied(p.closeOdds);
-      if (a != null && b != null) return b - a;
+      if (a != null && b != null) return { v: b - a, unit: 'prob' };
     }
+    if ((p.market === 'total' || p.market === 'team_total' || p.market === 'spread') && p.line != null && p.closeLine != null) return { v: 0, unit: 'pts' };
     return null;
+  }
+  function clv(p) { var c = clvInfo(p); return c ? c.v : null; }
+  /* Direction of the close against the pick: 1 beat it, -1 lost to it, 0 no
+     real move. Half a point of implied probability is the floor for a price
+     move: -176 to -174 is noise, not the market disagreeing. */
+  var PROB_EPS = 0.005;
+  function clvDir(p) {
+    var c = clvInfo(p);
+    if (!c) return null;
+    var eps = c.unit === 'prob' ? PROB_EPS : 1e-9;
+    return c.v > eps ? 1 : c.v < -eps ? -1 : 0;
   }
 
   function stats(list) {
     var s = { n: list.length, w: 0, l: 0, p: 0, risked: 0, net: 0, expWins: 0, varWins: 0,
-      clvN: 0, clvBeat: 0, clvSum: 0, clvUnit: null };
+      clvN: 0, clvBeat: 0, clvWorse: 0, clvSum: 0, clvUnit: null };
     for (var i = 0; i < list.length; i++) {
       var k = list[i];
       s.risked += Number(k.risk) || 0;
@@ -79,11 +96,13 @@
         var q = implied(k.odds) || 0.5;
         s.expWins += q; s.varWins += q * (1 - q);
       }
-      var c = clv(k);
-      if (c != null) {
-        s.clvN++; s.clvSum += c; if (c > 0) s.clvBeat++;
-        var unit = (k.market === 'total' || k.market === 'spread') && k.closeLine != null ? 'pts' : 'prob';
-        s.clvUnit = s.clvUnit && s.clvUnit !== unit ? 'mixed' : unit;
+      var ci = clvInfo(k);
+      if (ci) {
+        /* 1e-9: an unchanged price is a tie, not a sliver of value. */
+        s.clvN++; s.clvSum += ci.v;
+        var dir = clvDir(k);
+        if (dir > 0) s.clvBeat++; else if (dir < 0) s.clvWorse++;
+        s.clvUnit = s.clvUnit && s.clvUnit !== ci.unit ? 'mixed' : ci.unit;
       }
     }
     var decided = s.w + s.l;
@@ -93,8 +112,12 @@
     /* z of the win count against the break-even wins of the prices paid. */
     s.z = s.varWins > 0 ? (s.w - s.expWins) / Math.sqrt(s.varWins) : 0;
     s.pValue = 2 * (1 - phi(Math.abs(s.z)));
-    s.beatClose = s.clvN ? s.clvBeat / s.clvN : null;
-    s.avgClv = s.clvN ? s.clvSum / s.clvN : null;
+    /* Share of picks that beat the close among those where the number or the
+       price actually moved; a pick that closed exactly where it was taken
+       neither beat nor lost to the market. */
+    s.clvMoved = s.clvBeat + s.clvWorse;
+    s.beatClose = s.clvMoved ? s.clvBeat / s.clvMoved : null;
+    s.avgClv = s.clvN && s.clvUnit !== 'mixed' ? s.clvSum / s.clvN : null;
     s.verdict = verdict(s);
     return pack(s);
   }
@@ -105,7 +128,8 @@
       risked: round(s.risked, 2), net: round(s.net, 2), roi: round(s.roi, 4),
       win_pct: round(s.winPct, 4), break_even_pct: round(s.breakEven, 4),
       z: round(s.z, 2), p_value: round(s.pValue, 3),
-      clv_n: s.clvN, beat_close_pct: s.beatClose == null ? null : round(s.beatClose, 3),
+      clv_n: s.clvN, clv_moved: s.clvMoved, clv_unchanged: s.clvN - s.clvMoved,
+      beat_close_pct: s.beatClose == null ? null : round(s.beatClose, 3),
       avg_clv: s.avgClv == null ? null : round(s.avgClv, s.clvUnit === 'pts' ? 2 : 4), clv_unit: s.clvUnit,
       verdict: s.verdict,
     };
@@ -146,7 +170,10 @@
   var BAND_ORDER = ['Heavy favorite (-200 or shorter)', 'Favorite (-199 to -121)', 'Near even (-120 to +120)',
     'Underdog (+121 to +200)', 'Long shot (+201 or longer)'];
 
-  function catKey(p) { return p.sport + ' ' + (MARKET_LABEL[p.market] || p.market); }
+  /* Props are split by what was bet (strikeouts, hits, shots on goal): a
+     member can be sharp on one and losing on another, and "MLB props" would
+     average the two into nothing. */
+  function catKey(p) { return p.sport + ' ' + (p.marketName ? p.marketName : (MARKET_LABEL[p.market] || p.market)); }
   function slices(list, keyFn) {
     return groupBy(list, keyFn).map(function (g) {
       var s = stats(g.picks); s.key = g.key; return s;
@@ -162,7 +189,7 @@
     var tests = [
       { name: 'Side', fn: function (p) { return p.side ? (p.side === 'over' ? 'Overs' : 'Unders') : null; } },
       { name: 'Price', fn: function (p) { return Number(p.odds) <= -121 ? 'Laid -121 or more' : 'Better than -121'; } },
-      { name: 'Line movement', fn: function (p) { var c = clv(p); return c == null ? null : (c > 0 ? 'Beat the closing line' : 'Did not beat the closing line'); } },
+      { name: 'Line movement', fn: function (p) { var d = clvDir(p); return !d ? null : (d > 0 ? 'Beat the closing line' : 'Closing line moved against the pick'); } },
       { name: 'Day', fn: function (p) { var d = dayOfWeek(p.date); return d === 0 || d === 6 ? 'Weekend' : 'Weekday'; } },
     ];
     var found = [];
@@ -203,30 +230,73 @@
 
   /* One pick, split into what was knowable before the game and what happened. */
   function reviewPick(p) {
-    var c = clv(p);
+    var c = clv(p), dir = clvDir(p);
     var before = [], verdicts = [];
     before.push({ label: 'Price taken', value: (p.line != null ? (p.side ? (p.side === 'over' ? 'Over ' : 'Under ') : '') + p.line + ' ' : '') + '(' + (p.odds > 0 ? '+' : '') + p.odds + ')' });
     before.push({ label: 'Break-even win rate at that price', value: (implied(p.odds) * 100).toFixed(1) + '%' });
     if (p.closeLine != null || p.closeOdds != null) {
       before.push({ label: 'Closing number', value: (p.closeLine != null ? p.closeLine + ' ' : '') + (p.closeOdds != null ? '(' + (p.closeOdds > 0 ? '+' : '') + p.closeOdds + ')' : '') });
     }
-    if (c != null) {
-      if (c > 0) verdicts.push('The market moved toward this pick after it was placed, so the price was better than the close. That is a sign of a sound number even though the result went the other way.');
-      else if (c < 0) verdicts.push('The market moved away from this pick before the game. The close suggests the price paid was worse than the information available at game time supported.');
-      else verdicts.push('The pick closed at the same number it was placed at, so the market neither confirmed nor rejected the price.');
+    if (dir != null) {
+      if (dir === 0) verdicts.push(Math.abs(c) < 1e-9
+        ? 'The pick closed at the same number and price it was placed at, so the market neither confirmed nor rejected it.'
+        : 'The price barely moved before the game, so the market neither confirmed nor rejected it.');
+      else if (dir > 0) verdicts.push('The market moved toward this pick after it was placed, so the price was better than the close. That is a sign of a sound number even though the result went the other way.');
+      else verdicts.push('The market moved away from this pick before the game. The close suggests the price paid was worse than the information available at game time supported.');
+      var ref = marketReference(p);
+      if (ref) verdicts.push(ref);
     } else {
       verdicts.push('No closing number is on file for this pick, so the price cannot be checked against the market.');
     }
-    if (p.result === 'won' && c != null && c < 0) verdicts.push('It won, but the closing line moved against it. A win at a price the market rejected is not evidence of good handicapping.');
-    if (p.result === 'lost' && c != null && c > 0) verdicts.push('It lost, but it beat the close. Losses like this are the cost of variance, not a process failure.');
+    if (p.result === 'won' && dir === -1) verdicts.push('It won, but the closing line moved against it. A win at a price the market rejected is not evidence of good handicapping.');
+    if (p.result === 'lost' && dir === 1) verdicts.push('It lost, but it beat the close. Losses like this are the cost of variance, not a process failure.');
     return {
       id: p.id, date: p.date, sport: p.sport, market: p.market, matchup: p.matchup, selection: p.selection,
       result: p.result, net: round(Number(p.net) || 0, 2), clv: c == null ? null : round(c, 4),
       before_game: before,
       recorded_inputs: p.context || null,
+      inputs_summary: inputsSummary(p),
       market_read: verdicts,
       after_game: p.final || null,
       checklist: checklistFor(p.sport, p.market),
+    };
+  }
+
+  function odd(o) { return (o > 0 ? '+' : '') + o; }
+
+  /* What the close says about the price, in numbers. */
+  function marketReference(p) {
+    if ((p.market === 'total' || p.market === 'team_total' || p.market === 'spread') && p.line != null && p.closeLine != null && Number(p.line) !== Number(p.closeLine)) {
+      var gap = Math.abs(p.closeLine - p.line);
+      return (p.market === 'total' ? 'The total' : p.market === 'team_total' ? 'The team total' : 'The line') + ' closed at ' + p.closeLine + ' against the ' + p.line + ' taken, ' +
+        gap + (p.sport === 'MLB' && p.market !== 'spread' ? (gap === 1 ? ' run' : ' runs') : ' points') + ' apart.';
+    }
+    if (p.closeOdds != null && p.closeOdds !== p.odds) {
+      return 'The price closed at ' + odd(p.closeOdds) + ' against the ' + odd(p.odds) + ' taken: ' +
+        (implied(p.closeOdds) * 100).toFixed(1) + '% implied at the close, ' + (implied(p.odds) * 100).toFixed(1) + '% at the price paid.';
+    }
+    return null;
+  }
+
+  /* How the recorded pre-game inputs leaned, relative to the side taken.
+     Counted, never weighted: the report does not pretend to know how much
+     each factor was worth. */
+  function inputsSummary(p) {
+    var f = p.context && p.context.factors;
+    if (!f || !f.length) return null;
+    var taken = p.market === 'total' ? p.side : 'for';
+    if (!taken) return null;
+    var leaning = f.filter(function (x) { return x.pointed && x.pointed !== 'neutral'; });
+    var withPick = leaning.filter(function (x) { return x.pointed === taken; }).length;
+    var against = leaning.length - withPick;
+    var name = function (d) { return d === 'over' ? 'the Over' : d === 'under' ? 'the Under' : d === 'for' ? 'the side taken' : 'the other side'; };
+    var otherDir = p.market === 'total' ? (taken === 'over' ? 'under' : 'over') : 'against';
+    return {
+      total: f.length, leaning: leaning.length, with_pick: withPick, against_pick: against,
+      text: leaning.length
+        ? 'Of the ' + f.length + ' pre-game inputs on record, ' + leaning.length + ' leaned one way: ' + withPick + ' toward ' + name(taken) +
+          (p.market === 'total' ? ' (the side taken)' : '') + ' and ' + against + ' toward ' + name(otherDir) + '.'
+        : 'None of the ' + f.length + ' pre-game inputs on record leaned clearly either way.',
     };
   }
 
@@ -273,7 +343,10 @@
       .sort(function (a, b) { return b.z - a.z; });
     var weaknesses = categories.filter(function (c) { return c.roi < 0; })
       .sort(function (a, b) { return a.net - b.net; });
-    var priority = weaknesses.filter(function (c) { return c.n >= MIN_SAMPLE; })[0] || null;
+    /* A priority has to be a real drag: enough picks to judge, and at least
+       3 points of ROI under water. A category sitting at -0.3% is not
+       "costing" anyone anything worth a plan. */
+    var priority = weaknesses.filter(function (c) { return c.n >= MIN_SAMPLE && c.roi <= -0.03; })[0] || null;
 
     var focus = null;
     if (priority) {
@@ -334,9 +407,11 @@
       t += priority.verdict.key === 'weakness' ? 'That shortfall is statistically meaningful.'
         : priority.verdict.key === 'lean_weakness' ? 'The result alone is not conclusive (p = ' + priority.p_value.toFixed(2) + '), so the closing line is the better evidence.'
           : 'The result alone is within normal variance, so the closing line is the better evidence.';
-      if (priority.beat_close_pct != null) {
-        t += ' These picks beat the closing number ' + (priority.beat_close_pct * 100).toFixed(0) + '% of the time' +
-          (priority.beat_close_pct < 0.45 ? ', which points to a pricing problem rather than bad luck.' : ', so the process is closer to sound than the results suggest.');
+      if (priority.beat_close_pct != null && priority.clv_moved >= 20) {
+        t += ' Where the number moved before the game, these picks beat the close ' + (priority.beat_close_pct * 100).toFixed(0) + '% of the time (' +
+          priority.clv_moved + ' picks)' +
+          (priority.beat_close_pct < 0.45 ? ', which points to a pricing problem rather than bad luck.' : priority.beat_close_pct >= 0.55
+            ? ', so the process looks sounder than the results, and part of the shortfall is likely variance.' : ', about what an average bettor gets, so the close neither clears nor condemns the process.');
       }
       out.push(t);
     }
@@ -376,7 +451,7 @@
     /* The strength worth protecting: meaningful on results, or close to it
        AND beating the closing line, which is independent evidence. */
     var keep = strengths.filter(function (s) {
-      return s.verdict.key === 'strength' || (s.verdict.key === 'lean_strength' && s.beat_close_pct != null && s.beat_close_pct >= 0.55);
+      return s.verdict.key === 'strength' || (s.verdict.key === 'lean_strength' && s.beat_close_pct != null && s.beat_close_pct >= 0.55 && s.clv_moved >= 20);
     })[0];
     if (keep) steps.push({ title: 'Keep doing what works in ' + keep.key, detail: 'Write down the process behind these picks so it can be repeated on purpose. ' +
       keep.n + ' picks at ' + pct(keep.roi) + (keep.beat_close_pct != null ? ', beating the close ' + (keep.beat_close_pct * 100).toFixed(0) + '% of the time,' : '') +
@@ -385,5 +460,5 @@
   }
 
   return { VERSION: VERSION, MIN_SAMPLE: MIN_SAMPLE, analyze: analyze, stats: stats, reviewPick: reviewPick,
-    implied: implied, payout: payout, clv: clv, oddsBand: oddsBand, checklistFor: checklistFor };
+    implied: implied, payout: payout, clv: clv, clvDir: clvDir, oddsBand: oddsBand, checklistFor: checklistFor };
 }));
