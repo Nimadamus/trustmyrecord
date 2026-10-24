@@ -4201,8 +4201,12 @@
             if (idx === 0 && pitcher.role === 'SP') {
                 var spLim = defSide.postseason ? POSTSEASON_PITCH_LIMIT : STARTER_PITCH_LIMIT;
                 var tgt = defSide.starterOutsGame || defSide.starterOuts || 16;
-                if (apptRuns >= 5) { reason = 'removed after allowing ' + apptRuns + ' runs'; kind = 'damage'; }
-                else if (aHits >= 7) { reason = 'removed after allowing ' + aHits + ' hits'; kind = 'damage'; }
+                // STARTER_HOOK_CALIBRATION_20261024: measured on 700 real 2025-26 games
+                // (statsapi boxscores): starts with 5+ ER ended under 70 pitches in 48.6%
+                // of simulated starts against a real 16.2%. The run and hit hooks now wait
+                // for 70 pitches unless the damage is extreme (6+ runs, 8+ hits).
+                if (apptRuns >= 6 || (apptRuns >= 5 && (a.pitches || 0) >= 70)) { reason = 'removed after allowing ' + apptRuns + ' runs'; kind = 'damage'; }
+                else if (aHits >= 8 || (aHits >= 7 && (a.pitches || 0) >= 70)) { reason = 'removed after allowing ' + aHits + ' hits'; kind = 'damage'; }
                 else if (onBase && aBf >= 3 && (a.pitches || 0) >= spLim) { reason = 'pitch count (' + a.pitches + ') with a runner on'; kind = 'workload'; }
                 // Past his planned length with a man on: lifted, unless he is
                 // cruising and this manager rides a hot starter (the same test
@@ -4935,6 +4939,8 @@
     // against the regular season's 88 / 100. The October leash is shorter in
     // outs, not much shorter in pitches. 92 capped the simulated p90 at 94.
     var POSTSEASON_PITCH_LIMIT = 97;
+    // STARTER_HOOK_CALIBRATION_20261024: inning-boundary headroom (see evActivePitcher).
+    var STARTER_BOUNDARY_HEADROOM = 10;
     // A typical inning's pitches: the headroom a starter needs to be sent back out.
     var STARTER_PITCHES_PER_INNING = 16;
     function armOutsThisGame(p) { return (p.acc && p.acc.outs) || 0; }
@@ -5102,7 +5108,7 @@
         // trigger that would look erratic across many merely-mediocre starts.
         if (arms.length && !arms[0].removed && outsRecorded < starterOuts) {
             var spAcc = arms[0].acc, spOuts = spAcc.outs || 0, spEr = spAcc.er || 0;
-            if (spOuts >= 6 && ((spOuts < 15 && spEr >= 5) || (spOuts < 18 && spEr >= 6))) {
+            if (spOuts >= (workloadV2() ? 9 : 6) && ((spOuts < 15 && spEr >= 5) || (spOuts < 18 && spEr >= 6))) { // STARTER_HOOK_CALIBRATION_20261024: three innings in under the flag
                 starterOuts = Math.min(starterOuts, spOuts);
             }
             // POSTSEASON_MODE_20261001: a quicker hook in October, one earned run
@@ -5119,7 +5125,10 @@
             // only things that could pull a starter were an out target fixed before
             // the game and a five-run hook. This is the inning-boundary version: he
             // finishes the frame he is in, then hands it over.
-            if (workloadV2() && (spAcc.pitches || 0) >= (side.postseason ? POSTSEASON_PITCH_LIMIT : STARTER_PITCH_LIMIT)) {
+            // STARTER_HOOK_CALIBRATION_20261024: he is not sent out for another frame
+            // within 10 pitches of the limit. Measured on the same 700 games: 28.7% of
+            // simulated starts reached 100 pitches against a real 10.2% (105+: 9.3% vs 2.8%).
+            if (workloadV2() && (spAcc.pitches || 0) + STARTER_BOUNDARY_HEADROOM >= (side.postseason ? POSTSEASON_PITCH_LIMIT : STARTER_PITCH_LIMIT)) {
                 starterOuts = Math.min(starterOuts, spOuts);
             }
         }
