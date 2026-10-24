@@ -6,8 +6,8 @@
      - Homepage: a live Handicapper Watchdog block with real counts from the Watchdog.
      - Handicappers Around the Web: "N pending" on every tracked handicapper with open picks.
      - Leaderboards: a live Watchdog line (member picks stay private until kickoff, so members get no badge).
-   Every one of them opens the same preview: TMR Pro members see the picks, a signed in free member can
-   reveal ONE real pick a day, a visitor is asked to create a free account.
+   Every one of them opens the same preview: TMR Pro members see the picks; everyone else sees counts,
+   locked rows and the Pro offer (PAYWALL_20261024: the free daily reveal is closed).
 
    Also: loads GA4 on pages that never had it, and records the funnel source so checkout and purchase events
    say which page and component sent the buyer (window.TMRFunnel.src()).
@@ -285,42 +285,13 @@
                 });
             }
             track('watchdog_paywall_view', { component: comp, signed_in: st.signedIn ? 'yes' : 'no' });
-            if (!st.signedIn) {
-                body.innerHTML = lockedRows(count)
-                    + '<p><b>Create a free account</b> and reveal one real Watchdog pick every day: handicapper, exact pick, record, units and streak.</p>'
-                    + '<div class="tpf-row"><a class="tpf-btn ghost" data-tpf-signup href="/register/?return=' + encodeURIComponent(location.pathname) + '">Create free account</a>'
-                    + proCta(comp, 'Unlock all picks with TMR Pro') + '</div>'
-                    + '<p class="tpf-muted" style="margin-top:10px">TMR Pro: every pending pick from every tracked handicapper, full histories and records, $49.99/month or $500/year.</p>';
-                wireCtas(body);
-                return;
-            }
-            if (st.used) {
-                body.innerHTML = '<p><b>You&#39;ve used today&#39;s free Watchdog reveal.</b> ' + (st.total_picks || 'More') + ' tracked picks are pending right now.</p>'
-                    + (st.reveal ? '<p class="tpf-muted">Your reveal today:</p>' + revealCard(st.reveal) : '') + lockedRows(count)
-                    + '<div id="tpfUp"></div>';
-                upsell('post_reveal').then(function (h) { var u = body.querySelector('#tpfUp'); if (u) { u.innerHTML = h; wireCtas(u); } });
-                return;
-            }
+            /* PAYWALL_20261024 (Nima): the free daily reveal is closed. Anyone without TMR Pro sees the
+               counts above, locked rows and the Pro offer; the API returns no pick to them. */
             body.innerHTML = lockedRows(count)
-                + '<p><b>You have 1 free reveal today.</b> See one real pick' + (g ? ' on this game' : ' from ' + esc(opts.name || 'this handicapper')) + ', with the handicapper&#39;s record, units and streak.</p>'
-                + '<div class="tpf-row"><button type="button" class="tpf-btn gold" id="tpfReveal">Reveal 1 pick free</button>' + proCta(comp, 'Unlock all with TMR Pro').replace('tpf-btn gold', 'tpf-btn ghost') + '</div>';
+                + '<p><b>Unlock ' + (g ? 'every pick on this game' : 'every pick from ' + esc(opts.name || 'this handicapper')) + ' with TMR Pro.</b> See the handicapper, the exact pick and price, their graded record, units, ROI and streak, and where the proven handicappers agree.</p>'
+                + '<div class="tpf-row">' + proCta(comp, 'Unlock with TMR Pro, $49.99/month') + '</div>'
+                + '<p class="tpf-muted" style="margin-top:10px">TMR Pro: every pending pick from every tracked handicapper, full histories and records. $49.99/month or $500/year, cancel anytime.</p>';
             wireCtas(body);
-            body.querySelector('#tpfReveal').addEventListener('click', function (e) {
-                e.target.disabled = true; e.target.textContent = 'Revealing…';
-                authPost('/pro/watchdog/reveal', g ? { home: g.home, away: g.away, source: comp } : { key: opts.key, source: comp }).then(function (r) {
-                    statusP = null;
-                    if (r.reveal) {
-                        track('watchdog_free_reveal', { component: comp, already_used: r.__status === 409 ? 'yes' : 'no' });
-                        body.innerHTML = revealCard(r.reveal)
-                            + '<p><b>You&#39;ve used today&#39;s free Watchdog reveal.</b> ' + Math.max(0, (r.total_picks || 1) - 1) + ' more tracked picks are available right now.</p>'
-                            + '<div id="tpfUp"></div>';
-                        upsell('post_reveal').then(function (h) { var u = body.querySelector('#tpfUp'); if (u) { u.innerHTML = h; wireCtas(u); } });
-                        once('tmr_pro_impression', { component: 'post_reveal' });
-                    } else {
-                        body.innerHTML = '<p>That pick just closed. The board changes as games start.</p>';
-                    }
-                }).catch(function () { body.innerHTML = '<p>The Watchdog could not answer right now. Try again in a minute.</p>'; });
-            });
         }).catch(function () { body.innerHTML = '<p>The Watchdog could not answer right now. Try again in a minute.</p>'; });
     }
 
