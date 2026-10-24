@@ -879,6 +879,44 @@
      plus the homepage's own navbar rules, so every page renders the same bar. -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap">
 <link rel="stylesheet" href="/static/css/tmr-navbar.css?v=68ec3081d29a">
+<style id="wd-storefront-20261024">
+/* STOREFRONT_20261024: locked Watchdog preview + Pro / Ultimate tiers on /premium/. */
+.wdl-tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 0 0 18px; }
+.wdl-tile { background: var(--pro-surface); border: 1px solid var(--pro-line); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.wdl-tile b { font: 800 30px/1.1 'Barlow Condensed', 'Barlow', sans-serif; color: var(--pro-ink); }
+.wdl-tile span { font-weight: 700; color: var(--pro-ink); font-size: 14px; }
+.wdl-tile small { color: var(--pro-muted); font-size: 12px; overflow-wrap: anywhere; }
+.wdl-board { position: relative; border: 1px solid var(--pro-line); border-radius: 16px; overflow: hidden; background: var(--pro-surface); min-height: 380px; }
+.wdl-head, .wdl-row { display: grid; grid-template-columns: 28px 1.3fr .9fr 1.4fr .5fr; gap: 14px; align-items: center; padding: 12px 16px; }
+.wdl-head { font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--pro-muted); border-bottom: 1px solid var(--pro-line-soft); }
+.wdl-row { border-bottom: 1px solid var(--pro-line-soft); filter: blur(1.5px); }
+.wdl-row i { display: block; height: 11px; border-radius: 6px; background: linear-gradient(90deg, rgba(11,79,168,.16), rgba(11,79,168,.08)); }
+.wdl-lock { font-size: 14px; opacity: .7; }
+.wdl-card { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(460px, calc(100% - 32px)); background: var(--pro-surface); border: 1px solid rgba(245,197,66,.65); border-radius: 16px; padding: 20px 22px; box-shadow: 0 18px 50px rgba(7,24,42,.18); text-align: left; }
+.wdl-k { display: inline-block; font-size: 12px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; background: rgba(245,197,66,.18); color: #7a5a00; padding: 4px 10px; border-radius: 999px; }
+.wdl-card h3 { margin: 10px 0 8px; font-size: 20px; line-height: 1.25; color: var(--pro-ink); }
+.wdl-card ul { margin: 0 0 14px; padding-left: 18px; color: var(--pro-ink); font-size: 14px; line-height: 1.5; }
+.wdl-cta { display: inline-flex; align-items: center; min-height: 46px; padding: 0 20px; border-radius: 10px; background: #F5C542; color: #1a1400 !important; font-weight: 800; text-decoration: none; }
+.wdl-fine, .wdl-note { margin: 8px 0 0; font-size: 12px; color: var(--pro-muted); }
+.wdl-note { margin-top: 10px; }
+.tier-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 18px; }
+.tier { background: var(--pro-surface); border: 1px solid var(--pro-line); border-radius: 16px; padding: 22px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.tier.is-pro { border-color: rgba(245,197,66,.75); box-shadow: 0 10px 30px rgba(7,24,42,.08); }
+.tier h3 { margin: 0; font-size: 22px; color: var(--pro-ink); }
+.tier .tier-price { font: 800 28px/1 'Barlow Condensed', 'Barlow', sans-serif; color: var(--pro-ink); }
+.tier .tier-price small { font: 600 14px 'Inter', sans-serif; color: var(--pro-muted); }
+.tier .tier-tag { align-self: flex-start; font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; padding: 4px 10px; border-radius: 999px; background: rgba(11,79,168,.08); color: var(--pro-ink); }
+.tier ul { margin: 4px 0 0; padding-left: 18px; font-size: 14px; line-height: 1.55; color: var(--pro-ink); }
+.tier p { margin: 0; font-size: 14px; color: var(--pro-muted); }
+@media (max-width: 760px) {
+  .wdl-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .wdl-head, .wdl-row { grid-template-columns: 22px 1.2fr 1fr .5fr; }
+  .wdl-head span:nth-child(3), .wdl-row i:nth-of-type(2) { display: none; }
+  .wdl-board { min-height: 0; }
+  .wdl-card { position: static; transform: none; width: auto; margin: 12px; box-shadow: none; }
+  .tier-grid { grid-template-columns: 1fr; }
+}
+</style>
 </head>
 <body class="tmr-site-shell tmr-ds-shell tmr-light pro-page">
     <!-- Sitewide global nav is injected by tmr-sitewide.js -->
@@ -1365,6 +1403,43 @@
             </div>
         </section>
 
+        <!-- ============================================== Pro and Ultimate -->
+        <section class="pro-section" id="tiers">
+            <div class="pro-wrap">
+                <div class="pro-section-head">
+                    <span class="pxs-k">Plans</span>
+                    <h2>TMR Pro, and what Ultimate adds</h2>
+                    <p>Pro is the research: the pending picks, the records behind them and every tool on this page. Ultimate includes everything in Pro and turns the same rigor on your own betting.</p>
+                </div>
+                <div class="tier-grid">
+                    <div class="tier is-pro">
+                        <span class="tier-tag">Available now</span>
+                        <h3>TMR Pro</h3>
+                        <div class="tier-price">$49.99 <small>per month, or $500 a year</small></div>
+                        <p>Actionable handicapping research.</p>
+                        <ul>
+                            <li>The full pending Handicapper Watchdog board, before games start</li>
+                            <li>Every handicapper&#39;s graded record, units, ROI and streak beside each pick</li>
+                            <li>Where the proven handicappers agree, game by game</li>
+                            <li>Unlimited simulators, TrendSpotter, Bet Legend Pro and 15 Model Builder models</li>
+                        </ul>
+                    </div>
+                    <div class="tier">
+                        <span class="tier-tag">Invite only beta</span>
+                        <h3>TMR Ultimate</h3>
+                        <div class="tier-price">$99.99 <small>per month, includes everything in Pro</small></div>
+                        <p>Personal performance diagnostics for your own picks.</p>
+                        <ul>
+                            <li>Where your results really come from, by sport, market and price, tested for significance instead of luck</li>
+                            <li>Closing line value on your picks, measured against the market close</li>
+                            <li>The long term patterns that cost you units, with the evidence behind each recommendation</li>
+                        </ul>
+                        <p>Ultimate is in a closed beta and is not on sale yet.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- ============================================== free stays free -->
         <section class="pro-section" id="free">
             <div class="pro-wrap">
@@ -1725,33 +1800,40 @@
         function teaser(summary) {
             if (!boardEl) return;
             ga('watchdog_paywall_view', { component: 'pro_page_board' });
-            /* 2026-09-29: the teaser used to print "0 of them with 25 or more graded
-               picks" whenever nobody on the board had reached 25, which only told a
-               buyer what was missing. The proven count now shows only when it is
-               above zero, the leagues are named, and a locked preview shows one row
-               per real handicapper on the board (never invented data). */
-            var n = summary && summary.picks, t;
-            if (n) {
-                var lg = (summary.leagues || []).filter(Boolean);
-                t = '<b>' + n + ' pending pick' + (n === 1 ? '' : 's') + '</b> from <b>' + summary.handicappers + ' tracked handicapper' + (summary.handicappers === 1 ? '' : 's') + '</b> '
-                    + (summary.handicappers === 1 ? 'is' : 'are') + ' on the board right now' + (lg.length ? ' (' + esc(lg.join(', ')) + ')' : '') + '.'
-                    + (summary.proven_handicappers > 0 ? ' ' + summary.proven_handicappers + ' of them ' + (summary.proven_handicappers === 1 ? 'has' : 'have') + ' 25 or more graded picks.' : '');
-            } else {
-                t = 'The board fills up as the handicappers we track post their picks for the next games.';
-            }
-            var rows = '';
-            var k = 0;   // PAYWALL_20261024 (Nima): no game or pick preview on this page, counts only
-            for (var r = 0; r < k; r++) {
-                rows += '<div style="display:flex;gap:12px;align-items:center;padding:10px 14px;border-top:1px solid rgba(127,127,127,.18)">'
-                    + '<span aria-hidden="true">&#128274;</span>'
-                    + '<span style="flex:1;height:10px;border-radius:5px;background:rgba(127,127,127,.22)"></span>'
-                    + '<span style="width:22%;height:10px;border-radius:5px;background:rgba(127,127,127,.16)"></span>'
-                    + '<span style="width:14%;height:10px;border-radius:5px;background:rgba(127,127,127,.12)"></span></div>';
-            }
-            boardEl.innerHTML = '<div class="pro-teaser">' + t + ' TMR Pro shows every pick, each handicapper&#39;s record, units and streak, and where the proven handicappers agree.'
-                + (rows ? '<div aria-label="Locked preview" style="margin-top:14px;border:1px solid rgba(127,127,127,.22);border-radius:10px;overflow:hidden">'
-                    + '<div style="padding:8px 14px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;opacity:.7">Handicapper, pending pick, record</div>' + rows + '</div>' : '')
-                + '<p style="margin:14px 0 0"><a href="#pricing" style="display:inline-flex;align-items:center;min-height:44px;padding:0 18px;border-radius:10px;background:#F5C542;color:#1a1400;font-weight:800;text-decoration:none">Unlock with TMR Pro, $49.99/month</a></p></div>';
+            /* STOREFRONT_20261024 (Nima: the Watchdog information is the paid product). Live counts only,
+               then a locked sample layout. The sample rows are redacted bars, never real handicappers,
+               games or picks; the API sends none of those to anyone without TMR Pro. */
+            var sm = summary || {};
+            var n = function (v) { return v == null || isNaN(v) ? '&ndash;' : Number(v).toLocaleString('en-US'); };
+            var lg = (sm.leagues || []).filter(Boolean);
+            var tiles = [
+                [n(sm.picks), 'Pending picks right now', 'posted for games that have not started'],
+                [n(sm.handicappers), 'Handicappers on the board', 'each with a graded record'],
+                [n(sm.proven_handicappers), 'Proven handicappers', '25 or more graded picks'],
+                [lg.length ? String(lg.length) : '&ndash;', 'Leagues on the board', lg.length ? esc(lg.join(', ')) : 'updated all day']
+            ].map(function (x) { return '<div class="wdl-tile"><b>' + x[0] + '</b><span>' + x[1] + '</span><small>' + x[2] + '</small></div>'; }).join('');
+            var widths = [[46, 30, 58, 18], [38, 24, 64, 16], [52, 28, 50, 20], [34, 26, 60, 18], [44, 22, 54, 16]];
+            var rows = widths.map(function (w) {
+                return '<div class="wdl-row" aria-hidden="true"><span class="wdl-lock">&#128274;</span>'
+                    + '<i style="width:' + w[0] + '%"></i><i style="width:' + w[1] + '%"></i><i style="width:' + w[2] + '%"></i><i style="width:' + w[3] + '%"></i></div>';
+            }).join('');
+            boardEl.innerHTML = '<div class="wdl">'
+                + '<div class="wdl-tiles">' + tiles + '</div>'
+                + '<div class="wdl-board">'
+                + '<div class="wdl-head" aria-hidden="true"><span></span><span>Handicapper</span><span>Record &middot; ROI</span><span>Pick</span><span>Odds</span></div>'
+                + '<div class="wdl-rows">' + rows + '</div>'
+                + '<div class="wdl-card" role="group" aria-label="Locked: TMR Pro">'
+                + '<div class="wdl-k">&#128274; TMR Pro</div>'
+                + '<h3>Every pending pick, before the game starts</h3>'
+                + '<ul><li>The handicapper, the exact pick and the posted price</li>'
+                + '<li>Their graded record, units, ROI, streak and last 10 beside every pick</li>'
+                + '<li>Where the proven handicappers agree, game by game</li>'
+                + '<li>Filters by league, source and proven record, plus full handicapper histories</li></ul>'
+                + '<a class="wdl-cta" href="#pricing">Unlock with TMR Pro, $49.99/month</a>'
+                + '<p class="wdl-fine">or $500/year. Cancel any time.</p>'
+                + '</div></div>'
+                + '<p class="wdl-note">Sample layout. Real handicappers, games and picks are shown to TMR Pro members only.</p>'
+                + '</div>';
         }
         function sortVal(c, k) {
             if (k === 'name') return String(c.name || '').toLowerCase();
