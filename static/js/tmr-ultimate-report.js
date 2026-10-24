@@ -177,7 +177,8 @@
     if (!featured) return '<article class="ult-review">' + head + before + read + '</article>';
     var ctx = v.recorded_inputs;
     var LEAN = { over: 'Pointed Over', under: 'Pointed Under', for: 'Favored the pick', against: 'Against the pick', neutral: 'No clear lean' };
-    var takenDir = v.market === 'total' ? (/^under/i.test(v.selection) ? 'under' : 'over') : 'for';
+    var ou = v.market === 'total' || v.market === 'team_total' || v.market === 'prop';
+    var takenDir = ou ? (/\bunder\b/i.test(v.selection) ? 'under' : 'over') : 'for';
     var factors = '<div class="ult-factors" role="table" aria-label="Pre-game inputs">' + ctx.factors.map(function (f) {
       var cls = f.pointed === 'neutral' ? 'neutral' : f.pointed === takenDir ? 'with' : 'against';
       return '<div class="ult-factor" role="row"><span role="cell" class="ult-fname">' + esc(f.name) + '</span><span role="cell">' + prose(f.pre_game) +
@@ -195,11 +196,11 @@
     var check = '<ul class="ult-check">' + (v.checklist || []).map(function (c) { return '<li>' + esc(c) + '</li>'; }).join('') + '</ul>';
     var fin = v.after_game;
     var after = fin ? '<div class="ult-after"><h5>After the game</h5><p><b>Final: ' + esc(fin.score) + '</b>' +
-      (v.market === 'total' && fin.total_runs != null ? ' (' + fin.total_runs + ' runs)' : '') + '. ' + esc(fin.note || 'Shown for completeness; nothing above uses it.') + '</p></div>' : '';
+      (v.market === 'total' && fin.total_runs != null ? ' (' + fin.total_runs + (v.sport === 'MLB' ? ' runs' : ' total') + ')' : '') + '. ' + esc(fin.note || 'Shown for completeness; nothing above uses it.') + '</p></div>' : '';
     return '<article class="ult-review ult-review--featured">' +
       '<span class="ult-flag">' + esc(ctx.label) + '</span>' + head +
       '<div class="ult-revgrid"><div><h5>Before the game: the market</h5>' + before + read + '</div><div><h5>How the pre-game inputs leaned</h5>' + tally + '</div></div>' +
-      '<h5>Before the game: the matchup</h5><p class="ult-muted">' + esc(ctx.venue) + '. Every input below was available before first pitch. TMR does not know which of them ' + esc(who) + ' looked at, and the review does not guess.</p>' + factors +
+      '<h5>Before the game: the matchup</h5><p class="ult-muted">' + (ctx.venue ? esc(ctx.venue) + '. ' : '') + 'Every input below was available before the game. TMR does not know which of them ' + esc(who) + ' looked at, and the review does not guess.</p>' + factors +
       '<h5>What a fuller read would also check</h5>' + check + after + '</article>';
   }
 
@@ -274,7 +275,9 @@
         '<p>' + prose(top.key + ' returned ' + fu(top.net) + ' at ' + fp(top.roi) + ' over ' + top.n + ' picks' +
           (top.beat_close_pct != null && top.clv_moved >= 20 ? ', and beat the close on ' + pc(top.beat_close_pct) + ' of the ' + top.clv_moved + ' picks where the number moved' : '') + '. ' +
           (top.verdict.key === 'strength' ? 'The result is unlikely to be luck alone.' : 'The result alone does not rule out luck, which is why the closing line matters: ' + (top.beat_close_pct != null && top.beat_close_pct >= 0.55 ? 'beating it more often than not is independent evidence the edge is real.' : 'it does not yet confirm the edge either.'))) + '</p>' +
-        '<p class="ult-muted">A strength is worth protecting deliberately: write down what goes into these picks so it is repeated on purpose, not by habit.</p>' });
+        '<p class="ult-muted">A strength is worth protecting deliberately: write down what goes into these picks so it is repeated on purpose, not by habit.</p>' +
+        (r.strength_review && r.strength_review.category === top.key
+          ? '<h4>A recent ' + esc(top.key) + ' pick, reviewed</h4>' + reviewHtml(r.strength_review.review, Boolean(r.strength_review.review.recorded_inputs), who) : '') });
     }
     if (f) {
       var featured = f.reviews.filter(function (v) { return v.recorded_inputs; });
