@@ -159,7 +159,7 @@
   }
 
   function patternsHtml(f) {
-    if (!f.patterns.length) return '<p class="ult-muted">No split inside this category differs by 10 ROI points or more with 15 picks on each side.</p>';
+    if (!f.patterns.length) return '<p class="ult-muted">Three splits are checked for every member (side, price, home or away). None stood out in this category once the number of comparisons is accounted for, so the review is about the category as a whole.</p>';
     return f.patterns.map(function (pt) {
       return '<div class="ult-pattern"><h5>' + esc(pt.dimension) + '</h5>' +
         pairBars([{ label: 'ROI', a: pt.worse.roi, b: pt.better.roi, fmt: function (v) { return fp(v); }, floor: 0.05 }],
@@ -181,7 +181,10 @@
     var takenDir = ou ? (/\bunder\b/i.test(v.selection) ? 'under' : 'over') : 'for';
     var factors = '<div class="ult-factors" role="table" aria-label="Pre-game inputs">' + ctx.factors.map(function (f) {
       var cls = f.pointed === 'neutral' ? 'neutral' : f.pointed === takenDir ? 'with' : 'against';
-      return '<div class="ult-factor" role="row"><span role="cell" class="ult-fname">' + esc(f.name) + '</span><span role="cell">' + prose(f.pre_game) +
+      var KNOWN = { before_pick: 'Known at the pick', unverified: 'Timing not recorded', before_game: 'Published after the pick', game_time: 'At the start' };
+      return '<div class="ult-factor" role="row"><span role="cell" class="ult-fname">' + esc(f.name) +
+        (f.known ? '<small class="ult-known ult-known--' + esc(f.known) + '">' + esc(KNOWN[f.known] || f.known) + '</small>' : '') +
+        '</span><span role="cell">' + prose(f.pre_game) + (f.source ? '<small class="ult-src">Source: ' + esc(f.source) + '</small>' : '') +
         '</span><span role="cell"><span class="ult-lean ult-lean--' + cls + '">' + esc(LEAN[f.pointed] || 'No clear lean') + '</span></span></div>';
     }).join('') + '</div>';
     var sm = v.inputs_summary;
@@ -193,15 +196,22 @@
         '<div class="ult-legend"><span><i class="ult-sw ult-sw--with"></i>Toward the side taken (' + sm.with_pick + ')</span><span><i class="ult-sw ult-sw--against"></i>Toward the other side (' + sm.against_pick + ')</span><span><i class="ult-sw ult-sw--neutral"></i>No clear lean (' + (sm.total - sm.leaning) + ')</span></div>' +
         '<p>' + prose(sm.text) + '</p>';
     }
+    var rs = v.research;
+    var researchHtml = rs ? '<div class="ult-research">' +
+      (rs.conflicts.length ? '<h5>Inputs that pointed different ways</h5><ul class="ult-read">' + rs.conflicts.map(function (t) { return '<li>' + prose(t) + '</li>'; }).join('') + '</ul>' : '') +
+      (rs.uncertainty.length ? '<h5>Uncertainty</h5><ul class="ult-read">' + rs.uncertainty.map(function (t) { return '<li>' + prose(t) + '</li>'; }).join('') + '</ul>' : '') +
+      (rs.unavailable.length ? '<p class="ult-muted">Not available for this game: ' + esc(rs.unavailable.join(', ')) + '.</p>' : '') +
+      (rs.price ? '<h5>Price</h5><p>' + prose(rs.price) + '</p>' : '') +
+      '<h5>Decision and result</h5><p>' + prose(rs.decision) + '</p><p class="ult-muted">' + esc(rs.rationale) + '</p></div>' : '';
     var check = '<ul class="ult-check">' + (v.checklist || []).map(function (c) { return '<li>' + esc(c) + '</li>'; }).join('') + '</ul>';
     var fin = v.after_game;
     var after = fin ? '<div class="ult-after"><h5>After the game</h5><p><b>Final: ' + esc(fin.score) + '</b>' +
       (v.market === 'total' && fin.total_runs != null ? ' (' + fin.total_runs + (v.sport === 'MLB' ? ' runs' : ' total') + ')' : '') + '. ' + esc(fin.note || 'Shown for completeness; nothing above uses it.') + '</p></div>' : '';
     return '<article class="ult-review ult-review--featured">' +
       '<span class="ult-flag">' + esc(ctx.label) + '</span>' + head +
-      '<div class="ult-revgrid"><div><h5>Before the game: the market</h5>' + before + read + '</div><div><h5>How the pre-game inputs leaned</h5>' + tally + '</div></div>' +
-      '<h5>Before the game: the matchup</h5><p class="ult-muted">' + (ctx.venue ? esc(ctx.venue) + '. ' : '') + 'Every input below was available before the game. TMR does not know which of them ' + esc(who) + ' looked at, and the review does not guess.</p>' + factors +
-      '<h5>What a fuller read would also check</h5>' + check + after + '</article>';
+      '<div class="ult-revgrid"><div><h5>Before the game: the market</h5>' + before + read + '</div><div><h5>Point-in-time context</h5>' + tally + '</div></div>' +
+      '<h5>Before the game: the matchup</h5><p class="ult-muted">' + (ctx.venue ? esc(ctx.venue) + '. ' : '') + 'Each input is marked with when it was known. TMR does not know which of them ' + esc(who) + ' looked at, and the review does not guess. These are possible factors, never the reason for the result.</p>' + factors +
+      researchHtml + '<h5>Questions worth researching before similar picks</h5>' + check + after + '</article>';
   }
 
   function writtenHtml(n) {

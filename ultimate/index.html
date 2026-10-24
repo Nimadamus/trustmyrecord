@@ -34,7 +34,7 @@
 <link rel="stylesheet" href="/static/css/tmr-light.css?v=21433b023833">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap">
 <link rel="stylesheet" href="/static/css/tmr-navbar.css?v=68ec3081d29a">
-<link rel="stylesheet" href="/static/css/tmr-ultimate.css?v=20261024h">
+<link rel="stylesheet" href="/static/css/tmr-ultimate.css?v=20261024i">
 </head>
 <body class="tmr-site-shell tmr-ds-shell tmr-light ult-page">
     <!-- Sitewide global nav is injected by tmr-sitewide.js -->
@@ -126,7 +126,7 @@
             <div class="ult-how">
                 <div><b>1</b><h3>Your picks are graded</h3><p>Keep making picks on TrustMyRecord. Each graded pick carries the price you took and, where available, where the market closed.</p></div>
                 <div><b>2</b><h3>Every slice is tested</h3><p>Sport, bet type, price range, side, line movement and time period. Each is compared with the break-even rate of the prices you actually paid, so luck is separated from skill. Closing lines TMR did not capture are filled from the book's recorded close.</p></div>
-                <div><b>3</b><h3>Picks are reviewed with what was known</h3><p>Starters, injuries, goalies, rest, weather, park, form, player game logs, TrendSpotter history and line movement, rebuilt as of each game, then a plan and progress tracking from the day you start it.</p></div>
+                <div><b>3</b><h3>Picks are reviewed with what was known</h3><p>Starters, injuries, goalies, rest, weather, park, form, player game logs, TrendSpotter history and line movement, rebuilt as of the moment each pick was made and labelled with when each was known. Shown as possible factors, never as the reason a pick won or lost.</p></div>
             </div>
             <div class="ult-honest">
                 <div><h4>Evidence, not excuses</h4><p>The report never claims to know why a pick lost or what you were thinking. It shows what the market and the recorded inputs said before the game.</p></div>
@@ -210,9 +210,9 @@
 
 <script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-ds-nav.a3e4af57631a.js"></script>
 <script src="/static/js/tmr-live-chat.js?v=816ec6f0a118"></script>
-<script src="/static/js/tmr-performance-intelligence.js?v=20261024h"></script>
-<script src="/static/js/tmr-ultimate-report.js?v=20261024h"></script>
-<script src="/static/js/tmr-ultimate-joe-public.js?v=20261024h" defer></script>
+<script src="/static/js/tmr-performance-intelligence.js?v=20261024i"></script>
+<script src="/static/js/tmr-ultimate-report.js?v=20261024i"></script>
+<script src="/static/js/tmr-ultimate-joe-public.js?v=20261024i" defer></script>
 <script>
 /* TMR_ULTIMATE_20261024. The demo runs the real engine on Joe's bundled
    fictional picks: no account, no network call, no model cost per view. */
@@ -242,7 +242,7 @@
     var f = r.focus, top = r.strengths[0];
     var q = document.querySelector('[data-ult-peek-quote]');
     var M = '−', fu = function (x) { return (x >= 0 ? '+' : M) + Math.abs(x).toFixed(1) + 'u'; }, fp = function (x) { return (x >= 0 ? '+' : M) + Math.abs(x * 100).toFixed(1) + '%'; };
-    if (q && f) q.innerHTML = '<b>Priority review: ' + esc(f.category.key) + '.</b> ' + f.category.n + ' picks at ' + fp(f.category.roi) + '. Where the total moved before first pitch, Joe beat the close only ' + Math.round(f.category.beat_close_pct * 100) + '% of the time: a pricing problem, not just bad luck.';
+    if (q && f) q.innerHTML = '<b>Priority review: ' + esc(f.category.key) + '.</b> ' + f.category.n + ' picks at ' + fp(f.category.roi) + ', a potential area to review. Not conclusive on results alone, so the report shows what to examine and tracks the next 30 picks.';
     var rows = document.querySelector('[data-ult-peek-rows]');
     if (rows) rows.innerHTML = r.categories.filter(function (c) { return ['NFL spreads', 'NBA moneylines', 'MLB totals', 'NHL props'].indexOf(c.key) !== -1; }).map(function (c) {
       return '<div class="ult-peek-row"><span>' + esc(c.key) + '</span><b class="' + (c.roi >= 0 ? 'up' : 'dn') + '">' + fp(c.roi) + ' ROI · ' + fu(c.net) + '</b></div>';
