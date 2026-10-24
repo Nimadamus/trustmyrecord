@@ -1352,6 +1352,26 @@
                         <p class="pro-buy-note">&nbsp;</p>
                     </div>
                 </div>
+                <div class="pst-ult" aria-labelledby="pstUltH">
+                    <div class="pst-ult-copy">
+                        <span class="pst-kicker">Coming next: TMR Ultimate</span>
+                        <h3 id="pstUltH">Your record tells you what happened. Ultimate helps you understand why.</h3>
+                        <p>Everything in TMR Pro, plus Performance Intelligence: a diagnostic report on your own graded picks. It tests your result against luck at the prices you paid, ranks where your units are lost, shows what stake size and concentration did, and turns it into a plan it tracks.</p>
+                        <a class="pst-btn pst-btn--ghost" href="/ultimate/">See the sample report</a>
+                    </div>
+                    <table class="pst-cmp">
+                        <thead><tr><th scope="col"><span class="pst-sr">Feature</span></th><th scope="col">TMR Pro<small>$49.99/mo</small></th><th scope="col" class="is-ult">TMR Ultimate<small>$99.99/mo</small><small>Opens soon</small></th></tr></thead>
+                        <tbody>
+                            <tr><th scope="row">Unlimited simulators, Watchdog board, Bet Legend Pro, TrendSpotter, Model Builder</th><td>&#10003;</td><td class="is-ult">&#10003;</td></tr>
+                            <tr><th scope="row">Your record, units, ROI and splits (free public profile)</th><td>&#10003;</td><td class="is-ult">&#10003;</td></tr>
+                            <tr><th scope="row">Result against luck at your prices</th><td>&ndash;</td><td class="is-ult">&#10003;</td></tr>
+                            <tr><th scope="row">Loss drivers by sport, bet type and side</th><td>&ndash;</td><td class="is-ult">&#10003;</td></tr>
+                            <tr><th scope="row">Stake sizing, swings and concentration</th><td>&ndash;</td><td class="is-ult">&#10003;</td></tr>
+                            <tr><th scope="row">Pick reviews with what was known before the game</th><td>&ndash;</td><td class="is-ult">&#10003;</td></tr>
+                            <tr><th scope="row">Personal action plan, measured over your next picks</th><td>&ndash;</td><td class="is-ult">&#10003;</td></tr>
+                        </tbody>
+                    </table>
+                </div>
                 <p class="pro-signin-note" id="proSigninNote" hidden>
                     Next you create your free TrustMyRecord account, then you go straight to secure checkout
                     by Stripe. Already a member? <a href="/login/?next=%2Fpremium%2F%23pricing">Sign in</a>
@@ -1403,6 +1423,10 @@
                     <h2>Questions, answered</h2>
                 </div>
                 <div class="pro-faq">
+                    <details>
+                        <summary>What is TMR Ultimate?</summary>
+                        <p>The tier above TMR Pro, at $99.99 a month when it opens. It includes everything in TMR Pro and adds Performance Intelligence, a diagnostic report on your own graded picks. Your public profile shows what happened; Ultimate tests it against luck at your prices, ranks where units are lost, and gives you a plan it measures. It is not open for purchase yet. <a href="/ultimate/">See the sample report</a>.</p>
+                    </details>
                     <details>
                         <summary>Where do the pending picks come from?</summary>
                         <p>
@@ -1748,10 +1772,20 @@
                     + '<span style="width:22%;height:10px;border-radius:5px;background:rgba(127,127,127,.16)"></span>'
                     + '<span style="width:14%;height:10px;border-radius:5px;background:rgba(127,127,127,.12)"></span></div>';
             }
-            boardEl.innerHTML = '<div class="pro-teaser">' + t + ' TMR Pro shows every pick, each handicapper&#39;s record, units and streak, and where the proven handicappers agree.'
-                + (rows ? '<div aria-label="Locked preview" style="margin-top:14px;border:1px solid rgba(127,127,127,.22);border-radius:10px;overflow:hidden">'
-                    + '<div style="padding:8px 14px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;opacity:.7">Handicapper, pending pick, record</div>' + rows + '</div>' : '')
-                + '<p style="margin:14px 0 0"><a href="#pricing" style="display:inline-flex;align-items:center;min-height:44px;padding:0 18px;border-radius:10px;background:#F5C542;color:#1a1400;font-weight:800;text-decoration:none">Unlock with TMR Pro, $49.99/month</a></p></div>';
+            /* PREMIUM_STOREFRONT_20261024 (staged): the same counts, presented as a
+               locked board. Numbers only; no game, pick or side is shown. */
+            var lgs = (summary && summary.leagues || []).filter(Boolean);
+            var tile = function (v, l) { return '<div class="pst-stat"><b>' + v + '</b><span>' + l + '</span></div>'; };
+            boardEl.innerHTML = '<div class="pst-lock">'
+                + '<div class="pst-lock-head"><span class="pst-lock-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5Zm-3 8V7a3 3 0 1 1 6 0v3H9Z"/></svg></span>'
+                + '<div><span class="pst-kicker">Live board, locked</span><h3>' + (n ? 'Pending picks are on the board right now' : 'The board fills up before every slate') + '</h3></div></div>'
+                + (n ? '<div class="pst-stats">' + tile(n, 'pending picks') + tile(summary.handicappers, 'tracked handicappers')
+                    + (summary.proven_handicappers > 0 ? tile(summary.proven_handicappers, 'with 25+ graded picks') : '')
+                    + (summary.posted_last_hour ? tile(summary.posted_last_hour, 'posted in the last hour') : '') + '</div>' : '')
+                + (lgs.length ? '<div class="pst-leagues">' + lgs.map(function (x) { return '<span>' + esc(x) + '</span>'; }).join('') + '</div>' : '')
+                + '<p class="pst-lock-copy">' + t + '</p>'
+                + '<ul class="pst-gets"><li>Every pending pick: matchup, market, selection, odds and units as posted</li><li>Each handicapper&#39;s record, units, ROI and streak beside the pick</li><li>Where the proven handicappers agree, game by game</li></ul>'
+                + '<div class="pst-lock-cta"><a class="pst-btn pst-btn--gold" href="#pricing">Unlock the board with TMR Pro</a><span>$49.99 a month or $500 a year</span></div></div>';
         }
         function sortVal(c, k) {
             if (k === 'name') return String(c.name || '').toLowerCase();
@@ -2296,6 +2330,7 @@ body.tmr-light .wdx .px-explore { background: #FFFFFF !important; color: #07182A
 body.tmr-light .px-watch .pro-cta { background: #F5C542 !important; border-color: #F5C542 !important; color: #1A1400 !important; }
 </style>
 <link rel="stylesheet" href="/static/css/tmr-pro-redesign.f5af58ae59a9.css">
+<link rel="stylesheet" href="/static/css/tmr-premium-store.css?v=d7630a962af5">
 <style>
 /* PRO_PAGE_COMPACT_20261016 + PRO_PERFORMANCE_20261016 */
 .pperf-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;max-width:880px;margin:0 auto}
