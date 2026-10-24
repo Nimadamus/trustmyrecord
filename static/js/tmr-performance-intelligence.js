@@ -260,6 +260,61 @@
     return found;
   }
 
+  /* Comparisons between parts of a record: the coaching the member can act
+     on ("NFL sides beat NFL totals", "underdogs lag favorites"). Declared in
+     advance and the same for everyone:
+       within each sport, every pair of bet types with 30+ picks each
+       across the record, favorites against underdogs
+     Each is a Welch test on per-pick return (net / risked); every p-value is
+     Holm-adjusted over all comparisons made for this member. Only a gap that
+     survives (adjusted p < 0.10) is reported as a pattern worth
+     investigating; the rest are listed as differences within noise. */
+  function retStats(list) {
+    var r = list.map(function (p) { return (Number(p.net) || 0) / (Number(p.risk) || 1); });
+    var n = r.length, m = r.reduce(function (a, b) { return a + b; }, 0) / (n || 1);
+    var v = n > 1 ? r.reduce(function (a, b) { return a + (b - m) * (b - m); }, 0) / (n - 1) : 0;
+    return { n: n, mean: m, varr: v };
+  }
+  function compare(aName, aList, bName, bList) {
+    var A = stats(aList), B = stats(bList), ra = retStats(aList), rb = retStats(bList);
+    var se = Math.sqrt(ra.varr / ra.n + rb.varr / rb.n);
+    var z = se > 0 ? (ra.mean - rb.mean) / se : 0;
+    var better = A.roi >= B.roi;
+    return { better: better ? aName : bName, worse: better ? bName : aName, better_stats: better ? A : B, worse_stats: better ? B : A,
+      gap: round(Math.abs(A.roi - B.roi), 4), p_value: round(2 * (1 - phi(Math.abs(z))), 3) };
+  }
+  function insights(graded) {
+    var out = [];
+    var bySport = groupBy(graded, function (p) { return p.sport; });
+    bySport.forEach(function (g) {
+      var fams = groupBy(g.picks.filter(function (p) { return !p.marketName || p.market === 'prop'; }), function (p) { return MARKET_LABEL[p.market] || p.market; })
+        .filter(function (f) { return f.picks.length >= MIN_SAMPLE; });
+      for (var i = 0; i < fams.length; i++) for (var j = i + 1; j < fams.length; j++) {
+        var c = compare(g.key + ' ' + fams[i].key, fams[i].picks, g.key + ' ' + fams[j].key, fams[j].picks);
+        c.kind = 'bet_type'; c.sport = g.key; out.push(c);
+      }
+    });
+    /* Favorite or underdog is a moneyline idea: a -110 spread is neither. */
+    var favs = graded.filter(function (p) { return p.market === 'moneyline' && Number(p.odds) < 0; });
+    var dogs = graded.filter(function (p) { return p.market === 'moneyline' && Number(p.odds) > 0; });
+    if (favs.length >= MIN_SAMPLE && dogs.length >= MIN_SAMPLE) { var fd = compare('Moneyline favorites', favs, 'Moneyline underdogs', dogs); fd.kind = 'price_side'; out.push(fd); }
+    holm(out);
+    var findings = out.filter(function (c) { return c.p_adjusted < 0.10; }).sort(function (a, b) { return a.p_adjusted - b.p_adjusted; });
+    var noise = out.filter(function (c) { return !(c.p_adjusted < 0.10); }).sort(function (a, b) { return b.gap - a.gap; });
+    findings.forEach(function (c) {
+      c.text = c.better + ' returned ' + pct(c.better_stats.roi) + ' over ' + c.better_stats.n + ' picks against ' + pct(c.worse_stats.roi) + ' over ' + c.worse_stats.n +
+        ' for ' + c.worse + '. The gap held up after adjusting for the ' + out.length + ' comparisons made (adjusted p = ' + c.p_adjusted.toFixed(2) + ').';
+      c.suggestion = c.kind === 'price_side'
+        ? 'Consider reviewing how you choose ' + c.worse.toLowerCase() + ': the price each one needs to break even, and how often your price beat the close.'
+        : 'Consider comparing how you research ' + c.worse + ' with your process for ' + c.better + ': what you check, when you bet, and the prices you take.';
+    });
+    noise.forEach(function (c) {
+      c.text = c.better + ' (' + pct(c.better_stats.roi) + ', ' + c.better_stats.n + ' picks) against ' + c.worse + ' (' + pct(c.worse_stats.roi) + ', ' + c.worse_stats.n +
+        ' picks): within what chance produces once the ' + out.length + ' comparisons are accounted for.';
+    });
+    return { tested: out.length, findings: findings, within_noise: noise.slice(0, 3) };
+  }
+
   /* Research checklists, keyed by sport + market. Each item is a question the
      member can answer BEFORE the next bet, not an after-the-fact excuse. */
   var CHECKLISTS = {
@@ -367,7 +422,10 @@
     var later = f.filter(function (x) { return x.known === 'before_game' || x.known === 'game_time'; }).map(function (x) { return x.name; });
     if (later.length) uncertainty.push(later.join(' and ') + ' came after the pick and ' + (later.length > 1 ? 'are' : 'is') + ' shown for completeness only.');
     if (pre.length < 3) uncertainty.push('Few inputs were on record for this game, so the context is thin.');
-    if (p.placedAt && p.commence && new Date(p.placedAt) > new Date(p.commence)) uncertainty.push('TMR recorded this pick after the start, so no point-in-time review is possible.');
+    /* Second-half and live-segment picks are made after the start by design. */
+    if (p.placedAt && p.commence && new Date(p.placedAt) > new Date(p.commence) && !/^second_half_/.test(p.marketType || '')) {
+      uncertainty.push('TMR recorded this pick after the start, so no point-in-time review is possible.');
+    }
     if (p.closeNote) uncertainty.push(p.closeNote + '.');
 
     /* Price: the number taken against the other prices on record. */
@@ -465,13 +523,19 @@
     var categories = slices(graded, catKey).sort(function (a, b) { return b.net - a.net; });
     /* Every category big enough to judge is a separate test; the meaningful
        label uses the Holm-adjusted p across all of them. */
-    var judged = categories.filter(function (c) { return c.n >= MIN_SAMPLE; });
-    var comparisons = holm(judged);
-    judged.forEach(function (c) { c.verdict = verdict({ n: c.n, roi: c.roi, pValue: c.p_value, pAdjusted: c.p_adjusted }); });
+    function adjustFamily(list) {
+      var judged = list.filter(function (c) { return c.n >= MIN_SAMPLE; });
+      var m = holm(judged);
+      judged.forEach(function (c) { c.verdict = verdict({ n: c.n, roi: c.roi, pValue: c.p_value, pAdjusted: c.p_adjusted }); });
+      return m;
+    }
+    var comparisons = adjustFamily(categories);
     var bySport = slices(graded, function (p) { return p.sport; }).sort(function (a, b) { return b.net - a.net; });
     var byMarket = slices(graded, function (p) { return MARKET_LABEL[p.market] || p.market; }).sort(function (a, b) { return b.net - a.net; });
     var byOdds = slices(graded, function (p) { return oddsBand(p.odds); })
       .sort(function (a, b) { return BAND_ORDER.indexOf(a.key) - BAND_ORDER.indexOf(b.key); });
+    /* The sport, bet type and price tables are each their own family of tests. */
+    adjustFamily(bySport); adjustFamily(byMarket); adjustFamily(byOdds);
 
     /* Monthly series with a running total, for the trend chart. */
     var running = 0;
@@ -484,10 +548,13 @@
     var recent = stats(graded.filter(function (p) { return cut && p.date > cut; }));
     var earlier = stats(graded.filter(function (p) { return cut && p.date <= cut; }));
 
-    var strengths = categories.filter(function (c) { return c.roi > 0; })
-      .sort(function (a, b) { return b.z - a.z; });
-    var weaknesses = categories.filter(function (c) { return c.roi < 0; })
-      .sort(function (a, b) { return a.net - b.net; });
+    /* Strengths and weaknesses: categories with 10+ picks only, judged ones
+       (30+) first, so a 5-pick +88% never tops the list. */
+    var judgedFirst = function (a, b) { return (a.n >= MIN_SAMPLE ? 0 : 1) - (b.n >= MIN_SAMPLE ? 0 : 1); };
+    var strengths = categories.filter(function (c) { return c.roi > 0 && c.n >= 10; })
+      .sort(function (a, b) { return judgedFirst(a, b) || b.z - a.z; });
+    var weaknesses = categories.filter(function (c) { return c.roi < 0 && c.n >= 10; })
+      .sort(function (a, b) { return judgedFirst(a, b) || a.net - b.net; });
     /* A priority has to be a real drag: enough picks to judge, and at least
        3 points of ROI under water. A category sitting at -0.3% is not
        "costing" anyone anything worth a plan. */
@@ -503,6 +570,8 @@
       var chosen = withCtx.length ? withCtx[withCtx.length - 1] : slist[slist.length - 1];
       if (chosen) strengthReview = { category: topStrength.key, review: reviewPick(chosen) };
     }
+
+    var ins = insights(graded);
 
     var focus = null;
     if (priority) {
@@ -536,9 +605,10 @@
       strengths: strengths, weaknesses: weaknesses,
       focus: focus,
       strength_review: strengthReview,
+      insights: ins,
       comparisons: { categories: comparisons },
-      evaluation: evaluation(overall, strengths, weaknesses, priority, focus, recent, earlier),
-      plan: plan(priority, focus, strengths),
+      evaluation: evaluation(overall, strengths, weaknesses, priority, focus, recent, earlier, ins),
+      plan: plan(priority, focus, strengths, ins),
       method: {
         min_sample: MIN_SAMPLE,
         significance: 'Two-sided z-test of wins against the break-even win rate implied by the prices actually paid. p < 0.05 meaningful, p < 0.20 possible, otherwise normal variance.',
@@ -549,7 +619,7 @@
     };
   }
 
-  function evaluation(o, strengths, weaknesses, priority, focus, recent, earlier) {
+  function evaluation(o, strengths, weaknesses, priority, focus, recent, earlier, ins) {
     var out = [];
     out.push('Across ' + o.n + ' graded picks the record is ' + o.w + '-' + o.l + (o.p ? '-' + o.p : '') + ', ' + u(o.net) + ' on ' +
       o.risked.toFixed(1) + ' units risked (' + pct(o.roi) + ' ROI). Winning ' + (o.win_pct * 100).toFixed(1) +
@@ -583,6 +653,8 @@
     } else if (focus) {
       out.push('Inside ' + priority.key + ', no split by side, price or home and away stood out once the number of comparisons is accounted for, so the review is about the category as a whole.');
     }
+    if (ins && ins.findings.length) out.push('Pattern worth investigating: ' + ins.findings[0].text);
+    else if (ins && ins.tested) out.push('Comparing bet types within each sport, and favorites with underdogs (' + ins.tested + ' comparisons), no gap was large enough to rule out chance.');
     if (recent.n >= MIN_SAMPLE && earlier.n >= MIN_SAMPLE) {
       out.push('Last 90 days: ' + u(recent.net) + ' at ' + pct(recent.roi) + ' over ' + recent.n + ' picks, against ' + pct(earlier.roi) + ' before that.');
     }
@@ -592,7 +664,7 @@
     return out;
   }
 
-  function plan(priority, focus, strengths) {
+  function plan(priority, focus, strengths, ins) {
     var steps = [];
     if (priority && focus) {
       var strong = strengths.filter(function (x) { return x.n >= MIN_SAMPLE; })[0];
@@ -615,6 +687,12 @@
       steps.push({ title: 'Consider stake size while you review', detail: 'Consider a smaller stake in this market until ' + MIN_SAMPLE +
         ' new picks show whether the change is working. This limits the cost of learning; it does not create an edge.' });
     }
+    if (ins && ins.findings.length) {
+      var top = ins.findings[0];
+      if (!priority || (top.worse.indexOf(priority.key) < 0)) {
+        steps.push({ title: 'Compare ' + top.worse + ' with ' + top.better, detail: top.text + ' ' + top.suggestion });
+      }
+    }
     /* The strength worth protecting: meaningful on results, or close to it
        AND beating the closing line, which is independent evidence. */
     var keep = strengths.filter(function (s) {
@@ -626,6 +704,6 @@
     return steps;
   }
 
-  return { VERSION: VERSION, MIN_SAMPLE: MIN_SAMPLE, analyze: analyze, stats: stats, reviewPick: reviewPick,
+  return { VERSION: VERSION, MIN_SAMPLE: MIN_SAMPLE, analyze: analyze, stats: stats, insights: insights, reviewPick: reviewPick,
     implied: implied, payout: payout, clv: clv, clvDir: clvDir, closeComparable: closeComparable, oddsBand: oddsBand, checklistFor: checklistFor };
 }));

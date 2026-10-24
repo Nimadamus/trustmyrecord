@@ -95,21 +95,31 @@
   }
 
   /* Diverging ROI bars around a zero line, values printed beside each bar. */
+  /* Rows with 30+ picks set the bar scale, so a 1-pick -100% cannot shrink
+     every real category to a sliver; rows under 10 picks are folded away. */
   function roiRows(list, opts) {
     opts = opts || {};
-    var max = Math.max(0.05, Math.max.apply(null, list.map(function (c) { return Math.abs(c.roi); })));
+    var judged = list.filter(function (c) { return c.n >= 30; });
+    var scaleSet = judged.length ? judged : list;
+    var max = Math.max(0.05, Math.max.apply(null, scaleSet.map(function (c) { return Math.abs(c.roi); })));
+    var row = function (c) {
+      var wpct = Math.min(50, Math.abs(c.roi) / max * 50);
+      var bar = '<span class="ult-bar"><i class="ult-bar0"></i><i class="ult-barfill ' + (c.roi >= 0 ? 'is-pos' : 'is-neg') + '" style="' +
+        (c.roi >= 0 ? 'left:50%' : 'right:50%') + ';width:' + wpct.toFixed(1) + '%"></i></span>';
+      return '<div class="ult-row' + (c.n < 30 ? ' is-small' : '') + '" role="row" title="' + esc(c.key + ': ' + rec(c) + ', ' + fu(c.net) + ' on ' + c.risked.toFixed(1) + 'u risked, ' + fp(c.roi) + ' ROI') + '">' +
+        '<span role="cell" class="ult-rowkey">' + esc(c.key) + '</span><span role="cell">' + c.n + '</span><span role="cell" class="ult-rec">' + rec(c) + '</span>' +
+        '<span role="cell" class="' + tone(c.net) + '">' + esc(fu(c.net)) + '</span>' +
+        '<span role="cell" class="ult-roicell">' + bar + '<b class="' + tone(c.roi) + '">' + esc(fp(c.roi)) + '</b></span>' +
+        '<span role="cell">' + chip(c.verdict) + '</span></div>';
+    };
+    var shown = list.filter(function (c) { return c.n >= 10; });
+    var folded = list.filter(function (c) { return c.n < 10; });
+    if (!shown.length) { shown = list; folded = []; }
     return '<div class="ult-rows" role="table" aria-label="' + esc(opts.label || 'Results by category') + '">' +
       '<div class="ult-row ult-row--head" role="row"><span role="columnheader">' + esc(opts.first || 'Category') + '</span><span role="columnheader">Picks</span><span role="columnheader">Record</span><span role="columnheader">Units</span><span role="columnheader" class="ult-roihead">ROI</span><span role="columnheader">Evidence</span></div>' +
-      list.map(function (c) {
-        var wpct = Math.abs(c.roi) / max * 50;
-        var bar = '<span class="ult-bar"><i class="ult-bar0"></i><i class="ult-barfill ' + (c.roi >= 0 ? 'is-pos' : 'is-neg') + '" style="' +
-          (c.roi >= 0 ? 'left:50%' : 'right:50%') + ';width:' + wpct.toFixed(1) + '%"></i></span>';
-        return '<div class="ult-row" role="row" title="' + esc(c.key + ': ' + rec(c) + ', ' + fu(c.net) + ' on ' + c.risked.toFixed(1) + 'u risked, ' + fp(c.roi) + ' ROI, p = ' + c.p_value.toFixed(2)) + '">' +
-          '<span role="cell" class="ult-rowkey">' + esc(c.key) + '</span><span role="cell">' + c.n + '</span><span role="cell">' + rec(c) + '</span>' +
-          '<span role="cell" class="' + tone(c.net) + '">' + esc(fu(c.net)) + '</span>' +
-          '<span role="cell" class="ult-roicell">' + bar + '<b class="' + tone(c.roi) + '">' + esc(fp(c.roi)) + '</b></span>' +
-          '<span role="cell">' + chip(c.verdict) + '</span></div>';
-      }).join('') + '</div>';
+      shown.map(row).join('') +
+      (folded.length ? '<details class="ult-fold"><summary>' + folded.length + ' more with fewer than 10 picks (too few to read anything into)</summary>' + folded.map(row).join('') + '</details>' : '') +
+      '</div>';
   }
 
   function renderProfile(el, r, opts) {
@@ -118,6 +128,7 @@
       tiles(r.overall) +
       '<p class="ult-assume">' + esc(opts.assumption || ('ROI is net units divided by units risked: ' + r.overall.risked.toFixed(1) + ' units across ' + r.overall.n + ' graded picks.')) + '</p>' +
       '<div class="ult-card"><div class="ult-cardhead"><h3>Running units</h3><span>Cumulative, by month. Hover or tap the line.</span></div><div class="ult-chart" data-ult-line></div></div>' +
+      '<div class="ult-card"><div class="ult-cardhead"><h3>By sport</h3><span>Every bet type combined</span></div>' + roiRows(r.by_sport, { first: 'Sport', label: 'Results by sport' }) + '</div>' +
       '<div class="ult-card"><div class="ult-cardhead"><h3>By category</h3><span>Sport and bet type, best to worst</span></div>' + roiRows(r.categories) + '</div>' +
       '<div class="ult-card"><div class="ult-cardhead"><h3>By price</h3><span>American odds at the time of the pick</span></div>' + roiRows(r.by_odds, { first: 'Odds range', label: 'Results by odds range' }) + '</div>';
     var chart = el.querySelector('[data-ult-line]');
@@ -214,6 +225,21 @@
       researchHtml + '<h5>Questions worth researching before similar picks</h5>' + check + after + '</article>';
   }
 
+  function insightsHtml(ins) {
+    if (!ins || !ins.tested) return '';
+    var found = ins.findings.length
+      ? ins.findings.map(function (c) {
+        return '<div class="ult-insight"><div class="ult-insight-bars">' +
+          pairBars([{ label: 'ROI', a: c.worse_stats.roi, b: c.better_stats.roi, fmt: function (v) { return fp(v); }, floor: 0.05 }],
+            [c.worse + ' (' + c.worse_stats.n + ' picks)', c.better + ' (' + c.better_stats.n + ' picks)']) +
+          '</div><p>' + prose(c.text) + '</p><p class="ult-suggest">' + prose(c.suggestion) + '</p></div>';
+      }).join('')
+      : '<p class="ult-muted">No gap between bet types or between favorites and underdogs was large enough to rule out chance across the ' + ins.tested + ' comparisons made.</p>';
+    var noise = ins.within_noise.length ? '<details class="ult-noise"><summary>Differences that are within chance (' + ins.within_noise.length + ')</summary><ul class="ult-read">' +
+      ins.within_noise.map(function (c) { return '<li>' + prose(c.text) + '</li>'; }).join('') + '</ul></details>' : '';
+    return '<div class="ult-insights"><h4>Patterns worth investigating</h4>' + found + noise + '</div>';
+  }
+
   function writtenHtml(n) {
     if (!n || !n.summary) return '';
     return '<div class="ult-written"><span class="ult-kicker">Written evaluation</span><p class="ult-lead">' + prose(n.summary) + '</p>' +
@@ -269,7 +295,8 @@
       '<div class="ult-swcol ult-swcol--neg"><h4>Dragging results down</h4>' + (r.weaknesses.length ? r.weaknesses.map(function (s) {
         return '<div class="ult-swrow' + (f && s.key === f.category.key ? ' is-priority' : '') + '"><b>' + esc(s.key) + (f && s.key === f.category.key ? ' <em>Priority review</em>' : '') + '</b><span>' + esc(fp(s.roi)) + ' · ' + s.n + ' picks · ' + esc(fu(s.net)) + '</span>' + chip(s.verdict) + '</div>';
       }).join('') : '<p class="ult-muted">No category is negative.</p>') + '</div></div>' +
-      '<p class="ult-muted">Verdicts test wins against the break-even rate of the prices actually paid. "Within normal variance" means the result, good or bad, is what luck alone produces often enough that it is not a reason to change anything by itself.</p>' });
+      insightsHtml(r.insights) +
+      '<p class="ult-muted">Verdicts test wins against the break-even rate of the prices actually paid, adjusted for the number of categories tested. "Within normal variance" means the result, good or bad, is what luck alone produces often enough that it is not a reason to change anything by itself.</p>' });
 
     if (f) {
       tabs.push({ id: 'focus', label: f.category.key, html:
@@ -316,6 +343,14 @@
         : '<p class="ult-muted">Start the improvement plan and every graded pick after that date is measured against the record before it.</p>' +
           (opts.canStartPlan ? '<button type="button" class="ult-btn ult-btn--ghost" data-ult-startplan>Start the plan today</button>' : '') });
     }
+
+    tabs.push({ id: 'method', label: 'How This Works', html:
+      '<div class="ult-method">' +
+      '<h4>What the numbers are</h4><p>Every figure comes from graded TrustMyRecord picks. ROI is net units divided by units risked. A category is judged only with 30 or more graded picks, and each verdict tests wins against the break-even rate of the prices actually paid, adjusted for the number of categories and comparisons tested so that one lucky slice is not presented as a strength.</p>' +
+      '<h4>What the pick reviews use</h4><p>Pre-game inputs are rebuilt as of the moment each pick was made and labelled: <b>known at the pick</b>, <b>timing not recorded</b> (real pre-game facts such as confirmed starters or injury absences with no publication time), <b>published after the pick</b>, or <b>at the start</b> (the closing line, first-pitch weather). Only inputs known at the pick count as context. They are possible factors, never the reason a pick won or lost; TMR stores no written rationale, so the report never says what was considered.</p>' +
+      '<h4>Closing lines</h4><p>TMR records the close from pre-game sportsbook prices. Where TMR has none, the DraftKings close recorded by ESPN is used and labelled. Beating the close is measured only where the number or price actually moved.</p>' +
+      '<h4>Not available yet</h4><ul class="ult-read"><li>Weather forecasts as of the pick (MLB shows first-pitch conditions, labelled; football has none).</li><li>Closing prices for player props.</li><li>NFL injury reports before March 2026; injury publication times for the NBA and NHL.</li><li>Confirmed lineups, pitch matchups and advanced player metrics as of the pick.</li><li>Pre-game inputs for soccer, MMA, tennis and first-half or first-five markets (their records and prices are still analyzed).</li></ul>' +
+      '<h4>What this is not</h4><p>A research and coaching tool, not a prediction service. Nothing here promises better results.</p></div>' });
 
     el.innerHTML = tabsHtml(tabs);
     var select = wireTabs(el, opts.onSwitch);
