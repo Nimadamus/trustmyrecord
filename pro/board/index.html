@@ -1,0 +1,2417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Watchdog Board | TMR Pro | TrustMyRecord</title>
+    <meta name="robots" content="noindex, nofollow">
+
+<link rel="canonical" href="https://trustmyrecord.com/pro/board/">
+    <meta name="description" content="TMR Pro: today's pending picks from the handicappers TrustMyRecord tracks around the web, next to their graded records, plus Bet Legend Pro, unlimited simulators, TrendSpotter money data and Model Builder. $49.99 a month or $500 a year.">
+    <meta name="keywords" content="sports betting research tools, historical betting trends, betting model tracking, handicapping research">
+    <meta property="og:title" content="TMR Pro | Sports Betting Research Tools">
+    <meta property="og:description" content="Pending picks from tracked handicappers with their graded records, Bet Legend Pro, unlimited simulators, TrendSpotter money data and Model Builder.">
+    <meta property="og:url" content="https://trustmyrecord.com/premium/">
+    <meta property="og:type" content="website">
+
+    <link rel="icon" type="image/png" href="/static/favicon.png">
+    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=859cacfb660e">
+<script defer src="/static/js/tmr-sitewide.js?v=c6f29b7cd398"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="/static/css/social.css?v=53415e93b875" rel="stylesheet">
+
+    <style>
+        /* TMR_PRO_PRICING_PAGE_20260912.
+           Electric blue on light, the sitewide brand. #0B4FA8 is the brand ink
+           on white; the on-dark variant #4DA3FF is used only inside the dark
+           founding panel, where the brand itself reads 2.3:1. */
+        :root {
+            --pro-brand: #0B4FA8;
+            --pro-brand-dark: #073A7C;
+            --pro-brand-on-dark: #4DA3FF;
+            --pro-ink: #07182A;
+            --pro-body: #2E4459;
+            --pro-muted: #5E7590;
+            --pro-line: rgba(11, 79, 168, .22);
+            --pro-line-soft: rgba(11, 79, 168, .12);
+            --pro-surface: #FFFFFF;
+            --pro-page: #F4F7FA;
+            --pro-tint: #EEF4FC;
+        }
+
+        .pro-page * { box-sizing: border-box; }
+
+        .pro-page {
+            background: var(--pro-page);
+            color: var(--pro-ink);
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+        }
+
+        .pro-wrap {
+            width: 100%;
+            max-width: 1120px;
+            margin: 0 auto;
+            padding-inline: 20px;
+        }
+
+        /* ---------------------------------------------------------- hero -- */
+        .pro-hero {
+            padding-block: 56px 40px;
+            text-align: center;
+        }
+
+        .pro-eyebrow {
+            display: inline-block;
+            font-family: 'Barlow', sans-serif;
+            font-weight: 700;
+            font-size: .78rem;
+            letter-spacing: .14em;
+            text-transform: uppercase;
+            color: var(--pro-brand);
+            background: var(--pro-tint);
+            border: 1px solid var(--pro-line);
+            border-radius: 999px;
+            padding: 6px 14px;
+            margin-bottom: 18px;
+        }
+
+        .pro-hero h1 {
+            font-family: 'Barlow', sans-serif;
+            font-weight: 800;
+            font-size: clamp(2.4rem, 7vw, 3.9rem);
+            line-height: 1.05;
+            letter-spacing: -.015em;
+            margin: 0 0 14px;
+        }
+
+        .pro-lede {
+            font-size: clamp(1.02rem, 2.4vw, 1.2rem);
+            line-height: 1.55;
+            color: var(--pro-body);
+            max-width: 620px;
+            margin: 0 auto;
+        }
+
+        .pro-note {
+            margin: 22px auto 0;
+            max-width: 640px;
+            font-size: .92rem;
+            line-height: 1.55;
+            color: var(--pro-muted);
+        }
+
+        /* -------------------------------------------------- your status --- */
+        .pro-status {
+            display: none;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+            background: var(--pro-surface);
+            border: 1px solid var(--pro-line);
+            border-radius: 14px;
+            padding: 14px 18px;
+            margin: 28px auto 0;
+            max-width: 620px;
+            font-size: .95rem;
+            color: var(--pro-body);
+        }
+
+        .pro-status.is-shown { display: flex; }
+
+        .pro-status strong { color: var(--pro-ink); }
+
+        .pro-chip {
+            font-family: 'Barlow', sans-serif;
+            font-weight: 700;
+            font-size: .78rem;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            border-radius: 999px;
+            padding: 5px 12px;
+            background: var(--pro-tint);
+            color: var(--pro-brand);
+            border: 1px solid var(--pro-line);
+        }
+
+        .pro-chip.is-pro {
+            background: var(--pro-brand);
+            color: #fff;
+            border-color: var(--pro-brand);
+        }
+
+        /* ------------------------------------------------------ sections -- */
+        .pro-section { padding-block: 44px; }
+
+        .pro-section-head { margin-bottom: 26px; }
+
+        .pro-section-head h2 {
+            font-family: 'Barlow', sans-serif;
+            font-weight: 800;
+            font-size: clamp(1.6rem, 4vw, 2.15rem);
+            letter-spacing: -.01em;
+            margin: 0 0 8px;
+        }
+
+        .pro-section-head p {
+            color: var(--pro-body);
+            font-size: 1rem;
+            line-height: 1.55;
+            max-width: 680px;
+            margin: 0;
+        }
+
+        /* ------------------------------------------------------ products -- */
+        .pro-products {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+            gap: 18px;
+        }
+
+        .pro-product {
+            background: var(--pro-surface);
+            border: 1px solid var(--pro-line);
+            border-radius: 18px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pro-product-kicker {
+            font-family: 'Barlow', sans-serif;
+            font-weight: 700;
+            font-size: .74rem;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            color: var(--pro-muted);
+            margin-bottom: 8px;
+        }
+
+        .pro-product h3 {
+            font-family: 'Barlow', sans-serif;
+            font-weight: 800;
+            font-size: 1.35rem;
+            letter-spacing: -.01em;
+            margin: 0 0 10px;
+        }
+
+        .pro-product > p {
+            color: var(--pro-body);
+            font-size: .96rem;
+            line-height: 1.6;
+            margin: 0 0 16px;
+        }
+
+        .pro-split {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: auto;
+        }
+
+        .pro-split-col {
+            background: var(--pro-page);
+            border: 1px solid var(--pro-line-soft);
+            border-radius: 12px;
+            padding: 14px;
+        }
+
+        .pro-split-col h4 {
+            font-family: 'Barlow', sans-serif;
+            font-weight: 700;
+            font-size: .78rem;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            margin: 0 0 10px;
+            color: var(--pro-muted);
+        }
+
+        .pro-split-col.is-pro { background: var(--pro-tint); border-color: var(--pro-line); }
+        .pro-split-col.is-pro h4 { color: var(--pro-brand); }
+
+        .pro-list { list-style: none; margin: 0; padding: 0; }
+
+        .pro-list li {
+            position: relative;
+            padding-left: 18px;
+            font-size: .9rem;
+            line-height: 1.5;
+            color: var(--pro-body);
+            margin-bottom: 6px;
+        }
+
+        .pro-list li::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: .55em;
+            width: 7px;
+            height: 7px;
+            border-radius: 2px;
+            background: var(--pro-brand);
+            opacity: .55;
+        }
+
+        .pro-list li:last-child { margin-bottom: 0; }
+
+        .pro-allowance {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 14px;
+        }
+
+        .pro-allowance span {
+            font-size: .85rem;
+            font-weight: 600;
+            color: var(--pro-body);
+            background: var(--pro-page);
+            border: 1px solid var(--pro-line-soft);
+            border-radius: 999px;
+            padding: 5px 12px;
+        }
+
+        /* ------------------------------------------------------- pricing -- */
+        .pro-prices {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
+            gap: 18px;
+            align-items: start;
+        }
+
+        .pro-price {
+            background: var(--pro-surface);
+            border: 1px solid var(--pro-line);
+            border-radius: 18px;
+            padding: 26px 24px;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .pro-price.is-featured {
+            border-color: var(--pro-brand);
+            box-shadow: 0 10px 28px rgba(11, 79, 168, .12);
+        }
+
+        .pro-price-flag {
+            font-family: 'Barlow', sans-serif;
+            font-weight: 700;
+            font-size: .72rem;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            color: var(--pro-brand);
+            margin-bottom: 10px;
+            min-height: 1em;
+        }
+
+        .pro-price h3 {
+            font-family: 'Barlow', sans-serif;
+            font-weight: 800;
+            font-size: 1.3rem;
+            margin: 0 0 14px;
+        }
+
+        .pro-amount {
+            font-family: 'Barlow', sans-serif;
+            font-weight: 800;
+            font-size: clamp(2.1rem, 6vw, 2.7rem);
+            line-height: 1;
+            letter-spacing: -.02em;
+        }
+
+        .pro-amount small {
+            font-size: .95rem;
+            font-weight: 600;
+            color: var(--pro-muted);
+            letter-spacing: 0;
+        }
+
+        .pro-price-detail {
+            margin: 12px 0 18px;
+            font-size: .92rem;
+            line-height: 1.55;
+            color: var(--pro-body);
+            min-height: 3em;
+        }
+
+        .pro-price-detail em { color: var(--pro-ink); font-style: normal; font-weight: 600; }
+
+        .pro-buy {
+            width: 100%;
+            margin-top: auto;
+            font-family: 'Barlow', sans-serif;
+            font-weight: 700;
+            font-size: .95rem;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+            border-radius: 12px;
+            padding: 14px 18px;
+            border: 1px solid var(--pro-line);
+            background: var(--pro-page);
+            color: var(--pro-muted);
+            cursor: not-allowed;
+        }
+
+        .pro-buy.is-primary {
+            background: var(--pro-brand-dark);
+            border-color: var(--pro-brand-dark);
+            color: #fff;
+            opacity: .55;
+        }
+
+        /* TMR_PRO_ACCOUNT_20260928: a button the server has said this user may
+           use. Everything else keeps the inert look above. */
+        .pro-buy.is-live {
+            cursor: pointer;
+            opacity: 1;
+            background: var(--pro-brand-dark);
+            border-color: var(--pro-brand-dark);
+            color: #fff;
+        }
+        .pro-buy.is-live:hover, .pro-buy.is-live:focus-visible { filter: brightness(1.12); }
+        .pro-buy.is-busy { cursor: progress; opacity: .7; }
+        .pro-banner {
+            margin-top: 16px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: 1px solid var(--pro-line);
+            background: var(--pro-page);
+            color: var(--pro-ink);
+            font-size: .95rem;
+            line-height: 1.5;
+        }
+        .pro-banner.is-good { border-color: #1D7A46; }
+        .pro-banner.is-warn { border-color: #A5620A; }
+        .pro-manage {
+            margin-left: 10px;
+            font: inherit;
+            font-weight: 700;
+            font-size: .85rem;
+            padding: 6px 12px;
+            border-radius: 999px;
+            border: 1px solid var(--pro-brand-dark);
+            background: transparent;
+            color: var(--pro-brand-dark);
+            cursor: pointer;
+        }
+        .pro-cancel { border-color: var(--pro-muted); color: var(--pro-body); }
+        .pro-cancel-dialog {
+            width: min(520px, calc(100vw - 32px));
+            border: 1px solid var(--pro-line);
+            border-radius: 14px;
+            padding: 22px;
+            background: var(--pro-surface);
+            color: var(--pro-ink);
+        }
+        .pro-cancel-dialog::backdrop { background: rgba(7, 24, 42, .55); }
+        .pro-cancel-dialog h2 { margin: 0 0 6px; font-size: 1.2rem; }
+        .pro-cancel-dialog p { margin: 0 0 14px; color: var(--pro-body); font-size: .92rem; line-height: 1.5; }
+        .pro-cancel-dialog fieldset { border: 0; margin: 0 0 14px; padding: 0; }
+        .pro-cancel-dialog legend, .pro-cancel-dialog .pcd-label { font-weight: 700; font-size: .92rem; margin-bottom: 8px; display: block; }
+        .pro-cancel-dialog label.pcd-opt { display: flex; gap: 8px; align-items: center; padding: 6px 0; font-size: .92rem; cursor: pointer; }
+        .pro-cancel-dialog textarea {
+            width: 100%; box-sizing: border-box; min-height: 90px; font: inherit; font-size: .92rem;
+            padding: 10px; border-radius: 10px; border: 1px solid var(--pro-line); resize: vertical;
+        }
+        .pro-cancel-dialog .pcd-err { color: #A5620A; font-size: .85rem; min-height: 1.2em; margin: 6px 0 0; }
+        .pro-cancel-dialog .pcd-actions { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; margin-top: 14px; }
+        .pro-cancel-dialog .pcd-actions button {
+            font: inherit; font-weight: 700; font-size: .9rem; padding: 9px 16px; border-radius: 999px; cursor: pointer;
+            border: 1px solid var(--pro-brand-dark); background: var(--pro-brand-dark); color: #fff;
+        }
+        .pro-cancel-dialog .pcd-actions button.pcd-keep { background: transparent; color: var(--pro-brand-dark); }
+        .pro-cancel-dialog .pcd-actions button:disabled { opacity: .45; cursor: not-allowed; }
+        .pro-renew-note {
+            margin: 14px auto 0;
+            max-width: 720px;
+            text-align: center;
+            font-size: .88rem;
+            color: var(--pro-muted);
+            line-height: 1.5;
+        }
+
+        /* TMR_PRO_SALES_20260928 */
+        .pro-benefits { list-style: none; margin: 18px auto 0; padding: 0; display: grid; gap: 8px; max-width: 560px; text-align: left; }
+        .pro-benefits li { position: relative; padding-left: 26px; color: var(--pro-ink); font-weight: 600; line-height: 1.45; }
+        .pro-benefits li::before { content: ""; position: absolute; left: 4px; top: .5em; width: 10px; height: 10px; border-radius: 50%; background: var(--pro-brand); }
+        .pro-hero-price { margin: 18px 0 0; color: var(--pro-body); font-size: 1rem; }
+        .pro-hero-price b { color: var(--pro-ink); }
+        .pro-cta { display: inline-block; margin-top: 16px; padding: 14px 28px; border-radius: 12px; background: var(--pro-brand-dark); color: #fff !important; font-family: 'Barlow', sans-serif; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; text-decoration: none; }
+        .pro-cta:hover, .pro-cta:focus-visible { filter: brightness(1.12); }
+        .pro-save { display: inline-block; margin-left: 6px; padding: 2px 8px; border-radius: 999px; background: #E3F4EA; color: #1D7A46; font-size: .78rem; font-weight: 800; }
+        .pro-welcome { margin-top: 16px; padding: 16px; border-radius: 14px; border: 1px solid #1D7A46; background: var(--pro-surface); text-align: left; }
+        .pro-welcome h2 { margin: 0 0 6px; font-size: 1.3rem; color: var(--pro-ink); }
+        .pro-welcome p { margin: 0 0 12px; color: var(--pro-body); }
+.pd-recap { margin: 14px 0; padding: 14px 16px; border: 1px solid rgba(15,35,70,.12); border-radius: 14px; background: var(--pro-surface, #fff); }
+.pd-recap h3 { margin: 0 0 8px; font-size: 1.05rem; color: var(--pro-ink); }
+.pd-recap-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.pd-recap-list li { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; font-size: .95rem; color: var(--pro-body); }
+.pd-recap-list b { color: var(--pro-ink); }
+.pd-recap-hit { color: #067647; font-weight: 700; }
+.pd-recap-miss { color: #b42318; font-weight: 700; }
+.pd-recap-note { margin: 10px 0 0; font-size: .85rem; color: var(--pro-body); }
+.pd-onboard li[data-k] a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+.pd-onboard li.pd-onboard-lead { font-weight: 600; }
+        .pro-links { display: flex; flex-wrap: wrap; gap: 8px; }
+        .pro-links a { padding: 8px 12px; border-radius: 10px; border: 1px solid var(--pro-line); background: var(--pro-page); color: var(--pro-ink); font-weight: 700; font-size: .9rem; text-decoration: none; }
+        .pro-links a:hover { border-color: var(--pro-brand); }
+
+        /* TMR_PRO_BOARD_V2_20260928: Handicapper Watchdog board */
+        .pro-teaser { background: var(--pro-surface); border: 1px dashed var(--pro-line); border-radius: 14px; padding: 18px; color: var(--pro-body); line-height: 1.6; }
+        .pro-teaser b { color: var(--pro-ink); }
+        #proBoard { font-variant-numeric: tabular-nums; }
+        .wd-bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 4px 0 16px; }
+        .wd-search { flex: 1 1 200px; min-width: 0; font: inherit; padding: 9px 12px; border-radius: 10px; border: 1px solid var(--pro-line); background: var(--pro-surface); color: var(--pro-ink); }
+        .wd-bar select { width: auto !important; flex: 0 0 auto; max-width: 100%; font: inherit; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--pro-line); background: var(--pro-surface); color: var(--pro-ink); }
+        .wd-check { display: inline-flex; gap: 6px; align-items: center; color: var(--pro-body); font-size: .92rem; white-space: nowrap; }
+        .wd-check input { width: 16px !important; height: 16px !important; min-width: 0 !important; margin: 0; flex: none; }
+        body .wd-bar .wd-check input[type=checkbox] { width: 18px !important; height: 18px !important; min-height: 0 !important; max-width: 18px !important; padding: 0 !important; }
+        @media (max-width: 600px) { body .wd-net { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); } body .wd-net span { display: block; font-size: 12px; } }
+        .wd-count { flex-basis: 100%; font-size: .85rem; color: var(--pro-muted); }
+        .wd-count b { color: var(--pro-ink); }
+        .wd-cons { margin-bottom: 16px; }
+        .wd-cons h3 { margin: 0 0 8px; font-size: 1rem; color: var(--pro-ink); }
+        .wd-cons-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)); gap: 10px; }
+        .wd-cons-card { display: flex; gap: 12px; align-items: center; background: var(--pro-surface); border: 1px solid var(--pro-line); border-radius: 12px; padding: 10px 12px; min-width: 0; }
+        .wd-cons-n { flex: none; text-align: center; font-size: .78rem; color: var(--pro-muted); line-height: 1.2; min-width: 58px; }
+        .wd-cons-n b { display: block; font-size: 1.35rem; color: var(--pro-brand); }
+        .wd-cons-n span { display: block; }
+        .wd-cons-sel { font-weight: 700; color: var(--pro-ink); }
+        .wd-table-wrap { overflow-x: auto; background: var(--pro-surface); border: 1px solid var(--pro-line); border-radius: 14px; }
+        .wd-table { width: 100%; border-collapse: collapse; min-width: 0 !important; font-size: .92rem; }
+        .wd-table th { position: sticky; top: 0; background: var(--pro-surface); text-align: left; padding: 0; border-bottom: 1px solid var(--pro-line); }
+        .wd-table th.n, .wd-table td.n { text-align: right; }
+        .wd-sort { font: inherit; font-size: .74rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--pro-muted); background: none; border: 0; padding: 10px 12px; cursor: pointer; white-space: nowrap; width: 100%; text-align: inherit; }
+        .wd-sort.on { color: var(--pro-brand); }
+        .wd-table td { padding: 10px 12px; border-top: 1px solid var(--pro-line); vertical-align: middle; color: var(--pro-body); }
+        .wd-row { cursor: pointer; }
+        .wd-row:hover td, .wd-row:focus td { background: var(--pro-page); }
+        .wd-row:focus { outline: 2px solid var(--pro-brand); outline-offset: -2px; }
+        .wd-picks-row td { border-top: 0; padding-top: 0; }
+        .wd-name { font-weight: 800; color: var(--pro-ink); }
+        .wd-sub { font-size: .78rem; color: var(--pro-muted); margin-top: 2px; }
+        .wd-muted { color: var(--pro-muted); font-size: .85rem; }
+        .wd-badge { display: inline-block; margin-left: 4px; padding: 1px 7px; border-radius: 999px; background: #E6F0FF; color: var(--pro-brand); font-size: .68rem; font-weight: 800; letter-spacing: .04em; vertical-align: middle; }
+        .wd-rec { font-weight: 700; color: var(--pro-ink); white-space: nowrap; }
+        .up { color: #1D7A46 !important; font-weight: 700; }
+        .down { color: #B3261E !important; font-weight: 700; }
+        .wd-streak { display: inline-block; min-width: 36px; padding: 2px 8px; border-radius: 999px; font-weight: 800; font-size: .8rem; text-align: center; background: var(--pro-page); }
+        .wd-streak.up { background: #E3F4EA; }
+        .wd-streak.down { background: #FBE7E5; }
+        .wd-dots { display: inline-flex; gap: 3px; }
+        .wd-dots i { width: 8px; height: 8px; border-radius: 50%; background: #C9D3DE; }
+        .wd-dots i.w { background: #1D7A46; }
+        .wd-dots i.l { background: #B3261E; }
+        .wd-pend { display: inline-block; min-width: 26px; padding: 2px 8px; border-radius: 999px; background: var(--pro-brand-dark); color: #fff; font-weight: 800; font-size: .8rem; text-align: center; }
+        .wd-chip { display: inline-block; margin: 0 6px 6px 0; padding: 5px 10px; border-radius: 10px; background: var(--pro-page); border: 1px solid var(--pro-line); font-size: .82rem; color: var(--pro-ink); }
+        .wd-odds { color: var(--pro-muted); font-weight: 600; }
+        .wd-panel { position: fixed; inset: 0; z-index: 9999; background: rgba(7, 24, 42, .45); display: flex; justify-content: flex-end; }
+        .wd-panel[hidden] { display: none; }
+        body.wd-locked { overflow: hidden; }
+        .wd-sheet { position: relative; width: min(560px, 100%); height: 100%; overflow-y: auto; background: var(--pro-surface); padding: 22px 20px 40px; box-shadow: -8px 0 30px rgba(7, 24, 42, .2); }
+        .wd-close { position: absolute; top: 10px; right: 12px; width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--pro-line); background: var(--pro-page); font-size: 1.3rem; line-height: 1; cursor: pointer; color: var(--pro-ink); }
+        .wd-head h3 { margin: 0 44px 4px 0; font-size: 1.4rem; color: var(--pro-ink); }
+        .wd-head a, .wd-pick a, .wd-full { color: var(--pro-brand); }
+        .wd-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 16px 0 8px; }
+        .wd-stat { background: var(--pro-page); border: 1px solid var(--pro-line); border-radius: 10px; padding: 8px 10px; min-width: 0; }
+        .wd-stat span { display: block; font-size: .7rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--pro-muted); }
+        .wd-stat b { display: block; font-size: 1.02rem; color: var(--pro-ink); overflow-wrap: anywhere; }
+        .wd-sports { margin-bottom: 6px; }
+        .wd-sheet h4 { margin: 18px 0 8px; font-size: .8rem; letter-spacing: .08em; text-transform: uppercase; color: var(--pro-muted); }
+        .wd-pick { border: 1px solid var(--pro-line); border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; }
+        .wd-pick-game { font-size: .78rem; font-weight: 700; letter-spacing: .03em; color: var(--pro-muted); margin-bottom: 2px; }
+        .wd-pick-sel { font-weight: 800; color: var(--pro-ink); margin-bottom: 2px; }
+        .wd-res { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: .72rem; font-weight: 800; text-transform: uppercase; background: var(--pro-page); color: var(--pro-muted); }
+        .wd-res.won { background: #E3F4EA; color: #1D7A46; }
+        .wd-res.lost { background: #FBE7E5; color: #B3261E; }
+        .wd-recent td { padding: 8px 10px; }
+        @media (max-width: 640px) {
+            .wd-table .hide-s { display: none; }
+            .wd-table td, .wd-sort { padding-left: 8px; padding-right: 8px; }
+            .wd-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .wd-sheet { padding: 18px 14px 40px; }
+        }
+
+
+        .pro-buy-note {
+            margin-top: 10px;
+            font-size: .82rem;
+            color: var(--pro-muted);
+            text-align: center;
+        }
+
+        /* ------------------------------------------------------ founding -- */
+        .pro-founding {
+            background: #071A2E;
+            border-radius: 20px;
+            padding: 30px;
+            color: #E7F0FA;
+        }
+
+        .pro-founding h2 {
+            font-family: 'Barlow', sans-serif;
+            font-weight: 800;
+            font-size: clamp(1.5rem, 4vw, 2rem);
+            margin: 0 0 12px;
+            color: #fff;
+        }
+
+        .pro-founding p { color: #C3D5E8; line-height: 1.6; margin: 0 0 18px; max-width: 720px; }
+
+        .pro-founding ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+
+        .pro-founding li {
+            position: relative;
+            padding-left: 20px;
+            color: #D8E6F4;
+            font-size: .95rem;
+            line-height: 1.55;
+        }
+
+        .pro-founding li::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: .55em;
+            width: 8px;
+            height: 8px;
+            border-radius: 2px;
+            background: var(--pro-brand-on-dark);
+        }
+
+        .pro-founding strong { color: #fff; }
+
+        /* ---------------------------------------------------- free layer -- */
+        .pro-free {
+            background: var(--pro-surface);
+            border: 1px solid var(--pro-line);
+            border-radius: 18px;
+            padding: 28px;
+        }
+
+        .pro-free-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+            gap: 10px 24px;
+            margin-top: 18px;
+        }
+
+        /* ----------------------------------------------------------- faq -- */
+        .pro-faq { display: grid; gap: 12px; }
+
+        .pro-faq details {
+            background: var(--pro-surface);
+            border: 1px solid var(--pro-line);
+            border-radius: 14px;
+            padding: 16px 18px;
+        }
+
+        .pro-faq summary {
+            font-weight: 700;
+            color: var(--pro-ink);
+            cursor: pointer;
+            list-style: none;
+        }
+
+        .pro-faq summary::-webkit-details-marker { display: none; }
+
+        .pro-faq summary::after {
+            content: "+";
+            float: right;
+            color: var(--pro-brand);
+            font-weight: 800;
+        }
+
+        .pro-faq details[open] summary::after { content: "\2212"; }
+
+        .pro-faq p {
+            margin: 12px 0 0;
+            color: var(--pro-body);
+            font-size: .95rem;
+            line-height: 1.6;
+        }
+
+        .pro-fineprint {
+            margin-block: 34px 60px;
+            font-size: .85rem;
+            line-height: 1.6;
+            color: var(--pro-muted);
+            border-top: 1px solid var(--pro-line-soft);
+            padding-top: 20px;
+        }
+
+        @media (max-width: 620px) {
+            .pro-hero { padding-block: 36px 28px; }
+            .pro-section { padding-block: 32px; }
+            .pro-split { grid-template-columns: 1fr; }
+            .pro-founding, .pro-free { padding: 22px 18px; }
+        }
+        /* PRO_SALES_V2_20260929: product sections. Watchdog leads as a wide dark
+           panel with a structural preview of a real profile's tabs; the other four
+           products sit in a two column grid. */
+        .px-kicker { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--pro-brand); }
+        .px-ico { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 9px; background: var(--pro-tint); border: 1px solid var(--pro-line); }
+        .px-watch { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 32px; align-items: start; padding: clamp(22px, 3.2vw, 38px); border-radius: 18px; background: linear-gradient(160deg, #07182A, #0B2A4D); color: #DCE8F5; box-shadow: 0 24px 60px -30px rgba(7, 24, 42, .7); margin-bottom: 26px; }
+        .px-watch .px-kicker { color: #F5C542; }
+        .px-watch .px-ico { background: rgba(245, 197, 66, .12); border-color: rgba(245, 197, 66, .4); }
+        .px-watch h3 { margin: 12px 0 10px; font-family: Barlow, Inter, sans-serif; font-size: clamp(26px, 3vw, 36px); line-height: 1.1; color: #fff; text-wrap: balance; }
+        .px-watch p { color: #C3D4E6; line-height: 1.6; margin: 0 0 12px; max-width: 68ch; }
+        .px-watch .px-lead { font-size: 17px; color: #E7F0FA; }
+        .px-cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; margin-top: 18px; }
+        .px-cols h4 { margin: 0 0 10px; font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: #fff; }
+        .px-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+        .px-list li { position: relative; padding-left: 22px; line-height: 1.5; font-size: 14.5px; }
+        .px-list li::before { content: ""; position: absolute; left: 2px; top: .55em; width: 9px; height: 5px; border-left: 2px solid var(--pro-brand); border-bottom: 2px solid var(--pro-brand); transform: rotate(-45deg); }
+        .px-watch .px-list li::before { border-color: #4DA3FF; }
+        .px-watch .px-list.is-pro li::before { border-color: #F5C542; }
+        .px-small { font-size: 13px !important; color: #9FB5CC !important; margin-top: 12px !important; }
+        .px-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; margin-top: 22px; }
+        .px-link { font-weight: 700; color: var(--pro-brand); text-decoration: none; }
+        .px-link::after { content: " \2192"; }
+        .px-watch .px-link { color: #8CC4FF; }
+        .px-watch-shot { border-radius: 14px; background: #0A1F37; border: 1px solid rgba(140, 196, 255, .22); overflow: hidden; font-size: 13px; }
+        .px-shot-bar { display: flex; align-items: center; gap: 6px; padding: 10px 12px; border-bottom: 1px solid rgba(140, 196, 255, .15); color: #9FB5CC; }
+        .px-shot-bar i { width: 9px; height: 9px; border-radius: 50%; background: rgba(140, 196, 255, .3); }
+        .px-shot-bar span { margin-left: 8px; font-weight: 700; }
+        .px-shot-tabs { display: flex; flex-wrap: wrap; gap: 6px; padding: 12px; }
+        .px-shot-tabs b, .px-shot-tabs span { padding: 4px 9px; border-radius: 999px; font-size: 11.5px; border: 1px solid rgba(140, 196, 255, .22); color: #C3D4E6; }
+        .px-shot-tabs b { background: #4DA3FF; border-color: #4DA3FF; color: #07182A; }
+        .px-shot-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; padding: 0 12px 12px; }
+        .px-shot-grid div { padding: 10px; border-radius: 10px; background: rgba(140, 196, 255, .07); }
+        .px-shot-grid small { display: block; color: #9FB5CC; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; }
+        .px-shot-grid strong { color: #fff; font-size: 18px; }
+        .px-shot-rows div { display: flex; justify-content: space-between; gap: 12px; padding: 10px 12px; border-top: 1px solid rgba(140, 196, 255, .12); }
+        .px-shot-rows span { color: #fff; font-weight: 700; }
+        .px-shot-rows em { color: #9FB5CC; font-style: normal; text-align: right; }
+        .px-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+        .px-card { display: flex; flex-direction: column; gap: 10px; padding: 24px; border-radius: 16px; background: var(--pro-surface); border: 1px solid var(--pro-line); min-width: 0; }
+        .px-card h3 { margin: 4px 0 0; font-family: Barlow, Inter, sans-serif; font-size: 22px; color: var(--pro-ink); }
+        .px-card p { margin: 0; color: var(--pro-body); line-height: 1.6; }
+        .px-card .px-list li { color: var(--pro-body); }
+        .px-card .px-link { margin-top: auto; padding-top: 6px; }
+        .px-card-wide { grid-column: 1 / -1; }
+        .px-includes { list-style: none; margin: 0 0 22px; padding: 18px 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px 18px; border-radius: 14px; background: var(--pro-tint); border: 1px solid var(--pro-line); }
+        .px-includes li { position: relative; padding-left: 22px; font-weight: 600; color: var(--pro-ink); }
+        .px-includes li::before { content: ""; position: absolute; left: 2px; top: .45em; width: 9px; height: 5px; border-left: 2px solid var(--pro-brand); border-bottom: 2px solid var(--pro-brand); transform: rotate(-45deg); }
+        .pro-benefits b { color: var(--pro-ink); }
+        .px-explore { display: inline-flex; align-items: center; gap: 10px; margin-top: 6px; min-height: 52px; padding: 0 22px; border-radius: 12px; font-weight: 800; font-size: 16px; text-decoration: none; }
+        .px-cols .px-col-pro { padding: 18px; border-radius: 14px; border: 2px solid #F5C542; background: rgba(245, 197, 66, .08); }
+        .px-cols .px-col-public { padding: 18px; border-radius: 14px; border: 1px solid rgba(140, 196, 255, .25); }
+        .px-tag { display: inline-block; margin-right: 8px; padding: 3px 9px; border-radius: 999px; font-size: 11px; letter-spacing: .08em; }
+        .px-pro-lead { font-size: 16px; font-weight: 600; }
+        /* WATCHDOG_SCALE_20260929: the Watchdog module as a live research database. Always a dark panel,
+           so every text colour is pinned (the light theme recolours generic text). */
+        .wdx { --wx-ink: #FFFFFF; --wx-body: #C3D4E6; --wx-dim: #8FA6BF; --wx-line: rgba(140, 196, 255, .16); --wx-blue: #4DA3FF; --wx-gold: #F5C542; --wx-cell: rgba(140, 196, 255, .06);
+            position: relative; overflow: hidden; padding: clamp(22px, 3.4vw, 44px); border-radius: 20px; margin-bottom: 26px;
+            background: radial-gradient(1200px 420px at 85% -10%, rgba(77, 163, 255, .18), transparent 60%), linear-gradient(165deg, #06142A 0%, #0A2344 55%, #0B2A4D 100%);
+            box-shadow: 0 28px 70px -34px rgba(7, 24, 42, .8), inset 0 0 0 1px rgba(140, 196, 255, .14); color: var(--wx-body); }
+        .wdx::before { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .35;
+            background-image: linear-gradient(rgba(140, 196, 255, .05) 1px, transparent 1px), linear-gradient(90deg, rgba(140, 196, 255, .05) 1px, transparent 1px); background-size: 32px 32px;
+            -webkit-mask-image: linear-gradient(180deg, #000, transparent 55%); mask-image: linear-gradient(180deg, #000, transparent 55%); }
+        .wdx > * { position: relative; }
+        .wdx .px-kicker { color: var(--wx-gold) !important; }
+        .wdx .px-ico { background: rgba(245, 197, 66, .12); border-color: rgba(245, 197, 66, .4); }
+        .wdx-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+        .wdx-live { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; border: 1px solid rgba(61, 220, 132, .35); background: rgba(61, 220, 132, .08); font-size: 12px; font-weight: 700; letter-spacing: .04em; color: #BFF3D6 !important; }
+        .wdx-live i { width: 8px; height: 8px; border-radius: 50%; background: #3DDC84; box-shadow: 0 0 0 0 rgba(61, 220, 132, .6); animation: wdxPulse 2.4s ease-out infinite; }
+        .wdx-live b { font-weight: 600; color: #8FD9B0 !important; margin-left: 2px; }
+        @keyframes wdxPulse { 0% { box-shadow: 0 0 0 0 rgba(61, 220, 132, .55); } 70% { box-shadow: 0 0 0 8px rgba(61, 220, 132, 0); } 100% { box-shadow: 0 0 0 0 rgba(61, 220, 132, 0); } }
+        .wdx h3 { margin: 14px 0 10px; font-family: Barlow, Inter, sans-serif; font-size: clamp(28px, 3.6vw, 44px); line-height: 1.06; letter-spacing: -.01em; color: var(--wx-ink) !important; text-wrap: balance; max-width: 22ch; -webkit-hyphens: manual; hyphens: manual; overflow-wrap: normal; }
+        .wdx-hl { color: var(--wx-gold); font-variant-numeric: tabular-nums; white-space: nowrap; }
+        /* PRO_ATW_LINK_20260930: public records CTA beside the Watchdog description */
+        .wdx-headrow { display: flex; align-items: center; justify-content: space-between; gap: 18px 28px; }
+        .wdx-intro { min-width: 0; flex: 1 1 auto; }
+        .wdx-records { flex: none; display: inline-flex; align-items: center; gap: 10px; padding: 14px 20px; border-radius: 12px; border: 1.5px solid var(--wx-blue); background: rgba(77, 163, 255, .12); color: #FFFFFF !important; font-size: 14px; font-weight: 800; letter-spacing: .06em; text-decoration: none !important; white-space: nowrap; box-shadow: 0 10px 28px -14px rgba(77, 163, 255, .7); transition: background .15s, transform .15s; }
+        .wdx-records span { color: var(--wx-blue) !important; font-size: 18px; line-height: 1; transition: transform .15s; }
+        .wdx-records:hover, .wdx-records:focus-visible { background: rgba(77, 163, 255, .24); transform: translateY(-1px); }
+        .wdx-records:hover span { transform: translateX(3px); }
+        .wdx-records:focus-visible { outline: 2px solid #FFFFFF; outline-offset: 3px; }
+        @media (max-width: 820px) { .wdx-headrow { flex-direction: column; align-items: flex-start; } .wdx-records { white-space: normal; } }
+        .wdx-side { flex: none; display: flex; flex-direction: column; align-items: center; gap: 16px; }
+        .wdx-logo { display: block; width: 300px; height: auto; filter: drop-shadow(0 0 24px rgba(77, 163, 255, .28)); }
+        @media (max-width: 820px) { .wdx-side { align-self: center; } .wdx-logo { width: min(280px, 78vw); } }
+        .wdx-lead { margin: 0; max-width: 62ch; font-size: 17px; line-height: 1.55; color: #DCE8F5 !important; }
+        .wdx-founder { margin-top: 22px; max-width: 62ch; padding: 16px 20px; border-left: 3px solid var(--wx-gold); border-radius: 0 12px 12px 0; background: rgba(245, 197, 66, .07); }
+        .wdx-founder-k { display: block; margin-bottom: 6px; font-size: 12.5px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--wx-gold) !important; }
+        .wdx-founder p { margin: 0; font-size: 16.5px; line-height: 1.6; color: #F2F7FC !important; }
+        .wdx-stats { display: grid; grid-template-columns: 1.35fr 1fr 1fr 1fr; gap: 12px; margin: 26px 0 14px; }
+        .wdx-stat { display: flex; flex-direction: column; gap: 4px; min-width: 0; padding: 18px 18px 16px; border-radius: 14px; background: var(--wx-cell); border: 1px solid var(--wx-line); }
+        .wdx-stat strong { font-family: Barlow, Inter, sans-serif; font-size: clamp(30px, 3.4vw, 42px); line-height: 1; font-weight: 800; color: var(--wx-ink) !important; font-variant-numeric: tabular-nums; min-height: 1em; }
+        .wdx-stat span { font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: #9CC9FF !important; }
+        .wdx-stat small { font-size: 12.5px; color: var(--wx-dim) !important; min-height: 1.2em; }
+        .wdx-stat.is-hero { background: linear-gradient(160deg, rgba(245, 197, 66, .16), rgba(245, 197, 66, .04)); border-color: rgba(245, 197, 66, .45); }
+        .wdx-stat.is-hero strong { font-size: clamp(38px, 4.6vw, 58px); color: var(--wx-gold) !important; }
+        .wdx-stat.is-hero span { color: #FFE6A3 !important; }
+        .wdx-pulse { display: flex; flex-wrap: wrap; gap: 8px 22px; padding: 12px 16px; border-radius: 12px; border: 1px dashed var(--wx-line); font-size: 13.5px; color: var(--wx-body) !important; }
+        .wdx-pulse span { color: var(--wx-body) !important; }
+        .wdx-pulse b { color: var(--wx-ink) !important; font-variant-numeric: tabular-nums; margin-left: 4px; }
+        .wdx-pulse[hidden], .wdx-live[hidden] { display: none; }
+        .wdx-block { margin-top: 34px; padding-top: 28px; border-top: 1px solid var(--wx-line); }
+        .wdx-h { margin: 0 0 6px; font-family: Barlow, Inter, sans-serif; font-size: 22px; letter-spacing: .01em; color: var(--wx-ink) !important; }
+        .wdx-sub { margin: 0 0 16px; max-width: 70ch; line-height: 1.55; color: var(--wx-body) !important; }
+        .wdx-flow { list-style: none; margin: 14px 0 0; padding: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; counter-reset: none; }
+        .wdx-flow li { position: relative; padding: 16px 14px 14px; border-radius: 14px; background: var(--wx-cell); border: 1px solid var(--wx-line); }
+        .wdx-flow li:not(:last-child)::after { content: ""; position: absolute; top: 28px; right: -11px; width: 10px; height: 10px; border-top: 2px solid var(--wx-blue); border-right: 2px solid var(--wx-blue); transform: rotate(45deg); opacity: .8; }
+        .wdx-step { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 8px; background: rgba(77, 163, 255, .16); border: 1px solid rgba(77, 163, 255, .45); font-size: 12px; font-weight: 800; color: #CFE4FF !important; }
+        .wdx-flow b { display: block; margin: 10px 0 4px; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--wx-ink) !important; }
+        .wdx-flow p { margin: 0; font-size: 13.5px; line-height: 1.45; color: var(--wx-body) !important; }
+        .wdx-sources { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+        .wdx-src { display: flex; flex-direction: column; gap: 10px; min-width: 0; padding: 16px; border-radius: 14px; background: var(--wx-cell); border: 1px solid var(--wx-line); }
+        .wdx-src-h { display: flex; align-items: center; gap: 12px; min-width: 0; }
+        .wdx-src-h b { display: block; font-size: 16px; color: var(--wx-ink) !important; }
+        .wdx-src-h em { display: block; font-style: normal; font-size: 12px; color: var(--wx-dim) !important; }
+        .wdx-mono { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 10px; font-size: 13px; font-weight: 800; letter-spacing: .02em; color: #fff !important; background: #1C3E66; border: 1px solid rgba(255, 255, 255, .12); }
+        .wdx-src.is-reddit .wdx-mono { background: #C2410C; }
+        .wdx-src.is-covers .wdx-mono { background: #0F5C3A; }
+        .wdx-src.is-x .wdx-mono { background: #000; }
+        .wdx-src.is-therx .wdx-mono { background: #7A1F2B; }
+        .wdx-src.is-sbr .wdx-mono { background: #1D4ED8; }
+        .wdx-src.is-predictem .wdx-mono { background: #5B3A8C; }
+        .wdx-src-n { font-family: Barlow, Inter, sans-serif; font-size: 32px; line-height: 1; font-weight: 800; color: var(--wx-ink) !important; font-variant-numeric: tabular-nums; }
+        .wdx-src-n small { margin-left: 6px; font-family: Inter, sans-serif; font-size: 12px; font-weight: 600; color: var(--wx-dim) !important; }
+        .wdx-bar { display: block; height: 4px; border-radius: 4px; background: rgba(140, 196, 255, .12); overflow: hidden; }
+        .wdx-bar i { display: block; height: 100%; border-radius: 4px; background: linear-gradient(90deg, #4DA3FF, #8CC4FF); }
+        .wdx-src dl { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 0; }
+        .wdx-src dl div { display: flex; align-items: baseline; gap: 5px; }
+        .wdx-src dt { font-weight: 800; font-size: 13.5px; color: var(--wx-ink) !important; font-variant-numeric: tabular-nums; }
+        .wdx-src dd { margin: 0; font-size: 12.5px; color: var(--wx-dim) !important; }
+        .wdx-note { margin: 14px 0 0; font-size: 13px; line-height: 1.55; color: var(--wx-dim) !important; }
+        .wdx-note b { color: #CFE4FF !important; font-variant-numeric: tabular-nums; }
+        .wdx-depth { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 28px; align-items: start; }
+        .wdx-groups { display: grid; gap: 14px; }
+        .wdx-groups h5 { margin: 0 0 8px; font-size: 11.5px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: #9CC9FF !important; }
+        .wdx-chips { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 7px; }
+        .wdx-chips li { padding: 6px 11px; border-radius: 999px; font-size: 13px; line-height: 1.2; color: #DCE8F5 !important; background: rgba(140, 196, 255, .08); border: 1px solid var(--wx-line); }
+        .wdx-chips li.is-pro { color: #1A1400 !important; background: var(--wx-gold); border-color: var(--wx-gold); font-weight: 700; }
+        .wdx .px-watch-shot { margin-top: 6px; }
+        .wdx .px-cols { margin-top: 0; }
+        .wdx .px-list li { color: #C9D8E8 !important; }
+        .wdx .px-list li::before { border-color: #4DA3FF; }
+        .wdx .px-list.is-pro li::before { border-color: #F5C542; }
+        .wdx h4 { margin: 0 0 12px; font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: #fff !important; }
+        .wdx .px-tag { background: rgba(140, 196, 255, .18); color: #CFE4FF !important; }
+        .wdx .px-tag.is-pro { background: #F5C542; color: #1A1400 !important; }
+        .wdx .px-pro-lead { margin: 0 0 12px; color: #fff !important; }
+        .wdx .px-small { font-size: 13px !important; color: #9FB5CC !important; margin: 12px 0 0 !important; }
+        .wdx .px-explore { margin-top: 16px; background: #FFFFFF; color: #07182A !important; box-shadow: 0 10px 26px -12px rgba(77, 163, 255, .8); }
+        .wdx .px-link { color: #8CC4FF !important; }
+        .wdx .pro-cta { margin-top: 0; background: #F5C542 !important; border-color: #F5C542 !important; color: #1A1400 !important; }
+        .wdx .px-actions { margin-top: 16px; }
+        @media (prefers-reduced-motion: reduce) { .wdx-live i { animation: none; } }
+        @media (max-width: 1000px) {
+            .wdx-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .wdx-flow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .wdx-flow li::after { display: none; }
+            .wdx-flow li:last-child { grid-column: 1 / -1; }
+            .wdx-sources { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .wdx-depth { grid-template-columns: minmax(0, 1fr); }
+        }
+        @media (max-width: 560px) {
+            .wdx { border-radius: 16px; }
+            .wdx-stats { gap: 10px; }
+            .wdx-stat { padding: 14px; }
+            .wdx-stat.is-hero { grid-column: 1 / -1; }
+            .wdx-flow, .wdx-sources { grid-template-columns: minmax(0, 1fr); }
+            .wdx-pulse { flex-direction: column; gap: 6px; }
+        }
+        /* PRO_DASHBOARD_20260929 */
+        .pd { text-align: left; margin-top: 18px; padding: clamp(18px, 3vw, 28px); border-radius: 18px; background: var(--pro-surface); border: 1px solid var(--pro-line); box-shadow: 0 18px 44px -28px rgba(7, 24, 42, .45); }
+        .pd-anchor { display: block; position: relative; top: -90px; }
+        .pd-kicker { display: inline-block; font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--pro-brand); }
+        .pd-head h2 { margin: 6px 0 6px; font-family: Barlow, Inter, sans-serif; font-size: clamp(26px, 3vw, 34px); color: var(--pro-ink); }
+        .pd-head p { margin: 0 0 14px; color: var(--pro-body); }
+        .pd-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+        .pd-card { display: flex; flex-direction: column; gap: 6px; padding: 18px; border-radius: 14px; border: 1px solid var(--pro-line); background: var(--pro-page); text-decoration: none; color: var(--pro-ink); min-width: 0; transition: transform .12s ease, box-shadow .12s ease; }
+        .pd-card:hover { transform: translateY(-2px); box-shadow: 0 12px 26px -16px rgba(11, 79, 168, .6); }
+        .pd-card strong { font-size: 18px; color: var(--pro-ink); }
+        .pd-card strong::after { content: " \2192"; }
+        .pd-card-k { font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--pro-brand); }
+        .pd-card-d { font-size: 14px; color: var(--pro-body); line-height: 1.45; }
+        .pd-card-lead { grid-column: span 2; background: linear-gradient(160deg, #07182A, #0B2A4D); border-color: #0B2A4D; }
+        .pd-onboard { margin: 0 0 16px; padding: 14px 18px 14px 36px; border-radius: 12px; background: var(--pro-tint); border: 1px solid var(--pro-line); display: grid; gap: 6px; color: var(--pro-body); }
+        .pd-onboard-x { list-style: none; margin-left: -18px; }
+        .pd-onboard-x button { margin-top: 6px; min-height: 40px; padding: 0 16px; border-radius: 10px; border: 1px solid var(--pro-brand); background: var(--pro-brand); color: #fff; font-weight: 700; cursor: pointer; }
+        .wd-split { font-size: 15px; }
+        .wd-net { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+        .wd-net span { display: inline-flex; align-items: baseline; gap: 6px; padding: 8px 12px; border-radius: 10px; background: var(--pro-surface); border: 1px solid var(--pro-line); font-size: 13px; color: var(--pro-body); }
+        .wd-net b { font-size: 15px; color: var(--pro-ink); font-variant-numeric: tabular-nums; }
+        .wd-empty { padding: 22px; border-radius: 14px; background: var(--pro-surface); border: 1px solid var(--pro-line); }
+        .wd-empty h3 { margin: 0 0 8px; font-size: 19px; color: var(--pro-ink); }
+        .wd-empty p { margin: 0 0 12px; color: var(--pro-body); }
+        body.is-pro-member .pro-eyebrow, body.is-pro-member .pro-hero h1, body.is-pro-member .pro-lede,
+        body.is-pro-member .pro-benefits, body.is-pro-member .pro-hero-price, body.is-pro-member #proHeroCta,
+        body.is-pro-member #tools, body.is-pro-member #pricing, body.is-pro-member #free { display: none !important; }
+        body.is-pro-member .pro-hero { padding-top: 18px; }
+        @media (max-width: 760px) {
+            .pd-grid { grid-template-columns: minmax(0, 1fr); }
+            .pd-card-lead { grid-column: auto; }
+        }
+        @media (max-width: 900px) {
+            .px-watch { grid-template-columns: minmax(0, 1fr); }
+            .px-grid { grid-template-columns: minmax(0, 1fr); }
+        }
+        @media (max-width: 600px) {
+            .px-cols { grid-template-columns: minmax(0, 1fr); }
+            .px-card { padding: 18px; }
+        }
+    </style>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-V5MCVXS2HE"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-V5MCVXS2HE');
+    </script>
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Home", "item": "https://trustmyrecord.com/"}, {"@type": "ListItem", "position": 2, "name": "TMR Pro", "item": "https://trustmyrecord.com/premium/"}]}
+</script>
+<link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=282f1f70cb51">
+<script defer src="/static/js/tmr-linkhub.js?v=7be5e93e0626"></script>
+<link rel="stylesheet" href="/static/css/tmr-ds.d4d41a955166.css">
+<link rel="stylesheet" href="/static/css/tmr-ds-header.cc364e352e74.css">
+<link rel="stylesheet" href="/static/css/tmr-light.css?v=21433b023833">
+<!-- The one approved navbar: the shared header component (tmr-ds-nav.js)
+     plus the homepage's own navbar rules, so every page renders the same bar. -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap">
+<link rel="stylesheet" href="/static/css/tmr-navbar.css?v=68ec3081d29a">
+<style>
+/* PRO_BOARD_PAGE_20261024 (Nima): the Watchdog board lives here, for TMR Pro members only; the
+   /premium/ sales page never shows a pick. The API returns the board to Pro and admin only. */
+.pro-board-page .pro-hero, .pro-board-page main > section:not(#board), .pro-board-page .pd-recap { display: none !important; }
+.pro-board-page main { padding-top: 24px; }
+</style>
+</head>
+<body class="tmr-site-shell tmr-ds-shell tmr-light pro-page pro-board-page">
+    <!-- Sitewide global nav is injected by tmr-sitewide.js -->
+
+    <!-- A div, not a header: tmr-ds-nav hides every legacy <header> on the page,
+         which blanked this hero (the H1 and the account panel) in production. -->
+    <div class="pro-hero">
+        <div class="pxh-bg" aria-hidden="true"><i class="pxh-light l1"></i><i class="pxh-light l2"></i><i class="pxh-light l3"></i></div>
+        <div class="pro-wrap">
+            <div class="pxh-grid">
+                <div class="pxh-copy">
+                    <span class="pro-eyebrow">The TrustMyRecord research membership</span>
+                    <h1>TMR Pro <span class="pxh-h1-sub">Run every simulator without limits, then see what verified handicappers are betting <em>before the game starts.</em></span></h1>
+                    <p class="pro-lede">
+                        Run any MLB, NFL, NBA or NHL game as often as you like. Then check the Handicapper
+                        Watchdog: thousands of outside handicappers graded on the final score, and the picks
+                        they post before games start. Bet Legend Pro, TrendSpotter money figures and 15 tracked
+                        models included. Research tools and verified records, not a promise of profit.
+                    </p>
+                    <ul class="pro-benefits">
+                        <li><b>Unlimited simulators</b> for every MLB, NFL, NBA and NHL game, season and playoff race</li>
+                        <li><b>Full Handicapper Watchdog board:</b> pending picks before kickoff from graded handicappers on Covers, X, Reddit and more</li>
+                        <li><b>Bet Legend Pro included</b>, sold on its own for $49 a month</li>
+                        <li><b>TrendSpotter money view:</b> units, ROI and the average price behind every trend</li>
+                        <li><b>Model Builder:</b> track 15 betting models instead of 2</li>
+                    </ul>
+                    <div class="pxh-actions">
+                        <a class="pro-cta" id="proHeroCta" href="#pricing">Get TMR Pro</a>
+                        <a class="pxh-ghost" href="#board">See today's board <span aria-hidden="true">&rarr;</span></a>
+                    </div>
+                    <p class="pro-hero-price"><b>$49.99 a month</b> or <b>$500 a year</b> <span class="pro-save">Save $99.88</span></p>
+                </div>
+                <aside class="pxh-panel" id="pxhPanel" aria-label="Handicapper Watchdog live numbers">
+                    <div class="pxh-panel-k"><span class="pxh-dot" aria-hidden="true"></span>Handicapper Watchdog &middot; live</div>
+                    <div class="pxh-stat pxh-stat-big"><strong data-pxh="accounts">&nbsp;</strong><span>handicapper accounts tracked</span></div>
+                    <div class="pxh-stat-row">
+                        <div class="pxh-stat"><strong data-pxh="graded_picks">&nbsp;</strong><span>picks graded</span></div>
+                        <div class="pxh-stat"><strong data-pxh="pending_picks">&nbsp;</strong><span>pending picks right now</span></div>
+                    </div>
+                    <div class="pxh-stat-row">
+                        <div class="pxh-stat"><strong>24/7</strong><span>monitored in the cloud</span></div>
+                        <div class="pxh-stat"><strong data-pxh="platforms">&nbsp;</strong><span>sources watched</span></div>
+                    </div>
+                    <p class="pxh-panel-foot">Updated <b data-pxh-ago="last_capture_at">&hellip;</b> Every number is read live from the Watchdog database.</p>
+                </aside>
+            </div>
+
+            <div class="pro-status" id="proStatus" aria-live="polite">
+                <span class="pro-chip" id="proStatusChip">Free account</span>
+                <span id="proStatusText"></span>
+                <button type="button" class="pro-manage" id="proManage" hidden>Manage subscription</button>
+                <button type="button" class="pro-manage pro-cancel" id="proCancel" hidden>Cancel subscription</button>
+                <button type="button" class="pro-manage" id="proResume" hidden>Resume TMR Pro</button>
+            </div>
+            <!-- PRO_CANCEL_REASON_REQUIRED_20261023: a reason and a written answer before the cancel goes through. -->
+            <dialog class="pro-cancel-dialog" id="proCancelDialog" aria-labelledby="pcdTitle">
+                <form id="proCancelForm" method="dialog" novalidate>
+                    <h2 id="pcdTitle">Before you cancel</h2>
+                    <p>Tell us why so we can fix it. You keep TMR Pro until the end of the period you already paid for, and you will not be charged again.</p>
+                    <fieldset>
+                        <legend>Main reason (required)</legend>
+                        <label class="pcd-opt"><input type="radio" name="reason" value="too_expensive" required> It costs too much</label>
+                        <label class="pcd-opt"><input type="radio" name="reason" value="unused"> I did not use it enough</label>
+                        <label class="pcd-opt"><input type="radio" name="reason" value="missing_features"> It is missing something I need</label>
+                        <label class="pcd-opt"><input type="radio" name="reason" value="low_quality"> The picks or tools were not good enough</label>
+                        <label class="pcd-opt"><input type="radio" name="reason" value="too_complex"> It was hard to use</label>
+                        <label class="pcd-opt"><input type="radio" name="reason" value="switched_service"> I switched to another service</label>
+                        <label class="pcd-opt"><input type="radio" name="reason" value="customer_service"> Support did not help me</label>
+                        <label class="pcd-opt"><input type="radio" name="reason" value="other"> Something else</label>
+                    </fieldset>
+                    <label class="pcd-label" for="pcdComment">In a sentence, what would have made you stay? (required)</label>
+                    <textarea id="pcdComment" name="comment" maxlength="2000" required></textarea>
+                    <p class="pcd-err" id="pcdErr" role="alert"></p>
+                    <div class="pcd-actions">
+                        <button type="button" class="pcd-keep" id="pcdKeep">Keep TMR Pro</button>
+                        <button type="submit" id="pcdSubmit" disabled>Cancel subscription</button>
+                    </div>
+                </form>
+            </dialog>
+            <div class="pro-banner" id="proBanner" role="status" hidden></div>
+            <div class="pro-welcome pd" id="proWelcome" hidden>
+                <span id="dashboard" class="pd-anchor"></span>
+                <div class="pd-head">
+                    <span class="pd-kicker">TMR Pro Dashboard</span>
+                    <h2 id="proWelcomeTitle">Your TMR Pro</h2>
+                    <p id="proWelcomeText">Everything in TMR Pro is unlocked on your account. Open any tool below.</p>
+                </div>
+                <ol class="pd-onboard" id="pdOnboard" hidden>
+                    <li data-k="watchdog"><a href="#board"><b>Open the Watchdog</b></a> to see the pending picks outside handicappers have posted for upcoming games.</li>
+                    <li data-k="blp"><a href="/betlegend-pro/app/"><b>Use Bet Legend Pro</b></a> for deep historical matchup and situation research.</li>
+                    <li data-k="sims"><a href="/sports-simulators/"><b>Run the simulators</b></a> as often as you like. There is no daily limit on your account.</li>
+                    <li data-k="trends"><a href="/trendspotter/"><b>Open TrendSpotter</b></a> to see the units, ROI and prices behind any trend.</li>
+                    <li data-k="models"><a href="/model-builder/"><b>Build models</b></a> in Model Builder and track up to 15 at once.</li>
+                    <li class="pd-onboard-x"><button type="button" id="pdOnboardDone">Got it</button></li>
+                </ol>
+                <!-- SIM_RECAP_20261017: the member's own simulations from yesterday next to the final scores.
+                     Hidden unless /api/sim-archive/mine/recap answers with at least one game. -->
+                <section class="pd-recap" id="pdRecap" hidden>
+                    <h3>Your simulations from yesterday</h3>
+                    <ul class="pd-recap-list" id="pdRecapList"></ul>
+                    <p class="pd-recap-note" id="pdRecapNote"></p>
+                </section>
+                <div class="pd-grid">
+                    <a class="pd-card pd-card-lead" href="#board">
+                        <span class="pd-card-k">Handicapper Watchdog</span>
+                        <strong>Open Handicapper Watchdog</strong>
+                        <span class="pd-card-d">Pending picks from tracked outside handicappers, each beside that handicapper's record, units and streak.</span>
+                    </a>
+                    <a class="pd-card" href="/betlegend-pro/app/">
+                        <span class="pd-card-k">Bet Legend Pro</span>
+                        <strong>Open Bet Legend Pro</strong>
+                        <span class="pd-card-d">Search every comparable game already played, with the games behind each answer.</span>
+                    </a>
+                    <a class="pd-card" href="/sports-simulators/">
+                        <span class="pd-card-k">Unlimited simulators</span>
+                        <strong>Run simulators</strong>
+                        <span class="pd-card-d">MLB, NFL, NBA and NHL game, season and playoff simulators, no daily limit.</span>
+                    </a>
+                    <a class="pd-card" href="/trendspotter/">
+                        <span class="pd-card-k">TrendSpotter</span>
+                        <strong>Open TrendSpotter</strong>
+                        <span class="pd-card-d">Units won or lost, ROI and the average price behind every trend.</span>
+                    </a>
+                    <a class="pd-card" href="/model-builder/">
+                        <span class="pd-card-k">Model Builder</span>
+                        <strong>Open Model Builder</strong>
+                        <span class="pd-card-d">Define the bets you believe in and track up to 15 models forward.</span>
+                    </a>
+                    <a class="pd-card pd-card-dir" href="/around-the-web/">
+                        <span class="pd-card-k">Directory</span>
+                        <strong>Handicappers Around the Web</strong>
+                        <span class="pd-card-d">Browse every tracked handicapper's full record and history.</span>
+                    </a>
+                </div>
+            </div>
+            <p class="pro-note">
+                Research tools describe what has already happened. They do not predict results
+                and nothing here is a claim about your future returns.
+            </p>
+        </div>
+    </div>
+
+    <main>
+        <!-- ================================================= the products -->
+        <section class="pro-section" id="tools">
+            <div class="pro-wrap">
+                <div class="pro-section-head">
+                    <span class="pxs-k">What you get</span>
+                    <h2>Five research tools. One membership.</h2>
+                    <p>
+                        Unlimited simulations, verified handicapper records, what they are betting right
+                        now, and the historical evidence to check any angle yourself. TMR Pro is the research desk that sits on
+                        top of TrustMyRecord.
+                    </p>
+                </div>
+
+                <!-- WATCHDOG_SCALE_20260929: every number in this module is read live from the Watchdog ledger
+                     (GET /api/pro/watchdog/stats, which proxies the Watchdog's own /api/stats). No number is typed
+                     into this page; if the call fails the numbers stay blank and the copy still reads correctly.
+                     Profile features and the Public / Pro split were checked against the live profile tabs,
+                     the Around the Web directory and the /api/pro endpoints on 2026-09-29. -->
+                <article class="wdx" id="watchdog" aria-labelledby="wdxTitle">
+                    <header class="wdx-head">
+                        <div class="wdx-top">
+                            <div class="px-kicker"><span class="px-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/><path d="M8 11l2 2 4-4"/></svg></span>Handicapper Watchdog</div>
+                            <span class="wdx-live" id="wdxLive" hidden><i aria-hidden="true"></i>Live database<b id="wdxUpdated"></b></span>
+                        </div>
+                        <!-- PRO_ATW_LINK_20260930: public records CTA to the right of the Watchdog description -->
+                        <div class="wdx-headrow">
+                            <div class="wdx-intro">
+                                <h3 id="wdxTitle">Research the tracked handicappers of the betting web</h3>
+                                <p class="wdx-lead">A searchable research database, not a directory. Every account is watched around the clock, every qualifying pick is graded on the final score, and every record rebuilds itself.</p>
+                                <div class="wdx-founder">
+                                    <span class="wdx-founder-k">Built by a bettor, for bettors</span>
+                                    <p>TrustMyRecord was established by a lifelong sports bettor who is passionate about launching a unified war against the sportsbooks. He understands the importance of informed decisions, verified claims and accurate statistics. This website is dedicated to people who bet sports and want to make the best decisions they possibly can.</p>
+                                </div>
+                            </div>
+                            <div class="wdx-side">
+                                <img class="wdx-logo" src="/static/media/handicapper-watchdog-logo.webp" width="560" height="528" alt="Handicapper Watchdog logo" decoding="async">
+                                <a class="wdx-records" href="/around-the-web/">VIEW ALL HANDICAPPER RECORDS <span aria-hidden="true">&rarr;</span></a>
+                            </div>
+                        </div>
+                    </header>
+
+                    <div class="wdx-stats" role="list">
+                        <div class="wdx-stat is-hero" role="listitem"><strong data-wdx="accounts">&nbsp;</strong><span>Tracked handicapper accounts</span><small data-wdx-sub="with_record"></small></div>
+                        <div class="wdx-stat" role="listitem"><strong data-wdx="platforms">&nbsp;</strong><span>Sources</span><small data-wdx-sub="communities"></small></div>
+                        <div class="wdx-stat" role="listitem"><strong>24/7</strong><span>Automated monitoring</span><small>Cloud harvester, no manual entry</small></div>
+                        <div class="wdx-stat" role="listitem"><strong data-wdx="graded_picks">&nbsp;</strong><span>Graded picks tracked</span><small data-wdx-sub="posts_captured"></small></div>
+                    </div>
+
+                    <div class="wdx-pulse" id="wdxPulse" hidden>
+                        <span>Last database update <b data-wdx-ago="last_capture_at"></b></span>
+                        <span>Handicappers discovered today <b data-wdx="new_accounts_today"></b></span>
+                        <span>New picks captured today <b data-wdx="picks_captured_today"></b></span>
+                        <span>Pending picks right now <b data-wdx="pending_picks"></b></span>
+                    </div>
+
+                    <section class="wdx-block" aria-labelledby="wdxFlowH">
+                        <h4 class="wdx-h" id="wdxFlowH">How the Watchdog works</h4>
+                        <ol class="wdx-flow">
+                            <li><span class="wdx-step">1</span><b>Discover</b><p>New public handicappers are found as they start posting.</p></li>
+                            <li><span class="wdx-step">2</span><b>Collect</b><p>Their publicly posted qualifying picks are captured, with the original post.</p></li>
+                            <li><span class="wdx-step">3</span><b>Grade</b><p>Completed picks are graded against the final score.</p></li>
+                            <li><span class="wdx-step">4</span><b>Build history</b><p>Record, units, ROI, streaks and splits update automatically.</p></li>
+                            <li><span class="wdx-step">5</span><b>Monitor</b><p>New pending picks keep arriving as they are posted.</p></li>
+                        </ol>
+                    </section>
+
+                    <section class="wdx-block" aria-labelledby="wdxSrcH">
+                        <div class="wdx-row">
+                            <div>
+                                <h4 class="wdx-h" id="wdxSrcH">Tracking the betting web</h4>
+                                <p class="wdx-sub">Betting forums, social platforms and betting communities, monitored continuously. Numbers are live from the Watchdog database.</p>
+                            </div>
+                        </div>
+                        <div class="wdx-sources" id="wdxSources">
+                            <div class="wdx-src"><div class="wdx-src-h"><span class="wdx-mono">RD</span><div><b>Reddit</b><em>Betting communities</em></div></div></div>
+                            <div class="wdx-src"><div class="wdx-src-h"><span class="wdx-mono">CV</span><div><b>Covers</b><em>Betting forum</em></div></div></div>
+                            <div class="wdx-src"><div class="wdx-src-h"><span class="wdx-mono">X</span><div><b>X</b><em>Social platform</em></div></div></div>
+                            <div class="wdx-src"><div class="wdx-src-h"><span class="wdx-mono">RX</span><div><b>TheRX</b><em>Betting forum</em></div></div></div>
+                            <div class="wdx-src"><div class="wdx-src-h"><span class="wdx-mono">SB</span><div><b>Sportsbook Review</b><em>Betting forum</em></div></div></div>
+                            <div class="wdx-src"><div class="wdx-src-h"><span class="wdx-mono">PE</span><div><b>Predictem</b><em>Betting forum</em></div></div></div>
+                        </div>
+                        <p class="wdx-note" id="wdxNote">Each account is one handle on one site. Accounts are never merged across sites without verified proof, so the numbers by source add up exactly to the total. TrustMyRecord member picks are never part of the Watchdog.</p>
+                    </section>
+
+                    <section class="wdx-block wdx-depth" aria-labelledby="wdxDepthH">
+                        <div class="wdx-depth-copy">
+                            <h4 class="wdx-h" id="wdxDepthH">Inside every profile</h4>
+                            <p class="wdx-sub">Not a list of names and records. Every number opens the individual picks behind it.</p>
+                            <div class="wdx-groups">
+                                <div><h5>Results</h5><ul class="wdx-chips"><li>Overall record</li><li>Units won and lost</li><li>ROI</li><li>Win rate</li><li>Current and longest streaks</li><li>Recent form</li><li>Running units</li><li>Max drawdown</li></ul></div>
+                                <div><h5>Splits</h5><ul class="wdx-chips"><li>Sport</li><li>League, conference and division</li><li>Moneyline, spread and total</li><li>Favorites and underdogs</li><li>Odds ranges</li><li>Overs and unders</li><li>Home and away</li><li>Backing and fading each team</li><li>Season, month and day</li></ul></div>
+                                <div><h5>Evidence</h5><ul class="wdx-chips"><li>Complete pick history</li><li>Picks behind every number</li><li>Link to the original post</li><li>Closing line value</li><li>Historical trends</li><li class="is-pro">Pending picks with TMR Pro</li></ul></div>
+                            </div>
+                        </div>
+                        <div class="px-watch-shot" aria-hidden="true">
+                            <div class="px-shot-bar"><i></i><i></i><i></i><span>Handicapper profile</span></div>
+                            <div class="px-shot-tabs"><b>Overview</b><span>Pick History</span><span>Sports</span><span>Markets &amp; Odds</span><span>Teams</span><span>Advanced</span><span>Trends</span></div>
+                            <div class="px-shot-grid">
+                                <div><small>Record</small><strong>W L P</strong></div>
+                                <div><small>Units</small><strong>+u</strong></div>
+                                <div><small>ROI</small><strong>%</strong></div>
+                                <div><small>Streak</small><strong>W / L</strong></div>
+                            </div>
+                            <div class="px-shot-rows">
+                                <div><span>By market</span><em>moneyline, spread, total</em></div>
+                                <div><span>By price</span><em>favorites, underdogs, odds ranges</em></div>
+                                <div><span>Teams</span><em>backed, faded, home, away</em></div>
+                                <div><span>Every number</span><em>opens the picks behind it</em></div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="wdx-block" aria-label="Public and TMR Pro access">
+                        <div class="px-cols wdx-access">
+                            <div class="px-col-public">
+                                <h4><span class="px-tag">Public</span> Free for everyone</h4>
+                                <ul class="px-list">
+                                    <li>Search the handicapper database by name, sport and graded picks</li>
+                                    <li>Full historical profiles: record, units, ROI, win rate, streaks and recent form</li>
+                                    <li>Complete graded pick histories with odds, result and running units</li>
+                                    <li>Every graded pick linked to the original post</li>
+                                    <li>Breakdowns by sport, season, market, price, home and away, and team</li>
+                                </ul>
+                                <a class="px-explore" href="/around-the-web/">Explore Handicappers Around the Web <span aria-hidden="true">&rarr;</span></a>
+                            </div>
+                            <div class="px-col-pro">
+                                <h4><span class="px-tag is-pro">TMR Pro</span> The pending picks</h4>
+                                <p class="px-pro-lead">See the pending picks these tracked handicappers post before their games start, as they are collected.</p>
+                                <ul class="px-list is-pro">
+                                    <li>Every collected pregame pick in one board: matchup, market, selection, odds and units where posted</li>
+                                    <li>Each pick beside that handicapper's record, units, ROI, streak and last 10</li>
+                                    <li>Updated as new picks are collected, only for games that have not started</li>
+                                    <li>A link to the original post where one is available</li>
+                                    <li>Sort and filter by record, streak, ROI, league and source, and see where the proven handicappers agree</li>
+                                </ul>
+                                <div class="px-actions">
+                                    <a class="pro-cta" href="#pricing">Get TMR Pro</a>
+                                    <a class="px-link" href="#board">See today's pending board</a>
+                                </div>
+                                <p class="px-small">Not every handicapper posts every day. The board shows the pending picks that have been posted and collected so far.</p>
+                            </div>
+                        </div>
+                    </section>
+                </article>
+
+                <div class="px-grid">
+                    <article class="px-card">
+                        <div class="px-kicker"><span class="px-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></span>Unlimited simulators</div>
+                        <h3>Every simulator, no daily limit</h3>
+                        <p>
+                            Free members get one free run a day on each simulator. TMR Pro removes the
+                            limit and the TMR Coin cost on every MLB, NFL, NBA and NHL game, season and
+                            playoff simulator.
+                        </p>
+                        <ul class="px-list">
+                            <li>Projected score, win probability and a full box score with named players</li>
+                            <li>Set the simulation count and read the whole distribution, not one result</li>
+                            <li>MLB: starting pitchers, run distribution, strikeouts, walks, home runs, bullpen use</li>
+                            <li>NFL: margin distribution, passing, rushing, receiving and kicking</li>
+                            <li>NBA: quarter scoring, shot profile, rebounds, fouls, overtime</li>
+                            <li>NHL: starting goalies, period scoring, shots, power plays, saves</li>
+                            <li>Season and playoff simulators for division, seed and title odds</li>
+                        </ul>
+                        <a class="px-link" href="/sports-simulators/">See the simulators</a>
+                    </article>
+
+                    <article class="px-card">
+                        <div class="px-kicker"><span class="px-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg></span>Bet Legend Pro</div>
+                        <h3>Historical betting research engine</h3>
+                        <p>
+                            Pick a matchup and search every comparable game already played: MLB from
+                            2000, NBA from 2007, NFL from 1966 and NHL from 2003. Sold on its own for
+                            $49 a month, included in full with TMR Pro.
+                        </p>
+                        <ul class="px-list">
+                            <li>Filter by teams, venue, date range and dozens of situations: rest, streaks, previous result, day or night, day of week, price and more</li>
+                            <li>Straight up, against the spread and over/under records, plus head to head history</li>
+                            <li>The qualifying games themselves: date, final score, margin, the favorite, the closing total and moneyline, and why each one qualified</li>
+                            <li>Ask BetLegend: type a question and get a written research report</li>
+                            <li>Team trends, a bankroll simulator and a library of everything you have run</li>
+                        </ul>
+                        <a class="px-link" href="/betlegend-pro/">About Bet Legend Pro</a>
+                    </article>
+
+                    <article class="px-card">
+                        <div class="px-kicker"><span class="px-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="M17 6H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>TrendSpotter</div>
+                        <h3>The money behind every trend</h3>
+                        <p>
+                            Pick a team, a market and a situation and TrendSpotter searches completed
+                            games for the record. Everyone sees what happened. TMR Pro shows what it
+                            was worth.
+                        </p>
+                        <div class="pro-split">
+                            <div class="pro-split-col">
+                                <h4>Free</h4>
+                                <ul class="pro-list">
+                                    <li>Record and win rate</li>
+                                    <li>Sample size and date range</li>
+                                    <li>Season splits</li>
+                                    <li>The qualifying games</li>
+                                </ul>
+                            </div>
+                            <div class="pro-split-col is-pro">
+                                <h4>TMR Pro</h4>
+                                <ul class="pro-list">
+                                    <li>Units won or lost</li>
+                                    <li>ROI</li>
+                                    <li>Average price paid</li>
+                                    <li>Market implied win rate</li>
+                                    <li>Profitability chart</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <a class="px-link" href="/trendspotter/">Open TrendSpotter</a>
+                    </article>
+
+                    <article class="px-card">
+                        <div class="px-kicker"><span class="px-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 17.5h7M17.5 14v7"/></svg></span>Model Builder</div>
+                        <h3>Track your own betting models</h3>
+                        <p>
+                            Describe the kind of bet you believe in and TrustMyRecord watches for it.
+                            Track up to 15 models at once with TMR Pro, against 2 on a free account.
+                        </p>
+                        <ul class="px-list">
+                            <li>Conditions on sport, market, side, home or away, price range and line range</li>
+                            <li>Build on handicapper picks or on game results</li>
+                            <li>Optional check of how those exact conditions did in the graded history</li>
+                            <li>Every future match logged at the posted price and graded on the final score</li>
+                            <li>Record, win rate, units, ROI, pending and settled, with every tracked wager listed</li>
+                        </ul>
+                        <a class="px-link" href="/model-builder/">Open Model Builder</a>
+                    </article>
+
+                    <article class="px-card px-card-wide">
+                        <div class="px-kicker"><span class="px-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h10M4 18h6"/><circle cx="18" cy="16" r="3"/><path d="M20.2 18.2L22 20"/></svg></span>Research you can check</div>
+                        <h3>Every number opens the evidence behind it</h3>
+                        <p>
+                            Across the suite, a statistic is never the end of the answer. Records on
+                            Watchdog profiles open to the graded picks behind them. TrendSpotter and
+                            Bet Legend Pro list the qualifying games. Model Builder lists every wager it
+                            tracked. You can check any figure yourself instead of taking it on trust.
+                        </p>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================ the pending board -->
+        <section class="pro-section" id="board">
+            <div class="pro-wrap">
+                <div class="pro-section-head">
+                    <span class="pxs-k">Today</span>
+                    <h2>The Watchdog board</h2>
+                    <p>
+                        Handicapper Watchdog continuously monitors supported outside handicapping
+                        sources, discovers new accounts, collects qualifying pregame picks, grades
+                        completed picks and updates records automatically. It runs around the clock
+                        in the cloud, and new handicappers are added as they are discovered.
+                        TrustMyRecord members are never included.
+                    </p>
+                    <p class="wd-split"><b>Public:</b> every tracked handicapper's record and history on
+                        <a href="/around-the-web/">Handicappers Around the Web</a>.
+                        <b>TMR Pro:</b> the pending picks below, before the games start.</p>
+                    <div class="wd-net" id="wdNet" hidden></div>
+                </div>
+                <div id="proBoard">
+                    <div class="pro-teaser" id="proBoardTeaser">Loading today's board.</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================================================== the pricing -->
+        <!-- PRO_PERFORMANCE_20261016: graded record of the proven handicappers. Hidden unless
+             /api/pro/watchdog/performance answers (public only once Nima approves the numbers).
+             Every figure is read from the API; nothing is typed here. -->
+        <section class="pro-section" id="performance" hidden>
+            <div class="pro-wrap">
+                <div class="pro-section-head">
+                    <span class="pxs-k">The record, as graded</span>
+                    <h2>How the proven handicappers on the board have done</h2>
+                    <p>Every graded pick by a handicapper outside TMR, tracked by the Watchdog, who already had 25 or more graded picks on games before that one. Winners and losers count the same. The only picks left out are the few graded at futures or parlay prices, counted in the note below. 1 unit risked per pick. This is a record of what already happened, not a forecast.</p>
+                </div>
+                <div class="pperf-grid" id="pperfGrid"></div>
+                <p class="pperf-note" id="pperfNote"></p>
+            </div>
+        </section>
+
+        <section class="pro-section" id="pricing">
+            <div class="pro-wrap">
+                <div class="pro-section-head">
+                    <span class="pxs-k">Pricing</span>
+                    <h2>One plan. Everything included.</h2>
+                    <p>Every tool on this page for one price. Cancel any time and keep access to the end of the period you paid for.</p>
+                </div>
+                <ul class="px-includes" aria-label="Included with TMR Pro">
+                    <li>Unlimited sports simulators</li>
+                    <li>Full pending Handicapper Watchdog board</li>
+                    <li>Thousands of tracked handicappers</li>
+                    <li>Complete pick histories and advanced records</li>
+                    <li>Bet Legend Pro ($49 a month on its own)</li>
+                    <li>TrendSpotter units, ROI and average price</li>
+                    <li>15 Model Builder models (2 on a free account)</li>
+                </ul>
+
+                <div class="pro-prices">
+                    <div class="pro-price">
+                        <div class="pro-price-flag pxp-flag-plain">Flexible</div>
+                        <h3>Monthly</h3>
+                        <div class="pro-amount">$49.99<small>/month</small></div>
+                        <p class="pro-price-detail">
+                            Billed monthly. Cancel any time.
+                        </p>
+                        <button type="button" class="pro-buy" disabled aria-disabled="true"
+                                data-pro-buy="monthly">Choose monthly</button>
+                        <p class="pro-buy-note" id="proMonthlyNote">&nbsp;</p>
+                    </div>
+
+                    <div class="pro-price pxp-best">
+                        <div class="pro-price-flag">Best value &middot; save $99.88</div>
+                        <h3>Annual</h3>
+                        <div class="pro-amount">$500<small>/year</small></div>
+                        <p class="pro-price-detail">
+                            Works out to <em>$41.67 a month</em>. Against $49.99 a month for a
+                            year, that is <em>$99.88</em> less, about <em>17%</em>.
+                        </p>
+                        <button type="button" class="pro-buy" disabled aria-disabled="true"
+                                data-pro-buy="annual">Choose annual</button>
+                        <p class="pro-buy-note">&nbsp;</p>
+                    </div>
+                </div>
+                <p class="pro-signin-note" id="proSigninNote" hidden>
+                    Next you create your free TrustMyRecord account, then you go straight to secure checkout
+                    by Stripe. Already a member? <a href="/login/?next=%2Fpremium%2F%23pricing">Sign in</a>
+                </p>
+                <p class="pro-renew-note" id="proRenewNote" hidden>
+                    Subscriptions renew automatically at the same price until you cancel.
+                    Cancel any time with Cancel subscription on this page, and you keep
+                    TMR Pro until the end of the period you already paid for. Payment is
+                    handled by Stripe.
+                </p>
+            </div>
+        </section>
+
+        <!-- ============================================== free stays free -->
+        <section class="pro-section" id="free">
+            <div class="pro-wrap">
+                <div class="pro-free">
+                    <div class="pro-section-head" style="margin-bottom:0">
+                        <h2>TrustMyRecord stays free</h2>
+                        <p>
+                            TMR Pro is the research-tool layer. It is not a paywall around the
+                            site. Everything that makes TrustMyRecord a public record is free
+                            and stays free, for everyone, whether you subscribe or not.
+                        </p>
+                    </div>
+                    <div class="pro-free-grid">
+                        <ul class="pro-list">
+                            <li>Profiles</li>
+                            <li>Public records</li>
+                            <li>Pick tracking</li>
+                            <li>Leaderboards</li>
+                        </ul>
+                        <ul class="pro-list">
+                            <li>Handicapping content</li>
+                            <li>Public community features</li>
+                            <li>The sportsbook and normal pick entry</li>
+                            <li>TrendSpotter records and the games behind them</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ====================================================== the faq -->
+        <section class="pro-section">
+            <div class="pro-wrap">
+                <div class="pro-section-head">
+                    <span class="pxs-k">FAQ</span>
+                    <h2>Questions, answered</h2>
+                </div>
+                <div class="pro-faq">
+                    <details>
+                        <summary>Where do the pending picks come from?</summary>
+                        <p>
+                            From public posts by handicappers TrustMyRecord tracks on Covers, X,
+                            TheRX, Reddit and other sites. We grade every pick they post against
+                            the final score, so each one on the board comes with that
+                            handicapper's real record and units, and a link to the original post.
+                            Only games that have not started are shown.
+                        </p>
+                    </details>
+                    <details>
+                        <summary>Are TrustMyRecord members' picks on the board?</summary>
+                        <p>
+                            No. Members' picks stay private until their games start, for everyone,
+                            including TMR Pro subscribers.
+                        </p>
+                    </details>
+                    <details>
+                        <summary>Does TMR Pro change how my record looks?</summary>
+                        <p>
+                            No. A subscription buys research tools and nothing else. It does not
+                            change your verification, your badges, your public standing, how
+                            your picks are graded, how many picks you can post, or how you rank
+                            on any leaderboard. Nobody can buy credibility here; the whole point
+                            of the site is that the record speaks for itself.
+                        </p>
+                    </details>
+                    <details>
+                        <summary>Do I need TMR Pro to use TrendSpotter?</summary>
+                        <p>
+                            No. The record, the sample size, the win rate, the date range, the
+                            season splits and the qualifying games are all free, so you can
+                            check any trend yourself. TMR Pro adds the profitability side: units,
+                            ROI, average price, the market-implied rate and the deeper charts.
+                        </p>
+                    </details>
+                    <details>
+                        <summary>Is Model Builder a backtester?</summary>
+                        <p>
+                            Not in the main sense. A model you build starts tracking from that
+                            moment and measures results forward as games settle, which is what
+                            makes the record honest. There is a separate historical preview
+                            component that looks backwards; that one is the only part doing
+                            anything retrospective.
+                        </p>
+                    </details>
+                    <details>
+                        <summary>Is Bet Legend Pro the same thing I can buy on its own?</summary>
+                        <p>
+                            Yes, the same tool. It is sold separately at $49 a month, and a TMR
+                            Pro subscription includes it in full.
+                        </p>
+                    </details>
+                    <details>
+                        <summary>Can I cancel any time?</summary>
+                        <p>
+                            Yes. Use Cancel subscription on this page whenever you like. There is no
+                            contract and no cancellation fee.
+                        </p>
+                    </details>
+                    <details>
+                        <summary>How is billing handled?</summary>
+                        <p>
+                            Payments run through Stripe. You enter your card on Stripe's secure
+                            checkout, not on TrustMyRecord, and Stripe's billing page is where you
+                            update your card, see invoices or cancel. Monthly is $49.99 a month;
+                            annual is $500 a year.
+                        </p>
+                    </details>
+                    <details>
+                        <summary>What happens when I cancel?</summary>
+                        <p>
+                            You keep TMR Pro until the end of the period you already paid for and
+                            you are not charged again. After that your account goes back to the
+                            free version of each tool. Your account, your record and your picks
+                            stay exactly as they are.
+                        </p>
+                    </details>
+                    <details>
+                        <summary>Do the handicappers on the board win?</summary>
+                        <p>
+                            Some do and many do not. When the verified figures are available, this
+                            page shows the graded result of the proven group live, with the dates it
+                            covers, whichever way it goes. It describes past picks only. It is not a
+                            forecast, an edge or a promise of profit.
+                        </p>
+                    </details>
+                    <details>
+                        <summary>When can I subscribe?</summary>
+                        <p id="proWhenAnswer">
+                            Now. Pick monthly or annual above. Checkout is handled by Stripe, and you can
+                            cancel any time with Manage subscription on this page.
+                        </p>
+                    </details>
+                </div>
+            </div>
+        </section>
+
+        <div class="pro-wrap">
+            <p class="pro-fineprint">
+                TMR Pro is a research and record-keeping product. It provides historical
+                data, measurement and tracking tools. It does not provide predictions,
+                guaranteed outcomes, profit, or any form of edge, and nothing on this page
+                should be read as a claim that any strategy will win. Sports betting
+                involves risk of loss. Prices shown are in US dollars and exclude any
+                applicable tax. Bet Legend Pro remains separately available at its own
+                price. If you or someone you know needs help with gambling, call
+                1-800-GAMBLER.
+            </p>
+        </div>
+    </main>
+
+    <script>
+    /* TMR_PRO_PRICING_PAGE_20260912, reworked TMR_PRO_ACCOUNT_20260928.
+
+       The page never decides who may buy or at what price. It asks the
+       server two questions and draws what it is told:
+         GET /api/premium/checkout-status  (public) is checkout open to all?
+         GET /api/premium/me               (signed in) may THIS account buy,
+                                           is the founding rate on offer, and
+                                           what is its current subscription?
+       A buy button only becomes live when the server has said yes. The
+       server picks the Stripe price, including the founding substitution,
+       so nothing here can name a price. With checkout closed on the server
+       this page behaves exactly as before: "Coming soon" and inert. */
+    (function () {
+        'use strict';
+
+        /* tmr-session.js loads after this block, so both are resolved in start(). */
+        var S = null;
+        var API = 'https://trustmyrecord-api.onrender.com/api';
+        var LOGIN = '/login/?next=' + encodeURIComponent('/premium/#pricing');
+        /* PRO_FUNNEL_FIX_20261002: a signed out visitor who picks a plan creates an account first. Send them to
+           /register/ with ?return= so they come straight back here, where the saved plan opens checkout. Before
+           this they went to /login/, and a new visitor who then registered landed on /welcome/ instead. */
+        var REGISTER = '/register/?return=' + encodeURIComponent('/premium/' + (location.search || ''));
+        /* PRO_INTENT_20260929: a signed-out visitor who picks a plan is sent to
+           log in or sign up. The plan they picked is kept here, and when they
+           land back on this page signed in, checkout for that plan opens
+           without a second click. Expires after 30 minutes. */
+        var INTENT_KEY = 'tmr_pro_intent';
+        function saveIntent(kind) { try { localStorage.setItem(INTENT_KEY, JSON.stringify({ plan: kind, at: Date.now() })); } catch (e) { } }
+        function takeIntent() {
+            try {
+                var raw = localStorage.getItem(INTENT_KEY); localStorage.removeItem(INTENT_KEY);
+                var v = raw && JSON.parse(raw);
+                if (v && (v.plan === 'monthly' || v.plan === 'annual') && Date.now() - v.at < 30 * 60 * 1000) return v.plan;
+            } catch (e) { }
+            return null;
+        }
+
+        var buttons = document.querySelectorAll('[data-pro-buy]');
+        var statusEl = document.getElementById('proStatus');
+        var chipEl = document.getElementById('proStatusChip');
+        var textEl = document.getElementById('proStatusText');
+        var manageEl = document.getElementById('proManage');
+        var cancelEl = document.getElementById('proCancel');
+        var resumeEl = document.getElementById('proResume');
+        var bannerEl = document.getElementById('proBanner');
+        var monthlyNote = document.getElementById('proMonthlyNote');
+        var renewNote = document.getElementById('proRenewNote');
+        var whenAnswer = document.getElementById('proWhenAnswer');
+
+        var LABEL = { monthly: 'Choose monthly', annual: 'Choose annual' };
+        var welcomeEl = document.getElementById('proWelcome');
+        var PRICE = { monthly: 49.99, annual: 500 };
+        /* TMR_PRO_ANALYTICS_20260928: funnel events to GA4 (G-V5MCVXS2HE). */
+        /* FUNNEL_EVENTS_20260929: every event carries the page and component that sent the visitor here
+           (tmr-pro-funnel.js stores it), and the funnel names Nima asked for are sent alongside the old ones. */
+        var FUNNEL_ALIAS = { pro_page_view: 'tmr_pro_impression', pro_checkout_click: 'tmr_pro_checkout_click', purchase: 'tmr_pro_purchase' };
+        function ga(name, params) {
+            var p = params || {};
+            try { var fs = JSON.parse(localStorage.getItem('tmr_funnel_src') || 'null'); if (fs && Date.now() - fs.at < 7 * 864e5) { p.funnel_source = fs.src; p.funnel_page = fs.page; } } catch (e) { }
+            if (name === 'pro_checkout_click' || name === 'purchase') {
+                try { var ft = JSON.parse(localStorage.getItem('tmr_first_touch') || 'null'); if (ft && ft.landing) p.first_landing = String(ft.landing).split('?')[0].slice(0, 100); } catch (e) { }
+            }
+            window.dataLayer = window.dataLayer || [];
+            if (typeof window.gtag !== 'function') window.gtag = function () { window.dataLayer.push(arguments); };
+            try { window.gtag('event', name, p); if (FUNNEL_ALIAS[name]) window.gtag('event', FUNNEL_ALIAS[name], Object.assign({ component: 'pro_page' }, p)); } catch (e) { }
+        }
+        ga('pro_page_view', {});
+        var mode = 'closed';          // closed | signin | buy | subscribed
+        var busy = false;
+
+        function fmtDate(iso) {
+            if (!iso) return '';
+            var d = new Date(iso);
+            if (isNaN(d.getTime())) return '';
+            return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+        }
+        function banner(msg, kind) {
+            if (!bannerEl) return;
+            if (!msg) { bannerEl.hidden = true; return; }
+            bannerEl.textContent = msg;
+            bannerEl.className = 'pro-banner' + (kind ? ' is-' + kind : '');
+            bannerEl.hidden = false;
+        }
+        function setButton(btn, live, label) {
+            btn.disabled = !live;
+            btn.setAttribute('aria-disabled', live ? 'false' : 'true');
+            btn.classList.toggle('is-live', live);
+            btn.textContent = label;
+        }
+        var foundingFull = false;
+        function paintButtons(foundingOffered) {
+            Array.prototype.forEach.call(buttons, function (btn) {
+                var kind = btn.getAttribute('data-pro-buy');
+                if (mode === 'buy') {
+                    setButton(btn, true, LABEL[kind]);
+                } else if (mode === 'signin') {
+                    setButton(btn, true, LABEL[kind]);
+                } else if (mode === 'subscribed') {
+                    setButton(btn, false, 'You are subscribed');
+                } else {
+                    setButton(btn, false, 'Coming soon');
+                }
+            });
+            if (monthlyNote) monthlyNote.textContent = '\u00a0';
+            var signinNote = document.getElementById('proSigninNote');
+            if (signinNote) signinNote.hidden = mode !== 'signin';
+            var open = mode === 'buy' || mode === 'signin' || mode === 'subscribed';
+            if (renewNote) renewNote.hidden = !open;
+            if (whenAnswer && open) {
+                whenAnswer.textContent = 'Now. Pick a plan above. Checkout is handled by Stripe, and you can cancel any time from Cancel subscription on this page.';
+            }
+        }
+        function paintStatus(chip, text, isPro, canManage) {
+            if (!statusEl) return;
+            chipEl.textContent = chip;
+            chipEl.classList.toggle('is-pro', !!isPro);
+            textEl.textContent = text;
+            if (manageEl) manageEl.hidden = !canManage;
+            if (cancelEl) cancelEl.hidden = true;
+            if (resumeEl) resumeEl.hidden = true;
+            statusEl.classList.add('is-shown');
+        }
+
+        function drawAccount(me) {
+            var sub = me && me.subscription;
+            if (sub) {
+                mode = 'subscribed';
+                var plan = (sub.billing_period === 'yearly' ? 'Annual plan' : sub.billing_period === 'monthly' ? 'Monthly plan' : 'TMR Pro');
+                var when = fmtDate(sub.current_period_end || sub.expires_at);
+                var line;
+                if (sub.source && sub.source !== 'stripe') {
+                    line = 'TMR Pro is active on your account.' + (when ? ' Access runs to ' + when + '.' : '');
+                } else if (sub.cancel_at_period_end) {
+                    line = plan + '. Cancelled: you keep TMR Pro until ' + (when || 'the end of the paid period') + ', and you will not be charged again.';
+                } else if (sub.status === 'past_due') {
+                    line = plan + '. Your last payment did not go through. Update your card with Manage subscription to keep access.';
+                } else {
+                    line = plan + '. Everything in TMR Pro is unlocked.' + (when ? ' Renews ' + when + '.' : '');
+                }
+                paintStatus('TMR Pro', line, true, !!me.can_manage_billing);
+                if (cancelEl) cancelEl.hidden = !(me.can_manage_billing && sub.source === 'stripe' && !sub.cancel_at_period_end);
+                if (resumeEl) resumeEl.hidden = !(me.can_manage_billing && sub.source === 'stripe' && sub.cancel_at_period_end);
+                paintButtons(false);
+                loadBoard(true);
+                takeIntent();
+                /* PRO_DASHBOARD_20260929: a member sees the dashboard, not the sales page. */
+                document.body.classList.add('is-pro-member');
+                if (welcomeEl) {
+                    welcomeEl.hidden = false;
+                    var fresh = purchase === 'success';
+                    document.getElementById('proWelcomeTitle').textContent = fresh ? 'Welcome to TMR Pro' : 'Your TMR Pro';
+                    document.getElementById('proWelcomeText').textContent = (fresh ? 'Your membership is active. ' : '') + line;
+                    showOnboarding(fresh);
+                    loadRecap();
+                }
+                var cta = document.getElementById('proHeroCta');
+                if (cta) { cta.textContent = 'Open the pending picks'; cta.setAttribute('href', '#board'); }
+                return;
+            }
+            mode = me && me.checkout_open ? 'buy' : 'closed';
+            paintStatus('Free account', mode === 'buy'
+                ? 'You are on the free plan, and everything free stays free. Pick a plan below to add TMR Pro.'
+                : 'You are on the free plan, and everything free stays free. Subscriptions are not open yet.',
+                false, !!(me && me.can_manage_billing));
+            foundingFull = !!(me && me.founding && me.founding.seats_left === 0);
+            paintButtons(false);
+            loadBoard(false, true);
+            var intent = mode === 'buy' ? takeIntent() : null;
+            if (intent) { ga('pro_intent_resumed', { plan: intent }); startCheckout(intent); }
+        }
+
+
+        /* ------------------------- Handicapper Watchdog board (TMR Pro) -- */
+        /* TMR_PRO_BOARD_V2_20260928: a sortable list of the external handicappers
+           with picks pending, and a detail panel per handicapper. Data comes
+           from /api/pro/pending-board and /api/pro/handicapper; TMR members are
+           excluded on the server. */
+        var boardEl = document.getElementById('proBoard');
+        var boardData = null;
+        /* 2026-09-29: Proven was on by default, so a board with no handicapper at 25+ graded
+           picks looked empty to a paying member. Every pending pick shows first; Proven is a filter. */
+        var boardFilter = { proven: false, league: 'all', source: 'all', q: '' };
+        var boardSort = { key: 'units', dir: -1 };
+        function esc(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+        function odds(o) { if (o == null || o === '') return ''; var n = Number(o); return isNaN(n) ? esc(o) : (n > 0 ? '+' + n : String(n)); }
+        function signed(n, d) { if (n == null || isNaN(n)) return 'n/a'; var v = Number(n).toFixed(d == null ? 2 : d); return (n > 0 ? '+' : '') + v; }
+        function unitsCls(n) { return n == null ? '' : (n > 0 ? 'up' : n < 0 ? 'down' : ''); }
+        function kick(iso) {
+            var d = new Date(iso); if (isNaN(d.getTime())) return '';
+            return d.toLocaleString('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' }) + ' PT';
+        }
+        function day(iso) { var d = new Date(iso); return isNaN(d.getTime()) ? '' : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'America/Los_Angeles' }); }
+        function streakTag(s) {
+            if (!s) return '<span class="wd-streak">n/a</span>';
+            return '<span class="wd-streak ' + (s > 0 ? 'up' : 'down') + '">' + (s > 0 ? 'W' : 'L') + Math.abs(s) + '</span>';
+        }
+        function dots(list) {
+            if (!list || !list.length) return '<span class="wd-muted">n/a</span>';
+            return '<span class="wd-dots" aria-label="Last ' + list.length + ' results">' + list.slice(0, 10).map(function (r) { return '<i class="' + (r === 'W' ? 'w' : r === 'L' ? 'l' : 'p') + '"></i>'; }).join('') + '</span>';
+        }
+        function pickLabel(p) {
+            var sel = String(p.selection || '');
+            var hasLine = p.line != null && sel.indexOf(String(Math.abs(Number(p.line)))) === -1;
+            return esc(sel) + (hasLine ? ' ' + esc(p.line) : '') + (p.odds != null ? ' <span class="wd-odds">' + odds(p.odds) + '</span>' : '');
+        }
+        function teaser(summary) {
+            if (!boardEl) return;
+            ga('watchdog_paywall_view', { component: 'pro_page_board' });
+            /* 2026-09-29: the teaser used to print "0 of them with 25 or more graded
+               picks" whenever nobody on the board had reached 25, which only told a
+               buyer what was missing. The proven count now shows only when it is
+               above zero, the leagues are named, and a locked preview shows one row
+               per real handicapper on the board (never invented data). */
+            var n = summary && summary.picks, t;
+            if (n) {
+                var lg = (summary.leagues || []).filter(Boolean);
+                t = '<b>' + n + ' pending pick' + (n === 1 ? '' : 's') + '</b> from <b>' + summary.handicappers + ' tracked handicapper' + (summary.handicappers === 1 ? '' : 's') + '</b> '
+                    + (summary.handicappers === 1 ? 'is' : 'are') + ' on the board right now' + (lg.length ? ' (' + esc(lg.join(', ')) + ')' : '') + '.'
+                    + (summary.proven_handicappers > 0 ? ' ' + summary.proven_handicappers + ' of them ' + (summary.proven_handicappers === 1 ? 'has' : 'have') + ' 25 or more graded picks.' : '');
+            } else {
+                t = 'The board fills up as the handicappers we track post their picks for the next games.';
+            }
+            var rows = '';
+            var k = 0;   // PAYWALL_20261024 (Nima): no game or pick preview on this page, counts only
+            for (var r = 0; r < k; r++) {
+                rows += '<div style="display:flex;gap:12px;align-items:center;padding:10px 14px;border-top:1px solid rgba(127,127,127,.18)">'
+                    + '<span aria-hidden="true">&#128274;</span>'
+                    + '<span style="flex:1;height:10px;border-radius:5px;background:rgba(127,127,127,.22)"></span>'
+                    + '<span style="width:22%;height:10px;border-radius:5px;background:rgba(127,127,127,.16)"></span>'
+                    + '<span style="width:14%;height:10px;border-radius:5px;background:rgba(127,127,127,.12)"></span></div>';
+            }
+            boardEl.innerHTML = '<div class="pro-teaser">' + t + ' TMR Pro shows every pick, each handicapper&#39;s record, units and streak, and where the proven handicappers agree.'
+                + (rows ? '<div aria-label="Locked preview" style="margin-top:14px;border:1px solid rgba(127,127,127,.22);border-radius:10px;overflow:hidden">'
+                    + '<div style="padding:8px 14px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;opacity:.7">Handicapper, pending pick, record</div>' + rows + '</div>' : '')
+                + '<p style="margin:14px 0 0"><a href="#pricing" style="display:inline-flex;align-items:center;min-height:44px;padding:0 18px;border-radius:10px;background:#F5C542;color:#1a1400;font-weight:800;text-decoration:none">Unlock with TMR Pro, $49.99/month</a></p></div>';
+        }
+        function sortVal(c, k) {
+            if (k === 'name') return String(c.name || '').toLowerCase();
+            if (k === 'record') return (c.record.w + c.record.l) ? c.record.w / (c.record.w + c.record.l) : -1;
+            if (k === 'streak') return c.streak == null ? -99 : c.streak;
+            if (k === 'last10') return c.last10 ? c.last10.units : -99;
+            if (k === 'roi') return c.roi == null ? -999 : c.roi;
+            if (k === 'pending') return c.shown.length;
+            if (k === 'graded') return c.graded;
+            return c.units == null ? -999 : c.units;
+        }
+        function drawBoard() {
+            if (!boardEl || !boardData) return;
+            var d = boardData, f = boardFilter;
+            var q = f.q.trim().toLowerCase();
+            var rows = d.handicappers.filter(function (c) {
+                if (f.proven && !c.proven) return false;
+                if (f.source !== 'all' && c.source !== f.source) return false;
+                if (q && String(c.name).toLowerCase().indexOf(q) === -1) return false;
+                return true;
+            }).map(function (c) {
+                c.shown = c.picks.filter(function (p) { return f.league === 'all' || p.league === f.league; });
+                return c;
+            }).filter(function (c) { return c.shown.length; });
+            rows.sort(function (a, b) {
+                var x = sortVal(a, boardSort.key), y = sortVal(b, boardSort.key);
+                return (x < y ? -1 : x > y ? 1 : 0) * boardSort.dir || (b.graded - a.graded);
+            });
+            var picks = rows.reduce(function (n, c) { return n + c.shown.length; }, 0);
+            var sources = Array.from(new Set(d.handicappers.map(function (c) { return c.source; }).filter(Boolean))).sort();
+            var opt = function (v, cur) { return '<option' + (cur === v ? ' selected' : '') + '>' + esc(v) + '</option>'; };
+            var th = function (k, label, cls) {
+                var on = boardSort.key === k;
+                return '<th class="' + (cls || '') + '"><button type="button" class="wd-sort' + (on ? ' on' : '') + '" data-sort="' + k + '">' + label + (on ? (boardSort.dir < 0 ? ' &darr;' : ' &uarr;') : '') + '</button></th>';
+            };
+            var html = '<div class="wd-bar">' +
+                '<input type="search" id="wdSearch" class="wd-search" placeholder="Search handicappers" value="' + esc(f.q) + '" aria-label="Search handicappers">' +
+                '<label class="wd-check"><input type="checkbox" id="wdProven"' + (f.proven ? ' checked' : '') + '> Proven (25+ graded)</label>' +
+                '<select id="wdLeague" aria-label="League"><option value="all">All leagues</option>' + (d.summary.leagues || []).map(function (l) { return opt(l, f.league); }).join('') + '</select>' +
+                '<select id="wdSource" aria-label="Source"><option value="all">All sources</option>' + sources.map(function (s) { return opt(s, f.source); }).join('') + '</select>' +
+                '<span class="wd-count"><b>' + picks + '</b> pending picks &middot; <b>' + rows.length + '</b> handicappers &middot; updated ' + esc(new Date(d.generated_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' })) + ' PT</span></div>';
+            var cons = (d.consensus || []).filter(function (g) { return g.proven >= 2 && (f.league === 'all' || g.league === f.league); }).slice(0, 6);
+            if (cons.length) {
+                html += '<div class="wd-cons"><h3>Where the proven handicappers agree</h3><div class="wd-cons-grid">' + cons.map(function (g) {
+                    return '<div class="wd-cons-card"><div class="wd-cons-n"><b>' + g.proven + '</b> proven<span>' + g.cappers + ' total</span></div><div><div class="wd-cons-sel">' + esc(g.selection) + ' <span class="wd-muted">' + esc(g.bet_type || '') + '</span></div><div class="wd-muted">' + esc(g.matchup || '') + ' &middot; ' + esc(kick(g.start)) + '</div></div></div>';
+                }).join('') + '</div></div>';
+            }
+            if (!(d.handicappers || []).length) {
+                html = emptyBoard();
+            } else if (!rows.length) {
+                html += '<div class="pro-teaser">No pending picks match these filters right now. The board fills up as the handicappers post for the next games.</div>';
+            } else {
+                html += '<div class="wd-table-wrap"><table class="wd-table"><thead><tr>' + th('name', 'Handicapper') + th('record', 'Record') + th('units', 'Units', 'n') + th('roi', 'ROI', 'n hide-s') + th('streak', 'Streak', 'n') + th('last10', 'Last 10', 'hide-s') + th('pending', 'Pending', 'n') + '</tr></thead><tbody>' +
+                    rows.map(function (c) {
+                        var r = c.record;
+                        return '<tr class="wd-row" tabindex="0" data-key="' + esc(c.key) + '">' +
+                            '<td><div class="wd-name">' + esc(c.name) + (c.proven ? ' <span class="wd-badge">Proven</span>' : '') + '</div><div class="wd-sub">' + esc(c.source || '') + (c.sports && c.sports.length ? ' &middot; ' + esc(c.sports.join(', ')) : '') + '</div></td>' +
+                            '<td class="wd-rec">' + r.w + '-' + r.l + (r.p ? '-' + r.p : '') + '<div class="wd-sub">' + c.graded + ' graded</div></td>' +
+                            '<td class="n ' + unitsCls(c.units) + '">' + signed(c.units) + 'u</td>' +
+                            '<td class="n hide-s ' + unitsCls(c.roi) + '">' + (c.roi == null ? 'n/a' : signed(c.roi, 1) + '%') + '</td>' +
+                            '<td class="n">' + streakTag(c.streak) + '</td>' +
+                            '<td class="hide-s">' + dots(c.last10_results) + '</td>' +
+                            '<td class="n"><span class="wd-pend">' + c.shown.length + '</span></td></tr>' +
+                            '<tr class="wd-picks-row"><td colspan="7">' + c.shown.map(function (p) {
+                                return '<span class="wd-chip"><b>' + pickLabel(p) + '</b> <span class="wd-muted">' + esc(p.bet_type || '') + ' &middot; ' + esc(p.league || '') + ' &middot; ' + esc(kick(p.start)) + '</span></span>';
+                            }).join('') + '</td></tr>';
+                    }).join('') + '</tbody></table></div>';
+            }
+            html += '<div class="wd-panel" id="wdPanel" hidden></div>';
+            boardEl.innerHTML = html;
+            var on = function (id, ev, fn) { var el = document.getElementById(id); if (el) el.addEventListener(ev, fn); };
+            on('wdProven', 'change', function (e) { boardFilter.proven = e.target.checked; drawBoard(); });
+            on('wdLeague', 'change', function (e) { boardFilter.league = e.target.value; drawBoard(); });
+            on('wdSource', 'change', function (e) { boardFilter.source = e.target.value; drawBoard(); });
+            on('wdSearch', 'input', function (e) { boardFilter.q = e.target.value; var pos = e.target.selectionStart; drawBoard(); var s = document.getElementById('wdSearch'); if (s) { s.focus(); try { s.setSelectionRange(pos, pos); } catch (x) { } } });
+            Array.prototype.forEach.call(boardEl.querySelectorAll('.wd-sort'), function (b) {
+                b.addEventListener('click', function () {
+                    var k = b.getAttribute('data-sort');
+                    boardSort = { key: k, dir: boardSort.key === k ? -boardSort.dir : (k === 'name' ? 1 : -1) };
+                    drawBoard();
+                });
+            });
+            Array.prototype.forEach.call(boardEl.querySelectorAll('.wd-row'), function (tr) {
+                var open = function () { openCapper(tr.getAttribute('data-key')); };
+                tr.addEventListener('click', open);
+                tr.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
+            });
+        }
+        function closePanel() { var p = document.getElementById('wdPanel'); if (p) { p.hidden = true; p.innerHTML = ''; } document.body.classList.remove('wd-locked'); }
+        function openCapper(key) {
+            var panel = document.getElementById('wdPanel'); if (!panel) return;
+            panel.hidden = false; document.body.classList.add('wd-locked');
+            panel.innerHTML = '<div class="wd-sheet"><button type="button" class="wd-close" aria-label="Close">&times;</button><div class="wd-muted">Loading profile</div></div>';
+            panel.querySelector('.wd-close').addEventListener('click', closePanel);
+            ga('pro_watchdog_profile_open', {});
+            S.authFetch(API + '/pro/handicapper?key=' + encodeURIComponent(key)).then(function (r) {
+                return r.json().then(function (j) { if (!r.ok) throw new Error(j.error || 'failed'); return j; });
+            }).then(function (h) {
+                var r = h.record, st = h.streaks || {};
+                var stat = function (label, val, cls) { return '<div class="wd-stat"><span>' + label + '</span><b class="' + (cls || '') + '">' + val + '</b></div>'; };
+                var f25 = h.form && h.form.last_25;
+                var html = '<div class="wd-sheet" role="dialog" aria-label="' + esc(h.name) + '"><button type="button" class="wd-close" aria-label="Close">&times;</button>' +
+                    '<div class="wd-head"><div><h3>' + esc(h.name) + (h.proven ? ' <span class="wd-badge">Proven</span>' : '') + '</h3><div class="wd-muted">' + esc(h.source || '') +
+                    (h.tracked_since ? ' &middot; tracked since ' + esc(day(h.tracked_since)) : '') + (h.source_url ? ' &middot; <a href="' + esc(h.source_url) + '" target="_blank" rel="nofollow noopener">' + esc(h.source || 'Source') + ' profile</a>' : '') + '</div></div></div>' +
+                    '<div class="wd-stats">' + stat('Record', r.w + '-' + r.l + (r.p ? '-' + r.p : '')) + stat('Units', signed(h.units) + 'u', unitsCls(h.units)) + stat('ROI', h.roi == null ? 'n/a' : signed(h.roi, 1) + '%', unitsCls(h.roi)) +
+                    stat('Win rate', h.win_rate == null ? 'n/a' : Number(h.win_rate).toFixed(1) + '%') + stat('Streak', (st.current ? (st.current > 0 ? 'W' : 'L') + Math.abs(st.current) : 'n/a'), st.current > 0 ? 'up' : st.current < 0 ? 'down' : '') +
+                    stat('Last 25', f25 ? f25.wins + '-' + f25.losses + (f25.pushes ? '-' + f25.pushes : '') + ' (' + signed(f25.net_units) + 'u)' : 'n/a', f25 ? unitsCls(f25.net_units) : '') + '</div>' +
+                    (h.sports && h.sports.length ? '<div class="wd-muted wd-sports">' + h.sports.map(function (s) { return esc(s.label) + ' ' + s.graded_picks; }).join(' &middot; ') + ' graded</div>' : '') +
+                    '<h4>Pending picks</h4>' + h.pending.map(function (p) {
+                        var meta = [esc(p.bet_type || 'Pick'), p.units != null ? esc(p.units) + 'u' : '', 'Starts ' + esc(kick(p.start))].filter(Boolean).join(' &middot; ');
+                        var posted = p.posted_at ? 'Posted ' + esc(day(p.posted_at)) + ' ' + esc(new Date(p.posted_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' })) + ' PT on ' + esc(h.source || 'source') : 'Posted on ' + esc(h.source || 'source');
+                        return '<div class="wd-pick"><div class="wd-pick-game">' + esc(p.league || '') + ' &middot; ' + esc(p.matchup || '') + '</div><div class="wd-pick-sel">' + pickLabel(p) + '</div><div class="wd-muted">' + meta + '</div><div class="wd-muted">' + posted +
+                            (p.source_post ? ' &middot; <a href="' + esc(p.source_post) + '" target="_blank" rel="nofollow noopener">Original post</a>' : '') + (p.home && p.away && /^(NFL|NBA|MLB|NHL)$/.test(String(p.league || '')) ? ' &middot; <a href="/betlegend-pro/app/?sport=' + esc(p.league) + '&amp;away=' + encodeURIComponent(p.away) + '&amp;home=' + encodeURIComponent(p.home) + '">Research this matchup in Bet Legend Pro</a>' : '') + '</div></div>';
+                    }).join('') +
+                    '<h4>Recent graded picks</h4>' + (h.recent.length ? '<div class="wd-table-wrap"><table class="wd-table wd-recent"><tbody>' + h.recent.map(function (x) {
+                        return '<tr><td class="wd-muted">' + esc(day(x.date)) + '</td><td><b>' + esc(x.pick || '') + '</b> ' + (x.odds != null ? '<span class="wd-odds">' + odds(x.odds) + '</span>' : '') + '<div class="wd-sub">' + esc(x.league || '') + ' &middot; ' + esc(x.matchup || '') + '</div></td><td class="n"><span class="wd-res ' + esc(x.result) + '">' + esc(x.result) + '</span></td><td class="n ' + unitsCls(x.units) + '">' + signed(x.units) + '</td></tr>';
+                    }).join('') + '</tbody></table></div>' : '<div class="wd-muted">No graded picks yet.</div>') +
+                    (h.profile_url ? '<p><a class="wd-full" href="' + esc(h.profile_url) + '">Full record and history</a></p>' : '') + '</div>';
+                panel.innerHTML = html;
+                panel.querySelector('.wd-close').addEventListener('click', closePanel);
+            }).catch(function (e) {
+                panel.innerHTML = '<div class="wd-sheet"><button type="button" class="wd-close" aria-label="Close">&times;</button><div class="pro-teaser">' + esc(e.message || 'That profile could not load right now.') + '</div></div>';
+                panel.querySelector('.wd-close').addEventListener('click', closePanel);
+            });
+        }
+        document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closePanel(); });
+        document.addEventListener('click', function (e) { var p = document.getElementById('wdPanel'); if (p && !p.hidden && e.target === p) closePanel(); });
+        /* First Pro visit (or right after purchase): a five step start list, dismissed once. */
+        /* SIM_RECAP_20261017: yesterday's simulations next to the final scores, member's own runs only. */
+        function loadRecap() {
+            var box = document.getElementById('pdRecap');
+            if (!box || !S || !S.authFetch) return;
+            S.authFetch(API + '/sim-archive/mine/recap').then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
+                if (!d || !d.games || !d.games.length) return;
+                var esc = function (t) { return String(t == null ? '' : t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+                document.getElementById('pdRecapList').innerHTML = d.games.map(function (g) {
+                    var L = g.latest || {}, wp = L.win_probability || {};
+                    var fav = L.favored, favPct = wp.home != null ? Math.round(100 * (fav === g.home ? wp.home : wp.away)) : null;
+                    var res = g.final ? (esc(g.away) + ' ' + g.final.away + ', ' + esc(g.home) + ' ' + g.final.home) : 'Not final yet';
+                    var verdict = g.favored_won === true ? '<span class="pd-recap-hit">Favorite won</span>' : g.favored_won === false ? '<span class="pd-recap-miss">Favorite lost</span>' : '';
+                    return '<li><b>' + esc(g.away) + ' at ' + esc(g.home) + '</b><span>Your sim: ' + esc(fav) + (favPct != null ? ' ' + favPct + '% to win' : '')
+                        + (L.simulations ? ' over ' + Number(L.simulations).toLocaleString('en-US') + ' simulations' : '')
+                        + (L.sampling_margin_pts != null ? ' (\u00b1' + L.sampling_margin_pts + ' pts from run to run)' : '') + '</span>'
+                        + '<span>Final: ' + res + '</span>' + verdict + '</li>';
+                }).join('');
+                var s2 = d.summary || {};
+                document.getElementById('pdRecapNote').textContent = (s2.decided ? 'The favorite in your simulations won ' + s2.favored_won + ' of ' + s2.decided + ' finished games. ' : '') + (d.note || '');
+                box.hidden = false;
+                ga('pro_recap_view', { games: d.games.length });
+            }).catch(function () { });
+        }
+        function onboardLead() {
+            var src = '', land = '';
+            try { var fs = JSON.parse(localStorage.getItem('tmr_funnel_src') || 'null'); if (fs && fs.src) src = String(fs.src); } catch (e) { }
+            try { var ft = JSON.parse(localStorage.getItem('tmr_first_touch') || 'null'); if (ft && ft.landing) land = String(ft.landing); } catch (e) { }
+            if (/^sim_/.test(src) || (!src && /simulator/.test(land))) return 'sims';
+            if (src) return 'watchdog';
+            return '';
+        }
+        function showOnboarding(force) {
+            var el = document.getElementById('pdOnboard');
+            if (!el) return;
+            var seen = false;
+            try { seen = localStorage.getItem('tmr_pro_onboarded') === '1'; } catch (e) { }
+            if (seen && !force) return;
+            var lead = onboardLead();
+            var first = lead && el.querySelector('li[data-k="' + lead + '"]');
+            if (first && first !== el.firstElementChild) el.insertBefore(first, el.firstElementChild);
+            if (first) first.classList.add('pd-onboard-lead');
+            [].forEach.call(el.querySelectorAll('li[data-k] a'), function (a, i) {
+                a.addEventListener('click', function () { ga('pro_onboard_click', { step: a.parentNode.getAttribute('data-k'), position: i + 1, lead: lead || 'none', fresh: force ? 'yes' : 'no' }); });
+            });
+            ga('pro_onboard_view', { lead: lead || 'none', fresh: force ? 'yes' : 'no' });
+            el.hidden = false;
+            var b = document.getElementById('pdOnboardDone');
+            if (b) b.onclick = function () { el.hidden = true; try { localStorage.setItem('tmr_pro_onboarded', '1'); } catch (e) { } };
+        }
+        /* Live proof the Watchdog keeps running: counts and last run times from the public summary. */
+        var netData = null;
+        function agoText(iso) {
+            var t = iso ? Date.parse(iso) : NaN;
+            if (!isFinite(t)) return '';
+            var m = Math.max(0, Math.round((Date.now() - t) / 60000));
+            return m < 1 ? 'just now' : m < 60 ? m + ' min ago' : Math.round(m / 60) + ' h ago';
+        }
+        function netStats(n) {
+            if (!n) return [];
+            var out = [], d = n.directory || {}, src = n.sources || [];
+            if (d.accounts) out.push(['<b>' + Number(d.accounts).toLocaleString('en-US') + '</b> accounts monitored', '']);
+            if (d.with_record) out.push(['<b>' + Number(d.with_record).toLocaleString('en-US') + '</b> handicappers with graded records', '']);
+            if (d.graded) out.push(['<b>' + Number(d.graded).toLocaleString('en-US') + '</b> graded picks', '']);
+            if (n.picks_harvested_24h != null) out.push(['<b>' + Number(n.picks_harvested_24h).toLocaleString('en-US') + '</b> picks collected in the last 24 hours', '']);
+            var newAcc = src.reduce(function (a, x) { return a + (Number(x.new_accounts_24h) || 0); }, 0);
+            if (newAcc) out.push(['<b>' + newAcc.toLocaleString('en-US') + '</b> new accounts found in 24 hours', '']);
+            var last = src.map(function (x) { return x.last_check; }).filter(Boolean).sort().pop();
+            if (last) out.push(['Sources last checked <b>' + agoText(last) + '</b>', '']);
+            if (n.last_graded) out.push(['Last grading run <b>' + agoText(n.last_graded) + '</b>', '']);
+            return out.map(function (x) { return '<span>' + x[0] + '</span>'; });
+        }
+        function paintNet(n) {
+            netData = n || netData;
+            var el = document.getElementById('wdNet');
+            var items = netStats(netData);
+            if (!el || !items.length) return;
+            el.innerHTML = items.join('');
+            el.hidden = false;
+            if (boardData && !(boardData.handicappers || []).length) drawBoard();
+        }
+        function emptyBoard() {
+            var items = document.getElementById('wdNet') && !document.getElementById('wdNet').hidden ? [] : netStats(netData);
+            return '<div class="wd-empty"><h3>No pending picks right now</h3>'
+                + '<p>No pending picks are currently available. The Watchdog is continuing to monitor tracked sources, and this board updates as new pregame picks are collected.</p>'
+                + (items.length ? '<div class="wd-net" style="margin:0 0 14px">' + items.join('') + '</div>' : '')
+                + '<a class="px-link" href="/around-the-web/">Browse Handicappers Around the Web</a></div>';
+        }
+        /* WATCHDOG_SCALE_20260929: the Watchdog module's numbers, live from the ledger. Nothing is typed in;
+           when the call fails every number stays blank and the static copy still reads correctly. */
+        var WDX_MONO = { reddit: 'RD', covers: 'CV', x: 'X', therx: 'RX', sbr: 'SB', predictem: 'PE', twoplustwo: '2+2' };
+        var WDX_COMM = { reddit: 'subreddits', x: '' };
+        function wdxFmt(v) { return Number(v).toLocaleString('en-US'); }
+        function wdxEsc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+        function wdxCount(el, to, animate) {
+            var still = !animate || !window.requestAnimationFrame || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+            if (still || to < 50) { el.textContent = wdxFmt(to); return; }
+            var t0 = null, dur = 1100;
+            function step(t) {
+                if (t0 === null) t0 = t;
+                var k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+                el.textContent = wdxFmt(Math.round(to * e));
+                if (k < 1) requestAnimationFrame(step);
+            }
+            requestAnimationFrame(step);
+        }
+        var wdxSeen = false;
+        function paintWdx(d, animate) {
+            var root = document.getElementById('watchdog');
+            if (!root || !d || !d.accounts) return;
+            var h = document.getElementById('wdxTitle');
+            if (h) h.innerHTML = 'Research <span class="wdx-hl">' + wdxFmt(d.accounts) + '</span> tracked handicapper accounts from across the betting web';
+            root.querySelectorAll('[data-wdx]').forEach(function (el) {
+                var v = d[el.getAttribute('data-wdx')];
+                if (v == null) return;
+                if (el.tagName === 'STRONG') { if (animate !== 'defer') wdxCount(el, Number(v), animate); } else el.textContent = wdxFmt(v);
+            });
+            var subs = {
+                with_record: d.with_record != null ? wdxFmt(d.with_record) + ' with a graded record' : '',
+                communities: d.communities != null ? wdxFmt(d.communities) + ' forums, subreddits and feeds' : '',
+                posts_captured: d.posts_captured != null ? 'from ' + wdxFmt(d.posts_captured) + ' captured posts' : ''
+            };
+            root.querySelectorAll('[data-wdx-sub]').forEach(function (el) { el.textContent = subs[el.getAttribute('data-wdx-sub')] || ''; });
+            var ago = agoText(d.last_capture_at);
+            root.querySelectorAll('[data-wdx-ago]').forEach(function (el) { el.textContent = ago; });
+            var up = document.getElementById('wdxUpdated');
+            if (up && ago) { up.textContent = 'updated ' + ago; document.getElementById('wdxLive').hidden = false; }
+            if (ago) document.getElementById('wdxPulse').hidden = false;
+            var src = (d.sources || []).slice().sort(function (a, b) { return b.accounts - a.accounts; });
+            var box = document.getElementById('wdxSources');
+            if (box && src.length) {
+                var top = src[0].accounts || 1;
+                box.innerHTML = src.map(function (s) {
+                    var comm = WDX_COMM[s.id] === undefined ? 'forums' : WDX_COMM[s.id];
+                    var meta = [[s.graded_picks, 'graded picks'], [s.with_record, 'with a record']];
+                    if (comm && s.communities) meta.push([s.communities, s.communities === 1 ? comm.replace(/s$/, '') : comm]);
+                    return '<div class="wdx-src is-' + wdxEsc(s.id) + '"><div class="wdx-src-h"><span class="wdx-mono">' + wdxEsc(WDX_MONO[s.id] || s.label.slice(0, 2).toUpperCase())
+                        + '</span><div><b>' + wdxEsc(s.label) + '</b><em>' + wdxEsc(s.kind || '') + '</em></div></div>'
+                        + '<strong class="wdx-src-n">' + wdxFmt(s.accounts) + '<small>accounts</small></strong>'
+                        + '<span class="wdx-bar"><i style="width:' + Math.max(2, Math.round(100 * s.accounts / top)) + '%"></i></span>'
+                        + '<dl>' + meta.map(function (m) { return '<div><dt>' + wdxFmt(m[0] || 0) + '</dt><dd>' + m[1] + '</dd></div>'; }).join('') + '</dl></div>';
+                }).join('');
+            }
+            var sum = src.reduce(function (a, s) { return a + (s.accounts || 0); }, 0);
+            var note = document.getElementById('wdxNote');
+            if (note && sum === d.accounts) note.innerHTML = '<b>' + src.map(function (s) { return wdxFmt(s.accounts); }).join(' + ') + ' = ' + wdxFmt(d.accounts) + ' accounts.</b> ' + note.textContent.replace(/^[^.]*=[^.]*accounts\.\s*/, '');
+        }
+        function loadWdx() {
+            if (!document.getElementById('watchdog')) return;
+            fetch(API + '/pro/watchdog/stats', { cache: 'no-store' }).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+                .then(function (d) {
+                    var el = document.getElementById('watchdog');
+                    if (wdxSeen || !('IntersectionObserver' in window)) { paintWdx(d, !wdxSeen); wdxSeen = true; return; }
+                    paintWdx(d, 'defer');
+                    var io = new IntersectionObserver(function (es) {
+                        if (!es[0].isIntersecting) return;
+                        io.disconnect(); wdxSeen = true; paintWdx(d, true);
+                    }, { threshold: 0.2 });
+                    io.observe(el.querySelector('.wdx-stats') || el);
+                }).catch(function () { });
+        }
+        loadWdx();
+        setInterval(function () { if (!document.hidden) loadWdx(); }, 5 * 60 * 1000);
+        function loadBoard(isPro, signedIn) {
+            if (!boardEl) return;
+            /* PRO_SUNDAY_FREE_20261019: on Sundays from 8 AM ET until the first NFL kickoff the API
+               may open the board to signed in free members (flag PRO_SUNDAY_FREE_BOARD). The page
+               says so plainly, with the exact closing time, and only when the API says so. */
+            if (!isPro && signedIn && S && S.authFetch) {
+                S.authFetch(API + '/pro/pending-board').then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
+                    if (!d || d.access !== 'sunday_free') return;
+                    boardData = d; drawBoard();
+                    var until = d.free_until ? new Date(d.free_until).toLocaleString('en-US', { weekday: 'long', hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' }) + ' PT' : 'the first NFL kickoff';
+                    var note = document.createElement('p');
+                    note.className = 'pro-teaser';
+                    note.textContent = 'Free Sunday board: open to every signed in member until ' + until + ', the first NFL kickoff today. After that the full board is part of TMR Pro again.';
+                    boardEl.parentNode.insertBefore(note, boardEl);
+                    ga('pro_sunday_free_view', { component: 'pro_page_board' });
+                }).catch(function () { });
+            }
+            fetch(API + '/pro/pending-board/summary', { cache: 'no-store' }).then(function (r) { return r.json(); })
+                .then(function (sm) { paintNet(sm && sm.network); if (!isPro) teaser(sm); })
+                .catch(function () { if (!isPro) teaser(null); });
+            if (isPro) {
+                S.authFetch(API + '/pro/pending-board').then(function (r) {
+                    if (!r.ok) throw new Error('board ' + r.status);
+                    return r.json();
+                }).then(function (d) { boardData = d; drawBoard(); }).catch(function () {
+                    boardEl.innerHTML = '<div class="pro-teaser">The board could not load right now. Refresh in a minute.</div>';
+                });
+                return;
+            }
+        }
+
+        function loadMe() {
+            return S.authFetch(API + '/premium/me').then(function (r) {
+                if (!r.ok) throw new Error('me ' + r.status);
+                return r.json();
+            });
+        }
+
+        function startCheckout(kind) {
+            if (busy) return;
+            if (mode === 'signin') { ga('pro_signin_click', { plan: kind }); saveIntent(kind); window.location.href = REGISTER; return; }
+            if (mode !== 'buy') return;
+            busy = true;
+            ga('pro_checkout_click', { plan: kind, value: PRICE[kind], currency: 'USD' });
+            var btn = document.querySelector('[data-pro-buy="' + kind + '"]');
+            if (btn) { btn.classList.add('is-busy'); btn.textContent = 'Opening checkout'; }
+            banner('');
+            S.authFetch(API + '/premium/upgrade', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ tier: 'pro', billing_period: kind === 'annual' ? 'yearly' : 'monthly' })
+            }).then(function (r) {
+                return r.json().catch(function () { return {}; }).then(function (b) { return { r: r, b: b }; });
+            }).then(function (x) {
+                if (x.r.ok && x.b.url) {
+                    ga('begin_checkout', { plan: kind, value: PRICE[kind], currency: 'USD', items: [{ item_id: 'tmr_pro_' + kind, item_name: 'TMR Pro ' + kind, price: PRICE[kind], quantity: 1 }] });
+                    try { sessionStorage.setItem('tmr_pro_plan', kind); } catch (e) { }
+                    setTimeout(function () { window.location.href = x.b.url; }, 150);
+                    return;
+                }
+                if (x.r.status === 401) { window.location.href = LOGIN; return; }
+                ga('pro_checkout_error', { plan: kind, status: x.r.status });
+                banner(x.b.error || 'Checkout could not open. Nothing was charged. Please try again in a minute.', 'warn');
+                throw new Error('upgrade ' + x.r.status);
+            }).catch(function () {
+                busy = false;
+                if (btn) btn.classList.remove('is-busy');
+                loadMe().then(drawAccount).catch(function () {});
+            });
+        }
+
+        Array.prototype.forEach.call(buttons, function (btn) {
+            btn.addEventListener('click', function (ev) {
+                ev.preventDefault();
+                if (btn.disabled) return;
+                startCheckout(btn.getAttribute('data-pro-buy'));
+            });
+        });
+
+        if (manageEl) {
+            manageEl.addEventListener('click', function () {
+                manageEl.disabled = true;
+                ga('pro_manage_click', {});
+                S.authFetch(API + '/premium/portal', { method: 'POST' }).then(function (r) {
+                    return r.json().then(function (b) { return { r: r, b: b }; });
+                }).then(function (x) {
+                    if (x.r.ok && x.b.url) { window.location.href = x.b.url; return; }
+                    manageEl.disabled = false;
+                    banner('The billing page could not open right now. Please try again in a minute, or email support@trustmyrecord.com.', 'warn');
+                }).catch(function () {
+                    manageEl.disabled = false;
+                    banner('The billing page could not open right now. Please try again in a minute.', 'warn');
+                });
+            });
+        }
+
+        /* PRO_CANCEL_REASON_REQUIRED_20261023. The portal no longer cancels; this
+           form does, and its button stays off until a reason is picked and a
+           sentence is written. The server checks the same two things. */
+        var cancelDialog = document.getElementById('proCancelDialog');
+        var cancelForm = document.getElementById('proCancelForm');
+        if (cancelEl && cancelDialog && cancelForm) {
+            var pcdSubmit = document.getElementById('pcdSubmit');
+            var pcdComment = document.getElementById('pcdComment');
+            var pcdErr = document.getElementById('pcdErr');
+            var pcdReason = function () { var r = cancelForm.querySelector('input[name="reason"]:checked'); return r ? r.value : ''; };
+            var pcdValid = function () { return !!pcdReason() && pcdComment.value.trim().length >= 10; };
+            var pcdCheck = function () { pcdSubmit.disabled = !pcdValid(); };
+            cancelForm.addEventListener('input', pcdCheck);
+            cancelForm.addEventListener('change', pcdCheck);
+            document.getElementById('pcdKeep').addEventListener('click', function () { cancelDialog.close(); ga('pro_cancel_kept', {}); });
+            cancelEl.addEventListener('click', function () {
+                pcdErr.textContent = '';
+                pcdCheck();
+                ga('pro_cancel_open', {});
+                if (cancelDialog.showModal) cancelDialog.showModal(); else cancelDialog.setAttribute('open', '');
+            });
+            cancelForm.addEventListener('submit', function (ev) {
+                ev.preventDefault();
+                if (!pcdValid()) { pcdErr.textContent = 'Please pick a reason and write at least one sentence.'; return; }
+                pcdSubmit.disabled = true;
+                pcdErr.textContent = '';
+                S.authFetch(API + '/premium/cancel', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ reason: pcdReason(), comment: pcdComment.value.trim() })
+                }).then(function (r) {
+                    return r.json().catch(function () { return {}; }).then(function (b) { return { r: r, b: b }; });
+                }).then(function (x) {
+                    if (x.r.ok && x.b.ok) {
+                        ga('pro_cancel_done', { reason: pcdReason() });
+                        cancelDialog.close();
+                        var until = x.b.access_until ? fmtDate(x.b.access_until) : '';
+                        banner('Your subscription is cancelled. You keep TMR Pro until ' + (until || 'the end of the paid period') + ', and you will not be charged again. Thank you for telling us why.', 'good');
+                        loadMe().then(drawAccount).catch(function () {});
+                        return;
+                    }
+                    pcdErr.textContent = x.b.error || 'The cancellation did not go through. Please try again in a minute.';
+                    pcdCheck();
+                }).catch(function () {
+                    pcdErr.textContent = 'The cancellation did not go through. Please try again in a minute.';
+                    pcdCheck();
+                });
+            });
+        }
+
+        if (resumeEl) {
+            resumeEl.addEventListener('click', function () {
+                resumeEl.disabled = true;
+                ga('pro_resume_click', {});
+                S.authFetch(API + '/premium/resume', { method: 'POST' }).then(function (r) {
+                    return r.json().catch(function () { return {}; }).then(function (b) { return { r: r, b: b }; });
+                }).then(function (x) {
+                    resumeEl.disabled = false;
+                    if (x.r.ok && x.b.ok) {
+                        ga('pro_resume_done', {});
+                        banner('Welcome back. TMR Pro will renew as normal.', 'good');
+                        loadMe().then(drawAccount).catch(function () {});
+                        return;
+                    }
+                    banner(x.b.error || 'TMR Pro could not be resumed right now. Please try again in a minute.', 'warn');
+                }).catch(function () {
+                    resumeEl.disabled = false;
+                    banner('TMR Pro could not be resumed right now. Please try again in a minute.', 'warn');
+                });
+            });
+        }
+
+        /* Coming back from Stripe. The webhook, not this redirect, grants
+           access, so after a success the page polls until the server shows
+           the subscription (normally a few seconds). */
+        var params = new URLSearchParams(window.location.search);
+        var purchase = params.get('purchase');
+        var sessionId = params.get('session_id');
+        if (purchase && window.history && history.replaceState) {
+            history.replaceState(null, '', window.location.pathname + window.location.hash);
+        }
+        if (purchase === 'canceled') { banner('Checkout was cancelled. You were not charged.', 'warn'); ga('pro_checkout_canceled', {}); }
+        if (purchase === 'success') banner('Payment received. Turning on TMR Pro for your account now.', 'good');
+
+        function pollUntilActive(tries) {
+            loadMe().then(function (me) {
+                drawAccount(me);
+                if (me.subscription) {
+                    banner('');
+                    if (welcomeEl) { welcomeEl.hidden = false; try { welcomeEl.scrollIntoView({ block: 'center' }); } catch (e) { } }
+                    var plan = me.subscription.billing_period === 'yearly' ? 'annual' : 'monthly';
+                    var val = me.subscription.amount ? me.subscription.amount / 100 : PRICE[plan];
+                    ga('purchase', { transaction_id: sessionId || ('pro_' + Date.now()), value: val, currency: 'USD', items: [{ item_id: 'tmr_pro_' + plan, item_name: 'TMR Pro ' + plan, price: val, quantity: 1 }] });
+                    return;
+                }
+                if (tries > 0) setTimeout(function () { pollUntilActive(tries - 1); }, 2000);
+                else banner('Payment received. Activation is taking longer than usual; refresh in a minute. If TMR Pro is not on within a few minutes, email support@trustmyrecord.com.', 'warn');
+            }).catch(function () {
+                if (tries > 0) setTimeout(function () { pollUntilActive(tries - 1); }, 2000);
+            });
+        }
+
+        function start() {
+            S = window.TMRSession || null;
+            if (S && S.api) API = S.api;
+            paintButtons(false);
+            if (!S) { paintStatus('Not signed in', 'Pick a plan below, then sign in or create a free account. Checkout opens right after, with the plan you picked.', false, false); return; }
+            if (!S.hasTokens || !S.hasTokens()) {
+                paintStatus('Not signed in', 'Pick a plan below, then sign in or create a free account. Checkout opens right after, with the plan you picked.', false, false);
+                loadBoard(false);
+                fetch(API + '/premium/checkout-status', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (b) {
+                    if (b && b.open_to_public) { mode = 'signin'; paintButtons(false); }
+                }).catch(function () {});
+                return;
+            }
+            if (purchase === 'success') { pollUntilActive(15); return; }
+            loadMe().then(drawAccount).catch(function () {
+                /* Cold start or a network blip: leave the inert page as is. */
+            });
+        }
+
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
+        else start();
+    })();
+    </script>
+<script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-ds-nav.a3e4af57631a.js"></script>
+    <script src="/static/js/tmr-live-chat.js?v=816ec6f0a118"></script>
+    <script src="/static/js/tmr-pro-hero.9ab0ca7f824c.js" defer></script>
+<style id="dark-text-fix-20260913">
+/* DARK_TEXT_ON_DARK_20260913: the light theme pass recoloured this text navy but left its
+   surface dark, so it read navy on navy on every device. Light text restored. */
+body.tmr-light .pro-founding h2 { color: #F2F8FF !important; }
+body.tmr-light .pro-founding p, body.tmr-light .pro-founding li { color: #C3D6EA !important; }
+/* PRO_SALES_V2_20260929: the Watchdog panel is dark, so the light theme's text colours
+   must not reach it. */
+body.tmr-light .px-watch h3 { color: #FFFFFF !important; }
+body.tmr-light .px-watch h4 { color: #FFFFFF !important; }
+body.tmr-light .px-watch p, body.tmr-light .px-watch li { color: #C9D8E8 !important; }
+body.tmr-light .px-watch .px-lead { color: #E7F0FA !important; }
+body.tmr-light .px-watch .px-small { color: #9FB5CC !important; }
+body.tmr-light .px-watch .px-kicker { color: #F5C542 !important; }
+body.tmr-light .px-watch .px-link { color: #8CC4FF !important; }
+body.tmr-light .px-watch-shot span, body.tmr-light .px-watch-shot em, body.tmr-light .px-watch-shot small { color: #9FB5CC !important; }
+body.tmr-light .px-watch-shot strong, body.tmr-light .px-shot-rows span, body.tmr-light .px-shot-bar span { color: #FFFFFF !important; }
+body.tmr-light .px-shot-tabs span { color: #C3D4E6 !important; }
+body.tmr-light .px-shot-tabs b { color: #07182A !important; }
+body.tmr-light .px-watch .px-explore { background: #FFFFFF !important; color: #07182A !important; box-shadow: 0 10px 26px -12px rgba(77, 163, 255, .8); }
+body.tmr-light .px-watch .px-tag { background: rgba(140, 196, 255, .18) !important; color: #CFE4FF !important; }
+body.tmr-light .px-watch .px-tag.is-pro { background: #F5C542 !important; color: #1A1400 !important; }
+body.tmr-light .px-watch .px-pro-lead { color: #FFFFFF !important; }
+body.tmr-light .pd-card-lead strong { color: #FFFFFF !important; }
+body.tmr-light .pd-card-lead .pd-card-k { color: #F5C542 !important; }
+body.tmr-light .pd-card-lead .pd-card-d { color: #C9D8E8 !important; }
+/* WATCHDOG_SCALE_20260929: the Watchdog module is always dark; keep the light theme's text colours off it. */
+body.tmr-light .wdx h3 { color: #FFFFFF !important; }
+body.tmr-light .wdx .wdx-hl { color: #F5C542 !important; }
+body.tmr-light .wdx .wdx-lead { color: #DCE8F5 !important; }
+body.tmr-light .wdx .wdx-founder p { color: #F2F7FC !important; }
+body.tmr-light .wdx .wdx-founder-k { color: #F5C542 !important; }
+body.tmr-light .wdx .wdx-records { color: #FFFFFF !important; }
+body.tmr-light .wdx .wdx-sub, body.tmr-light .wdx .wdx-flow p, body.tmr-light .wdx .wdx-pulse span { color: #C3D4E6 !important; }
+body.tmr-light .wdx .wdx-note { color: #8FA6BF !important; }
+body.tmr-light .wdx .wdx-chips li { color: #DCE8F5 !important; }
+body.tmr-light .wdx .wdx-chips li.is-pro { color: #1A1400 !important; }
+body.tmr-light .wdx .px-list li { color: #C9D8E8 !important; }
+body.tmr-light .wdx .px-pro-lead, body.tmr-light .wdx h4, body.tmr-light .wdx .wdx-h, body.tmr-light .wdx .wdx-flow b { color: #FFFFFF !important; }
+body.tmr-light .wdx .px-small { color: #9FB5CC !important; }
+body.tmr-light .wdx .px-explore { background: #FFFFFF !important; color: #07182A !important; }
+body.tmr-light .px-watch .pro-cta { background: #F5C542 !important; border-color: #F5C542 !important; color: #1A1400 !important; }
+</style>
+<link rel="stylesheet" href="/static/css/tmr-pro-redesign.f5af58ae59a9.css">
+<style>
+/* PRO_PAGE_COMPACT_20261016 + PRO_PERFORMANCE_20261016 */
+.pperf-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;max-width:880px;margin:0 auto}
+.pperf-card{border:1px solid rgba(15,35,70,.12);border-radius:16px;padding:20px;background:#fff;box-shadow:0 10px 30px -18px rgba(10,30,60,.35)}
+.pperf-card h3{margin:0 0 4px;font:800 13px/1.2 Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5b6b80}
+.pperf-rec{font:800 34px/1.1 Barlow,Inter,sans-serif;color:#0b1a2e;font-variant-numeric:tabular-nums;margin:6px 0}
+.pperf-row{display:flex;flex-wrap:wrap;gap:6px 16px;font:600 14px/1.5 Inter,system-ui,sans-serif;color:#33465e}
+.pperf-row b{color:#0b1a2e}.pperf-row b.pperf-neg{color:#b42318}.pperf-row b.pperf-pos{color:#067647}
+.pperf-stale{display:block;margin-top:6px;color:#b54708}
+.pperf-note{max-width:880px;margin:14px auto 0;text-align:center;color:#5b6b80;font:13px/1.55 Inter,system-ui,sans-serif}
+.pcx-more{display:none}
+@media (max-width:640px){
+  /* The site-wide support button (.tmr-lc, 58px fixed bottom right) sat on the footer's last line
+     on phones: let the page scroll that line clear of it. Pro page only. */
+  .pcx .site-footer, .pcx footer{padding-bottom:84px}
+  .pperf-grid{grid-template-columns:1fr}
+  .pcx .pcx-hide{display:none}
+  .pcx .px-list li.pcx-x,.pcx .pro-list li.pcx-x{display:none}
+  .pcx .is-open li.pcx-x{display:revert}
+  .pcx .pcx-more{display:inline-flex;margin:8px 0 2px;padding:8px 12px;border-radius:10px;border:1px solid rgba(140,196,255,.35);background:transparent;color:#8cc4ff;font:700 13px Inter,system-ui,sans-serif;cursor:pointer}
+  .pcx .px-card .pcx-more{color:#1d4ed8;border-color:rgba(29,78,216,.3)}
+  .pcx .is-open > .pcx-more{display:none}
+}
+</style>
+<script>
+(function () {
+  'use strict';
+  var API = 'https://trustmyrecord-api.onrender.com/api';
+  try { if (window.TMR_SESSION && window.TMR_SESSION.api) API = window.TMR_SESSION.api; } catch (e) {}
+  function ev(name, p) { try { if (typeof window.gtag === 'function') window.gtag('event', name, p || {}); } catch (e) {} }
+  /* Compact mobile layout: same content stays in the DOM (nothing removed for crawlers);
+     long detail is folded behind a button on phones only. */
+  function compact() {
+    if (!window.matchMedia || !window.matchMedia('(max-width:640px)').matches) return;
+    document.body.classList.add('pcx');
+    function moreBtn(label, host) {
+      var b = document.createElement('button'); b.type = 'button'; b.className = 'pcx-more'; b.textContent = label;
+      b.addEventListener('click', function () { host.classList.add('is-open'); ev('pro_page_expand', { section: label }); });
+      return b;
+    }
+    /* The Watchdog detail blocks (how it works, sources, inside a profile) fold into one button;
+       the free vs Pro comparison stays open. */
+    var blocks = [].filter.call(document.querySelectorAll('#tools .wdx-block'), function (blk) { return !blk.querySelector('.pro-split'); });
+    if (blocks.length) {
+      var holder = document.createElement('div');
+      var btn = moreBtn('How the Watchdog works, its sources and what is in every profile', holder);
+      btn.style.display = 'inline-flex';
+      btn.addEventListener('click', function () { blocks.forEach(function (x) { x.classList.remove('pcx-hide'); }); btn.parentNode.removeChild(btn); });
+      blocks.forEach(function (x) { x.classList.add('pcx-hide'); });
+      blocks[0].parentNode.insertBefore(btn, blocks[0]);
+    }
+    [].forEach.call(document.querySelectorAll('#tools .px-list, #tools .pro-list'), function (ul) {
+      var lis = ul.querySelectorAll('li');
+      if (lis.length <= 3) return;
+      for (var i = 3; i < lis.length; i++) lis[i].classList.add('pcx-x');
+      ul.parentNode.insertBefore(moreBtn('Show all ' + lis.length, ul.parentNode), ul.nextSibling);
+    });
+  }
+  /* Graded performance: shown exactly as the API returns it, losing or winning. */
+  function n0(v) { return Number(v || 0).toLocaleString('en-US'); }
+  function sgn(v, d) { v = Number(v || 0); return (v > 0 ? '+' : v < 0 ? '\u2212' : '') + Math.abs(v).toFixed(d); }
+  function card(title, w) {
+    if (!w || !w.picks) return '';
+    var cls = '';   /* neutral: a result is reported, never sold as a gain or a loss */
+    return '<div class="pperf-card"><h3>' + title + '</h3>'
+      + '<div class="pperf-rec">' + n0(w.w) + '-' + n0(w.l) + (w.p ? '-' + n0(w.p) : '') + '</div>'
+      + '<div class="pperf-row"><span>Units <b class="' + cls + '">' + sgn(w.units, 1) + 'u</b></span><span>ROI <b class="' + cls + '">' + sgn(w.roi_pct, 2) + '%</b></span><span>Win rate <b>' + (w.win_pct == null ? 'n/a' : Number(w.win_pct).toFixed(1) + '%') + '</b></span></div>'
+      + '<div class="pperf-row" style="margin-top:6px"><span><b>' + n0(w.picks) + '</b> graded picks</span><span><b>' + n0(w.handicappers) + '</b> handicappers</span></div></div>';
+  }
+  function perf() {
+    var sec = document.getElementById('performance');
+    if (!sec) return;
+    fetch(API + '/pro/watchdog/performance', { cache: 'no-store' }).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); }).then(function (d) {
+      var a = d.last_30_days, b = d.since_tracking;
+      if (!a || !a.picks || !d.verified_at) return;          /* only reconciled figures are ever shown */
+      var since = new Date(d.method.tracking_since + 'T12:00:00Z').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      var md = function (t) { return new Date(t).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'America/Los_Angeles' }); };
+      var gen = Date.parse(d.generated_at);
+      var wn = (d.windows && d.windows.last_30_days) || { from: gen - 30 * 864e5, to: gen };
+      document.getElementById('pperfGrid').innerHTML = card('Last 30 days, ' + md(wn.from) + ' to ' + md(wn.to), a) + card('Since tracking began, ' + since + ' to ' + md(gen), b);
+      var ts = function (t) { return new Date(t).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' }); };
+      var asof = ts(d.verified_at);
+      document.getElementById('pperfNote').innerHTML = 'Graded by the TMR Watchdog. Settled picks only: ' + n0(d.pending && d.pending.picks)
+        + ' pending picks are not graded yet and are not in these numbers. Graded at the price the handicapper posted where the source gives one ('
+        + n0(a.at_posted_price) + ' of the last 30 days), otherwise at TMR&#39;s reference price (' + n0(a.at_reference_price)
+        + ')' + (a.graded_without_price ? '; ' + n0(a.graded_without_price) + ' picks posted without any price count in the record but not in units' : '')
+        + (a.excluded_price_check ? '; ' + n0(a.excluded_price_check) + ' picks graded at prices no single game offers (longer than +1000, futures or parlay prices) are left out' : '')
+        + '. Every figure is recounted independently before it is published. Past results do not predict future results, and these figures are not an edge or a promise of profit. Verified '
+        + asof + ' PT.' + (d.stale ? ' <b class="pperf-stale">These are the last verified figures. The newest update has not passed verification yet.</b>' : '');
+      sec.hidden = false;
+      ev('tmr_pro_impression', { component: 'pro_performance' });
+    }).catch(function () { });
+  }
+  function start() { compact(); perf(); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+})();
+</script>
+</body>
+</html>

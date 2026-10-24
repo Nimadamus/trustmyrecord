@@ -58,6 +58,15 @@
         return S().authFetch(api() + p, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) })
             .then(function (r) { return r.json().then(function (b) { b.__status = r.status; return b; }); });
     }
+    /* PAYWALL_20261024 (Nima): which games the proven handicappers are on is TMR Pro only. The API
+       answers it to a signed in Pro member only; everyone else gets no game lines at all. */
+    var gamesP = null;
+    function proGames() {
+        if (!signedIn()) return Promise.resolve({ games: [] });
+        if (!gamesP) gamesP = authGet('/pro/watchdog/games').then(function (b) { return b.__status === 200 ? b : { games: [] }; })
+            .catch(function () { gamesP = null; return { games: [] }; });
+        return gamesP;
+    }
     var cache = {};
     function getJSON(p) {
         if (!cache[p]) cache[p] = fetch(api() + p, { cache: 'no-store' }).then(function (r) { if (!r.ok) throw new Error(p + ' ' + r.status); return r.json(); })
@@ -75,7 +84,7 @@
     }
     function boardFacts() {
         return Promise.all([getJSON('/pro/pending-board/summary').catch(function () { return {}; }),
-                            getJSON('/pro/watchdog/games').catch(function () { return { games: [] }; })]).then(function (r) {
+                            proGames().catch(function () { return { games: [] }; })]).then(function (r) {
             var sm = r[0] || {}, games = r[1].games || [];
             return { picks: sm.picks || 0, handicappers: sm.handicappers || 0, games: games.length,
                      proven3: games.filter(function (g) { return (g.proven || 0) >= 3; }).length, top: topGame(games), list: games };
@@ -301,7 +310,7 @@
         if (!host) return false;
         injectStyle();
         mountSportsbookCapture(host);
-        getJSON('/pro/watchdog/games').then(function (d) {
+        proGames().then(function (d) {
             var games = d.games || [];
             if (!games.length) return;
             function paint() {
@@ -459,7 +468,7 @@
             shownFor = sig;
             injectStyle();
             var old = document.getElementById('tpfSimLine'); if (old) old.parentNode.removeChild(old);
-            getJSON('/pro/watchdog/games').catch(function () { return { games: [] }; }).then(function (d) {
+            proGames().catch(function () { return { games: [] }; }).then(function (d) {
                 if (shownFor !== sig) return;
                 var g = gameFor(d.games || [], a, b);
                 var wrap = document.createElement('div');
@@ -490,7 +499,7 @@
         var hero = document.querySelector('section.hero');
         if (!hero || document.getElementById('tpfLive')) return;
         injectStyle();
-        Promise.all([getJSON('/pro/pending-board/summary'), getJSON('/pro/watchdog/games').catch(function () { return { games: [] }; })]).then(function (r) {
+        Promise.all([getJSON('/pro/pending-board/summary'), proGames().catch(function () { return { games: [] }; })]).then(function (r) {
             var sm = r[0] || {}, games = (r[1].games || []).slice(0, 4), net = sm.network || {}, dir = net.directory || {};
             var nums = [];
             if (dir.accounts) nums.push([Number(dir.accounts).toLocaleString('en-US'), 'accounts monitored']);
@@ -635,7 +644,7 @@
     /* ------------------------------------------------------------ public API (BLP app, Pro page) */
     window.TMRFunnel = {
         track: track, setSrc: setSrc, src: src, preview: preview,
-        games: function () { return getJSON('/pro/watchdog/games').then(function (d) { return d.games || []; }); },
+        games: function () { return proGames().then(function (d) { return d.games || []; }); },
         findGame: findGame
     };
 

@@ -2051,8 +2051,13 @@
                pick, a handicapper or a consensus side, to anyone, Pro included. Everyone sees the counts
                and the locked game preview. */
             fetch(API + '/pro/pending-board/summary', { cache: 'no-store' }).then(function (r) { return r.json(); })
-                .then(function (sm) { paintNet(sm && sm.network); teaser(sm); })
-                .catch(function () { teaser(null); });
+                .then(function (sm) { paintNet(sm && sm.network); teaser(sm); if (isPro) proLink(); })
+                .catch(function () { teaser(null); if (isPro) proLink(); });
+        }
+        function proLink() {
+            if (!boardEl) return;
+            boardEl.innerHTML = '<div class="pro-teaser"><b>You have TMR Pro.</b> Your full Watchdog board, with every pending pick, record and consensus, is on its own members page.'
+                + '<p style="margin:14px 0 0"><a href="/pro/board/" style="display:inline-flex;align-items:center;min-height:44px;padding:0 18px;border-radius:10px;background:#F5C542;color:#1a1400;font-weight:800;text-decoration:none">Open my Watchdog board</a></p></div>';
         }
 
         function loadMe() {
