@@ -6,13 +6,13 @@ Prepared 2026-10-24, Pacific time. Nothing here is pushed or deployed.
 
 | Item | Value |
 |---|---|
-| Branch | `mlb-pitching-release-only`, local only, no upstream |
+| Branch | `mlb-pitching-release-only`, pushed to `origin/mlb-pitching-release-only` (not main) |
 | Worktree | `C:\Users\BL\mlbsim_pitching_release` |
-| Commits on top of `origin/main` `0fe2fb014` | `30ce580aa` (engine, tests), `e49e6ef9d` (legibility and contrast) |
-| Engine SHA-256 (first 12) | `43b94057ceb6`, pinned as `?v=43b94057ceb6-pitchmgmt` |
+| Commits on top of `origin/main` `0fe2fb014` | `30ce580aa` (engine, tests), `e49e6ef9d` (legibility and contrast), `bf8ff2e0b` (starter hook calibration), plus docs commits |
+| Engine SHA-256 (first 12) | `937ffbddef2c`, pinned as `?v=937ffbddef2c-pitchmgmt` |
 | CSS SHA-256 (first 12) | `45964a786b1b`, re-pinned on the simulator page and both season pages |
 | Live engine at 08:56 PDT | `4cf0065b16b2`, identical to main |
-| Engine vs the 24/24 realism build | identical ignoring line endings, except one display string in `pitchingChangesSection` ("X replaces Y: reason" instead of nested parentheses) |
+| Engine vs the 24/24 realism build | identical ignoring line endings, except one display string in `pitchingChangesSection` and the starter hook calibration (section 6a); the 12k realism shards were not rerun after those |
 
 ## 2. Scope (what reaches the site)
 
@@ -55,6 +55,13 @@ passed, 0 failed; matchup page contract all passed.
 Focused checks (`_audit/focused_extra.cjs`, 09:29 PDT): every regular season
 extra half inning starts with the runner on 2nd (68 games, 190 halves, 190
 placed, 0 misplaced); postseason extras place none (65 games).
+
+After the starter hook calibration (`bf8ff2e0b`), essential regression only,
+12:11 to 12:29 PDT (`_audit/regress.sh`, logs `_audit/release3/`), 11 of 11 rc=0:
+page, pitching management (66 of 66 PASS), feature flag isolation, box score
+reconciliation, box score, determinism, runs versus hits, postseason series, no
+legacy path, archive replay, focused extra inning checks (184 of 184 regular
+season extra halves with the runner, 0 in 69 postseason extra games).
 
 ## 4. Real game backtest (700 games, pre-game inputs only)
 
@@ -128,19 +135,51 @@ starter pitches median 80 (real October 82), pitchers per team-game 4.99 (real
 5.03), closer 4+ outs 32.4% (real 31.5%), 7+ outs 1.2% (real 1.2%), 35+ pitches
 5.0% (real 2.4%), position player pitched 4.2% (real postseason: rare).
 
+## 6a. Starter hook calibration (approved by the owner 2026-10-24, commit below)
+
+Three changes, all under `workloadV2()` (`STARTER_HOOK_CALIBRATION_20261024`):
+the mid-inning run hook waits for 70 pitches unless he has allowed 6+ runs; the
+hit hook waits for 70 pitches unless 8+ hits; the boundary "rocky" hook needs
+three innings in instead of two; and a starter is not sent out for another frame
+within 10 pitches of the limit (`STARTER_BOUNDARY_HEADROOM = 10`).
+
+Focused validation, same 700 real games, 4 simulated box scores each, same seeds
+(`_audit/bt/sw_rel.jsonl` before, `sw_final.jsonl` after; `spm.cjs`):
+
+| Metric | Real | Before | After |
+|---|---|---|---|
+| Starts with 5+ ER ending under 70 pitches | 16.2% | 48.5% | 40.8% |
+| Starts under 70 pitches with 3+ ER (all starts) | 5.8% | 12.8% | 9.3% |
+| Starts reaching 100 pitches | 10.2% | 28.7% | 15.2% |
+| Starts reaching 105 pitches | 2.8% | 9.3% | 3.4% |
+| Starter pitches p10 / p50 / p90 | 65 / 88 / 100 | 55 / 89 / 104 | 60 / 88 / 101 |
+| Good starts (1 ER or fewer) under 70 pitches | 6.6% | 5.8% | 5.6% |
+| Starts of 6+ innings | 35.6% | 31.0% | 28.8% |
+| Runs per team-game | 4.50 | 4.44 | 4.45 |
+| Pitchers per team-game | 4.32 | 4.52 | 4.53 |
+| Relief outings of 7+ outs per team-game | 0.183 | 0.238 | 0.222 |
+| Position player pitched | 2.7 to 2.9% | 3.4% | 3.5% |
+| Closer outings of 7+ outs | ~0 | 0.1% | 0.1% |
+
+Both targeted metrics improved and no bullpen metric got worse; 6+ inning starts
+fell 2.2 points. The 5+ ER gap is only partly closed: the simulated damage comes
+earlier in the outing than real damage does (5+ ER starts average 9.6 outs vs a
+real 12.7), which is a plate appearance engine property, and leaving the hooks
+looser made it worse (variant D2: 47.0%). Variants tried: `_audit/bt/mkvar.cjs`
+(D, D+H, D+H+R, B5, B8, B10, L95, D2+H2+R2 and combinations); chosen B10+D+H+R.
+
 ## 6. Known gaps (measured, not fixed in this release)
 
-1. Shelled starters leave too early: among starts with 5+ ER, 48.6% end under 70
-   pitches against a real 16.2%.
-2. Cruising starters run long: 28.7% of starts reach 100 pitches against a real
-   10.2% (105+: 9.2% vs 2.8%).
+1. Shelled starters still leave early: 40.8% of 5+ ER starts end under 70
+   pitches against a real 16.2% (was 48.5%; see 6a).
+2. 100-pitch starts 15.2% against a real 10.2% (was 28.7%); 6+ inning starts
+   28.8% against 35.6%.
 3. Hits high, walks and strikeouts low, intentional walks never issued: the same
    in production; parked as a separate calibration project.
 4. Starter quality is under-credited (section 4).
 5. Postseason mode: closer 35+ pitch outings about double the real rate, and
    position players still pitch in 4.2% of team-games on the fail open path.
-6. A sweep of hook and pitch-limit variants for gaps 1 and 2 was built
-   (`_audit/bt/mkvar.cjs`) but cancelled by the close-out order before it ran.
+
 
 ## 7. Browser check
 
@@ -153,10 +192,18 @@ browser (the renderer froze under machine load; main froze the same way, so this
 is not a candidate defect), mobile width, and named bullpen arms (backend roster
 calls fail from localhost because of CORS).
 
+Final display check (12:2x PDT): the Pitching Changes section rendered through
+the real `runSimulation` path on the final engine reads "X replaces Y: reason"
+(`_audit/snap.cjs`). Static CSS check: no dark-scheme rule touches the box
+score or the Roster Moves / Pitching Changes blocks, so dark mode renders the
+same colors as light: headings 14.9:1, list text 14.3:1, substitution rows
+8.9:1 on the white card. The browser preview froze again under machine load,
+so the final CSS is still not confirmed in a rendered browser.
+
 ## 8. Close-out state
 
-All background jobs finished at 11:27 PDT and the two preview servers were
-stopped at 11:28 PDT; nothing from this work is still running.
+All jobs finished by 12:29 PDT and the preview server was stopped; nothing from
+this work is still running.
 
 ## 9. Guarded deployment (only after the owner says yes)
 
@@ -171,12 +218,12 @@ stopped at 11:28 PDT; nothing from this work is still running.
 
 ## 10. Rollback
 
-`git revert` the two commits and push to `main`: the old engine, CSS and pins
+`git revert` the three code commits (`bf8ff2e0b`, `e49e6ef9d`, `30ce580aa`) and push to `main`: the old engine, CSS and pins
 return together. Verify the marker `mlb-simulator-blowout-calibration-20260727a`
 with a cache-busted GET.
 
 ## 11. Owner question
 
-May I push `30ce580aa` and `e49e6ef9d` (rebased onto current main) to main of
+May I merge `origin/mlb-pitching-release-only` (rebased onto current main) into main of
 trustmyrecord so the pitching and bullpen changes go live, with the rollback
 above if anything looks wrong?
