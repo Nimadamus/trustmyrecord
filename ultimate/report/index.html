@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Performance Intelligence | TMR Ultimate | TrustMyRecord</title>
+    <link rel="canonical" href="https://trustmyrecord.com/ultimate/report/">
+    <meta name="description" content="Your TMR Ultimate Performance Intelligence report, built from your graded TrustMyRecord picks.">
+    <link rel="icon" type="image/png" href="/static/favicon.png">
+    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=859cacfb660e">
+    <script defer src="/static/js/tmr-sitewide.js?v=c6f29b7cd398"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-V5MCVXS2HE"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-V5MCVXS2HE');
+    </script>
+<link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=282f1f70cb51">
+<script defer src="/static/js/tmr-linkhub.js?v=7be5e93e0626"></script>
+<link rel="stylesheet" href="/static/css/tmr-ds.d4d41a955166.css">
+<link rel="stylesheet" href="/static/css/tmr-ds-header.cc364e352e74.css">
+<link rel="stylesheet" href="/static/css/tmr-light.css?v=21433b023833">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap">
+<link rel="stylesheet" href="/static/css/tmr-navbar.css?v=68ec3081d29a">
+<link rel="stylesheet" href="/static/css/tmr-ultimate.css?v=20261024k">
+</head>
+<body class="tmr-site-shell tmr-ds-shell tmr-light ult-page">
+    <div class="ult-member">
+        <div class="ult-wrap">
+            <div class="ult-sechead" style="text-align:left;margin:0 0 20px;max-width:none">
+                <span class="ult-kicker">TMR Ultimate</span>
+                <h1 style="font:800 clamp(30px,4vw,44px)/1.1 Barlow,Inter,sans-serif;margin-top:8px">My Performance Intelligence</h1>
+                <p data-ult-asof>Built from your graded TrustMyRecord picks.</p>
+            </div>
+            <div data-ult-state class="ult-member-state"><p>Loading your report.</p></div>
+            <div class="ult-shell" data-ult-shell hidden>
+                <div class="ult-profile" data-ult-profile></div>
+                <div class="ult-report-wrap">
+                    <div class="ult-report-head"><div><span class="ult-kicker">Performance Intelligence Report</span><h3>Your evaluation</h3></div></div>
+                    <div class="ult-report" data-ult-report></div>
+                </div>
+            </div>
+        </div>
+    </div>
+<script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-ds-nav.a3e4af57631a.js"></script>
+<script src="/static/js/tmr-live-chat.js?v=816ec6f0a118"></script>
+<script src="/static/js/tmr-ultimate-report.js?v=20261024k"></script>
+<script>
+/* TMR_ULTIMATE_20261024. Access is decided by the server (403 for anyone
+   without an active Ultimate plan); this page only draws the answer. */
+(function () {
+  'use strict';
+  var API = 'https://trustmyrecord-api.onrender.com/api';
+  var S = null;
+  var stateEl = document.querySelector('[data-ult-state]');
+  function state(html) { stateEl.hidden = false; stateEl.innerHTML = html; document.querySelector('[data-ult-shell]').hidden = true; }
+
+  function draw(r) {
+    var R = window.TMRUltimateReport;
+    if (!r.overall || !r.overall.n) {
+      state('<h2>Your report starts with your first graded pick</h2><p>Make picks on TrustMyRecord. Each one is graded on the final score and added here. A category gets a verdict once it has 30 graded picks.</p><a class="ult-btn ult-btn--gold" href="/sportsbook/">Make a pick</a>');
+      return;
+    }
+    stateEl.hidden = true;
+    document.querySelector('[data-ult-shell]').hidden = false;
+    var asof = document.querySelector('[data-ult-asof]');
+    if (asof && r.generated_at) asof.textContent = 'Built from your ' + r.overall.n + ' graded picks. Updated ' +
+      new Date(r.generated_at).toLocaleString('en-US', { timeZone: 'America/Los_Angeles', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) + ' PT.';
+    R.renderProfile(document.querySelector('[data-ult-profile]'), r);
+    R.renderReport(document.querySelector('[data-ult-report]'), r, {
+      name: 'you',
+      canStartPlan: true,
+      onStartPlan: function (btn) {
+        btn.classList.add('is-busy');
+        S.authFetch(API + '/ultimate/intelligence/plan', { method: 'POST' }).then(function (x) {
+          if (!x.ok) throw new Error('plan ' + x.status);
+          return load();
+        }).catch(function () { btn.classList.remove('is-busy'); btn.textContent = 'Could not start the plan. Try again'; });
+      }
+    });
+  }
+
+  function load() {
+    return S.authFetch(API + '/ultimate/intelligence', { cache: 'no-store' }).then(function (x) {
+      return x.json().catch(function () { return {}; }).then(function (b) { return { x: x, b: b }; });
+    }).then(function (o) {
+      if (o.x.ok) return draw(o.b);
+      if (o.x.status === 401) { window.location.href = '/login/?next=' + encodeURIComponent('/ultimate/report/'); return; }
+      if (o.x.status === 403) {
+        state('<h2>Performance Intelligence is part of TMR Ultimate</h2><p>Ultimate includes everything in TMR Pro plus this report on your own record. See the full sample report first.</p><a class="ult-btn ult-btn--gold" href="/ultimate/">See TMR Ultimate</a>');
+        return;
+      }
+      state('<h2>Your report could not load</h2><p>' + (o.b && o.b.error ? String(o.b.error).replace(/</g, '&lt;') : 'Please try again in a minute.') + '</p><button type="button" class="ult-btn ult-btn--ghost" data-ult-retry>Try again</button>');
+      var b = stateEl.querySelector('[data-ult-retry]'); if (b) b.addEventListener('click', function () { state('<p>Loading your report.</p>'); load(); });
+    }).catch(function () { state('<h2>Your report could not load</h2><p>Please check your connection and try again.</p>'); });
+  }
+
+  function start() {
+    S = window.TMRSession || null;
+    if (S && S.api) API = S.api;
+    if (!S || !S.hasTokens || !S.hasTokens()) {
+      state('<h2>Sign in to see your report</h2><p>Performance Intelligence reads your own graded picks, so it needs your account.</p><a class="ult-btn ult-btn--gold" href="/login/?next=' + encodeURIComponent('/ultimate/report/') + '">Sign in</a>');
+      return;
+    }
+    load();
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+})();
+</script>
+</body>
+</html>
