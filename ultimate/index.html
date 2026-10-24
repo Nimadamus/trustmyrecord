@@ -265,7 +265,7 @@
     n.innerHTML = html; n.hidden = !html;
     if (html) n.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
-  function cta(where) {
+  function cta(where, confirmed) {
     ev('tmr_ultimate_cta_click', { location: where });
     if (busy) return;
     if (!status || !status.ultimate_open_to_public) {
@@ -279,6 +279,15 @@
       var sub = me && me.subscription;
       var onCard = sub && sub.source === 'stripe' && (sub.status === 'active' || sub.status === 'trialing');
       if (sub && sub.tier === 'ultimate') { window.location.href = '/ultimate/report/'; return null; }
+      /* A card plan change charges the saved card at once, so it never runs
+         from a click elsewhere or a ?buy=1 return: the member confirms here. */
+      if (onCard && !confirmed) {
+        busy = false;
+        notice('<b>Upgrade TMR Pro to TMR Ultimate?</b> Your plan becomes $99.99 a month on the card you already use. Today you pay only the difference for the rest of this billing period, and nothing else changes. <span class="ult-ctas"><button type="button" class="ult-btn ult-btn--gold" data-ult-confirm>Confirm upgrade</button></span>');
+        var c = document.querySelector('[data-ult-confirm]');
+        if (c) c.addEventListener('click', function () { cta('confirm', true); });
+        return null;
+      }
       var path = onCard ? '/premium/change-plan' : '/premium/upgrade';
       return S.authFetch(API + path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tier: 'ultimate', billing_period: period }) })
         .then(function (r) { return r.json().catch(function () { return {}; }).then(function (b) { return { r: r, b: b, change: onCard }; }); });
