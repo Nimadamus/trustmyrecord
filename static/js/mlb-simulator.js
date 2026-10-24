@@ -8967,7 +8967,7 @@
             if (!list.length) return '';
             return '<div class="rm-block"><h5>' + escapeHtml((t[1] && t[1].name) || t[0]) + '</h5><ul>' + list.map(function (c) {
                 var when = c.inning ? ((c.half === 'bottom' ? 'Bot ' : 'Top ') + ord(c.inning) + (c.midInning ? '' : ', start') + ' — ') : '';
-                var why = c.reason && c.reason !== 'pitching change' ? ' (' + c.reason + ')' : '';
+                var why = c.reason && c.reason !== 'pitching change' ? ': ' + c.reason : '';
                 var inh = c.inheritedRunners ? '; inherits ' + c.inheritedRunners + ' on base' : '';
                 return '<li>' + escapeHtml(when + String(c.in).replace(/\s*\((LHP|RHP)\)$/, '') + ' replaces ' + String(c.out).replace(/\s*\((LHP|RHP)\)$/, '') + why + inh) + '</li>';
             }).join('') + '</ul></div>';
