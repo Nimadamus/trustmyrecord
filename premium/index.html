@@ -1740,7 +1740,7 @@
                 t = 'The board fills up as the handicappers we track post their picks for the next games.';
             }
             var rows = '';
-            var k = Math.min(Number(summary && summary.handicappers) || 0, 5);
+            var k = 0;   // PAYWALL_20261024 (Nima): no game or pick preview on this page, counts only
             for (var r = 0; r < k; r++) {
                 rows += '<div style="display:flex;gap:12px;align-items:center;padding:10px 14px;border-top:1px solid rgba(127,127,127,.18)">'
                     + '<span aria-hidden="true">&#128274;</span>'
@@ -1752,26 +1752,6 @@
                 + (rows ? '<div aria-label="Locked preview" style="margin-top:14px;border:1px solid rgba(127,127,127,.22);border-radius:10px;overflow:hidden">'
                     + '<div style="padding:8px 14px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;opacity:.7">Handicapper, pending pick, record</div>' + rows + '</div>' : '')
                 + '<p style="margin:14px 0 0"><a href="#pricing" style="display:inline-flex;align-items:center;min-height:44px;padding:0 18px;border-radius:10px;background:#F5C542;color:#1a1400;font-weight:800;text-decoration:none">Unlock with TMR Pro, $49.99/month</a></p></div>';
-            /* PAYWALL_20261024 (Nima): the locked preview shows real upcoming games and how many proven
-               handicappers (25+ graded picks) have a pending pick on each, from the public
-               /pro/watchdog/games counts. The side, the pick and the handicappers stay Pro only; the API
-               never sends them to a non Pro visitor. */
-            fetch(API + '/pro/watchdog/games', { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
-                var now = Date.now();
-                var gs = ((d && d.games) || []).filter(function (g) { return Date.parse(g.start) > now && g.proven >= 2; })
-                    .sort(function (a, b) { return b.proven - a.proven || Date.parse(a.start) - Date.parse(b.start); }).slice(0, 5);
-                var box = boardEl && boardEl.querySelector('[aria-label="Locked preview"]');
-                if (!gs.length || !box) return;
-                box.innerHTML = '<div style="padding:8px 14px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;opacity:.7">Where the proven handicappers are betting &middot; picks locked</div>'
-                    + gs.map(function (g) {
-                        return '<div style="display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;padding:12px 14px;border-top:1px solid rgba(127,127,127,.18)">'
-                            + '<div style="flex:1 1 220px;min-width:0"><div style="font-weight:700">' + esc(g.away) + ' at ' + esc(g.home) + '</div>'
-                            + '<div class="wd-muted" style="font-size:13px">' + esc(g.league || '') + ' &middot; ' + esc(kick(g.start)) + '</div></div>'
-                            + '<div style="font-size:14px"><b>' + g.proven + '</b> proven handicapper' + (g.proven === 1 ? '' : 's') + ' with a pending pick</div>'
-                            + '<span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:rgba(245,197,66,.16);font-size:12px;font-weight:800"><span aria-hidden="true">&#128274;</span>Pick locked</span></div>';
-                    }).join('');
-                ga('watchdog_locked_games_view', { component: 'pro_page_board', games: gs.length });
-            }).catch(function () { });
         }
         function sortVal(c, k) {
             if (k === 'name') return String(c.name || '').toLowerCase();
