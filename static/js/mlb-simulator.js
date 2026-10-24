@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-roster-refresh-20260804';
+    var UI_BUILD = 'mlb-simulator-pitching-mgmt-20261023';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -3069,6 +3069,20 @@
                 var role = a === arms.closer ? 'CL' : (a === arms.setup ? 'SU' : (isOpenerGame && idx === 0 ? 'BULK' : 'RP'));
                 pitchers.push({ name: a.name, vec: evPitcherVector({ mlbId: a.mlbId }, 100), acc: evNewPit(), role: role, hand: a.hand || null, gbShare: bbShareOf('pitchers', a.mlbId), seasonEra: seasonEraOf(a.mlbId), mlbId: a.mlbId || null });
             });
+        } else if (workloadV2()) {
+            // FAIL_OPEN_PEN_DEPTH_20261023: with no qualified reliever stats (every
+            // historical club, or a current club whose feeds failed) the staff was
+            // a starter, ONE middle arm and a closer, so the closer was the next
+            // rung by the 6th: on 1,200 historical matchups 30% of closer outings
+            // began before the 8th, 23% ran 7+ outs, and a position player pitched
+            // in 16% of team-games. Same team-profile pen vector, but a real depth
+            // of arms; unnamed arms are labeled as unnamed, never given invented
+            // names. Named arms from the roster keep their names.
+            var abbr = (team && team.abbreviation) || 'TEAM';
+            var mids = [staffNames[3], staffNames[4], null].map(function (nm, i) { return nm || (abbr + ' bullpen arm ' + (i + 1)); });
+            mids.forEach(function (nm, i) { pitchers.push({ name: nm, vec: penVec, acc: evNewPit(), role: isOpenerGame && i === 0 ? 'BULK' : 'RP' }); });
+            pitchers.push({ name: staffNames[1] || (abbr + ' setup man'), vec: penVec, acc: evNewPit(), role: 'SU' });
+            pitchers.push({ name: staffNames[2] || (abbr + ' CL'), vec: penVec, acc: evNewPit(), role: 'CL' });
         } else {
             pitchers.push({ name: staffNames[1] || (team.abbreviation + ' RP'), vec: penVec, acc: evNewPit(), role: isOpenerGame ? 'BULK' : 'RP' });
             pitchers.push({ name: staffNames[2] || (team.abbreviation + ' CL'), vec: penVec, acc: evNewPit(), role: 'CL' });
@@ -3076,7 +3090,12 @@
         // TMR_ROSTER_STATE_20260723: the bench pool (verified reserves) is built once
         // here and only ever consumed in the displayed game. Empty for synthetic teams.
         var benchPool = roster ? evBuildBench(team, roster, parkHr) : [];
+        if (postseasonOpts) pitchers.forEach(function (p) { p._postseason = true; });
+        var builtSide = { pitchers: pitchers, team: team };
+        evApplyBullpenLedger(builtSide);
         return {
+            ledgerNote: builtSide.ledgerNote || null,
+            reservePen: (arms && arms.reserve) || [],
             // POSTSEASON_MODE_20261001: null in the regular season; every engine
             // branch that reads it is skipped when it is null.
             postseason: postseasonOpts ? { round: postseasonOpts.round || null } : null,
@@ -3160,7 +3179,15 @@
             // so the postseason staff keeps the three best middle arms instead of
             // four. Modeling assumption, not a measured figure. Regular season
             // (postseason falsy) is byte identical to before.
-            var depth = rest.slice(0, postseason ? 3 : 4).reverse(); // worst ERA first, best last
+            // POSTSEASON_PEN_DEPTH_20261023: reversed. On every postseason game
+            // of 2022-2025 a club used 5.03 pitchers against 4.26 in the 2025
+            // regular season: October pens are top heavy in WHO pitches the
+            // late innings (the leverage rule in evActivePitcher), but managers
+            // use MORE arms, each for less. Three middle arms left the ladder
+            // so short that the closer was the next rung by the 7th and a
+            // position player pitched in 11.5% of simulated World Series
+            // team-games (8.3% in games decided by four or fewer).
+            var depth = rest.slice(0, postseason ? 5 : 4).reverse(); // worst ERA first, best last
             for (var di = 0; di < depth.length; di++) {
                 if (depth[di] !== setup) ordered.push(depth[di]);
             }
@@ -3171,7 +3198,43 @@
             ordered.push(setup);
             ordered.push(closer);
         }
-        return { setup: setup, closer: closer, bridge: bridge, ordered: ordered };
+        // The qualified relievers left out of the ladder: the depth arm draws
+        // from these before it falls back to a generic one.
+        var reserve = rest.filter(function (a) { return ordered.indexOf(a) === -1; });
+        // Then the roster relievers with too few innings to qualify for the
+        // ladder (fewer than 10 IP): still real arms, behind everyone else.
+        if (workloadV2()) {
+            players.forEach(function (p) {
+                if (!p || !p.mlbId || !/^(P|SP|RP|CP)$|Relief|Pitcher/i.test(String(p.position || '')) || normalizeName(p.name) === starterKey) return;
+                if (arms.some(function (a) { return a.mlbId === p.mlbId; })) return;
+                var s = cachedPlayerStat(p.mlbId, 'pitching');
+                if (!s) return;
+                var ip = ipStringToDecimal(s.inningsPitched), gs = Number(s.gamesStarted || 0), g = Number(s.gamesPlayed || 0);
+                if (!Number.isFinite(ip) || ip < 1 || ip >= 10 || gs >= 4 || (g > 0 && gs / g >= 0.5)) return;
+                reserve.push({ name: p.name, mlbId: p.mlbId, era: Number(s.era), hand: pitchHandOf(p.mlbId) });
+            });
+        }
+        // Rotation starters other than tonight's: in October they are the long
+        // relievers of last resort (a deep extra-inning game), never the plan.
+        // MARATHON_DEPTH_20261023: the regular season too. A real club has 13
+        // pitchers, and in a 15th-inning tie the manager uses a starter who is
+        // not scheduled soon before he sends out a shortstop. They sit at the
+        // very end of the reserve list, so they are reached only after every
+        // reliever, and evDepthArm skips any the ledger shows pitched recently.
+        var reserveStarters = [];
+        if (workloadV2()) {
+            reserveStarters = players.filter(function (p) {
+                return p && p.mlbId && /^(P|SP|RP|CP)$|Relief|Pitcher/i.test(String(p.position || '')) && normalizeName(p.name) !== starterKey;
+            }).map(function (p) {
+                var s = cachedPlayerStat(p.mlbId, 'pitching');
+                if (!s) return null;
+                var ip = ipStringToDecimal(s.inningsPitched), gs = Number(s.gamesStarted || 0), g = Number(s.gamesPlayed || 0), era = Number(s.era);
+                if (!Number.isFinite(ip) || ip < 20 || !(gs >= 4 || (g > 0 && gs / g >= 0.5))) return null;
+                if (!Number.isFinite(era) || era <= 0 || era >= 30) return null;
+                return { name: p.name, mlbId: p.mlbId, era: era, hand: pitchHandOf(p.mlbId), long: true };
+            }).filter(Boolean).sort(function (a, b) { return a.era - b.era; });
+        }
+        return { setup: setup, closer: closer, bridge: bridge, ordered: ordered, reserve: reserve.concat(reserveStarters) };
     }
     function evStarterOuts(starter, team) {
         var quality = Number(starter && starter.quality); if (!Number.isFinite(quality)) quality = 100;
@@ -3254,7 +3317,8 @@
     var EL_TYPES = {
         PA: 'PA', STEAL: 'STEAL', PICKOFF: 'PICKOFF', SUB: 'SUB', INJURY: 'INJURY',
         EJECTION: 'EJECTION', INNING_START: 'INNING_START', INNING_END: 'INNING_END', GAME_END: 'GAME_END',
-        WILD_PITCH: 'WILD_PITCH', PASSED_BALL: 'PASSED_BALL', BALK: 'BALK', INTERFERENCE: 'INTERFERENCE'
+        WILD_PITCH: 'WILD_PITCH', PASSED_BALL: 'PASSED_BALL', BALK: 'BALK', INTERFERENCE: 'INTERFERENCE',
+        PLACED_RUNNER: 'PLACED_RUNNER'
     };
     function elNewLog(gameId) {
         return { gameId: gameId || 'sim', seq: 0, events: [], scoring: [] };
@@ -3368,6 +3432,7 @@
     // four, strikeouts end on the third strike, balls in play end on a swing,
     // fouls with two strikes extend the at-bat - so the count is always legal
     // and PC/ST are simply the length and the strike tally of this array.
+    var BIP_FOUL = 0.545, BIP_TWO_STRIKE_FOUL = 0.38;
     function evPitchSequence(code, isHbp, random) {
         var seq = [], b = 0, s = 0, MAX = 14;
         function add(call) {
@@ -3405,10 +3470,15 @@
                 add(call);
             } else {
                 // Ball in play. Target mix per pitch: 34% ball, 33% foul, 33% contact.
+                // PITCH_ECONOMY_20261023: measured on real-data sims the engine threw
+                // 3.66 pitches per plate appearance against MLB's ~3.9, so a starter
+                // reached a given out count about 25 pitches early and box scores
+                // showed hooks at 60-70 pitches. Balls in play now see a few more
+                // fouls first. Pitch counts only: the PA outcome is drawn elsewhere.
                 if (rush) { add('X'); break; }
-                if (s === 2 && random() < 0.34) { add('F'); continue; }
+                if (s === 2 && random() < (workloadV2() ? BIP_TWO_STRIKE_FOUL : 0.34)) { add('F'); continue; }
                 if (b < 3 && random() < 0.34) { add('B'); continue; }
-                if (random() < 0.50) { add('F'); continue; }
+                if (random() < (workloadV2() ? BIP_FOUL : 0.50)) { add('F'); continue; }
                 add('X');
                 break;
             }
@@ -3551,7 +3621,7 @@
         ['b1', 'b2', 'b3', 'hr'].forEach(function (h) { if (out[h]) { out.out = (out.out || 0) + out[h] * penalty; out[h] *= (1 - penalty); } });
         return out;
     }
-    function evPlayHalf(side, pitcher, random, endLead, defSide, log) {
+    function evPlayHalf(side, pitcher, random, endLead, defSide, log, placeRunner) {
         var lineup = side.lineup, outs = 0, bases = [null, null, null], runs = 0, errors = 0;
         // SCORING_EVENT_LOG_20260703: when `log` is provided (only for the single
         // displayed game, never the win-probability samples) record each notable event
@@ -3767,10 +3837,26 @@
             var subjectTeam = log.battingTeam === 'home' ? 'away' : 'home';
             var outgoing = pitcher;
             var pname = String(outgoing.name).replace(/\s*\((LHP|RHP)\)$/, '');
-            pitcher = arms[idx + 1];
-            defSide.minArmIdx = Math.max(defSide.minArmIdx || 0, idx + 1);
+            if (workloadV2()) {
+                // REENTRY_FIX_20261023: idx + 1 could be an arm who had already
+                // pitched and been replaced (illegal re-entry), or the closer in
+                // the 5th. Same choice a manager makes for any unplanned change.
+                var injLead = Number.isFinite(defSide._defLeadAtHalf) ? defSide._defLeadAtHalf - runs : null;
+                var repl = evUnusedReliefArm(defSide, !closerEntryOk(defSide, sumOuts(defSide), injLead, true), sumOuts(defSide) < 18);
+                if (!repl) { outgoing.removed = true; var dpa = evDepthArm(defSide); outgoing.removed = false; if (dpa && dpa !== outgoing && !dpa.removed && (dpa.acc.bf || 0) === 0) repl = dpa; }
+                if (!repl) return;
+                pitcher = repl;
+                pitcher._apptStartHits = pitcher.acc.h; pitcher._apptStartRuns = pitcher.acc.r; pitcher._apptStartBf = pitcher.acc.bf;
+                apptStartHits = pitcher.acc.h; apptRuns = 0;
+                var ri = arms.indexOf(repl);
+                if (repl !== defSide.depthArm) defSide.minArmIdx = Math.max(defSide.minArmIdx || 0, ri);
+            } else {
+                pitcher = arms[idx + 1];
+                defSide.minArmIdx = Math.max(defSide.minArmIdx || 0, idx + 1);
+            }
             if (outgoing.pid) defSide.removedPids && (defSide.removedPids[outgoing.pid] = true);
             outgoing.removed = true;
+            if (workloadV2()) outgoing._exitReason = injured ? 'injury' : 'ejection';
             if (injured) {
                 var sev = elInjurySeverity(random);
                 var area = elBodyArea('pitching', random);
@@ -3818,6 +3904,30 @@
         // hit was wrongly charged earned. bu[] rides along with bases[]/bp[] through
         // every shift/advance so the taint survives until he scores or is put out.
         var bu = [false, false, false];
+        // EXTRA_INNING_RUNNER_20261023: the automatic runner on second. The
+        // removal note above (EXTRA_INNINGS_RULE_REMOVAL_20260727) was wrong: MLB
+        // made the rule permanent for the regular season in 2023 and it is in
+        // force today; it does not apply in the postseason. Measured on statsapi
+        // linescores, 64-75% of 2021-2025 regular season extra-inning games ended
+        // in the 10th and none of 2024-2025's 426 reached the 15th; without the
+        // runner the engine ended 37% in the 10th and sent 9.5% to the 15th or
+        // later, which is also what emptied bullpens and put position players on
+        // the mound in tie games. The runner is the batter before the leadoff
+        // man, charged to the pitcher on the mound, and unearned if he scores.
+        if (placeRunner) {
+            var prSlot = ((side.idx || 0) + 8) % 9;
+            bases[1] = prSlot; bp[1] = pitcher; bu[1] = true;
+            side.placedRunners = (side.placedRunners || 0) + 1;
+            elEmit(EL_TYPES.PLACED_RUNNER, {
+                runnerId: bname(prSlot), base: '2nd',
+                baseStateBefore: [null, null, null], baseStateAfter: baseSnapshot(),
+                runnerPitcher: pitcherRefs(),
+                outsBefore: 0, outsAfter: 0,
+                scoreBefore: elScore(), scoreAfter: elScore(),
+                result: { code: 'PLACED_RUNNER', detail: bname(prSlot) + ' placed on second base (extra-inning rule)' },
+                runsScored: [], rbi: 0
+            });
+        }
         // Runs during this pitcher's appearance. Under the flag this spans the
         // whole appearance rather than restarting each half-inning; see
         // APPEARANCE_SCOPED_HOOK_20260827 below.
@@ -3847,6 +3957,7 @@
         if (workloadV2() && pitcher && pitcher.acc && pitcher._apptStartHits === undefined) {
             pitcher._apptStartHits = pitcher.acc.h;
             pitcher._apptStartRuns = pitcher.acc.r;
+            pitcher._apptStartBf = pitcher.acc.bf;
         }
         var apptStartHits = (workloadV2() && pitcher && pitcher._apptStartHits !== undefined)
             ? pitcher._apptStartHits
@@ -3882,6 +3993,7 @@
             if (!defSide || !Array.isArray(defSide.pitchers)) return;
             var arms = defSide.pitchers, idx = arms.indexOf(pitcher);
             if (idx < 0) return;
+            if (workloadV2()) { maybeChangeV2(arms, idx); return; }
             /**
              * LAST_ARM_POSITION_PLAYER_20260827 -- somebody has to take the ball.
              *
@@ -4048,6 +4160,168 @@
                     runsScored: [], rbi: 0
                 });
             }
+        }
+        /**
+         * MID_INNING_MANAGER_20261023 -- the mid-inning change, decided the way a
+         * manager decides it: first WHETHER (damage, pitch count, leverage), then
+         * WHO, from the arms that are actually appropriate right now.
+         *
+         * The previous rule always handed the ball to the next rung of the
+         * ladder (idx + 1). The top rung is the closer, so a 7th-inning change
+         * from the setup man brought the closer in, and the floor ratchet then
+         * kept him out there inning after inning: Trevor Megill, 2 2/3 IP and 41
+         * pitches in World Series Game 1. On real-data sims of that matchup 25%
+         * of postseason closer outings began before the 8th and 20.7% ran 7+
+         * outs, against 1.2% for 7+ outs on every 2022-2025 postseason game.
+         *
+         * Also fixed here, all measured on the same runs:
+         *   the leverage test read `endLead`, which is null except in a home
+         *   walk-off half, so every game counted as "within two" and relievers
+         *   were lifted for leverage in blowouts;
+         *   the three-batter minimum (a rule since 2020) was not applied to the
+         *   damage hooks;
+         *   batters faced this appearance was measured from the half-inning's
+         *   first pitcher, so after one change a second was nearly impossible;
+         *   with the ladder exhausted a position player was sent out in close
+         *   games (8.3% of simulated World Series team-games decided by four or
+         *   fewer). A depth reliever comes first now, and a position player only
+         *   when trailing by eight or more (the boundary blowout rule's line), or
+         *   as a true last resort.
+         * Every change records the reason the engine acted on.
+         */
+        function maybeChangeV2(arms, idx) {
+            var a = pitcher.acc;
+            if (pitcher._apptStartBf === undefined) pitcher._apptStartBf = 0;
+            var aBf = a.bf - pitcher._apptStartBf;
+            var aHits = a.h - apptStartHits;
+            var onBase = bases[0] !== null || bases[1] !== null || bases[2] !== null;
+            var lead = Number.isFinite(defSide._defLeadAtHalf) ? defSide._defLeadAtHalf - runs : null;
+            var outsNow = sumOuts(defSide);
+            var reason = null, kind = null;
+            if (idx === 0 && pitcher.role === 'SP') {
+                var spLim = defSide.postseason ? POSTSEASON_PITCH_LIMIT : STARTER_PITCH_LIMIT;
+                var tgt = defSide.starterOutsGame || defSide.starterOuts || 16;
+                if (apptRuns >= 5) { reason = 'removed after allowing ' + apptRuns + ' runs'; kind = 'damage'; }
+                else if (aHits >= 7) { reason = 'removed after allowing ' + aHits + ' hits'; kind = 'damage'; }
+                else if (onBase && aBf >= 3 && (a.pitches || 0) >= spLim) { reason = 'pitch count (' + a.pitches + ') with a runner on'; kind = 'workload'; }
+                // Past his planned length with a man on: lifted, unless he is
+                // cruising and this manager rides a hot starter (the same test
+                // that extends him at the inning boundary).
+                else if (onBase && aBf >= 3 && (a.outs || 0) >= tgt && !(defSide._spRide && evStarterCruising(defSide, a))) { reason = 'planned workload reached (' + a.pitches + ' pitches) with a runner on'; kind = 'workload'; }
+            } else if (pitcher.role === 'POS') {
+                // In a blowout the position player normally finishes: nobody burns
+                // a real arm to replace the man sent out to save the bullpen. But
+                // he is not left out there to be hit forever either; real one-inning
+                // relief lines (position players included) top out at 7 hits in
+                // 12,782 appearances. Past 6 hits or 6 runs another position player
+                // takes over (blowout) or the pen does (close game).
+                var blowoutPos = lead !== null && lead <= -8;
+                if ((!blowoutPos && (apptRuns >= 5 || aHits >= 6)) || (blowoutPos && (apptRuns >= 6 || aHits >= 6))) { reason = 'position player removed after allowing ' + (apptRuns >= 5 ? apptRuns + ' runs' : aHits + ' hits'); kind = 'damage'; }
+            } else if (aBf >= 3) { // three-batter minimum
+                var midCeil = RELIEF_PITCH_CEILING[pitcher.role] ? RELIEF_PITCH_CEILING[pitcher.role] + (pitcher.role === 'CL' ? 5 : 8 + (pitcher._postseason ? 5 : 0)) - (pitcher.limited ? 12 : 0) : null;
+                if (apptRuns >= 3) { reason = 'allowed ' + apptRuns + ' runs'; kind = 'damage'; }
+                else if (aHits >= 4) { reason = 'allowed ' + aHits + ' hits'; kind = 'damage'; }
+                else if (midCeil && pitcher.role !== 'BULK' && (onBase || pitcher.limited) && (a.pitches || 0) >= midCeil) { reason = 'reliever pitch count (' + a.pitches + ')'; kind = 'workload'; }
+                // A closer is the best arm; nobody better is coming. He leaves on
+                // damage, not on a leverage matchup.
+                // Matchup changes are a late-inning tool: before the 6th the
+                // man out there is expected to give length.
+                // LEVERAGE_WINDOW_20261023: regular season from the 7th within a run,
+                // October from the 6th within two. Measured: the wider regular
+                // season window used 4.62 pitchers a team-game against a real
+                // 4.21-4.26 (2023-2025), with 6+ pitchers in 22% of games (real 14%).
+                else if (pitcher.role !== 'CL' && outsNow >= (defSide.postseason ? 15 : 18) && onBase && aBf >= (idx === 1 ? 5 : 3) && lead !== null && Math.abs(lead) <= (defSide.postseason ? 2 : 1) && (aHits >= 1 || apptRuns >= 1)) {
+                    reason = 'leverage change with runners on (' + (lead === 0 ? 'tie game' : (lead > 0 ? lead + '-run lead' : 'trailing by ' + (-lead))) + ')';
+                    kind = 'leverage';
+                }
+            }
+            // THE FOUR-OUT SAVE: in the 8th with a 1-3 run lead (0-3 in October)
+            // and the tying run on base (any runner in October), the closer comes
+            // in early. Real closers: 10.0% of 2025 regular season outings and
+            // 31.5% of 2022-2025 postseason outings ran four or more outs.
+            var forced = null;
+            if (!reason && pitcher.role !== 'CL' && pitcher.role !== 'POS' && aBf >= 3 && lead !== null && outsNow >= (defSide.postseason ? 21 : 22) && outsNow < 24
+                && lead >= (defSide.postseason ? 0 : 1) && lead <= 3
+                && (defSide.postseason ? onBase : (bases[1] !== null || bases[2] !== null))) {
+                for (var ci = arms.length - 1; ci > 0; ci--) {
+                    var cc = arms[ci];
+                    if (cc.role === 'CL' && !cc.removed && !cc.unavailable && (cc.acc.bf || 0) === 0 && armUnderCap(cc)) { forced = cc; break; }
+                }
+                if (forced) { reason = 'closer brought in for a four-out save (' + (lead === 0 ? 'tie game' : lead + '-run lead') + ', runners on in the 8th)'; kind = 'leverage'; }
+            }
+            if (!reason) return;
+            // WHO. The ladder above him first (the closer only when his entry is
+            // allowed), then an arm the schedule skipped, then the depth arm.
+            var closerOk = closerEntryOk(defSide, outsNow, lead, true);
+            var incoming = forced, j;
+            if (!incoming && pitcher.role === 'POS' && lead !== null && lead <= -8) {
+                var nextPos = evMakePositionPitcher(defSide);
+                if (nextPos && !defSide.pitchers.some(function (p) { return p.name === nextPos.name; })) {
+                    defSide.pitchers.push(nextPos);
+                    defSide.posPitcherIdx = defSide.pitchers.length - 1;
+                    defSide.posPitcher = nextPos;
+                    incoming = nextPos;
+                }
+            }
+            for (j = idx + 1; j < arms.length && !incoming; j++) {
+                var c = arms[j];
+                if (!evIsReliefArm(c) || c === defSide.depthArm || c.removed || c.unavailable || c === pitcher || (c.acc.bf || 0) > 0 || !armUnderCap(c)) continue;
+                if (c.role === 'CL' && !closerOk) continue;
+                incoming = c;
+            }
+            if (!incoming) incoming = evUnusedReliefArm(defSide, !closerOk, outsNow < 18);
+            if (incoming === pitcher) incoming = null;
+            if (!incoming) {
+                // If the man being lifted IS the current depth arm, evDepthArm must
+                // see him as gone or it hands him straight back (that is how a
+                // tie game ran out of pitchers with five starters unused).
+                var wasRemoved = pitcher.removed; pitcher.removed = true;
+                var d = evDepthArm(defSide);
+                pitcher.removed = wasRemoved;
+                if (d !== pitcher && !d.removed && (d.acc.bf || 0) === 0 && armUnderCap(d)) incoming = d;
+            }
+            // A position player: a lopsided game, or a true last resort when the
+            // man out there is being destroyed and nobody is left.
+            if (!incoming && kind === 'damage' && ((lead !== null && lead <= -8) || apptRuns >= 5 || aHits >= 6)) {
+                var emergency = evMakePositionPitcher(defSide);
+                if (emergency && defSide.pitchers.some(function (p) { return p.name === emergency.name; })) emergency = null;
+                if (emergency) {
+                    defSide.pitchers.push(emergency);
+                    defSide.posPitcherIdx = defSide.pitchers.length - 1;
+                    defSide.posPitcher = emergency;
+                    incoming = emergency;
+                    reason += '; bullpen exhausted';
+                }
+            }
+            if (!incoming) return; // nobody appropriate is left: he stays in
+            var outgoing = pitcher;
+            outgoing.removed = true;
+            outgoing._exitReason = reason;
+            var nextIdx = arms.indexOf(incoming);
+            pitcher = incoming; apptRuns = 0;
+            apptStartHits = pitcher.acc.h;
+            pitcher._apptStartHits = apptStartHits; pitcher._apptStartRuns = pitcher.acc.r; pitcher._apptStartBf = pitcher.acc.bf;
+            pitcher._entryReason = reason;
+            if (pitcher._enterMargin === undefined && lead !== null) pitcher._enterMargin = lead;
+            // The ladder floor only moves up within the named ladder; a depth or
+            // position arm does not lock the closer out of the 9th.
+            var closerIdx = -1;
+            for (j = arms.length - 1; j >= 0; j--) if (arms[j].role === 'CL') { closerIdx = j; break; }
+            if (evIsReliefArm(pitcher) && pitcher !== defSide.depthArm && (closerIdx < 0 || nextIdx <= closerIdx)) defSide.minArmIdx = Math.max(defSide.minArmIdx || 0, nextIdx);
+            else if (pitcher.role === 'POS') defSide.minArmIdx = nextIdx;
+            defSide.midChanges = (defSide.midChanges || 0) + 1;
+            var inheritedCount = bases.filter(function (x) { return x !== null; }).length;
+            pitcher.acc.ir = (pitcher.acc.ir || 0) + inheritedCount;
+            pitcher._inheritedSlots = bases.slice();
+            elEmit(EL_TYPES.SUB, {
+                baseStateBefore: baseSnapshot(), baseStateAfter: baseSnapshot(),
+                runnerPitcher: pitcherRefs(),
+                outsBefore: outs, outsAfter: outs,
+                scoreBefore: elScore(), scoreAfter: elScore(),
+                substitutionData: { out: outgoing.name, in: pitcher.name, role: 'P', reason: reason, inheritedRunners: inheritedCount, midInning: true },
+                result: { code: 'PITCHING_CHANGE', detail: 'Pitching Change: ' + pitcher.name + ' replaces ' + outgoing.name + (inheritedCount ? ' with ' + inheritedCount + ' on base' : '') + ' (' + reason + ')' },
+                runsScored: [], rbi: 0
+            });
         }
         var gidp = 0, ofAssists = 0;
         // Stage 3: one pitcher injury/ejection check as the arm takes the mound.
@@ -4615,6 +4889,7 @@
             result: { code: 'INNING_END', detail: 'End of the ' + (log ? log.half : '') + ' of the inning' },
             lob: stranded, runsThisHalf: runs, runsScored: [], rbi: 0
         });
+        if (defSide && workloadV2()) defSide._halfEndPitcher = pitcher;
         return { runs: runs, errors: errors, gidp: gidp, ofAssists: ofAssists, lob: stranded };
     }
     // PITCHING_WORKLOAD_CAPS_20260725: realistic single-appearance ceilings so no
@@ -4655,19 +4930,162 @@
     // game is high leverage and off days rest the pen. 92 is a modeling
     // assumption chosen to sit a little under the regular season limit, not a
     // published figure. Only read when side.postseason is set.
-    var POSTSEASON_PITCH_LIMIT = 92;
+    // POSTSEASON_PITCH_LIMIT_20261023: measured on all 171 postseason games of
+    // 2022-2025 (statsapi boxscores), starters' pitch counts ran p50 82 / p90 99
+    // against the regular season's 88 / 100. The October leash is shorter in
+    // outs, not much shorter in pitches. 92 capped the simulated p90 at 94.
+    var POSTSEASON_PITCH_LIMIT = 97;
+    // A typical inning's pitches: the headroom a starter needs to be sent back out.
+    var STARTER_PITCHES_PER_INNING = 16;
     function armOutsThisGame(p) { return (p.acc && p.acc.outs) || 0; }
     // POSTSEASON_MODE_20261001: per appearance out cap. capOverride is only ever
     // set by the postseason path (a closer allowed a seven out save in an
     // elimination game); undefined everywhere else, so this is ROLE_OUT_CAP.
-    function armCap(p) { return p.capOverride || ROLE_OUT_CAP[p.role]; }
+    // RELIEVER_ROLE_WORKLOAD_20261023: role-specific limits on being sent back out
+    // for ANOTHER inning (armUnderCap is only read at inning boundaries and when
+    // choosing an arm). Measured on real boxscores, closers (team saves leader):
+    //                     4+ outs   7+ outs   35+ pitches
+    //   2025 regular        10.0%      0.0%        1.5%
+    //   2022-25 postseason  31.5%      1.2%        2.4%
+    // The engine let a closer start an inning with up to 5 outs already
+    // recorded, so a 7th-inning entry rode through the 9th (2 2/3 IP, 41 pitches
+    // in the reported game; 20.7% of simulated postseason closer outings went
+    // 7+ outs). Now a closer starts a new inning only with fewer than 4 outs
+    // (so a full 8th plus the 9th, the real six-out save, stays possible) and
+    // under his pitch ceiling. Every relief role gets a pitch ceiling for
+    // starting another frame; BULK (behind an opener) is the long role.
+    var ROLE_OUT_CAP_V2 = { CL: 4, SU: 6, RP: 9, BULK: 18 };
+    var RELIEF_PITCH_CEILING = { CL: 25, SU: 28, RP: 32, BULK: 75 };
+    function armCap(p) {
+        var cap = p.capOverride || (workloadV2() ? ROLE_OUT_CAP_V2 : ROLE_OUT_CAP)[p.role];
+        // A reliever the workload ledger marks limited (worked hard in the last
+        // two or three days) is a one-inning arm tonight.
+        if (workloadV2() && p.limited && cap) cap = Math.min(cap, 3);
+        return cap;
+    }
     // .removed is the hard "left the game, can never return" flag (mirrors real
     // baseball substitution rules). armUnderCap folds it in: a removed arm is
     // never eligible again regardless of how few outs it recorded.
     function armUnderCap(p) {
         if (p.removed || p.unavailable) return false;
         var cap = armCap(p);
+        if (workloadV2() && RELIEF_PITCH_CEILING[p.role]) {
+            // The postseason ceiling is five pitches higher: one more hitter.
+            // The postseason ceiling is five pitches higher (one more hitter) for
+            // everyone but the closer: October closers still rarely pass 35.
+            var ceiling = RELIEF_PITCH_CEILING[p.role] + (p.capOverride ? 10 : 0) + (p._postseason && p.role !== 'CL' ? 5 : 0) - (p.limited ? 8 : 0);
+            if (((p.acc && p.acc.pitches) || 0) >= ceiling) return false;
+            // HIT_AT_BOUNDARY_20261023: a reliever who has been squared up this
+            // outing (3+ hits) is not sent back out for another inning, whatever
+            // his outs and pitches. The 12,000-game suite found the line it
+            // allows: 4 hits in one frame, back out, a 5th, 1 2/3 IP 5 H 0 R
+            // (real baseball: 0 such lines in 14,003 outings of 2 IP or less).
+            if (p.role !== 'BULK' && ((p.acc && p.acc.bf) || 0) > 0 && ((p.acc.h || 0) - (p._apptStartHits || 0)) >= 3) return false;
+        }
         return !cap || armOutsThisGame(p) < cap;
+    }
+    // CLOSER_ENTRY_20261023: when a closer may FIRST come into a game. Before
+    // this, any mid-inning change simply took the next arm in the ladder, and
+    // the closer is the top rung, so a 7th-inning change could bring him in
+    // (25% of simulated postseason closer outings started before the 8th). A
+    // closer now enters only:
+    //   in the 9th or later (any situation the schedule gives him);
+    //   in the 8th mid-inning with the lead 0-3: the four or five out save;
+    //   in the 8th at the start of the inning in a postseason elimination game
+    //     with the lead 0-3 (the existing CLOSER_FLOOR=21 rule);
+    //   in the 7th mid-inning in a postseason elimination game with the lead
+    //     0-2: the all-hands case, modeled explicitly.
+    // lead is the defending club's lead (negative when trailing).
+    function closerEntryOk(side, outsNow, lead, midInning) {
+        if (outsNow >= 24) return true;
+        if (lead === null || lead === undefined || !Number.isFinite(lead)) return false;
+        if (outsNow >= 21 && lead >= 0 && lead <= 3) return midInning || !!(side.postseason && side.elimination);
+        if (outsNow >= 18 && midInning && side.postseason && side.elimination && lead >= 0 && lead <= 2) return true;
+        return false;
+    }
+    function evIsReliefArm(p) { return !!p && (p.role === 'CL' || p.role === 'SU' || p.role === 'RP' || p.role === 'BULK'); }
+    // The arm a manager goes to when the scheduled one is not allowed (closer too
+    // early) or is spent: an unused, rested relief arm under his limits,
+    // preferring the highest leverage rung below the closer. Null when the
+    // named bullpen has nobody left.
+    // preferLow: early in a game (a starter knocked out or hurt), the manager
+    // wants length from the low-leverage end of the pen, not his setup man.
+    function evUnusedReliefArm(side, excludeCloser, preferLow) {
+        var arms = side.pitchers, best = null;
+        for (var i = 1; i < arms.length; i++) {
+            var p = arms[i];
+            if (!evIsReliefArm(p) || p.removed || p.unavailable || p === side._halfEndPitcher) continue;
+            if (excludeCloser && p.role === 'CL') continue;
+            if (((p.acc && p.acc.bf) || 0) > 0 || !armUnderCap(p)) continue;
+            best = p; // later index = higher leverage rung
+            if (preferLow) break;
+        }
+        return best;
+    }
+    // MANAGER_DECISION_REASONS_20261023: why an arm left at an inning boundary,
+    // read from the same state that made the decision, never invented after.
+    function evBoundaryChangeReason(side, p, outsRecorded) {
+        var a = p.acc || {}, pc = a.pitches || 0;
+        if (p.role === 'SP') {
+            var limit = side.postseason ? POSTSEASON_PITCH_LIMIT : STARTER_PITCH_LIMIT;
+            if (pc >= limit) return 'pitch count (' + pc + ')';
+            if ((a.er || 0) >= 4) return 'removed after allowing ' + a.er + ' earned runs';
+            var why = 'planned workload reached (' + pc + ' pitches';
+            if ((a.bf || 0) >= 18) why += ', lineup turning over a third time';
+            if (side.postseason) why += ', postseason bullpen plan';
+            return why + ')';
+        }
+        if (p.role === 'POS') return 'position player finished his inning';
+        var ceiling = RELIEF_PITCH_CEILING[p.role];
+        if (ceiling && pc >= ceiling) return 'reliever pitch limit (' + pc + ' pitches)';
+        var cap = armCap(p);
+        if (cap && armOutsThisGame(p) >= cap) return 'workload limit for his role (' + armOutsThisGame(p) + ' outs)';
+        return 'bullpen plan: next inning assigned to another reliever';
+    }
+    // The generic depth reliever (the named staff is the five or six arms with
+    // real stats worth tracking; a real club carries eight). Created once.
+    function evDepthArm(side) {
+        // Under the flag: once the current depth arm is spent or removed, the
+        // next one comes from the roster (reliever, then in October a rotation
+        // starter as the long man), and the generic arm only after that.
+        var needNew = !side.depthArm;
+        if (workloadV2() && side.depthArm && (side.depthArm.removed || !armUnderCap(side.depthArm))) {
+            var more = (side.reservePen && (side._reserveNext || 0) < side.reservePen.length) || !side._genericDepthMade;
+            if (more) needNew = true;
+        }
+        if (needNew) {
+            // A real reliever from the active roster who was not in the named
+            // ladder, when one exists (his own rates); otherwise the generic arm.
+            var res = null;
+            while (workloadV2() && side.reservePen && (side._reserveNext || 0) < side.reservePen.length && !res) {
+                var cand = side.reservePen[side._reserveNext || 0];
+                side._reserveNext = (side._reserveNext || 0) + 1;
+                var cw = bullpenWorkloadOf(side.team, cand.mlbId);
+                // Out tonight per the ledger, or a starter who pitched in the last
+                // three days: not an option.
+                if (cw && (cw.availability === 'unavailable' || (cand.long && cw.daysRest !== null && cw.daysRest < 3))) continue;
+                if (side._seriesUnavailable && side._seriesUnavailable[cand.name]) continue;
+                res = cand;
+            }
+            if (!res && side._genericDepthMade && side.depthArm) return side.depthArm; // only one generic arm
+            if (!res) side._genericDepthMade = true;
+            var depthArm = res
+                ? { name: res.name, vec: evPitcherVector({ mlbId: res.mlbId }, 100), acc: evNewPit(), role: res.long ? 'BULK' : 'RP', hand: res.hand || null, gbShare: bbShareOf('pitchers', res.mlbId), seasonEra: seasonEraOf(res.mlbId), mlbId: res.mlbId || null, _postseason: !!side.postseason, _entryReason: res.long ? 'rotation starter used in long relief' : null }
+                : { name: (side.team && side.team.abbreviation ? side.team.abbreviation + ' ' : '') + 'emergency reliever', vec: evStaffVector(side.team, true), acc: evNewPit(), role: 'RP', hand: null, _postseason: !!side.postseason };
+            side.pitchers.push(depthArm);
+            side.depthArmIdx = side.pitchers.length - 1;
+            side.depthArm = depthArm;
+        }
+        return side.depthArm;
+    }
+    // STARTER_EFFECTIVENESS_20261023: has the starter been efficient enough, with
+    // enough pitches left, that tonight's manager would send him back out?
+    function evStarterCruising(side, sp) {
+        var spLimit = side.postseason ? POSTSEASON_PITCH_LIMIT : STARTER_PITCH_LIMIT;
+        var runners = (sp.h || 0) + (sp.bb || 0) + (sp.hbp || 0);
+        return (sp.pitches || 0) + STARTER_PITCHES_PER_INNING <= spLimit
+            && (sp.r || 0) <= (side.postseason ? 1 : 2)
+            && runners <= Math.floor((sp.outs || 0) / 3) + (side.postseason ? 0 : 1);
     }
     function evActivePitcher(side, outsRecorded, extraInnings, defRuns, oppRuns, oppHand) {
         // starterOutsGame: per-game sampled hook point (real starters do not throw
@@ -4705,6 +5123,24 @@
                 starterOuts = Math.min(starterOuts, spOuts);
             }
         }
+        // STARTER_EFFECTIVENESS_20261023: the planned length is a plan, not a
+        // stopwatch. The out target above is drawn before the first pitch, so a
+        // starter who was cruising (1 hit, 62 pitches through 4 2/3 in the
+        // reported World Series game) was lifted exactly as if he were laboring.
+        // Real managers ride a starter who is dealing and has pitches left. At an
+        // inning boundary at or past the plan, a starter who has the pitches for
+        // another frame and has been efficient gets one more inning, re-checked
+        // each inning, up to two past the plan. Whether this manager rides a hot
+        // starter at all is drawn once per game (_spRide, see evSimGame), so
+        // the times-through-the-order quick hook still happens on some nights.
+        if (workloadV2() && arms.length && !arms[0].removed && side._spRide && side.minArmIdx === 0
+            && outsRecorded >= starterOuts && outsRecorded % 3 === 0 && outsRecorded < 27) {
+            if (evStarterCruising(side, arms[0].acc) && outsRecorded < (side._spPlanOuts || starterOuts) + 6) {
+                side.starterOutsGame = outsRecorded + 3;
+                starterOuts = side.starterOutsGame;
+                side._spExtended = (side._spExtended || 0) + 1;
+            }
+        }
         if (arms.length <= 1) return arms[0];
         // minArmIdx floors the selection: once a mid-inning change has advanced to a later
         // arm, the next inning never reverts to an earlier one (no using the closer in the
@@ -4716,6 +5152,14 @@
         // (bridge, setup) split the outs between the starter's exit and the 9th, in
         // order, so the highest-leverage arm (setup) covers the latest pocket.
         var closerIdx = arms.length - 1;
+        // LADDER_END_20261023: depth arms are appended to the staff during a game
+        // now (evDepthArm), so "the last arm is the closer" no longer holds. The
+        // ladder ends at the named staff; the closer is found by role.
+        if (workloadV2()) {
+            var ladderEnd = Math.min(arms.length, side._baseArms || arms.length) - 1;
+            closerIdx = ladderEnd;
+            for (var li = 1; li <= ladderEnd; li++) if (arms[li].role === 'CL') closerIdx = li;
+        }
         var CLOSER_FLOOR = 24; // 9th inning begins at the 24th defensive out
         // POSTSEASON_MODE_20261001: in an elimination game the closer can be asked
         // for a four out (or longer) save: with a lead of one to three runs or a
@@ -4743,7 +5187,7 @@
             }
             // POSTSEASON_MODE_20261001: an arm ruled out by series workload is not
             // a candidate unless every arm is ruled out (then the least used goes).
-            if (side.postseason) {
+            if (side.postseason || workloadV2()) {
                 var rested = candidates.filter(function (p) { return !p.unavailable; });
                 if (rested.length) candidates = rested;
             }
@@ -4842,6 +5286,11 @@
         var idx = Math.max(scheduledIdx, floor);
         while (idx < closerIdx && !armUnderCap(pick(idx))) idx++;
         var finalPick = pick(idx);
+        // A late pocket whose arm is spent or out tonight (the closer worked the
+        // last three days) goes to the next best rung, not the least-used arm.
+        if (workloadV2() && !armUnderCap(finalPick) && idx >= closerIdx - 1) {
+            for (var dn = Math.min(idx, closerIdx) - 1; dn >= 1; dn--) if (armUnderCap(arms[dn])) return arms[dn];
+        }
         return armUnderCap(finalPick) ? finalPick : freshestArm();
     }
     // A position player on the mound: real teams down big late send a hitter out to
@@ -4878,6 +5327,12 @@
         var pick = cand2.length ? cand2[cand2.length - 1] : pool[pool.length - 1];
         if (!pick) return null;
         var nm = (pick.playerName || pick.name || 'Position player').replace(/\s*\([^)]*\)\s*$/, '');
+        // Unnamed (synthetic) lineups: two position players must not share a box
+        // score name, or the game log cannot tell them apart.
+        if (workloadV2()) {
+            var base = nm, n2 = 2;
+            while ((side.pitchers || []).some(function (p) { return String(p.name).indexOf(nm + ' (') === 0; })) nm = base + ' ' + (n2++);
+        }
         // POS_PITCHER_PID_SYNC_20260727: carry the source batter's pid so a later
         // injury/ejection on him AS A BATTER (elSwapSlot) can mark this pitcher
         // object .removed too - see elSwapSlot.
@@ -4895,8 +5350,33 @@
         var b = side && side.lineup && side.lineup[(side.idx || 0) % 9];
         return (b && b.batSide) || null;
     }
+    // EVERY_EXIT_RECORDED_20261023: the blowout and exhausted-bullpen branches
+    // of evDefPitcherCore return early, before the code that marks the outgoing
+    // arm as removed, so the man they replaced could be scheduled again later
+    // (re-entry, illegal). Every boundary hand-off now passes through here.
     function evDefPitcher(side, outsRecorded, defRuns, oppRuns, inn, oppHand) {
+        if (!workloadV2()) return evDefPitcherCore(side, outsRecorded, defRuns, oppRuns, inn, oppHand);
+        var before = side._halfEndPitcher || side._activePitcher;
+        side._boundaryChangeReason = null;
+        var chosen = evDefPitcherCore(side, outsRecorded, defRuns, oppRuns, inn, oppHand);
+        if (before && chosen && chosen !== before) {
+            if (((before.acc && before.acc.bf) || 0) > 0) before.removed = true;
+            if (!side._boundaryChangeReason) {
+                side._boundaryChangeReason = chosen.role === 'POS'
+                    ? ((oppRuns - defRuns) >= 8 ? 'position player pitching, trailing by ' + (oppRuns - defRuns) + ' late' : 'bullpen exhausted')
+                    : evBoundaryChangeReason(side, before, outsRecorded);
+            }
+            if (!before._exitReason) before._exitReason = side._boundaryChangeReason;
+        }
+        side._activePitcher = chosen;
+        return chosen;
+    }
+    function evDefPitcherCore(side, outsRecorded, defRuns, oppRuns, inn, oppHand) {
+        // A position player squared up for 3+ hits is not sent back out for
+        // another inning; the next volunteer goes (HIT_AT_BOUNDARY_20261023).
+        if (workloadV2() && side.posPitcher && !side.posPitcher.removed && ((side.posPitcher.acc.h || 0) - (side.posPitcher._apptStartHits || 0)) >= 3) side.posPitcher.removed = true;
         if (inn >= 7 && (oppRuns - defRuns) >= 8) {
+            if (workloadV2() && side.posPitcher && side.posPitcher.removed) side.posPitcher = null;
             if (!side.posPitcher) {
                 var pp = evMakePositionPitcher(side);
                 if (pp) { side.pitchers.push(pp); side.posPitcherIdx = side.pitchers.length - 1; side.posPitcher = pp; }
@@ -4941,13 +5421,9 @@
             // unrealistic outing; once it's ALSO spent, allSpent re-evaluates true
             // (its role is 'RP', included in `relievers` above) and the position
             // player fallback below still applies.
-            if (!side.depthArm) {
-                var depthArm = { name: (side.team && side.team.abbreviation ? side.team.abbreviation + ' ' : '') + 'emergency reliever', vec: evStaffVector(side.team, true), acc: evNewPit(), role: 'RP', hand: null };
-                side.pitchers.push(depthArm);
-                side.depthArmIdx = side.pitchers.length - 1;
-                side.depthArm = depthArm;
-            }
+            evDepthArm(side);
             if (side.depthArm && armUnderCap(side.depthArm)) { side.minArmIdx = side.depthArmIdx; return side.depthArm; }
+            if (workloadV2() && side.posPitcher && side.posPitcher.removed) side.posPitcher = null;
             if (!side.posPitcher) {
                 var pp2 = evMakePositionPitcher(side);
                 if (pp2) { side.pitchers.push(pp2); side.posPitcherIdx = side.pitchers.length - 1; side.posPitcher = pp2; }
@@ -4955,6 +5431,28 @@
             if (side.posPitcher) { side.minArmIdx = side.posPitcherIdx; return side.posPitcher; }
         }
         var chosen = evActivePitcher(side, outsRecorded, extraInnings, defRuns, oppRuns, oppHand);
+        // The arm who actually finished the last half (a mid-inning change moves
+        // it past the one evDefPitcher chose), recorded by evPlayHalf.
+        var onMound = workloadV2() ? (side._halfEndPitcher || side._activePitcher) : side._activePitcher;
+        var changeReason = null;
+        if (workloadV2() && chosen) {
+            var lead = defRuns - oppRuns;
+            // CLOSER_ENTRY_20261023 at an inning boundary: a closer who is not
+            // already in the game is not brought in before his time. Go to an
+            // unused rested arm instead, then the depth arm.
+            if (chosen !== onMound && chosen.role === 'CL' && !closerEntryOk(side, outsRecorded, lead, false)) {
+                var alt = evUnusedReliefArm(side, true) || evDepthArm(side);
+                if (alt && armUnderCap(alt)) chosen = alt;
+            }
+            // Whatever the schedule picked, including the man already out there,
+            // never send out an arm past his limits when a fresh one exists (the
+            // depth arms are the rest of the active staff).
+            if (evIsReliefArm(chosen) && !armUnderCap(chosen)) {
+                var alt2 = evUnusedReliefArm(side, !closerEntryOk(side, outsRecorded, lead, false)) || evDepthArm(side);
+                if (alt2 && alt2 !== chosen && armUnderCap(alt2)) chosen = alt2;
+            }
+            if (onMound && chosen !== onMound) changeReason = evBoundaryChangeReason(side, onMound, outsRecorded);
+        }
         // ARM_REMOVAL_TRACKING_20260725: the moment a half-inning boundary hands
         // off to a DIFFERENT arm than last time, the previous arm has left the
         // game for good (real baseball: no pitcher re-enters once replaced). This
@@ -4964,6 +5462,15 @@
         if (side._activePitcher && side._activePitcher !== chosen && armOutsThisGame(side._activePitcher) > 0) {
             side._activePitcher.removed = true;
         }
+        // REENTRY_FIX_20261023: the arm who came in mid-inning and finished the
+        // half was never marked, so a later scheduling pass could send him out
+        // again after another pitcher had worked in between.
+        if (workloadV2() && onMound && onMound !== chosen && armOutsThisGame(onMound) + ((onMound.acc && onMound.acc.bf) || 0) > 0) {
+            onMound.removed = true;
+            if (changeReason && !onMound._exitReason) onMound._exitReason = changeReason;
+        }
+        if (workloadV2() && chosen !== onMound && changeReason) side._boundaryChangeReason = changeReason;
+        else if (workloadV2()) side._boundaryChangeReason = null;
         side._activePitcher = chosen;
         // HOLD_TRACKING_20260725: the run margin (own runs - opponent runs) the
         // moment this arm FIRST takes the mound this game - pitcherDecisions uses
@@ -4994,7 +5501,7 @@
             // player appended in a prior sampled game) so resampling never accumulates.
             if (s._baseArms === undefined) s._baseArms = s.pitchers.length;
             else if (s.pitchers.length > s._baseArms) s.pitchers.length = s._baseArms;
-            s.posPitcher = null; s.posPitcherIdx = -1; s.depthArm = null; s.depthArmIdx = -1; s._activePitcher = null;
+            s.posPitcher = null; s.posPitcherIdx = -1; s.depthArm = null; s.depthArmIdx = -1; s._activePitcher = null; s._reserveNext = 0; s._genericDepthMade = false;
             s.idx = 0; s.lob = 0; s.sb = 0; s.cs = 0; s.minArmIdx = 0; s.midChanges = 0; s.ibb = 0;
             // Event-sourced situational trackers (reset per game).
             s.gidp = 0; s.sf = 0; s.sacBunts = 0; s.hbp = 0; s.rispAb = 0; s.rispHits = 0; s.twoOutRbi = 0;
@@ -5049,7 +5556,15 @@
             var dealingBonus = random() < 0.019 ? (4 + Math.floor(random() * 5)) : 0;
             s.starterOutsGame = clamp(s.starterOuts + Math.round((random() + random() - 1) * 6) + dealingBonus, 9, 27);
             s.lineup.forEach(function (b) { b.acc = evNewBat(); });
-            s.pitchers.forEach(function (p) { p.acc = evNewPit(); p.removed = false; p._enterMargin = undefined; });
+            s.pitchers.forEach(function (p) {
+                p.acc = evNewPit(); p.removed = false; p._enterMargin = undefined;
+                // APPEARANCE_SNAPSHOT_RESET_20261023: these appearance snapshots
+                // were never cleared between games. The same side objects play the
+                // win-probability sample and then the displayed game, so the
+                // displayed game's hit and run hooks were measured against a stale
+                // snapshot from an earlier sampled game.
+                if (workloadV2()) { p._apptStartHits = undefined; p._apptStartRuns = undefined; p._apptStartBf = undefined; p._exitReason = undefined; p._entryReason = undefined; }
+            });
             // NO_HITTER_CALIBRATION_20260727: the same rare "dealing" day that
             // extends a starter's expected length also needs to suppress what he
             // allows, or a no-hitter is nearly impossible even on a day he goes the
@@ -5058,6 +5573,18 @@
             // outing length). One flag drives both effects together, matching how
             // a real "he's got it today" start actually presents.
             if (s.pitchers[0]) s.pitchers[0]._dealing = dealingBonus > 0;
+            // STARTER_EFFECTIVENESS_20261023: the plan, kept so an extension is
+            // bounded against it, and whether tonight's manager rides a starter
+            // who is dealing (see evActivePitcher). Fitted to real boxscores: a
+            // dominant start (12+ outs, 1 ER or fewer, 3 hits or fewer) was still
+            // lifted before six innings under 80 pitches in 20% of 2025 regular
+            // season starts and 31% of 2022-2025 postseason starts. October's
+            // stricter "cruising" test (evStarterCruising) carries most of that
+            // difference; the ride rates below land the simulated figures at 18%
+            // and 27% on the reported Rays-Brewers matchup.
+            s._spPlanOuts = s.starterOutsGame; s._spExtended = 0;
+            s._spRide = workloadV2() ? random() < (s.postseason ? 0.60 : 0.62) : false;
+            s._halfEndPitcher = null;
         });
         var aRuns = 0, hRuns = 0, aErr = 0, hErr = 0, aInn = [], hInn = [], walkOff = false;
         // WEATHER_DELAY_20260726: at most one delay per game, and only within
@@ -5118,7 +5645,7 @@
         // the authoritative structured event log (elNewLog).
         var sinkScoring = Array.isArray(logSink) ? logSink : (logSink && logSink.scoring) || null;
         var sinkEl = (logSink && !Array.isArray(logSink) && logSink.el) || null;
-        function half(batSide, defSide, pitcher, endLead, inning, halfLabel) {
+        function half(batSide, defSide, pitcher, endLead, inning, halfLabel, placeRunner) {
             var isHomeBat = batSide === homeSide;
             var log = (sinkScoring || sinkEl) ? {
                 events: sinkScoring || [], el: sinkEl,
@@ -5151,16 +5678,19 @@
                     baseStateBefore: [null, null, null], baseStateAfter: [null, null, null],
                     outsBefore: 0, outsAfter: 0,
                     scoreBefore: { away: aRuns, home: hRuns }, scoreAfter: { away: aRuns, home: hRuns },
-                    substitutionData: { out: defSide._lastPitcher.name, in: pitcher.name, role: 'P', reason: 'pitching change', inheritedRunners: 0, midInning: false },
-                    result: { code: 'PITCHING_CHANGE', detail: 'Pitching Change: ' + pitcher.name + ' replaces ' + defSide._lastPitcher.name },
+                    substitutionData: { out: defSide._lastPitcher.name, in: pitcher.name, role: 'P', reason: (workloadV2() && defSide._boundaryChangeReason) || 'pitching change', inheritedRunners: 0, midInning: false },
+                    result: { code: 'PITCHING_CHANGE', detail: 'Pitching Change: ' + pitcher.name + ' replaces ' + defSide._lastPitcher.name + ((workloadV2() && defSide._boundaryChangeReason) ? ' (' + defSide._boundaryChangeReason + ')' : '') },
                     runsScored: [], rbi: 0
                 });
             }
-            var r = evPlayHalf(batSide, pitcher, random, endLead, defSide, log);
+            // The defending club's lead as the half begins (evPlayHalf subtracts
+            // the runs it gives up), so in-inning decisions can read the score.
+            defSide._defLeadAtHalf = isHomeBat ? (aRuns - hRuns) : (hRuns - aRuns);
+            var r = evPlayHalf(batSide, pitcher, random, endLead, defSide, log, placeRunner);
             defSide.dpTurned += r.gidp; defSide.ofAssists += r.ofAssists;
             // Track the arm that FINISHED the half (mid-inning changes move it on),
             // so the next half only reports a change when one really happened.
-            defSide._lastPitcher = defSide.pitchers.filter(function (p) { return p.acc.outs > 0 || p.acc.bf > 0; }).slice(-1)[0] || pitcher;
+            defSide._lastPitcher = (workloadV2() && defSide._halfEndPitcher) || defSide.pitchers.filter(function (p) { return p.acc.outs > 0 || p.acc.bf > 0; }).slice(-1)[0] || pitcher;
             return r;
         }
         // DECISION_RECONSTRUCTION_20260727: apLog/hpLog/marginLog let the win/loss
@@ -5210,16 +5740,19 @@
         // needs more room before hitting a safety ceiling - see the recalibration
         // pass in scripts/validate-mlb-simulator.cjs for how often this cap binds.
         var extra = 9;
+        // Regular season only (see EXTRA_INNING_RUNNER_20261023 in evPlayHalf).
+        var ghostRunner = workloadV2() && !awaySide.postseason && !homeSide.postseason;
+        awaySide.placedRunners = 0; homeSide.placedRunners = 0;
         var stoppedForWeather = !!(weatherDelay && weatherDelay.outcome !== 'resume');
         while (!stoppedForWeather && aRuns === hRuns && extra < 30) {
             // evDefPitcher (not evActivePitcher): extra innings must keep the same
             // blowout position-player-pitching rule the regulation loop uses.
             var ap2 = evDefPitcher(homeSide, sumOuts(homeSide), hRuns, aRuns, extra, evNextBatterHand(awaySide));
-            var rae = half(awaySide, homeSide, ap2, null, extra + 1, 'top');
+            var rae = half(awaySide, homeSide, ap2, null, extra + 1, 'top', ghostRunner);
             aRuns += rae.runs; hErr += rae.errors; aInn.push(rae.runs);
             var hp2 = evDefPitcher(awaySide, sumOuts(awaySide), aRuns, hRuns, extra, evNextBatterHand(homeSide));
             var hBeforeX = hRuns;
-            var rhe = half(homeSide, awaySide, hp2, aRuns - hRuns, extra + 1, 'bottom');
+            var rhe = half(homeSide, awaySide, hp2, aRuns - hRuns, extra + 1, 'bottom', ghostRunner);
             hRuns += rhe.runs; aErr += rhe.errors; hInn.push(rhe.runs);
             if (hBeforeX <= aRuns && hRuns > aRuns) walkOff = true;
             extra++;
@@ -5305,7 +5838,7 @@
                 derivedLosePitcherName = nearestWorked(apLog, streakStart.inning);
             }
         }
-        return { aRuns: aRuns, hRuns: hRuns, aInn: aInn, hInn: hInn, aErr: aErr, hErr: hErr, extra: actualInnings, walkOff: walkOff, weatherDelay: weatherDelay, gameStatus: gameStatus, pregameDelay: pregameDelay, derivedWinPitcherName: derivedWinPitcherName, derivedLosePitcherName: derivedLosePitcherName };
+        return { aRuns: aRuns, hRuns: hRuns, aInn: aInn, hInn: hInn, aErr: aErr, hErr: hErr, aPlaced: awaySide.placedRunners || 0, hPlaced: homeSide.placedRunners || 0, extra: actualInnings, walkOff: walkOff, weatherDelay: weatherDelay, gameStatus: gameStatus, pregameDelay: pregameDelay, derivedWinPitcherName: derivedWinPitcherName, derivedLosePitcherName: derivedLosePitcherName };
     }
     function sumOuts(side) { return side.pitchers.reduce(function (t, p) { return t + p.acc.outs; }, 0); }
 
@@ -5405,7 +5938,14 @@
         }
         return occupants;
     }
-    function evBatterRows(side) {
+    // keepUnnamed: RECONCILE_UNNAMED_ROWS_20261023. Display rows drop batters
+    // with no verified name (a synthetic lineup when the roster feed is down)
+    // so the box never shows invented players. The reconciliation compared the
+    // event-log fold, which keeps every slot, against those FILTERED rows, so
+    // every such game reported batting log=N engine=0: a false failure, in
+    // pristine production too (300 of 300 roster-less current matchups). The
+    // check now compares like with like; the display is unchanged.
+    function evBatterRows(side, keepUnnamed) {
         // Stage 3: iterate the full slot history (starter first, then each
         // substitute in the same batting-order slot) so subs get their own line
         // indented under the starter. With no substitutions each slot has exactly
@@ -5440,7 +5980,7 @@
                 // HEADSHOTS_20261001: display only, recovered from the engine pid.
                 mlbId: (/^id(\d+)$/.exec(String(b.pid || '')) || [null, null])[1]
             };
-        }).filter(function (row) { return row.name; });
+        }).filter(function (row) { return keepUnnamed || row.name; });
     }
     // STARTER_ROW_VISIBILITY_FIX_20260727: root cause of a real live defect - a
     // pitcher (including the STARTER) injured/ejected in elMaybePitcherEvent
@@ -5472,7 +6012,10 @@
         // byte-identical to production, which is the release gate's whole point.
         // The fix ships with the bundle it was validated in.
         var pitcherAppeared = function (p) {
-            var worked = p.acc.bf > 0 || p.acc.outs > 0 || p.acc.h > 0 || p.acc.bb > 0;
+            // A pitcher charged with a run appeared, even with no batter faced: the
+            // extra-inning runner is charged to the man on the mound when the half
+            // begins, and a pitcher hurt before his first batter still owns him.
+            var worked = p.acc.bf > 0 || p.acc.outs > 0 || p.acc.h > 0 || p.acc.bb > 0 || p.acc.r > 0;
             return workloadV2() ? worked : (p.removed === true || worked);
         };
         return side.pitchers.filter(pitcherAppeared).map(function (p) {
@@ -5486,6 +6029,10 @@
                 bf: a.bf || 0, pitches: a.pitches || 0, strikes: a.strikes || 0,
                 fps: a.fps || 0, whiff: a.whiff || 0, ir: a.ir || 0, irs: a.irs || 0,
                 enterMargin: p._enterMargin,
+                // MANAGER_DECISION_REASONS_20261023: why he came out / went in,
+                // recorded by the engine at the moment it made the decision.
+                exitReason: p._exitReason || null,
+                entryReason: p._entryReason || null,
                 // His real season line, for the box row. Never derived from this
                 // game, and null rather than a league average when unknown.
                 seasonEra: p.seasonEra != null ? p.seasonEra : null,
@@ -5607,7 +6154,7 @@
         };
         var reconciliation = elReconcile(folded, {
             aRuns: g.aRuns, hRuns: g.hRuns, aHits: awayHits, hHits: homeHits, aErr: g.aErr, hErr: g.hErr,
-            awayBatters: awayBatters, homeBatters: homeBatters,
+            awayBatters: evBatterRows(inputs.awaySide, true), homeBatters: evBatterRows(inputs.homeSide, true),
             awayPitchers: awayPitchers, homePitchers: homePitchers,
             awaySide: inputs.awaySide, homeSide: inputs.homeSide
         });
@@ -5898,7 +6445,7 @@
             if (e.eventType === EL_TYPES.PICKOFF && isBat) { n.pickoffs.push(e.runnerId); n.outsOnBases++; }
             if (e.eventType === EL_TYPES.INNING_END && isBat) n.lob += e.lob || 0;
             if (e.eventType === EL_TYPES.SUB && isFld && e.substitutionData && e.substitutionData.role === 'P') {
-                n.pitchingChanges.push(e.substitutionData);
+                n.pitchingChanges.push(Object.assign({ inning: e.inning, half: e.half }, e.substitutionData));
                 n.inherited += e.substitutionData.inheritedRunners || 0;
             }
             // Substitutions, injuries and ejections attribute to the SUBJECT's team.
@@ -6439,6 +6986,79 @@
                 : ''
         };
     }
+    /**
+     * BULLPEN_WORKLOAD_LEDGER_20261023 -- recent reliever usage for a single game.
+     *
+     * The backend ledger (trustmyrecord-backend services/mlbData/mlbPitcherWorkload,
+     * GET /api/mlb-data/teams/:id/bullpen, live since 2026-08-11) folds every
+     * appearance from statsapi boxscores into per-pitcher availability:
+     *   unavailable: 3 apps in 3 days, 4 in 5 days, or 50+ pitches in 2 days
+     *   limited:     30+ pitches yesterday, 55+ in 3 days, or 2 apps in 2 days
+     * The engine never read it, so a reliever who threw 40 pitches last night was
+     * simulated as fully fresh. Current-era clubs only, once per session per club
+     * with a 30 minute TTL, and fail-open: no ledger means every arm is rested,
+     * exactly the behavior before this layer.
+     */
+    var BULLPEN_LEDGER_TTL_MS = 1800000;
+    function fetchBullpenWorkload(team) {
+        if (!workloadV2() || !team || team.era !== 'current') return Promise.resolve(null);
+        var abbr = team.abbreviation, teamId = MLB_TEAM_IDS[abbr];
+        if (!teamId) return Promise.resolve(null);
+        state.liveContext.bullpenWorkload = state.liveContext.bullpenWorkload || {};
+        var cached = state.liveContext.bullpenWorkload[abbr];
+        if (cached && (Date.now() - (cached.fetchedAt || 0)) < BULLPEN_LEDGER_TTL_MS) return Promise.resolve(cached);
+        return fetchJson(apiBaseUrl().replace(/\/+$/, '') + '/mlb-data/teams/' + encodeURIComponent(teamId) + '/bullpen', { cache: 'no-store', timeoutMs: 5000 })
+            .then(function (payload) {
+                var byId = {};
+                (payload && Array.isArray(payload.bullpen) ? payload.bullpen : []).forEach(function (r) {
+                    if (!r || !r.mlb_player_id) return;
+                    byId[String(r.mlb_player_id)] = {
+                        availability: String(r.availability || 'available'),
+                        daysRest: r.days_rest == null ? null : Number(r.days_rest),
+                        pitchesYesterday: Number(r.pitches_yesterday || 0),
+                        pitchesLast3d: Number(r.pitches_last_3d || 0),
+                        appsLast3d: Number(r.apps_last_3d || 0)
+                    };
+                });
+                state.liveContext.bullpenWorkload[abbr] = { fetchedAt: Date.now(), byId: byId, count: Object.keys(byId).length };
+                return state.liveContext.bullpenWorkload[abbr];
+            })
+            .catch(function () {
+                state.liveContext.bullpenWorkload[abbr] = { fetchedAt: Date.now(), byId: {}, count: 0, error: true };
+                return null;
+            });
+    }
+    function bullpenWorkloadOf(team, mlbId) {
+        var w = state.liveContext && state.liveContext.bullpenWorkload && team && state.liveContext.bullpenWorkload[team.abbreviation];
+        return (w && mlbId && w.byId[String(mlbId)]) || null;
+    }
+    // Mark the staff from the ledger. Never leaves a club with fewer than two
+    // available relievers (the least-used come back first), and never touches
+    // tonight's starter. Returns a short note for the inputs panel.
+    function evApplyBullpenLedger(side) {
+        if (!workloadV2()) return null;
+        var out = [], lim = [];
+        side.pitchers.forEach(function (p, i) {
+            if (i === 0) return;
+            var w = bullpenWorkloadOf(side.team, p.mlbId);
+            p._ledger = w || null;
+            p._ledgerUnavailable = !!(w && w.availability === 'unavailable');
+            p.limited = !!(w && w.availability === 'limited');
+            p.unavailable = p._ledgerUnavailable;
+            if (p._ledgerUnavailable) out.push(p);
+            else if (p.limited) lim.push(p);
+        });
+        var free = side.pitchers.filter(function (p, i) { return i > 0 && !p.unavailable; });
+        if (free.length < 2) {
+            out.slice().sort(function (a, b) { return (a._ledger.pitchesLast3d || 0) - (b._ledger.pitchesLast3d || 0); })
+                .slice(0, 2 - free.length).forEach(function (p) { p.unavailable = false; p._ledgerUnavailable = false; p.limited = true; });
+        }
+        side.ledgerNote = (out.length || lim.length) ? {
+            unavailable: out.filter(function (p) { return p.unavailable; }).map(function (p) { return p.name; }),
+            limited: side.pitchers.filter(function (p, i) { return i > 0 && p.limited; }).map(function (p) { return p.name; })
+        } : null;
+        return side.ledgerNote;
+    }
     function fetchBackendProjectionStatus(context) {
         var boardGame = context && context.boardGame;
         if (!boardGame || !boardGame.id) {
@@ -6896,6 +7516,15 @@
             homeRuns = clamp(homeRuns * (1 - RSRA_W) + rExpH * RSRA_W, 1.6, 9.4);
         }
         var eventInputs = buildEventInputs(away, home, awayPitcher, homePitcher, awayRuns, homeRuns, rosterContext, simWeather, simOpts.postseason || null);
+        // BULLPEN_WORKLOAD_LEDGER_20261023: say which arms recent work took away.
+        [[away, eventInputs.awaySide], [home, eventInputs.homeSide]].forEach(function (pair) {
+            var n = pair[1] && pair[1].ledgerNote;
+            if (!n) return;
+            var parts = [];
+            if (n.unavailable.length) parts.push('unavailable after recent heavy use: ' + n.unavailable.join(', '));
+            if (n.limited.length) parts.push('limited to about an inning: ' + n.limited.join(', '));
+            if (parts.length) liveFactors.push(pair[0].name + ' bullpen (recent workload, MLB game logs): ' + parts.join('; ') + '.');
+        });
         if (simOpts.postseason) {
             liveFactors.push('Postseason mode: ' + (simOpts.postseason.label || 'playoff game') + '. Playoff settings: a shorter starter leash, a top heavy bullpen with the best arms in high leverage'
                 + (simOpts.postseason.elimination ? ', and a closer who can get more than three outs in this elimination game' : '') + '.');
@@ -7340,14 +7969,45 @@
         function gameSideFor(base, abbr, day, elimination) {
             var hist = usage[abbr] || {};
             var arms = base.pitchers.slice(0, base._baseArms || base.pitchers.length);
-            var keep = arms.filter(function (p, idx) { return idx === 0 || !relieverUnavailable(hist[p.name], day); });
-            if (keep.length < 2) keep = arms; // never leave a club with no pen at all
+            // BULLPEN_WORKLOAD_LEDGER_20261023: the real pre-series workload
+            // applies to the first game simulated; from then on the series'
+            // own usage record (relieverUnavailable) is the authority, and an
+            // off day or two clears last week's work the same way it does for
+            // arms used inside the series.
+            var firstDay = days[firstGame - 1];
+            arms.forEach(function (p, idx) {
+                if (idx === 0) return;
+                p.unavailable = !!(p._ledgerUnavailable && day === firstDay);
+                p.limited = !!(p._ledger && p._ledger.availability === 'limited' && day === firstDay);
+            });
+            var keep = arms.filter(function (p, idx) { return idx === 0 || (!relieverUnavailable(hist[p.name], day) && !p.unavailable); });
+            var forced = [];
+            if (workloadV2()) {
+                // SERIES_FATIGUE_FALLBACK_20261023: with fewer than two rested
+                // relievers the old rule reinstated the ENTIRE pen, so an arm who
+                // threw two innings yesterday was scheduled as if fresh. Bring
+                // back only the least-worked arms needed to reach two, record who,
+                // and let the roster depth arms cover the rest.
+                if (keep.length < 3) {
+                    var tired = arms.filter(function (p, idx) { return idx > 0 && keep.indexOf(p) === -1; }).sort(function (a, b) {
+                        var wa = (hist[a.name] || []).filter(function (h) { return h.day >= day - 2; }).reduce(function (t, h) { return t + h.outs; }, 0);
+                        var wb = (hist[b.name] || []).filter(function (h) { return h.day >= day - 2; }).reduce(function (t, h) { return t + h.outs; }, 0);
+                        return wa - wb;
+                    });
+                    while (keep.length < 3 && tired.length) { var back = tired.shift(); keep.push(back); forced.push(back.name); }
+                    keep.sort(function (a, b) { return arms.indexOf(a) - arms.indexOf(b); });
+                }
+            } else if (keep.length < 2) keep = arms; // never leave a club with no pen at all
             arms.forEach(function (p) { p.capOverride = (elimination && p.role === 'CL') ? 7 : undefined; });
             var s = Object.create(base);
             s.pitchers = keep;
             s._baseArms = keep.length;
             s.elimination = !!elimination;
             s.restedOut = arms.length - keep.length;
+            s.forcedFatigued = forced;
+            // Depth arms come from the roster at game time; they obey the same rule.
+            s._seriesUnavailable = {};
+            (base.reservePen || []).forEach(function (r) { if (relieverUnavailable(hist[r.name], day)) s._seriesUnavailable[r.name] = true; });
             return s;
         }
         function record(side, abbr, day) {
@@ -7370,6 +8030,9 @@
                 var res = evSimGame(awaySide, homeSide, rnd, null, null, bbRnd);
                 record(awaySide, c.away.abbreviation, c.day);
                 record(homeSide, c.home.abbreviation, c.day);
+                // Optional observer (tests): every simulated series game, its day
+                // and both staffs as they finished it. Never set by the page.
+                if (typeof settings.onGame === 'function') settings.onGame({ series: s, game: gameNumber, day: c.day, away: awaySide, home: homeSide, awayAbbr: c.away.abbreviation, homeAbbr: c.home.abbreviation });
                 // A tie cannot come out of a played game without weather; if one
                 // ever did, the home club is credited (documented, vanishingly rare).
                 var homeWon = res.hRuns >= res.aRuns;
@@ -7380,7 +8043,7 @@
         // Clean up the per game flags so nothing leaks into a later run.
         Object.keys(configs).forEach(function (k) {
             [configs[k].inputs.awaySide, configs[k].inputs.homeSide].forEach(function (side) {
-                side.pitchers.forEach(function (p) { p.capOverride = undefined; });
+                side.pitchers.forEach(function (p) { p.capOverride = undefined; p.unavailable = !!p._ledgerUnavailable; p.limited = !!(p._ledger && p._ledger.availability === 'limited'); });
             });
         });
         return {
@@ -8290,6 +8953,28 @@
         if (on.length === 3) return 'bases loaded';
         return 'runner' + (on.length > 1 ? 's' : '') + ' on ' + on.join(' and ');
     }
+    // MANAGER_DECISION_REASONS_20261023: every pitching change in the displayed
+    // game with the reason the engine acted on, folded from the event log (the
+    // same SUB events the play-by-play shows). Nothing here is written after
+    // the fact: each reason string was recorded at the moment of the decision.
+    function pitchingChangesSection(result) {
+        var folded = result && result.boxScore && result.boxScore.folded;
+        if (!folded || !folded.notes) return '';
+        function ord(n) { n = Number(n) || 0; var s = ['th', 'st', 'nd', 'rd'], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]); }
+        var teams = [['away', result.away], ['home', result.home]];
+        var blocks = teams.map(function (t) {
+            var list = (folded.notes[t[0]] && folded.notes[t[0]].pitchingChanges) || [];
+            if (!list.length) return '';
+            return '<div class="rm-block"><h5>' + escapeHtml((t[1] && t[1].name) || t[0]) + '</h5><ul>' + list.map(function (c) {
+                var when = c.inning ? ((c.half === 'bottom' ? 'Bot ' : 'Top ') + ord(c.inning) + (c.midInning ? '' : ', start') + ' — ') : '';
+                var why = c.reason && c.reason !== 'pitching change' ? ' (' + c.reason + ')' : '';
+                var inh = c.inheritedRunners ? '; inherits ' + c.inheritedRunners + ' on base' : '';
+                return '<li>' + escapeHtml(when + String(c.in).replace(/\s*\((LHP|RHP)\)$/, '') + ' replaces ' + String(c.out).replace(/\s*\((LHP|RHP)\)$/, '') + why + inh) + '</li>';
+            }).join('') + '</ul></div>';
+        }).join('');
+        if (!blocks) return '';
+        return '<section class="roster-moves pitching-changes"><h4>Pitching Changes</h4>' + blocks + '</section>';
+    }
     // TMR_ROSTER_STATE_20260723: professional-style roster-move notes — substitutions,
     // injuries and ejections — all folded from the event log. Only rendered when the
     // displayed game actually produced one (most games have none).
@@ -8568,6 +9253,7 @@
             pitchingTableSection(result.home, box.players.home, !awayWon, margin, { walkOff: walkOff, extra: extra, isHome: true, suspended: box.gameStatus === 'suspended', derivedWinPitcherName: box.derivedWinPitcherName, derivedLosePitcherName: box.derivedLosePitcherName }, foldedSideFor(result, 'home')) +
             pitchingGameNotes(result) +
             rosterMovesSection(result) +
+            pitchingChangesSection(result) +
             playByPlaySection(result) +
             reconciliationPanel(result);
     }
@@ -9179,6 +9865,7 @@
                 ensureRostersForTeams(away, home),
                 fetchBackendProjectionStatus(state.activeLiveContext),
                 fetchLeagueSeasonStrength(),
+                fetchBullpenWorkload(away), fetchBullpenWorkload(home),
                 // POSTSEASON_MODE_20261001: resolves null outside late Sep to Nov
                 // and on any failure, so it can never block a regular season run.
                 (away.era === 'current' && home.era === 'current') ? fetchPostseasonSeries() : Promise.resolve(null)
