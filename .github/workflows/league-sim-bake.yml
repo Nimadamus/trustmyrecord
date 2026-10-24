@@ -7,28 +7,67 @@ name: League Simulator Bake
 # laptop was off. Same steps, same order, same fail closed rule: any failing
 # build or gate publishes nothing and the last good bake stays live.
 #
-# SCHEDULE. The laptop ran at 06:20 and 14:20 PT. GitHub drops scheduled runs
-# on this repo under load, so this runs four times a day; a run with nothing
-# new commits nothing.
+# SCHEDULE. Four bakes a day, one per slot: 01:20, 09:20, 13:20, 21:20 UTC
+# (6:20 PM, 2:20 AM, 6:20 AM, 2:20 PM PDT). GitHub starts this repo's scheduled
+# runs 3 to 6 hours late and drops some (the 09:20 slot ran 2 times in 22 days),
+# so the trigger fires hourly and the gate job (scripts/sim-bake-due.js) bakes
+# only when no bake has succeeded since the latest slot. A run with nothing new
+# commits nothing. SIM_BAKE_FOURTH_RUN_20261023
 #
 # ALERTS. A failed bake opens (or comments on) one issue labelled
 # sim-bake-alert, which emails the repo owner; the next good bake closes it.
+# The gate also alerts when the last good bake is more than 14 hours old.
 
 on:
   schedule:
-    - cron: '20 1,9,13,21 * * *'
+    - cron: '47 * * * *'
   workflow_dispatch:
 
 permissions:
   contents: write
   issues: write
+  actions: read
 
 concurrency:
   group: league-sim-bake
   cancel-in-progress: false
 
 jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      due: ${{ steps.due.outputs.due }}
+    steps:
+      - name: Checkout gate script
+        uses: actions/checkout@v5
+        with:
+          sparse-checkout: scripts/sim-bake-due.js
+          sparse-checkout-cone-mode: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Is a bake due
+        id: due
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/sim-bake-due.js
+      - name: Alert when the bake is stale
+        if: steps.due.outputs.stale == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          WHEN=$(TZ=America/Los_Angeles date '+%b %d %I:%M %p PT')
+          RUN_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          gh label create sim-bake-alert --color B60205 --description "Simulator page bake failure" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1 || true
+          N=$(gh issue list -R "$GITHUB_REPOSITORY" --label sim-bake-alert --state open --json number --jq '.[0].number' 2>/dev/null)
+          MSG="No good bake for over 14 hours at $WHEN (last ${{ steps.due.outputs.last }}). Run: $RUN_URL"
+          if [ -n "$N" ]; then gh issue comment "$N" -R "$GITHUB_REPOSITORY" --body "$MSG" || true
+          else gh issue create -R "$GITHUB_REPOSITORY" --label sim-bake-alert --title "Simulator page bake is failing" --body "$MSG. This issue closes itself after the next good bake." || true; fi
+
   bake:
+    needs: gate
+    if: needs.gate.outputs.due == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
