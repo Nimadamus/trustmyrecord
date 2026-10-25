@@ -388,7 +388,6 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
       rows.push(['Market price', 'No functioning market yet. The last pool price ($' + Number(m.price_usd).toPrecision(3) + ') is not a price anyone can sell at.']);
     } else if (m && m.price_usd) {
       rows.push(['Market price', '$' + Number(m.price_usd).toFixed(8) + ' per TMR']);
-      rows.push(['Traded on', (m.dex || 'Uniswap') + ' — <a href="' + t.tradeUrl + '" target="_blank" rel="noopener">view market</a>']);
     }
     $('tokenKv').innerHTML = rows.map(function (r) { return '<dt>' + r[0] + '</dt><dd>' + r[1] + '</dd>'; }).join('');
     $('marketWarn').innerHTML = (m && m.depth_warning)
