@@ -202,6 +202,7 @@
       var KNOWN = { before_pick: 'Known at the pick', unverified: 'Timing not recorded', before_game: 'Published after the pick', game_time: 'At the start' };
       return '<div class="ult-factor" role="row"><span role="cell" class="ult-fname">' + esc(f.name) +
         (f.known ? '<small class="ult-known ult-known--' + esc(f.known) + '">' + esc(KNOWN[f.known] || f.known) + '</small>' : '') +
+        (f.sample_small ? '<small class="ult-known">Thin sample, fewer than five games</small>' : '') +
         '</span><span role="cell">' + prose(f.pre_game) + (f.source ? '<small class="ult-src">Source: ' + esc(f.source) + '</small>' : '') +
         '</span><span role="cell"><span class="ult-lean ult-lean--' + cls + '">' + esc(LEAN[f.pointed] || 'No clear lean') + '</span></span></div>';
     }).join('') + '</div>';
@@ -339,6 +340,20 @@
   function renderReport(el, r, opts) {
     opts = opts || {};
     var who = opts.name || 'you';
+    var reviewLimit = (r.method && r.method.review_limit) || 'Full pregame context covers at most five picks in each report: up to three recent losses in the priority category, one win whose price closed against the pick, and one recent pick from the strongest category. Every other graded pick stays in the totals, the tests and the plan. The factor count is not a test of the whole category.';
+    function progressCopy(pg) {
+      var n = pg.measured != null ? pg.measured : pg.after.n;
+      var first = pg.first_bar != null ? pg.first_bar : 30;
+      var firm = pg.firm_bar != null ? pg.firm_bar : 100;
+      var count = n < first ? (n + ' of ' + first) : (n < firm ? (n + ' of ' + firm) : (n + ', past ' + firm));
+      var which = n < first
+        ? 'That count is the first read. It is the same subset, not a second population.'
+        : (n < firm
+          ? 'The check at ' + first + ' picks is met. The same picks are measured toward ' + firm + ' before a change is treated as more than variance.'
+          : 'The check at ' + first + ' picks and the check at ' + firm + ' picks are both met on this same subset.');
+      var subset = pg.subset ? ' ' + pg.subset : '';
+      return 'The closing line moves first: ' + pc(pg.before.beat_close_pct) + ' of picks beat it before the plan, ' + pc(pg.after.beat_close_pct) + ' since. Progress is ' + count + ' graded picks in this category on or after the plan start.' + subset + ' ' + which + ' The report keeps measuring every graded pick in that category.';
+    }
     var f = r.focus;
     var top = r.strengths.filter(function (s) { return s.n >= 30; })[0] || null;
     var tabs = [];
@@ -378,8 +393,15 @@
     if (f) {
       var featured = f.reviews.filter(function (v) { return v.recorded_inputs; });
       var rest = f.reviews.filter(function (v) { return !v.recorded_inputs; });
+      var cov = r.coverage;
+      var covLine = cov
+        ? 'Aggregate analysis covers ' + cov.aggregate.graded + ' graded picks. Detailed pregame reviews cover ' + cov.detailed_reviews.selected +
+          (cov.detailed_reviews.priority_category_n ? ' (' + cov.detailed_reviews.priority_reviewed + ' of ' + cov.detailed_reviews.priority_category_n + ' in ' + f.category.key + ')' : '') +
+          '. ' + cov.detailed_reviews.text
+        : reviewLimit;
       tabs.push({ id: 'reviews', label: 'Pick Reviews', html:
         '<p class="ult-intro">Each review separates what was knowable before the game from what happened after it. A loss that beat the closing line can be a good bet; a win at a price the market rejected can be a bad one.</p>' +
+        '<p class="ult-muted">' + esc(covLine) + '</p>' +
         featured.map(function (v) { return reviewHtml(v, true, who); }).join('') +
         (rest.length ? '<h4>More ' + esc(f.category.key) + ' reviews</h4><div class="ult-revlist">' + rest.map(function (v) { return reviewHtml(v, false); }).join('') + '</div>' : '') });
     }
@@ -398,7 +420,7 @@
             { label: 'Beat the close', a: pg.before.beat_close_pct || 0, b: pg.after.beat_close_pct || 0, fmt: function (v) { return pc(v); }, floor: 0.5 },
             { label: 'Win rate', a: pg.before.win_pct, b: pg.after.win_pct, fmt: function (v) { return pc(v, 1); }, floor: 0.5 },
           ], ['Before the plan (' + pg.before.n + ' picks, ' + rec(pg.before) + ')', 'Since the plan (' + pg.after.n + ' picks, ' + rec(pg.after) + ')']) +
-          '<p>' + prose('The closing line moves first: ' + pc(pg.before.beat_close_pct) + ' of picks beat it before the plan, ' + pc(pg.after.beat_close_pct) + ' since. Results follow more slowly, and ' + pg.after.n + ' picks is not enough to call the problem solved. The report keeps measuring with every graded pick.') + '</p>'
+          '<p>' + prose(progressCopy(pg)) + '</p>'
         : '<p class="ult-muted">Start the improvement plan and every graded pick after that date is measured against the record before it.</p>' +
           (opts.canStartPlan ? '<button type="button" class="ult-btn ult-btn--ghost" data-ult-startplan>Start the plan today</button>' : '') });
     }
@@ -407,6 +429,8 @@
       '<div class="ult-method">' +
       '<h4>What the numbers are</h4><p>Every figure comes from graded TrustMyRecord picks. ROI is net units divided by units risked. A category is judged only with 30 or more graded picks, and each verdict tests wins against the break-even rate of the prices actually paid, adjusted for the number of categories and comparisons tested so that one lucky slice is not presented as a strength.</p>' +
       '<h4>What the pick reviews use</h4><p>Pre-game inputs are rebuilt as of the moment each pick was made and labelled: <b>known at the pick</b>, <b>timing not recorded</b> (real pre-game facts such as confirmed starters or injury absences with no publication time), <b>published after the pick</b>, or <b>at the start</b> (the closing line, first-pitch weather). Only inputs known at the pick count as context. They are possible factors, never the reason a pick won or lost; TMR stores no written rationale, so the report never says what was considered.</p>' +
+      '<h4>How many picks get pregame context</h4><p>' + esc(reviewLimit) + '</p>' +
+      '<h4>Improvement progress</h4><p>Progress uses one subset: graded picks in the priority category dated on or after the plan start. 30 of those picks is the first read. 100 is the point where a change is no longer treated as a short sample. Both numbers are thresholds on that same subset.</p>' +
       '<h4>The diagnostics</h4><p>The luck range is the 90% range of units a bettor with no edge finishes with at the same prices and stakes. Loss drivers rank every sport, bet type and side combination with 10 or more picks; verdicts appear only at 30 or more and are adjusted for the number of cells tested. Flat-stake ROI counts every pick as one unit, so its gap to the actual ROI is what sizing did. The record is also split into halves in time and recomputed without its five biggest wins.</p>' +
       '<h4>Closing lines</h4><p>TMR records the close from pre-game sportsbook prices. Where TMR has none, the DraftKings close recorded by ESPN is used and labelled. Beating the close is measured only where the number or price actually moved.</p>' +
       '<h4>Not available yet</h4><ul class="ult-read"><li>Weather forecasts as of the pick (MLB shows first-pitch conditions, labelled; football has none).</li><li>Closing prices for player props.</li><li>NFL injury reports before March 2026; injury publication times for the NBA and NHL.</li><li>Confirmed lineups, pitch matchups and advanced player metrics as of the pick.</li><li>Pre-game inputs for soccer, MMA, tennis and first-half or first-five markets (their records and prices are still analyzed).</li></ul>' +

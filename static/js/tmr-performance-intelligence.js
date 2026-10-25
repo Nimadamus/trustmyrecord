@@ -32,8 +32,12 @@
 }(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
 
-  var VERSION = 'pi-2.2.2';
+  var VERSION = 'pi-2.2.3';
   var MIN_SAMPLE = 30;
+  /* Progress uses one subset: graded picks in the priority category dated on
+     or after the plan start. 30 is the first read. 100 is the variance bar.
+     They are not two populations. */
+  var PROGRESS_FIRM = 100;
   var MARKET_LABEL = { spread: 'spreads', moneyline: 'moneylines', total: 'totals', team_total: 'team totals', prop: 'props', other: 'other markets' };
 
   function round(x, d) { var f = Math.pow(10, d == null ? 2 : d); return Math.round(x * f) / f; }
@@ -327,7 +331,7 @@
     var noise = out.filter(function (c) { return !(c.p_adjusted < 0.10); }).sort(function (a, b) { return b.gap - a.gap; });
     findings.forEach(function (c) {
       c.text = c.better + ' returned ' + pct(c.better_stats.roi) + ' over ' + c.better_stats.n + ' picks against ' + pct(c.worse_stats.roi) + ' over ' + c.worse_stats.n +
-        ' for ' + c.worse + '. The gap held up after adjusting for the ' + out.length + ' comparisons made (adjusted p = ' + c.p_adjusted.toFixed(2) + ').';
+        ' for ' + c.worse + '. The gap held up after adjusting for the ' + out.length + ' comparisons made (adjusted p = ' + pNum(c.p_adjusted) + ').';
       c.suggestion = c.kind === 'price_side'
         ? 'Consider reviewing how you choose ' + c.worse.toLowerCase() + ': the price each one needs to break even, and how often your price beat the close.'
         : 'Consider comparing how you research ' + c.worse + ' with your process for ' + c.better + ': what you check, when you bet, and the prices you take.';
@@ -445,6 +449,8 @@
     if (unver.length) uncertainty.push(unver.join(' and ') + ' had no recorded publication time and may have been confirmed after the pick.');
     var later = f.filter(function (x) { return x.known === 'before_game' || x.known === 'game_time'; }).map(function (x) { return x.name; });
     if (later.length) uncertainty.push(later.join(' and ') + ' came after the pick and ' + (later.length > 1 ? 'are' : 'is') + ' shown for completeness only.');
+    var thin = pre.filter(function (x) { return x.sample_small; }).map(function (x) { return x.name; });
+    if (thin.length) uncertainty.push('Recorded from fewer than five games before this one, so it is a thin sample: ' + thin.join(', ') + '.');
     if (pre.length < 3) uncertainty.push('Few inputs were on record for this game, so the context is thin.');
     /* Second-half and live-segment picks are made after the start by design. */
     if (p.placedAt && p.commence && new Date(p.placedAt) > new Date(p.commence) && !/^second_half_/.test(p.marketType || '')) {
@@ -527,15 +533,29 @@
     var before = list.filter(function (p) { return p.date < planStartedAt; });
     var after = list.filter(function (p) { return p.date >= planStartedAt; });
     var b = stats(before), a = stats(after);
+    var n = a.n;
+    var met = 'the check at ' + MIN_SAMPLE + ' picks is met';
     var status;
-    if (a.n < MIN_SAMPLE) status = { key: 'too_early', label: 'Too early to tell (' + a.n + ' of ' + MIN_SAMPLE + ' picks since the plan began)' };
-    else if (a.roi - b.roi >= 0.05 && (a.beat_close_pct == null || b.beat_close_pct == null || a.beat_close_pct >= b.beat_close_pct)) {
-      status = a.n < 100 ? { key: 'early_improving', label: 'Early signs of improvement (' + a.n + ' picks; results this short can still be variance)' }
-        : { key: 'improving', label: 'Improving' };
+    if (n < MIN_SAMPLE) {
+      status = { key: 'too_early', label: 'Too early to tell (' + n + ' of ' + MIN_SAMPLE + ' picks since the plan began)' };
+    } else if (a.roi - b.roi >= 0.05 && (a.beat_close_pct == null || b.beat_close_pct == null || a.beat_close_pct >= b.beat_close_pct)) {
+      status = n < PROGRESS_FIRM
+        ? { key: 'early_improving', label: 'Early signs of improvement (' + n + ' of ' + PROGRESS_FIRM + ' picks since the plan began; ' + met + ')' }
+        : { key: 'improving', label: 'Improving (' + n + ' picks since the plan began, past the check at ' + PROGRESS_FIRM + ' picks)' };
+    } else if (b.roi - a.roi >= 0.05) {
+      status = n < PROGRESS_FIRM
+        ? { key: 'worse', label: 'Worse than before the plan (' + n + ' of ' + PROGRESS_FIRM + ' picks since the plan began; ' + met + ')' }
+        : { key: 'worse', label: 'Worse than before the plan (' + n + ' picks since the plan began, past the check at ' + PROGRESS_FIRM + ' picks)' };
+    } else {
+      status = n < PROGRESS_FIRM
+        ? { key: 'flat', label: 'No clear change yet (' + n + ' of ' + PROGRESS_FIRM + ' picks since the plan began; ' + met + ')' }
+        : { key: 'flat', label: 'No clear change yet (' + n + ' picks since the plan began, past the check at ' + PROGRESS_FIRM + ' picks)' };
     }
-    else if (b.roi - a.roi >= 0.05) status = { key: 'worse', label: 'Worse than before the plan' };
-    else status = { key: 'flat', label: 'No clear change yet' };
-    return { plan_started_at: planStartedAt, before: b, after: a, status: status };
+    return {
+      plan_started_at: planStartedAt, before: b, after: a, status: status,
+      measured: n, first_bar: MIN_SAMPLE, firm_bar: PROGRESS_FIRM,
+      subset: 'Graded picks in this category dated on or after the plan start. ' + n + ' are in. The first read is ' + MIN_SAMPLE + ' and the variance bar is ' + PROGRESS_FIRM + ', both on this same subset.',
+    };
   }
 
   /* ------------------------------------------------------------------
@@ -637,8 +657,8 @@
     else {
       text = 'Flat-stake ROI is ' + pct(flatRoi) + ' against ' + pct(o.roi) + ' actual, so stake sizing ' + (effect >= 0 ? 'added ' : 'cost ') + Math.abs(effect * 100).toFixed(1) + ' ROI points.';
       if (cmp) text += cmp.p_value < 0.05
-        ? ' ' + cmp.worse + ' did worse (' + pct(cmp.worse_stats.roi) + ' over ' + cmp.worse_stats.n + ' picks against ' + pct(cmp.better_stats.roi) + '), a gap unlikely to be chance (p = ' + cmp.p_value.toFixed(2) + ').'
-        : ' The gap between smaller and larger stakes (' + pct(buckets[0].roi) + ' and ' + pct(buckets[1].roi) + ') is within what chance produces (p = ' + cmp.p_value.toFixed(2) + ').';
+        ? ' ' + cmp.worse + ' did worse (' + pct(cmp.worse_stats.roi) + ' over ' + cmp.worse_stats.n + ' picks against ' + pct(cmp.better_stats.roi) + '), a gap unlikely to be chance (' + pText(cmp.p_value) + ').'
+        : ' The gap between smaller and larger stakes (' + pct(buckets[0].roi) + ' and ' + pct(buckets[1].roi) + ') is within what chance produces (' + pText(cmp.p_value) + ').';
     }
     return { flat_roi: round(flatRoi, 4), actual_roi: o.roi, sizing_effect: round(effect, 4), avg_stake: round(mean, 2), stake_cv: round(cv, 2),
       buckets: buckets, comparison: cmp ? { worse: cmp.worse, better: cmp.better, p_value: cmp.p_value } : null, text: text };
@@ -728,6 +748,7 @@
       c.clv_moved + ' picks, ' + pText(c.clv_p_value) + ')';
   }
   function pText(v) { return v == null ? 'p = n/a' : v < 0.01 ? 'p < 0.01' : 'p = ' + v.toFixed(2); }
+  function pNum(v) { return v == null ? 'n/a' : v < 0.01 ? '< 0.01' : v.toFixed(2); }
 
   /* The median-stake half whose win rate fails the prices, when that
      failure is meaningful. One split, not a scan across stake sizes. */
@@ -740,13 +761,21 @@
     return b;
   }
 
-  function summary(o, diag, priority, strengths) {
+  function progressMeasure(progress) {
+    if (!progress || progress.measured == null) return 'measured over the next ' + MIN_SAMPLE + ' picks.';
+    var n = progress.measured;
+    if (n < progress.first_bar) return n + ' of ' + progress.first_bar + ' picks in this category are in since the plan began.';
+    if (n < progress.firm_bar) return n + ' of ' + progress.firm_bar + ' picks in this category are in since the plan began. The check at ' + progress.first_bar + ' picks is met.';
+    return n + ' picks in this category are in since the plan began, past the check at ' + progress.firm_bar + ' picks.';
+  }
+
+  function summary(o, diag, priority, strengths, progress) {
     if (!diag) return [];
     var out = [];
     out.push({ k: 'Result against luck', v: diag.luck.position === 'unknown' ? 'No prices' : diag.luck.position === 'inside' ? 'Within luck' : diag.luck.position === 'above' ? 'Above luck' : 'Below luck',
       tone: diag.luck.position === 'above' ? 'pos' : diag.luck.position === 'below' ? 'neg' : 'neutral', text: diag.luck.text });
     var stake = stakeFinding(diag);
-    if (stake) out.push({ k: 'Stake size', v: stake.key, tone: 'neg', text: stake.key + ' returned ' + pct(stake.roi) + ' over ' + stake.n + ' picks. The win rate is short of the break-even rate of the prices paid (p = ' + stake.p_value.toFixed(2) + '). ' + diag.sizing.text });
+    if (stake) out.push({ k: 'Stake size', v: stake.key, tone: 'neg', text: stake.key + ' returned ' + pct(stake.roi) + ' over ' + stake.n + ' picks. The win rate is short of the break-even rate of the prices paid (' + pText(stake.p_value) + '). ' + diag.sizing.text });
     if (o.beat_close_pct != null && o.clv_moved >= MIN_SAMPLE) {
       var cpo = o.clv_p_value;
       var sig = cpo != null && cpo < 0.05;
@@ -765,7 +794,7 @@
     if (diag.robustness.enough) out.push({ k: 'Holds up over time', v: diag.robustness.consistent_sign && !diag.robustness.fragile ? 'Yes' : 'Not yet', tone: diag.robustness.consistent_sign && !diag.robustness.fragile ? 'pos' : 'neutral', text: diag.robustness.text });
     if (priority && clvSound(priority) && priority.verdict.key !== 'weakness') {
       out.push({ k: 'First action', v: 'Keep ' + priority.key, tone: 'neutral', text: priority.key + ' is down, but ' + closeLine(priority).charAt(0).toLowerCase() + closeLine(priority).slice(1) + ', so the shortfall looks like variance. See the action plan.' });
-    } else if (priority) out.push({ k: 'First action', v: 'Review ' + priority.key, tone: 'neutral', text: 'See the action plan: a checklist for ' + priority.key + ', measured over the next ' + MIN_SAMPLE + ' picks.' });
+    } else if (priority) out.push({ k: 'First action', v: 'Review ' + priority.key, tone: 'neutral', text: 'See the action plan: a checklist for ' + priority.key + ', ' + progressMeasure(progress) });
     return out;
   }
 
@@ -857,6 +886,25 @@
       };
     }
 
+    var detailed = (focus && focus.reviews ? focus.reviews.slice() : []);
+    if (strengthReview) detailed.push(strengthReview.review);
+    var coverage = {
+      aggregate: {
+        graded: graded.length,
+        categories: categories.length,
+        judged_categories: categories.filter(function (c) { return c.n >= MIN_SAMPLE; }).length,
+        text: 'Totals, verdicts, closing prices, stake size, loss drivers and the plan use every graded pick.',
+      },
+      detailed_reviews: {
+        cap: 5,
+        selected: detailed.length,
+        with_context: detailed.filter(function (r) { return r.recorded_inputs; }).length,
+        priority_category_n: focus ? focus.category.n : null,
+        priority_reviewed: focus ? focus.reviews.length : 0,
+        text: 'Detailed pregame reviews are coaching examples: up to three recent losses in the priority category, one win whose price closed against the pick, and one recent pick from the strongest category. That selection over-represents recent losses, so the factor count is not a reading of the whole category.',
+      },
+    };
+
     return {
       engine: VERSION,
       generated_from: { graded: graded.length, first: graded.length ? graded[0].date : null, last: lastDate },
@@ -866,9 +914,10 @@
       strengths: strengths, weaknesses: weaknesses,
       focus: focus,
       strength_review: strengthReview,
+      coverage: coverage,
       insights: ins,
       diagnostics: diag,
-      summary: summary(overall, diag, priority, strengths),
+      summary: summary(overall, diag, priority, strengths, focus && focus.progress),
       comparisons: { categories: comparisons },
       evaluation: evaluation(overall, strengths, weaknesses, priority, focus, recent, earlier, ins),
       plan: plan(priority, focus, strengths, ins, diag, overall, categories),
@@ -876,7 +925,8 @@
         min_sample: MIN_SAMPLE,
         significance: 'Two-sided z-test of wins against the break-even win rate implied by the prices actually paid. p < 0.05 is meaningful only after Holm adjustment across the slices tested; p < 0.20 is possible; otherwise the slice is normal variance. ROI and net units are reported beside that test. When they disagree with it, the label is mixed evidence rather than a strength or a weakness.',
         clv: 'Spreads and totals: points gained on the closing line. Moneylines and props: implied probability gained at the closing price.',
-        patterns: 'Each weak category is split several ways (side, price, line movement, day). With several splits, one can look strong by chance, so a pattern is a question to research, never a rule.',
+        patterns: 'Each weak category is split three ways, declared in advance: side, price, and home or away. With several splits, one can look strong by chance, so a pattern is a question to research, never a rule.',
+        review_limit: 'Full pregame context covers at most five picks in each report: up to three recent losses in the priority category, one win whose price closed against the pick, and one recent pick from the strongest category. Every other graded pick stays in the totals, the tests and the plan. The factor count is not a test of the whole category.',
         not_claimed: 'The report never states why a pick lost. It separates information available before the game from the result.',
       luck: 'The luck range is the 90% range of units a bettor with no edge would finish with at the same prices and stakes (each pick wins at the break-even rate of its price).',
       leaks: 'Every sport, bet type and side combination (favorites or underdogs, overs or unders) with 10+ picks; verdicts only at 30+, Holm-adjusted over every judged cell.',
@@ -894,22 +944,22 @@
     var real = strengths.filter(function (s) { return s.verdict.key === 'strength'; });
     var lean = strengths.filter(function (s) { return s.verdict.key === 'lean_strength'; });
     if (real.length) out.push(real[0].key + ' is the strongest part of the record: ' + u(real[0].net) + ' at ' + pct(real[0].roi) +
-      ' over ' + real[0].n + ' picks, a result unlikely to be luck alone (p = ' + real[0].p_value.toFixed(2) + ').');
+      ' over ' + real[0].n + ' picks, a result unlikely to be luck alone (' + pText(real[0].p_value) + ').');
     if (lean.length) out.push(lean.map(function (s) { return s.key + ' (' + pct(s.roi) + ', ' + s.n + ' picks)'; }).join(' and ') +
       (lean.length > 1 ? ' look' : ' looks') + ' promising but the sample cannot yet separate skill from variance.');
     if (priority) {
       var t = priority.key + ' returned ' + pct(priority.roi) + ' over ' + priority.n + ' picks (' + u(priority.net) + '), a potential area to review. ';
       t += priority.verdict.key === 'weakness' ? 'That shortfall is statistically meaningful.'
-        : priority.verdict.key === 'lean_weakness' ? 'The result alone is not conclusive (p = ' + priority.p_value.toFixed(2) + '), so the closing line is the better evidence.'
+        : priority.verdict.key === 'lean_weakness' ? 'The result alone is not conclusive (' + pText(priority.p_value) + '), so the closing line is the better evidence.'
           : 'The result alone is within normal variance, so the closing line is the better evidence.';
       if (priority.beat_close_pct != null && priority.clv_moved >= 20) {
         var cp = priority.clv_p_value;
         t += ' Where the number moved before the game, these picks beat the close ' + (priority.beat_close_pct * 100).toFixed(0) + '% of the time (' +
           priority.clv_moved + ' picks)' +
           (cp != null && cp < 0.05
-            ? (priority.beat_close_pct < 0.5 ? ', consistently worse than the close (p = ' + cp.toFixed(2) + '), which suggests reviewing how prices are taken in this category.'
-              : ', consistently better than the close (p = ' + cp.toFixed(2) + '), so the process looks sounder than the results and part of the shortfall is likely variance.')
-            : ', which is within what chance produces over that many picks (p = ' + (cp == null ? 'n/a' : cp.toFixed(2)) + '), so the close neither clears nor condemns the process.');
+            ? (priority.beat_close_pct < 0.5 ? ', consistently worse than the close (' + pText(cp) + '), which suggests reviewing how prices are taken in this category.'
+              : ', consistently better than the close (' + pText(cp) + '), so the process looks sounder than the results and part of the shortfall is likely variance.')
+            : ', which is within what chance produces over that many picks (' + (cp == null ? 'p = n/a' : pText(cp)) + '), so the close neither clears nor condemns the process.');
       }
       out.push(t);
     }
@@ -955,6 +1005,30 @@
       hist + ' That count covers only the reviewed picks. It is not a test of the whole category, and it is not a reason any single pick won or lost.';
   }
 
+  function measureStep(priority, focus, idleDetail) {
+    var pg = focus && focus.progress;
+    var n = pg && pg.measured;
+    if (pg == null || n == null) {
+      return { title: 'Measure the next ' + MIN_SAMPLE + ' ' + priority.key + ' picks', detail: idleDetail };
+    }
+    if (n < pg.first_bar) {
+      return {
+        title: 'Measure toward ' + pg.first_bar + ' ' + priority.key + ' picks (' + n + ' of ' + pg.first_bar + ')',
+        detail: n + ' of ' + pg.first_bar + ' graded ' + priority.key + ' picks dated on or after the plan start are already in. The report tracks every later pick in this category against the record before it. The first read is ' + pg.first_bar + ' and the variance bar is ' + pg.firm_bar + ', on this same subset.',
+      };
+    }
+    if (n < pg.firm_bar) {
+      return {
+        title: 'Keep measuring ' + priority.key + ' (' + n + ' of ' + pg.firm_bar + ' since the plan began)',
+        detail: 'The check at ' + pg.first_bar + ' picks is met. These ' + n + ' picks are the same ' + priority.key + ' set, dated on or after the plan start. The variance caution runs to ' + pg.firm_bar + '. The report keeps measuring every later pick in this category.',
+      };
+    }
+    return {
+      title: 'Keep measuring ' + priority.key + ' (' + n + ' picks since the plan began)',
+      detail: n + ' graded ' + priority.key + ' picks are in since the plan start, past the check at ' + pg.firm_bar + ' picks. The report keeps measuring every later pick in this category.',
+    };
+  }
+
   function plan(priority, focus, strengths, ins, diag, o, categories) {
     var steps = [];
     if (priority && focus && clvSound(priority) && priority.verdict.key !== 'weakness') {
@@ -965,8 +1039,7 @@
           '. A losing process rarely does that, and the loss itself is not conclusive, so no change to how you pick or size these is suggested. Keep writing your own number down before you look at the market.' + factorCoaching(focus),
         checklist: focus.checklist,
       });
-      steps.push({ title: 'Measure the next ' + MIN_SAMPLE + ' ' + priority.key + ' picks',
-        detail: 'Start the plan and the report tracks every later pick in this category against the record before it. If the price keeps beating the close, the results should follow; if it stops beating the close, that is the moment to review the process.' });
+      steps.push(measureStep(priority, focus, 'Start the plan and the report tracks every later pick in this category against the record before it. If the price keeps beating the close, the results should follow; if it stops beating the close, that is the moment to review the process.'));
     } else if (priority && focus) {
       var strong = strengths.filter(function (x) { return x.n >= MIN_SAMPLE; })[0];
       steps.push({
@@ -984,8 +1057,7 @@
         steps.push({ title: 'Look at the ' + pt.dimension.toLowerCase() + ' split', detail: pt.worse.key + ' returned ' + pct(pt.worse.roi) +
           ' over ' + pt.worse.n + ' picks, and the gap held up after adjusting for multiple comparisons. Ask what is different about those spots. It is a question to research, not a rule.' });
       }
-      steps.push({ title: 'Measure the next ' + MIN_SAMPLE + ' ' + priority.key + ' picks',
-        detail: 'Start the plan and the report tracks every later pick in this category against the record before it: ROI, win rate against the break-even of your prices, and how often your price beats the close, which moves sooner than results.' });
+      steps.push(measureStep(priority, focus, 'Start the plan and the report tracks every later pick in this category against the record before it: ROI, win rate against the break-even of your prices, and how often your price beats the close, which moves sooner than results.'));
       steps.push({ title: 'Consider stake size while you review', detail: 'Consider a smaller stake in this market until ' + MIN_SAMPLE +
         ' new picks show whether the change is working. This limits the cost of learning; it does not create an edge.' });
     }
@@ -1035,7 +1107,7 @@
     })[0];
     if (keep && keep.verdict.key !== 'strength') steps.push({ title: 'Keep doing what works in ' + keep.key, detail: 'Write down the process behind these picks so it can be repeated on purpose. ' +
       keep.n + ' picks at ' + pct(keep.roi) + ' is not yet conclusive on results alone' +
-      (keep.p_adjusted != null ? ' (adjusted p = ' + keep.p_adjusted.toFixed(2) + ')' : '') +
+      (keep.p_adjusted != null ? ' (adjusted p = ' + pNum(keep.p_adjusted) + ')' : '') +
       ', but your price beat the closing number ' + (keep.beat_close_pct * 100).toFixed(0) +
       '% of the time where it moved (' + keep.clv_moved + ' picks, ' + pText(keep.clv_p_value) + '). The close is a separate test from the result, and it still clears the other categories with ' + MIN_SAMPLE + ' or more moved closes. It is not proof the next results will match.' });
     else if (keep) steps.push({ title: 'Keep doing what works in ' + keep.key, detail: 'Write down the process behind these picks so it can be repeated on purpose. ' +
@@ -1075,6 +1147,6 @@
     return steps;
   }
 
-  return { VERSION: VERSION, MIN_SAMPLE: MIN_SAMPLE, analyze: analyze, stats: stats, insights: insights, diagnostics: diagnostics, reviewPick: reviewPick,
+  return { VERSION: VERSION, MIN_SAMPLE: MIN_SAMPLE, PROGRESS_FIRM: PROGRESS_FIRM, analyze: analyze, stats: stats, insights: insights, diagnostics: diagnostics, reviewPick: reviewPick,
     implied: implied, payout: payout, clv: clv, clvDir: clvDir, closeComparable: closeComparable, oddsBand: oddsBand, checklistFor: checklistFor };
 }));
