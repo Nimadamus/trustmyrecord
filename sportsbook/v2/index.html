@@ -23895,7 +23895,7 @@ document.addEventListener('DOMContentLoaded', function() {
          #picksLeaderboardBody / arena DOM that doesn't exist here and were
          the bulk of the 40+ console errors a Reddit user flagged. They run
          on /profile/, /arena/, /handicappers/ where the elements exist. -->
-    <script src="/static/js/notifications.js?v=76df0ede5da6"></script>
+    <script src="/static/js/notifications.js?v=5f48b33df4b1"></script>
 
     <script>
     // COMPLETE PICKS MODULE - FIXED VERSION v2 - January 13, 2026
@@ -26629,7 +26629,11 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    function markAllNotificationsRead() {
+    // Legacy localStorage achievements only. This name must not be
+    // markAllNotificationsRead: that global belongs to notifications.js,
+    // and this script loads after it, so a same-named function here used
+    // to replace the real save. The bell then looked unread after refresh.
+    function markLegacyLocalNotificationsRead() {
         var notifs = getNotifications();
         notifs.forEach(function(n) { n.read = true; });
         localStorage.setItem('tmr_notifications', JSON.stringify(notifs));
@@ -26641,7 +26645,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!container) return;
 
         var notifs = getNotifications();
-        markAllNotificationsRead();
+        markLegacyLocalNotificationsRead();
 
         if (notifs.length === 0) {
             container.innerHTML = '<div style="text-align: center; padding: 30px; color: var(--text-muted);">No fresh alerts yet. Pick grades, social activity, and account alerts will appear here once the account is active.</div>';

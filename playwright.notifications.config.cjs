@@ -9,7 +9,7 @@ const { defineConfig, devices } = require('@playwright/test');
 //   TMR_STATIC_PORT=5502 node tests/static-server.cjs
 module.exports = defineConfig({
   testDir: './tests',
-  testMatch: /notification-toasts\.spec\.js/,
+  testMatch: /notification-(toasts|read-state)\.spec\.js/,
   timeout: 60000,
   expect: { timeout: 10000 },
   outputDir: 'artifacts/notification-toasts-results',

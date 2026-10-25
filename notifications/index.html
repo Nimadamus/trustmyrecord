@@ -19,7 +19,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=859cacfb660e">
-<script defer src="/static/js/tmr-sitewide.js?v=f2e899b5bcae"></script>
+<script defer src="/static/js/tmr-sitewide.js?v=ae69244976f8"></script>
 <!-- v2 design system, loaded last so it wins the cascade without !important wars -->
 <link rel="stylesheet" href="/static/css/tmr-notif-v2.css?v=e27750555c14">
 <link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=282f1f70cb51">
@@ -44,6 +44,7 @@
             <div class="nv-head-actions">
                 <button id="notifPrefsToggle" class="nv-btn" type="button">Alert settings</button>
                 <button id="markAllBtn" class="nv-btn p" type="button">Mark all read</button>
+                <p id="nvSaveError" hidden style="color:#991B1B;font-weight:700;margin:8px 0 0;"></p>
                 <button id="clearAllBtn" class="nv-btn dg" type="button">Clear all</button>
             </div>
         </div>
@@ -379,13 +380,26 @@
 
         function state(html) { listEl.innerHTML = '<div class="nv-state">' + html + '</div>'; }
 
+        var loadEpoch = 0;
+        function setSaveError(message) {
+            var el = document.getElementById('nvSaveError');
+            if (!el) return;
+            el.hidden = !message;
+            el.textContent = message || '';
+        }
+
         async function load() {
+            var epoch = loadEpoch;
             state('Loading notifications...');
             try {
                 var data = await api.getNotifications({ limit: 100 });
+                // Mark read happened while this list was loading. Keep the
+                // state the click already painted.
+                if (epoch !== loadEpoch) return;
                 items = data.notifications || [];
                 render();
             } catch (error) {
+                if (epoch !== loadEpoch) return;
                 if (error && (error.status === 401 || error.status === 403)) {
                     state('<strong>Your session expired</strong>Log in again to see your alert history.' +
                         '<div><a class="nv-btn p" href="/login/?next=' + encodeURIComponent('/notifications/') + '" style="margin-top:16px;">Log in</a></div>');
@@ -428,23 +442,49 @@
                 var nn = normalize(row);
                 href = destination(nn) || actor(nn).href;
             }
+            var wasUnread = !!(row && !(row.is_read || row.read));
             try {
-                if (row && !(row.is_read || row.read)) {
+                if (wasUnread) {
+                    loadEpoch += 1;
+                    if (typeof window.__tmrBeginNotifAck === 'function') window.__tmrBeginNotifAck();
+                    if (typeof window.__tmrRememberReads === 'function') window.__tmrRememberReads([row], false);
                     await api.markNotificationRead(id);
+                    if (typeof window.__tmrSettleNotifAck === 'function') window.__tmrSettleNotifAck();
                     row.is_read = true;
                     render();
+                    setSaveError('');
                 }
-            } catch (e) {}
+            } catch (e) {
+                if (typeof window.__tmrCancelNotifAck === 'function') window.__tmrCancelNotifAck();
+                setSaveError('Could not save. This alert is still unread.');
+                return;
+            }
             if (href) location.href = href;
         }
 
         async function markAll() {
+            if (markAllBtn.disabled) return;
+            loadEpoch += 1;
+            var prior = items.map(function (n) { return !!(n.is_read || n.read); });
+            items.forEach(function (n) { n.is_read = true; });
+            render();
+            var ok = false;
             try {
-                await api.markAllNotificationsRead();
-                items = items.map(function (n) { n.is_read = true; return n; });
+                if (typeof window.__tmrMarkAllNotificationsRead === 'function') {
+                    ok = await window.__tmrMarkAllNotificationsRead();
+                } else {
+                    await api.markAllNotificationsRead();
+                    ok = true;
+                    if (typeof window.updateNotifBadge === 'function') window.updateNotifBadge(0);
+                }
+            } catch (e) { ok = false; }
+            if (!ok) {
+                items.forEach(function (n, i) { n.is_read = prior[i]; });
                 render();
-                if (typeof window.updateNotifBadge === 'function') window.updateNotifBadge(0);
-            } catch (e) {}
+                setSaveError('Could not save. These alerts are still unread.');
+                return;
+            }
+            setSaveError('');
         }
 
         /* Clear all. Deletes only the notification rows; the messages, threads,

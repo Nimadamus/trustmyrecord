@@ -49,8 +49,36 @@
     failWith: null,
     calls: 0,
     marked: [],
-    loggedIn: true
+    markAllCalls: 0,
+    loggedIn: true,
+    failMarkOne: false,
+    failMarkAll: false,
+    markDelayMs: 0,
+    nextListDelayMs: 0,
+    replyUnread: null
   };
+
+  // A previous page in this tab already saved the read state. A reload or a
+  // back-navigation has to see that, not the empty default.
+  try {
+    var stash = sessionStorage.getItem('__harness_server');
+    if (stash) {
+      var parsed = JSON.parse(stash);
+      if (parsed && Array.isArray(parsed.feed)) {
+        window.__TEST.feed = parsed.feed;
+        window.__TEST.unreadCount = Number(parsed.unreadCount) || 0;
+      }
+    }
+  } catch (e) {}
+
+  function stashServer() {
+    try {
+      sessionStorage.setItem('__harness_server', JSON.stringify({
+        feed: window.__TEST.feed,
+        unreadCount: window.__TEST.unreadCount
+      }));
+    } catch (e) {}
+  }
 
   window.api = {
     ready: Promise.resolve(),
@@ -65,10 +93,24 @@
         err.status = window.__TEST.failWith;
         throw err;
       }
-      return {
-        notifications: window.__TEST.feed.slice(),
+      if (window.__TEST.replyUnread) {
+        const stale = window.__TEST.replyUnread;
+        window.__TEST.replyUnread = null;
+        const wait = window.__TEST.nextListDelayMs || 0;
+        window.__TEST.nextListDelayMs = 0;
+        if (wait) await new Promise(function (r) { setTimeout(r, wait); });
+        return stale;
+      }
+      // Snapshot before the wait so a save that lands while this request is
+      // still open cannot change the answer. That is the stale poll.
+      const snap = {
+        notifications: window.__TEST.feed.map(function (n) { return Object.assign({}, n); }),
         unreadCount: window.__TEST.unreadCount
       };
+      const delay = window.__TEST.nextListDelayMs || 0;
+      window.__TEST.nextListDelayMs = 0;
+      if (delay) await new Promise(function (r) { setTimeout(r, delay); });
+      return snap;
     },
     markNotificationRead: async function (id) {
       window.__TEST.marked.push(String(id));
@@ -79,12 +121,39 @@
         prior.push(String(id));
         localStorage.setItem('__harness_marked', JSON.stringify(prior));
       } catch (e) {}
+      if (window.__TEST.failMarkOne) {
+        const err = new Error('save failed');
+        err.status = 500;
+        throw err;
+      }
+      if (window.__TEST.markDelayMs) {
+        await new Promise(function (r) { setTimeout(r, window.__TEST.markDelayMs); });
+      }
+      window.__TEST.feed = window.__TEST.feed.map(function (n) {
+        return String(n.id) === String(id) ? Object.assign({}, n, { is_read: true }) : n;
+      });
+      window.__TEST.unreadCount = window.__TEST.feed.filter(function (n) { return !n.is_read; }).length;
+      stashServer();
       return { ok: true };
     },
-    markAllNotificationsRead: async function () { return { ok: true }; }
+    markAllNotificationsRead: async function () {
+      window.__TEST.markAllCalls += 1;
+      if (window.__TEST.failMarkAll) {
+        const err = new Error('save failed');
+        err.status = 500;
+        throw err;
+      }
+      if (window.__TEST.markDelayMs) {
+        await new Promise(function (r) { setTimeout(r, window.__TEST.markDelayMs); });
+      }
+      window.__TEST.feed = window.__TEST.feed.map(function (n) { return Object.assign({}, n, { is_read: true }); });
+      window.__TEST.unreadCount = 0;
+      stashServer();
+      return { ok: true };
+    }
   };
 </script>
-<script src="/static/js/notifications.js?v=76df0ede5da6"></script>
+<script src="/static/js/notifications.js?v=5f48b33df4b1"></script>
 <script defer src="/static/js/tmr-ds-avatar.a6e8c49d08e7.js"></script>
 </body>
 </html>

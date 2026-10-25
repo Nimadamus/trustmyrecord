@@ -27,6 +27,116 @@ const TMR_NOTIF_AUTH_BACKOFF_MS = _notifTunable('TMR_NOTIF_AUTH_BACKOFF_MS', [30
 let _notifPollTimer = null;
 let _notifPollIntervalMs = null;
 let _notifCache = { notifications: [], unreadCount: 0 };
+// A list or badge fetch that started before "mark read" must not paint the old
+// unread rows back over the click. Opening the dropdown and the 20s poll both
+// fire that fetch, and on a slow answer it lands after the mark has already
+// succeeded. _notifEpoch is the generation those in-flight answers belong to.
+// Acks keep a response that started after the click but before the save
+// committed from putting the same rows back, while a newer created_at (a
+// resurfaced like, or a truly new alert) still shows as unread.
+let _notifEpoch = 0;
+let _notifAckIds = Object.create(null);
+let _notifAckWatermark = 0;
+let _notifAckAll = false;
+let _notifAckSnap = null;
+let _notifMarkAllBusy = false;
+let _notifSaveError = '';
+function notifRowMs(n) {
+    const t = Date.parse(n && (n.created_at || n.createdAt) || '');
+    return Number.isFinite(t) ? t : 0;
+}
+function beginNotifAck() {
+    _notifEpoch += 1;
+    _notifAckSnap = {
+        ids: Object.assign({}, _notifAckIds),
+        watermark: _notifAckWatermark,
+        all: _notifAckAll
+    };
+    try {
+        window.__tmrNotifReadAt = Date.now();
+        window.__tmrNotifAckUntil = 0;
+    } catch (e) {}
+    return _notifEpoch;
+}
+function settleNotifAck() {
+    _notifAckSnap = null;
+    try { window.__tmrNotifAckUntil = Date.now(); } catch (e) {}
+}
+function cancelNotifAck() {
+    if (_notifAckSnap) {
+        _notifAckIds = _notifAckSnap.ids;
+        _notifAckWatermark = _notifAckSnap.watermark;
+        _notifAckAll = _notifAckSnap.all;
+    }
+    _notifAckSnap = null;
+    _notifEpoch += 1;
+    try {
+        window.__tmrNotifReadAt = 0;
+        window.__tmrNotifAckUntil = 0;
+    } catch (e) {}
+}
+function rememberNotifReads(rows, markAll) {
+    const list = Array.isArray(rows) ? rows : [];
+    let maxMs = _notifAckWatermark;
+    list.forEach(function (n) {
+        if (!n || n.id == null) return;
+        const ms = notifRowMs(n);
+        _notifAckIds[String(n.id)] = ms || Date.now();
+        if (ms > maxMs) maxMs = ms;
+    });
+    if (markAll) {
+        _notifAckAll = true;
+        if (maxMs) _notifAckWatermark = maxMs;
+    }
+}
+// Header badges fetch /unread-count on their own. A count that was already in
+// flight when the member marked read, or that started before the save
+// finished, is the old number.
+function tmrNotifCountIsStale(startedAt) {
+    if (!startedAt) return false;
+    let readAt = 0;
+    let until = 0;
+    try {
+        readAt = window.__tmrNotifReadAt || 0;
+        until = window.__tmrNotifAckUntil || 0;
+    } catch (e) {}
+    if (readAt && startedAt <= readAt) return true;
+    if (readAt && !until) return true;
+    if (until && startedAt < until) return true;
+    return false;
+}
+function applyNotifSnapshot(rows, serverUnread) {
+    const list = Array.isArray(rows) ? rows : [];
+    let visibleServerUnread = 0;
+    const out = list.map(function (n) {
+        const copy = Object.assign({}, n);
+        if (!copy.is_read) visibleServerUnread += 1;
+        const id = String(copy.id);
+        const ms = notifRowMs(copy);
+        const ackMs = _notifAckIds[id];
+        if (ackMs && ms > ackMs) {
+            delete _notifAckIds[id];
+        } else if (ackMs || (_notifAckWatermark && ms && ms < _notifAckWatermark)) {
+            copy.is_read = true;
+        }
+        return copy;
+    });
+    const visibleNow = out.filter(function (n) { return !n.is_read; }).length;
+    const hidden = Math.max(0, (Number(serverUnread) || 0) - visibleServerUnread);
+    return { notifications: out, unreadCount: visibleNow + (_notifAckAll ? 0 : hidden) };
+}
+function setNotifSaveError(message) {
+    _notifSaveError = message || '';
+    const el = document.getElementById('notifSaveError');
+    if (!el) return;
+    el.hidden = !_notifSaveError;
+    el.textContent = _notifSaveError;
+}
+window.tmrNotifCountIsStale = tmrNotifCountIsStale;
+window.__tmrBeginNotifAck = beginNotifAck;
+window.__tmrSettleNotifAck = settleNotifAck;
+window.__tmrCancelNotifAck = cancelNotifAck;
+window.__tmrRememberReads = rememberNotifReads;
 let _notifAuthListenerBound = false; // declared before initNotifications IIFE (TDZ fix)
 let _notifAuthFailures = 0;
 let _notifPauseUntil = 0;
@@ -100,13 +210,18 @@ async function setupNotifications() {
         bell.addEventListener('click', toggleNotificationsDropdown);
     }
 
-    // Close dropdown on outside click
+    // Close dropdown on outside click. A row click re-renders the list before
+    // the event finishes bubbling, which detaches the target. contains() then
+    // says the click was outside and the panel snaps shut. composedPath is the
+    // path from when the click started, so a click inside the panel stays inside.
     document.addEventListener('click', function(e) {
         const dropdown = getNotificationsContainer();
         const bellBtn = getNotificationTrigger();
-        if (dropdown && bellBtn && !dropdown.contains(e.target) && !bellBtn.contains(e.target)) {
-            dropdown.style.display = 'none';
-        }
+        if (!dropdown || !bellBtn) return;
+        const path = typeof e.composedPath === 'function' ? e.composedPath() : [];
+        if (path.indexOf(dropdown) !== -1 || path.indexOf(bellBtn) !== -1) return;
+        if (dropdown.contains(e.target) || bellBtn.contains(e.target)) return;
+        dropdown.style.display = 'none';
     });
 
     if (!_notifAuthListenerBound) {
@@ -256,6 +371,14 @@ function addNotificationDropdown() {
                 color: #A9F5EA;
                 text-decoration: none;
             }
+            .notifications-save-error {
+                margin: 0;
+                padding: 8px 14px;
+                background: #FEF2F2;
+                color: #991B1B;
+                font-size: 13px;
+                font-weight: 700;
+            }
 
             .notifications-list {
                 max-height: calc(72vh - 104px);
@@ -378,8 +501,9 @@ function addNotificationDropdown() {
     dropdown.innerHTML = `
         <div class="notifications-header">
             <h4>Notifications</h4>
-            <button onclick="markAllNotificationsRead()">Mark all read</button>
+            <button type="button" onclick="if(window.__tmrMarkAllNotificationsRead){window.__tmrMarkAllNotificationsRead(event);}">Mark all read</button>
         </div>
+        <p id="notifSaveError" class="notifications-save-error" hidden></p>
         <div class="notifications-list" id="notificationsList">
             <div class="notification-empty">No notifications yet</div>
         </div>
@@ -399,10 +523,20 @@ async function fetchNotifications() {
     // tick after the backoff expires picks the session back up on its own.
     if (_notifPauseUntil && Date.now() < _notifPauseUntil) return;
 
+    const epoch = _notifEpoch;
+    const startedAt = Date.now();
     try {
         const data = await api.getNotifications({ limit: 20 });
-        _notifCache.notifications = data.notifications || [];
-        _notifCache.unreadCount = Number(data.unreadCount ?? data.unread_count ?? 0);
+        // Mark read won while this snapshot was on the wire, or this request
+        // started before the save finished. Drop it. The next poll reads the
+        // saved state. A newer alert still arrives on that later poll.
+        if (epoch !== _notifEpoch || tmrNotifCountIsStale(startedAt)) return;
+        const applied = applyNotifSnapshot(
+            data.notifications || [],
+            data.unreadCount ?? data.unread_count ?? 0
+        );
+        _notifCache.notifications = applied.notifications;
+        _notifCache.unreadCount = applied.unreadCount;
 
         // Recovered.
         if (_notifAuthFailures || _notifPauseUntil) {
@@ -420,6 +554,7 @@ async function fetchNotifications() {
             renderNotificationsList(_notifCache.notifications);
         }
     } catch (err) {
+        if (epoch !== _notifEpoch) return;
         if (err && (err.status === 401 || err.status === 403)) {
             // AUTH_PAUSE_20260819: this used to call stopNotificationsPolling(),
             // which killed the bell for the rest of the page's life -- badge
@@ -451,13 +586,18 @@ function updateNotifBadge(count) {
     ].filter(Boolean);
     const unreadCount = getUnreadCountElement();
 
+    const n = Number(count) || 0;
     badges.forEach(function(badge) {
-        if (count > 0) {
-            badge.textContent = count > 99 ? '99+' : count;
+        if (n > 0) {
+            badge.hidden = false;
+            badge.textContent = n > 99 ? '99+' : String(n);
             badge.style.display = (badge.id === 'notifBadge' || badge.id === 'homeNotifBadge') ? 'inline' : 'block';
         } else {
             // Zero unread: hide AND empty it. Leaving a literal "0" behind meant
             // any stylesheet that re-showed the span painted a red "0" pill.
+            // .v2nav-badge display rules outrank the hidden attribute, so the
+            // inline display has to go too.
+            badge.hidden = true;
             badge.style.display = 'none';
             badge.textContent = '';
         }
@@ -525,7 +665,7 @@ function renderNotificationsList(notifications) {
         const rowClass = destination ? '' : 'no-destination';
 
         return `
-            <div class="notification-item ${isRead ? '' : 'unread'} ${rowClass}" data-type="${getLegacyFilterType(n.type)}" onclick="handleNotifClick('${n.id}')">
+            <div class="notification-item ${isRead ? '' : 'unread'} ${rowClass}" data-type="${getLegacyFilterType(n.type)}" onclick="if(window.__tmrHandleNotifClick){window.__tmrHandleNotifClick('${n.id}', null, event);}">
                 ${iconHtml}
                 <div class="notification-content">
                     <div class="notification-message">${renderNotifMessage(n, actor)}</div>
@@ -767,22 +907,40 @@ function getNotificationDestination(notification) {
     return null;
 }
 
-async function handleNotifClick(notifId, overrideHref) {
+async function handleNotifClick(notifId, overrideHref, e) {
+    if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+    if (e && typeof e.preventDefault === 'function') e.preventDefault();
     const notification = _notifCache.notifications.find(x => String(x.id) === String(notifId));
 
-    // Mark as read via backend
+    // Paint the read state first, then persist. A list fetch already in flight
+    // belongs to the previous generation and is dropped. A fetch that starts
+    // before the save commits is overlaid with this ack. A failed save puts
+    // this row back and says so, instead of leaving for the destination.
     if (window.api && api.isLoggedIn()) {
-        try {
-            await api.markNotificationRead(notifId);
-            // Update cache
-            if (notification && !notification.is_read) {
-                notification.is_read = true;
-                _notifCache.unreadCount = Math.max(0, _notifCache.unreadCount - 1);
-            }
+        const wasUnread = !!(notification && !notification.is_read);
+        beginNotifAck();
+        if (wasUnread) {
+            rememberNotifReads([notification], false);
+            notification.is_read = true;
+            _notifCache.unreadCount = Math.max(0, _notifCache.unreadCount - 1);
             updateNotifBadge(_notifCache.unreadCount);
             renderNotificationsList(_notifCache.notifications);
+        }
+        setNotifSaveError('');
+        try {
+            await api.markNotificationRead(notifId);
+            settleNotifAck();
         } catch (err) {
             console.error('[Notifications] Mark read error:', err);
+            cancelNotifAck();
+            if (wasUnread && notification) {
+                notification.is_read = false;
+                _notifCache.unreadCount += 1;
+                updateNotifBadge(_notifCache.unreadCount);
+                renderNotificationsList(_notifCache.notifications);
+            }
+            setNotifSaveError('Could not save. This alert is still unread.');
+            return false;
         }
     }
 
@@ -794,19 +952,41 @@ async function handleNotifClick(notifId, overrideHref) {
     if (destination) {
         window.location.href = destination;
     }
+    return true;
 }
 
-async function markAllNotificationsRead() {
-    if (!window.api || !api.isLoggedIn()) return;
+async function markAllNotificationsRead(e) {
+    if (e && typeof e.preventDefault === 'function') e.preventDefault();
+    if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+    if (!window.api || !api.isLoggedIn()) return false;
+    if (_notifMarkAllBusy) return true;
+    _notifMarkAllBusy = true;
+
+    beginNotifAck();
+    const priorRows = _notifCache.notifications.map(function (n) { return Object.assign({}, n); });
+    const priorCount = _notifCache.unreadCount;
+    rememberNotifReads(_notifCache.notifications, true);
+    _notifCache.notifications.forEach(function (n) { n.is_read = true; });
+    _notifCache.unreadCount = 0;
+    updateNotifBadge(0);
+    renderNotificationsList(_notifCache.notifications);
+    setNotifSaveError('');
 
     try {
         await api.markAllNotificationsRead();
-        _notifCache.notifications.forEach(n => n.is_read = true);
-        _notifCache.unreadCount = 0;
-        updateNotifBadge(0);
-        renderNotificationsList(_notifCache.notifications);
+        settleNotifAck();
+        return true;
     } catch (err) {
         console.error('[Notifications] Mark all read error:', err);
+        cancelNotifAck();
+        _notifCache.notifications = priorRows;
+        _notifCache.unreadCount = priorCount;
+        updateNotifBadge(priorCount);
+        renderNotificationsList(_notifCache.notifications);
+        setNotifSaveError('Could not save. These alerts are still unread.');
+        return false;
+    } finally {
+        _notifMarkAllBusy = false;
     }
 }
 
@@ -854,6 +1034,9 @@ window.TMR.refreshNotifications = fetchNotifications;
 window.toggleNotifications = toggleNotificationsDropdown;
 window.markAllRead = markAllNotificationsRead;
 window.markAllNotificationsRead = markAllNotificationsRead;
+window.__tmrMarkAllNotificationsRead = markAllNotificationsRead;
+window.handleNotifClick = handleNotifClick;
+window.__tmrHandleNotifClick = handleNotifClick;
 window.filterNotifications = filterNotifications;
 
 /* =====================================================================

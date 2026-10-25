@@ -72,12 +72,16 @@
     // unread alert count. The endpoint returns { unreadCount }; the older
     // count/unread keys are kept as fallbacks. notifications.js also drives
     // #homeNotifBadge once it polls, so the two stay in sync.
+    var unreadStarted = Date.now();
     (S ? S.authFetch(API + '/notifications/unread-count')
        : fetch(API + '/notifications/unread-count', {
            headers: { Accept: 'application/json', Authorization: 'Bearer ' + token() }
          }))
       .then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (d) { setBellBadge(d && (d.unreadCount != null ? d.unreadCount : (d.count != null ? d.count : d.unread))); })
+      .then(function (d) {
+        if (window.tmrNotifCountIsStale && window.tmrNotifCountIsStale(unreadStarted)) return;
+        setBellBadge(d && (d.unreadCount != null ? d.unreadCount : (d.count != null ? d.count : d.unread)));
+      })
       // A failed/unauthorised count must never leave a red dot behind: the badge
       // only ever shows a number the server actually returned.
       .catch(function () { setBellBadge(0); });

@@ -734,7 +734,7 @@
     '/static/js/config.js?v=430b4bba7b37',
     '/static/js/backend-api.js?v=e4eaeea31d19',
     '/static/js/auth-persistent.js?v=d479be477169',
-    '/static/js/notifications.js?v=76df0ede5da6'
+    '/static/js/notifications.js?v=5f48b33df4b1'
   ];
 
   /* REALM-LEVEL LOAD REGISTRY (2026-08-06)
@@ -841,11 +841,18 @@
         .then(function (r) { return r.ok ? r.json() : null; });
     }
 
+    var unreadStarted = Date.now();
     headerRead('/notifications/unread-count')
       .then(function (d) {
+        // A mark-read that happened while this count was in flight owns the
+        // badge. Painting this answer would put the red number back.
+        if (window.tmrNotifCountIsStale && window.tmrNotifCountIsStale(unreadStarted)) return;
         var n = d && (d.unreadCount != null ? d.unreadCount : (d.count != null ? d.count : d.unread));
         var b = document.getElementById('homeNotifBadge');
-        if (b && n > 0) { b.textContent = n > 99 ? '99+' : n; b.hidden = false; b.style.display = 'inline'; }
+        if (!b || n == null || n === '') return;
+        n = Number(n);
+        if (n > 0) { b.textContent = n > 99 ? '99+' : String(n); b.hidden = false; b.style.display = 'inline'; }
+        else { b.hidden = true; b.style.display = 'none'; b.textContent = ''; }
       }).catch(function () {});
 
     headerRead('/coins/balance')
