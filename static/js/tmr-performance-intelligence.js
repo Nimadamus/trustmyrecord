@@ -30,7 +30,7 @@
 }(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
 
-  var VERSION = 'pi-2.0.0';
+  var VERSION = 'pi-2.1.0';
   var MIN_SAMPLE = 30;
   var MARKET_LABEL = { spread: 'spreads', moneyline: 'moneylines', total: 'totals', team_total: 'team totals', prop: 'props', other: 'other markets' };
 
@@ -336,7 +336,7 @@
     'Note the information that could change the number (injuries, weather, lineups)'];
   function checklistFor(sport, market) { return CHECKLISTS[sport + ' ' + market] || GENERIC_CHECKLIST; }
 
-  function pct(x, d) { return (x >= 0 ? '+' : '') + (x * 100).toFixed(d == null ? 1 : d) + '%'; }
+  function pct(x, d) { var t = (x * 100).toFixed(d == null ? 1 : d); if (Number(t) === 0) t = t.replace('-', ''); return (Number(t) >= 0 ? '+' : '') + t + '%'; }
   function u(x) { return (x >= 0 ? '+' : '') + x.toFixed(1) + 'u'; }
 
   /* One pick, split into what was knowable before the game and what happened. */
@@ -514,6 +514,199 @@
     return { plan_started_at: planStartedAt, before: b, after: a, status: status };
   }
 
+  /* ------------------------------------------------------------------
+     Diagnostics (pi-2.1.0): what a public profile cannot show. A profile
+     says WHAT happened (record, units, ROI, splits). These say how much of it
+     luck explains at the prices actually paid, where the units were lost,
+     how stake size and concentration shaped the result, how deep the swings
+     ran, and whether the result holds up over time and without its biggest
+     wins. Every figure comes from the graded picks alone; nothing here
+     explains WHY a pick won or lost.                                     */
+
+  /* Units a bettor with NO edge would win or lose at these exact prices and
+     stakes: mean 0, and this standard deviation. Each pick wins with the
+     break-even probability q of its price; the swing is risk * (payout + 1). */
+  function noEdgeSd(list) {
+    var v = 0;
+    list.forEach(function (k) {
+      if (k.result !== 'won' && k.result !== 'lost') return;
+      var q = implied(k.odds); if (q == null) return;
+      var r = Number(k.risk) || 0, b = payout(k.odds);
+      v += q * (1 - q) * Math.pow(r * (b + 1), 2);
+    });
+    return Math.sqrt(v);
+  }
+
+  function luckBand(list, o) {
+    var priced = list.filter(function (k) { return (k.result === 'won' || k.result === 'lost') && implied(k.odds) != null; }).length;
+    var decided = list.filter(function (k) { return k.result === 'won' || k.result === 'lost'; }).length;
+    if (!priced) return { sd: null, band_90: null, z: null, position: 'unknown', priced: 0,
+      text: 'No prices were recorded with these picks, so the result cannot be compared with what luck alone produces.' };
+    var sd = noEdgeSd(list);
+    var net = list.reduce(function (a, k) { return a + ((k.result === 'won' || k.result === 'lost') && implied(k.odds) != null ? Number(k.net) || 0 : 0); }, 0);
+    var z = sd > 0 ? net / sd : 0;
+    var band = round(1.645 * sd, 1);
+    var read = Math.abs(z) < 1.645 ? 'inside' : z > 0 ? 'above' : 'below';
+    var missing = decided - priced;
+    return { sd: round(sd, 2), band_90: band, z: round(z, 2), position: read, priced: priced, missing_prices: missing,
+      net: round(net, 2),
+      text: 'A bettor with no edge, betting these ' + priced + ' decided picks at the same prices and stakes, finishes within ' + MINUS_PLUS + band.toFixed(1) +
+        ' units 90% of the time. These picks are ' + u(net) + ', ' +
+        (read === 'inside' ? 'inside that range, so luck alone could explain it.' : read === 'above' ? 'above that range: more than luck alone usually produces.' : 'below that range: worse than luck alone usually produces.') +
+        (missing ? ' ' + missing + ' decided picks had no recorded price and are left out of the range.' : '') };
+  }
+  var MINUS_PLUS = '\u00b1';
+
+  /* The real side of a bet for combination cells: favorite or underdog on
+     sides, over or under on totals. */
+  function sideKind(p) {
+    if (p.side) return p.side === 'over' ? 'overs' : 'unders';
+    var o = Number(p.odds);
+    if (p.market === 'moneyline') return o < 0 ? 'favorites' : o > 0 ? 'underdogs' : null;
+    if (p.market === 'spread' && p.line != null && Number(p.line) !== 0) return Number(p.line) < 0 ? 'favorites' : 'underdogs';
+    return null;
+  }
+  function comboKey(p) { var k = sideKind(p); return k ? catKey(p) + ', ' + k : null; }
+
+  /* Where the units went: every sport, bet type and side combination, the
+     losing ones ranked by units lost. Judged cells (30+ picks) get a
+     Holm-adjusted verdict over every judged cell; smaller ones are shown as
+     unproven. Share = this cell's loss as a part of all losses across
+     losing cells. */
+  function leaks(graded) {
+    var cells = slices(graded, comboKey);
+    var judged = cells.filter(function (c) { return c.n >= MIN_SAMPLE; });
+    holm(judged);
+    judged.forEach(function (c) { c.verdict = verdict({ n: c.n, roi: c.roi, pValue: c.p_value, pAdjusted: c.p_adjusted }); });
+    var losing = cells.filter(function (c) { return c.net < 0 && c.n >= 10; }).sort(function (a, b) { return a.net - b.net; });
+    var totalLoss = losing.reduce(function (a, c) { return a + c.net; }, 0);
+    losing.forEach(function (c) { c.share_of_losses = totalLoss ? round(c.net / totalLoss, 3) : 0; });
+    var winning = cells.filter(function (c) { return c.net > 0 && c.n >= 10; }).sort(function (a, b) { return b.net - a.net; });
+    return { tested: judged.length, cells: cells.length, losing: losing.slice(0, 6), winning: winning.slice(0, 4),
+      note: 'Cells with fewer than ' + MIN_SAMPLE + ' picks are shown but not judged. A losing cell is a place to review, not proof of a leak, unless its verdict says the shortfall is meaningful after adjusting for the ' + judged.length + ' cells tested.' };
+  }
+
+  /* Stake size. Flat ROI treats every pick as one unit; the gap between it
+     and the actual ROI is what sizing did to the result. Buckets by stake. */
+  function sizing(graded, o) {
+    var n = 0, flat = 0, stakes = [];
+    graded.forEach(function (k) { var r = Number(k.risk) || 0; if (r > 0) { n++; flat += (Number(k.net) || 0) / r; stakes.push(r); } });
+    var flatRoi = n ? flat / n : 0;
+    stakes.sort(function (a, b) { return a - b; });
+    var mean = stakes.reduce(function (a, b) { return a + b; }, 0) / (stakes.length || 1);
+    var sd = Math.sqrt(stakes.reduce(function (a, b) { return a + (b - mean) * (b - mean); }, 0) / (stakes.length || 1));
+    var cv = mean ? sd / mean : 0;
+    var buckets = null, cmp = null;
+    if (cv >= 0.15 && stakes.length >= 2 * MIN_SAMPLE) {
+      var cut = stakes[Math.floor(stakes.length / 2)];
+      var small = graded.filter(function (k) { return (Number(k.risk) || 0) < cut; });
+      var large = graded.filter(function (k) { return (Number(k.risk) || 0) >= cut; });
+      if (small.length >= MIN_SAMPLE && large.length >= MIN_SAMPLE) {
+        var label = cut.toFixed(cut % 1 ? 1 : 0);
+        buckets = [Object.assign(stats(small), { key: 'Under ' + label + 'u' }), Object.assign(stats(large), { key: label + 'u and up' })];
+        cmp = compare('Smaller stakes', small, 'Larger stakes', large);
+      }
+    }
+    var effect = o.roi - flatRoi;
+    var text;
+    if (cv < 0.15) text = 'Stakes are close to flat (they vary ' + (cv * 100).toFixed(0) + '% around the average of ' + mean.toFixed(2) + 'u), so sizing did not shape the result.';
+    else {
+      text = 'Flat-stake ROI is ' + pct(flatRoi) + ' against ' + pct(o.roi) + ' actual, so stake sizing ' + (effect >= 0 ? 'added ' : 'cost ') + Math.abs(effect * 100).toFixed(1) + ' ROI points.';
+      if (cmp) text += cmp.p_value < 0.05
+        ? ' ' + cmp.worse + ' did worse (' + pct(cmp.worse_stats.roi) + ' over ' + cmp.worse_stats.n + ' picks against ' + pct(cmp.better_stats.roi) + '), a gap unlikely to be chance (p = ' + cmp.p_value.toFixed(2) + ').'
+        : ' The gap between smaller and larger stakes (' + pct(buckets[0].roi) + ' and ' + pct(buckets[1].roi) + ') is within what chance produces (p = ' + cmp.p_value.toFixed(2) + ').';
+    }
+    return { flat_roi: round(flatRoi, 4), actual_roi: o.roi, sizing_effect: round(effect, 4), avg_stake: round(mean, 2), stake_cv: round(cv, 2),
+      buckets: buckets, comparison: cmp ? { worse: cmp.worse, better: cmp.better, p_value: cmp.p_value } : null, text: text };
+  }
+
+  /* Swings: deepest peak-to-trough fall of the running total (in pick
+     order), longest losing run, worst month, and the drawdown measured in
+     average stakes so it reads the same at any unit size. */
+  function risk(graded, monthly, avgStake) {
+    var run = 0, peak = 0, dd = 0, ddFrom = null, ddTo = null, peakDate = graded.length ? graded[0].date : null;
+    var streak = 0, worstStreak = 0;
+    graded.forEach(function (k) {
+      run += Number(k.net) || 0;
+      if (run > peak) { peak = run; peakDate = k.date; }
+      if (peak - run > dd) { dd = peak - run; ddFrom = peakDate; ddTo = k.date; }
+      if (k.result === 'lost') { streak++; if (streak > worstStreak) worstStreak = streak; } else if (k.result === 'won') streak = 0;
+    });
+    var worst = monthly.slice().sort(function (a, b) { return a.net - b.net; })[0] || null;
+    var mNets = monthly.map(function (m) { return m.net; });
+    var mMean = mNets.reduce(function (a, b) { return a + b; }, 0) / (mNets.length || 1);
+    var mSd = Math.sqrt(mNets.reduce(function (a, b) { return a + (b - mMean) * (b - mMean); }, 0) / (mNets.length > 1 ? mNets.length - 1 : 1));
+    var inStakes = avgStake ? dd / avgStake : 0;
+    return { max_drawdown: round(dd, 2), drawdown_from: ddFrom, drawdown_to: ddTo, drawdown_stakes: round(inStakes, 1),
+      longest_losing_run: worstStreak, worst_month: worst ? { month: worst.key, net: worst.net, n: worst.n } : null,
+      monthly_sd: round(mSd, 2), losing_months: mNets.filter(function (x) { return x < 0; }).length, months: mNets.length,
+      text: 'The deepest fall from a high point was ' + dd.toFixed(1) + ' units (about ' + inStakes.toFixed(0) + ' average stakes)' +
+        (ddFrom ? ', from ' + ddFrom + ' to ' + ddTo : '') + '. The longest losing run was ' + worstStreak + ' picks, and ' +
+        mNets.filter(function (x) { return x < 0; }).length + ' of ' + mNets.length + ' months finished down.' };
+  }
+
+  /* Concentration: how much of the risk and of the result sits in one place,
+     and what the record looks like without it. */
+  function concentration(graded, categories, o) {
+    if (!categories.length || !o.risked) return null;
+    var byRisk = categories.slice().sort(function (a, b) { return b.risked - a.risked; });
+    var top = byRisk[0];
+    var hhi = categories.reduce(function (a, c) { var sh = c.risked / o.risked; return a + sh * sh; }, 0);
+    var best = categories.slice().sort(function (a, b) { return b.net - a.net; })[0];
+    var without = stats(graded.filter(function (p) { return catKey(p) !== best.key; }));
+    return { top_category: top.key, top_share_of_risk: round(top.risked / o.risked, 3), effective_categories: round(hhi ? 1 / hhi : 0, 1),
+      best_category: best.key, best_net: best.net, roi_without_best: without.roi, n_without_best: without.n,
+      text: top.key + ' carries ' + (top.risked / o.risked * 100).toFixed(0) + '% of all units risked; the record behaves like ' + (hhi ? 1 / hhi : 0).toFixed(1) +
+        ' equally sized categories. Without ' + best.key + ' (' + u(best.net) + '), the rest of the record is ' + pct(without.roi) + ' over ' + without.n + ' picks.' };
+  }
+
+  /* Does the result hold up? Chronological halves, and the record without
+     its five biggest single wins. */
+  function robustness(graded, o) {
+    if (graded.length < 2 * MIN_SAMPLE) return { enough: false, text: 'Fewer than ' + (2 * MIN_SAMPLE) + ' graded picks: too few to split the record in time.' };
+    var mid = Math.floor(graded.length / 2);
+    var a = stats(graded.slice(0, mid)), b = stats(graded.slice(mid));
+    var top5 = graded.slice().sort(function (x, y) { return (Number(y.net) || 0) - (Number(x.net) || 0); }).slice(0, 5);
+    var ids = top5.map(function (x) { return x; });
+    var rest = stats(graded.filter(function (x) { return ids.indexOf(x) < 0; }));
+    var same = (a.roi >= 0) === (b.roi >= 0);
+    var fragile = o.roi > 0 && rest.roi <= 0;
+    return { enough: true, first_half: a, second_half: b, consistent_sign: same, without_top5: rest, top5_net: round(top5.reduce(function (s2, x) { return s2 + (Number(x.net) || 0); }, 0), 2), fragile: fragile,
+      text: 'First half of the record (' + a.n + ' picks to ' + graded[mid - 1].date + '): ' + pct(a.roi) + '. Second half: ' + pct(b.roi) + '. ' +
+        (same ? 'Both halves point the same way.' : 'The two halves point in opposite directions, so the overall figure is not yet stable.') +
+        ' Without the five biggest wins the record is ' + pct(rest.roi) + (fragile ? ', so the profit rests on a handful of results.' : '.') };
+  }
+
+  function diagnostics(graded, o, categories, monthly) {
+    if (!graded.length) return null;
+    var sz = sizing(graded, o);
+    return {
+      luck: luckBand(graded, o),
+      leaks: leaks(graded),
+      sizing: sz,
+      risk: risk(graded, monthly, sz.avg_stake),
+      concentration: concentration(graded, categories, o),
+      robustness: robustness(graded, o),
+    };
+  }
+
+  /* Executive summary: five short lines a member can act on, each tied to a
+     figure further down the report. */
+  function summary(o, diag, priority, strengths) {
+    if (!diag) return [];
+    var out = [];
+    out.push({ k: 'Result against luck', v: diag.luck.position === 'unknown' ? 'No prices' : diag.luck.position === 'inside' ? 'Within luck' : diag.luck.position === 'above' ? 'Above luck' : 'Below luck',
+      tone: diag.luck.position === 'above' ? 'pos' : diag.luck.position === 'below' ? 'neg' : 'neutral', text: diag.luck.text });
+    var keep = strengths.filter(function (s) { return s.n >= MIN_SAMPLE; })[0];
+    if (keep) out.push({ k: 'Strongest area', v: keep.key, tone: 'pos', text: keep.key + ': ' + pct(keep.roi) + ' over ' + keep.n + ' picks. ' + keep.verdict.label + '.' });
+    var leak = diag.leaks.losing[0];
+    if (leak) out.push({ k: 'Largest loss driver', v: leak.key, tone: 'neg', text: leak.key + ': ' + u(leak.net) + ' over ' + leak.n + ' picks, ' + (leak.share_of_losses * 100).toFixed(0) + '% of all losses in losing areas. ' + (leak.verdict ? leak.verdict.label : 'Too few picks to judge') + '.' });
+    out.push({ k: 'Deepest swing', v: diag.risk.max_drawdown.toFixed(1) + 'u', tone: 'neutral', text: diag.risk.text });
+    if (diag.robustness.enough) out.push({ k: 'Holds up over time', v: diag.robustness.consistent_sign && !diag.robustness.fragile ? 'Yes' : 'Not yet', tone: diag.robustness.consistent_sign && !diag.robustness.fragile ? 'pos' : 'neutral', text: diag.robustness.text });
+    if (priority) out.push({ k: 'First action', v: 'Review ' + priority.key, tone: 'neutral', text: 'See the action plan: a checklist for ' + priority.key + ', measured over the next ' + MIN_SAMPLE + ' picks.' });
+    return out;
+  }
+
   /* The whole report. */
   function analyze(picks, opts) {
     opts = opts || {};
@@ -572,6 +765,7 @@
     }
 
     var ins = insights(graded);
+    var diag = diagnostics(graded, overall, categories, monthly);
 
     var focus = null;
     if (priority) {
@@ -606,15 +800,21 @@
       focus: focus,
       strength_review: strengthReview,
       insights: ins,
+      diagnostics: diag,
+      summary: summary(overall, diag, priority, strengths),
       comparisons: { categories: comparisons },
       evaluation: evaluation(overall, strengths, weaknesses, priority, focus, recent, earlier, ins),
-      plan: plan(priority, focus, strengths, ins),
+      plan: plan(priority, focus, strengths, ins, diag),
       method: {
         min_sample: MIN_SAMPLE,
         significance: 'Two-sided z-test of wins against the break-even win rate implied by the prices actually paid. p < 0.05 meaningful, p < 0.20 possible, otherwise normal variance.',
         clv: 'Spreads and totals: points gained on the closing line. Moneylines and props: implied probability gained at the closing price.',
         patterns: 'Each weak category is split several ways (side, price, line movement, day). With several splits, one can look strong by chance, so a pattern is a question to research, never a rule.',
         not_claimed: 'The report never states why a pick lost. It separates information available before the game from the result.',
+      luck: 'The luck range is the 90% range of units a bettor with no edge would finish with at the same prices and stakes (each pick wins at the break-even rate of its price).',
+      leaks: 'Every sport, bet type and side combination (favorites or underdogs, overs or unders) with 10+ picks; verdicts only at 30+, Holm-adjusted over every judged cell.',
+      sizing: 'Flat ROI counts every pick as one unit. Stakes are split at the median stake when they vary by 15% or more; the two halves are compared with a Welch test.',
+      robustness: 'The record is split into its first and second half in time, and recomputed without its five biggest wins.',
       },
     };
   }
@@ -664,7 +864,7 @@
     return out;
   }
 
-  function plan(priority, focus, strengths, ins) {
+  function plan(priority, focus, strengths, ins, diag) {
     var steps = [];
     if (priority && focus) {
       var strong = strengths.filter(function (x) { return x.n >= MIN_SAMPLE; })[0];
@@ -693,6 +893,14 @@
         steps.push({ title: 'Compare ' + top.worse + ' with ' + top.better, detail: top.text + ' ' + top.suggestion });
       }
     }
+    /* Sizing: only when stakes vary and larger stakes did meaningfully worse. */
+    if (diag && diag.sizing.comparison && diag.sizing.comparison.p_value < 0.05 && diag.sizing.comparison.worse === 'Larger stakes') {
+      steps.push({ title: 'Check how you size up', detail: diag.sizing.text + ' Consider writing down why a pick deserves a bigger stake before placing it, and compare the next ' + MIN_SAMPLE + ' larger stakes with this record.' });
+    }
+    /* Fragile profit: say it plainly so a hot streak is not mistaken for an edge. */
+    if (diag && diag.robustness.enough && diag.robustness.fragile) {
+      steps.push({ title: 'Treat the profit as unproven', detail: diag.robustness.text + ' Consider keeping stakes steady until the record is positive without its biggest wins.' });
+    }
     /* The strength worth protecting: meaningful on results, or close to it
        AND beating the closing line, which is independent evidence. */
     var keep = strengths.filter(function (s) {
@@ -704,6 +912,6 @@
     return steps;
   }
 
-  return { VERSION: VERSION, MIN_SAMPLE: MIN_SAMPLE, analyze: analyze, stats: stats, insights: insights, reviewPick: reviewPick,
+  return { VERSION: VERSION, MIN_SAMPLE: MIN_SAMPLE, analyze: analyze, stats: stats, insights: insights, diagnostics: diagnostics, reviewPick: reviewPick,
     implied: implied, payout: payout, clv: clv, clvDir: clvDir, closeComparable: closeComparable, oddsBand: oddsBand, checklistFor: checklistFor };
 }));

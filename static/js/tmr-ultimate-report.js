@@ -279,6 +279,56 @@
     return function (id) { var t = el.querySelector('#ult-tab-' + id); if (t) select(t); };
   }
 
+  /* pi-2.1.0: executive summary and diagnostics. Each card restates one
+     figure from further down the report; nothing here is new judgement. */
+  function summaryHtml(list) {
+    if (!list || !list.length) return '';
+    return '<div class="ult-summary"><span class="ult-kicker">Executive summary</span><div class="ult-sumgrid">' + list.map(function (x) {
+      return '<div class="ult-sum ult-sum--' + esc(x.tone) + '"><span>' + esc(x.k) + '</span><b>' + prose(x.v) + '</b><p>' + prose(x.text) + '</p></div>';
+    }).join('') + '</div></div>';
+  }
+
+  function luckHtml(l) {
+    if (!l || l.position === 'unknown' || !l.band_90) return '<p>' + prose(l ? l.text : '') + '</p>';
+    var span = Math.max(l.band_90 * 1.6, Math.abs(l.net) * 1.15, 1);
+    var x = function (v) { return Math.max(0, Math.min(100, 50 + v / span * 50)); };
+    return '<div class="ult-luck" role="img" aria-label="' + esc('No-edge range ' + MINUS + l.band_90.toFixed(1) + ' to +' + l.band_90.toFixed(1) + ' units; this record ' + fu(l.net)) + '">' +
+      '<div class="ult-luck-track"><i class="ult-luck-band" style="left:' + x(-l.band_90) + '%;right:' + (100 - x(l.band_90)) + '%"></i><i class="ult-luck-zero" style="left:50%"></i>' +
+      '<i class="ult-luck-dot ult-luck-dot--' + esc(l.position) + '" style="left:' + x(l.net) + '%"><em>' + esc(fu(l.net)) + '</em></i></div>' +
+      '<div class="ult-luck-scale"><span>' + MINUS + l.band_90.toFixed(1) + 'u</span><span>0</span><span>+' + l.band_90.toFixed(1) + 'u</span></div></div>' +
+      '<p>' + prose(l.text) + '</p>';
+  }
+
+  function cellRows(list, lossShare) {
+    if (!list.length) return '<p class="ult-muted">None with 10 or more picks.</p>';
+    return '<div class="ult-cells">' + list.map(function (c) {
+      return '<div class="ult-cell"><div class="ult-cell-head"><b>' + esc(c.key) + '</b>' + (c.verdict ? chip(c.verdict) : '<span class="ult-chip ult-chip--neutral">Too few picks to judge</span>') + '</div>' +
+        '<div class="ult-cell-nums"><span>' + esc(fu(c.net)) + '</span><span>' + esc(fp(c.roi)) + ' ROI</span><span>' + c.n + ' picks</span><span>' + esc(rec(c)) + '</span>' +
+        (lossShare && c.share_of_losses != null ? '<span>' + pc(c.share_of_losses) + ' of losses</span>' : '') + '</div>' +
+        (lossShare && c.share_of_losses != null ? '<div class="ult-cell-bar"><i style="width:' + Math.round(c.share_of_losses * 100) + '%"></i></div>' : '') + '</div>';
+    }).join('') + '</div>';
+  }
+
+  function diagnosticsHtml(d) {
+    if (!d) return '<p class="ult-muted">Diagnostics appear after the first graded pick.</p>';
+    var k = d.risk, z = d.sizing, c = d.concentration, rb = d.robustness;
+    return '<p class="ult-intro">A public profile shows what happened. These diagnostics test it: how much luck explains at the prices you paid, where the units went, what stake size and concentration did, how deep the swings ran, and whether the result holds up.</p>' +
+      '<section class="ult-dsec"><h4>Result against luck</h4>' + luckHtml(d.luck) + '</section>' +
+      '<section class="ult-dsec"><h4>Where the units were lost</h4><p class="ult-muted">Sport, bet type and side together (favorites or underdogs, overs or unders), ranked by units lost.</p>' + cellRows(d.leaks.losing, true) +
+      '<h4 class="ult-sub">Where they were earned</h4>' + cellRows(d.leaks.winning, false) + '<p class="ult-muted">' + prose(d.leaks.note) + '</p></section>' +
+      '<section class="ult-dsec"><h4>Risk and bet sizing</h4><div class="ult-strip ult-strip--4">' +
+        '<div><span>Deepest swing</span><b>' + esc(k.max_drawdown.toFixed(1)) + 'u</b></div>' +
+        '<div><span>Longest losing run</span><b>' + k.longest_losing_run + '</b></div>' +
+        '<div><span>Worst month</span><b>' + (k.worst_month ? esc(fu(k.worst_month.net)) : 'n/a') + '</b></div>' +
+        '<div><span>Flat-stake ROI</span><b>' + esc(fp(z.flat_roi)) + '</b></div></div>' +
+        '<p>' + prose(k.text) + '</p><p>' + prose(z.text) + '</p></section>' +
+      (c ? '<section class="ult-dsec"><h4>Concentration</h4><p>' + prose(c.text) + '</p></section>' : '') +
+      '<section class="ult-dsec"><h4>Does it hold up?</h4>' + (rb.enough
+        ? '<div class="ult-strip ult-strip--3"><div><span>First half</span><b>' + esc(fp(rb.first_half.roi)) + '</b></div><div><span>Second half</span><b>' + esc(fp(rb.second_half.roi)) + '</b></div><div><span>Without top 5 wins</span><b>' + esc(fp(rb.without_top5.roi)) + '</b></div></div>'
+        : '') + '<p>' + prose(rb.text) + '</p></section>' +
+      '<p class="ult-muted">These describe the record. They do not say why any pick won or lost, and none of them predicts future results.</p>';
+  }
+
   function renderReport(el, r, opts) {
     opts = opts || {};
     var who = opts.name || 'you';
@@ -287,6 +337,7 @@
     var tabs = [];
 
     tabs.push({ id: 'overall', label: 'Overall Analysis', html:
+      summaryHtml(r.summary) +
       writtenHtml(r.narrative) +
       '<div class="ult-eval"><span class="ult-kicker">' + (r.narrative ? 'The numbers behind it' : 'Overall handicapping evaluation') + '</span>' + r.evaluation.map(function (p, i) { return '<p' + (i === 0 ? ' class="ult-lead"' : '') + '>' + prose(p) + '</p>'; }).join('') + '</div>' +
       '<div class="ult-sw2"><div class="ult-swcol ult-swcol--pos"><h4>Strongest categories</h4>' + (r.strengths.length ? r.strengths.map(function (s) {
@@ -298,6 +349,7 @@
       insightsHtml(r.insights) +
       '<p class="ult-muted">Verdicts test wins against the break-even rate of the prices actually paid, adjusted for the number of categories tested. "Within normal variance" means the result, good or bad, is what luck alone produces often enough that it is not a reason to change anything by itself.</p>' });
 
+    if (r.diagnostics) tabs.push({ id: 'diagnostics', label: 'Diagnostics', html: diagnosticsHtml(r.diagnostics) });
     if (f) {
       tabs.push({ id: 'focus', label: f.category.key, html:
         '<div class="ult-focushead"><div><span class="ult-kicker">Priority review</span><h3>' + esc(f.category.key) + '</h3></div>' + chip(f.category.verdict) + '</div>' +
@@ -348,6 +400,7 @@
       '<div class="ult-method">' +
       '<h4>What the numbers are</h4><p>Every figure comes from graded TrustMyRecord picks. ROI is net units divided by units risked. A category is judged only with 30 or more graded picks, and each verdict tests wins against the break-even rate of the prices actually paid, adjusted for the number of categories and comparisons tested so that one lucky slice is not presented as a strength.</p>' +
       '<h4>What the pick reviews use</h4><p>Pre-game inputs are rebuilt as of the moment each pick was made and labelled: <b>known at the pick</b>, <b>timing not recorded</b> (real pre-game facts such as confirmed starters or injury absences with no publication time), <b>published after the pick</b>, or <b>at the start</b> (the closing line, first-pitch weather). Only inputs known at the pick count as context. They are possible factors, never the reason a pick won or lost; TMR stores no written rationale, so the report never says what was considered.</p>' +
+      '<h4>The diagnostics</h4><p>The luck range is the 90% range of units a bettor with no edge finishes with at the same prices and stakes. Loss drivers rank every sport, bet type and side combination with 10 or more picks; verdicts appear only at 30 or more and are adjusted for the number of cells tested. Flat-stake ROI counts every pick as one unit, so its gap to the actual ROI is what sizing did. The record is also split into halves in time and recomputed without its five biggest wins.</p>' +
       '<h4>Closing lines</h4><p>TMR records the close from pre-game sportsbook prices. Where TMR has none, the DraftKings close recorded by ESPN is used and labelled. Beating the close is measured only where the number or price actually moved.</p>' +
       '<h4>Not available yet</h4><ul class="ult-read"><li>Weather forecasts as of the pick (MLB shows first-pitch conditions, labelled; football has none).</li><li>Closing prices for player props.</li><li>NFL injury reports before March 2026; injury publication times for the NBA and NHL.</li><li>Confirmed lineups, pitch matchups and advanced player metrics as of the pick.</li><li>Pre-game inputs for soccer, MMA, tennis and first-half or first-five markets (their records and prices are still analyzed).</li></ul>' +
       '<h4>What this is not</h4><p>A research and coaching tool, not a prediction service. Nothing here promises better results.</p></div>' });
