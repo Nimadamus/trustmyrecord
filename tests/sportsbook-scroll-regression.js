@@ -317,14 +317,31 @@ async function scenario(browser, label, viewport, mobile) {
     const g = window.__sbNext.state.games[0];
     g.main.h2h[0].odds = -188;
   });
-  await page.evaluate(() => window.__sbNext.render());
-  await page.waitForTimeout(700);
+  const oddsTrace = await page.evaluate(() => new Promise((resolve) => {
+    const foot = document.querySelector('.page-footer');
+    const snap = () => ({
+      y: Math.round(window.scrollY),
+      h: document.getElementById('sbnBoard').offsetHeight,
+      foot: foot ? Math.round(foot.getBoundingClientRect().top) : null,
+      token: !!document.querySelector('#sbnBoard .tpf-chipline[data-token="refresh1"]')
+    });
+    const samples = [snap()];
+    window.__sbNext.render();
+    samples.push(snap());
+    [50, 150, 300, 600].forEach((ms) => setTimeout(() => samples.push(snap()), ms));
+    setTimeout(() => resolve(samples), 700);
+  }));
   const price = await page.evaluate(() => {
     const row = document.querySelector('#sbnBoard article.sbn-row');
     return row ? row.textContent.indexOf('-188') !== -1 : false;
   });
-  const yAfterOdds = await y(page);
-  check(label + ' changed odds paint without a scroll jump', price && Math.abs(yAfterOdds - fromRefresh) <= 2, 'price=' + price + ' y=' + yAfterOdds);
+  const oddsSpan = (key) => {
+    const vals = oddsTrace.map((s) => s[key]).filter((v) => v != null);
+    return vals.length ? Math.max.apply(null, vals) - Math.min.apply(null, vals) : 0;
+  };
+  const oddsKept = oddsTrace.every((s) => s.token);
+  check(label + ' changed odds keep board height', price && oddsKept && oddsSpan('h') <= 2 && oddsSpan('foot') <= 2 && oddsSpan('y') <= 2,
+    'price=' + price + ' kept=' + oddsKept + ' h=' + oddsSpan('h') + ' foot=' + oddsSpan('foot') + ' y=' + oddsSpan('y'));
 
   check(label + ' no page errors', errs.length === 0, errs.join(' | ').slice(0, 300));
   await page.close();

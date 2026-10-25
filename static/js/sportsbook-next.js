@@ -2566,12 +2566,37 @@
                     })() +
                     '</div>';
             }
-            // An unchanged odds refresh must not wipe the rows. Wiping them is
-            // what makes the pro funnel insert chip lines again, and that insert
-            // is what scroll-anchoring turns into a jump.
+            // An unchanged odds refresh must not wipe the rows. A real price
+            // change still rebuilds them. The pro chip lines live in those
+            // rows, so a bare wipe shortens the board until the funnel paints
+            // them back. Hold the lines across the swap and put them on the
+            // same games before the browser paints. ODDS_HEIGHT_20261025
             if (board._sbnHtml !== html) {
+                var heldLines = [];
+                var oldLines = board.querySelectorAll('article.sbn-row .tpf-chipline');
+                var hi;
+                for (hi = 0; hi < oldLines.length; hi++) {
+                    var oldRow = oldLines[hi].closest('article.sbn-row');
+                    var gid = oldRow && oldRow.getAttribute('data-game');
+                    if (!gid) continue;
+                    heldLines.push({ gid: gid, node: oldLines[hi] });
+                }
+                for (hi = 0; hi < heldLines.length; hi++) {
+                    var held = heldLines[hi].node;
+                    if (held.parentNode) held.parentNode.removeChild(held);
+                }
                 board._sbnHtml = html;
                 board.innerHTML = html;
+                var nextRows = board.querySelectorAll('article.sbn-row[data-game]');
+                var rowByGame = {};
+                for (hi = 0; hi < nextRows.length; hi++) rowByGame[nextRows[hi].getAttribute('data-game')] = nextRows[hi];
+                for (hi = 0; hi < heldLines.length; hi++) {
+                    var dest = rowByGame[heldLines[hi].gid];
+                    if (!dest || dest.querySelector('.tpf-chipline')) continue;
+                    var rowTop = dest.querySelector('.sbn-rowtop');
+                    if (rowTop && rowTop.parentNode === dest) dest.insertBefore(heldLines[hi].node, rowTop.nextSibling);
+                    else dest.insertBefore(heldLines[hi].node, dest.firstChild);
+                }
             }
         }
         var slip = el('sbnSlip');
