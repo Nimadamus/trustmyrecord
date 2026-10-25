@@ -1711,19 +1711,21 @@
             paintUltimate(!!(me && me.ultimate_checkout_open), sub);
             if (sub) {
                 mode = 'subscribed';
-                var plan = (sub.billing_period === 'yearly' ? 'Annual plan' : sub.billing_period === 'monthly' ? 'Monthly plan' : 'TMR Pro');
+                var tname = sub.tier === 'ultimate' ? 'TMR Ultimate' : 'TMR Pro';
+                memberName = tname;
+                var plan = (sub.billing_period === 'yearly' ? 'Annual plan' : sub.billing_period === 'monthly' ? 'Monthly plan' : tname);
                 var when = fmtDate(sub.current_period_end || sub.expires_at);
                 var line;
                 if (sub.source && sub.source !== 'stripe') {
-                    line = 'TMR Pro is active on your account.' + (when ? ' Access runs to ' + when + '.' : '');
+                    line = tname + ' is active on your account.' + (when ? ' Access runs to ' + when + '.' : '');
                 } else if (sub.cancel_at_period_end) {
-                    line = plan + '. Cancelled: you keep TMR Pro until ' + (when || 'the end of the paid period') + ', and you will not be charged again.';
+                    line = plan + '. Cancelled: you keep ' + tname + ' until ' + (when || 'the end of the paid period') + ', and you will not be charged again.';
                 } else if (sub.status === 'past_due') {
                     line = plan + '. Your last payment did not go through. Update your card with Manage subscription to keep access.';
                 } else {
-                    line = plan + '. Everything in TMR Pro is unlocked.' + (when ? ' Renews ' + when + '.' : '');
+                    line = plan + (sub.tier === 'ultimate' ? '. Everything in TMR Ultimate, including all of TMR Pro, is unlocked.' : '. Everything in TMR Pro is unlocked.') + (when ? ' Renews ' + when + '.' : '');
                 }
-                paintStatus('TMR Pro', line, true, !!me.can_manage_billing);
+                paintStatus(tname, line, true, !!me.can_manage_billing);
                 if (cancelEl) cancelEl.hidden = !(me.can_manage_billing && sub.source === 'stripe' && !sub.cancel_at_period_end);
                 if (resumeEl) resumeEl.hidden = !(me.can_manage_billing && sub.source === 'stripe' && sub.cancel_at_period_end);
                 paintButtons(false);
@@ -1734,8 +1736,7 @@
                 if (welcomeEl) {
                     welcomeEl.hidden = false;
                     var fresh = purchase === 'success';
-                    var ultName = sub.tier === 'ultimate' ? 'TMR Ultimate' : 'TMR Pro';
-                    document.getElementById('proWelcomeTitle').textContent = fresh ? 'Welcome to ' + ultName : 'Your ' + ultName;
+                    document.getElementById('proWelcomeTitle').textContent = fresh ? 'Welcome to ' + tname : 'Your ' + tname;
                     document.getElementById('proWelcomeText').textContent = (fresh ? 'Your membership is active. ' : '') + line;
                     showOnboarding(fresh);
                     loadRecap();
@@ -2132,9 +2133,10 @@
                 .then(function (sm) { paintNet(sm && sm.network); teaser(sm); if (isPro) proLink(); })
                 .catch(function () { teaser(null); if (isPro) proLink(); });
         }
+        var memberName = 'TMR Pro';
         function proLink() {
             if (!boardEl) return;
-            boardEl.innerHTML = '<div class="pro-teaser"><b>You have TMR Pro.</b> Your full Watchdog board, with every pending pick, record and consensus, is on its own members page.'
+            boardEl.innerHTML = '<div class="pro-teaser"><b>You have ' + memberName + '.</b> Your full Watchdog board, with every pending pick, record and consensus, is on its own members page.'
                 + '<p style="margin:14px 0 0"><a href="/pro/board/" style="display:inline-flex;align-items:center;min-height:44px;padding:0 18px;border-radius:10px;background:#F5C542;color:#1a1400;font-weight:800;text-decoration:none">Open my Watchdog board</a></p></div>';
         }
 
