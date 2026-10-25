@@ -1113,7 +1113,8 @@
             p.units = 1;
             state.picks.push(p);
         }
-        render();
+        syncChips();
+        paintSlip();
     }
     function announce(msg) {
         var live = el('sbnLive'); if (live) live.textContent = msg;
@@ -1179,7 +1180,7 @@
         clearConfirm();
         state.confirm = { items: items, failed: failed };
         state.confirmTimer = setTimeout(function () {
-            state.confirmTimer = null; state.confirm = null; render();
+            state.confirmTimer = null; state.confirm = null; paintSlip();
         }, CONFIRM_MS);
     }
     function seed() {
@@ -1235,7 +1236,7 @@
             announce(state.subError);
             toast('Pick could not be submitted. Your slip was kept.', 'bad');
             if (btn) { btn.disabled = false; btn.textContent = 'Lock picks'; }
-            render();
+            paintSlip();
             return;
         }
         state.submitting = true;
@@ -1266,7 +1267,8 @@
                     (state.dupes.length ? ' ' + state.dupes.length + (state.dupes.length === 1
                         ? ' pick is already on your record.' : ' picks are already on your record.') : ''));
                 if (btn) { btn.disabled = false; btn.textContent = 'Lock picks'; }
-                render();
+                syncChips();
+                paintSlip();
                 return;
             }
             var p = queue[i];
@@ -2266,7 +2268,7 @@
         if (!d || d.busy || d.done) return;
         d.add = value;
         d.add = chosenAdd(d);
-        render();
+        paintSlip();
     }
     function addUnitsToExisting(i) {
         var d = state.dupes[i];
@@ -2276,11 +2278,11 @@
         var client = window.api;
         if (!client || typeof client.addUnitsToPick !== 'function') {
             d.done = 'Adding units is unavailable right now. Your existing pick is unchanged.';
-            render();
+            paintSlip();
             return;
         }
         d.busy = true;
-        render();
+        paintSlip();
         client.addUnitsToPick(d.existing.id, room, d.stakeMode).then(function (res) {
             d.busy = false;
             d.done = 'Added ' + room + (room === 1 ? ' unit. ' : ' units. ') +
@@ -2289,13 +2291,13 @@
                 'and still grades as one pick.';
             toast('Units added to your existing pick.');
             announce(d.done);
-            render();
+            paintSlip();
         }).catch(function (err) {
             d.busy = false;
             d.done = (err && err.message) ? err.message : 'Those units could not be added. Your existing pick is unchanged.';
             toast('Units could not be added.', 'bad');
             announce(d.done);
-            render();
+            paintSlip();
         });
     }
 
@@ -2411,6 +2413,96 @@
             '</section>';
     }
 
+    /* SLIP_PAINT_20261025
+       Changing units, the stake mode, or locking a pick used to call render(),
+       which replaces #sbnBoard. The pro funnel watches that subtree and puts a
+       chip line back on every game a moment later. Lines above the viewport
+       make scroll anchoring move the document, and the page's smooth scroll
+       animates that jump against the user. These paths only change the slip
+       and the selected-chip marker, so they must not rebuild the board. */
+    function blurSlipFocus() {
+        var slip = el('sbnSlip');
+        var ae = document.activeElement;
+        if (!slip || !ae || !slip.contains(ae) || ae === slip) return;
+        if (!slip.hasAttribute('tabindex')) slip.setAttribute('tabindex', '-1');
+        try { slip.focus({ preventScroll: true }); }
+        catch (e) { try { ae.blur(); } catch (e2) {} }
+    }
+    function updateBar() {
+        var bar = el('sbnBar');
+        if (!bar) return;
+        bar.classList.toggle('is-on', state.picks.length > 0);
+        var text = bar.querySelector('.sbn-bartext');
+        if (text) {
+            text.textContent = state.picks.length
+                ? state.picks.length + (state.picks.length === 1 ? ' pick' : ' picks') + ' on your slip'
+                : (state.confirm ? 'Pick submitted to your record' : 'Tap a price to start');
+        }
+        bar.classList.toggle('is-ok', !state.picks.length && !!state.confirm);
+    }
+    function syncChips() {
+        var nodes = document.querySelectorAll('.sbn-chip[data-pick]');
+        for (var i = 0; i < nodes.length; i++) {
+            var btn = nodes[i];
+            var data = null;
+            try { data = JSON.parse(btn.getAttribute('data-pick')); } catch (e) { continue; }
+            var on = !!(data && findPick(pickKey(data)) >= 0);
+            btn.classList.toggle('is-sel', on);
+            if (on) btn.setAttribute('aria-pressed', 'true');
+            else btn.removeAttribute('aria-pressed');
+        }
+    }
+    function paintSlip() {
+        var slip = el('sbnSlip');
+        if (slip) {
+            var html = slipHtml();
+            blurSlipFocus();
+            slip._sbnHtml = html;
+            slip.innerHTML = html;
+        }
+        updateBar();
+    }
+    function money(n) { return Math.round(n * 100) / 100; }
+    function calcText(p) {
+        var st = stakeFor(p);
+        return state.stakeMode === 'to_win'
+            ? ('Risk ' + money(st.risk) + 'u')
+            : ('To win ' + money(st.win) + 'u');
+    }
+    function paintTotals() {
+        var box = document.querySelector('#sbnSlip .sbn-sliptotals');
+        if (!box) return false;
+        var totalRisk = 0, totalWin = 0, i;
+        for (i = 0; i < state.picks.length; i++) {
+            var st = stakeFor(state.picks[i]);
+            totalRisk += st.risk;
+            totalWin += st.win;
+        }
+        var spans = box.querySelectorAll('span');
+        if (spans[0]) spans[0].innerHTML = 'Total risk <b>' + money(totalRisk) + 'u</b>';
+        if (spans[1]) spans[1].innerHTML = 'To win <b>' + money(totalWin) + 'u</b>';
+        return true;
+    }
+    function paintUnits(i) {
+        var p = state.picks[i];
+        var input = p && document.getElementById('sbnUnits' + i);
+        if (!p || !input) { paintSlip(); return; }
+        var shown = String(p.units);
+        if (input.value !== shown) input.value = shown;
+        var row = input.closest('.sbn-sliprow');
+        var calc = row && row.querySelector('.sbn-slipcalc');
+        if (calc) calc.textContent = calcText(p);
+        if (!paintTotals()) paintSlip();
+    }
+    function paintStakeMode() {
+        var btns = document.querySelectorAll('#sbnSlip .sbn-modebtn');
+        if (!btns.length) { paintSlip(); return; }
+        for (var b = 0; b < btns.length; b++) {
+            btns[b].classList.toggle('is-on', btns[b].getAttribute('data-mode') === state.stakeMode);
+        }
+        for (var i = 0; i < state.picks.length; i++) paintUnits(i);
+    }
+
     function render() {
         /* PROPS_LAZY_20260911. One hook for every way the Player Props tab can
          * be opened: click, the in-card tab row, keyboard arrow navigation, a
@@ -2445,9 +2537,10 @@
             // with no pre-game slate left to show: a game reaching halftime is
             // exactly when the rest of the board has emptied out.
             var liveSection = liveHtml();
-            if (state.loading) board.innerHTML = liveSection + '<div class="sbn-note">Loading ' + esc(sportMeta(state.sport).label) + ' odds…</div>';
-            else if (state.error) board.innerHTML = liveSection + '<div class="sbn-note">' + esc(state.error) + '</div>';
-            else if (!state.games.length) board.innerHTML = liveSection + '<div class="sbn-note">No upcoming ' + esc(sportMeta(state.sport).label) + ' games with posted odds right now.</div>';
+            var html;
+            if (state.loading) html = liveSection + '<div class="sbn-note">Loading ' + esc(sportMeta(state.sport).label) + ' odds…</div>';
+            else if (state.error) html = liveSection + '<div class="sbn-note">' + esc(state.error) + '</div>';
+            else if (!state.games.length) html = liveSection + '<div class="sbn-note">No upcoming ' + esc(sportMeta(state.sport).label) + ' games with posted odds right now.</div>';
             else {
                 var cat = activeCat();
                 var cols = cat.layout === 'lines' ? linesCols(cat) : null;
@@ -2455,7 +2548,7 @@
                 // The rows are the tab's panel. An unstyled block wrapper: it
                 // adds no padding, border or display of its own, so the column
                 // header and the rows lay out exactly as they did.
-                board.innerHTML = liveSection + catNav() +
+                html = liveSection + catNav() +
                     '<div id="' + BOARD_PANEL_ID + '" role="tabpanel" aria-labelledby="' +
                     catTabId(cat.key) + '">' +
                     colHead(cat, cols) +
@@ -2473,8 +2566,23 @@
                     })() +
                     '</div>';
             }
+            // An unchanged odds refresh must not wipe the rows. Wiping them is
+            // what makes the pro funnel insert chip lines again, and that insert
+            // is what scroll-anchoring turns into a jump.
+            if (board._sbnHtml !== html) {
+                board._sbnHtml = html;
+                board.innerHTML = html;
+            }
         }
-        var slip = el('sbnSlip'); if (slip) slip.innerHTML = slipHtml();
+        var slip = el('sbnSlip');
+        if (slip) {
+            var slipNext = slipHtml();
+            if (slip._sbnHtml !== slipNext) {
+                blurSlipFocus();
+                slip._sbnHtml = slipNext;
+                slip.innerHTML = slipNext;
+            }
+        }
         // INLINE_EXPAND_20260909. The deep markets render inside the game card
         // now, so the old body-level overlay mount is emptied and the page is
         // never scroll-locked.
@@ -2482,14 +2590,7 @@
         if (dw) { dw.innerHTML = ''; dw.classList.remove('is-open'); }
         document.documentElement.classList.remove('sbn-locked');
         if (state.drawer) showActiveTab();
-        var bar = el('sbnBar');
-        if (bar) {
-            bar.classList.toggle('is-on', state.picks.length > 0);
-            bar.querySelector('.sbn-bartext').textContent = state.picks.length
-                ? state.picks.length + (state.picks.length === 1 ? ' pick' : ' picks') + ' on your slip'
-                : (state.confirm ? 'Pick submitted to your record' : 'Tap a price to start');
-            bar.classList.toggle('is-ok', !state.picks.length && !!state.confirm);
-        }
+        updateBar();
     }
 
     // ---- events -------------------------------------------------------------
@@ -2672,7 +2773,7 @@
         }
         if (t.closest && t.closest('[data-drawerclose]')) { collapse(true); return; }
         var rm = t.closest && t.closest('[data-remove]');
-        if (rm) { state.picks.splice(parseInt(rm.getAttribute('data-remove'), 10), 1); render(); return; }
+        if (rm) { state.picks.splice(parseInt(rm.getAttribute('data-remove'), 10), 1); syncChips(); paintSlip(); return; }
         var addU = t.closest && t.closest('[data-addunits]');
         if (addU) { addUnitsToExisting(parseInt(addU.getAttribute('data-addunits'), 10)); return; }
         var dupStep = t.closest && t.closest('[data-dupstep]');
@@ -2684,18 +2785,18 @@
             return;
         }
         var dupX = t.closest && t.closest('[data-dupdismiss]');
-        if (dupX) { state.dupes.splice(parseInt(dupX.getAttribute('data-dupdismiss'), 10), 1); render(); return; }
+        if (dupX) { state.dupes.splice(parseInt(dupX.getAttribute('data-dupdismiss'), 10), 1); paintSlip(); return; }
         var clear = t.closest && t.closest('[data-clear]');
-        if (clear) { state.picks = []; state.subError = ''; state.dupes = []; clearConfirm(); render(); return; }
+        if (clear) { state.picks = []; state.subError = ''; state.dupes = []; clearConfirm(); syncChips(); paintSlip(); return; }
         var mode = t.closest && t.closest('[data-mode]');
-        if (mode) { state.stakeMode = mode.getAttribute('data-mode'); render(); return; }
+        if (mode) { state.stakeMode = mode.getAttribute('data-mode'); paintStakeMode(); return; }
         var step = t.closest && t.closest('[data-units]');
         if (step) {
             var i = parseInt(step.getAttribute('data-units'), 10);
             var dir = parseInt(step.getAttribute('data-dir'), 10);
             var p = state.picks[i]; if (!p) return;
             p.units = Math.min(5, Math.max(0.5, Math.round((p.units + dir * 0.5) * 2) / 2));
-            render();
+            paintUnits(i);
             return;
         }
         if (t.closest && t.closest('#sbnSubmit')) { submitAll(); return; }
@@ -2714,7 +2815,7 @@
         var p = state.picks[i]; if (!p) return;
         var v = Math.round(parseFloat(inp.value) * 2) / 2;
         p.units = Number.isFinite(v) ? Math.min(5, Math.max(0.5, v)) : 1;
-        render();
+        paintUnits(i);
     }
 
     function boot() {

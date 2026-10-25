@@ -227,6 +227,18 @@ html.tmr-sbnext .sbn-shell, html.tmr-sbnext .sbn-drawer {
 }
 .sbn-more:hover, .sbn-morebtn:hover { background: rgba(34, 211, 238, 0.1); border-color: rgba(34, 211, 238, 0.45); }
 
+/* SCROLL_ANCHOR_20261025
+   A board rebuild (odds refresh, sport change) lets the pro funnel put chip
+   lines back above the viewport. Scroll anchoring then moves the document by
+   that height, and the sportsbook's smooth scrolling animates it against the
+   user. The sportsbook scroller opts out. Slip-only updates no longer rebuild
+   the board; this covers the rebuilds that still have to happen. */
+html.tmr-sbnext,
+html.tmr-sbnext #sbnBoard,
+html.tmr-sbnext #sbnSlip {
+    overflow-anchor: none;
+}
+
 /* ---- Pick slip ------------------------------------------------------------- */
 .sbn-slip {
     position: sticky; top: 56px;

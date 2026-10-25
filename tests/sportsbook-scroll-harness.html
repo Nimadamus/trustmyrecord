@@ -1,0 +1,114 @@
+<!doctype html>
+<html class="tmr-sbnext" lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sportsbook scroll harness</title>
+<link rel="stylesheet" href="../static/css/sportsbook-next.css">
+<style>
+  html { overflow-y: auto; scroll-behavior: smooth; }
+  body { margin: 0; background: #071018; color: #e8eef5; }
+  .sbn-row { min-height: 150px; }
+  .tpf-chipline { display: block; height: 48px; background: #12382a; }
+  .page-footer { height: 280px; }
+</style>
+</head>
+<body>
+<main class="sbn-shell" id="sbnShell">
+  <aside class="sbn-railwrap" aria-label="Sports">
+    <div class="sbn-railhead">Sports</div>
+    <nav id="sbnRail" class="sbn-rail"></nav>
+  </aside>
+  <section class="sbn-main">
+    <h2 id="sbnTitle" class="sbn-sr">Board</h2>
+    <div id="sbnBoard" class="sbn-boardlist"></div>
+  </section>
+  <aside id="sbnSlip" class="sbn-slip" aria-label="Pick slip"></aside>
+</main>
+<div id="sbnDrawer" class="sbn-drawer"></div>
+<div id="sbnBar" class="sbn-bar" role="button" tabindex="0" aria-controls="sbnSlip">
+  <span class="sbn-bardot" aria-hidden="true"></span>
+  <span class="sbn-bartext">Tap a price to start</span>
+  <span class="sbn-barcta">View slip</span>
+</div>
+<p id="sbnLive" class="sbn-sr" role="status" aria-live="polite"></p>
+<footer class="page-footer">Footer</footer>
+<script>
+  window.TMR_CONFIG = { baseUrl: 'https://fixture.invalid/api' };
+  window.__fetches = [];
+  window.__liveHits = 0;
+  (function () {
+    var games = [];
+    var start = Date.now() + 6 * 3600 * 1000;
+    for (var i = 0; i < 24; i++) {
+      var away = 'Away Club ' + i;
+      var home = 'Home Club ' + i;
+      games.push({
+        id: 'g' + i,
+        sport_key: 'americanfootball_nfl',
+        away_team: away,
+        home_team: home,
+        commence_time: new Date(start + i * 3 * 3600 * 1000).toISOString(),
+        bookmakers: [{
+          key: 'draftkings',
+          title: 'DraftKings',
+          markets: [
+            { key: 'spreads', outcomes: [
+              { name: away, price: -110, point: -3.5 },
+              { name: home, price: -110, point: 3.5 }
+            ]},
+            { key: 'h2h', outcomes: [
+              { name: away, price: -120 },
+              { name: home, price: 100 }
+            ]},
+            { key: 'totals', outcomes: [
+              { name: 'Over', price: -110, point: 44.5 },
+              { name: 'Under', price: -110, point: 44.5 }
+            ]}
+          ]
+        }],
+        market_groups: []
+      });
+    }
+    window.__fixtureGames = games;
+    window.fetch = function (url) {
+      var u = String(url);
+      window.__fetches.push(u);
+      function ok(body) {
+        return Promise.resolve({ ok: true, json: function () { return Promise.resolve(body); } });
+      }
+      if (u.indexOf('/games/board/') !== -1) return ok({ games: games });
+      if (u.indexOf('/games/live/') !== -1) {
+        window.__liveHits++;
+        if (window.__liveHits > 1) return new Promise(function () {});
+        return ok({ games: [] });
+      }
+      return Promise.resolve({ ok: false, json: function () { return Promise.resolve(null); } });
+    };
+  })();
+</script>
+<script>
+  /* Same timing as tmr-pro-funnel mountBoard: 250ms after a board mutation,
+     a chip line is inserted into every game row that does not have one. */
+  (function () {
+    var host = document.getElementById('sbnBoard');
+    function paint() {
+      [].forEach.call(document.querySelectorAll('article.sbn-row'), function (row) {
+        if (row.querySelector('.tpf-chipline')) return;
+        var wrap = document.createElement('div');
+        wrap.className = 'tpf-chipline';
+        wrap.textContent = 'Pending picks';
+        var top = row.querySelector('.sbn-rowtop');
+        if (top && top.nextSibling) row.insertBefore(wrap, top.nextSibling);
+        else row.appendChild(wrap);
+      });
+    }
+    new MutationObserver(function () {
+      clearTimeout(paint.t);
+      paint.t = setTimeout(paint, 250);
+    }).observe(host.parentNode || host, { childList: true, subtree: true });
+  })();
+</script>
+<script src="../static/js/sportsbook-next.js"></script>
+</body>
+</html>
