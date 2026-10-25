@@ -1,0 +1,101 @@
+name: Watchdog publish guard
+
+# 2026-10-24: a noindex added to one page (/pro/board/) failed the SEO
+# indexability gate, and that same gate runs inside every Handicappers Around
+# the Web publish from the Watchdog. Every publish from 3:08 PM to 7:11 PM PT
+# failed, the public records froze at 43,734 graded picks while the Watchdog
+# kept grading, and nothing on this side said so.
+#
+# Two checks, both report only (nothing here edits a page or an SEO rule):
+#   1. On every push that touches pages or SEO files: run the same gate the
+#      Watchdog publish runs. A red run here means the next Watchdog publish
+#      will fail too. Fix the page, or change the SEO rule with the owner's
+#      approval; never strip a directive just to turn this green.
+#   2. Every two hours: is the Around the Web data fresh? The Watchdog
+#      publishes about hourly whenever its ledger moved; no publish commit for
+#      four hours means the publish is failing or not running.
+# Either failure opens (or comments on) one issue labelled watchdog-publish.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '**/*.html'
+      - 'robots.txt'
+      - 'sitemap*.xml'
+      - 'tests/seo-indexability-regression-test.js'
+  schedule:
+    - cron: '20 */2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 200
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: SEO gate the Watchdog publish runs
+        id: seo
+        if: github.event_name != 'schedule'
+        run: |
+          if ! node tests/seo-indexability-regression-test.js > seo.log 2>&1; then
+            tail -40 seo.log
+            echo "problem=$(grep -E 'FAIL' seo.log | head -5 | tr '\n' ' ' | cut -c1-600)" >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+          tail -3 seo.log
+
+      - name: Around the Web data freshness
+        id: fresh
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        run: |
+          last=$(git log -1 --format=%ct --grep='Handicappers Around the Web: daily records update' -- around-the-web/index.html || true)
+          if [ -z "$last" ]; then echo "problem=no Around the Web publish commit in the last 200 commits" >> "$GITHUB_OUTPUT"; exit 1; fi
+          age=$(( ( $(date +%s) - last ) / 60 ))
+          echo "last Watchdog publish commit $age minutes ago"
+          if [ "$age" -gt 240 ]; then
+            echo "problem=last Watchdog publish commit was $age minutes ago (limit 240)" >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+
+      - name: Raise it where it will be seen
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = 'Watchdog publishing is blocked or stale';
+            const body = [
+              `Watchdog publish guard failed (${context.eventName}, ${new Date().toISOString()}).`,
+              '',
+              `- SEO gate: ${{ toJSON(steps.seo.outputs.problem) }}`,
+              `- Freshness: ${{ toJSON(steps.fresh.outputs.problem) }}`,
+              `- Commit: ${context.sha}`,
+              '',
+              'Check, in order:',
+              '1. `node tests/seo-indexability-regression-test.js` locally: the same gate runs inside every Watchdog publish, so a failure here blocks it.',
+              '2. Watchdog cloud `/api/status`: `jobs.publish.last_rc`, `consecutive_failures`, and the `/api/runs` tail of the last `publish` run.',
+              '3. Fix the page or change the SEO rule with owner approval. Never remove a directive only to make the gate pass.',
+            ].join('\n');
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner, repo: context.repo.repo, state: 'open', labels: 'watchdog-publish',
+            });
+            if (existing.data.length) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner, repo: context.repo.repo, issue_number: existing.data[0].number, body,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner, repo: context.repo.repo, title, body, labels: ['watchdog-publish'],
+              });
+            }
