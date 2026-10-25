@@ -13,9 +13,11 @@
        (the price, the line, how the market closed, any pre-game inputs that
        were recorded with the pick) from what happened after (the result), and
        says which of those it actually has;
-     * call a slice a strength or a weakness on sample size alone. Every
-       verdict carries its z-score against the break-even rate of the prices
-       actually paid, and small or noisy slices are labelled as such;
+     * call a slice a strength or a weakness on sample size alone, or on the
+       sign of ROI. The verdict follows the z-score of wins against the
+       break-even rate of the prices actually paid. ROI and net units stay
+       beside that test. When the money result and the win-rate test
+       disagree, the label is mixed evidence. Small samples stay unjudged;
      * treat a win as good handicapping or a loss as bad handicapping. Closing
        line value is reported next to the result for exactly that reason.
 
@@ -30,7 +32,7 @@
 }(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
 
-  var VERSION = 'pi-2.2.1';
+  var VERSION = 'pi-2.2.2';
   var MIN_SAMPLE = 30;
   var MARKET_LABEL = { spread: 'spreads', moneyline: 'moneylines', total: 'totals', team_total: 'team totals', prop: 'props', other: 'other markets' };
 
@@ -173,18 +175,40 @@
     return m;
   }
 
-  /* The verdict ladder. Sample size first, then evidence strength. */
+  /* The verdict ladder. Sample size first. Direction is the win-rate test
+     against the prices paid, not the sign of ROI. A disagreement is mixed. */
   function verdict(s) {
-    if (s.n < MIN_SAMPLE) return { key: 'small_sample', label: 'Too few picks to judge', tone: 'neutral' };
-    var up = s.roi >= 0;
-    var pMeaningful = s.pAdjusted != null ? s.pAdjusted : s.pValue;
-    if (pMeaningful < 0.05) return up
+    if (!s || s.n < MIN_SAMPLE) return { key: 'small_sample', label: 'Too few picks to judge', tone: 'neutral' };
+    var z = s.z != null ? Number(s.z) : null;
+    var roi = Number(s.roi) || 0;
+    var pValue = s.pValue != null ? Number(s.pValue) : (s.p_value != null ? Number(s.p_value) : null);
+    var pAdjusted = s.pAdjusted != null ? Number(s.pAdjusted) : (s.p_adjusted != null ? Number(s.p_adjusted) : null);
+    var win = s.winPct != null ? Number(s.winPct) : (s.win_pct != null ? Number(s.win_pct) : null);
+    var be = s.breakEven != null ? Number(s.breakEven) : (s.break_even_pct != null ? Number(s.break_even_pct) : null);
+    var pMeaningful = pAdjusted != null ? pAdjusted : pValue;
+    var suggestive = (pValue != null && pValue < 0.2) || (pMeaningful != null && pMeaningful < 0.05);
+    if (z == null || !suggestive || z === 0) return { key: 'variance', label: 'Within normal variance', tone: 'neutral' };
+    var priceUp = z > 0;
+    var rates = (win != null && be != null)
+      ? 'Win rate ' + (win * 100).toFixed(1) + '% against a ' + (be * 100).toFixed(1) + '% break-even at the prices paid'
+      : 'The win rate against the prices paid';
+    var pBit = pValue == null ? '' : ' (' + pText(pValue) + ')';
+    /* Flat money with a win rate ahead of the price is not a profitable strength. */
+    if ((priceUp && roi < 0) || (!priceUp && roi > 0) || (priceUp && roi === 0)) {
+      var note = priceUp && roi < 0
+        ? rates + ' is ahead of the price' + pBit + '. ROI is ' + pct(roi) + '. The money result is down, so this is not a strength. The two signals disagree.'
+        : !priceUp && roi > 0
+          ? rates + ' is short of the price' + pBit + '. ROI is ' + pct(roi) + '. The money result is positive anyway. That is mixed evidence, not a strength.'
+          : rates + ' is ahead of the price' + pBit + ', and ROI is flat. That is not a profitable strength.';
+      return { key: 'mixed', label: 'Mixed evidence', tone: 'neutral', note: note };
+    }
+    var meaningful = pMeaningful != null && pMeaningful < 0.05;
+    if (priceUp) return meaningful
       ? { key: 'strength', label: 'Statistically meaningful strength', tone: 'pos' }
-      : { key: 'weakness', label: 'Statistically meaningful weakness', tone: 'neg' };
-    if (s.pValue < 0.2) return up
-      ? { key: 'lean_strength', label: 'Possible strength, not yet conclusive', tone: 'pos' }
+      : { key: 'lean_strength', label: 'Possible strength, not yet conclusive', tone: 'pos' };
+    return meaningful
+      ? { key: 'weakness', label: 'Statistically meaningful weakness', tone: 'neg' }
       : { key: 'lean_weakness', label: 'Possible weakness, not yet conclusive', tone: 'neg' };
-    return { key: 'variance', label: 'Within normal variance', tone: 'neutral' };
   }
 
   function groupBy(list, keyFn) {
@@ -577,7 +601,7 @@
     var cells = slices(graded, comboKey);
     var judged = cells.filter(function (c) { return c.n >= MIN_SAMPLE; });
     holm(judged);
-    judged.forEach(function (c) { c.verdict = verdict({ n: c.n, roi: c.roi, pValue: c.p_value, pAdjusted: c.p_adjusted }); });
+    judged.forEach(function (c) { c.verdict = verdict({ n: c.n, roi: c.roi, z: c.z, win_pct: c.win_pct, break_even_pct: c.break_even_pct, pValue: c.p_value, pAdjusted: c.p_adjusted }); });
     var losing = cells.filter(function (c) { return c.net < 0 && c.n >= 10; }).sort(function (a, b) { return a.net - b.net; });
     var totalLoss = losing.reduce(function (a, c) { return a + c.net; }, 0);
     losing.forEach(function (c) { c.share_of_losses = totalLoss ? round(c.net / totalLoss, 3) : 0; });
@@ -705,11 +729,24 @@
   }
   function pText(v) { return v == null ? 'p = n/a' : v < 0.01 ? 'p < 0.01' : 'p = ' + v.toFixed(2); }
 
+  /* The median-stake half whose win rate fails the prices, when that
+     failure is meaningful. One split, not a scan across stake sizes. */
+  function stakeFinding(diag) {
+    if (!diag || !diag.sizing || !diag.sizing.comparison || !diag.sizing.buckets) return null;
+    var cmp = diag.sizing.comparison;
+    if (!(cmp.p_value < 0.05)) return null;
+    var b = cmp.worse === 'Smaller stakes' ? diag.sizing.buckets[0] : diag.sizing.buckets[1];
+    if (!b || b.n < MIN_SAMPLE || !b.verdict || b.verdict.key !== 'weakness' || !(b.roi <= -0.03)) return null;
+    return b;
+  }
+
   function summary(o, diag, priority, strengths) {
     if (!diag) return [];
     var out = [];
     out.push({ k: 'Result against luck', v: diag.luck.position === 'unknown' ? 'No prices' : diag.luck.position === 'inside' ? 'Within luck' : diag.luck.position === 'above' ? 'Above luck' : 'Below luck',
       tone: diag.luck.position === 'above' ? 'pos' : diag.luck.position === 'below' ? 'neg' : 'neutral', text: diag.luck.text });
+    var stake = stakeFinding(diag);
+    if (stake) out.push({ k: 'Stake size', v: stake.key, tone: 'neg', text: stake.key + ' returned ' + pct(stake.roi) + ' over ' + stake.n + ' picks. The win rate is short of the break-even rate of the prices paid (p = ' + stake.p_value.toFixed(2) + '). ' + diag.sizing.text });
     if (o.beat_close_pct != null && o.clv_moved >= MIN_SAMPLE) {
       var cpo = o.clv_p_value;
       var sig = cpo != null && cpo < 0.05;
@@ -744,7 +781,7 @@
     function adjustFamily(list) {
       var judged = list.filter(function (c) { return c.n >= MIN_SAMPLE; });
       var m = holm(judged);
-      judged.forEach(function (c) { c.verdict = verdict({ n: c.n, roi: c.roi, pValue: c.p_value, pAdjusted: c.p_adjusted }); });
+      judged.forEach(function (c) { c.verdict = verdict({ n: c.n, roi: c.roi, z: c.z, win_pct: c.win_pct, break_even_pct: c.break_even_pct, pValue: c.p_value, pAdjusted: c.p_adjusted }); });
       return m;
     }
     var comparisons = adjustFamily(categories);
@@ -769,17 +806,19 @@
     /* Strengths and weaknesses: categories with 10+ picks only, judged ones
        (30+) first, so a 5-pick +88% never tops the list. */
     var judgedFirst = function (a, b) { return (a.n >= MIN_SAMPLE ? 0 : 1) - (b.n >= MIN_SAMPLE ? 0 : 1); };
-    var strengths = categories.filter(function (c) { return c.roi > 0 && c.n >= 10; })
+    /* Mixed slices stay in the full table. They are not strengths or
+       weaknesses: ROI and the win-rate test point different ways. */
+    var strengths = categories.filter(function (c) { return c.roi > 0 && c.n >= 10 && !(c.verdict && c.verdict.key === 'mixed'); })
       .sort(function (a, b) { return judgedFirst(a, b) || b.z - a.z; });
-    var weaknesses = categories.filter(function (c) { return c.roi < 0 && c.n >= 10; })
+    var weaknesses = categories.filter(function (c) { return c.roi < 0 && c.n >= 10 && !(c.verdict && c.verdict.key === 'mixed'); })
       .sort(function (a, b) { return judgedFirst(a, b) || a.net - b.net; });
-    /* A priority has to be a real drag: enough picks to judge, and at least
-       3 points of ROI under water. A category sitting at -0.3% is not
-       "costing" anyone anything worth a plan. */
-    /* pi-2.2.1: and the result has to be at least a possible weakness. A loss
-       the verdict calls normal variance is the same "no change is needed on
-       results alone" the evaluation says about every other such category. */
-    var priority = weaknesses.filter(function (c) { return c.n >= MIN_SAMPLE && c.roi <= -0.03 && c.verdict && c.verdict.key !== 'variance'; })[0] || null;
+    /* A priority has to be a real drag: enough picks to judge, at least
+       3 points of ROI under water, and a win-rate test that agrees.
+       Variance and mixed evidence are not a process to tear up. */
+    var priority = weaknesses.filter(function (c) {
+      return c.n >= MIN_SAMPLE && c.roi <= -0.03 && c.verdict &&
+        (c.verdict.key === 'weakness' || c.verdict.key === 'lean_weakness');
+    })[0] || null;
 
     /* One review from the strongest category too: what a winning process
        looked like before the game is as useful as what a losing one did. */
@@ -835,7 +874,7 @@
       plan: plan(priority, focus, strengths, ins, diag, overall, categories),
       method: {
         min_sample: MIN_SAMPLE,
-        significance: 'Two-sided z-test of wins against the break-even win rate implied by the prices actually paid. p < 0.05 meaningful, p < 0.20 possible, otherwise normal variance.',
+        significance: 'Two-sided z-test of wins against the break-even win rate implied by the prices actually paid. p < 0.05 is meaningful only after Holm adjustment across the slices tested; p < 0.20 is possible; otherwise the slice is normal variance. ROI and net units are reported beside that test. When they disagree with it, the label is mixed evidence rather than a strength or a weakness.',
         clv: 'Spreads and totals: points gained on the closing line. Moneylines and props: implied probability gained at the closing price.',
         patterns: 'Each weak category is split several ways (side, price, line movement, day). With several splits, one can look strong by chance, so a pattern is a question to research, never a rule.',
         not_claimed: 'The report never states why a pick lost. It separates information available before the game from the result.',
@@ -892,6 +931,30 @@
     return out;
   }
 
+  /* What the reviewed picks actually had on file. Counts only. It does not
+     say those inputs produced the category record. */
+  function factorCoaching(focus) {
+    if (!focus || !focus.reviews) return '';
+    var withS = focus.reviews.filter(function (r) { return r.inputs_summary && r.recorded_inputs && r.recorded_inputs.factors; });
+    var cat = focus.category;
+    var hist = cat ? ' The category record is ' + pct(cat.roi) + ' over ' + cat.n + ' graded picks.' : '';
+    if (!withS.length) return ' None of the reviewed picks have recorded pregame inputs. Nothing was filled in.' + hist + ' The checklist is what to write down before the next bet.';
+    var withPick = 0, against = 0, total = 0, names = {}, missing = {};
+    withS.forEach(function (r) {
+      var sm = r.inputs_summary;
+      withPick += sm.with_pick; against += sm.against_pick; total += sm.total;
+      r.recorded_inputs.factors.forEach(function (f) { if (f && f.name) names[f.name] = true; });
+      if (r.research && r.research.unavailable) r.research.unavailable.forEach(function (n) { missing[n] = true; });
+    });
+    var nameList = Object.keys(names);
+    var missList = Object.keys(missing);
+    return ' Across ' + withS.length + ' reviewed pick' + (withS.length > 1 ? 's' : '') +
+      (nameList.length ? ' (' + nameList.join(', ') + ')' : '') + ', ' + withPick + ' recorded inputs leaned toward the side taken and ' +
+      against + ' leaned the other way, out of ' + total + ' inputs that were on file before the result.' +
+      (missList.length ? ' Not on record for those picks: ' + missList.join(', ') + '.' : '') +
+      hist + ' That count covers only the reviewed picks. It is not a test of the whole category, and it is not a reason any single pick won or lost.';
+  }
+
   function plan(priority, focus, strengths, ins, diag, o, categories) {
     var steps = [];
     if (priority && focus && clvSound(priority) && priority.verdict.key !== 'weakness') {
@@ -899,7 +962,7 @@
         title: 'Keep your ' + priority.key + ' process',
         detail: priority.key + ' returned ' + pct(priority.roi) + ' over ' + priority.n + ' graded picks (' + u(priority.net) + '), but ' +
           closeLine(priority).charAt(0).toLowerCase() + closeLine(priority).slice(1) +
-          '. A losing process rarely does that, and the loss itself is not conclusive, so no change to how you pick or size these is suggested. Keep writing your own number down before you look at the market.',
+          '. A losing process rarely does that, and the loss itself is not conclusive, so no change to how you pick or size these is suggested. Keep writing your own number down before you look at the market.' + factorCoaching(focus),
         checklist: focus.checklist,
       });
       steps.push({ title: 'Measure the next ' + MIN_SAMPLE + ' ' + priority.key + ' picks',
@@ -913,7 +976,7 @@
           ' Consider examining how you evaluate the items below' + (clvSound(priority) ? '' : ' and the price you take') + ', and compare that process with ' +
           (strong ? 'your ' + strong.key + ' (' + pct(strong.roi) + ' over ' + strong.n + ' picks).' : 'the categories where your record is stronger.') +
           ' Write your own number down before you look at the market.' +
-          (clvSound(priority) ? ' ' + closeLine(priority) + ', so the price you take is not the problem here; look at which games you pick and how you size them.' : ''),
+          (clvSound(priority) ? ' ' + closeLine(priority) + ', so the price you take is not the problem here; look at which games you pick and how you size them.' : '') + factorCoaching(focus),
         checklist: focus.checklist,
       });
       if (focus.patterns.length) {
@@ -932,28 +995,53 @@
         steps.push({ title: 'Compare ' + top.worse + ' with ' + top.better, detail: top.text + ' ' + top.suggestion });
       }
     }
-    /* Sizing: only when stakes vary and larger stakes did meaningfully worse. */
-    if (diag && diag.sizing.comparison && diag.sizing.comparison.p_value < 0.05 && diag.sizing.comparison.worse === 'Larger stakes') {
+    /* Sizing. A smaller-stake group that fails the price test leads the plan.
+       Larger stakes that merely return less still get the existing caution.
+       The split is the median, one comparison. */
+    var stake = stakeFinding(diag);
+    if (stake && diag.sizing.comparison.worse === 'Smaller stakes') {
+      var other = diag.sizing.buckets[1];
+      steps.unshift({ title: 'Review bets ' + stake.key, detail: stake.key + ' returned ' + pct(stake.roi) + ' over ' + stake.n + ' picks. The win rate is short of the break-even rate of the prices paid (' + pText(stake.p_value) + '). ' +
+        (other ? other.key + ' returned ' + pct(other.roi) + ' over ' + other.n + ' picks. ' : '') +
+        'The cut is the median stake, one comparison, not a search over stake sizes. The Welch test on return per unit puts the gap at ' + pText(diag.sizing.comparison.p_value) + '. ' +
+        'Write down what those smaller bets have in common before changing the stake. A different stake size is not an edge by itself.' });
+    } else if (diag && diag.sizing.comparison && diag.sizing.comparison.p_value < 0.05 && diag.sizing.comparison.worse === 'Larger stakes') {
       steps.push({ title: 'Check how you size up', detail: diag.sizing.text + ' Consider writing down why a pick deserves a bigger stake before placing it, and compare the next ' + MIN_SAMPLE + ' larger stakes with this record.' });
     }
     /* Fragile profit: say it plainly so a hot streak is not mistaken for an edge. */
     if (diag && diag.robustness.enough && diag.robustness.fragile) {
       steps.push({ title: 'Treat the profit as unproven', detail: diag.robustness.text + ' Consider keeping stakes steady until the record is positive without its biggest wins.' });
     }
-    /* The strength worth protecting: meaningful on results, or close to it
-       AND beating the closing line, which is independent evidence. */
+    /* A category close can lead only with 30+ moved closes, and only if that
+       close still clears Holm across every category with that many closes.
+       A 20-close hot streak does not outrank a larger sample. A result that
+       is not itself meaningful is never called the most reliable part. */
+    var clvFam = (categories || []).filter(function (s) { return s.n >= MIN_SAMPLE && s.clv_moved >= MIN_SAMPLE && s.clv_p_value != null; });
+    var clvAdj = {}, clvRun = 0;
+    clvFam.slice().sort(function (a, b) { return a.clv_p_value - b.clv_p_value; }).forEach(function (it, i) {
+      clvRun = Math.max(clvRun, Math.min(1, (clvFam.length - i) * it.clv_p_value));
+      clvAdj[it.key] = clvRun;
+    });
+    function closeFeatured(s) {
+      if (s.beat_close_pct == null || s.beat_close_pct < 0.55 || s.clv_moved < MIN_SAMPLE || s.clv_p_value == null || !(s.clv_p_value < 0.05)) return false;
+      var adj = clvAdj[s.key];
+      return adj == null || adj < 0.05;
+    }
     var keep = strengths.filter(function (s) {
-      return s.verdict.key === 'strength' || (s.verdict.key === 'lean_strength' && s.beat_close_pct != null && s.beat_close_pct >= 0.55 && s.clv_moved >= 20 && s.clv_p_value < 0.05) ||
-        /* pi-2.2.1: a winning category whose result is still within variance but
-           whose price beats the close consistently over 30+ moved closes. */
-        (s.verdict.key === 'variance' && s.n >= MIN_SAMPLE && s.beat_close_pct != null && s.beat_close_pct >= 0.55 && s.clv_moved >= MIN_SAMPLE && s.clv_p_value < 0.05);
+      return s.n >= MIN_SAMPLE && s.verdict && (s.verdict.key === 'strength' ||
+        ((s.verdict.key === 'lean_strength' || s.verdict.key === 'variance') && closeFeatured(s)));
+    }).sort(function (a, b) {
+      return (a.verdict.key === 'strength' ? 0 : 1) - (b.verdict.key === 'strength' ? 0 : 1) || (b.clv_moved || 0) - (a.clv_moved || 0) || b.n - a.n;
     })[0];
-    if (keep && keep.verdict.key === 'variance') steps.push({ title: 'Keep doing what works in ' + keep.key, detail: 'Write down the process behind these picks so it can be repeated on purpose. ' +
-      keep.n + ' picks at ' + pct(keep.roi) + ' is not yet conclusive on results alone, but your price beat the closing number ' + (keep.beat_close_pct * 100).toFixed(0) +
-      '% of the time where it moved (' + keep.clv_moved + ' picks, ' + pText(keep.clv_p_value) + '), the earliest sign of an edge in this record.' });
+    if (keep && keep.verdict.key !== 'strength') steps.push({ title: 'Keep doing what works in ' + keep.key, detail: 'Write down the process behind these picks so it can be repeated on purpose. ' +
+      keep.n + ' picks at ' + pct(keep.roi) + ' is not yet conclusive on results alone' +
+      (keep.p_adjusted != null ? ' (adjusted p = ' + keep.p_adjusted.toFixed(2) + ')' : '') +
+      ', but your price beat the closing number ' + (keep.beat_close_pct * 100).toFixed(0) +
+      '% of the time where it moved (' + keep.clv_moved + ' picks, ' + pText(keep.clv_p_value) + '). The close is a separate test from the result, and it still clears the other categories with ' + MIN_SAMPLE + ' or more moved closes. It is not proof the next results will match.' });
     else if (keep) steps.push({ title: 'Keep doing what works in ' + keep.key, detail: 'Write down the process behind these picks so it can be repeated on purpose. ' +
-      keep.n + ' picks at ' + pct(keep.roi) + (keep.beat_close_pct != null ? ', beating the close ' + (keep.beat_close_pct * 100).toFixed(0) + '% of the time,' : '') +
-      ' is the most reliable part of the record.' });
+      keep.n + ' picks at ' + pct(keep.roi) + ' beat the break-even rate of the prices paid after the other categories are accounted for' +
+      (keep.beat_close_pct != null ? ', and beat the close ' + (keep.beat_close_pct * 100).toFixed(0) + '% of the time where it moved (' + keep.clv_moved + ' picks, ' + pText(keep.clv_p_value) + ')' : '') +
+      '. ROI and the win-rate test agree. This is not a forecast of the next picks.' });
 
     /* pi-2.2.1: record-level steps, so a record with no single category big
        enough to judge still gets advice the numbers support. */
@@ -966,6 +1054,11 @@
       steps.push({ title: 'Your record is below the luck range', detail: diag.luck.text +
         (worst ? ' No single category has enough picks to say where it comes from; the largest loss is ' + worst.key + ' (' + u(worst.net) + ' over ' + worst.n + ' picks).' : '') +
         ' Consider smaller stakes across the board until the next ' + MIN_SAMPLE + ' picks show whether anything has changed.' });
+    }
+    var citedClose = steps.some(function (s) { return /clos/i.test(s.detail || ''); });
+    if ((priority || keep) && !citedClose && o && o.beat_close_pct != null && o.clv_moved >= MIN_SAMPLE && o.clv_p_value != null && o.clv_p_value < 0.05 && o.beat_close_pct >= 0.55) {
+      steps.push({ title: 'Your prices beat the close across the record', detail: 'Where the number moved, the price beat the close ' +
+        (o.beat_close_pct * 100).toFixed(0) + '% of the time (' + o.clv_moved + ' picks, ' + pText(o.clv_p_value) + '). That is one test on the whole record, separate from any one category. Results are a separate question (' + pct(o.roi) + ' over ' + o.n + ' picks).' });
     }
     if (!priority && !keep && clvSound(o) && o.beat_close_pct > 0.5 && o.clv_moved >= MIN_SAMPLE) {
       steps.push({ title: 'Keep your process', detail: 'Results so far are ' + pct(o.roi) + ' over ' + o.n + ' picks, but ' +

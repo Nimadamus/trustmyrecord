@@ -122,6 +122,12 @@
       '</div>';
   }
 
+  function verdictNotes(list) {
+    var rows = (list || []).filter(function (c) { return c.n >= 30 && c.verdict && c.verdict.note; });
+    if (!rows.length) return '';
+    return '<ul class="ult-read">' + rows.map(function (c) { return '<li><b>' + esc(c.key) + '.</b> ' + prose(c.verdict.note) + '</li>'; }).join('') + '</ul>';
+  }
+
   function renderProfile(el, r, opts) {
     opts = opts || {};
     el.innerHTML =
@@ -130,7 +136,7 @@
       '<div class="ult-card"><div class="ult-cardhead"><h3>Running units</h3><span>Cumulative, by month. Hover or tap the line.</span></div><div class="ult-chart" data-ult-line></div></div>' +
       '<div class="ult-card"><div class="ult-cardhead"><h3>By sport</h3><span>Every bet type combined</span></div>' + roiRows(r.by_sport, { first: 'Sport', label: 'Results by sport' }) + '</div>' +
       '<div class="ult-card"><div class="ult-cardhead"><h3>By category</h3><span>Sport and bet type, best to worst</span></div>' + roiRows(r.categories) + '</div>' +
-      '<div class="ult-card"><div class="ult-cardhead"><h3>By price</h3><span>American odds at the time of the pick</span></div>' + roiRows(r.by_odds, { first: 'Odds range', label: 'Results by odds range' }) + '</div>';
+      '<div class="ult-card"><div class="ult-cardhead"><h3>By price</h3><span>American odds at the time of the pick</span></div>' + roiRows(r.by_odds, { first: 'Odds range', label: 'Results by odds range' }) + verdictNotes(r.by_odds) + '</div>';
     var chart = el.querySelector('[data-ult-line]');
     lineChart(chart, r.monthly);
     var t; window.addEventListener('resize', function () { clearTimeout(t); t = setTimeout(function () { lineChart(chart, r.monthly); }, 150); });
@@ -145,7 +151,8 @@
       '<div class="ult-meterbar"><span class="z1" style="width:' + ((Math.log10(0.05) + 3) / 3 * 100).toFixed(1) + '%">Meaningful</span>' +
       '<span class="z2" style="width:' + ((Math.log10(0.2) - Math.log10(0.05)) / 3 * 100).toFixed(1) + '%">Possible</span>' +
       '<span class="z3">Normal variance</span><i style="left:' + pos.toFixed(1) + '%"></i></div>' +
-      '<p>p = ' + c.p_value.toFixed(2) + ' (z = ' + (c.z < 0 ? MINUS : '') + Math.abs(c.z).toFixed(2) + '): the chance a break-even bettor at these prices would run this ' + (c.roi < 0 ? 'cold' : 'hot') + ' or more by luck is about ' + Math.max(1, Math.round(c.p_value * 100)) + ' in 100.</p></div>';
+      '<p>p = ' + c.p_value.toFixed(2) + ' (z = ' + (c.z < 0 ? MINUS : '') + Math.abs(c.z).toFixed(2) + '): the chance a break-even bettor at these prices would finish this far ' + (c.z < 0 ? 'short of' : 'ahead of') + ' the break-even win rate by luck is about ' + Math.max(1, Math.round(c.p_value * 100)) + ' in 100. ROI is shown separately and does not set this test.</p>' +
+      (c.verdict && c.verdict.note ? '<p>' + prose(c.verdict.note) + '</p>' : '') + '</div>';
   }
 
   function statStrip(c) {
