@@ -30,7 +30,7 @@
 }(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
 
-  var VERSION = 'pi-2.2.0';
+  var VERSION = 'pi-2.2.1';
   var MIN_SAMPLE = 30;
   var MARKET_LABEL = { spread: 'spreads', moneyline: 'moneylines', total: 'totals', team_total: 'team totals', prop: 'props', other: 'other markets' };
 
@@ -776,7 +776,10 @@
     /* A priority has to be a real drag: enough picks to judge, and at least
        3 points of ROI under water. A category sitting at -0.3% is not
        "costing" anyone anything worth a plan. */
-    var priority = weaknesses.filter(function (c) { return c.n >= MIN_SAMPLE && c.roi <= -0.03; })[0] || null;
+    /* pi-2.2.1: and the result has to be at least a possible weakness. A loss
+       the verdict calls normal variance is the same "no change is needed on
+       results alone" the evaluation says about every other such category. */
+    var priority = weaknesses.filter(function (c) { return c.n >= MIN_SAMPLE && c.roi <= -0.03 && c.verdict && c.verdict.key !== 'variance'; })[0] || null;
 
     /* One review from the strongest category too: what a winning process
        looked like before the game is as useful as what a losing one did. */
@@ -829,7 +832,7 @@
       summary: summary(overall, diag, priority, strengths),
       comparisons: { categories: comparisons },
       evaluation: evaluation(overall, strengths, weaknesses, priority, focus, recent, earlier, ins),
-      plan: plan(priority, focus, strengths, ins, diag),
+      plan: plan(priority, focus, strengths, ins, diag, overall, categories),
       method: {
         min_sample: MIN_SAMPLE,
         significance: 'Two-sided z-test of wins against the break-even win rate implied by the prices actually paid. p < 0.05 meaningful, p < 0.20 possible, otherwise normal variance.',
@@ -889,7 +892,7 @@
     return out;
   }
 
-  function plan(priority, focus, strengths, ins, diag) {
+  function plan(priority, focus, strengths, ins, diag, o, categories) {
     var steps = [];
     if (priority && focus && clvSound(priority) && priority.verdict.key !== 'weakness') {
       steps.push({
@@ -907,9 +910,10 @@
         title: 'Review your ' + priority.key + ' process',
         detail: priority.key + ' returned ' + pct(priority.roi) + ' over ' + priority.n + ' graded picks (' + u(priority.net) + '), a potential area to review' +
           (priority.verdict.key === 'weakness' ? '.' : ', though the result alone is not conclusive.') +
-          ' Consider examining how you evaluate the items below and the price you take, and compare that process with ' +
+          ' Consider examining how you evaluate the items below' + (clvSound(priority) ? '' : ' and the price you take') + ', and compare that process with ' +
           (strong ? 'your ' + strong.key + ' (' + pct(strong.roi) + ' over ' + strong.n + ' picks).' : 'the categories where your record is stronger.') +
-          ' Write your own number down before you look at the market.',
+          ' Write your own number down before you look at the market.' +
+          (clvSound(priority) ? ' ' + closeLine(priority) + ', so the price you take is not the problem here; look at which games you pick and how you size them.' : ''),
         checklist: focus.checklist,
       });
       if (focus.patterns.length) {
@@ -939,11 +943,42 @@
     /* The strength worth protecting: meaningful on results, or close to it
        AND beating the closing line, which is independent evidence. */
     var keep = strengths.filter(function (s) {
-      return s.verdict.key === 'strength' || (s.verdict.key === 'lean_strength' && s.beat_close_pct != null && s.beat_close_pct >= 0.55 && s.clv_moved >= 20 && s.clv_p_value < 0.05);
+      return s.verdict.key === 'strength' || (s.verdict.key === 'lean_strength' && s.beat_close_pct != null && s.beat_close_pct >= 0.55 && s.clv_moved >= 20 && s.clv_p_value < 0.05) ||
+        /* pi-2.2.1: a winning category whose result is still within variance but
+           whose price beats the close consistently over 30+ moved closes. */
+        (s.verdict.key === 'variance' && s.n >= MIN_SAMPLE && s.beat_close_pct != null && s.beat_close_pct >= 0.55 && s.clv_moved >= MIN_SAMPLE && s.clv_p_value < 0.05);
     })[0];
-    if (keep) steps.push({ title: 'Keep doing what works in ' + keep.key, detail: 'Write down the process behind these picks so it can be repeated on purpose. ' +
+    if (keep && keep.verdict.key === 'variance') steps.push({ title: 'Keep doing what works in ' + keep.key, detail: 'Write down the process behind these picks so it can be repeated on purpose. ' +
+      keep.n + ' picks at ' + pct(keep.roi) + ' is not yet conclusive on results alone, but your price beat the closing number ' + (keep.beat_close_pct * 100).toFixed(0) +
+      '% of the time where it moved (' + keep.clv_moved + ' picks, ' + pText(keep.clv_p_value) + '), the earliest sign of an edge in this record.' });
+    else if (keep) steps.push({ title: 'Keep doing what works in ' + keep.key, detail: 'Write down the process behind these picks so it can be repeated on purpose. ' +
       keep.n + ' picks at ' + pct(keep.roi) + (keep.beat_close_pct != null ? ', beating the close ' + (keep.beat_close_pct * 100).toFixed(0) + '% of the time,' : '') +
       ' is the most reliable part of the record.' });
+
+    /* pi-2.2.1: record-level steps, so a record with no single category big
+       enough to judge still gets advice the numbers support. */
+    if (o && o.beat_close_pct != null && o.clv_moved >= MIN_SAMPLE && o.clv_p_value != null && o.clv_p_value < 0.05 && o.beat_close_pct < 0.5) {
+      steps.unshift({ title: 'Work on the price you take', detail: 'Where the number moved before the game, your price lost to the closing number ' +
+        (o.beat_close_pct * 100).toFixed(0) + '% of the time (' + o.clv_moved + ' picks, ' + pText(o.clv_p_value) + '). The market keeps moving against these prices, and results tend to follow the close over time. Consider comparing books before you bet, and betting earlier in the week when you have a number.' });
+    }
+    if (!priority && diag && diag.luck.position === 'below') {
+      var worst = (categories || []).filter(function (c) { return c.n >= 10 && c.roi < 0; }).sort(function (a, b) { return a.net - b.net; })[0];
+      steps.push({ title: 'Your record is below the luck range', detail: diag.luck.text +
+        (worst ? ' No single category has enough picks to say where it comes from; the largest loss is ' + worst.key + ' (' + u(worst.net) + ' over ' + worst.n + ' picks).' : '') +
+        ' Consider smaller stakes across the board until the next ' + MIN_SAMPLE + ' picks show whether anything has changed.' });
+    }
+    if (!priority && !keep && clvSound(o) && o.beat_close_pct > 0.5 && o.clv_moved >= MIN_SAMPLE) {
+      steps.push({ title: 'Keep your process', detail: 'Results so far are ' + pct(o.roi) + ' over ' + o.n + ' picks, but ' +
+        closeLine(o).charAt(0).toLowerCase() + closeLine(o).slice(1) + '. That is the earliest sign of an edge; no change is suggested, and results tend to follow the close over time.' });
+    }
+    if (!steps.length) {
+      var judged = (categories || []).filter(function (c) { return c.n >= MIN_SAMPLE; });
+      var big = (categories || []).slice().sort(function (a, b) { return b.n - a.n; }).slice(0, 2);
+      steps.push(judged.length
+        ? { title: 'No change is called for', detail: 'Every category with ' + MIN_SAMPLE + ' or more picks is within normal variance, and nothing else in the record stands out once chance is accounted for. Keep recording your own number before you look at the market; the report updates as each pick is graded.' }
+        : { title: 'Build the sample', detail: 'No category has the ' + MIN_SAMPLE + ' graded picks needed for a verdict yet' +
+          (big.length ? '; the largest are ' + big.map(function (c) { return c.key + ' (' + c.n + ')'; }).join(' and ') : '') + '. The plan fills in as they reach ' + MIN_SAMPLE + '.' });
+    }
     return steps;
   }
 
