@@ -30,7 +30,7 @@
 }(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
 
-  var VERSION = 'pi-2.1.0';
+  var VERSION = 'pi-2.2.0';
   var MIN_SAMPLE = 30;
   var MARKET_LABEL = { spread: 'spreads', moneyline: 'moneylines', total: 'totals', team_total: 'team totals', prop: 'props', other: 'other markets' };
 
@@ -692,18 +692,43 @@
 
   /* Executive summary: five short lines a member can act on, each tied to a
      figure further down the report. */
+  /* pi-2.2.0: the close is the faster evidence. A category whose price beat
+     the closing number consistently (20+ moved closes, p < 0.05) is not a
+     process to fix on a losing result that is itself not meaningful. */
+  function clvSound(c) {
+    return !!c && c.beat_close_pct != null && c.clv_moved >= 20 && c.clv_p_value != null &&
+      c.clv_p_value < 0.05 && c.beat_close_pct > 0.5;
+  }
+  function closeLine(c) {
+    return 'Your price beat the closing number ' + (c.beat_close_pct * 100).toFixed(0) + '% of the time where it moved (' +
+      c.clv_moved + ' picks, ' + pText(c.clv_p_value) + ')';
+  }
+  function pText(v) { return v == null ? 'p = n/a' : v < 0.01 ? 'p < 0.01' : 'p = ' + v.toFixed(2); }
+
   function summary(o, diag, priority, strengths) {
     if (!diag) return [];
     var out = [];
     out.push({ k: 'Result against luck', v: diag.luck.position === 'unknown' ? 'No prices' : diag.luck.position === 'inside' ? 'Within luck' : diag.luck.position === 'above' ? 'Above luck' : 'Below luck',
       tone: diag.luck.position === 'above' ? 'pos' : diag.luck.position === 'below' ? 'neg' : 'neutral', text: diag.luck.text });
+    if (o.beat_close_pct != null && o.clv_moved >= MIN_SAMPLE) {
+      var cpo = o.clv_p_value;
+      var sig = cpo != null && cpo < 0.05;
+      out.push({ k: 'Price against the close', v: (o.beat_close_pct * 100).toFixed(0) + '% beat it',
+        tone: sig ? (o.beat_close_pct > 0.5 ? 'pos' : 'neg') : 'neutral',
+        text: 'Where the number moved before the game (' + o.clv_moved + ' picks), your price beat the close ' + (o.beat_close_pct * 100).toFixed(0) + '% of the time' +
+          (sig ? (o.beat_close_pct > 0.5 ? ', more often than chance produces (' + pText(cpo) + '). Beating the close is the earliest sign of an edge, before results can show it.'
+            : ', less often than chance produces (' + pText(cpo) + '). The market tends to move against these prices.')
+            : ', within what chance produces (' + pText(cpo) + ').') });
+    }
     var keep = strengths.filter(function (s) { return s.n >= MIN_SAMPLE; })[0];
     if (keep) out.push({ k: 'Strongest area', v: keep.key, tone: 'pos', text: keep.key + ': ' + pct(keep.roi) + ' over ' + keep.n + ' picks. ' + keep.verdict.label + '.' });
     var leak = diag.leaks.losing[0];
     if (leak) out.push({ k: 'Largest loss driver', v: leak.key, tone: 'neg', text: leak.key + ': ' + u(leak.net) + ' over ' + leak.n + ' picks, ' + (leak.share_of_losses * 100).toFixed(0) + '% of all losses in losing areas. ' + (leak.verdict ? leak.verdict.label : 'Too few picks to judge') + '.' });
     out.push({ k: 'Deepest swing', v: diag.risk.max_drawdown.toFixed(1) + 'u', tone: 'neutral', text: diag.risk.text });
     if (diag.robustness.enough) out.push({ k: 'Holds up over time', v: diag.robustness.consistent_sign && !diag.robustness.fragile ? 'Yes' : 'Not yet', tone: diag.robustness.consistent_sign && !diag.robustness.fragile ? 'pos' : 'neutral', text: diag.robustness.text });
-    if (priority) out.push({ k: 'First action', v: 'Review ' + priority.key, tone: 'neutral', text: 'See the action plan: a checklist for ' + priority.key + ', measured over the next ' + MIN_SAMPLE + ' picks.' });
+    if (priority && clvSound(priority) && priority.verdict.key !== 'weakness') {
+      out.push({ k: 'First action', v: 'Keep ' + priority.key, tone: 'neutral', text: priority.key + ' is down, but ' + closeLine(priority).charAt(0).toLowerCase() + closeLine(priority).slice(1) + ', so the shortfall looks like variance. See the action plan.' });
+    } else if (priority) out.push({ k: 'First action', v: 'Review ' + priority.key, tone: 'neutral', text: 'See the action plan: a checklist for ' + priority.key + ', measured over the next ' + MIN_SAMPLE + ' picks.' });
     return out;
   }
 
@@ -866,7 +891,17 @@
 
   function plan(priority, focus, strengths, ins, diag) {
     var steps = [];
-    if (priority && focus) {
+    if (priority && focus && clvSound(priority) && priority.verdict.key !== 'weakness') {
+      steps.push({
+        title: 'Keep your ' + priority.key + ' process',
+        detail: priority.key + ' returned ' + pct(priority.roi) + ' over ' + priority.n + ' graded picks (' + u(priority.net) + '), but ' +
+          closeLine(priority).charAt(0).toLowerCase() + closeLine(priority).slice(1) +
+          '. A losing process rarely does that, and the loss itself is not conclusive, so no change to how you pick or size these is suggested. Keep writing your own number down before you look at the market.',
+        checklist: focus.checklist,
+      });
+      steps.push({ title: 'Measure the next ' + MIN_SAMPLE + ' ' + priority.key + ' picks',
+        detail: 'Start the plan and the report tracks every later pick in this category against the record before it. If the price keeps beating the close, the results should follow; if it stops beating the close, that is the moment to review the process.' });
+    } else if (priority && focus) {
       var strong = strengths.filter(function (x) { return x.n >= MIN_SAMPLE; })[0];
       steps.push({
         title: 'Review your ' + priority.key + ' process',
