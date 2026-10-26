@@ -29,7 +29,7 @@
     return utc;
   }
 
-  var cutoffMs = zonedToUtcMs({ year: 2026, month: 10, day: 27, hour: 0, minute: 0, second: 0 });
+  var cutoffMs = zonedToUtcMs({ year: 2026, month: 10, day: 26, hour: 16, minute: 0, second: 0 });
 
   function closed(now) {
     var t = now == null ? Date.now() : new Date(now).getTime();
