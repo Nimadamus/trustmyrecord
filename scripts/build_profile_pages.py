@@ -175,7 +175,16 @@ img.u-avatar{display:block;}
 .u-name{margin:0;font-family:'Barlow Condensed','Barlow',Inter,sans-serif;font-weight:900;font-size:clamp(28px,3.4vw,42px);line-height:1.02;letter-spacing:.005em;color:#fff;overflow-wrap:anywhere;}
 .u-tag{color:var(--u-mute);font-size:13px;margin:5px 0 0;}
 .u-tag b{color:var(--u-blue);font-weight:700;}
-.u-bio{color:#b9c2d8;margin:8px 0 0;font-size:14px;line-height:1.5;max-width:64ch;}
+.u-bio{color:#b9c2d8;margin:8px 0 0;font-size:14px;line-height:1.55;max-width:68ch;}
+.u-bio-text,p.u-bio{white-space:pre-line;overflow-wrap:break-word;}
+details.u-bio > summary{display:block;list-style:none;cursor:pointer;}
+details.u-bio > summary::-webkit-details-marker{display:none;}
+details.u-bio > summary::marker{content:"";}
+details.u-bio > summary:focus-visible{outline:2px solid rgba(77,163,255,.55);outline-offset:3px;border-radius:6px;}
+details.u-bio .u-bio-text{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;line-clamp:4;overflow:hidden;}
+details.u-bio[open] .u-bio-text{display:block;-webkit-line-clamp:unset;line-clamp:unset;overflow:visible;}
+.u-bio-more{display:inline-block;margin-top:8px;color:#4DA3FF;font-weight:800;font-size:13px;letter-spacing:.02em;}
+details.u-bio[open] .u-bio-more-open,details.u-bio:not([open]) .u-bio-more-close{display:none;}
 .u-chips{display:flex;flex-wrap:wrap;gap:7px;margin:11px 0 0;}
 .u-chip{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;
   color:#b9c2d8;background:rgba(255,255,255,.045);border:1px solid var(--u-line);border-radius:999px;padding:5px 11px;}
@@ -789,6 +798,34 @@ def identity_chips(d, graded_total):
     return f'<div class="u-chips">{"".join(chips)}</div>' if chips else ""
 
 
+# SHELL_BIO_PREVIEW_20261025: no-JS visitors and the shell fallback see this
+# markup. The full biography stays in the HTML for crawlers and assistive tech.
+# A long one is a native disclosure clamped to four lines. A short one stays a
+# paragraph, so it does not grow a control that opens nothing. The /profile/
+# app replaces this document when JavaScript runs and uses its own Read more.
+SHELL_BIO_PREVIEW_CHARS = 68 * 4
+
+def shell_bio_is_long(text):
+    raw = (text or "").replace("\r\n", "\n").strip()
+    if not raw:
+        return False
+    return raw.count("\n") >= 3 or len(raw) > SHELL_BIO_PREVIEW_CHARS
+
+def shell_bio_html(text, escape):
+    raw = (text or "").replace("\r\n", "\n").strip()
+    if not raw:
+        return ""
+    body = escape(raw)
+    if not shell_bio_is_long(raw):
+        return f'<p class="u-bio">{body}</p>'
+    return (
+        '<details class="u-bio"><summary>'
+        f'<span class="u-bio-text">{body}</span>'
+        '<span class="u-bio-more"><span class="u-bio-more-open">Read more</span>'
+        '<span class="u-bio-more-close">Show less</span></span>'
+        '</summary></details>'
+    )
+
 def page_html(d, recent, avg_amer, sport_rows, m=None, siblings=None, awards=None,
               compact=False):
     """Render a /u/<username>/ page.
@@ -902,7 +939,7 @@ def page_html(d, recent, avg_amer, sport_rows, m=None, siblings=None, awards=Non
     # query error.
     avatar_html = avatar_markup(d, disp, avatar)
     chips_html = identity_chips(d, tp)
-    bio_html = f'<p class="u-bio">{e(bio)}</p>' if bio else ""
+    bio_html = shell_bio_html(bio, e)
     share_html = share_button(un, disp)
 
     def stat(big, lab, tone=""):

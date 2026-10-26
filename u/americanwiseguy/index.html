@@ -56,7 +56,16 @@ img.u-avatar{display:block;}
 .u-name{margin:0;font-family:'Barlow Condensed','Barlow',Inter,sans-serif;font-weight:900;font-size:clamp(28px,3.4vw,42px);line-height:1.02;letter-spacing:.005em;color:#fff;overflow-wrap:anywhere;}
 .u-tag{color:var(--u-mute);font-size:13px;margin:5px 0 0;}
 .u-tag b{color:var(--u-blue);font-weight:700;}
-.u-bio{color:#b9c2d8;margin:8px 0 0;font-size:14px;line-height:1.5;max-width:64ch;}
+.u-bio{color:#b9c2d8;margin:8px 0 0;font-size:14px;line-height:1.55;max-width:68ch;}
+.u-bio-text,p.u-bio{white-space:pre-line;overflow-wrap:break-word;}
+details.u-bio > summary{display:block;list-style:none;cursor:pointer;}
+details.u-bio > summary::-webkit-details-marker{display:none;}
+details.u-bio > summary::marker{content:"";}
+details.u-bio > summary:focus-visible{outline:2px solid rgba(77,163,255,.55);outline-offset:3px;border-radius:6px;}
+details.u-bio .u-bio-text{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;line-clamp:4;overflow:hidden;}
+details.u-bio[open] .u-bio-text{display:block;-webkit-line-clamp:unset;line-clamp:unset;overflow:visible;}
+.u-bio-more{display:inline-block;margin-top:8px;color:#4DA3FF;font-weight:800;font-size:13px;letter-spacing:.02em;}
+details.u-bio[open] .u-bio-more-open,details.u-bio:not([open]) .u-bio-more-close{display:none;}
 .u-chips{display:flex;flex-wrap:wrap;gap:7px;margin:11px 0 0;}
 .u-chip{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;
   color:#b9c2d8;background:rgba(255,255,255,.045);border:1px solid var(--u-line);border-radius:999px;padding:5px 11px;}
@@ -154,7 +163,7 @@ body.tmr-u-booting #tmrUBoot{display:block;position:fixed;inset:0;z-index:214748
     <div class="u-id">
       <h1 class="u-name">AmericanWiseguy</h1>
       <p class="u-tag"><b>@americanwiseguy</b> · Verified sports betting record</p>
-      <p class="u-bio">American Wiseguy delivers disciplined, data-driven sports analysis focused on identifying value across NFL, college football, NBA, MLB, and other major markets. My process combines statistical modeling, matchup analysis, injuries, recent form, market movement, and situational trends to find opportunities where the numbers support the play. Bettors can expect clear reasoning behind each selection, consistent record tracking, and a transparent approach focused on long-term decision-making—not hype or guarantees.</p>
+      <details class="u-bio"><summary><span class="u-bio-text">American Wiseguy delivers disciplined, data-driven sports analysis focused on identifying value across NFL, college football, NBA, MLB, and other major markets. My process combines statistical modeling, matchup analysis, injuries, recent form, market movement, and situational trends to find opportunities where the numbers support the play. Bettors can expect clear reasoning behind each selection, consistent record tracking, and a transparent approach focused on long-term decision-making—not hype or guarantees.</span><span class="u-bio-more"><span class="u-bio-more-open">Read more</span><span class="u-bio-more-close">Show less</span></span></summary></details>
       <div class="u-chips"><span class="u-chip u-chip--verified">Verified record</span><span class="u-chip u-chip--rank">Rank <b>#2 of 25 qualified</b></span><span class="u-chip">Ledger <b>510 graded</b></span><span class="u-chip">Member since <b>Sep 2026</b></span><span class="u-chip">Followers <b>1</b></span><span class="u-chip">Fan of <b>San Francisco 49ers, Los Angeles Dodgers</b></span></div>
     </div>
   </div>
