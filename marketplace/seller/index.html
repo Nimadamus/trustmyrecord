@@ -125,6 +125,7 @@
 <script src="/static/js/backend-api.js?v=e4eaeea31d19"></script>
 <script src="/static/js/tmr-marketplace-shell.js?v=a3f4545023e1"></script>
 <script src="/static/js/tmr-drill.js?v=c68f34eb6d14"></script>
+<script src="/static/js/day-pass-cutoff.js?v=d4c7079569da"></script>
 <script>
 (function () {
     const API_BASE = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
@@ -189,22 +190,25 @@
             '<div class="sf-stat"><b>' + s.graded_picks + '</b><span>Graded Picks</span></div>' +
         '</div>' + (window.TMRDrill ? '<div style="margin-top:8px;text-align:right">' + window.TMRDrill.ctaHtml('View every pick behind these numbers') + '</div>' : '') + '</div>';
 
-        const listings = store.listings && store.listings.length ? store.listings : (l ? [l] : []);
-        if (!s.storefront_active || !listings.length) {
+        var betlegend = String((s && s.username) || '').toLowerCase() === 'betlegend';
+        var salesClosed = store.day_pass_sales_open === false || (betlegend && window.TMRDayPass && window.TMRDayPass.closed());
+        var listings = (store.listings && store.listings.length ? store.listings : (l ? [l] : []))
+            .filter(function (x) { return !(salesClosed && x && x.product_type === 'daily_access'); });
+        var picks = store.picks_for_sale || [];
+        if ((!s.storefront_active && !picks.length) || (!listings.length && !picks.length)) {
             html += '<div class="mp-empty">This seller does not have an active storefront right now.</div>';
             content.innerHTML = html; return;
         }
         const DUR = { single_pick: '1 PICK', daily_access: '24H', weekly_access: '7 DAYS', monthly_access: '30 DAYS' };
         const PER = { single_pick: 'one pick, one-time', daily_access: 'all picks for 24 hours', weekly_access: 'all picks for 7 days', monthly_access: 'all picks for 30 days' };
 
+        if (listings.length) {
         html += '<div class="panel"><h2 class="offer">Packages</h2>' +
         (listings[0].description ? '<p class="offer-desc">' + esc(listings[0].description) + '</p>' : '') +
         '<div class="pkg-row">' +
         listings.map(function (x) {
             return '<div class="pkg">' +
                 '<div class="pkg-head"><span class="pkg-name">' + esc(x.product_label || x.title) + '</span><span class="pkg-dur">' + (DUR[x.product_type] || '') + '</span></div>' +
-                // One package, both prices. The seller sets them on the same
-                // listing, so the buyer sees both here and chooses how to pay.
                 '<div class="pkg-price">' + money(x.price_cents, x.currency) +
                     (x.accepts_tmr && x.price_tmr ? '<small style="color:#7FB6FF;font-weight:700;">or ' + Number(x.price_tmr).toLocaleString() + ' TMR</small>' : '') +
                     '<small>' + (PER[x.product_type] || 'one-time') + '</small></div>' +
@@ -218,20 +222,35 @@
         }).join('') +
         '</div>' +
         '<p class="terms-note">Single picks reveal one selection. A pass reveals every pick this seller posts during your access window, and every pick whose game starts during that window. Times are Pacific. Everything unlocks in your <a href="/marketplace/purchases/">purchases dashboard</a> after payment confirms, whichever way you paid. TrustMyRecord\'s commission is 20% on a cash sale and 5% on a TMR Coin sale, because a card sale carries processing, payouts and chargebacks and a TMR sale is a ledger transfer; the seller keeps the rest either way. No refunds after reveal except as described in the <a href="/marketplace/terms/">refund policy</a>. Results are never guaranteed.</p></div>';
+        }
 
-        html += '<h3 class="sec" id="picks">Picks Available Right Now (' + store.picks_for_sale.length + ')</h3>';
+        if (salesClosed) {
+            var closedNote = 'Day pass sales ended at midnight Pacific on October 27. Pending picks stay locked unless a pass you already hold covers them.';
+            if (listings.some(function (x) { return x.product_type === 'monthly_access'; })) {
+                closedNote += ' The monthly package is still for sale.';
+            }
+            html += '<div class="mp-empty">' + closedNote + '</div>';
+        }
+        html += '<h3 class="sec" id="picks">Picks Available Right Now (' + picks.length + ')</h3>';
         if (!store.marketplace_enabled) {
             html += '<div class="mp-empty">Marketplace purchases are not enabled yet — final testing is in progress. Check back soon.</div>';
-        } else if (!store.picks_for_sale.length) {
+        } else if (!picks.length) {
             html += '<div class="mp-empty">No pending picks are on the board right now. Follow the seller to catch the next release.</div>';
         }
-        var dayPass = listings.find(function (x) { return x.product_type === 'daily_access'; });
-        html += store.picks_for_sale.map(function (p) {
+        var monthly = listings.find(function (x) { return x.product_type === 'monthly_access'; });
+        var dayPass = !salesClosed && listings.find(function (x) { return x.product_type === 'daily_access'; });
+        var pickBtn = '';
+        if (store.marketplace_enabled && dayPass) {
+            pickBtn = '<button class="btn btn-primary" data-buy-listing="' + dayPass.id + '">Day Pass ' + money(dayPass.price_cents, dayPass.currency) + '</button>';
+        } else if (store.marketplace_enabled && salesClosed && monthly) {
+            pickBtn = '<button class="btn btn-primary" data-buy-listing="' + monthly.id + '">Monthly Pass ' + money(monthly.price_cents, monthly.currency) + '</button>';
+        }
+        html += picks.map(function (p) {
             return '<div class="pick-row">' +
                 '<div class="pr-lock">&#128274;</div>' +
                 '<div class="pr-main"><div class="pr-game">' + esc(p.away_team) + ' @ ' + esc(p.home_team) + '</div>' +
                 '<div class="pr-meta"><b>Locked pick</b> &middot; ' + esc(p.sport_title || p.sport_key) + ' &middot; ' + gameTime(p.commence_time) + '</div></div>' +
-                (store.marketplace_enabled && dayPass ? '<button class="btn btn-primary" data-buy-listing="' + dayPass.id + '">Day Pass ' + money(dayPass.price_cents, dayPass.currency) + '</button>' : '') +
+                pickBtn +
             '</div>';
         }).join('');
 

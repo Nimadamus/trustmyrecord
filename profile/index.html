@@ -21160,6 +21160,7 @@
 
     <script defer src="/static/js/tmr-fan-identity.js?v=d98ab0971ef9"></script>
 <script src="/static/js/first-pick-onboarding.js?v=eb65434956ed"></script>
+<script src="/static/js/day-pass-cutoff.js?v=d4c7079569da"></script>
 <script>
 (function(){
   var API_BASE = (window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
@@ -21183,8 +21184,21 @@
       if (!res.ok) return;
       var data = await res.json();
       var seller = data.seller || {};
-      var listings = Array.isArray(data.listings) ? data.listings : [];
-      if (!seller.storefront_active || listings.length === 0) return;
+      var raw = Array.isArray(data.listings) ? data.listings : [];
+      var betlegend = String(username).toLowerCase() === 'betlegend' || String(seller.username || '').toLowerCase() === 'betlegend';
+      var closed = data.day_pass_sales_open === false || (betlegend && window.TMRDayPass && window.TMRDayPass.closed());
+      var listings = closed ? raw.filter(function (l) { return l.product_type !== 'daily_access'; }) : raw;
+      if (!seller.storefront_active || listings.length === 0) {
+        if (closed) {
+          grid.innerHTML = '<div class="mppfs-pkg">' +
+            '<div class="mppfs-pkg-name">Pending picks stay locked</div>' +
+            '<div class="mppfs-pkg-desc">Day pass sales have ended. A pass you already hold keeps working until it expires.</div>' +
+          '</div>';
+          if (viewAll) viewAll.href = '/marketplace/seller/?u=' + encodeURIComponent(username);
+          section.hidden = false;
+        }
+        return;
+      }
       viewAll.href = '/marketplace/seller/?u=' + encodeURIComponent(username);
       grid.innerHTML = listings.map(function(l){
         return '<div class="mppfs-pkg">' +

@@ -166,6 +166,7 @@
 <script src="/static/js/config.js?v=430b4bba7b37"></script>
 <script src="/static/js/backend-api.js?v=e4eaeea31d19"></script>
 <script src="/static/js/tmr-marketplace-shell.js?v=a3f4545023e1"></script>
+<script src="/static/js/day-pass-cutoff.js?v=d4c7079569da"></script>
 <script>
 (function () {
     const app = document.getElementById('app');
@@ -178,6 +179,12 @@
         { type: 'weekly_access', name: 'Weekly Pass',  dur: '7 DAYS', ph: '99.00' },
         { type: 'monthly_access',name: 'Monthly Pass', dur: '30 DAYS',ph: '249.00' },
     ];
+    function offeredPkgs() {
+        if (elig && elig.day_pass_sales_open === false) {
+            return PKG.filter(function (pk) { return pk.type !== 'daily_access'; });
+        }
+        return PKG;
+    }
     const PKG_HELP = {
         single_pick: 'List one pick at a time. Set a price and publish - every locked pick you post afterward is purchasable on its own until you turn this off.',
         daily_access: 'Buyer gets every pick you post in the 24 hours after they pay, and every pick whose game starts in those same 24 hours.',
@@ -478,10 +485,13 @@
             '</div>' +
             '<p class="hint" style="margin-bottom:12px;">The two rates differ because the two sales cost different amounts to run: a cash sale carries card processing, bank payouts, refunds and chargebacks; a TMR sale is a ledger transfer with none of that attached. The rate that applies is shown to the buyer before they pay, either way.</p>' +
             '<div class="pkg-group-label">Sell picks one at a time</div>' +
-            '<div class="pkg-grid">' + renderPkgCard(PKG[0]) + '</div>' +
+            '<div class="pkg-grid">' + offeredPkgs().filter(function (pk) { return pk.type === 'single_pick'; }).map(renderPkgCard).join('') + '</div>' +
             '<div class="pkg-group-label" style="margin-top:14px;">Or sell access passes</div>' +
+            (elig && elig.day_pass_sales_open === false
+                ? '<p class="hint">The $5 day pass is closed to new buyers. Passes already sold keep their original window. Weekly and monthly passes are unchanged.</p>'
+                : '') +
             '<div class="pkg-grid">' +
-            PKG.slice(1).map(renderPkgCard).join('') +
+            offeredPkgs().filter(function (pk) { return pk.type !== 'single_pick'; }).map(renderPkgCard).join('') +
             '</div>' +
             '<div class="field"><label>About your picks (shown on every package)</label><textarea id="lsDesc" maxlength="2000" placeholder="Locked picks from my public board, revealed immediately after purchase.">' + esc(listing ? listing.description : '') + '</textarea>' +
             '<p class="hint">No guaranteed-outcome language (guaranteed winner, lock, risk-free) — listings using it are rejected.</p></div>' +
@@ -600,7 +610,7 @@
                 disconnectBtn.disabled = false; disconnectBtn.textContent = 'Disconnect Stripe';
             }
         });
-        PKG.forEach(function (pk) {
+        offeredPkgs().forEach(function (pk) {
             const input = app.querySelector('[data-price="' + pk.type + '"]');
             if (input) { input.addEventListener('input', function(){ updateKeepLine(pk.type); }); updateKeepLine(pk.type); }
             const chk = app.querySelector('[data-offer="' + pk.type + '"]');
@@ -621,12 +631,12 @@
         if (saveBtn) saveBtn.addEventListener('click', async function () {
             const label = saveBtn.textContent;
             saveBtn.disabled = true; saveBtn.textContent = 'Saving…';
-            PKG.forEach(function (pk) { const err = app.querySelector('[data-err="' + pk.type + '"]'); if (err) err.textContent = ''; });
+            offeredPkgs().forEach(function (pk) { const err = app.querySelector('[data-err="' + pk.type + '"]'); if (err) err.textContent = ''; });
             const desc = document.getElementById('lsDesc').value;
             const sports = document.getElementById('lsSports').value.split(',').map(function(s){return s.trim();}).filter(Boolean);
 
             let savedCount = 0, unpublishedCount = 0, failedCount = 0;
-            for (const pk of PKG) {
+            for (const pk of offeredPkgs()) {
                 const errSlot = app.querySelector('[data-err="' + pk.type + '"]');
                 const offered = app.querySelector('[data-offer="' + pk.type + '"]').checked;
                 const cents = Math.round(parseFloat(app.querySelector('[data-price="' + pk.type + '"]').value || '0') * 100);

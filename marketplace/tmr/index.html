@@ -415,6 +415,7 @@ body.mp-tmr-page .reveal .sel {font-weight:800;font-size:13.5px}
 <script src="/static/js/config.js?v=430b4bba7b37"></script>
 <script src="/static/js/backend-api.js?v=e4eaeea31d19"></script>
 <script src="/static/js/tmr-marketplace-shell.js?v=a3f4545023e1"></script>
+<script src="/static/js/day-pass-cutoff.js?v=d4c7079569da"></script>
 <script>
 (function () {
   'use strict';
@@ -616,6 +617,7 @@ body.mp-tmr-page .reveal .sel {font-weight:800;font-size:13.5px}
       // Never offer someone their own listing. The server refuses a self
       // purchase anyway; showing a Buy button that cannot work is worse.
       if (mine.indexOf(l.id) !== -1) return false;
+      if (window.TMRDayPass && window.TMRDayPass.closed() && l.product_type === 'daily_access' && l.seller && String(l.seller.username || '').toLowerCase() === 'betlegend') return false;
       if (filters.sport && l.sports.indexOf(filters.sport) === -1) return false;
       if (filters.type && l.product_type !== filters.type) return false;
       if (filters.seller && l.seller.username !== filters.seller) return false;
