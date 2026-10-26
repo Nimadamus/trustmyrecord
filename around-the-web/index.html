@@ -8,7 +8,7 @@
     <meta http-equiv="Expires" content="0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Handicappers Around the Web | TrustMyRecord</title>
-    <meta name="description" content="Anonymous public handicappers tracked by TrustMyRecord. Records, units, ROI, and streaks from monitored public picks. Usernames are not shown.">
+    <meta name="description" content="The public ledger of handicappers tracked by TrustMyRecord. Private identities, graded records, units, and ROI. Usernames are not shown.">
     
     
     
@@ -889,32 +889,42 @@
 <main class="hm-page">
   <section class="aw-hero" aria-labelledby="awHeroTitle">
     <div class="aw-hero-copy">
-      <p class="aw-hero-kicker">Performance ledger</p>
+      <p class="aw-hero-kicker">Public ledger</p>
       <h1 id="awHeroTitle">Handicappers Around the Web</h1>
-      <p class="aw-hero-deck">We track the record. The name stays private.</p>
-      <p class="aw-hero-lead">Each handicapper has a private tracked identity. Public picks are monitored, graded, and kept on that same record.</p>
-      <ul class="aw-hero-points">
-        <li><strong>Private identity</strong><span>A stable anonymous profile. No public username.</span></li>
-        <li><strong>Independent grades</strong><span>Wins, losses, units, and streaks from the posts we captured.</span></li>
-        <li><strong>One record</strong><span>Results stay on the same identity over time.</span></li>
-      </ul>
+      <p class="aw-hero-deck">The record is public. The name is not.</p>
+      <p class="aw-hero-lead">Each profile is a private tracked identity. We monitor the public picks, grade the results, and keep the history on that same identity.</p>
+      <ol class="aw-specs">
+        <li><b>01</b><span>Private identity. No username on the public record.</span></li>
+        <li><b>02</b><span>Graded in house. Wins, losses, units, and streaks from the posts we captured.</span></li>
+        <li><b>03</b><span>One history. The same identity follows the record forward.</span></li>
+      </ol>
     </div>
-    <div class="aw-hero-mark" aria-hidden="true">
+    <aside class="aw-specimen" aria-hidden="true">
       <img src="/around-the-web/avatars/silhouette.svg" alt="">
-      <b>TH</b>
-      <small>Tracked identity</small>
-    </div>
+      <div>
+        <p>Tracked identity</p>
+        <strong>TH-0042</strong>
+        <span>The plate is the name. The source stays on the record.</span>
+      </div>
+    </aside>
   </section>
 
   <header class="hm-header" aria-label="Directory header">
-    <div class="hm-metrics" aria-label="Monitoring statistics">
-      <div class="hm-metric hm-metric--primary" title="Accounts TMR has found posting in public pick threads and on X."><strong id="awAccounts">…</strong><span>Accounts Monitored</span><small>Every account harvested</small></div>
-      <div class="hm-metric" title="Accounts with at least one completed, graded pick."><strong id="awWithRecords">…</strong><span>With a Record</span><small>1+ graded pick</small></div>
-      <div class="hm-metric" title="Completed picks graded by TMR from public posts."><strong id="awGraded">…</strong><span>Graded Picks</span><small>Won, lost, or push</small></div>
-      <div class="hm-metric" title="Public posts TMR has read. The source post is not republished."><strong id="awPosts">…</strong><span>Posts Captured</span><small>Not republished</small></div>
-      <div class="hm-metric" title="The first day TMR began monitoring."><strong id="awSince">…</strong><span>Monitoring Since</span><small>Records start here</small></div>
+    <div class="hm-metrics" aria-label="Board statistics">
+      <div class="hm-metric hm-metric--primary" title="Every account TMR has found posting public picks."><strong id="awAccounts">…</strong><span>Tracked</span><small>Identities on the board</small></div>
+      <div class="hm-metric" title="Accounts with at least one completed, graded pick."><strong id="awWithRecords">…</strong><span>With a record</span><small>One or more graded picks</small></div>
+      <div class="hm-metric" title="Completed picks graded by TMR from public posts."><strong id="awGraded">…</strong><span>Graded picks</span><small>Won, lost, or push</small></div>
+      <div class="hm-metric" title="Identities with a pick in the last 7 days."><strong id="awActive">…</strong><span>Active, 7 days</span><small>A pick in the last week</small></div>
+      <div class="hm-metric" title="Identities whose latest pick falls in the last day."><strong id="awToday">…</strong><span>Last pick today</span><small>Logged in the last day</small></div>
     </div>
+    <p class="aw-metric-note" id="awContext">Monitoring since …</p>
   </header>
+
+  <div class="aw-segments" id="awView" role="tablist" aria-label="Board view">
+    <button type="button" class="is-active" role="tab" aria-selected="true" data-view="all">All identities</button>
+    <button type="button" role="tab" aria-selected="false" data-view="record">With a record</button>
+    <button type="button" role="tab" aria-selected="false" data-view="active">Active, 7 days</button>
+  </div>
 
   <nav class="hm-tabs" id="awTabs" role="tablist" aria-label="Source">
     <button type="button" class="hm-tab is-active" role="tab" aria-selected="true" data-source="all">All Sources <span class="hm-tab-count" data-count="all">0</span></button>
@@ -928,10 +938,10 @@
   </nav>
 
   <section class="hm-controls" aria-label="Search and filters">
-    <div class="hm-field"><label for="awSearch">Search handicappers</label><input class="hm-input" id="awSearch" type="search" placeholder="TH-0066" autocomplete="off"></div>
+    <div class="hm-field"><label for="awSearch">Search identity</label><input class="hm-input" id="awSearch" type="search" placeholder="TH-0042" autocomplete="off"></div>
     <div class="hm-field"><label for="awSport">Sport</label><select class="hm-select" id="awSport"><option value="all">All sports</option></select></div>
-    <div class="hm-field"><label for="awMin">Min graded picks</label><select class="hm-select" id="awMin"><option value="0">All accounts</option><option value="1">1+</option><option value="5">5+</option><option value="10">10+</option><option value="25">25+</option><option value="50">50+</option></select></div>
-    <div class="hm-field"><label for="awSort">Sort by</label><select class="hm-select" id="awSort"><option value="units">Net units</option><option value="roi">ROI</option><option value="winRate">Win percentage</option><option value="graded" selected>Most graded picks</option><option value="recent">Most recent pick</option><option value="record">Best record</option><option value="streak">Longest win streak</option><option value="username">Identifier A to Z</option></select></div>
+    <div class="hm-field"><label for="awMin">Sample</label><select class="hm-select" id="awMin"><option value="0">Any sample</option><option value="1">1 or more</option><option value="5">5 or more</option><option value="10">10 or more</option><option value="25">25 or more</option><option value="50">50 or more</option></select></div>
+    <div class="hm-field"><label for="awSort">Order</label><select class="hm-select" id="awSort"><option value="units">Net units</option><option value="roi">ROI</option><option value="winRate">Win percentage</option><option value="graded" selected>Most graded picks</option><option value="recent">Most recent pick</option><option value="record">Best record</option><option value="streak">Longest win streak</option><option value="username">Identity A to Z</option></select></div>
   </section>
 
   <section class="aw-privacy" aria-labelledby="awPrivacyTitle">
@@ -944,6 +954,13 @@
     </details>
   </section>
 
+  <div class="aw-board-head">
+    <div>
+      <h2>The board</h2>
+      <p>The identities in this view. Every sort runs across the full filtered set.</p>
+    </div>
+    <p class="aw-shown"><strong id="awShown">…</strong> shown</p>
+  </div>
   <section class="hm-table-wrap" aria-live="polite">
     <div class="hm-table">
       <div class="hm-row hm-head" role="row">
@@ -953,7 +970,7 @@
     </div>
   </section>
 
-  <p class="hm-foot-note">How this works: TMR reads public pick threads and posts, records each selection with the time it was posted, and grades it after the game ends. The source post is not republished. A pick counts only if it was posted before the game started. Units use 1 unit risked per pick. TMR uses the handicapper's posted odds when available. When no price is published, TMR assigns a standardized reference price from market odds available near the time the pick was recorded. <abbr title="TMR Reference Odds: the handicapper did not post a price, so TMR uses the Action Network consensus price for the exact market and line in effect when the pick was posted. If the consensus is at a different line, TMR uses the median of the sportsbooks quoting the exact line at that time. With no exact match, the pick stays in the record and in its league, and it adds nothing to units or ROI. The closing line is never used." style="cursor:help">TMR Reference Odds</abbr>. Pending picks are never shown. Source account names are not shown.</p>
+  <p class="hm-foot-note">TMR reads the public post, records the selection and the time it was posted, and grades the pick after the game. The original post is not republished. A pick counts only if it was posted before the game started. Each pick risks 1 unit. We use the handicapper&rsquo;s posted price. When no price is posted, the grade uses <abbr title="TMR Reference Odds: the handicapper did not post a price, so TMR uses the Action Network consensus price for the exact market and line in effect when the pick was posted. If the consensus is at a different line, TMR uses the median of the sportsbooks quoting the exact line at that time. With no exact match, the pick stays in the record and in its league, and it adds nothing to units or ROI. The closing line is never used.">TMR Reference Odds</abbr>. Pending picks are not shown. Account names are not shown.</p>
 </main>
 <style>
 .aw-privacy{margin:0 0 18px;max-width:100%;min-width:0}
@@ -1019,11 +1036,53 @@ body.tmr-ds .hm-page #awRows .hm-action-btn--view:hover{background:#1D7FE8;borde
 body.tmr-ds .hm-page .hm-foot-note{margin-top:18px;max-width:920px;line-height:1.6;color:#8FA3BB}
 @media (max-width:800px){body.tmr-ds .hm-page .aw-hero{grid-template-columns:1fr;padding:22px 16px 16px}body.tmr-ds .hm-page .aw-hero-mark{flex-direction:row;min-height:0;padding:10px 12px;justify-content:flex-start;gap:12px}body.tmr-ds .hm-page .aw-hero-mark img{width:44px;height:44px}body.tmr-ds .hm-page .aw-hero-points{grid-template-columns:1fr}}
 @media (max-width:768px){body.tmr-ds .hm-page .hm-metrics{grid-template-columns:1fr 1fr}body.tmr-ds .hm-page .hm-row.hm-head{display:none}body.tmr-ds .hm-page .hm-row{grid-template-columns:1fr 1fr;gap:10px 14px;padding:16px;margin-bottom:10px;border:1px solid rgba(148,163,184,.16);border-radius:12px;background:#101b2e}body.tmr-ds .hm-page .hm-user{grid-column:1 / -1}body.tmr-ds .hm-page .hm-actions{grid-column:1 / -1}body.tmr-ds .hm-page #awRows .hm-member-row::before{display:none}body.tmr-ds .hm-page #awRows .aw-rank{display:inline}body.tmr-ds .hm-page #awRows .hm-member-row:hover{box-shadow:none}}
+
+body.tmr-ds .hm-page .aw-hero{grid-template-columns:minmax(0,1fr) minmax(240px,300px);gap:32px;padding:32px 32px 28px 34px}
+body.tmr-ds .hm-page .aw-specs{list-style:none;margin:20px 0 0;padding:14px 0 0;border-top:1px solid rgba(148,163,184,.16);display:grid;gap:8px}
+body.tmr-ds .hm-page .aw-specs li{display:flex;gap:12px;align-items:baseline;margin:0}
+body.tmr-ds .hm-page .aw-specs b{font-family:'Barlow Condensed',Inter,sans-serif;font-size:18px;font-weight:700;letter-spacing:.08em;color:#F6D35F;flex:none}
+body.tmr-ds .hm-page .aw-specs span{font:500 14px/1.45 Inter,Arial,sans-serif;color:#C5D4E4}
+body.tmr-ds .hm-page .aw-specimen{display:flex;gap:14px;align-items:center;padding:16px;border:1px solid rgba(77,163,255,.32);border-radius:16px;background:radial-gradient(circle at 30% 20%,rgba(77,163,255,.16),rgba(8,16,28,.2) 70%)}
+body.tmr-ds .hm-page .aw-specimen img{width:84px;height:84px;border-radius:18px;flex:none}
+body.tmr-ds .hm-page .aw-specimen p{margin:0 0 6px;font:800 10px/1 Inter,Arial,sans-serif;letter-spacing:.18em;text-transform:uppercase;color:#7FB8FF}
+body.tmr-ds .hm-page .aw-specimen strong{display:block;font-family:'Barlow Condensed',Inter,sans-serif;font-size:36px;font-weight:700;letter-spacing:.04em;line-height:.9;color:#F4F7FB}
+body.tmr-ds .hm-page .aw-specimen span{display:block;margin-top:8px;font:500 13px/1.4 Inter,Arial,sans-serif;color:#9FB4C9}
+body.tmr-ds .hm-page .aw-metric-note{margin:12px 2px 0;font:600 13px/1.45 Inter,Arial,sans-serif;color:#8FA3BB}
+body.tmr-ds .hm-page .hm-metrics{grid-template-columns:repeat(5,minmax(0,1fr))}
+body.tmr-ds .hm-page .aw-segments{display:flex;gap:8px;margin:0 0 12px;flex-wrap:wrap}
+body.tmr-ds .hm-page .aw-segments button{appearance:none;border:1px solid rgba(148,163,184,.22);background:#101b2e;color:#C5D4E4;border-radius:999px;padding:8px 14px;font:700 13px/1 Inter,Arial,sans-serif;cursor:pointer}
+body.tmr-ds .hm-page .aw-segments button.is-active{background:#1D7FE8;border-color:#1D7FE8;color:#fff}
+body.tmr-ds .hm-page .aw-segments button:focus-visible{outline:2px solid #4DA3FF;outline-offset:2px}
+body.tmr-ds .hm-page .hm-controls{grid-template-columns:minmax(220px,1.7fr) repeat(3,minmax(140px,1fr));border-radius:14px;background:#101b2e;border-color:rgba(148,163,184,.16);padding:14px}
+body.tmr-ds .hm-page .aw-board-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin:8px 2px 10px}
+body.tmr-ds .hm-page .aw-board-head h2{margin:0;font-family:'Barlow Condensed',Inter,sans-serif;font-size:30px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;line-height:1;color:#F4F7FB}
+body.tmr-ds .hm-page .aw-board-head p{margin:6px 0 0;font:500 13px/1.4 Inter,Arial,sans-serif;color:#8FA3BB}
+body.tmr-ds .hm-page .aw-shown{margin:0;font:600 13px/1 Inter,Arial,sans-serif;color:#8FA3BB;white-space:nowrap}
+body.tmr-ds .hm-page .aw-shown strong{font-family:'Barlow Condensed',Inter,sans-serif;font-size:30px;font-weight:700;color:#F4F7FB;margin-right:6px}
+body.tmr-ds .hm-page .hm-row{grid-template-columns:42px minmax(196px,1.3fr) minmax(104px,.82fr) minmax(88px,.7fr) minmax(80px,.66fr) minmax(64px,.52fr) minmax(52px,.4fr) minmax(72px,.56fr) minmax(108px,.78fr) 78px}
+body.tmr-ds .hm-page #awRows .aw-id-link{flex:none;display:inline-flex}
+body.tmr-ds .hm-page #awRows .aw-plate{position:relative;width:46px;height:44px;border-radius:11px;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:#0C2138;border:1px solid #4DA3FF;box-shadow:inset 0 0 0 1px rgba(255,255,255,.04)}
+body.tmr-ds .hm-page #awRows .aw-plate i{font:700 8px/1 Inter,Arial,sans-serif;letter-spacing:.16em;color:#8FB4D4;font-style:normal}
+body.tmr-ds .hm-page #awRows .aw-plate b{font-family:'Barlow Condensed',Inter,sans-serif;font-size:14px;font-weight:700;line-height:1;color:#F4F7FB;letter-spacing:.04em}
+body.tmr-ds .hm-page #awRows .aw-plate--1{background:#141208;border-color:#C9A227}
+body.tmr-ds .hm-page #awRows .aw-plate--1 b{color:#F6E7B2}
+body.tmr-ds .hm-page #awRows .aw-plate--2{border-color:#8FB4D4}
+body.tmr-ds .hm-page #awRows .aw-plate--3{background:#0E1C30;border-color:#7FB8FF}
+body.tmr-ds .hm-page #awRows .aw-plate.is-live::after{content:'';position:absolute;top:-3px;right:-3px;width:8px;height:8px;border-radius:50%;background:#F6D35F;box-shadow:0 0 0 2px #0b1322}
+body.tmr-ds .hm-page #awRows .aw-src{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:16px;padding:0 4px;border-radius:4px;border:1px solid rgba(148,163,184,.28);background:rgba(148,163,184,.1);font:800 9px/1 Inter,Arial,sans-serif;letter-spacing:.04em;color:#C5D4E4}
+body.tmr-ds .hm-page #awRows .aw-src--covers{border-color:rgba(77,163,255,.5);color:#9fd0ff}
+body.tmr-ds .hm-page #awRows .aw-src--x{color:#F4F7FB;border-color:rgba(244,247,251,.28)}
+body.tmr-ds .hm-page #awRows .aw-src--sbr{border-color:rgba(201,162,39,.55);color:#F6E7B2}
+body.tmr-ds .hm-page #awRows .aw-src--therx{border-color:rgba(143,180,212,.45)}
+body.tmr-ds .hm-page #awRows .hm-user{gap:10px}
+@media (max-width:1100px){body.tmr-ds .hm-page .hm-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}body.tmr-ds .hm-page .aw-hero{grid-template-columns:1fr}body.tmr-ds .hm-page .hm-controls{grid-template-columns:1fr 1fr}body.tmr-ds .hm-page .hm-controls .hm-field:first-child{grid-column:1 / -1}}
+@media (max-width:768px){body.tmr-ds .hm-page .aw-hero{padding:22px 16px 18px}body.tmr-ds .hm-page .aw-specimen{padding:12px}body.tmr-ds .hm-page .aw-specimen img{width:64px;height:64px}body.tmr-ds .hm-page .aw-specimen strong{font-size:30px}body.tmr-ds .hm-page .hm-metrics{grid-template-columns:1fr 1fr}body.tmr-ds .hm-page .hm-metric:last-child{grid-column:1 / -1}body.tmr-ds .hm-page .aw-segments{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px}body.tmr-ds .hm-page .aw-segments button{flex:none}body.tmr-ds .hm-page .hm-controls{grid-template-columns:1fr}body.tmr-ds .hm-page .aw-board-head{flex-direction:column;align-items:flex-start;gap:8px}body.tmr-ds .hm-page .hm-row.hm-head{display:none}body.tmr-ds .hm-page .hm-row{grid-template-columns:1fr 1fr;gap:10px 14px;padding:16px;margin-bottom:10px;border:1px solid rgba(148,163,184,.16);border-radius:14px;background:#101b2e}body.tmr-ds .hm-page .hm-user{grid-column:1 / -1}body.tmr-ds .hm-page .hm-actions{grid-column:1 / -1}body.tmr-ds .hm-page #awRows .hm-member-row::before{display:none}body.tmr-ds .hm-page #awRows .aw-rank{display:inline}body.tmr-ds .hm-page #awRows .hm-member-row:hover{box-shadow:none}body.tmr-ds .hm-page #awRows .hm-name strong{font-size:26px}}
+@media (min-width:769px){body.tmr-ds .hm-page .hm-actions{min-width:0}body.tmr-ds .hm-page .hm-row{grid-template-columns:32px minmax(168px,1.45fr) minmax(88px,.72fr) minmax(72px,.56fr) minmax(66px,.5fr) minmax(52px,.4fr) minmax(40px,.32fr) minmax(56px,.44fr) minmax(84px,.62fr) 68px;gap:8px 10px;padding:11px 12px}}
 </style>
 <script>
 (function(){
   var MINUS = "−";
-  var state = { source: "all", q: "", sport: "all", min: 0, sort: "graded", dir: "desc" };   // default: most completed picks first
+  var state = { source: "all", q: "", sport: "all", min: 0, sort: "graded", dir: "desc", view: "all" };   // default: most completed picks first
   // First click direction per column: text A to Z, everything else best first.
   var FIRST_DIR = { username: "asc", record: "desc", units: "desc", roi: "desc", winRate: "desc", graded: "desc", streak: "desc", recent: "desc" };
   var DATA = null;
@@ -1086,6 +1145,7 @@ body.tmr-ds .hm-page .hm-foot-note{margin-top:18px;max-width:920px;line-height:1
       return sign * (x - y) || ties || byImage || byName;
     });
   }
+  var SRC = { covers: "CV", x: "X", sbr: "SBR", therx: "RX", predictem: "PD", reddit: "RD", twoplustwo: "22" };
   function shortId(h){
     var m = String(h.slug || h.username || "").match(/^th-(\d+)$/i);
     if (m) return "TH-" + m[1];
@@ -1096,9 +1156,20 @@ body.tmr-ds .hm-page .hm-foot-note{margin-top:18px;max-width:920px;line-height:1
     var m = String(h.slug || h.username || "").match(/(\d+)/);
     return (m ? parseInt(m[1], 10) : 0) % 4;
   }
-  function freshCls(iso){
-    if (!iso) return " is-muted";
+  function plateNo(h){
+    var m = shortId(h).match(/(\d+)$/);
+    if (!m) return "----";
+    var n = String(parseInt(m[1], 10));
+    return n.length < 4 ? ("0000" + n).slice(-4) : n;
+  }
+  function daysAgo(iso){
+    if (!iso) return null;
     var d = (Date.now() - new Date(iso).getTime()) / 86400000;
+    return isNaN(d) ? null : d;
+  }
+  function freshCls(iso){
+    var d = daysAgo(iso);
+    if (d == null) return " is-muted";
     return d < 2 ? " is-fresh" : " is-muted";
   }
   function row(h, i){
@@ -1107,13 +1178,15 @@ body.tmr-ds .hm-page .hm-foot-note{margin-top:18px;max-width:920px;line-height:1
     var streak = h.streak ? (h.streak > 0 ? "W" + h.streak : "L" + Math.abs(h.streak)) : "0";
     var streakCls = h.streak > 0 ? "aw-pill is-up" : h.streak < 0 ? "aw-pill is-down" : "aw-pill is-flat";
     var id = shortId(h);
+    var live = daysAgo(h.last_pick_at);
+    var src = h.source || "";
     return '<div class="hm-row hm-member-row" role="link" tabindex="0" data-href="' + href + '" data-rank="#' + (i + 1) + '">'
-      + '<div class="hm-user"><a class="aw-id-link" href="' + href + '" tabindex="-1"><span class="aw-mark aw-mark--' + tone(h) + '" aria-hidden="true">TH</span></a>'
-      + '<div class="hm-name"><a class="hm-profile-name" href="' + href + '"><strong>' + esc(id) + '</strong></a><span class="aw-sub"><span class="aw-rank">#' + (i + 1) + '</span>' + esc(where(h)) + '</span></div></div>'
-      + '<div class="hm-stat aw-record" data-label="Record">' + (s.graded ? esc(s.record) : '<span class="aw-none">No completed picks yet</span>') + '</div>'
-      + '<div class="hm-stat' + cls(s.units) + '" data-label="Units">' + (hasUnits(s) ? '<span class="aw-val">' + signed(s.units, 2) + '</span>' : '<span class="aw-none">none</span>') + '</div>'
-      + '<div class="hm-stat' + cls(s.roi) + '" data-label="ROI">' + (s.priced ? '<span class="aw-val">' + signed(s.roi, 1) + '%</span>' : '<span class="aw-none">none</span>') + '</div>'
-      + '<div class="hm-stat" data-label="Win %">' + (s.win_rate == null ? '<span class="aw-none">none</span>' : esc(s.win_rate.toFixed(1)) + '%') + '</div>'
+      + '<div class="hm-user"><a class="aw-id-link" href="' + href + '" tabindex="-1"><span class="aw-plate aw-plate--' + tone(h) + (live != null && live < 2 ? " is-live" : "") + '" aria-hidden="true"><i>TH</i><b>' + esc(plateNo(h)) + '</b></span></a>'
+      + '<div class="hm-name"><a class="hm-profile-name" href="' + href + '"><strong>' + esc(id) + '</strong></a><span class="aw-sub"><span class="aw-rank">#' + (i + 1) + '</span><span class="aw-src aw-src--' + esc(src) + '">' + esc(SRC[src] || "SRC") + '</span>' + esc(where(h)) + '</span></div></div>'
+      + '<div class="hm-stat aw-record" data-label="Record">' + (s.graded ? esc(s.record) : '<span class="aw-none">None yet</span>') + '</div>'
+      + '<div class="hm-stat' + cls(s.units) + '" data-label="Units">' + (hasUnits(s) ? '<span class="aw-val">' + signed(s.units, 2) + '</span>' : '<span class="aw-none">None</span>') + '</div>'
+      + '<div class="hm-stat' + cls(s.roi) + '" data-label="ROI">' + (s.priced ? '<span class="aw-val">' + signed(s.roi, 1) + '%</span>' : '<span class="aw-none">None</span>') + '</div>'
+      + '<div class="hm-stat" data-label="Win %">' + (s.win_rate == null ? '<span class="aw-none">None</span>' : esc(s.win_rate.toFixed(1)) + '%') + '</div>'
       + '<div class="hm-stat aw-picks" data-label="Total picks">' + s.graded + '</div>'
       + '<div class="hm-stat" data-label="Current streak"><span class="' + streakCls + '">' + esc(streak) + '</span></div>'
       + '<div class="hm-stat' + freshCls(h.last_pick_at) + '" data-label="Last pick">' + (h.last_pick_at ? ago(h.last_pick_at) : "None yet") + '</div>'
@@ -1122,7 +1195,9 @@ body.tmr-ds .hm-page .hm-foot-note{margin-top:18px;max-width:920px;line-height:1
   function render(){
     var list = DATA.handicappers.filter(function(h){
       if (state.source !== "all" && h.source !== state.source) return false;
-      if (state.q && (h.handle + " " + (h.slug || "") + " " + (h.username || "") + " " + shortId(h)).toLowerCase().indexOf(state.q) < 0) return false;
+      if (state.view === "record" && !(h.graded >= 1)) return false;
+      if (state.view === "active") { var age = daysAgo(h.last_pick_at); if (age == null || age >= 7) return false; }
+      if (state.q && (h.handle + " " + (h.slug || "") + " " + (h.username || "") + " " + shortId(h) + " " + (SRC[h.source] || "") + " " + where(h)).toLowerCase().indexOf(state.q) < 0) return false;
       if (state.sport === "all") return h.graded >= state.min;
       var s = h.by_sport[state.sport];
       return s && s.graded >= Math.max(1, state.min);
@@ -1136,7 +1211,9 @@ body.tmr-ds .hm-page .hm-foot-note{margin-top:18px;max-width:920px;line-height:1
     });
     var sel = document.getElementById("awSort");
     if (sel && sel.value !== state.sort) sel.value = state.sort;
-    document.getElementById("awRows").innerHTML = list.map(row).join("") || '<div class="hm-row"><div class="hm-stat is-muted">No handicappers match these filters yet.</div></div>';
+    var shown = document.getElementById("awShown");
+    if (shown) shown.textContent = list.length.toLocaleString();
+    document.getElementById("awRows").innerHTML = list.map(row).join("") || '<div class="hm-row"><div class="hm-stat is-muted">No identities match this view.</div></div>';
   }
   function load(){
     Promise.resolve(window.__ATW_DATA).then(function(d){
@@ -1144,8 +1221,15 @@ body.tmr-ds .hm-page .hm-foot-note{margin-top:18px;max-width:920px;line-height:1
       document.getElementById("awAccounts").textContent = d.totals.accounts.toLocaleString();
       document.getElementById("awWithRecords").textContent = d.totals.with_record.toLocaleString();
       document.getElementById("awGraded").textContent = d.totals.graded.toLocaleString();
-      document.getElementById("awPosts").textContent = d.totals.posts.toLocaleString();
-      document.getElementById("awSince").textContent = d.totals.since;
+      var active = 0, today = 0;
+      d.handicappers.forEach(function(h){
+        var age = daysAgo(h.last_pick_at);
+        if (age != null && age < 7) active += 1;
+        if (age != null && age < 1) today += 1;
+      });
+      document.getElementById("awActive").textContent = active.toLocaleString();
+      document.getElementById("awToday").textContent = today.toLocaleString();
+      document.getElementById("awContext").textContent = "Monitoring since " + d.totals.since + ". " + d.totals.posts.toLocaleString() + " posts read. Source posts are not republished.";
       ["all", "covers", "x", "sbr", "therx", "predictem", "reddit", "twoplustwo"].forEach(function(k){
         var el = document.querySelector('[data-count="' + k + '"]');
         if (el) el.textContent = d.handicappers.filter(function(h){ return k === "all" || h.source === k; }).length;
@@ -1159,6 +1243,8 @@ body.tmr-ds .hm-page .hm-foot-note{margin-top:18px;max-width:920px;line-height:1
   document.addEventListener("click", function(e){
     var head = e.target.closest(".aw-sort");
     if (head){ var k = head.dataset.sort; state.dir = state.sort === k ? (state.dir === "asc" ? "desc" : "asc") : FIRST_DIR[k]; state.sort = k; render(); return; }
+    var view = e.target.closest("#awView [data-view]");
+    if (view){ state.view = view.dataset.view; document.querySelectorAll("#awView [data-view]").forEach(function(t){ var on = t === view; t.classList.toggle("is-active", on); t.setAttribute("aria-selected", on ? "true" : "false"); }); render(); return; }
     var tab = e.target.closest("#awTabs [data-source]");
     if (tab){ state.source = tab.dataset.source; document.querySelectorAll("#awTabs .hm-tab").forEach(function(t){ var on = t === tab; t.classList.toggle("is-active", on); t.setAttribute("aria-selected", on); }); render(); return; }
     var r = e.target.closest(".hm-member-row");
