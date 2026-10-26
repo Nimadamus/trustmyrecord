@@ -164,7 +164,7 @@
         return map[m] || String(m || '').replace(/_/g,' ');
     }
     function gameTime(iso) {
-        try { return new Date(iso).toLocaleString('en-US',{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}); }
+        try { return new Date(iso).toLocaleString('en-US',{timeZone:'America/Los_Angeles',weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit',timeZoneName:'short'}); }
         catch (e) { return ''; }
     }
 
@@ -194,7 +194,6 @@
             html += '<div class="mp-empty">This seller does not have an active storefront right now.</div>';
             content.innerHTML = html; return;
         }
-        const single = listings.find(function (x) { return x.product_type === 'single_pick'; });
         const DUR = { single_pick: '1 PICK', daily_access: '24H', weekly_access: '7 DAYS', monthly_access: '30 DAYS' };
         const PER = { single_pick: 'one pick, one-time', daily_access: 'all picks for 24 hours', weekly_access: 'all picks for 7 days', monthly_access: 'all picks for 30 days' };
 
@@ -226,12 +225,13 @@
         } else if (!store.picks_for_sale.length) {
             html += '<div class="mp-empty">No pending picks are on the board right now. Follow the seller to catch the next release.</div>';
         }
+        var dayPass = listings.find(function (x) { return x.product_type === 'daily_access'; });
         html += store.picks_for_sale.map(function (p) {
             return '<div class="pick-row">' +
                 '<div class="pr-lock">&#128274;</div>' +
                 '<div class="pr-main"><div class="pr-game">' + esc(p.away_team) + ' @ ' + esc(p.home_team) + '</div>' +
-                '<div class="pr-meta"><b>' + esc(p.sport_title || p.sport_key) + '</b> &middot; ' + esc(marketLabel(p.market_type)) + ' &middot; ' + (p.units != null ? p.units + 'u &middot; ' : '') + gameTime(p.commence_time) + ' &middot; selection hidden until purchase</div></div>' +
-                (store.marketplace_enabled && single ? '<button class="btn btn-primary" data-buy="' + p.pick_id + '">Buy ' + money(single.price_cents, single.currency) + '</button>' : '') +
+                '<div class="pr-meta"><b>Locked pick</b> &middot; ' + esc(p.sport_title || p.sport_key) + ' &middot; ' + gameTime(p.commence_time) + '</div></div>' +
+                (store.marketplace_enabled && dayPass ? '<button class="btn btn-primary" data-buy-listing="' + dayPass.id + '">Day Pass ' + money(dayPass.price_cents, dayPass.currency) + '</button>' : '') +
             '</div>';
         }).join('');
 
