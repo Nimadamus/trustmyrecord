@@ -125,6 +125,15 @@
         return map[m] || String(m || '').replace(/_/g,' ');
     }
     function oddsFmt(o) { return o > 0 ? '+' + o : String(o); }
+    function whenPT(iso) {
+        const d = new Date(iso);
+        if (!iso || isNaN(d.getTime())) return '';
+        return d.toLocaleString('en-US', {
+            timeZone: 'America/Los_Angeles',
+            month: 'short', day: 'numeric', year: 'numeric',
+            hour: 'numeric', minute: '2-digit', timeZoneName: 'short'
+        });
+    }
 
     function isPass(p) { return p.product_type && p.product_type !== 'single_pick'; }
     function passLabel(t) {
@@ -167,9 +176,9 @@
         list.innerHTML = rows.map(function (p) {
             const unlocked = p.status !== 'pending_payment' && p.entitlement_status === 'active';
             const pass = isPass(p);
-            const meta = '@' + esc(p.seller_username) + ' &middot; ' + new Date(p.created_at).toLocaleString() +
+            const meta = '@' + esc(p.seller_username) + ' &middot; ' + whenPT(p.paid_at || p.created_at) +
                 ' &middot; ' + esc(pass ? passLabel(p.product_type) : 'single pick') +
-                (pass && p.expires_at ? ' &middot; access ' + (new Date(p.expires_at) > new Date() ? 'until ' : 'ended ') + new Date(p.expires_at).toLocaleString() : '') +
+                (pass && p.expires_at ? ' &middot; access ' + (new Date(p.expires_at) > new Date() ? 'until ' : 'ended ') + whenPT(p.expires_at) : '') +
                 (p.refunded_cents && !isTmr(p) ? ' &middot; refunded ' + money(p.refunded_cents, p.currency) : '');
             const action = !unlocked ? '' :
                 pass ? '<div style="margin-top:11px;"><button class="btn btn-primary" data-pass="' + esc(p.public_id) + '" data-target="rv-' + esc(p.public_id) + '">View Picks</button> <a class="btn btn-outline" href="/marketplace/seller/?u=' + encodeURIComponent(p.seller_username) + '">Storefront</a></div>'
@@ -196,7 +205,7 @@
                         const graded = pk.status !== 'pending';
                         return '<div style="padding:9px 0;border-bottom:1px solid rgba(148,163,184,.1);">' +
                             '<div class="rv-sel" style="font-size:18px;">' + esc(pk.selection) + (pk.line != null ? ' ' + (pk.line > 0 && /spread/i.test(pk.market_type) ? '+' : '') + pk.line : '') + '</div>' +
-                            '<div class="rv-line">' + esc(pk.away_team) + ' @ ' + esc(pk.home_team) + ' &middot; ' + esc(marketLabel(pk.market_type)) + ' &middot; ' + oddsFmt(pk.odds) + ' &middot; ' + pk.units + 'u &middot; ' + new Date(pk.commence_time).toLocaleString() +
+                            '<div class="rv-line">' + esc(pk.away_team) + ' @ ' + esc(pk.home_team) + ' &middot; ' + esc(marketLabel(pk.market_type)) + ' &middot; ' + oddsFmt(pk.odds) + ' &middot; ' + pk.units + 'u &middot; ' + whenPT(pk.commence_time) +
                             (graded ? ' &middot; <b style="color:' + (pk.status==='won'?'var(--green)':pk.status==='lost'?'var(--red)':'var(--muted)') + ';">' + esc(pk.status.toUpperCase()) + (pk.result_units != null ? ' (' + (pk.result_units > 0 ? '+' : '') + pk.result_units + 'u)' : '') + '</b>' : '') +
                             '</div></div>';
                     }).join('') : '<p style="color:var(--muted);font-size:13px;">No picks in your pass window yet — new picks from this seller appear here automatically while your pass is active.</p>') +
@@ -221,7 +230,7 @@
                     const graded = pk.status !== 'pending';
                     target.innerHTML =
                         '<div class="rv-sel">' + esc(pk.selection) + (pk.line != null ? ' ' + (pk.line > 0 && /spread/i.test(pk.market_type) ? '+' : '') + pk.line : '') + '</div>' +
-                        '<div class="rv-line">' + esc(pk.away_team) + ' @ ' + esc(pk.home_team) + ' &middot; ' + esc(marketLabel(pk.market_type)) + ' &middot; ' + oddsFmt(pk.odds) + ' &middot; ' + pk.units + 'u &middot; ' + new Date(pk.commence_time).toLocaleString() + '</div>' +
+                        '<div class="rv-line">' + esc(pk.away_team) + ' @ ' + esc(pk.home_team) + ' &middot; ' + esc(marketLabel(pk.market_type)) + ' &middot; ' + oddsFmt(pk.odds) + ' &middot; ' + pk.units + 'u &middot; ' + whenPT(pk.commence_time) + '</div>' +
                         (graded ? '<div class="rv-grade ' + (pk.status === 'won' ? 'pill-green' : pk.status === 'lost' ? 'pill-red' : '') + '" style="background:none;border:none;color:' + (pk.status==='won'?'var(--green)':pk.status==='lost'?'var(--red)':'var(--muted)') + ';">Result: ' + esc(pk.status.toUpperCase()) + (pk.result_units != null ? ' (' + (pk.result_units > 0 ? '+' : '') + pk.result_units + 'u)' : '') + (pk.home_score != null ? ' — final ' + pk.away_score + '-' + pk.home_score : '') + '</div>' : '') +
                         '<p style="color:var(--muted);font-size:11.5px;margin-top:8px;">For your eyes only — redistributing purchased picks violates the buyer terms. Results are never guaranteed.</p>';
                     target.style.display = 'block';
