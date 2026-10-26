@@ -29,6 +29,7 @@
     return utc;
   }
 
+  // Sales ended 2026-10-26 16:00 America/Los_Angeles.
   var cutoffMs = zonedToUtcMs({ year: 2026, month: 10, day: 26, hour: 16, minute: 0, second: 0 });
 
   function closed(now) {
