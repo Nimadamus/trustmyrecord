@@ -2294,11 +2294,11 @@
                 drawAccount(me);
                 if (me.subscription) {
                     banner('');
-                    if (welcomeEl) { welcomeEl.hidden = false; try { welcomeEl.scrollIntoView({ block: 'center' }); } catch (e) { } }
                     var plan = me.subscription.billing_period === 'yearly' ? 'annual' : 'monthly';
                     var val = me.subscription.amount ? me.subscription.amount / 100 : (me.subscription.tier === 'ultimate' ? 99.99 : PRICE[plan]);
                     var ptier = me.subscription.tier === 'ultimate' ? 'ultimate' : 'pro';
                     ga('purchase', { transaction_id: sessionId || (ptier + '_' + Date.now()), value: val, currency: 'USD', items: [{ item_id: 'tmr_' + ptier + '_' + plan, item_name: (ptier === 'ultimate' ? 'TMR Ultimate ' : 'TMR Pro ') + plan, price: val, quantity: 1 }] });
+                    window.location.replace('/pro/board/?from=checkout');
                     return;
                 }
                 if (tries > 0) setTimeout(function () { pollUntilActive(tries - 1); }, 2000);

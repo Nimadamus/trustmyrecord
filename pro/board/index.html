@@ -507,6 +507,15 @@
         .wd-dots i.w { background: #1D7A46; }
         .wd-dots i.l { background: #B3261E; }
         .wd-pend { display: inline-block; min-width: 26px; padding: 2px 8px; border-radius: 999px; background: var(--pro-brand-dark); color: #fff; font-weight: 800; font-size: .8rem; text-align: center; }
+        .wd-follow { display: inline-flex; align-items: center; margin-top: 6px; min-height: 32px; padding: 4px 12px; border-radius: 999px; border: 1px solid var(--pro-line); background: var(--pro-page); color: var(--pro-ink); font: inherit; font-size: .78rem; font-weight: 800; cursor: pointer; }
+        .wd-follow.on { background: var(--pro-brand); color: #fff; border-color: transparent; }
+        .wd-follow:disabled { opacity: .6; cursor: wait; }
+        .wd-since, .wd-hello { background: var(--pro-surface); border: 1px solid var(--pro-line); border-radius: 14px; padding: 14px 16px; margin: 0 0 16px; color: var(--pro-body); line-height: 1.5; }
+        .wd-hello { border-color: var(--pro-brand); }
+        .wd-since h3, .wd-hello b { margin: 0 0 6px; font-size: 1rem; color: var(--pro-ink); }
+        .wd-since p { margin: 0 0 8px; }
+        .wd-since ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+        .wd-since li { font-size: .92rem; }
         .wd-chip { display: inline-block; margin: 0 6px 6px 0; padding: 5px 10px; border-radius: 10px; background: var(--pro-page); border: 1px solid var(--pro-line); font-size: .82rem; color: var(--pro-ink); }
         .wd-odds { color: var(--pro-muted); font-weight: 600; }
         .wd-panel { position: fixed; inset: 0; z-index: 9999; background: rgba(7, 24, 42, .45); display: flex; justify-content: flex-end; }
@@ -1706,6 +1715,16 @@
            picks looked empty to a paying member. Every pending pick shows first; Proven is a filter. */
         var boardFilter = { proven: false, league: 'all', source: 'all', q: '' };
         var boardSort = { key: 'units', dir: -1 };
+        var followKeys = {};
+        var settledHtml = '';
+        var fromCheckout = false;
+        try {
+            var bootQ = new URLSearchParams(window.location.search);
+            if (bootQ.get('from') === 'checkout') {
+                fromCheckout = true;
+                if (window.history && history.replaceState) history.replaceState(null, '', window.location.pathname + '#board');
+            }
+        } catch (e0) { /* keep the board usable if the query string cannot be read */ }
         function esc(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
         function odds(o) { if (o == null || o === '') return ''; var n = Number(o); return isNaN(n) ? esc(o) : (n > 0 ? '+' + n : String(n)); }
         function signed(n, d) { if (n == null || isNaN(n)) return 'n/a'; var v = Number(n).toFixed(d == null ? 2 : d); return (n > 0 ? '+' : '') + v; }
@@ -1769,9 +1788,32 @@
             if (k === 'graded') return c.graded;
             return c.units == null ? -999 : c.units;
         }
+        function sinceStrip(d) {
+            var since = d && d.since;
+            if (!since || !since.window) return '';
+            var when = 'New in the last 24 hours';
+            if (since.window === 'since_last_open' && since.previous_at) {
+                var dt = new Date(since.previous_at);
+                if (!isNaN(dt.getTime())) when = 'Since ' + dt.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' }) + ' PT';
+            }
+            var picks = (since.new_picks || []).slice(0, 8);
+            var more = (since.new_picks || []).length - picks.length;
+            var list = picks.map(function (p) {
+                return '<li><b>' + esc(p.name || 'Handicapper') + '</b> ' + pickLabel(p) + ' <span class="wd-muted">' + esc(p.league || '') + (p.matchup ? ' &middot; ' + esc(p.matchup) : '') + '</span></li>';
+            }).join('');
+            var followedPending = (since.following || []).filter(function (c) { return c.pending && c.pending.length; });
+            var followLine = followedPending.length
+                ? '<p>' + followedPending.length + ' followed handicapper' + (followedPending.length === 1 ? ' has' : 's have') + ' a pick still pending.</p>'
+                : ((since.following && since.following.length) ? '<p>The handicappers you follow have no pending picks on the board right now.</p>' : '<p>Follow a handicapper. The next time you open the board, their new picks and grades show here.</p>');
+            return '<div class="wd-since"><h3>' + esc(when) + '</h3>' + followLine
+                + (list ? '<ul>' + list + '</ul>' : '<p class="wd-muted">No newly posted picks in this window.</p>')
+                + (more > 0 ? '<p class="wd-muted">' + more + ' more new picks are in the table below.</p>' : '')
+                + settledHtml + '</div>';
+        }
         function drawBoard() {
             if (!boardEl || !boardData) return;
             var d = boardData, f = boardFilter;
+            var canFollow = d.access !== 'sunday_free';
             var q = f.q.trim().toLowerCase();
             var rows = d.handicappers.filter(function (c) {
                 if (f.proven && !c.proven) return false;
@@ -1793,7 +1835,7 @@
                 var on = boardSort.key === k;
                 return '<th class="' + (cls || '') + '"><button type="button" class="wd-sort' + (on ? ' on' : '') + '" data-sort="' + k + '">' + label + (on ? (boardSort.dir < 0 ? ' &darr;' : ' &uarr;') : '') + '</button></th>';
             };
-            var html = '<div class="wd-bar">' +
+            var html = sinceStrip(d) + '<div class="wd-bar">' +
                 '<input type="search" id="wdSearch" class="wd-search" placeholder="Search handicappers" value="' + esc(f.q) + '" aria-label="Search handicappers">' +
                 '<label class="wd-check"><input type="checkbox" id="wdProven"' + (f.proven ? ' checked' : '') + '> Proven (25+ graded)</label>' +
                 '<select id="wdLeague" aria-label="League"><option value="all">All leagues</option>' + (d.summary.leagues || []).map(function (l) { return opt(l, f.league); }).join('') + '</select>' +
@@ -1806,7 +1848,7 @@
                 }).join('') + '</div></div>';
             }
             if (!(d.handicappers || []).length) {
-                html = emptyBoard();
+                html = sinceStrip(d) + emptyBoard();
             } else if (!rows.length) {
                 html += '<div class="pro-teaser">No pending picks match these filters right now. The board fills up as the handicappers post for the next games.</div>';
             } else {
@@ -1814,7 +1856,9 @@
                     rows.map(function (c) {
                         var r = c.record;
                         return '<tr class="wd-row" tabindex="0" data-key="' + esc(c.key) + '">' +
-                            '<td><div class="wd-name">' + esc(c.name) + (c.proven ? ' <span class="wd-badge">Proven</span>' : '') + '</div><div class="wd-sub">' + esc(c.source || '') + (c.sports && c.sports.length ? ' &middot; ' + esc(c.sports.join(', ')) : '') + '</div></td>' +
+                            '<td><div class="wd-name">' + esc(c.name) + (c.proven ? ' <span class="wd-badge">Proven</span>' : '') + '</div><div class="wd-sub">' + esc(c.source || '') + (c.sports && c.sports.length ? ' &middot; ' + esc(c.sports.join(', ')) : '') + '</div>'
+                            + (canFollow ? '<button type="button" class="wd-follow' + (followKeys[c.key] ? ' on' : '') + '" data-follow="' + esc(c.key) + '">' + (followKeys[c.key] ? 'Following' : 'Follow') + '</button>' : '')
+                            + '</td>' +
                             '<td class="wd-rec">' + r.w + '-' + r.l + (r.p ? '-' + r.p : '') + '<div class="wd-sub">' + c.graded + ' graded</div></td>' +
                             '<td class="n ' + unitsCls(c.units) + '">' + signed(c.units) + 'u</td>' +
                             '<td class="n hide-s ' + unitsCls(c.roi) + '">' + (c.roi == null ? 'n/a' : signed(c.roi, 1) + '%') + '</td>' +
@@ -1842,8 +1886,37 @@
             });
             Array.prototype.forEach.call(boardEl.querySelectorAll('.wd-row'), function (tr) {
                 var open = function () { openCapper(tr.getAttribute('data-key')); };
-                tr.addEventListener('click', open);
-                tr.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
+                tr.addEventListener('click', function (e) {
+                    if (e.target.closest && e.target.closest('.wd-follow')) return;
+                    open();
+                });
+                tr.addEventListener('keydown', function (e) {
+                    if (e.target.closest && e.target.closest('.wd-follow')) return;
+                    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); }
+                });
+            });
+            Array.prototype.forEach.call(boardEl.querySelectorAll('.wd-follow'), function (btn) {
+                btn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    var key = btn.getAttribute('data-follow');
+                    if (!key || btn.disabled || !S || !S.authFetch) return;
+                    var on = !!followKeys[key];
+                    btn.disabled = true;
+                    var req = on
+                        ? S.authFetch(API + '/pro/watchdog/follow?key=' + encodeURIComponent(key), { method: 'DELETE' })
+                        : S.authFetch(API + '/pro/watchdog/follow', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: key }) });
+                    req.then(function (r) {
+                        return r.json().catch(function () { return {}; }).then(function (b) { return { ok: r.ok, b: b }; });
+                    }).then(function (x) {
+                        btn.disabled = false;
+                        if (!x.ok) { btn.textContent = on ? 'Following' : 'Follow'; return; }
+                        if (on) delete followKeys[key]; else followKeys[key] = true;
+                        btn.classList.toggle('on', !on);
+                        btn.textContent = on ? 'Follow' : 'Following';
+                    }).catch(function () { btn.disabled = false; btn.textContent = on ? 'Following' : 'Follow'; });
+                });
+                btn.addEventListener('keydown', function (e) { e.stopPropagation(); });
             });
         }
         function closePanel() { var p = document.getElementById('wdPanel'); if (p) { p.hidden = true; p.innerHTML = ''; } document.body.classList.remove('wd-locked'); }
@@ -2069,14 +2142,50 @@
                 .then(function (sm) { paintNet(sm && sm.network); if (!isPro) teaser(sm); })
                 .catch(function () { if (!isPro) teaser(null); });
             if (isPro) {
+                showCheckoutHello();
                 S.authFetch(API + '/pro/pending-board').then(function (r) {
                     if (!r.ok) throw new Error('board ' + r.status);
                     return r.json();
-                }).then(function (d) { boardData = d; drawBoard(); }).catch(function () {
+                }).then(function (d) {
+                    boardData = d;
+                    var s = d && d.since;
+                    if (s) {
+                        (s.following || []).forEach(function (c) { if (c && c.key) followKeys[c.key] = true; });
+                        (s.following_without_pending || []).forEach(function (k) { followKeys[k] = true; });
+                    }
+                    drawBoard();
+                    if (s) loadSettled();
+                }).catch(function () {
                     boardEl.innerHTML = '<div class="pro-teaser">The board could not load right now. Refresh in a minute.</div>';
                 });
                 return;
             }
+        }
+        function showCheckoutHello() {
+            if (!fromCheckout || !boardEl || document.getElementById('wdHello')) return;
+            var n = document.createElement('div');
+            n.id = 'wdHello';
+            n.className = 'wd-hello';
+            n.innerHTML = '<b>You are in.</b> This is tonight&#39;s board. Follow a handicapper and the next time you open it, new picks and grades since this visit show up here.';
+            boardEl.parentNode.insertBefore(n, boardEl);
+            try { document.getElementById('board').scrollIntoView({ block: 'start' }); } catch (e1) { }
+        }
+        function loadSettled() {
+            if (!S || !S.authFetch) return;
+            S.authFetch(API + '/pro/watchdog/following').then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
+                if (!d || !boardData) return;
+                (d.keys || []).forEach(function (k) { followKeys[k] = true; });
+                var names = {};
+                (boardData.handicappers || []).forEach(function (c) { names[c.key] = c.name; });
+                var bits = [];
+                (d.settled || []).forEach(function (row) {
+                    (row.settled || []).forEach(function (g) {
+                        bits.push('<li><b>' + esc(names[row.key] || 'Followed') + '</b> ' + esc(g.result) + ' ' + esc(g.pick || '') + ' <span class="wd-muted">' + esc(g.league || '') + '</span></li>');
+                    });
+                });
+                settledHtml = bits.length ? '<h3>Graded since your last visit</h3><ul>' + bits.slice(0, 8).join('') + '</ul>' : '';
+                drawBoard();
+            }).catch(function () { });
         }
 
         function loadMe() {
@@ -2233,10 +2342,10 @@
                 drawAccount(me);
                 if (me.subscription) {
                     banner('');
-                    if (welcomeEl) { welcomeEl.hidden = false; try { welcomeEl.scrollIntoView({ block: 'center' }); } catch (e) { } }
                     var plan = me.subscription.billing_period === 'yearly' ? 'annual' : 'monthly';
                     var val = me.subscription.amount ? me.subscription.amount / 100 : PRICE[plan];
                     ga('purchase', { transaction_id: sessionId || ('pro_' + Date.now()), value: val, currency: 'USD', items: [{ item_id: 'tmr_pro_' + plan, item_name: 'TMR Pro ' + plan, price: val, quantity: 1 }] });
+                    window.location.replace('/pro/board/?from=checkout');
                     return;
                 }
                 if (tries > 0) setTimeout(function () { pollUntilActive(tries - 1); }, 2000);
