@@ -98,7 +98,9 @@ ok(hashed && fs.existsSync(path.join(root, `static/js/tmr-home-live.${hashed}.js
 ok(read(`static/js/tmr-home-live.${hashed}.js`) === home, 'home: the hashed bundle index.html loads is the current source');
 {
   const bakedBoard = indexHtml.match(/<!--MK:homeLeaderboard-->[\s\S]*?<!--\/MK:homeLeaderboard-->/)[0];
-  ok(/No official ranks issued yet/.test(bakedBoard) || /class="lbr" title="#\d+ of \d+ qualified"/.test(bakedBoard),
+  // Drill attributes sit between class and title. The official-rank signal is the
+  // ranking_status title. A row-index bake is <div class="lbr"><span> with no title.
+  ok(/No official ranks issued yet/.test(bakedBoard) || /class="lbr"[^>]* title="#\d+ of \d+ qualified"/.test(bakedBoard),
     'home: the baked leaderboard is an official-rank render (or the honest empty state), not a row-index bake');
 }
 
