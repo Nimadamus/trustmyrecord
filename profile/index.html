@@ -11937,6 +11937,15 @@
         }
     }
 
+    /* A short "#12" stays a stat. Anything with words ("Not yet ranked: 22/25 picks",
+       "#2 of 6 qualified") is prose and must wrap on spaces, not as a 32px number. */
+    function profileRankValueClass(text) {
+        const t = String(text || '').trim();
+        if (!t) return '';
+        if (t.length <= 8 && t.charAt(0) === '#') return '';
+        return ' profile-rail-value--prose';
+    }
+
     // ======================== RENDER PROFILE HEADER ========================
     function renderProfileHeader(p) {
         const el = document.getElementById('profileHeader');
@@ -12063,7 +12072,7 @@
             '<div class="profile-rail-card" data-rail-stat="winrate"><span class="profile-rail-label">Win Rate</span><span class="profile-rail-value' + (winLossSample > 0 ? signedClass(derivedWinRate - 50) : ' is-neutral') + '">' + (canShowRecordStats ? (winLossSample > 0 ? derivedWinRate.toFixed(1) + '%' : 'N/A') : (statsLoadError ? 'Unavailable' : 'Loading...')) + '</span></div>' +
             '<div class="profile-rail-card" data-rail-stat="units"><span class="profile-rail-label">Units</span><span class="profile-rail-value' + (canShowFinancialStats ? signedClass(netUnitsValue) : ' is-neutral') + '">' + (canShowFinancialStats ? fmtSigned(netUnitsValue, 'u', 2) : (statsLoadError ? 'Unavailable' : 'Loading...')) + '</span></div>' +
             '<div class="profile-rail-card" data-rail-stat="roi"><span class="profile-rail-label">ROI</span><span class="profile-rail-value' + (canShowFinancialStats && gradedProfilePicks > 0 ? signedClass(roiValue) : ' is-neutral') + '">' + (canShowFinancialStats ? (gradedProfilePicks > 0 ? fmtSigned(roiValue, '%') : 'N/A') : (statsLoadError ? 'Unavailable' : 'Loading...')) + '</span></div>' +
-            '<div class="profile-rail-card" data-rail-stat="rank"><span class="profile-rail-label">Rank</span><span class="profile-rail-value">' + rankText + '</span></div>' +
+            '<div class="profile-rail-card" data-rail-stat="rank"><span class="profile-rail-label">Rank</span><span class="profile-rail-value' + profileRankValueClass(rankText) + '" title="' + escapeHtml(rankText) + '">' + escapeHtml(rankText) + '</span></div>' +
             '<div class="profile-rail-card profile-rail-card--avg-odds" data-rail-stat="avgodds"><span class="profile-rail-label">Avg Odds</span><span class="profile-rail-value">' + avgOddsText + '</span></div>' +
             '<div class="profile-rail-card profile-rail-card--corr"><span class="profile-rail-label">Correlated Picks <span class="profile-corr-info" id="railCorrInfo" role="button" tabindex="0" aria-label="What are correlated picks?" title="Correlated picks are multiple picks that depend on the SAME game outcome in the same direction (for example a team moneyline plus that team’s spread, or a game total over plus a team total over). It is NOT just any two picks on the same game. A high share means the record has less independent sample than the raw pick count suggests. Click to see details.">?</span></span><span class="profile-rail-value rail-corr-value" id="railCorrValue">&mdash;</span><span class="profile-rail-corr-sub" id="railCorrSub"></span></div>' +
             '</div>' +
@@ -12187,7 +12196,7 @@
             // put the /u/ family under "Soft 404" in Search Console. Styling is
             // class-based and unchanged; .profile-name now carries margin-top:0
             // so the h1 UA margin cannot shift the header.
-            '<h1 class="profile-name">' + name + '</h1>' +
+            '<h1 class="profile-name" title="' + escapeHtml(name) + '">' + escapeHtml(name) + '</h1>' +
             '<div class="profile-handle">@' + p.username + '</div>' +
             (p.is_admin ? '<div><span class="profile-admin-badge">ADMIN</span></div>' : (p.is_moderator ? '<div><span class="profile-admin-badge">MOD</span></div>' : '')) +
             (p.has_early_access_badge ? '<div><span class="profile-early-access-badge">🪙 TMR Early Access</span></div>' : '') +
@@ -12197,7 +12206,7 @@
             followCounts +
             trustPills +
             affiliationRow +
-            (p.bio ? '<div class="profile-bio">' + p.bio + '</div>' : '<div class="profile-bio profile-bio-empty">No bio added yet.</div>') +
+            profileBioHtml(p.bio) +
             overview +
             '<div class="profile-meta">' +
             '<button type="button" class="profile-meta-item" style="cursor:pointer;" onclick="openSocialList(\'followers\')">View followers</button>' +
@@ -12216,7 +12225,43 @@
         try { railDrillSync(); } catch (_) {}
         try { applyRailSportView(); } catch (_) {}
         try { fitRailValues(); } catch (_) {}
+        try { bindProfileBio(); } catch (_) {}
         try { if (window.TMRRenderProfileAwardsPreview) window.TMRRenderProfileAwardsPreview(); } catch (_) {}
+    }
+
+    /* PROFILE_BIO_PREVIEW_20261025: the stored bio is unchanged. The header
+       shows about four lines, and Read more reveals the rest with paragraph
+       breaks kept. Show less puts the toggle back where it was. */
+    function profileBioHtml(raw) {
+        const text = String(raw || '').replace(/\r\n/g, '\n').trim();
+        if (!text) return '<div class="profile-bio profile-bio-empty">No bio added yet.</div>';
+        return '<div class="profile-bio" data-profile-bio>' +
+            '<div class="profile-bio__body" id="profileBioBody">' + escapeHtml(text) + '</div>' +
+            '<button type="button" class="profile-bio__toggle" hidden data-profile-bio-toggle aria-expanded="false" aria-controls="profileBioBody">Read more</button>' +
+            '</div>';
+    }
+    function bindProfileBio() {
+        const root = document.querySelector('#profileHeader [data-profile-bio]');
+        if (!root) return;
+        const body = root.querySelector('.profile-bio__body');
+        const btn = root.querySelector('[data-profile-bio-toggle]');
+        if (!body || !btn) return;
+        if (!root.classList.contains('is-expanded')) {
+            btn.hidden = body.scrollHeight <= body.clientHeight + 1;
+        }
+        if (btn.dataset.bound === '1') return;
+        btn.dataset.bound = '1';
+        btn.addEventListener('click', function () {
+            const open = !root.classList.contains('is-expanded');
+            const topBefore = btn.getBoundingClientRect().top;
+            root.classList.toggle('is-expanded', open);
+            btn.textContent = open ? 'Show less' : 'Read more';
+            btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+            if (!open) {
+                const delta = btn.getBoundingClientRect().top - topBefore;
+                if (Math.abs(delta) > 1) window.scrollBy(0, delta);
+            }
+        });
     }
 
     /* ===================================================================
@@ -12955,6 +13000,7 @@
         railFitRetries = 0;
         document.querySelectorAll('#profileHeader .profile-rail-value').forEach((v) => {
             v.classList.remove('is-fit-wrap', 'is-fit-small');
+            if (v.classList.contains('profile-rail-value--prose')) return;
             if (v.scrollWidth <= v.clientWidth + 1) return;
             v.classList.add('is-fit-wrap');
             if (v.scrollWidth <= v.clientWidth + 1) return;
@@ -12964,7 +13010,7 @@
     let railFitTimer = null;
     window.addEventListener('resize', () => {
         clearTimeout(railFitTimer);
-        railFitTimer = setTimeout(() => { try { fitRailValues(); } catch (_) {} }, 120);
+        railFitTimer = setTimeout(() => { try { fitRailValues(); } catch (_) {} try { bindProfileBio(); } catch (_) {} }, 120);
     });
     function applyRailSportView() {
         if (!railSportState().id) return;
@@ -12978,7 +13024,14 @@
             const el = rail.querySelector('[data-rail-stat="' + key + '"]');
             if (!el) return;
             const v = el.querySelector('.profile-rail-value');
-            if (v) { v.textContent = text; v.className = 'profile-rail-value' + (cls || ''); }
+            if (v) {
+                v.textContent = text;
+                v.className = 'profile-rail-value' + (cls || '') + (key === 'rank' ? profileRankValueClass(text) : '');
+                if (key === 'rank') {
+                    v.title = text;
+                    v.style.removeProperty('font-size');
+                }
+            }
             if (label != null) { const l = el.querySelector('.profile-rail-label'); if (l) l.textContent = label; }
         };
         const graded = Number(s.total_picks || 0);
@@ -20870,7 +20923,7 @@
   var SEL = '.profile-advanced-metric__value, .profile-rail-value';
   var MIN_PX = 12;
   function fitOne(el) {
-    if (!el || el.classList.contains('is-empty')) return;
+    if (!el || el.classList.contains('is-empty') || el.classList.contains('profile-rail-value--prose')) return;
     el.style.removeProperty('font-size');
     var size = parseFloat(window.getComputedStyle(el).fontSize) || 22;
     /* PROFILE_METRIC_FIT_20260604: for very long values (4-digit records),
@@ -21561,6 +21614,123 @@ html[data-profile-sport] #teamBreakdownSportPicker{display:none!important;}
   .profile-sportctx-label{width:100%;}
   .profile-sportctx-tabs{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;width:100%;}
   .profile-sportctx-tabs::-webkit-scrollbar{display:none;}
+}
+</style>
+<style id="tmr-profile-layout-20261025">
+/* PROFILE_LAYOUT_20261025
+   The header used to size its left track to the display name's min-content
+   and forbid wrapping (white-space:nowrap). A long name then ate the row and
+   crushed the stat rail to its 300px floor. The name now wraps inside a
+   shrinkable column. The rail keeps a real minimum and never grows with the name.
+   Bios stay in storage in full. The header shows four lines until the visitor expands them. */
+html body.profile-page.tmr-social-profile #profileHeader.profile-header{
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) minmax(340px,420px) !important;
+  align-items:start !important;
+}
+html body.profile-page.tmr-social-profile #profileHeader .profile-info,
+html body.profile-page.tmr-social-profile #profileHeader .profile-identity-row,
+html body.profile-page.tmr-social-profile #profileHeader .profile-identity-copy,
+html body.profile-page.tmr-social-profile #profileHeader .profile-rail-block,
+html body.profile-page.tmr-social-profile #profileHeader .profile-headline{
+  min-width:0 !important;
+  max-width:100% !important;
+}
+html body.profile-page.tmr-social-profile #profileHeader .profile-name{
+  white-space:normal !important;
+  overflow-wrap:break-word !important;
+  word-break:normal !important;
+  hyphens:manual !important;
+  font-size:clamp(22px,2.4vw + .6rem,36px) !important;
+  line-height:1.08 !important;
+  letter-spacing:-.015em !important;
+}
+html body.profile-page.tmr-social-profile #profileHeader .profile-handle,
+html body.profile-page.tmr-social-profile #profileHeader .profile-headline{
+  white-space:normal !important;
+  overflow-wrap:break-word !important;
+  word-break:normal !important;
+}
+html body.profile-page.tmr-social-profile #profileHeader .profile-handle{
+  overflow-wrap:anywhere !important;
+}
+html body.profile-page.tmr-social-profile #profileHeader .profile-bio[data-profile-bio]{
+  max-width:68ch !important;
+  margin-top:14px !important;
+}
+html body.profile-page.tmr-social-profile #profileHeader .profile-bio__body{
+  white-space:pre-line !important;
+  overflow-wrap:break-word !important;
+  word-break:normal !important;
+  display:-webkit-box !important;
+  -webkit-box-orient:vertical !important;
+  -webkit-line-clamp:4 !important;
+  line-clamp:4 !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+  color:#d9e5f5 !important;
+  font-size:15px !important;
+  line-height:1.55 !important;
+}
+html body.profile-page.tmr-social-profile #profileHeader .profile-bio.is-expanded .profile-bio__body{
+  display:block !important;
+  -webkit-line-clamp:unset !important;
+  line-clamp:unset !important;
+  overflow:visible !important;
+}
+html body.profile-page.tmr-social-profile #profileHeader .profile-bio__toggle{
+  display:inline-flex !important;
+  align-items:center !important;
+  margin-top:8px !important;
+  padding:0 !important;
+  border:0 !important;
+  background:transparent !important;
+  color:#4DA3FF !important;
+  font:800 13px/1.2 'Inter',sans-serif !important;
+  letter-spacing:.02em !important;
+  cursor:pointer !important;
+  text-transform:none !important;
+}
+html body.profile-page.tmr-social-profile #profileHeader .profile-bio__toggle:hover,
+html body.profile-page.tmr-social-profile #profileHeader .profile-bio__toggle:focus-visible{
+  color:#a7f3ff !important;
+  text-decoration:underline !important;
+  outline:2px solid rgba(77,163,255,.55) !important;
+  outline-offset:3px !important;
+}
+html body.profile-page.tmr-social-profile #profileHeader .profile-bio__toggle[hidden]{
+  display:none !important;
+}
+html body.profile-page.tmr-social-profile #profileHeader .profile-rail-label{
+  letter-spacing:.06em !important;
+  line-height:1.25 !important;
+  overflow-wrap:normal !important;
+  word-break:normal !important;
+}
+html body.profile-page #profileHeader .profile-rail-card{
+  min-width:0 !important;
+  padding:14px 12px !important;
+}
+html body.profile-page #profileHeader .profile-rail-value.profile-rail-value--prose{
+  white-space:normal !important;
+  overflow:visible !important;
+  text-overflow:clip !important;
+  overflow-wrap:break-word !important;
+  word-break:normal !important;
+  font-size:14px !important;
+  line-height:1.35 !important;
+  font-weight:800 !important;
+  letter-spacing:0 !important;
+}
+@media (max-width:1180px){
+  html body.profile-page.tmr-social-profile #profileHeader.profile-header{
+    grid-template-columns:minmax(0,1fr) !important;
+  }
+}
+@media (max-width:440px){
+  html body.profile-page.tmr-social-profile #profileHeader .profile-name{
+    font-size:clamp(22px,7.2vw,28px) !important;
+  }
 }
 </style>
 <script src="/static/js/tmr-pick-transparency.js?v=d4c821eee182"></script>
