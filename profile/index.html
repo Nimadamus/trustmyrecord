@@ -12257,9 +12257,15 @@
             root.classList.toggle('is-expanded', open);
             btn.textContent = open ? 'Show less' : 'Read more';
             btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-            if (!open) {
-                const delta = btn.getBoundingClientRect().top - topBefore;
-                if (Math.abs(delta) > 1) window.scrollBy(0, delta);
+            const delta = btn.getBoundingClientRect().top - topBefore;
+            if (Math.abs(delta) > 1) {
+                // The document scrolls smoothly. An animated correction runs past
+                // the toggle. Pin it for this adjustment only.
+                const scroller = document.documentElement;
+                const prev = scroller.style.scrollBehavior;
+                scroller.style.scrollBehavior = 'auto';
+                window.scrollBy(0, delta);
+                scroller.style.scrollBehavior = prev;
             }
         });
     }
