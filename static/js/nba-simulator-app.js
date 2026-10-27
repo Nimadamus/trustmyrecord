@@ -366,7 +366,7 @@
           // man. The route has capped minutes and renormalised the rotation to
           // 240 around the cap as long as it has accepted an out list; nothing
           // on the page could ask for it. Blank means no restriction.
-          { h: 'Cap MIN', fmt: function (r) {
+          { h: 'Cap MIN', title: 'A minutes cap you set for this scenario. No feed publishes a confirmed minutes restriction.', fmt: function (r) {
             var cur = app.minutes[pair[2]][String(r.id)];
             var i = document.createElement('input');
             i.type = 'number';

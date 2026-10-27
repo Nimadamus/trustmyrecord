@@ -780,7 +780,7 @@
         }
         var url = injuredRosterUrl(team);
         if (!url) return Promise.resolve(null);
-        return fetchJson(url, { cache: 'default' }).then(function (data) {
+        return fetchJson(url, { cache: 'no-store' }).then(function (data) {
             var list = (Array.isArray(data && data.roster) ? data.roster : []).filter(function (p) {
                 var desc = p && p.status && p.status.description || '';
                 return /^Injured\b/i.test(desc);
@@ -792,9 +792,11 @@
                 };
             });
             state.liveContext.teamInjured[team.abbreviation] = list;
+            if (state.liveContext.injuryFetchFailed) delete state.liveContext.injuryFetchFailed[team.abbreviation];
             return list;
         }).catch(function () {
-            state.liveContext.teamInjured[team.abbreviation] = null;
+            state.liveContext.injuryFetchFailed = state.liveContext.injuryFetchFailed || {};
+            state.liveContext.injuryFetchFailed[team.abbreviation] = Date.now();
             return null;
         });
     }
@@ -1126,7 +1128,8 @@
             lineupRemovals: lineupRemovals,
             lineupBackfills: lineupBackfills,
             substitutesRejected: (recentLineup && recentLineup.substitutesRejected) || [],
-            injuredCount: ((state.liveContext.teamInjured && state.liveContext.teamInjured[team && team.abbreviation]) || []).length
+            injuredCount: ((state.liveContext.teamInjured && state.liveContext.teamInjured[team && team.abbreviation]) || []).length,
+            injuryListFailed: !!(team && state.liveContext.injuryFetchFailed && state.liveContext.injuryFetchFailed[team.abbreviation])
         });
     }
     function mlbDateString(date) {
@@ -1572,13 +1575,13 @@
                 era: Number.isFinite(realEra) ? realEra : null,
                 whip: todayRates.whip,
                 kbbPct: todayRates.kbbPct,
-                source: "Today's confirmed MLB probable starter",
+                source: "Today's MLB probable starter",
                 verified: true,
                 confirmed: true,
                 mlbId: todayProbable.id || null,
                 note: pitchStat
                     ? ('Real ' + seasonYear() + ' season' + (Number.isFinite(realEra) ? ' ERA ' + realEra.toFixed(2) : '') + (pitchStat.whip ? ', WHIP ' + pitchStat.whip : '') + ', ' + (pitchStat.wins || 0) + '-' + (pitchStat.losses || 0))
-                    : "Today's confirmed MLB probable starter from the official schedule"
+                    : "Today's MLB probable starter from the official schedule"
             });
         }
         if (liveStarter && liveStarter.name && verifiedPitchers.filter(function (player) { return normalizeName(player.name) === normalizeName(liveStarter.name); }).length) {
@@ -1708,7 +1711,7 @@
     }
     function pitcherMeta(pitcher) {
         if (!pitcher) return 'No pitcher selected.';
-        if (pitcher.confirmed) return "Today's confirmed MLB probable starter. Real " + seasonYear() + ' season ERA shown.';
+        if (pitcher.confirmed) return "Today's MLB probable starter, not a confirmed starter. Real " + seasonYear() + ' season ERA shown.';
         if (pitcher.verified) return 'Verified on the selected team active roster.';
         return 'Starter list is for simulation selection and may not reflect today\'s confirmed starter.';
     }
@@ -2293,7 +2296,8 @@
             removals: roster.lineupRemovals || [],
             backfills: roster.lineupBackfills || [],
             substitutesRejected: roster.substitutesRejected || [],
-            todayTransactions: roster.todayTransactions || []
+            todayTransactions: roster.todayTransactions || [],
+            injuryListFailed: !!roster.injuryListFailed
         };
     }
     // LINEUP_INTEGRITY_20260722: human-readable "how fresh is this" line.
@@ -2314,6 +2318,7 @@
                 (info.lineupSourceGamePk ? ' #' + info.lineupSourceGamePk : '') +
                 (lAgo ? ' (refreshed ' + lAgo + ')' : ''));
         }
+        if (info.injuryListFailed) bits.push('Injury list did not load. Players on the injured list may still appear.');
         if (info.substitutesRejected && info.substitutesRejected.length) {
             bits.push('In-game substitutes excluded: ' + info.substitutesRejected.map(function (s) { return s.name + ' (slot ' + s.slot + ')'; }).join(', '));
         }
@@ -8213,6 +8218,7 @@
         if (info.status === 'confirmed') { tone = 'confirmed'; text = 'Confirmed lineup from MLB.'; }
         else if (info.status === 'posted') { tone = 'posted'; text = 'Lineup posted by MLB for today\'s game.'; }
         else { tone = 'projected'; text = 'Lineup not posted yet, using projected lineup.'; }
+        if (info.injuryListFailed) text += ' Injury list did not load, so players on the injured list may still appear.';
         var ts = info.lineupFetchedAt || info.rosterFetchedAt;
         var stale = ts && (Date.now() - ts) > 6 * 3600000;
         return '<p class="lineup-banner" data-lineup-banner="' + tone + (stale ? ' stale' : '') + '"><span class="lineup-banner-dot" aria-hidden="true"></span>' + escapeHtml(text) + (stale ? ' Refresh the page for the latest lineup.' : '') + '</p>';

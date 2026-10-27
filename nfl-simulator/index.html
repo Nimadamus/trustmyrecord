@@ -365,6 +365,7 @@
 <script>window.SIM_GATE_FLAGS = { gate: true, resume: true, autoSave: true, meter: true };</script>
 <script src="/static/js/config.js?v=430b4bba7b37"></script>
 <script src="/static/js/backend-api.js?v=e4eaeea31d19"></script>
+<script src="/static/js/roster-clock.js?v=20261027labels"></script>
 <script src="/static/js/analytics.js?v=471dc3fea1e5"></script>
 <script src="/static/js/sim-auth-gate.js?v=a4282de29394"></script>
 <!-- SIM_ACTIVATION_20260808: measures the two activation milestones that
@@ -399,6 +400,7 @@
     <h1>NFL Game Simulator</h1>
     <p>Simulate any 2026 NFL game for a projected score, win probability and full box score, built from real drive data and current rosters. Free with a TrustMyRecord account, no card needed.</p>
   </section>
+  <p class="roster-clock" data-roster-clock="nfl" role="status">Roster times: checking the live status.</p>
 
   <!-- NFL_SIM_UX_20261021: the next game, one tap from a result. Filled by renderFeatured(). -->
   <section class="feat" id="featured" aria-labelledby="featTitle" hidden>
@@ -772,6 +774,21 @@ function teamMark(abbr,size){
    abandoned with a friendly message and a retry. A cold start measured 10.4s
    on Oct 21, so the limit sits well above it. */
 const SIM_TIMEOUT_MS=(typeof window.__NFL_SIM_TIMEOUT_MS==='number'&&window.__NFL_SIM_TIMEOUT_MS>0)?window.__NFL_SIM_TIMEOUT_MS:45000;
+let rosterStatusPromise=null;
+function paintRosterClock(node){
+  if(!rosterStatusPromise){
+    const base=(window.CONFIG&&window.CONFIG.api&&window.CONFIG.api.baseUrl)||'https://trustmyrecord-api.onrender.com/api';
+    rosterStatusPromise=fetch(base+'/roster/status',{headers:{Accept:'application/json'},credentials:'omit'}).then(r=>r.ok?r.json():null).catch(()=>null);
+  }
+  rosterStatusPromise.then(s=>{
+    const n=s&&s.sports&&s.sports.nfl;
+    if(!node)return;
+    if(window.TMRRosterClock){node.innerHTML=window.TMRRosterClock.html('nfl', n);return}
+    if(!n||!n.built_at){node.textContent='Roster table age is unavailable. This page will not invent a roster timestamp.';return}
+    const when=new Date(n.built_at).toLocaleString('en-US',{timeZone:'America/Los_Angeles',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
+    node.textContent='Last roster snapshot: '+when+' PT. This page will not invent a separate roster change time.';
+  });
+}
 async function nflApi(p){
   /* SIM_ATTRIBUTION_20261001: a signed-in visitor's simulations carry their
      token so the run archive credits them (attribution only). Other reads
@@ -1712,8 +1729,15 @@ function renderResult(out,d){
 
   /* meta + disclaimer (dynamic sim count) */
   const meta=el('div','disc');
-  meta.innerHTML=`Model: <b>${esc(d.meta.model)}</b> · <b>${fmtN(d.meta.simulations)}</b> simulations · calibration: ${esc(d.meta.calibration)} · roster data as of ${esc(d.meta.data_freshness)}${d.meta.roster_stale?' · <span class="pill warn">roster data may be stale</span>':''}. ${esc(d.disclaimer)}`;
+  const pd=d.meta&&d.meta.player_data;
+  const partial=pd&&pd.status&&pd.status!=='FRESH';
+  const lowUse=d.roster&&((d.roster.home&&d.roster.home.confidence!=null&&d.roster.home.confidence<0.5)||(d.roster.away&&d.roster.away.confidence!=null&&d.roster.away.confidence<0.5));
+  meta.innerHTML=`Model: <b>${esc(d.meta.model)}</b> · <b>${fmtN(d.meta.simulations)}</b> simulations · calibration: ${esc(d.meta.calibration)} · run dated ${esc(d.meta.data_freshness)}${lowUse?' · <span class="pill warn">player usage confidence is low</span>':''}${partial?' · <span class="pill warn">player usage feed incomplete</span>':''}. ${esc(d.disclaimer)}`;
   out.appendChild(meta);
+  const clock=el('div','disc');
+  clock.textContent='Roster table age: checking the live status.';
+  out.appendChild(clock);
+  paintRosterClock(clock);
 
   /* HISTORICAL_ROSTER_20260817. Picking an earlier season changes the SCHEDULE
      but not the squads: the model always runs current projected rosters, so a
@@ -1775,13 +1799,14 @@ function renderTab(body,id,d,g,hAbbr,aAbbr){
       const hd=el('div','team');hd.style.marginBottom='6px';hd.appendChild(teamMark(abbr,26));hd.appendChild(Object.assign(el('span','nm'),{textContent:name}));
       if(r.confidence!=null)hd.appendChild(Object.assign(el('span','role'),{textContent:'data confidence '+Math.round(r.confidence*100)+'%'}));
       sec.appendChild(hd);
-      sec.appendChild(Object.assign(el('h3',null,'Expected starters')));
+      sec.appendChild(Object.assign(el('h3',null,'Projected usage')));
+      sec.appendChild(Object.assign(el('div','dim'),{textContent:'These are the skill players the model is using from recent usage. This is a projected group, not a confirmed lineup.'}));
       const s1=el('div','list');
       for(const st of r.expected_starters){const li=el('div','li');const nmw=el('span');nmw.style.cssText='display:inline-flex;align-items:center;gap:8px;min-width:0';nmw.appendChild(avatar(st.name,espnIdFor(d,st.name),28));nmw.appendChild(Object.assign(el('span'),{textContent:st.name}));li.appendChild(nmw);li.appendChild(Object.assign(el('span','role'),{textContent:st.role}));s1.appendChild(li)}
       sec.appendChild(s1);
       sec.appendChild(Object.assign(el('h3',null,'Ruled out / inactive')));
       if(r.major_inactives.length){const s2=el('div','list');for(const pl of r.major_inactives){const li=el('div','li');li.appendChild(Object.assign(el('span'),{textContent:pl.name}));if(pl.pos)li.appendChild(Object.assign(el('span','role'),{textContent:pl.pos}));if(pl.status)li.appendChild(Object.assign(el('span','role'),{textContent:pl.status}));s2.appendChild(li)}sec.appendChild(s2)}
-      else sec.appendChild(Object.assign(el('div','dim'),{textContent:'No major inactives reported for this game.'}));
+      else sec.appendChild(Object.assign(el('div','dim'),{textContent:'No inactives were ingested for this game. An empty list means the inactive feed had no names for this game.'}));
       body.appendChild(sec);
     }
     return;

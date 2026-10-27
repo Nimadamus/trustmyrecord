@@ -122,6 +122,11 @@ assert.strictEqual(postedRoster.lineupConfirmed, false, 'posted lineup roster is
 assert.strictEqual(postedRoster.lineupStatus, 'posted', 'posted lineup roster keeps posted status');
 assert(/posted/i.test(postedRoster.source) && !/confirmed/i.test(postedRoster.source), 'posted roster source avoids the word confirmed');
 
+assert(!/confirmed MLB probable/.test(scriptText), 'a probable starter is not labelled confirmed');
+assert(/Today's MLB probable starter, not a confirmed starter/.test(scriptText), 'pitcher meta says probable, not confirmed');
+assert(/cache:\s*'no-store'/.test(scriptText.slice(scriptText.indexOf('function fetchInjuredRoster'), scriptText.indexOf('function fetchInjuredRoster') + 1600)), 'injury list is not served from the browser cache');
+assert(/Injury list did not load/.test(scriptText), 'a failed injury fetch is said out loud');
+
 console.log('mlb-simulator-roster-source-test: ok');
 console.log(JSON.stringify({
   parsedActivePlayers: fallbackNames.length,
