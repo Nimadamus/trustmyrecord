@@ -153,6 +153,13 @@ function normalizePickStatus(item) {
     return String(item.status || item.result || item.pick_status || '').toLowerCase();
 }
 
+function followingBuyLink(item) {
+    if (typeof currentFilter === 'undefined' || currentFilter !== 'following') return '';
+    const username = getUsername(item);
+    if (!username) return '';
+    return '<div style="margin-top:8px;"><a href="/marketplace/seller/?u=' + encodeURIComponent(username) + '">View available picks</a></div>';
+}
+
 function renderPickCard(item) {
     const id = item.pick_id || item.id || item.item_id;
     const status = normalizePickStatus(item);
@@ -166,6 +173,7 @@ function renderPickCard(item) {
         body = '<div class="pick-embed is-private">' +
             '<div class="pe-row"><span class="pe-chip is-sport"><i class="fas fa-lock"></i> Status: Awaiting grade</span><span class="pe-chip">' + count + ' locked pick' + (count === 1 ? '' : 's') + '</span></div>' +
             '<div class="pe-team">Pick details hidden until eligible for public record.</div>' +
+            followingBuyLink(item) +
         '</div>';
     } else {
         const breakdown = getGradedBreakdownText(item);
@@ -178,6 +186,7 @@ function renderPickCard(item) {
                 ? '<div class="pe-team">' + esc(breakdown) + '</div>'
                 : '<div class="pe-team">Verified record updated.</div>') +
             '<div style="margin-top:5px;color:var(--text-muted);font-size:0.86rem;"' + recordDrillAttrs(item, 'Community feed, graded pick update') + '>Current overall record: ' + esc(getRecordText(item)) + (recordDrillAttrs(item, '') && window.TMRDrill ? window.TMRDrill.ctaHtml('View picks') : '') + '</div>' +
+            followingBuyLink(item) +
         '</div>';
     }
 
@@ -784,9 +793,68 @@ function takeFeedSources() {
     return startFeedSources(currentFilter, feedOffset);
 }
 
+function renderFollowingPeople(list) {
+    const host = document.getElementById('followingPeople');
+    if (!host) return;
+    if (typeof currentFilter === 'undefined' || currentFilter !== 'following') {
+        host.hidden = true;
+        host.innerHTML = '';
+        return;
+    }
+    host.hidden = false;
+    const people = Array.isArray(list) ? list : [];
+    const chips = people.map(function(u) {
+        const un = u.username || '';
+        const name = esc(u.display_name || un || 'Handicapper');
+        const id = Number(u.id);
+        return '<span style="display:inline-flex;align-items:center;gap:6px;margin:0 8px 8px 0;padding:4px 8px;border:1px solid rgba(255,255,255,.12);border-radius:999px;">' +
+            '<a href="/profile/?user=' + encodeURIComponent(un) + '">' + name + '</a>' +
+            '<a href="/marketplace/seller/?u=' + encodeURIComponent(un) + '">Picks</a>' +
+            (id ? '<button type="button" onclick="unfollowFromFollowingTab(' + id + ')" style="background:none;border:0;color:#c9a2a2;cursor:pointer;">Unfollow</button>' : '') +
+            '</span>';
+    }).join('');
+    host.innerHTML = '<div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:baseline;margin-bottom:8px;">' +
+        '<strong>Handicappers you follow</strong>' +
+        '<span><a href="/handicappers/">Discover</a> · <a href="/usercp/#ucpFollowingBox">Notification settings</a></span></div>' +
+        (chips || '<span>You are not following anyone yet. Discover handicappers and follow them for free. Paid plays stay locked.</span>') +
+        '<div style="margin-top:8px;font-size:12px;opacity:.75;">Following is free. It does not unlock paid picks.</div>';
+}
+
+async function loadFollowingPeople() {
+    const host = document.getElementById('followingPeople');
+    if (!host) return;
+    if (typeof currentFilter === 'undefined' || currentFilter !== 'following') {
+        host.hidden = true;
+        host.innerHTML = '';
+        return;
+    }
+    const user = (typeof auth !== 'undefined' && auth.currentUser) ? auth.currentUser : null;
+    if (!user || !window.api || typeof api.getFollowingManage !== 'function') {
+        host.hidden = false;
+        host.innerHTML = '<a href="/login/">Sign in</a> to follow handicappers. Following is free and does not reveal paid picks. <a href="/handicappers/">Discover handicappers</a>.';
+        return;
+    }
+    try {
+        const data = await api.getFollowingManage({ sort: 'name' });
+        renderFollowingPeople(data.following || []);
+    } catch (e) {
+        renderFollowingPeople([]);
+    }
+}
+
+async function unfollowFromFollowingTab(userId) {
+    if (!window.api || typeof api.unfollowUser !== 'function') return;
+    try {
+        await api.unfollowUser(userId);
+        await loadFollowingPeople();
+        if (typeof loadFeed === 'function') loadFeed();
+    } catch (e) {}
+}
+
 async function loadFeedItems() {
     const c = document.getElementById('feedList');
     if (!c) return;
+    loadFollowingPeople();
 
     let items = [];
     try {
