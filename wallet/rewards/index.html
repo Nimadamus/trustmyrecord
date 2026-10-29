@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TMR Coin Rewards Catalog | TrustMyRecord</title>
-    <meta name="description" content="The TMR Coin rewards catalog: what you can earn on TrustMyRecord and what your TMR Coin can be spent on.">
+    <meta name="description" content="The rewards catalog: what you can earn on TrustMyRecord and what your site credits can be spent on. Site credits are separate from the TMR Coin token.">
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="https://trustmyrecord.com/wallet/rewards/">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -61,13 +61,13 @@
             <div>
                 <p class="rewards-kicker"><img class="tmr-coin-icon" src="/static/branding/tmr-coin/tmr-coin-logo.svg" alt="" aria-hidden="true">TMR Coin</p>
                 <h1>Rewards Catalog</h1>
-                <p class="rewards-subtitle" id="rewardsSubtitle">A preview of future rewards. Items marked Available can be redeemed now; the rest are previews.</p>
+                <p class="rewards-subtitle" id="rewardsSubtitle">Items marked Available can be redeemed now with site credits; the rest are previews.</p>
             </div>
             <a class="btn" href="/wallet/">My Wallet</a>
             <a class="btn" href="/how-tmr-coin-works/">How It Works</a>
         </header>
 
-        <div class="disclaimer" id="disclaimerText">TMR Coin is the platform currency of TrustMyRecord. Every new member receives TMR Coin when they sign up. Members can earn additional coins through platform participation, achievements, referrals, contests, and competitions. Additional purchase and redemption options may be introduced as the platform develops.</div>
+        <div class="disclaimer" id="disclaimerText">Catalog items are paid for with site credits, the balance in your TrustMyRecord wallet. Every new member receives 25 credits on sign up, and more can be earned from a first pick and forum threads. Other earning rules, including referrals, are paused. Card purchases of credits are closed, and credits cannot be withdrawn, cashed out or converted into the TMR Coin token.</div>
 
         <div id="catalogGrid" class="catalog-grid" hidden></div>
         <div id="catalogEmpty" hidden>No catalog items yet. Check back soon.</div>
@@ -124,9 +124,8 @@
                     } catch (e) { /* soft -- catalog still renders without owned-state */ }
                 }
                 var data = await window.api.getCoinCatalog();
-                if (data.disclaimer) document.getElementById('disclaimerText').textContent = data.disclaimer;
                 if (data.redemption_available) {
-                    document.getElementById('rewardsSubtitle').textContent = 'Items marked Available can be redeemed now for TMR Coin you\'ve earned.';
+                    document.getElementById('rewardsSubtitle').textContent = 'Items marked Available can be redeemed now with site credits.';
                 }
                 var items = data.items || [];
                 if (!items.length) { empty.hidden = false; return; }

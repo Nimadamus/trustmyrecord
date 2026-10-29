@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TMR Wallet | TrustMyRecord</title>
-    <meta name="description" content="Your TMR wallet on TrustMyRecord: your TMR Coin balance, rewards earned and recent wallet activity.">
+    <meta name="description" content="Your TMR wallet on TrustMyRecord: your TMR credits balance, rewards earned and recent wallet activity. TMR credits are site credits, separate from the TMR Coin token.">
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="https://trustmyrecord.com/wallet/">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -207,11 +207,10 @@
             <div>
                 <p class="wallet-kicker">TMR Wallet</p>
                 <h1>Your TMR</h1>
-                <p class="wallet-subtitle">TMR is the currency of sports credibility on TrustMyRecord. Earn it by building a real record and contributing to the community, then spend it on tools, contests and creators.</p>
+                <p class="wallet-subtitle">TMR credits are your site balance on TrustMyRecord. Earn them by building a real record and contributing to the community, then use them for simulator runs, tips and the marketplace.</p>
             </div>
             <div class="wallet-actions">
                 <!-- The wallet said TMR is spendable but never said where. -->
-                <a class="btn" href="/wallet/get-tmr/#buy">Buy TMR</a>
                 <a class="btn" href="/marketplace/tmr/">Spend TMR on picks</a>
                 <a class="btn" href="/tmr-coin/">What is TMR Coin?</a>
                 <a class="btn" href="/wallet/rewards/">Rewards</a>
@@ -219,7 +218,7 @@
         </header>
 
         <p class="disclaimer">
-            TrustMyRecord holds your TMR in its accounting ledger so spending it here is instant and costs no gas. It is the same <a href="/tmr-coin/">TMR Coin token on Base</a>, a fixed supply ERC-20. On-chain withdrawal to a wallet you control does not exist. TMR is not offered as an investment.
+            Your TMR credits are site credits recorded in TrustMyRecord's ledger. They are not the <a href="/tmr-coin/">TMR Coin token on Base</a>, and nothing converts one into the other in either direction. Credits cannot be withdrawn, and card purchases of credits are currently closed. Credits are not offered as an investment.
         </p>
 
         <section id="loadingSkeleton" class="skeleton" aria-hidden="true">
@@ -245,12 +244,12 @@
                 <div class="balance-card">
                     <p class="balance-label"><img class="tmr-coin-icon" src="/static/branding/tmr-coin/tmr-coin-logo.svg" alt="" aria-hidden="true">Available</p>
                     <p class="balance-value" id="availableValue">&mdash;</p>
-                    <p class="balance-hint">Ready to tip, spend or stake right now.</p>
+                    <p class="balance-hint">Ready to tip or spend right now.</p>
                 </div>
                 <div class="balance-card sub">
                     <p class="balance-label">Locked</p>
                     <p class="balance-value" id="lockedValue">&mdash;</p>
-                    <p class="balance-hint" id="lockedHint">Committed to open challenges.</p>
+                    <p class="balance-hint" id="lockedHint">Held for pending activity.</p>
                 </div>
                 <div class="balance-card sub">
                     <p class="balance-label">Lifetime earned</p>
@@ -343,11 +342,11 @@
             <!-- ================= CHALLENGES ================= -->
             <section class="pane" id="pane-challenges" role="tabpanel" hidden>
                 <h2>Challenge Center</h2>
-                <p class="lead">Put TMR behind your opinion against another member. Both stakes are held while the game plays out, then settled on the official result.</p>
+                <p class="lead">Head-to-head challenges between members are currently off.</p>
 
                 <div id="challengesDisabled" class="locked-notice" hidden>
-                    <strong>Head-to-head challenges are not switched on yet.</strong><br>
-                    The Challenge Center is built and waiting. It stays off until TrustMyRecord has the right compliance structure for member-versus-member competition.
+                    <strong>Head-to-head challenges are off.</strong><br>
+                    Member challenges are not available.
                 </div>
 
                 <div id="challengesLive" hidden>
@@ -429,7 +428,7 @@
             <!-- ================= SPEND ================= -->
             <section class="pane" id="pane-spend" role="tabpanel" hidden>
                 <h2>Spend TMR</h2>
-                <p class="lead">What TMR is for. More sinks open as the economy grows &mdash; anything not yet live is marked.</p>
+                <p class="lead">What TMR credits are for. Anything not live is marked.</p>
                 <ul class="spend-list">
                     <li>
                         <div class="earn-item-head"><span class="earn-title">BetLegend Pro inquiries</span></div>
@@ -443,12 +442,12 @@
                     </li>
                     <li>
                         <div class="earn-item-head"><span class="earn-title">Rewards catalog</span></div>
-                        <p class="earn-desc">Redeem TMR for the items currently listed.</p>
+                        <p class="earn-desc">Use credits for the items currently listed.</p>
                         <a class="btn btn-sm" href="/wallet/rewards/">View catalog</a>
                     </li>
                     <li id="spendChallenges">
                         <div class="earn-item-head"><span class="earn-title">Head-to-head challenges</span></div>
-                        <p class="earn-desc" id="spendChallengesDesc">Stake TMR against another member on a game.</p>
+                        <p class="earn-desc" id="spendChallengesDesc">Member challenges are off.</p>
                     </li>
                     <li id="spendMarketplace">
                         <div class="earn-item-head"><span class="earn-title">Creator content</span></div>
@@ -456,7 +455,7 @@
                     </li>
                     <li id="spendContests">
                         <div class="earn-item-head"><span class="earn-title">Contests</span></div>
-                        <p class="earn-desc" id="spendContestsDesc">Free contests with TMR prize pools. Entry-fee contests are not live.</p>
+                        <p class="earn-desc" id="spendContestsDesc">Free contests only. Paid contests are off.</p>
                     </li>
                 </ul>
             </section>
@@ -465,10 +464,10 @@
             <section class="pane" id="pane-about" role="tabpanel" hidden>
                 <h2>About TMR</h2>
                 <p class="lead">
-                    TMR is an internal balance inside TrustMyRecord. It is earned through participation, spent on tools and content inside the site, and recorded in an append-only ledger where every movement keeps its own before-and-after balance.
+                    TMR credits are an internal balance inside TrustMyRecord. They are earned through participation, used for simulator runs, tips and the marketplace, and recorded in an append-only ledger where every movement keeps its own before-and-after balance.
                 </p>
                 <p class="lead">
-                    <strong>What to know.</strong> Buying TMR directly and withdrawing it on-chain are not built. TMR is not offered as an investment and nobody is promising its value will rise. Anything that would change that requires a compliance structure TrustMyRecord does not have yet, and stays switched off until it does. The separate <a href="/tmr-coin/">TMR Coin token on Base</a> does trade publicly, we do not sell it, and holding a balance here gives you no claim on it.
+                    <strong>What to know.</strong> Card purchases of credits were sold until 25 October 2026 and are currently closed. Withdrawals, transfers, redemption and cash redemption are off. Credits are not offered as an investment and nobody is promising any value. The separate <a href="/tmr-coin/">TMR Coin token on Base</a> is a cryptocurrency we do not sell, nothing converts credits into it, and holding a balance here gives you no claim on it.
                 </p>
                 <h2 style="margin-top:24px;font-size:18px;">Supply</h2>
                 <p class="lead">These figures come straight from the ledger. Nothing here is a marketing number.</p>
@@ -583,14 +582,14 @@
             el('chLimits').textContent = 'Between ' + num(l.challenge_min_stake) + ' and ' + num(l.challenge_max_stake) + ' TMR.';
 
             el('spendChallengesDesc').textContent = f.challenges
-                ? 'Stake TMR against another member on a game.'
-                : 'Stake TMR against another member on a game. Not live yet.';
+                ? 'Back your pick against another member on a game.'
+                : 'Member challenges are off.';
             el('spendMarketplaceDesc').textContent = f.marketplace
                 ? 'Buy premium cards and write-ups from strong handicappers with TMR.'
                 : 'Buy premium cards and write-ups from strong handicappers with TMR. Not live yet.';
             el('spendContestsDesc').textContent = f.paid_contests
                 ? 'Enter contests using TMR.'
-                : 'Free contests with TMR prize pools. Entry-fee contests are not live.';
+                : 'Free contests only. Paid contests are off.';
         }
 
         // ---- transactions ---------------------------------------------------

@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Get TMR Coin | TrustMyRecord</title>
-    <meta name="description" content="Buy TMR with a card and it goes straight into your TrustMyRecord wallet. See what TMR does on the site and how to earn it.">
+    <title>Get TMR Credits | TrustMyRecord</title>
+    <meta name="description" content="How to get TMR credits, the site credits in your TrustMyRecord wallet. Card purchases are currently closed. See what credits do on the site and how to earn them.">
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="https://trustmyrecord.com/wallet/get-tmr/">
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
@@ -82,15 +82,16 @@
 </head>
 <body class="tmr-ds-shell tmr-theme-a">
 <main class="gt-page">
-    <p class="gt-kicker">TMR Coin</p>
-    <h1>What TMR is for, and how you get it</h1>
-    <p class="gt-lede">TMR is the currency of competition on TrustMyRecord. Buy it with a card and it lands
-        straight in your TrustMyRecord wallet, ready to use. No crypto wallet, nothing to set up.</p>
+    <p class="gt-kicker">TMR credits</p>
+    <h1>What TMR credits are for, and how you get them</h1>
+    <p class="gt-lede">TMR credits are the site credits in your TrustMyRecord wallet, used for simulator
+        runs, tips and the marketplace. They are separate from the TMR Coin token, and nothing converts one
+        into the other. Card purchases of credits were turned off on 25 October 2026 and are currently closed.</p>
 
     <div class="gt-result" id="purchaseResult" hidden></div>
 
     <section class="gt-card">
-        <h2>What TMR does here</h2>
+        <h2>What TMR credits do here</h2>
         <p class="sub">Every one of these is live now.</p>
         <div class="gt-uses" id="uses"></div>
     </section>
@@ -108,32 +109,31 @@
             <h2>Earn it</h2>
             <p class="sub">Earning is deliberately small, so it rewards real activity on the site.</p>
             <ul class="gt-reach">
-                <li><span>Signing up</span><span class="yes">25 TMR, once</span></li>
-                <li><span>Your first sportsbook pick</span><span class="yes">10 TMR, once</span></li>
-                <li><span>Your first forum thread</span><span class="yes">5 TMR, once</span></li>
-                <li><span>Monthly competitions</span><span class="yes">shared prize pool</span></li>
+                <li><span>Signing up</span><span class="yes">25 credits, once</span></li>
+                <li><span>Your first sportsbook pick</span><span class="yes">10 credits, once</span></li>
+                <li><span>Your first forum thread</span><span class="yes">5 credits, once</span></li>
+                <li><span>Each forum thread created</span><span class="yes">1 credit</span></li>
                 <li><span>Tips from other members</span><span class="yes">any amount</span></li>
             </ul>
-            <p class="sub" style="margin-top:14px;">That is <strong>40 TMR</strong> in total from the
-                one-off rewards. Four repeating rewards pay on top of that, capped at 13 TMR a day, deliberately small so TMR is not given
-                away. <a href="/wallet/earn/">See your earning history →</a></p>
+            <p class="sub" style="margin-top:14px;">These four are the only active earning rules. Other rules,
+                such as pick wins, trivia, polls and referrals, are paused. <a href="/wallet/earn/">See your earning history →</a></p>
         </div>
 
         <div class="gt-card" id="buy">
             <span class="gt-tag soon" id="buyTag">Loading</span>
             <h2>Buy it</h2>
-            <p class="sub" id="buySub">Pick a pack. You pay by card on a secure Stripe checkout and the TMR goes
-                straight into your wallet.</p>
+            <p class="sub" id="buySub">Card purchases of TMR credits are currently closed. They were sold at $0.02 per
+                credit until 25 October 2026.</p>
             <div class="gt-packs" id="packs"></div>
             <p class="gt-msg" id="buyMsg"></p>
         </div>
     </section>
 
     <section class="gt-card">
-        <h2>About buying TMR</h2>
-        <div class="gt-notice">TMR you buy is for use on TrustMyRecord: simulator runs, BetLegend Pro reports,
-            tips and the other features listed above. It stays in your TrustMyRecord wallet and cannot be cashed
-            out. It is not an investment and we make no claim about what it is worth.</div>
+        <h2>About TMR credits</h2>
+        <div class="gt-notice">TMR credits are for use on TrustMyRecord: simulator runs, tips, the marketplace and
+            the other features listed above. They stay in your TrustMyRecord wallet and cannot be withdrawn, cashed
+            out or converted into the TMR Coin token. They are not an investment and we make no claim about what they are worth.</div>
     </section>
 
     <section class="gt-card" id="ordersCard" hidden>
@@ -247,7 +247,7 @@
             renderPacks(enabled);
             $('buyTag').textContent = enabled ? 'Open' : 'Closed';
             $('buyTag').className = 'gt-tag ' + (enabled ? 'live' : 'soon');
-            if (!enabled) $('buySub').textContent = 'Buying TMR is closed right now. Check back soon.';
+            if (!enabled) $('buySub').textContent = 'Card purchases of TMR credits are currently closed.';
             else if (!loggedIn()) $('buyMsg').innerHTML = '<a href="/login/?next=%2Fwallet%2Fget-tmr%2F%23buy">Log in</a> or <a href="/register/">sign up free</a> to buy TMR.';
         }).catch(function () {
             renderPacks(false);

@@ -204,13 +204,13 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
         '<dt>Linked</dt><dd>' + new Date(w.linkedAt).toLocaleDateString() + '</dd></dl>' +
         '<div class="row" style="margin-top:13px"><button class="btn ghost" id="btnRelink">Change wallet</button>' +
         '<button class="btn" id="btnWithdraw"' + (soon ? ' disabled' : '') + '>Withdraw TMR</button>' +
-        (soon ? '<span class="tag soon">Withdrawal activating</span>' : '<button class="btn ghost" id="btnWatch">Show TMR in my wallet app</button>') + '</div>' +
+        (soon ? '<span class="tag soon">Withdrawals off</span>' : '<button class="btn ghost" id="btnWatch">Show TMR in my wallet app</button>') + '</div>' +
         '<div id="wdForm" style="display:none;margin-top:14px"></div>';
     } else {
       $('walletBox').innerHTML =
-        '<p style="margin:0 0 12px;font-size:13.5px;color:var(--acct-muted)">No wallet linked yet. Linking a wallet you control is the first step to moving TMR out of TrustMyRecord.</p>' +
+        '<p style="margin:0 0 12px;font-size:13.5px;color:var(--acct-muted)">No wallet linked. Withdrawals are off, and site credits cannot be moved out of TrustMyRecord or converted into TMR Coin.</p>' +
         '<div class="row"><button class="btn" id="btnLink">Link a Base wallet</button>' +
-        (soon ? '<span class="tag soon">Withdrawal activating</span>' : '') + '</div>';
+        (soon ? '<span class="tag soon">Withdrawals off</span>' : '') + '</div>';
     }
     var link = $('btnLink') || $('btnRelink');
     if (link) link.onclick = linkWallet;
@@ -322,10 +322,9 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
       // withheld until deposits are open, so nobody sends coins into a closed door.
       host.innerHTML =
         '<h3 style="margin:0 0 8px;font-size:15px">Bring TMR in from your wallet</h3>' +
-        '<p style="margin:0;font-size:13.5px;color:var(--acct-muted)">Moving TMR from your own wallet into TrustMyRecord is not open yet. ' +
-        'When it is, a deposit address appears here and coins you send from your linked wallet are added to your balance one for one. ' +
-        'Do not send TMR anywhere until then.</p>' +
-        '<div class="row" style="margin-top:10px"><span class="tag soon">Deposits activating</span></div>';
+        '<p style="margin:0;font-size:13.5px;color:var(--acct-muted)">Deposits are off. Nothing converts TMR tokens into site credits. ' +
+        'Do not send TMR to TrustMyRecord.</p>' +
+        '<div class="row" style="margin-top:10px"><span class="tag soon">Deposits off</span></div>';
       return;
     }
     if (!d.linkedWallet) {
