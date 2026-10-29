@@ -660,41 +660,11 @@
                         <span class="justbet-mark" aria-label="JustBet"><img src="/static/media/justbet-logo.png?v=20260520a" alt="JustBet" width="320" height="32"></span>
                     </div>
                     <h1>JustBet MLB Handicapping Contest</h1>
-                    <p class="hero-sub">Compete for a $2,500 cash prize pool. 50 MLB picks per entrant, ranked by net units. Every pick is sealed publicly until first pitch — no front-running, no edits, full transparency.</p>
+                    <p class="hero-sub">This contest ran September 17 to 30, 2026 and is complete. 50 MLB picks per entrant, ranked by net units. Every pick is sealed publicly until first pitch — no front-running, no edits, full transparency.</p>
 
                     <div style="margin-top: 18px;">
-                        <span class="status-tag"><span class="pulse"></span> Registration Open until 12:00 AM PT / 3:00 AM ET Sep 17</span>
+                        <span class="status-tag" style="color:#5E7590;border-color:rgba(94,117,144,.4);background:rgba(94,117,144,.1)">Contest ended &middot; Final standings are public</span>
                     </div>
-
-                    <!-- Closing notice: entrant count comes from the live registrations API so the
-                         number of remaining spots never goes stale between deploys. -->
-                    <div id="tmr-closing-notice" style="display:none;margin-top:14px;padding:12px 16px;border:1px solid rgba(185,133,5,.35);border-radius:10px;background:linear-gradient(180deg,#FFFBEF,#FFFFFF);font-size:.95rem;color:#5A4300;font-weight:600;">
-                        <span id="tmr-closing-text"></span>
-                    </div>
-                    <script>
-                    (function(){
-                        var CAP = 20;
-                        fetch('https://trustmyrecord-api.onrender.com/api/contests/justbet-mlb/registrations')
-                            .then(function(r){ return r.ok ? r.json() : null; })
-                            .then(function(j){
-                                if (!j || typeof j.count !== 'number') return;
-                                var left = CAP - j.count;
-                                var box = document.getElementById('tmr-closing-notice');
-                                var txt = document.getElementById('tmr-closing-text');
-                                if (!box || !txt) return;
-                                if (left > 0) {
-                                    txt.innerHTML = '<b>Registration is closing up.</b> The contest starts as soon as we reach ' + CAP +
-                                        ' entrants. We are looking for <b>' + left + ' more ' + (left === 1 ? 'person' : 'people') +
-                                        '</b>. First place ' + '$1,500, second $750, third $250.';
-                                } else {
-                                    txt.innerHTML = '<b>Registration is full.</b> ' + CAP + ' entrants are in and the contest is starting. ' +
-                                        'First place $1,500, second $750, third $250.';
-                                }
-                                box.style.display = 'block';
-                            })
-                            .catch(function(){ /* leave the notice hidden if the count cannot be read */ });
-                    })();
-                    </script>
 
                     <div class="hero-meta">
                         <span><b>Format:</b> 50 MLB picks per entrant</span>
@@ -703,16 +673,8 @@
                     </div>
 
                     <div class="hero-cta-row">
-                        <a class="cta-primary"
-                           href="https://record.revshare.ag/_RFP1Ust_FFzUOsjNOfgKeWNd7ZgqdRLk/1/"
-                           target="_blank"
-                           rel="sponsored noopener"
-                           data-affiliate-link="justbet-mlb-contest-hero">
-                            <i class="fa-solid fa-up-right-from-square"></i> Create Your JustBet Account to Qualify
-                        </a>
-                        <a class="cta-ghost" href="/contests/justbet-mlb/register/"><i class="fa-solid fa-id-card"></i> Register for the Contest</a>
-                        <!-- CONTEST_PICKS_UNLOCKED_20260916: Nima approved contest pick entry for launch. -->
-                        <a class="cta-primary" href="/sportsbook/?contest=justbet-mlb"><i class="fa-solid fa-trophy"></i> Enter Contest Picks</a>
+                        <a class="cta-primary" href="/contests/justbet-mlb/leaderboard/"><i class="fa-solid fa-trophy"></i> Final Standings</a>
+                        <a class="cta-ghost" href="https://record.revshare.ag/_RFP1Ust_FFzUOsjNOfgKeWNd7ZgqdRLk/1/" target="_blank" rel="sponsored noopener" data-affiliate-link="justbet-mlb-contest-hero"><i class="fa-solid fa-up-right-from-square"></i> Visit JustBet</a>
                         <a class="cta-ghost" href="/contests/justbet-mlb/dashboard/"><i class="fa-solid fa-gauge-high"></i> Contest Dashboard</a>
                         <a class="cta-ghost" href="#rules"><i class="fa-solid fa-list-check"></i> View Contest Rules</a>
                         <!-- SHARE_SYSTEM_PHASE1_20260721: shares the contest page itself.
@@ -737,7 +699,7 @@
         </section>
 
         <!-- ===================== SIGNUP BANNER ===================== -->
-        <section class="signup-banner" aria-label="Contest signup requirement">
+        <section class="signup-banner" aria-label="Contest signup requirement" style="display:none">
             <div>
                 <span class="req-tag"><i class="fa-solid fa-circle-exclamation"></i> Required to Enter</span>
                 <h2>Create Your JustBet Account To Qualify</h2>
@@ -760,7 +722,7 @@
         <section aria-label="JustBet partner bonus offer" data-justbet-bonus-box data-variant="contest"></section>
 
         <!-- ===================== CONTEST REGISTRATION ===================== -->
-        <section class="section panel" id="contest-registration" aria-label="Contest registration">
+        <section class="section panel" id="contest-registration" aria-label="Contest registration" style="display:none">
             <h2><i class="fa-solid fa-id-card"></i> Contest Registration</h2>
             <p class="lead"><strong>Registration is still open to anyone until 12:00 AM PT (3:00 AM ET) Thursday, September 17. The contest starts at that moment and registration closes for good.</strong></p>
             <p class="lead">After opening your JustBet account, register here to lock in your contest eligibility. Submit your sportsbook customer ID so we can verify your qualifying signup.</p>
@@ -1277,6 +1239,5 @@
     <div id="tmr-footer-placeholder"></div>
 <script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-ds-nav.fba272805c18.js"></script>
     <script src="/static/js/tmr-live-chat.js?v=816ec6f0a118"></script>
-    <script defer src="/static/js/contest-enter-cta.js?v=18ec62cb125f"></script>
 </body>
 </html>
