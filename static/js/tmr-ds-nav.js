@@ -285,7 +285,7 @@
     '/sports-gaming/nhl/'
   ];
   var COMPETE = [
-    ['/contests/justbet-mlb/', 'Contest'],
+    ['/contests/justbet-mlb/', 'Contest Results'],
     /* Named 'Handicapper Challenges' from 2026-08-27. The bare word 'Challenges'
        meant three different products across this site -- pick vs pick here, TMR
        Coin below, and console games in Sports Gaming -- and this menu was where
