@@ -121,7 +121,7 @@
                 <div class="tcoin-metric"><div class="tcoin-metric-label">Pool liquidity</div><div class="tcoin-metric-val" id="m-tvl">&hellip;</div><div class="tcoin-metric-sub" id="m-tvl-sub">both sides</div></div>
                 <div class="tcoin-metric"><div class="tcoin-metric-label">Cash side of the pool</div><div class="tcoin-metric-val" id="m-cash">&hellip;</div><div class="tcoin-metric-sub">the most that can come out</div></div>
                 <div class="tcoin-metric"><div class="tcoin-metric-label">Fully diluted value</div><div class="tcoin-metric-val" id="m-fdv">&hellip;</div><div class="tcoin-metric-sub">price times total supply</div></div>
-                <div class="tcoin-metric"><div class="tcoin-metric-label">Tradable supply</div><div class="tcoin-metric-val" id="m-liquid">&hellip;</div><div class="tcoin-metric-sub" id="m-liquid-sub">sitting in the pool</div></div>
+                <div class="tcoin-metric"><div class="tcoin-metric-label">TMR in the pool</div><div class="tcoin-metric-val" id="m-liquid">&hellip;</div><div class="tcoin-metric-sub" id="m-liquid-sub">can be bought from the pool</div></div>
                 <div class="tcoin-metric"><div class="tcoin-metric-label">Liquidity custody</div><div class="tcoin-metric-val" id="m-lock">&hellip;</div><div class="tcoin-metric-sub" id="m-lock-sub">&nbsp;</div></div>
             </div>
             <div class="tcoin-depth" id="m-depth"></div>
@@ -141,22 +141,21 @@
                 <div class="tcoin-metric"><div class="tcoin-metric-label">Transfers, all time</div><div class="tcoin-metric-val" id="c-transfers">&hellip;</div><div class="tcoin-metric-sub" id="c-last">&nbsp;</div></div>
             </div>
         </div>
-        <h3 class="tcoin-sub">On TrustMyRecord</h3>
+        <h3 class="tcoin-sub">Site credits on TrustMyRecord (not TMR tokens)</h3>
         <div id="tcoin-site-state" class="tcoin-state is-loading">Reading the ledger&hellip;</div>
         <div id="tcoin-site-body" class="tcoin-hidden">
             <div class="tcoin-metrics">
-                <div class="tcoin-metric"><div class="tcoin-metric-label">Members holding TMR</div><div class="tcoin-metric-val" id="s-holders">&hellip;</div><div class="tcoin-metric-sub" id="s-balance">&nbsp;</div></div>
+                <div class="tcoin-metric"><div class="tcoin-metric-label">Members holding credits</div><div class="tcoin-metric-val" id="s-holders">&hellip;</div><div class="tcoin-metric-sub" id="s-balance">&nbsp;</div></div>
                 <div class="tcoin-metric"><div class="tcoin-metric-label">Payouts earned</div><div class="tcoin-metric-val" id="s-payouts">&hellip;</div><div class="tcoin-metric-sub" id="s-earned">&nbsp;</div></div>
-                <div class="tcoin-metric"><div class="tcoin-metric-label">Spent on features</div><div class="tcoin-metric-val" id="s-spent">&hellip;</div><div class="tcoin-metric-sub">spending destroys the TMR spent</div></div>
+                <div class="tcoin-metric"><div class="tcoin-metric-label">Spent on features</div><div class="tcoin-metric-val" id="s-spent">&hellip;</div><div class="tcoin-metric-sub">spending destroys the credits spent</div></div>
                 <div class="tcoin-metric"><div class="tcoin-metric-label">Tips between members</div><div class="tcoin-metric-val" id="s-tips">&hellip;</div><div class="tcoin-metric-sub" id="s-tips-sub">&nbsp;</div></div>
-                <div class="tcoin-metric"><div class="tcoin-metric-label">Challenges</div><div class="tcoin-metric-val" id="s-challenges">&hellip;</div><div class="tcoin-metric-sub" id="s-challenges-sub">member versus member</div></div>
             </div>
             <div class="tcoin-metric-sub" id="s-scope" style="margin-top:10px;"></div>
         </div>
     </section>
 
     <section class="tmr-glass">
-        <h2 class="tmr-h2">Supply And Reserve</h2>
+        <h2 class="tmr-h2">Supply</h2>
         <div id="tcoin-supply-state" class="tcoin-state is-loading">Reading supply from Base&hellip;</div>
         <div id="tcoin-supply-body" class="tcoin-hidden">
             <div class="tcoin-metrics">
@@ -165,15 +164,12 @@
                 <div class="tcoin-metric"><div class="tcoin-metric-label">Circulating</div><div class="tcoin-metric-val" id="p-circ">&hellip;</div><div class="tcoin-metric-sub">total minus treasury</div></div>
             </div>
         </div>
-        <div id="tcoin-reserve-state" class="tcoin-state is-loading">Reading the reserve position&hellip;</div>
+        <div id="tcoin-reserve-state" class="tcoin-state is-loading">Reading the treasury balance&hellip;</div>
         <div id="tcoin-reserve-body" class="tcoin-hidden">
             <div class="tcoin-metrics">
-                <div class="tcoin-metric"><div class="tcoin-metric-label">Treasury tokens reserved</div><div class="tcoin-metric-val" id="r-reserved">&hellip;</div><div class="tcoin-metric-sub">one set aside for each TMR earned</div></div>
-                <div class="tcoin-metric"><div class="tcoin-metric-label">Treasury tokens in total</div><div class="tcoin-metric-val" id="r-treasury">&hellip;</div><div class="tcoin-metric-sub">read from Base</div></div>
-                <div class="tcoin-metric"><div class="tcoin-metric-label">Reserve cover</div><div class="tcoin-metric-val" id="r-ratio">&hellip;</div><div class="tcoin-metric-sub">treasury tokens per TMR earned</div></div>
+                <div class="tcoin-metric"><div class="tcoin-metric-label">Company treasury wallet</div><div class="tcoin-metric-val" id="r-treasury">&hellip;</div><div class="tcoin-metric-sub">read from Base, one wallet, multisig planned</div></div>
             </div>
-            <div class="tcoin-metric-sub" style="margin-top:10px;">The reserve report counts every active account of type real, which is a slightly wider scope than the participation figures above, so the two member balance totals differ by a small amount. Both are computed rather than stored, and neither is rounded to flatter the other.</div>
-            <div class="tcoin-verify-banner">A reserve is a designation of tokens, not a dollar guarantee, and blockchain withdrawal is not active, so an earned balance cannot be sent to an outside wallet or sold today.</div>
+            <div class="tcoin-verify-banner">Site credits are not backed by TMR Coin. Site credits and the TMR token are separate, and nothing converts one into the other. Withdrawals are off. The separate <a href="/tmr-coin/revenue-reserve/">cash reserve</a> does not support or guarantee the market price.</div>
         </div>
     </section>
 
@@ -219,9 +215,9 @@
                 <h3>Running today</h3>
                 <ul>
                     <li>Fixed supply token on Base with no privileged functions</li>
-                    <li>Public Uniswap v3 market anyone can trade without us</li>
-                    <li>Earning from graded picks, predictions, trivia and forum activity</li>
-                    <li>Spending on reports, badges, flair and tipping</li>
+                    <li>Uniswap v3 TMR/WETH pool (0.3% fee tier): buy side only today, the pool holds no ETH</li>
+                    <li>Site credits earned from sign up, first pick and forum threads</li>
+                    <li>Site credits used for simulator runs, tips and the marketplace</li>
                     <li>These public endpoints, read on request</li>
                 </ul>
             </div>
@@ -229,16 +225,15 @@
                 <span class="tcoin-col-tag">Building</span>
                 <h3>Work in progress</h3>
                 <ul>
-                    <li>Member versus member challenges, built and awaiting real use</li>
-                    <li>Deeper liquidity, funded from platform revenue as it arrives</li>
-                    <li>More reasons to spend TMR inside the platform</li>
+                    <li>Moving the company treasury to a 2 of 3 multisig</li>
+                    <li>More uses for site credits inside the platform</li>
                 </ul>
             </div>
             <div class="tcoin-col is-maybe">
                 <span class="tcoin-col-tag">Not started</span>
                 <h3>Not promised</h3>
                 <ul>
-                    <li>Withdrawal or redemption between a site balance and a wallet</li>
+                    <li>Any conversion between site credits and TMR Coin</li>
                     <li>Partner platforms using TMR as their competition unit</li>
                     <li>Exchange or tracker listings, which are their decision and not ours</li>
                 </ul>
@@ -352,14 +347,14 @@
         if (s) {
             set('s-holders', num(s.members.holding_tmr));
             var bal = document.getElementById('s-balance');
-            if (bal) bal.textContent = num(s.members.total_balance_tmr) + ' TMR held between them';
+            if (bal) bal.textContent = num(s.members.total_balance_tmr) + ' credits held between them';
             set('s-payouts', num(s.earning.payouts_all_time));
             var earned = document.getElementById('s-earned');
-            if (earned) earned.textContent = num(s.earning.tmr_all_time) + ' TMR earned by members';
+            if (earned) earned.textContent = num(s.earning.tmr_all_time) + ' credits earned by members';
             set('s-spent', num(s.spending.tmr_spent) + ' TMR');
             set('s-tips', num(s.tipping.tips_sent));
             var tsub = document.getElementById('s-tips-sub');
-            if (tsub) tsub.textContent = num(s.tipping.tmr_tipped) + ' TMR tipped';
+            if (tsub) tsub.textContent = num(s.tipping.tmr_tipped) + ' credits tipped';
             set('s-challenges', num(s.challenges.created));
             var csub = document.getElementById('s-challenges-sub');
             if (csub) csub.textContent = s.challenges.created ? num(s.challenges.tmr_staked) + ' TMR staked' : 'built, no real use yet';
@@ -394,7 +389,7 @@
         hide('tcoin-reserve-state');
         show('tcoin-reserve-body');
     }).catch(function () {
-        down('tcoin-reserve-state', 'The reserve position could not be computed right now, so nothing is shown.');
+        down('tcoin-reserve-state', 'The treasury balance could not be read right now, so nothing is shown.');
     });
 }());
 </script>
