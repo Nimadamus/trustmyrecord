@@ -781,7 +781,7 @@
                 const now = Date.now();
                 const startMs = c.starts_at ? new Date(c.starts_at).getTime() : null;
                 const endMs = c.ends_at ? new Date(c.ends_at).getTime() : null;
-                var started = !!c.is_active && startMs !== null && now >= startMs;
+                var started = startMs !== null && now >= startMs;  // CONTEST_RETIRED_20261029: a retired (inactive) contest still shows its final board
                 // A contest whose window has already closed AND has no picks at
                 // all has not really run: that is a stale placeholder window, not
                 // a finished contest. Showing an empty "Final" board to entrants
@@ -796,7 +796,7 @@
                 }
                 PRELAUNCH = !started;
 
-                const picksOpen = started && (endMs === null || now < endMs);
+                const picksOpen = started && !!c.is_active && (endMs === null || now < endMs);
                 const openEl = $('#stat-picks-open');
                 if (openEl) {
                     openEl.textContent = !c.is_active ? 'Closed'

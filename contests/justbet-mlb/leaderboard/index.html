@@ -282,9 +282,9 @@
                     var now = Date.now();
                     var startMs = c.starts_at ? new Date(c.starts_at).getTime() : null;
                     var endMs = c.ends_at ? new Date(c.ends_at).getTime() : null;
-                    var started = !!c.is_active && startMs !== null && now >= startMs;
-                    var open = started && (endMs === null || now < endMs);
-                    var state = !c.is_active ? 'Closed' : (!started ? 'Not Started' : (open ? 'Live' : 'Final'));
+                    var started = startMs !== null && now >= startMs;
+                    var open = started && !!c.is_active && (endMs === null || now < endMs);
+                    var state = !started ? 'Not Started' : (open ? 'Live' : 'Final');
                     // Guard the stale-placeholder case: a window that closed with
                     // no picks at all never actually ran.
                     if (state === 'Final' && $('#stat-graded') && $('#stat-graded').textContent === '0'
