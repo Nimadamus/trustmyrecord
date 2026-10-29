@@ -30,9 +30,9 @@
         // the product.
         ["@sub", "Featured Matchups", [
             /*FMENU nfl-gotw*/ ["/handicapping/nfl/carolina-panthers-vs-green-bay-packers-290943/", "NFL Game of the Week", "/nfl-game-of-the-week/"],
-            /*FMENU ncaaf*/ ["/matchup-of-the-day/houston-utah-visiting-offense-has-the-edge/", "NCAAF", "/matchup-of-the-day/ncaaf/"],
+            /*FMENU ncaaf*/ ["/matchup-of-the-day/florida-atlantic-north-texas-passing-game-is-the-difference/", "NCAAF", "/matchup-of-the-day/ncaaf/"],
             /*FMENU mlb*/ ["/matchup-of-the-day/rays-brewers-bats-feast-on-righties/", "MLB", "/matchup-of-the-day/mlb/"],
-            /*FMENU nhl*/ ["/nhl/canadiens-stars-caufield-vs-robertson/", "NHL", "/matchup-of-the-day/nhl/"],
+            /*FMENU nhl*/ ["/matchup-of-the-day/blue-jackets-hurricanes-one-side-is-far-better/", "NHL", "/matchup-of-the-day/nhl/"],
             /*FMENU tennis*/ ["/matchup-of-the-day/struff-fils-one-closes-out-deciders/", "Tennis", "/matchup-of-the-day/tennis/"],
             /*FMENU soccer*/ ["/matchup-of-the-day/deportivo-atletico-madrid-the-table-says-one-side/", "Soccer", "/matchup-of-the-day/soccer/"]
         ]],
