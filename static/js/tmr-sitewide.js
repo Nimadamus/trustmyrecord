@@ -29,7 +29,7 @@
         // its full name because that lane is a weekly deep dive and the name is
         // the product.
         ["@sub", "Featured Matchups", [
-            /*FMENU nfl-gotw*/ ["/handicapping/nfl/carolina-panthers-vs-green-bay-packers-290943/", "NFL Game of the Week", "/nfl-game-of-the-week/"],
+            /*FMENU nfl-gotw*/ ["/matchup-of-the-day/carolina-green-bay-the-visitors-throw-it-well/", "NFL Game of the Week", "/nfl-game-of-the-week/"],
             /*FMENU ncaaf*/ ["/matchup-of-the-day/florida-atlantic-north-texas-passing-game-is-the-difference/", "NCAAF", "/matchup-of-the-day/ncaaf/"],
             /*FMENU mlb*/ ["/matchup-of-the-day/rays-brewers-bats-feast-on-righties/", "MLB", "/matchup-of-the-day/mlb/"],
             /*FMENU nhl*/ ["/matchup-of-the-day/blue-jackets-hurricanes-one-side-is-far-better/", "NHL", "/matchup-of-the-day/nhl/"],
