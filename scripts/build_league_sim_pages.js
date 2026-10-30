@@ -273,7 +273,7 @@ function page(sport, mode, inputs, result, shell) {
   const faqs = mode === 'season' ? [
     [`How does the ${L.label} season simulator work?`, `It plays every game on the ${season} ${L.label} schedule ${count(result.runs)} times. Final games keep their real results and every other game is decided by the calibrated win probability from the TrustMyRecord ${L.label} game model, then the standings, seeds and playoffs are played out for each simulated season.`],
     [`How many games are in the ${season} ${L.label} season?`, nba ? `Each NBA team plays 82 games. The league publishes 80 per team in advance and adds two per team in December after the NBA Cup group stage.` : `Each NHL team plays 84 games in ${season}, ${count(F.scheduled)} games in all.`],
-    [`What does the 80% range mean?`, `Eight of every ten simulated seasons land inside it. The other two fall above or below. It shows how much a team's ${L.unit} can swing on the same schedule and the same ratings.`],
+    [`What does the 80% range mean?`, `Eight of every ten simulated seasons land inside it. The other two fall above or below. It covers both the luck of the schedule and the chance that a team's rating is off: each simulated season moves every team's strength by a random amount sized from past seasons, so the range is widest early in the season and narrows as games are played.`],
     [`Does the simulator update during the season?`, `Yes. Each time the page is rebuilt it reads the schedule and every final result again, so completed games stop being simulated and the projection narrows as the season goes on.`],
     [`Is it free?`, RUN_POLICY.faqAnswer(RUN_POLICY.READ_FREE_SEASON)],
   ] : [
