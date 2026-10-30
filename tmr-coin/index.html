@@ -79,7 +79,7 @@
           "name": "Is the liquidity locked?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "No. The liquidity position is held by the TrustMyRecord treasury and is not locked or burned, which means it can be withdrawn. That is stated here because you should know it before trading."
+            "text": "Yes, by a timelock. Since 30 October 2026 the pool position is held by a 365 day timelock contract (0xf0b5295ED26c9023967ec7412386C999c07a08A6) with no admin. Any withdrawal must be scheduled on chain in public and can only run 365 days later. It is a standard OpenZeppelin TimelockController, not a scanner style lock."
           }
         },
         {
@@ -229,7 +229,7 @@
             <li><strong>Site credits are not TMR tokens.</strong> What you earn on the site is site credits, an internal balance in your TrustMyRecord wallet. Site credits and the TMR token are separate. Nothing converts one into the other, in either direction. Site credits cannot be withdrawn, sold or transferred off the site.</li>
         </ul>
         <h3 class="tcoin-announce-sub">What we are working on next</h3>
-        <p>The work in front of us is on the product: making site credits more useful inside TrustMyRecord, and keeping this page accurate about what is live and what is off. The company holds about 95.8% of the supply in one wallet today. A move to a 2 of 3 multisig is planned but has not been done yet.</p>
+        <p>The work in front of us is on the product: making site credits more useful inside TrustMyRecord, and keeping this page accurate about what is live and what is off. Since 30 October 2026 the company TMR is locked on chain: 908.17 million in a vesting contract that releases nothing until 25 October 2027, 50 million in a 30 day timelock, and the pool position in a 365 day timelock. Everything is controlled by a 2 of 3 multisig Safe. Details are in the supply section below.</p>
         <p>That is work on the product. It is not a promise about the price, and you should not read it as one. Nobody at TrustMyRecord controls what TMR trades at. It can go up, it can go to nothing, and you should never put in money you cannot afford to lose.</p>
         <div class="tcoin-links">
             <a class="tmr-cta-secondary" href="#tcoin-market-live">See the live market below &rarr;</a>
@@ -346,7 +346,7 @@
             <div class="tcoin-info-item"><div class="tcoin-info-label">Pause, freeze, blacklist</div><div class="tcoin-info-value">None exist</div></div>
             <div class="tcoin-info-item"><div class="tcoin-info-label">Transfer tax or fee</div><div class="tcoin-info-value">None</div></div>
             <div class="tcoin-info-item"><div class="tcoin-info-label">Upgradeable or proxy</div><div class="tcoin-info-value">No, the code cannot be changed</div></div>
-            <div class="tcoin-info-item"><div class="tcoin-info-label">Liquidity locked</div><div class="tcoin-info-value">No, see risks below</div></div>
+            <div class="tcoin-info-item"><div class="tcoin-info-label">Liquidity locked</div><div class="tcoin-info-value">Yes, 365 day timelock, see supply below</div></div>
         </div>
         <p style="margin-top:12px;">Because the contract has no privileged functions at all, nobody, including TrustMyRecord, can mint more TMR, freeze a holder, block a transfer, take a fee, or alter the code. That is checkable rather than promised: the source is published and verified, so you can read it yourself.</p>
         <div class="tcoin-links">
@@ -441,10 +441,10 @@
         <div class="tcoin-info-grid">
             <div class="tcoin-info-item"><div class="tcoin-info-label">Maximum supply, on-chain</div><div class="tcoin-info-value">1,000,000,000 TMR, immutable</div></div>
             <div class="tcoin-info-item"><div class="tcoin-info-label">Liquid supply</div><div class="tcoin-info-value" id="tcoin-supply-liquid">Read live above</div></div>
-            <div class="tcoin-info-item"><div class="tcoin-info-label">Held by the treasury</div><div class="tcoin-info-value" id="tcoin-supply-treasury">Read live below</div></div>
+            <div class="tcoin-info-item"><div class="tcoin-info-label">Held by the company Safe (unlocked)</div><div class="tcoin-info-value" id="tcoin-supply-treasury">Read live below</div></div>
             <div class="tcoin-info-item"><div class="tcoin-info-label">Tokens distributed to members</div><div class="tcoin-info-value">None, ever</div></div>
         </div>
-        <p style="margin-top:12px;">Only the TMR sitting in the pool can actually be bought. The rest is in the treasury, has never been distributed to anyone, and is visible on-chain at all times. There is no vesting contract, no allocation schedule and no team distribution, publishing one without a contract to enforce it would be a promise rather than a guarantee, so there isn't one.</p>
+        <p style="margin-top:12px;">Only the TMR sitting in the pool can actually be bought. The company holdings are locked on chain, in standard OpenZeppelin contracts anyone can read: 908.17 million TMR sit in a vesting contract (<a href="https://basescan.org/address/0x80a54441fd30C0ab54c720e2aEe63C2D6592f3DF" target="_blank" rel="noopener">0x80a54441fd30C0ab54c720e2aEe63C2D6592f3DF</a>) that releases nothing until 25 October 2027, then releases evenly to the company Safe over 48 months, ending 4 October 2031. 50 million TMR sit in a timelock (<a href="https://basescan.org/address/0x0ED7396212F6f4c491De86e203E45B26F006C6B5" target="_blank" rel="noopener">0x0ED7396212F6f4c491De86e203E45B26F006C6B5</a>): any use must be announced on chain 30 days ahead. The pool position is held by a timelock (<a href="https://basescan.org/address/0xf0b5295ED26c9023967ec7412386C999c07a08A6" target="_blank" rel="noopener">0xf0b5295ED26c9023967ec7412386C999c07a08A6</a>): it cannot be withdrawn without a public 365 day notice. The company Safe (<a href="https://basescan.org/address/0xb15736a022E0399A4ac2e8bc008ef0D93C4b2dB1" target="_blank" rel="noopener">0xb15736a022E0399A4ac2e8bc008ef0D93C4b2dB1</a>) needs 2 of 3 signatures and holds 50,000 unlocked TMR. These are not scanner "locks", and nothing here is a promise of price or value.</p>
         <div class="tcoin-supply">
             <strong>Separately:</strong> site credits have their own ceiling in the platform, 250,000,000, which has nothing to do with the token supply. Site credits and the TMR token are separate. Nothing converts one into the other, in either direction. Site credits cannot be withdrawn.
         </div>
@@ -455,8 +455,8 @@
         <ul class="tcoin-risk-list">
             <li><strong>You can lose everything you put in.</strong> Crypto prices are volatile. TMR could fall to effectively zero and stay there. Never spend money you cannot afford to lose.</li>
             <li><strong>The pool holds no ETH.</strong> It holds about 41.78 million TMR and 0 ETH, so you may not be able to sell TMR you buy, except into ETH that later buyers have paid in. Keep slippage protection on.</li>
-            <li><strong>The liquidity is not locked.</strong> The pool position is held by the TrustMyRecord treasury and could be withdrawn. It is disclosed here rather than glossed over so you can weigh it.</li>
-            <li><strong>The company holds about 95.8% of supply in one wallet.</strong> Like any holder, it could sell. There are 5 holding addresses and no outside holders today. A move to a 2 of 3 multisig is planned but not done. Any movement is visible on-chain.</li>
+            <li><strong>The liquidity lock is a timelock, not a burn.</strong> The pool position can be withdrawn, but only by a call scheduled on chain in public 365 days in advance. Collecting pool fees goes through the same delay.</li>
+            <li><strong>The company still owns most of the supply.</strong> It is locked as described above, but from 25 October 2027 vested TMR reaches the company Safe, and any 30 day reserve use is announced on chain first. Like any holder, the company could then sell. Any movement is visible on chain.</li>
             <li><strong>Nothing here is an investment offer.</strong> No return, profit, price increase or future listing is promised or implied. TrustMyRecord does not sell TMR tokens and takes no payment for them.</li>
             <li><strong>Site credits are not TMR.</strong> They cannot be withdrawn, transferred or converted, and they are not backed by tokens. The cash reserve does not support or guarantee the market price.</li>
             <li><strong>Verify the contract address</strong> every time, from this page. Fake tokens reuse real names and logos.</li>
