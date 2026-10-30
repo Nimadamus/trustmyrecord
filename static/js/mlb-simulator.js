@@ -3441,7 +3441,13 @@
     // four, strikeouts end on the third strike, balls in play end on a swing,
     // fouls with two strikes extend the at-bat - so the count is always legal
     // and PC/ST are simply the length and the strike tally of this array.
-    var BIP_FOUL = 0.545, BIP_TWO_STRIKE_FOUL = 0.38;
+    // PITCH_ECONOMY_RECAL_20261030: with the strikeout recalibration (more
+    // two-strike counts) the 0.545 / 0.38 foul rates overshot: 3.97 pitches per
+    // plate appearance against a real 3.84 on the same 700 real 2025-26 games
+    // (same counting rule both sides), so starters spent 5.68 pitches per out
+    // against a real 5.51 and ran out of pitches an inning early. 0.527 / 0.37
+    // measured 3.85 and 5.51.
+    var BIP_FOUL = 0.527, BIP_TWO_STRIKE_FOUL = 0.37;
     function evPitchSequence(code, isHbp, random) {
         var seq = [], b = 0, s = 0, MAX = 14;
         function add(call) {
@@ -4208,7 +4214,7 @@
             var outsNow = sumOuts(defSide);
             var reason = null, kind = null;
             if (idx === 0 && pitcher.role === 'SP') {
-                var spLim = defSide.postseason ? POSTSEASON_PITCH_LIMIT : STARTER_PITCH_LIMIT;
+                var spLim = starterPitchLimit(defSide);
                 var tgt = defSide.starterOutsGame || defSide.starterOuts || 16;
                 // STARTER_HOOK_CALIBRATION_20261024: measured on 700 real 2025-26 games
                 // (statsapi boxscores): starts with 5+ ER ended under 70 pitches in 48.6%
@@ -4223,12 +4229,20 @@
                 // 78 pitches, start (ER x length) distance to real 0.154 -> 0.136, runs,
                 // hits and pitchers per game unchanged or closer.
                 if (apptRuns >= 7 || (apptRuns >= 5 && (a.pitches || 0) >= 75)) { reason = 'removed after allowing ' + apptRuns + ' runs'; kind = 'damage'; }
-                else if (aHits >= 9 || (aHits >= 7 && (a.pitches || 0) >= 75)) { reason = 'removed after allowing ' + aHits + ' hits'; kind = 'damage'; }
+                // STARTER_HIT_HOOK_20261030: managers lift a starter on runs and pitch
+                // count, not on a hit tally. Real starts allowing 7 hits last 14.9 outs
+                // (28% reach 6 innings) and 8+ hits 14.3 outs (22%); the 7-hit hook cut
+                // the simulated ones to 13.9 and 11.9 outs and piled starts up at
+                // exactly 7 hits (16% of starts against a real 10.6%). The early
+                // knockout stays: inside the first two innings a starter who has given
+                // up 6 runs or 7 hits is gone (no real start of 3 outs or fewer
+                // allowed more than 7 hits in 1,400 2025-26 starts).
+                else if (aHits >= 12 || ((a.outs || 0) < 6 && (apptRuns >= 6 || aHits >= 7))) { reason = 'removed after allowing ' + (apptRuns >= 6 && (a.outs || 0) < 6 ? apptRuns + ' runs' : aHits + ' hits'); kind = 'damage'; }
                 else if (onBase && aBf >= 3 && (a.pitches || 0) >= spLim) { reason = 'pitch count (' + a.pitches + ') with a runner on'; kind = 'workload'; }
                 // Past his planned length with a man on: lifted, unless he is
                 // cruising and this manager rides a hot starter (the same test
                 // that extends him at the inning boundary).
-                else if (onBase && aBf >= 3 && (a.outs || 0) >= tgt && !(defSide._spRide && evStarterCruising(defSide, a))) { reason = 'planned workload reached (' + a.pitches + ' pitches) with a runner on'; kind = 'workload'; }
+                else if (onBase && aBf >= 3 && (a.outs || 0) >= tgt && !(defSide._spRide && evStarterCruising(defSide, a)) && !evStarterHasGas(defSide, a)) { reason = 'planned workload reached (' + a.pitches + ' pitches) with a runner on'; kind = 'workload'; }
             } else if (pitcher.role === 'POS') {
                 // In a blowout the position player normally finishes: nobody burns
                 // a real arm to replace the man sent out to save the bullpen. But
@@ -4956,6 +4970,26 @@
     // against the regular season's 88 / 100. The October leash is shorter in
     // outs, not much shorter in pitches. 92 capped the simulated p90 at 94.
     var POSTSEASON_PITCH_LIMIT = 97;
+    // STARTER_PITCH_LIMIT_V2_20261030: with pitches per out corrected, a 100
+    // limit put 15.5% of simulated starts at 100+ pitches against a real 10.2%
+    // (700 real 2025-26 games); 98 measured 9.8% (105+: 2.1%, real 2.8%).
+    var STARTER_PITCH_LIMIT_V2 = 98;
+    function starterPitchLimit(side) {
+        return side.postseason ? POSTSEASON_PITCH_LIMIT : (workloadV2() ? STARTER_PITCH_LIMIT_V2 : STARTER_PITCH_LIMIT);
+    }
+    // STARTER_HAS_GAS_20261030: the planned length is drawn before the first
+    // pitch, so an efficient starter was lifted at his plan with pitches to
+    // spare: real starts ending at 12-14 outs with 3 or fewer earned runs are
+    // 8.9% of starts at a median 80 pitches; the engine had 14% at 64-74. A
+    // regular season starter under 65 pitches with 3 or fewer earned runs is not
+    // lifted for the plan; he gets the next inning (re-checked every inning, at
+    // most two past the plan). October keeps its own quicker leash. Measured on
+    // 700 real 2025-26 games x 4: 6+ inning starts 27.5% -> 33.7% (real 35.6%),
+    // 5+ 59.1% -> 67.2% (67.9%), pitchers per team-game 4.55 -> 4.45 (4.32).
+    var STARTER_EFFICIENT_PITCHES = 65;
+    function evStarterHasGas(side, sp) {
+        return !side.postseason && (sp.pitches || 0) < STARTER_EFFICIENT_PITCHES && (sp.er || 0) <= 3;
+    }
     // STARTER_HOOK_CALIBRATION_20261024: inning-boundary headroom (see evActivePitcher).
     var STARTER_BOUNDARY_HEADROOM = 10;
     // A typical inning's pitches: the headroom a starter needs to be sent back out.
@@ -5050,7 +5084,7 @@
     function evBoundaryChangeReason(side, p, outsRecorded) {
         var a = p.acc || {}, pc = a.pitches || 0;
         if (p.role === 'SP') {
-            var limit = side.postseason ? POSTSEASON_PITCH_LIMIT : STARTER_PITCH_LIMIT;
+            var limit = starterPitchLimit(side);
             if (pc >= limit) return 'pitch count (' + pc + ')';
             if ((a.er || 0) >= 4) return 'removed after allowing ' + a.er + ' earned runs';
             var why = 'planned workload reached (' + pc + ' pitches';
@@ -5104,7 +5138,7 @@
     // STARTER_EFFECTIVENESS_20261023: has the starter been efficient enough, with
     // enough pitches left, that tonight's manager would send him back out?
     function evStarterCruising(side, sp) {
-        var spLimit = side.postseason ? POSTSEASON_PITCH_LIMIT : STARTER_PITCH_LIMIT;
+        var spLimit = starterPitchLimit(side);
         var runners = (sp.h || 0) + (sp.bb || 0) + (sp.hbp || 0);
         return (sp.pitches || 0) + STARTER_PITCHES_PER_INNING <= spLimit
             && (sp.r || 0) <= (side.postseason ? 1 : 2)
@@ -5145,7 +5179,7 @@
             // STARTER_HOOK_CALIBRATION_20261024: he is not sent out for another frame
             // within 10 pitches of the limit. Measured on the same 700 games: 28.7% of
             // simulated starts reached 100 pitches against a real 10.2% (105+: 9.3% vs 2.8%).
-            if (workloadV2() && (spAcc.pitches || 0) + STARTER_BOUNDARY_HEADROOM >= (side.postseason ? POSTSEASON_PITCH_LIMIT : STARTER_PITCH_LIMIT)) {
+            if (workloadV2() && (spAcc.pitches || 0) + STARTER_BOUNDARY_HEADROOM >= starterPitchLimit(side)) {
                 starterOuts = Math.min(starterOuts, spOuts);
             }
         }
@@ -5159,6 +5193,12 @@
         // each inning, up to two past the plan. Whether this manager rides a hot
         // starter at all is drawn once per game (_spRide, see evSimGame), so
         // the times-through-the-order quick hook still happens on some nights.
+        if (workloadV2() && arms.length && !arms[0].removed && side.minArmIdx === 0
+            && outsRecorded >= starterOuts && outsRecorded % 3 === 0 && outsRecorded < 27
+            && evStarterHasGas(side, arms[0].acc) && outsRecorded < (side._spPlanOuts || starterOuts) + 6) {
+            side.starterOutsGame = outsRecorded + 3;
+            starterOuts = side.starterOutsGame;
+        }
         if (workloadV2() && arms.length && !arms[0].removed && side._spRide && side.minArmIdx === 0
             && outsRecorded >= starterOuts && outsRecorded % 3 === 0 && outsRecorded < 27) {
             if (evStarterCruising(side, arms[0].acc) && outsRecorded < (side._spPlanOuts || starterOuts) + 6) {
