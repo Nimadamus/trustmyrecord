@@ -8,7 +8,7 @@ self.onmessage = function (e) {
   try {
     var result;
     if (m.kind === 'nfl') {
-      if (!self.TMRNflSeason) importScripts('/static/js/nfl-playoff-engine.js?v=3ba5c712a6db', '/static/js/nfl-season-project.js?v=98b463c9a513');
+      if (!self.TMRNflSeason) importScripts('/static/js/nfl-playoff-engine.js?v=b6cf8c488f7d', '/static/js/nfl-season-project.js?v=98b463c9a513');
       result = self.TMRNflSeason.project(m.inputs, m.n, m.seed);
     } else {
       if (!self.TMRLeagueSeason) importScripts('/static/js/league-season-engine.js?v=841b6c811359');
