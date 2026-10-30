@@ -1,3 +1,17 @@
+/* MLB_HUB_CLS_20261030 (mlb.md M12): metric-matched fallback for the Barlow headline face.
+   Measured in Chromium: Barlow 800 is ~92% of Arial Bold's advance width (92.7% matches the headline wraps from 320 to 1920 px except 430), ascent 1.00em,
+   descent 0.20em, so the first paint wraps and sits where the webfont will (desktop CLS 0.34). */
+@font-face { font-family: 'Barlow Fallback'; src: local('Arial Bold'), local('Arial-BoldMT'), local('Arial'); font-weight: 700 900;
+    size-adjust: 92.7%; ascent-override: 107.9%; descent-override: 21.6%; line-gap-override: 0%; }
+@font-face { font-family: 'Barlow Fallback'; src: local('Arial'), local('ArialMT'); font-weight: 400 600;
+    size-adjust: 91.7%; ascent-override: 109%; descent-override: 21.8%; line-gap-override: 0%; }
+/* Body copy (hero sub line, trust row) re-wrapped when Inter replaced system-ui; use the
+   Segoe UI scaled to Inter's measured body-text width (400: 108.1%, 600-700: ~106%). */
+@font-face { font-family: 'Inter Body Fallback'; src: local('Segoe UI'), local('SegoeUI'); font-weight: 300 500;
+    size-adjust: 108.1%; ascent-override: 89.6%; descent-override: 22.3%; line-gap-override: 0%; }
+@font-face { font-family: 'Inter Body Fallback'; src: local('Segoe UI Semibold'), local('Segoe UI'); font-weight: 600 900;
+    size-adjust: 106.1%; ascent-override: 91.3%; descent-override: 22.8%; line-gap-override: 0%; }
+body.tmr-polished-page.mlb-simulator-page, body.mlb-simulator-page { font-family: Inter, 'Inter Body Fallback', 'Inter Fallback A', system-ui, sans-serif !important; }
 /* =============================================================================
    MLB SIMULATOR — v2 LANDING RESTYLE (mlb-sim-landing-v2.css)  simv2 20260730
    Loads AFTER mlb-simulator.css and only overrides presentation. Removing this
@@ -95,7 +109,7 @@ body.mlb-simulator-page .sim-shell {
     margin: 0 0 6px;
 }
 body.tmr-ds.mlb-simulator-page .simv2-hero h1 {
-    font-family: 'Barlow', 'Inter', sans-serif;
+    font-family: 'Barlow', 'Barlow Fallback', 'Inter', sans-serif;
     font-size: 0.95rem;
     font-weight: 800;
     letter-spacing: 0.22em;
@@ -105,7 +119,7 @@ body.tmr-ds.mlb-simulator-page .simv2-hero h1 {
     line-height: 1.2;
 }
 .simv2-headline {
-    font-family: 'Barlow', 'Inter', sans-serif;
+    font-family: 'Barlow', 'Barlow Fallback', 'Inter', sans-serif;
     font-weight: 800;
     font-size: clamp(1.85rem, 4.3vw, 3.05rem);
     line-height: 1.08;
@@ -119,7 +133,7 @@ body.tmr-ds.mlb-simulator-page .simv2-hero h1 {
     color: var(--sv2-mut);
     font-size: 1.05rem;
     line-height: 1.6;
-    max-width: 56ch;
+    max-width: 35.3em; /* MLB_HUB_CLS_20261030: was 56ch; ch follows the loading font and the column widened by 78px on swap */
     margin: 0 0 22px;
 }
 .simv2-hero-ctas { display: flex; gap: 12px; flex-wrap: wrap; }
@@ -128,7 +142,7 @@ body.tmr-ds.mlb-simulator-page .simv2-hero h1 {
     align-items: center;
     justify-content: center;
     gap: 8px;
-    font-family: 'Barlow', 'Inter', sans-serif;
+    font-family: 'Barlow', 'Barlow Fallback', 'Inter', sans-serif;
     font-weight: 800;
     font-size: 1rem;
     border-radius: 12px;
@@ -165,6 +179,9 @@ body.tmr-ds.mlb-simulator-page .simv2-hero h1 {
     color: var(--sv2-dim);
     font-weight: 600;
 }
+/* MLB_HUB_CLS_20261030: Inter 600 wraps this row to 2 lines (3 on phones) where the fallback fit 1; reserve the final height. */
+.simv2-trust { min-height: 48px; }
+@media (max-width: 700px) { .simv2-trust { min-height: 76px; } }
 .simv2-trust span::before { content: '✓'; color: var(--sv2-teal); margin-right: 7px; font-weight: 800; }
 
 /* hero side card wraps the existing #simDataSourceTitle/Detail status */
@@ -198,6 +215,7 @@ body.tmr-ds.mlb-simulator-page .simv2-hero h1 {
 }
 .simv2-hero-card #simDataSourceDetail {
     display: block;
+    min-height: 3.75rem; /* MLB_HUB_CLS_20261030: the live dataset sentence replaces the 1 line placeholder */
     color: var(--sv2-mut);
     font-size: 0.84rem;
     line-height: 1.5;
@@ -218,7 +236,7 @@ body.tmr-ds.mlb-simulator-page .simv2-hero h1 {
    body.tmr-ds h1-h3 rules in tmr-ds.css carry 0,1,2 specificity; every v2
    heading override below must match or beat that. */
 body.tmr-ds.mlb-simulator-page .simv2-sechead h2 {
-    font-family: 'Barlow', 'Inter', sans-serif;
+    font-family: 'Barlow', 'Barlow Fallback', 'Inter', sans-serif;
     font-size: 1.45rem;
     line-height: 1.2;
     color: var(--sv2-ink);
@@ -260,7 +278,7 @@ body.tmr-ds.mlb-simulator-page .simv2-panel h3 {
     flex-wrap: wrap;
 }
 .simv2-sechead h2 {
-    font-family: 'Barlow', 'Inter', sans-serif;
+    font-family: 'Barlow', 'Barlow Fallback', 'Inter', sans-serif;
     font-size: 1.45rem;
     color: var(--sv2-ink);
     margin: 0;
@@ -348,7 +366,7 @@ body.tmr-ds.mlb-simulator-page .simv2-panel h3 {
     border-radius: 14px;
     color: var(--sv2-mut);
 }
-.simv2-slate-empty strong { display: block; color: var(--sv2-ink); margin-bottom: 6px; font-family: 'Barlow', sans-serif; }
+.simv2-slate-empty strong { display: block; color: var(--sv2-ink); margin-bottom: 6px; font-family: 'Barlow', 'Barlow Fallback', sans-serif; }
 .simv2-slate-empty p { margin: 0; font-size: 0.9rem; }
 
 /* ---------- STEP PROGRESS ---------- */
@@ -503,7 +521,7 @@ body.tmr-ds.mlb-simulator-page .simv2-panel h3 {
     border: 1px solid rgba(29, 127, 232, 0.3);
 }
 .simv2-convert h2 {
-    font-family: 'Barlow', 'Inter', sans-serif;
+    font-family: 'Barlow', 'Barlow Fallback', 'Inter', sans-serif;
     font-size: 1.55rem;
     color: var(--sv2-ink);
     margin: 0 0 10px;
@@ -557,7 +575,7 @@ body.tmr-ds.mlb-simulator-page .simv2-panel h3 {
     min-width: 0;
 }
 .simv2-panel h3 {
-    font-family: 'Barlow', 'Inter', sans-serif;
+    font-family: 'Barlow', 'Barlow Fallback', 'Inter', sans-serif;
     font-size: 1.2rem;
     color: var(--sv2-ink);
     margin: 6px 0 10px;
@@ -570,7 +588,7 @@ body.tmr-ds.mlb-simulator-page .simv2-panel h3 {
     font-size: 1.08rem;
     color: var(--sv2-ink);
     font-variant-numeric: tabular-nums;
-    font-family: 'Barlow', sans-serif;
+    font-family: 'Barlow', 'Barlow Fallback', sans-serif;
 }
 .simv2-cmeta div span {
     font-size: 0.68rem;
@@ -595,7 +613,7 @@ body.tmr-ds.mlb-simulator-page .simv2-panel h3 {
 /* ---------- SOCIAL PROOF ---------- */
 .simv2-proof { margin-top: 44px; text-align: center; }
 .simv2-proof h2 {
-    font-family: 'Barlow', 'Inter', sans-serif;
+    font-family: 'Barlow', 'Barlow Fallback', 'Inter', sans-serif;
     font-size: 1.65rem;
     color: var(--sv2-ink);
     margin: 0 0 8px;
@@ -615,7 +633,7 @@ body.tmr-ds.mlb-simulator-page .simv2-panel h3 {
 }
 .simv2-stat b {
     display: block;
-    font-family: 'Barlow', sans-serif;
+    font-family: 'Barlow', 'Barlow Fallback', sans-serif;
     font-size: 1.65rem;
     color: var(--sv2-teal);
     font-variant-numeric: tabular-nums;

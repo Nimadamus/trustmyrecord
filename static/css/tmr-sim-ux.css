@@ -1,0 +1,61 @@
+/* =============================================================================
+   TMR SIM UX LAYER                                           SIM_UX_20261030
+   -----------------------------------------------------------------------------
+   One shared presentation layer for every simulator page (hubs, season, playoff,
+   odds, saved, team, matchup and archive pages). Loaded by scripts/sim-ux.js
+   (builders inject it, scripts/stamp-sim-ux.js keeps hand pages current), so a
+   page cannot ship without it. Pairs with static/js/tmr-sim-ux.js.
+
+   Root cause it answers (CHECKLIST #14 #15 #29): every sim page carried its own
+   table, link and colour rules, so a wide table, an unmarked link or a muted
+   token was fixed page by page or not at all. The floor lives here once.
+   ============================================================================= */
+
+/* 1. Skip link (WCAG 2.4.1). Inserted by tmr-sim-ux.js. */
+.simux-skip{position:absolute;left:12px;top:-60px;z-index:100000;padding:10px 16px;border-radius:10px;
+  background:#0b1424;color:#fff !important;font:700 15px/1.2 Inter,system-ui,sans-serif;text-decoration:none;
+  border:2px solid #38bdf8;transition:top .12s}
+.simux-skip:focus{top:12px;outline:none}
+[data-simux-main]:focus{outline:none}
+
+/* 2. Links inside running text must not rely on colour alone (WCAG 1.4.1,
+      axe link-in-text-block: NBA 1.09:1 against the paragraph). */
+:where(p, li, dd, figcaption, blockquote, .lead, .sub, .note, .foot, .disc) > a:not([class*="btn"]):not([role="button"]):not([class*="chip"]):not([class*="pill"]):not([class*="tab"]):not([class*="cta"]),
+:where(p, li, dd) > :where(b, strong, em, span) > a:not([class*="btn"]){
+  text-decoration:underline !important;text-decoration-thickness:1px;text-underline-offset:2px}
+:where(nav, header, footer, .tmr-ds-nav, .tmr-ds-header, .tmr-lc, [role="navigation"], [role="tablist"], .crumbs, .sa-crumbs, .ss-crumb, .breadcrumbs) a{
+  text-decoration:none !important}
+
+/* 3. AA contrast floor for tokens that measured under 4.5:1 (axe 2026-10-30). */
+.lz{opacity:1 !important;color:#8b95a5 !important}                                   /* 0% cells: 4.07 -> 5.75 */
+.ss-btn-primary,.sa-tab[aria-selected="true"]{background:#1667c4 !important;border-color:#1667c4 !important}  /* white on #1D7FE8 3.99 -> 5.57 */
+.ss-btn-primary:hover{background:#1559aa !important}
+body.tmr-light .ss-rank,body.tmr-light .ss-pub-ws,body.tmr-light .ss-pub-ws b,body.tmr-light .ss-section-head .gold{color:#8a6200 !important}        /* gold on white 3.27 -> 5.49 */
+body.tmr-light .tmr-mlbx a{color:#0f766e !important}                                  /* teal on #F4F7FA 1.76 -> 5.09 */
+body.tmr-light .tmr-nflsimx a{color:#1663bf !important}                               /* blue on #F4F7FA 3.71 -> 5.47 */
+
+/* 4. Wide tables (CHECKLIST #14). tmr-sim-ux.js marks every scrolling table box
+      .simux-scroll; when it overflows it gets .simux-overflow, a sticky first
+      column, an edge fade on the side with more to show and a one-line hint. */
+.simux-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}
+.simux-scroll:focus-visible{outline:2px solid #38bdf8;outline-offset:2px}
+.simux-overflow.simux-more-r{-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 34px),rgba(0,0,0,.25));mask-image:linear-gradient(to right,#000 calc(100% - 34px),rgba(0,0,0,.25))}
+.simux-overflow > table > :where(thead, tbody, tfoot) > tr > :first-child,
+.simux-overflow > table > tr > :first-child{position:sticky;left:0;z-index:2;background:var(--simux-bg,#0d1526);box-shadow:1px 0 0 rgba(148,163,184,.25)}
+.simux-hint{display:flex;align-items:center;gap:6px;margin:6px 0 4px;font:600 12.5px/1.3 Inter,system-ui,sans-serif;color:#9fb0c6}
+body.tmr-light .simux-hint{color:#4a5d73}
+.simux-hint[hidden]{display:none}
+
+/* 5. Loading and error states shared by every sim fetch (tmr-sim-ux.js). */
+.simux-state{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:10px 0;padding:12px 14px;border-radius:12px;
+  border:1px solid rgba(148,163,184,.28);background:rgba(15,23,42,.55);color:#dbe5f1;font:600 14px/1.4 Inter,system-ui,sans-serif}
+body.tmr-light .simux-state{background:#f4f7fa;color:#1f2d3d;border-color:#d2deea}
+.simux-state.is-error{border-color:#f87171}
+.simux-state button{font:700 13px/1 Inter,system-ui,sans-serif;padding:8px 12px;border-radius:9px;border:1px solid #38bdf8;background:transparent;color:inherit;cursor:pointer}
+.simux-spin{width:16px;height:16px;border-radius:50%;border:2px solid rgba(148,163,184,.35);border-top-color:#38bdf8;animation:simux-spin .8s linear infinite}
+@keyframes simux-spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.simux-spin{animation:none}}
+
+/* 6. Live help launcher steps aside while it would cover a control or a table
+      cell (CHECKLIST #15); see tmr-sim-ux.js. */
+.tmr-lc:not(.is-open) .tmr-lc-launcher.simux-yield{opacity:0 !important;visibility:hidden !important;pointer-events:none !important}

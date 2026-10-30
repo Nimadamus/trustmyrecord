@@ -464,7 +464,11 @@
         loadLeaderboard();
       })
       .catch(function () {
-        if (attempt < 4) { setTimeout(function () { loadTeams(attempt + 1); }, 3000 + attempt * 2000); return; }
+        // SIM_UX_20261030 (#5): say it is retrying, never a silent spinner for 25 s.
+        if (attempt < 4) { setStatus('<i class="fas fa-spinner fa-spin"></i> The team list did not load. Trying again (' + (attempt + 2) + ' of 5)...', 'err'); setTimeout(function () { loadTeams(attempt + 1); }, 3000 + attempt * 2000); return; }
+        ['ss-build-divisions', 'ss-build-wildcards', 'ss-build-champions', 'ss-build-wintotals', 'ss-build-bracket'].forEach(function (id) {
+          var n = el(id); if (n) n.innerHTML = '<div class="ss-loading">The team list could not be loaded. Use Retry above.</div>';
+        });
         setStatus('<i class="fas fa-circle-exclamation"></i> Could not reach the simulator. <button type="button" id="ss-retry" class="ss-roster-link" style="font-size:0.95rem;">Retry</button>', 'err');
         var rb = el('ss-retry'); if (rb) rb.addEventListener('click', function () { loadTeams(0); });
       });
