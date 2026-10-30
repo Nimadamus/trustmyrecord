@@ -38,7 +38,7 @@ GIT = 'git'
 
 ADD = ['mlb-playoff-odds', 'mlb-simulator', 'data/mlb-playoff-odds-inputs.json', 'nfl-season-simulator', 'nfl-simulator',
        'nfl-playoff-simulator', 'sitemap.xml', 'nba-season-simulator', 'nba-playoff-simulator', 'nhl-season-simulator',
-       'nhl-playoff-simulator', 'nba-simulator', 'nhl-simulator']
+       'nhl-playoff-simulator', 'nba-simulator', 'nhl-simulator', 'data/nhl-evaluation.json']
 
 START = time.time()
 state = {}
@@ -136,6 +136,10 @@ def nhl_pages():
     if run('nhl: splice', [sys.executable, r'scripts\refresh_nhl_sim_pages.py'], fatal=False) != 0:
         log('nhl pages: refresh failed, kept as committed')
         run('nhl: undo', [GIT, 'checkout', '-q', '--', 'nba-simulator', 'nhl-simulator', 'scripts/sim-matchup-urls.txt', 'scripts/sim-team-urls.txt'], fatal=False)
+    # NHL_EVALUATION_20261030: hub accuracy numbers from the live ledger + accuracy report.
+    if run('nhl: evaluation', [NODE, os.path.join('scripts', 'stamp-nhl-evaluation.js'), '--fetch'], fatal=False) != 0:
+        log('nhl evaluation: stamp failed, kept as committed')
+        run('nhl: undo evaluation', [GIT, 'checkout', '-q', '--', 'data/nhl-evaluation.json', 'nhl-simulator/index.html'], fatal=False)
 
 
 def main():

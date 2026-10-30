@@ -1,0 +1,302 @@
+{
+ "fetched_at": "2026-10-30T13:24:51.197Z",
+ "source": {
+  "live": "/api/nhl/ledger/report",
+  "backtest": "/api/nhl/public/accuracy (report)"
+ },
+ "live": {
+  "definition_version": "nhl-ledger-v1",
+  "from": "2026-10-07",
+  "to": "2026-10-29",
+  "games": 161,
+  "model_brier": 0.23536,
+  "market_brier": 0.229622,
+  "market_games": 161,
+  "gap": 0.005738,
+  "brier": 0.23536,
+  "log_loss": 0.663213,
+  "winner_accuracy": 0.621118,
+  "home_won": 0.57764,
+  "goalie_accuracy": {
+   "sides": 80,
+   "correct": 56,
+   "rate": 0.7
+  },
+  "goalie_accuracy_at_close": {
+   "sides": 0,
+   "correct": 0,
+   "rate": null,
+   "confirmed": {
+    "sides": 0,
+    "correct": 0,
+    "rate": null
+   },
+   "projected": {
+    "sides": 0,
+    "correct": 0,
+    "rate": null
+   }
+  },
+  "model_versions": [
+   "tmr-nhl-sim-1.1.0"
+  ],
+  "engine_versions": [
+   "tmr-nhl-engine-0e09572b8a4a",
+   "tmr-nhl-engine-c17018e693d2"
+  ],
+  "fingerprints": 76,
+  "first_game_utc": "2026-10-07T23:30:00.000Z",
+  "team_vs_market": [
+   {
+    "abbr": "FLA",
+    "games": 9,
+    "model_minus_market": -0.131457
+   },
+   {
+    "abbr": "NJD",
+    "games": 10,
+    "model_minus_market": -0.079886
+   },
+   {
+    "abbr": "TOR",
+    "games": 11,
+    "model_minus_market": -0.065221
+   },
+   {
+    "abbr": "SJS",
+    "games": 11,
+    "model_minus_market": -0.043631
+   },
+   {
+    "abbr": "VGK",
+    "games": 10,
+    "model_minus_market": -0.039658
+   },
+   {
+    "abbr": "LAK",
+    "games": 9,
+    "model_minus_market": -0.038711
+   },
+   {
+    "abbr": "CAR",
+    "games": 11,
+    "model_minus_market": -0.033415
+   },
+   {
+    "abbr": "UTA",
+    "games": 10,
+    "model_minus_market": -0.023458
+   },
+   {
+    "abbr": "VAN",
+    "games": 11,
+    "model_minus_market": -0.014694
+   },
+   {
+    "abbr": "EDM",
+    "games": 10,
+    "model_minus_market": -0.01042
+   },
+   {
+    "abbr": "MTL",
+    "games": 10,
+    "model_minus_market": -0.008407
+   },
+   {
+    "abbr": "ANA",
+    "games": 11,
+    "model_minus_market": -0.007898
+   },
+   {
+    "abbr": "DAL",
+    "games": 10,
+    "model_minus_market": -0.007023
+   },
+   {
+    "abbr": "TBL",
+    "games": 9,
+    "model_minus_market": -0.005786
+   },
+   {
+    "abbr": "CHI",
+    "games": 9,
+    "model_minus_market": -0.000982
+   },
+   {
+    "abbr": "NSH",
+    "games": 10,
+    "model_minus_market": 0.007495
+   },
+   {
+    "abbr": "WPG",
+    "games": 10,
+    "model_minus_market": 0.007568
+   },
+   {
+    "abbr": "DET",
+    "games": 10,
+    "model_minus_market": 0.008047
+   },
+   {
+    "abbr": "MIN",
+    "games": 12,
+    "model_minus_market": 0.009127
+   },
+   {
+    "abbr": "PHI",
+    "games": 11,
+    "model_minus_market": 0.014118
+   },
+   {
+    "abbr": "PIT",
+    "games": 10,
+    "model_minus_market": 0.016911
+   },
+   {
+    "abbr": "CGY",
+    "games": 9,
+    "model_minus_market": 0.020345
+   },
+   {
+    "abbr": "WSH",
+    "games": 10,
+    "model_minus_market": 0.022973
+   },
+   {
+    "abbr": "CBJ",
+    "games": 9,
+    "model_minus_market": 0.029388
+   },
+   {
+    "abbr": "OTT",
+    "games": 11,
+    "model_minus_market": 0.031769
+   },
+   {
+    "abbr": "STL",
+    "games": 10,
+    "model_minus_market": 0.032967
+   },
+   {
+    "abbr": "NYR",
+    "games": 9,
+    "model_minus_market": 0.034053
+   },
+   {
+    "abbr": "COL",
+    "games": 11,
+    "model_minus_market": 0.036581
+   },
+   {
+    "abbr": "BUF",
+    "games": 10,
+    "model_minus_market": 0.042
+   },
+   {
+    "abbr": "NYI",
+    "games": 10,
+    "model_minus_market": 0.051909
+   },
+   {
+    "abbr": "SEA",
+    "games": 9,
+    "model_minus_market": 0.065447
+   },
+   {
+    "abbr": "BOS",
+    "games": 10,
+    "model_minus_market": 0.083593
+   }
+  ]
+ },
+ "backtest": {
+  "generated_at": "2026-10-07T15:08:09.732Z",
+  "model": "walk-forward ridge ratings, starting goaltender (weight 0.5), calibration fitted on earlier seasons only",
+  "method": "Every regular-season game projected from games already played that morning. The win-probability calibration for each season was fitted only on seasons before it. All calibrated games are counted; nothing is filtered by result.",
+  "market_source": "moneylines recorded in TrustMyRecord's trends database (data/trendspotter/history/nhl.json), vig removed; only games priced on both sides",
+  "all": {
+   "label": "all calibrated seasons",
+   "games": 3939,
+   "from": "2023-10-10",
+   "to": "2026-04-17",
+   "winner_accuracy": 0.5831,
+   "always_home_accuracy": 0.5423,
+   "brier": 0.2385,
+   "coin_flip_brier": 0.25,
+   "log_loss": 0.6694,
+   "margin_mae": 2.139,
+   "total_mae": 1.865,
+   "market": {
+    "games": 833,
+    "share_of_games": 0.211,
+    "model_brier": 0.2444,
+    "market_brier": 0.243,
+    "model_log_loss": 0.682,
+    "market_log_loss": 0.6789,
+    "model_accuracy": 0.5546,
+    "market_accuracy": 0.5618,
+    "brier_gap_model_minus_market": 0.0015,
+    "brier_gap_95": [
+     -0.0021,
+     0.0048
+    ]
+   }
+  },
+  "by_season": [
+   {
+    "label": "2023-24",
+    "games": 1315,
+    "from": "2023-10-10",
+    "to": "2024-04-19",
+    "winner_accuracy": 0.603,
+    "always_home_accuracy": 0.5422,
+    "brier": 0.2345,
+    "coin_flip_brier": 0.25,
+    "log_loss": 0.6611,
+    "margin_mae": 2.15,
+    "total_mae": 1.862
+   },
+   {
+    "label": "2024-25",
+    "games": 1312,
+    "from": "2024-10-04",
+    "to": "2025-04-18",
+    "winner_accuracy": 0.6014,
+    "always_home_accuracy": 0.5625,
+    "brier": 0.234,
+    "coin_flip_brier": 0.25,
+    "log_loss": 0.66,
+    "margin_mae": 2.131,
+    "total_mae": 1.889
+   },
+   {
+    "label": "2025-26",
+    "games": 1312,
+    "from": "2025-10-07",
+    "to": "2026-04-17",
+    "winner_accuracy": 0.545,
+    "always_home_accuracy": 0.5221,
+    "brier": 0.247,
+    "coin_flip_brier": 0.25,
+    "log_loss": 0.6871,
+    "margin_mae": 2.137,
+    "total_mae": 1.843,
+    "market": {
+     "games": 833,
+     "share_of_games": 0.635,
+     "model_brier": 0.2444,
+     "market_brier": 0.243,
+     "model_log_loss": 0.682,
+     "market_log_loss": 0.6789,
+     "model_accuracy": 0.5546,
+     "market_accuracy": 0.5618,
+     "brier_gap_model_minus_market": 0.0015,
+     "brier_gap_95": [
+      -0.0021,
+      0.0048
+     ]
+    }
+   }
+  ]
+ }
+}

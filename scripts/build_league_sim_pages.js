@@ -259,7 +259,17 @@ function page(sport, mode, inputs, result, shell) {
     ? `<p>Ties in the standings are settled by head to head winning percentage between the tied teams, then by a random draw. The NBA's later steps, division record, conference record and record against playoff teams, are not applied. Across thousands of simulated seasons they change a seed rarely, and they are listed here rather than approximated.</p>`
     : `<p>Ties in points are settled by regulation wins, then by points in the games between the tied teams, then by a random draw. The NHL's later steps, such as goal differential, are not applied, and they are listed here rather than approximated.</p>`;
 
+  // NHL_EVALUATION_20261030: NHL live numbers and the market gaps come from
+  // data/nhl-evaluation.json (scripts/stamp-nhl-evaluation.js), never typed here.
+  const ev = nba ? null : nhlEvaluation();
+  const nhlLive = ev ? `<p>Live, 2026-27: every NHL game since ${ptDate(ev.live.from + 'T12:00:00Z')} has been frozen before puck drop and graded after the final. Through ${ptDate(ev.live.to + 'T12:00:00Z')}, ${count(ev.live.games)} games, the model's Brier score was ${Number(ev.live.model_brier).toFixed(4)} against ${Number(ev.live.market_brier).toFixed(4)} for the no-vig betting market on the same games. The market has been the better forecaster so far, and these season and Cup odds come from the same ratings.</p>` : '';
+  const gaps = ev ? (ev.live.team_vs_market || []).filter((t) => t.games >= 5 && Math.abs(t.model_minus_market) >= 0.05).sort((a, b) => Math.abs(b.model_minus_market) - Math.abs(a.model_minus_market)) : [];
+  const teamName = (abbr) => { const t = inputs.teams.find((x) => x.espn_abbr === abbr || x.espn_abbr === ({ TBL: 'TB', NJD: 'NJ', SJS: 'SJ', LAK: 'LA', UTA: 'UTAH' })[abbr]); return t ? t.name : abbr; };
+  const gapLine = (t) => `${esc(teamName(t.abbr))} ${Math.abs(t.model_minus_market * 100).toFixed(0)} points ${t.model_minus_market < 0 ? 'lower' : 'higher'} over ${t.games} games`;
+  const nhlGaps = gaps.length ? `<p>Where the ratings and the market disagree most so far, as the model's win probability minus the market's for that club, game by game: ${gaps.slice(0, 5).map(gapLine).join('; ')}. A club rated from a 2025-26 season played without injured regulars, or one that changed its roster over the summer, can sit well away from the market until enough 2026-27 games are played, and its season, playoff and Cup percentages carry that error.</p>` : '';
+  const nhlUncertainty = nba ? '' : `<p>Treat a Stanley Cup percentage as the least certain number on the page. It multiplies four playoff rounds of close to even games, so a few points of rating error in one club moves its Cup chance far more than its playoff chance, and the 80% ranges above cover the luck of the schedule only, not the chance that the ratings themselves are wrong.</p>`;
   const limits = `<p>The model rates teams on results already played. A trade, a signing or an injury changes a team's rating only once games are played with it, so early in the season a team that rebuilt over the summer is rated on the roster it had. The win probability for a game in March does not know rest, back to backs or ${nba ? 'who sits' : 'the starting goalie'} that night. The model data was last built ${F.builtAt ? ptDate(F.builtAt, true) : 'recently'}.</p>`;
+  const limitsAll = limits + (nba ? '' : nhlGaps + nhlUncertainty);
 
   const split = mode === 'season'
     ? `<p>Those playoff percentages come from simulating the standings. To run the bracket, use the <a href="${sib}">${L.label} Playoff Simulator</a>.</p>`
@@ -368,11 +378,11 @@ ${NAV_RESERVE}
       ? `<p>The model that sets these probabilities was frozen before the 2025-26 season and then scored once on it: Brier 0.20603, log loss 0.59947, and the winner called correctly in 68.97% of 1,231 games. The game simulator scored 0.24021 on the same season and a coin flip scores 0.25000. No number here was tuned on that season, which is what makes it a test rather than a fit.</p>`
       : nba
       ? `<p>The game simulator's calibrated probability scored a Brier of 0.24021 on an untouched 2025-26 season, against 0.25000 for a coin flip.</p>`
-      : `<p>Hockey is the hardest of the four to forecast, and this page says so with numbers rather than adjectives. The engine's calibrated probability scored a Brier of 0.24727 on an untouched 2025-26 season, against 0.25000 for a coin flip. Two replacements were measured on that same season on 2026-09-15, a recalibrated Elo with rest and back to backs (0.24940) and the frozen V2 anchor (0.24856), and both were worse, so nothing was changed. The engine keeps the job until something beats it.</p>`}
+      : `<p>Hockey is the hardest of the four to forecast, and this page says so with numbers rather than adjectives. The engine's calibrated probability scored a Brier of 0.24727 on an untouched 2025-26 season, against 0.25000 for a coin flip. Two replacements were measured on that same season on 2026-09-15, a recalibrated Elo with rest and back to backs (0.24940) and the frozen V2 anchor (0.24856), and both were worse, so nothing was changed. The engine keeps the job until something beats it.</p>${nhlLive}`}
     <h2>Tiebreakers</h2>
     ${tiebreak}
     <h2>What the projection does not know</h2>
-    ${limits}
+    ${limitsAll}
 
     <h2 id="faq">${esc(h1)} FAQ</h2>
     ${faq.html}
@@ -1183,12 +1193,40 @@ function patchMatchups(sport, inputs, result) {
   return n;
 }
 
-module.exports = { shellAssets, CSS, faqBlock, ptDate, pctText, count, slugOf, esc, UI_one, pickPanel, seasonState, seasonStateLine };
+function nhlEvaluation() {
+  try { return JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'nhl-evaluation.json'), 'utf8')); } catch (e) { return null; }
+}
+
+/* NHL_STALE_FALLBACK_20261030: a server that has just restarted serves its committed
+   snapshot (Aug 26 2026 for the NHL) until the first live build lands, and labels it
+   model.fallback. A bake in that window used to print August ratings as today's.
+   Never bake from the fallback or from a ratings build over 36 hours old. */
+const MAX_INPUT_AGE_H = 36;
+function inputsProblem(inputs, now) {
+  const m = (inputs && inputs.model) || {};
+  if (m.fallback) return 'season inputs come from the committed fallback snapshot (built ' + (m.built_at || 'unknown') + ')';
+  const age = m.built_at ? (now - Date.parse(m.built_at)) / 3600e3 : Infinity;
+  if (!(age <= MAX_INPUT_AGE_H)) return 'season inputs come from a ratings build ' + (Number.isFinite(age) ? age.toFixed(0) + ' h' : 'of unknown age') + ' old';
+  return null;
+}
+
+module.exports = { inputsProblem, MAX_INPUT_AGE_H, shellAssets, CSS, faqBlock, ptDate, pctText, count, slugOf, esc, UI_one, pickPanel, seasonState, seasonStateLine };
 
 if (require.main === module) (async () => {
   const shell = shellAssets();
   for (const sport of ['nba', 'nhl']) {
-    const inputs = await inputsFor(sport);
+    let inputs = await inputsFor(sport);
+    if (!argVal('--inputs-dir')) {
+      // A restart fallback clears within minutes: wait for the live build, then give up
+      // on this league only (its pages stay as last baked, with their own date).
+      for (let i = 0; inputsProblem(inputs, Date.now()) && i < 4; i++) {
+        console.log(`${sport}: ${inputsProblem(inputs, Date.now())}; waiting 90 s for the live build`);
+        await new Promise((r) => setTimeout(r, 90e3));
+        inputs = await inputsFor(sport);
+      }
+      const problem = inputsProblem(inputs, Date.now());
+      if (problem) { console.error(`${sport}: ${problem}; season and playoff pages NOT rebaked`); continue; }
+    }
     inputs.teams.forEach((t) => { t.logo = UI.smallLogo(t.logo); });   // LOGO_SIZE_20261030
     if (!inputs.teams || inputs.teams.length < 30 || !inputs.schedule || inputs.schedule.length < 1000) {
       throw new Error(`${sport}: inputs look incomplete (${(inputs.teams || []).length} teams, ${(inputs.schedule || []).length} games); nothing written`);

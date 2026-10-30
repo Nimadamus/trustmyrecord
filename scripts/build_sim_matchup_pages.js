@@ -424,6 +424,18 @@ ${siblings}
 /* NHL                                                                        */
 /* ------------------------------------------------------------------------- */
 
+/** NHL_SEASON_LABEL_20261030: the season basis, from the model's own season fields. */
+function nhlBasis(model) {
+  const se = (model && model.seasons) || {};
+  const last = se.last || (model && model.statsSeasonLabel) || null;
+  if (se.currentStarted && se.current) {
+    return { header: se.current + ' records, per-game rates blending ' + last + ' with ' + se.current,
+      production: last + ' production blended with ' + se.current + ' to date' };
+  }
+  return { header: last + ' season', production: last + ' production' };
+}
+const ptDay = (iso) => new Date(String(iso).slice(0, 10) + 'T12:00:00Z').toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+
 function nhlNickname(team) {
   // "Toronto Maple Leafs" -> "Maple Leafs". The feed's common name is the city
   // for some teams, so the nickname is taken off the end of the full name.
@@ -473,6 +485,17 @@ function nhlPage(awayAbbr, homeAbbr, cssHash, siblings) {
       + (pl.season ? n1(pl.season.toiPerGame) : '--') + '</td></tr>').join('\n          ');
 
   const sg = d.matchup.starting_goalies;
+  // NHL_SEASON_LABEL_20261030: say what the numbers are. Records are this season's
+  // once it has started; per-game rates blend last season with this one. The old
+  // header printed meta.stats_season ("2025-26 season") above 2026-27 records.
+  const basis = nhlBasis(model);
+  const goalieSub = (team, g) => {
+    const proj = team.lineup && team.lineup.goalieProjection;
+    const confirmed = proj && proj.status === 'confirmed' && String(proj.starterId) === String(g.id);
+    const when = proj && proj.nextGame && proj.nextGame.date ? ' for ' + ptDay(proj.nextGame.date) : '';
+    return esc(team.name) + (confirmed ? ' confirmed starter' + when + ' (Daily Faceoff)' : ' projected starter' + when)
+      + (g.replacementLevel ? ', no qualifying season' : ', ' + g.gamesStarted + ' starts');
+  };
 
   const body = `  <div class="panel">
     <div class="sechead">Model projection</div>
@@ -503,17 +526,17 @@ function nhlPage(awayAbbr, homeAbbr, cssHash, siblings) {
       <div class="kpi"><div class="k">Projected shots</div><div class="v">${n1(d.matchup.projected_shots.away)} - ${n1(d.matchup.projected_shots.home)}</div><div class="s">On goal, per team</div></div>
     </div>
     <div class="goaliecard">
-      <div><div class="nm">${esc(sg.away.name)}</div><div class="sub">${esc(away.name)} projected starter${sg.away.replacementLevel ? ', no qualifying season' : ', ' + sg.away.gamesStarted + ' starts'}</div></div>
+      <div><div class="nm">${esc(sg.away.name)}</div><div class="sub">${goalieSub(away, sg.away)}</div></div>
       <div class="ln">${String(sg.away.savePct).replace(/^0/, '')} SV%</div>
     </div>
     <div class="goaliecard">
-      <div><div class="nm">${esc(sg.home.name)}</div><div class="sub">${esc(home.name)} projected starter${sg.home.replacementLevel ? ', no qualifying season' : ', ' + sg.home.gamesStarted + ' starts'}</div></div>
+      <div><div class="nm">${esc(sg.home.name)}</div><div class="sub">${goalieSub(home, sg.home)}</div></div>
       <div class="ln">${String(sg.home.savePct).replace(/^0/, '')} SV%</div>
     </div>
   </div>
 
   <div class="panel">
-    <div class="sechead">${esc(away.name)} against ${esc(home.name)}, ${esc(d.meta.stats_season)} season</div>
+    <div class="sechead">${esc(away.name)} against ${esc(home.name)}, ${esc(basis.header)}</div>
     <div class="tablewrap"><table>
       <thead><tr><th>${crestImg(away, 22)} ${esc(away.abbr)}</th><th>Metric</th><th>${crestImg(home, 22)} ${esc(home.abbr)}</th></tr></thead>
       <tbody>
@@ -568,7 +591,7 @@ function nhlPage(awayAbbr, homeAbbr, cssHash, siblings) {
   <p class="lead">This page runs the TrustMyRecord NHL simulator on ${esc(away.name)} at ${esc(home.name)} and prints the result of ${PAGE_SIMS.toLocaleString('en-US')} simulated games. The numbers above are the average of those runs: the projected score, win probability, total and overtime share all come out of the same shot-and-conversion model that powers the full simulator. To play one game out period by period and get shots on goal, both goaltender lines and a complete box score, open it live.</p>
 
   <h2>How the projection is built</h2>
-  <p>Each team's shot volume is its own shots-for rate met against the opponent's shots-against rate. ${esc(away.name)} put ${n1(away.shotsFor)} shots on goal a game last season and allowed ${n1(away.shotsAgainst)}; ${esc(home.name)} put up ${n1(home.shotsFor)} and allowed ${n1(home.shotsAgainst)}. Conversion combines each team's shooting with the goaltender actually in the other net, which is why the starter matters here: ${esc(sg.away.name)} and ${esc(sg.home.name)} are the projected starters, and swapping either one in the live simulator visibly moves the projection.</p>
+  <p>Each team's shot volume is its own shots-for rate met against the opponent's shots-against rate. ${esc(away.name)} put ${n1(away.shotsFor)} shots on goal a game (season blend) and allowed ${n1(away.shotsAgainst)}; ${esc(home.name)} put up ${n1(home.shotsFor)} and allowed ${n1(home.shotsAgainst)}. Conversion combines each team's shooting with the goaltender actually in the other net, which is why the starter matters here: ${esc(sg.away.name)} and ${esc(sg.home.name)} are the projected starters, and swapping either one in the live simulator visibly moves the projection.</p>
   <p>Special teams are simulated rather than assumed. ${esc(away.name)} ran a ${pctOf(away.powerPlayPct)} power play against a ${pctOf(home.penaltyKillPct)} kill, and ${esc(home.name)} ran ${pctOf(home.powerPlayPct)} against ${pctOf(away.penaltyKillPct)}. Across ${PAGE_SIMS.toLocaleString('en-US')} runs the model made ${esc(favName)} a ${pctOf(favWp)} favourite, projected a total of ${n2(p.total.mean)} goals, and sent ${pctOf(p.overtime_share)} of games past regulation.</p>
 
   <h2>Run it yourself</h2>
@@ -614,8 +637,8 @@ ${siblings}
       sportLabel: 'NHL',
       aboutTeams: [away.name, home.name],
       standfirst: 'A full simulation of ' + away.name + ' at ' + home.name + ', run '
-        + PAGE_SIMS.toLocaleString('en-US') + ' times on current rosters and ' + d.meta.stats_season
-        + ' production. Projected score, win probability, total, goaltending and the model drivers, '
+        + PAGE_SIMS.toLocaleString('en-US') + ' times on current rosters and ' + basis.production
+        + '. Projected score, win probability, total, goaltending and the model drivers, '
         + 'plus a live run for the complete period-by-period box score.',
       runHref: '/nhl-simulator/?away=' + away.abbr + '&amp;home=' + home.abbr,
       cssHash: cssHash,
