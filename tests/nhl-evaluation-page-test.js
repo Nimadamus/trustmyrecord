@@ -32,6 +32,12 @@ assert.ok(html.includes(Number(L.model_brier).toFixed(4)) && html.includes(Numbe
 assert.ok(html.includes(Number(data.backtest.all.games).toLocaleString('en-US') + ' games'), 'backtest count from the data file');
 assert.ok(/Opening week[^<]*not backfilled/.test(html), 'opening week gap stated');
 
+for (const p of ['nhl-season-simulator', 'nhl-playoff-simulator']) {
+  const h = fs.readFileSync(path.join(ROOT, p, 'index.html'), 'utf8');
+  assert.ok(h.includes('least certain number on the page'), p + ': Cup-odds uncertainty stated');
+  assert.ok(h.includes(Number(L.model_brier).toFixed(4)), p + ': live model Brier from the data file');
+}
+
 const mp = fs.readFileSync(path.join(ROOT, 'scripts', 'build_sim_matchup_pages.js'), 'utf8');
 assert.ok(!/esc\(d\.meta\.stats_season\)\} season/.test(mp) && !/\+ d\.meta\.stats_season/.test(mp), 'matchup header no longer prints meta.stats_season');
 assert.ok(/nhlBasis\(model\)/.test(mp), 'matchup header from the model season basis');

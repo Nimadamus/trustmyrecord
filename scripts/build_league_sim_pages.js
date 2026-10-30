@@ -259,15 +259,7 @@ function page(sport, mode, inputs, result, shell) {
     ? `<p>Ties in the standings are settled by head to head winning percentage between the tied teams, then by a random draw. The NBA's later steps, division record, conference record and record against playoff teams, are not applied. Across thousands of simulated seasons they change a seed rarely, and they are listed here rather than approximated.</p>`
     : `<p>Ties in points are settled by regulation wins, then by points in the games between the tied teams, then by a random draw. The NHL's later steps, such as goal differential, are not applied, and they are listed here rather than approximated.</p>`;
 
-  // NHL_EVALUATION_20261030: NHL live numbers and the market gaps come from
-  // data/nhl-evaluation.json (scripts/stamp-nhl-evaluation.js), never typed here.
-  const ev = nba ? null : nhlEvaluation();
-  const nhlLive = ev ? `<p>Live, 2026-27: every NHL game since ${ptDate(ev.live.from + 'T12:00:00Z')} has been frozen before puck drop and graded after the final. Through ${ptDate(ev.live.to + 'T12:00:00Z')}, ${count(ev.live.games)} games, the model's Brier score was ${Number(ev.live.model_brier).toFixed(4)} against ${Number(ev.live.market_brier).toFixed(4)} for the no-vig betting market on the same games. The market has been the better forecaster so far, and these season and Cup odds come from the same ratings.</p>` : '';
-  const gaps = ev ? (ev.live.team_vs_market || []).filter((t) => t.games >= 5 && Math.abs(t.model_minus_market) >= 0.05).sort((a, b) => Math.abs(b.model_minus_market) - Math.abs(a.model_minus_market)) : [];
-  const teamName = (abbr) => { const t = inputs.teams.find((x) => x.espn_abbr === abbr || x.espn_abbr === ({ TBL: 'TB', NJD: 'NJ', SJS: 'SJ', LAK: 'LA', UTA: 'UTAH' })[abbr]); return t ? t.name : abbr; };
-  const gapLine = (t) => `${esc(teamName(t.abbr))} ${Math.abs(t.model_minus_market * 100).toFixed(0)} points ${t.model_minus_market < 0 ? 'lower' : 'higher'} over ${t.games} games`;
-  const nhlGaps = gaps.length ? `<p>Where the ratings and the market disagree most so far, as the model's win probability minus the market's for that club, game by game: ${gaps.slice(0, 5).map(gapLine).join('; ')}. A club rated from a 2025-26 season played without injured regulars, or one that changed its roster over the summer, can sit well away from the market until enough 2026-27 games are played, and its season, playoff and Cup percentages carry that error.</p>` : '';
-  const nhlUncertainty = nba ? '' : `<p>Treat a Stanley Cup percentage as the least certain number on the page. It multiplies four playoff rounds of close to even games, so a few points of rating error in one club moves its Cup chance far more than its playoff chance, and the 80% ranges above cover the luck of the schedule only, not the chance that the ratings themselves are wrong.</p>`;
+  const { nhlLive, nhlGaps, nhlUncertainty } = nba ? { nhlLive: '', nhlGaps: '', nhlUncertainty: '' } : nhlEvidence(inputs);
   const limits = `<p>The model rates teams on results already played. A trade, a signing or an injury changes a team's rating only once games are played with it, so early in the season a team that rebuilt over the summer is rated on the roster it had. The win probability for a game in March does not know rest, back to backs or ${nba ? 'who sits' : 'the starting goalie'} that night. The model data was last built ${F.builtAt ? ptDate(F.builtAt, true) : 'recently'}.</p>`;
   const limitsAll = limits + (nba ? '' : nhlGaps + nhlUncertainty);
 
@@ -637,7 +629,11 @@ ${NAV_RESERVE}
     ${nba ? formatNba : formatNhl}
     <h2>How the bracket odds are produced</h2>
     ${oddsHow}
-    <h2>Simulations are useful. Verified records matter more.</h2>
+${nba ? '' : (() => { const e = nhlEvidence(inputs); return `    <h2>How far to trust the Stanley Cup odds</h2>
+    ${e.nhlUncertainty}
+    ${e.nhlLive}
+    ${e.nhlGaps}
+`; })()}    <h2>Simulations are useful. Verified records matter more.</h2>
     <p>A simulator can tell you what might happen. It cannot tell you who has actually been right. That is what TrustMyRecord is built for: every pick is locked before the game, graded automatically and counted on a public record, with no deleted losers and no edited history. Use the bracket to do your homework, then put your read on the record with the <a href="/${sport}-pick-tracker/">${sportName} pick tracker</a>, and see who has earned it on the <a href="/leaderboards/">leaderboard</a> and among the <a href="/handicappers/">verified handicappers</a>.</p>
 
     <h2 id="faq">${esc(h1)} FAQ</h2>
@@ -1191,6 +1187,19 @@ function patchMatchups(sport, inputs, result) {
     n++;
   }
   return n;
+}
+
+function nhlEvidence(inputs) {
+  // NHL_EVALUATION_20261030: NHL live numbers and the market gaps come from
+  // data/nhl-evaluation.json (scripts/stamp-nhl-evaluation.js), never typed here.
+  const ev = nhlEvaluation();
+  const nhlLive = ev ? `<p>Live, 2026-27: every NHL game since ${ptDate(ev.live.from + 'T12:00:00Z')} has been frozen before puck drop and graded after the final. Through ${ptDate(ev.live.to + 'T12:00:00Z')}, ${count(ev.live.games)} games, the model's Brier score was ${Number(ev.live.model_brier).toFixed(4)} against ${Number(ev.live.market_brier).toFixed(4)} for the no-vig betting market on the same games. The market has been the better forecaster so far, and these season and Cup odds come from the same ratings.</p>` : '';
+  const gaps = ev ? (ev.live.team_vs_market || []).filter((t) => t.games >= 5 && Math.abs(t.model_minus_market) >= 0.05).sort((a, b) => Math.abs(b.model_minus_market) - Math.abs(a.model_minus_market)) : [];
+  const teamName = (abbr) => { const t = inputs.teams.find((x) => x.espn_abbr === abbr || x.espn_abbr === ({ TBL: 'TB', NJD: 'NJ', SJS: 'SJ', LAK: 'LA', UTA: 'UTAH' })[abbr]); return t ? t.name : abbr; };
+  const gapLine = (t) => `${esc(teamName(t.abbr))} ${Math.abs(t.model_minus_market * 100).toFixed(0)} points ${t.model_minus_market < 0 ? 'lower' : 'higher'} over ${t.games} games`;
+  const nhlGaps = gaps.length ? `<p>Where the ratings and the market disagree most so far, as the model's win probability minus the market's for that club, game by game: ${gaps.slice(0, 5).map(gapLine).join('; ')}. A club rated from a 2025-26 season played without injured regulars, or one that changed its roster over the summer, can sit well away from the market until enough 2026-27 games are played, and its season, playoff and Cup percentages carry that error.</p>` : '';
+  const nhlUncertainty = `<p>Treat a Stanley Cup percentage as the least certain number on the page. It multiplies four playoff rounds of close to even games, so a few points of rating error in one club moves its Cup chance far more than its playoff chance, and the 80% ranges above cover the luck of the schedule only, not the chance that the ratings themselves are wrong.</p>`;
+  return { nhlLive, nhlGaps, nhlUncertainty };
 }
 
 function nhlEvaluation() {
