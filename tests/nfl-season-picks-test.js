@@ -59,6 +59,9 @@ ok('strength noise: sigma 0 is the old engine; noise widens the ranges', () => {
   const a = N.project(d, 600, 9, { sigma: 0 }), b = N.project(d, 600, 9, { sigma: 0.5 });
   const width = (r) => r.teams.reduce((s, t) => s + t.wins_p90 - t.wins_p10, 0);
   assert.ok(width(b) > width(a));
+  assert.strictEqual(N.SIGMA, 0.5, 'shipped sigma (CAND_NFL_SEASON_STRENGTH_NOISE_V1, lab CHANGELOG 2026-10-30)');
+  assert.ok(width(N.project(d, 600, 9)) > width(a), 'the default run includes strength uncertainty');
+  assert.ok(/team strength uncertainty/.test(read('nfl-season-simulator/index.html')), 'methodology copy discloses it');
   assert.deepStrictEqual(N.project(d, 200, 3, { sigma: 0.5 }).teams, N.project(d, 200, 3, { sigma: 0.5 }).teams, 'same seed, same answer');
 });
 
