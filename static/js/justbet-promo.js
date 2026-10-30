@@ -21,7 +21,7 @@
 
     var TMR_JUSTBET_PROMO = {
         // Master on/off. Set false after the weekend to hide every box sitewide.
-        ENABLED: true,
+        ENABLED: false,
         // JustBet SportsCapper Bonus Bonanza Weekend invite/VIP promo funnel.
         PROMO_URL: 'https://www.justbet.co/with-invitation/sportscapper-bonus-bonanza-weekend',
         // Invite / referral code — shown prominently.
