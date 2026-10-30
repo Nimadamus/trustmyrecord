@@ -33,8 +33,8 @@
             /*FMENU ncaaf*/ ["/matchup-of-the-day/florida-atlantic-north-texas-passing-game-is-the-difference/", "NCAAF", "/matchup-of-the-day/ncaaf/"],
             /*FMENU mlb*/ ["/matchup-of-the-day/rays-brewers-bats-feast-on-righties/", "MLB", "/matchup-of-the-day/mlb/"],
             /*FMENU nhl*/ ["/nhl/devils-golden-knights-hughes-vs-stone/", "NHL", "/matchup-of-the-day/nhl/"],
-            /*FMENU tennis*/ ["/matchup-of-the-day/struff-fils-one-closes-out-deciders/", "Tennis", "/matchup-of-the-day/tennis/"],
-            /*FMENU soccer*/ ["/matchup-of-the-day/deportivo-atletico-madrid-the-table-says-one-side/", "Soccer", "/matchup-of-the-day/soccer/"]
+            /*FMENU tennis*/ ["/matchup-of-the-day/medvedev-mannarino-the-games-say-something-else/", "Tennis", "/matchup-of-the-day/tennis/"],
+            /*FMENU soccer*/ ["/matchup-of-the-day/lens-lille-one-side-keeps-clean-sheets/", "Soccer", "/matchup-of-the-day/soccer/"]
         ]],
         // Each row lands on that league's research page, and each of those
         // pages opens on today's board for its league. All seven leagues since
