@@ -30,12 +30,27 @@
  *   Second and third in each division meet. Bracket fixed within the division,
  *   best of seven, 2-2-1-1-1, home ice to more points.
  *
- * TIEBREAKERS, STATED RATHER THAN FAKED
- *   NBA: head to head win percentage between the tied clubs, then a random
- *   draw. NHL: regulation wins, then head to head points, then a random draw.
- *   The leagues' later steps (division record, conference record, record
- *   against playoff teams, goal differential) are not applied; across thousands
- *   of seasons they move a seed rarely, and the page lists them as not applied.
+ * TIEBREAKERS (OFFICIAL_TIEBREAKERS_20261030): the leagues' full published orders.
+ *   NBA (NBA.com standings, paragraph L.2). Two clubs: head to head win pct,
+ *   division winner, division win pct (same division only), conference win pct,
+ *   win pct against playoff eligible clubs (tied for a top ten record) in own
+ *   conference, then in the other conference, point differential, random draw.
+ *   Three or more: division winner, win pct among the tied clubs, division pct
+ *   (all in one division only), conference pct, own conference playoff eligible
+ *   pct, point differential, random draw. A partial break restarts the process
+ *   for the clubs still tied; division leader ties are broken first and count
+ *   only for the division title.
+ *   NHL (NHL.com tie-breaking procedure): points percentage, regulation wins,
+ *   regulation plus overtime wins (ROW), total wins, points in the games among
+ *   the tied clubs (the odd home game excluded; percentage of available points
+ *   for three or more), goal differential, goals for, random draw.
+ *   Finished games use their real scores. A simulated game has no score, so
+ *   for the last steps (point and goal differential) a margin is drawn on a
+ *   separate random stream: NBA from a normal margin consistent with the game's
+ *   win probability (sd 12.5) given the winner; NHL from a fixed regulation
+ *   margin mix (overtime and shootout = 1 goal, a shootout win counts one goal
+ *   as the NHL does) and a Poisson loser score. Those steps decide a seed only
+ *   when every earlier step is level.
  */
 (function (root, factory) {
   var api = factory();
@@ -80,14 +95,45 @@
     return 1 / (1 + Math.exp(-z));
   }
 
+  /* NBA_SEASON_UNCERTAINTY_20261030: the same idea for the NBA, one offset
+     per club per simulated season, sd NBA_SIGMA x sqrt(share of games left,
+     floored at 0.25), on the PROBIT scale and MEAN PRESERVING: a game at p is
+     played at Phi(Phi^-1(p) x sqrt(1 + 2 s^2) + home offset - away offset), whose
+     average over the offsets is exactly p. So the projection still equals the
+     sum of the printed game odds (scripts/league-sim-consistency.js) and only
+     the spread widens. Without it the 80% win ranges held 58% of final totals.
+     NBA_SIGMA: see the fit note at its value below. */
+  /* NBA_SIGMA 0.35 (probit units, at a full season left). Fitted walk forward
+     on 2022-23 to 2025-26: ratings as of opening night and days 30, 60, 90 and
+     120 of each season (the live method), 2000 seasons per run, 600 club
+     forecasts. Leaving each season out in turn, the other three pick 0.35 (0.30
+     once); out of sample the 80% ranges hold 83.7% of final win totals (58.3%
+     without), log loss of the top six and top ten odds improves by 0.059 (95% CI
+     0.018 to 0.103, clustered by club season) and Brier by 0.0070 (0.0011 to
+     0.0132). Evidence: program_1030/evidence_leagues/nba_sigma_*. */
+  var NBA_SIGMA = 0.35;
+  var NOISE_S = 0;
+  function nbaSigma(inputs, full) {
+    var total = inputs.schedule.length, left = 0;
+    for (var i = 0; i < total; i++) if (!inputs.schedule[i].final) left++;
+    var frac = total ? left / total : 0;
+    return full * Math.sqrt(Math.max(frac, 0.25));
+  }
+  function noisy(sport, p, home, away) {
+    if (!NOISE) return p;
+    var d = (NOISE[home] || 0) - (NOISE[away] || 0);
+    if (sport === 'nhl') return shift(p, LOGIT_PER_GOAL * d);
+    var q = Math.min(0.9999, Math.max(0.0001, p));
+    return normCdf(normInv(q) * Math.sqrt(1 + 2 * NOISE_S * NOISE_S) + d);
+  }
+
   function prob(inputs, home, away) {
     var row = inputs.matchups[home];
     var c = row && row[away];
     c = c || { p: 0.5, ot: inputs.sport === 'nhl' ? 0.22 : 0 };
-    if (NOISE && inputs.sport === 'nhl') {
-      var d = LOGIT_PER_GOAL * ((NOISE[home] || 0) - (NOISE[away] || 0));
-      var out = { p: shift(c.p, d), ot: c.ot };
-      if (c.pp !== undefined && c.pp !== null) out.pp = shift(c.pp, d);
+    if (NOISE) {
+      var out = { p: noisy(inputs.sport, c.p, home, away), ot: c.ot };
+      if (c.pp !== undefined && c.pp !== null) out.pp = noisy(inputs.sport, c.pp, home, away);
       return out;
     }
     return c;
@@ -101,7 +147,7 @@
      engine all read this, so the printed odds and the projection agree. */
   function gameProb(inputs, g) {
     var c = prob(inputs, g.home, g.away);
-    if (typeof g.p_home === 'number') return { p: g.p_home, ot: c.ot, pp: c.pp };
+    if (typeof g.p_home === 'number') return { p: noisy(inputs.sport, g.p_home, g.home, g.away), ot: c.ot, pp: c.pp };
     return c;
   }
 
@@ -109,31 +155,83 @@
 
   function blankRecord(t) {
     return { abbr: t.espn_abbr, conference: t.conference, division: t.division,
-      w: 0, l: 0, otl: 0, pts: 0, rw: 0, gp: 0, h2h: {} };
+      w: 0, l: 0, otl: 0, pts: 0, rw: 0, row: 0, gp: 0, pf: 0, pa: 0, h2h: {} };
   }
 
-  function h2hAdd(rec, opp, won, pts) {
-    var h = rec.h2h[opp] || (rec.h2h[opp] = { w: 0, l: 0, pts: 0 });
+  function h2hAdd(rec, opp, won, pts, home) {
+    var h = rec.h2h[opp] || (rec.h2h[opp] = { w: 0, l: 0, pts: 0, games: [] });
     if (won) h.w += 1; else h.l += 1;
     h.pts += pts;
+    h.games.push({ home: home, pts: pts });
   }
 
-  function applyGame(sport, recs, home, away, homeWon, extra) {
+  /* One game into the standings. `extra`: decided after regulation; `so`: by
+     shootout (NHL); `hs`/`as`: the score (real, or drawn for the differential
+     steps only). */
+  function applyGame(sport, recs, home, away, homeWon, extra, so, hs, as) {
     var H = recs[home], A = recs[away];
     if (!H || !A) return;
     H.gp += 1; A.gp += 1;
     var W = homeWon ? H : A, L = homeWon ? A : H;
     W.w += 1;
+    if (typeof hs === 'number' && typeof as === 'number') {
+      H.pf += hs; H.pa += as; A.pf += as; A.pa += hs;
+    }
     if (sport === 'nhl') {
       W.pts += 2;
-      if (extra) { L.otl += 1; L.pts += 1; } else { L.l += 1; W.rw += 1; }
-      h2hAdd(W, L.abbr, true, 2);
-      h2hAdd(L, W.abbr, false, extra ? 1 : 0);
+      if (extra) { L.otl += 1; L.pts += 1; if (!so) W.row += 1; } else { L.l += 1; W.rw += 1; W.row += 1; }
+      h2hAdd(W, L.abbr, true, 2, home);
+      h2hAdd(L, W.abbr, false, extra ? 1 : 0, home);
     } else {
       L.l += 1;
-      h2hAdd(W, L.abbr, true, 0);
-      h2hAdd(L, W.abbr, false, 0);
+      h2hAdd(W, L.abbr, true, 0, home);
+      h2hAdd(L, W.abbr, false, 0, home);
     }
+  }
+
+  /* ------------------------------------------- scores for simulated games */
+
+  function normCdf(x) {
+    var t = 1 / (1 + 0.2316419 * Math.abs(x));
+    var d = 0.3989422804014327 * Math.exp(-x * x / 2);
+    var q = d * t * (0.319381530 + t * (-0.356563782 + t * (1.781477937 + t * (-1.821255978 + t * 1.330274429))));
+    return x >= 0 ? 1 - q : q;
+  }
+  function normInv(p) {
+    p = Math.min(1 - 1e-9, Math.max(1e-9, p));
+    var a = [-39.69683028665376, 220.9460984245205, -275.9285104469687, 138.3577518672690, -30.66479806614716, 2.506628277459239];
+    var b = [-54.47609879822406, 161.5858368580409, -155.6989798598866, 66.80131188771972, -13.28068155288572];
+    var c = [-0.007784894002430293, -0.3223964580411365, -2.400758277161838, -2.549732539343734, 4.374664141464968, 2.938163982698783];
+    var d = [0.007784695709041462, 0.3224671290700398, 2.445134137142996, 3.754408661907416];
+    var q, r;
+    if (p < 0.02425) { q = Math.sqrt(-2 * Math.log(p)); return (((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) / ((((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1); }
+    if (p > 1 - 0.02425) { q = Math.sqrt(-2 * Math.log(1 - p)); return -(((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) / ((((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1); }
+    q = p - 0.5; r = q * q;
+    return (((((a[0] * r + a[1]) * r + a[2]) * r + a[3]) * r + a[4]) * r + a[5]) * q / (((((b[0] * r + b[1]) * r + b[2]) * r + b[3]) * r + b[4]) * r + 1);
+  }
+  var NBA_MARGIN_SD = 12.5;
+  var NHL_REG_MARGIN = [[1, 0.36], [2, 0.31], [3, 0.18], [4, 0.09], [5, 0.04], [6, 0.02]];
+  function poisson(lam, u) {
+    var k = 0, p = Math.exp(-lam), c = p;
+    while (u > c && k < 15) { k++; p *= lam / k; c += p; }
+    return k;
+  }
+  /* [homeScore, awayScore] for a simulated game, drawn from `trng` only. */
+  function drawScore(sport, ph, homeWon, extra, trng) {
+    if (sport === 'nhl') {
+      var lose = poisson(extra ? 2.4 : 2.0, trng()), m = 1;
+      if (!extra) {
+        var u = trng(), c = 0;
+        for (var i = 0; i < NHL_REG_MARGIN.length; i++) { c += NHL_REG_MARGIN[i][1]; m = NHL_REG_MARGIN[i][0]; if (u < c) break; }
+      }
+      return homeWon ? [lose + m, lose] : [lose, lose + m];
+    }
+    var mu = NBA_MARGIN_SD * normInv(Math.min(0.995, Math.max(0.005, ph)));
+    var lo = normCdf(-mu / NBA_MARGIN_SD);
+    var v = trng(), u2 = homeWon ? lo + v * (1 - lo) : v * lo;
+    var mg = Math.round(Math.abs(mu + NBA_MARGIN_SD * normInv(u2)));
+    if (mg < 1) mg = 1;
+    return homeWon ? [110 + mg, 110] : [110, 110 + mg];
   }
 
   /* The two December NBA games per club not yet on the schedule: paired
@@ -166,28 +264,42 @@
       for (k = 0; k + 1 < pool.length; k += 2) {
         var home = pool[k], away = pool[k + 1];
         if (home === away) continue;
-        applyGame('nba', recs, home, away, rng() < prob(inputs, home, away).p, false);
+        var cp = prob(inputs, home, away).p, cw = rng() < cp;
+        var cs = drawScore('nba', cp, cw, false, recs._trng);
+        applyGame('nba', recs, home, away, cw, false, false, cs[0], cs[1]);
       }
     });
   }
+
+  /* Share of NHL extra-time games settled by shootout: 2025-26 regular season,
+     shootouts 9.1% of games, overtime or shootout 24.8% (NHL.com). Only the ROW
+     tiebreaker reads it. */
+  var NHL_SHOOTOUT_SHARE = 0.367;
 
   function simulateSeason(inputs, rng, opts) {
     var sport = inputs.sport;
     var recs = {};
     inputs.teams.forEach(function (t) { recs[t.espn_abbr] = blankRecord(t); recs[t.espn_abbr].scheduled = 0; });
+    /* Scores of simulated games come from their own stream, so the win and
+       loss draws are unchanged by the differential tiebreakers. */
+    var scored = sport === 'nba' || sport === 'nhl';   /* MLB keeps its stream exactly */
+    var trng = scored ? mulberry32(Math.floor(rng() * 4294967296)) : null;
+    Object.defineProperty(recs, '_trng', { value: trng, enumerable: false });
     var forced = (opts && opts.forced) || {};
     inputs.schedule.forEach(function (g) {
       if (recs[g.home]) recs[g.home].scheduled += 1;
       if (recs[g.away]) recs[g.away].scheduled += 1;
       if (g.final && g.home_score != null && g.away_score != null && g.home_score !== g.away_score) {
-        applyGame(sport, recs, g.home, g.away, g.home_score > g.away_score, !!g.extra_time);
+        applyGame(sport, recs, g.home, g.away, g.home_score > g.away_score, !!g.extra_time, !!g.shootout, g.home_score, g.away_score);
         return;
       }
       var c = gameProb(inputs, g);
       var ph = c.p;
       var homeWon = forced[g.id] ? forced[g.id] === 'home' : rng() < ph;
       var extra = sport === 'nhl' ? rng() < (c.ot || 0) : false;
-      applyGame(sport, recs, g.home, g.away, homeWon, extra);
+      var so = extra && trng() < NHL_SHOOTOUT_SHARE;
+      var sc = scored ? drawScore(sport, ph, homeWon, extra, trng) : [null, null];
+      applyGame(sport, recs, g.home, g.away, homeWon, extra, so, sc[0], sc[1]);
     });
     if (sport === 'nba') fillNbaCupGames(inputs, recs, rng);
     return recs;
@@ -208,12 +320,102 @@
     return w + l ? w / (w + l) : 0.5;
   }
 
-  /* Sort by the league's primary number, then the stated tiebreakers. `rng`
-     settles what is still tied, and every club carries its draw so a tie is
-     settled the same way wherever the same clubs meet in one season. */
-  function order(sport, list, rng) {
+  /* Win pct against the opponents `want` accepts (NBA record splits). */
+  function pctVs(r, recs, want) {
+    var w = 0, l = 0;
+    Object.keys(r.h2h).forEach(function (k) {
+      var o = recs[k];
+      if (!o || !want(o)) return;
+      w += r.h2h[k].w; l += r.h2h[k].l;
+    });
+    return w + l ? w / (w + l) : 0;
+  }
+
+  /* NHL head to head: points in games among `group`, the first game in the
+     city that hosted the extra game of an odd series left out; three or more
+     clubs compare the percentage of available points. */
+  function nhlH2h(r, group) {
+    var earned = 0, avail = 0;
+    group.forEach(function (o) {
+      if (o.abbr === r.abbr) return;
+      var h = r.h2h[o.abbr];
+      if (!h) return;
+      var atR = 0, atO = 0;
+      h.games.forEach(function (g) { if (g.home === r.abbr) atR++; else atO++; });
+      var skip = atR === atO ? null : (atR > atO ? r.abbr : o.abbr), skipped = false;
+      h.games.forEach(function (g) {
+        if (skip && !skipped && g.home === skip) { skipped = true; return; }
+        earned += g.pts; avail += 2;
+      });
+    });
+    if (group.length === 2) return earned;
+    return avail ? earned / avail : 0;
+  }
+
+  function nbaSteps(group, ctx) {
+    var recs = ctx.recs, two = group.length === 2;
+    var sameDiv = group.every(function (r) { return r.division === group[0].division; });
+    var divWin = function (r) { return ctx.divWinner && ctx.divWinner[r.abbr] ? 1 : 0; };
+    var h2h = function (r) { return h2hScore('nba', r, group); };
+    var divPct = function (r) { return pctVs(r, recs, function (o) { return o.division === r.division; }); };
+    var confPct = function (r) { return pctVs(r, recs, function (o) { return o.conference === r.conference; }); };
+    var eligOwn = function (r) { return pctVs(r, recs, function (o) { return o.conference === r.conference && ctx.eligible[o.abbr]; }); };
+    var eligOther = function (r) { return pctVs(r, recs, function (o) { return o.conference !== r.conference && ctx.eligible[o.abbr]; }); };
+    var pd = function (r) { return r.pf - r.pa; };
+    var steps = two ? [h2h, divWin] : [divWin, h2h];
+    if (sameDiv) steps.push(divPct);
+    steps.push(confPct, eligOwn);
+    if (two) steps.push(eligOther);
+    steps.push(pd);
+    return steps;
+  }
+
+  function nhlSteps(group) {
+    return [
+      function (r) { return r.gp ? r.pts / (2 * r.gp) : 0; },
+      function (r) { return r.rw; },
+      function (r) { return r.row; },
+      function (r) { return r.w; },
+      function (r) { return nhlH2h(r, group); },
+      function (r) { return r.pf - r.pa; },
+      function (r) { return r.pf; },
+    ];
+  }
+
+  /* Order a group level on the primary number. The first step that tells any
+     of them apart splits the group; clubs still level restart the process
+     among themselves (NBA L.2.c, and the NHL's head to head among the clubs
+     still tied). The random draw is last. */
+  function breakTie(sport, group, ctx) {
+    if (group.length < 2) return group.slice();
+    var steps = sport === 'nhl' ? nhlSteps(group) : nbaSteps(group, ctx);
+    for (var s = 0; s < steps.length; s++) {
+      var f = steps[s];
+      var vals = group.map(function (r) { return { r: r, v: f(r) }; });
+      var distinct = vals.some(function (x) { return x.v !== vals[0].v; });
+      if (!distinct) continue;
+      vals.sort(function (a, b) { return b.v - a.v; });
+      var out = [];
+      for (var i = 0; i < vals.length;) {
+        var j = i;
+        while (j + 1 < vals.length && vals[j + 1].v === vals[i].v) j++;
+        var sub = vals.slice(i, j + 1).map(function (x) { return x.r; });
+        out = out.concat(sub.length > 1 ? breakTie(sport, sub, ctx) : sub);
+        i = j + 1;
+      }
+      return out;
+    }
+    return group.slice().sort(function (a, b) { return b._draw - a._draw; });
+  }
+
+  /* Sort by the league's primary number, then the tiebreakers. `rng` gives
+     each club its random draw once, so a tie that reaches the draw is settled
+     the same way wherever the same clubs meet in one season. NBA ties need
+     `ctx` (all records, division winners, playoff eligible clubs); MLB keeps
+     head to head then the draw. */
+  function order(sport, list, rng, ctx) {
     list.forEach(function (r) { if (r._draw === undefined) r._draw = rng(); });
-    var primary = sport === 'nhl' ? function (r) { return r.pts; } : pctOf;
+    var primary = sport === 'nhl' ? function (r) { return r.gp ? r.pts / (2 * r.gp) : 0; } : pctOf;
     var sorted = list.slice().sort(function (a, b) { return primary(b) - primary(a); });
     var out = [];
     for (var i = 0; i < sorted.length;) {
@@ -221,17 +423,40 @@
       while (j + 1 < sorted.length && primary(sorted[j + 1]) === primary(sorted[i])) j++;
       var group = sorted.slice(i, j + 1);
       if (group.length > 1) {
-        group.sort(function (a, b) {
-          if (sport === 'nhl' && b.rw !== a.rw) return b.rw - a.rw;
-          var hb = h2hScore(sport, b, group), ha = h2hScore(sport, a, group);
-          if (hb !== ha) return hb - ha;
-          return b._draw - a._draw;
-        });
+        if (sport === 'nhl' || (sport === 'nba' && ctx)) group = breakTie(sport, group, ctx);
+        else {
+          group.sort(function (a, b) {
+            var hb = h2hScore(sport, b, group), ha = h2hScore(sport, a, group);
+            if (hb !== ha) return hb - ha;
+            return b._draw - a._draw;
+          });
+        }
       }
       out = out.concat(group);
       i = j + 1;
     }
     return out;
+  }
+
+  /* NBA context: playoff eligible = tied for one of the ten best records in
+     the conference; division winners from division-only tiebreaks (L.2.c). */
+  function nbaContext(recs, rng) {
+    var ctx = { recs: recs, eligible: {}, divWinner: {}, divOrder: {} };
+    var confs = byConference(recs);
+    Object.keys(confs).sort().forEach(function (c) {
+      var pcts = confs[c].map(pctOf).sort(function (a, b) { return b - a; });
+      var cut = pcts[Math.min(9, pcts.length - 1)];
+      confs[c].forEach(function (r) { if (pctOf(r) >= cut) ctx.eligible[r.abbr] = true; });
+    });
+    var divs = {};
+    Object.keys(recs).sort().forEach(function (k) { (divs[recs[k].division] || (divs[recs[k].division] = [])).push(recs[k]); });
+    Object.keys(divs).sort().forEach(function (d) {
+      var ranked = order('nba', divs[d], rng, { recs: recs, eligible: ctx.eligible, divWinner: {} });
+      ctx.divOrder[d] = ranked;
+      ctx.divWinner[ranked[0].abbr] = true;
+    });
+    Object.keys(recs).forEach(function (k) { recs[k]._ctx = ctx; });
+    return ctx;
   }
 
   function byConference(recs) {
@@ -243,9 +468,10 @@
   /* --------------------------------------------------------------- seeding */
 
   function seedNba(recs, rng, inputs, gameRng) {
+    var ctx = nbaContext(recs, rng);
     var confs = byConference(recs), out = {};
     Object.keys(confs).sort().forEach(function (conf) {
-      var ranked = order('nba', confs[conf], rng);
+      var ranked = order('nba', confs[conf], rng, ctx);
       var seeds = ranked.slice(0, 6);
       var s7 = ranked[6], s8 = ranked[7], s9 = ranked[8], s10 = ranked[9];
       var g1 = playGame(inputs, s7, s8, gameRng);
@@ -255,6 +481,8 @@
       seeds.push(g1, g3);
       out[conf] = {
         ranked: ranked,
+        divisionWinners: Object.keys(ctx.divOrder).filter(function (d) { return ctx.divOrder[d][0].conference === conf; })
+          .sort().map(function (d) { return ctx.divOrder[d][0]; }),
         seeds: seeds,
         playIn: [s7, s8, s9, s10],
         playInResults: [
@@ -310,9 +538,12 @@
     return rng() < p ? home : away;
   }
 
+  /* Home court / ice: the better regular season record, ties by the league's
+     tiebreakers (MLB: the draw). */
   function better(sport, a, b) {
     var pa = sport === 'nhl' ? a.pts : pctOf(a), pb = sport === 'nhl' ? b.pts : pctOf(b);
     if (pa !== pb) return pa > pb ? a : b;
+    if (sport === 'nhl' || (sport === 'nba' && a._ctx)) return breakTie(sport, [a, b], a._ctx)[0];
     return a._draw >= b._draw ? a : b;
   }
 
@@ -485,17 +716,30 @@
         playoffs: 0, round2: 0, conf_final: 0, final: 0, champion: 0, seeds: {} };
     });
     var sample = null;
-    var useNoise = sport === 'nhl' && !(opts && opts.uncertainty === false);
-    var sigma = useNoise ? nhlSigma(inputs) : 0;
+    var nbaFull = sport === 'nba' ? ((opts && typeof opts.nbaSigma === 'number') ? opts.nbaSigma : NBA_SIGMA) : 0;
+    var useNoise = (sport === 'nhl' || (sport === 'nba' && nbaFull > 0)) && !(opts && opts.uncertainty === false);
+    var sigma = !useNoise ? 0 : sport === 'nhl' ? nhlSigma(inputs) : nbaSigma(inputs, nbaFull);
     var noiseRng = mulberry32(((seed || 1) ^ 0x9e3779b9) >>> 0);
     var gauss = function () {
       var u = 0; while (u === 0) u = noiseRng();
       return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * noiseRng());
     };
+    var NOISE_PREV = null;
     for (var i = 0; i < n; i++) {
       if (useNoise) {
-        NOISE = {};
-        inputs.teams.forEach(function (t) { NOISE[t.espn_abbr] = sigma * gauss(); });
+        /* NBA: antithetic pairs (every second season mirrors the offsets of
+           the one before), so the average projection carries no extra Monte
+           Carlo error from the offsets. NHL keeps its independent draws. */
+        if (sport === 'nba' && i % 2 === 1 && NOISE_PREV) {
+          var prev = NOISE_PREV;
+          NOISE = {};
+          Object.keys(prev).forEach(function (k) { NOISE[k] = -prev[k]; });
+        } else {
+          NOISE = {};
+          inputs.teams.forEach(function (t) { NOISE[t.espn_abbr] = sigma * gauss(); });
+        }
+        NOISE_PREV = NOISE;
+        NOISE_S = sigma;
       }
       var one;
       try { one = runOnce(inputs, rng, opts); } finally { NOISE = null; }
@@ -519,8 +763,7 @@
           s.ranked.slice(0, 6).forEach(function (r) { acc[r.abbr].direct++; });
           s.playIn.forEach(function (r) { acc[r.abbr].play_in++; });
           s.seeds.forEach(function (r, idx) { acc[r.abbr].playoffs++; acc[r.abbr].seeds[idx + 1] = (acc[r.abbr].seeds[idx + 1] || 0) + 1; });
-          var divs = {};
-          s.ranked.forEach(function (r) { if (!divs[r.division]) { divs[r.division] = r; acc[r.abbr].division_title++; } });
+          s.divisionWinners.forEach(function (r) { acc[r.abbr].division_title++; });
         } else {
           acc[s.ranked[0].abbr].top_seed++;
           s.divisions.forEach(function (d) {
@@ -562,6 +805,10 @@
     simulateSeason: simulateSeason,
     gameProb: gameProb,
     order: order,
+    breakTie: breakTie,
+    nbaContext: nbaContext,
+    applyGame: applyGame,
+    blankRecord: blankRecord,
     seedNba: seedNba,
     seedNhl: seedNhl,
     series: series,

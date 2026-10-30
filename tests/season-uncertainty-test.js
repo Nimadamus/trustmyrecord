@@ -18,4 +18,14 @@ assert.ok(top(on) < top(off), 'the favourite is less certain with uncertainty');
 assert.ok(width(on) > width(off), 'points ranges are wider with uncertainty');
 const again = E.project(inputs, 1500, 3, {});
 assert.deepStrictEqual(again.teams.map((t) => t.champion), on.teams.map((t) => t.champion), 'same seed, same answer');
+/* NBA_SEASON_UNCERTAINTY_20261030: the NBA projection carries rating
+   uncertainty too (sigma 0.5, fitted walk forward). Without it the 80% win
+   ranges held 58% of final totals over four seasons. Scheduled NBA games carry
+   their own p_home, and the offset must reach them as well. */
+const nba = { sport: 'nba', teams: teams.map((t) => Object.assign({}, t)), matchups,
+  schedule: schedule.slice(0, 1230).map((g, i) => Object.assign({}, g, { p_home: 0.5 + ((i % 7) - 3) * 0.05 })) };
+const nOff = E.project(nba, 1500, 5, { uncertainty: false });
+const nOn = E.project(nba, 1500, 5, {});
+const wWidth = (r) => r.teams.reduce((s, t) => s + (t.wins_p90 - t.wins_p10), 0) / r.teams.length;
+assert.ok(wWidth(nOn) > wWidth(nOff) * 1.4, `NBA win ranges widen with rating uncertainty (${wWidth(nOff).toFixed(1)} -> ${wWidth(nOn).toFixed(1)})`);
 process.stdout.write('SEASON_UNCERTAINTY PASSED\n');

@@ -114,6 +114,18 @@ def run(stage, cmd, fatal=True):
     return rc
 
 
+# FETCH_OWN_REF_20261030: this checkout is a WORKTREE of C:/Users/BL/tmrfe3, so
+# refs/remotes/origin/main is shared with every session that fetches tmrfe3. Two of
+# the failed bakes (10/28 06:24, 10/30 06:26) were "cannot lock ref
+# 'refs/remotes/origin/main': is at X but expected Y": another session's fetch
+# moved the shared ref during ours. The bake now fetches main into a PER-WORKTREE
+# ref nobody else writes, from the canonical URL (origin answers "This repository
+# moved ... https://github.com/Nimadamus/trustmyrecord.git", a redirect on every
+# fetch and push).
+REPO_URL = 'https://github.com/Nimadamus/trustmyrecord.git'
+MAIN_REF = 'refs/worktree/bake-main'
+
+
 def fetch_main(stage):
     """FETCH_RETRY_20261030: fetch origin/main, retrying a dropped connection.
 
@@ -125,7 +137,8 @@ def fetch_main(stage):
     for attempt in (1, 2, 3):
         last = attempt == 3
         name = stage if attempt == 1 else '%s retry %d' % (stage, attempt)
-        rc = run(name, [GIT, '-c', 'http.version=HTTP/1.1', 'fetch', '-q', '--no-tags', 'origin', 'main'], fatal=last)
+        rc = run(name, [GIT, '-c', 'http.version=HTTP/1.1', 'fetch', '-q', '--no-tags', REPO_URL,
+                        '+refs/heads/main:' + MAIN_REF], fatal=last)
         if rc == 0:
             return 0
         time.sleep(20 * attempt)
@@ -193,7 +206,7 @@ def main():
     try:
         # Only main, no tags: fetching all 90 branches took 45 s to 7 min on this repo (20:12 run).
         fetch_main('fetch')
-        run('reset', [GIT, 'reset', '-q', '--hard', 'origin/main'])
+        run('reset', [GIT, 'reset', '-q', '--hard', MAIN_REF])
         nhl_pages()
         # NBA_TEAM_PAGES_LIVE_20261030: NBA team pages from the LIVE API (records with their
         # season, rotations, injuries). Never fatal: a failure keeps the committed pages.
@@ -204,7 +217,7 @@ def main():
         run('nfl team pages', [NODE, r'scripts\build_nfl_team_pages.js'])
         run('mlb odds page', [NODE, r'scripts\build_mlb_odds_page.js'])
         run('nfl playoff page', [NODE, r'scripts\build_nfl_playoff_page.js'], fatal=False)
-        for t in ['playoff-bracket-test.js', 'league-season-engine-test.js', 'mlb-postseason-odds-test.js', 'seo-indexability-regression-test.js',
+        for t in ['playoff-bracket-test.js', 'league-season-engine-test.js', 'league-tiebreakers-official-test.js', 'mlb-postseason-odds-test.js', 'seo-indexability-regression-test.js',
                   'league-sim-consistency-test.js', 'nba-team-season-label-test.js']:
             run('test ' + t, [NODE, 'tests\\' + t])
         run('git add', [GIT, 'add'] + ADD)
@@ -216,8 +229,8 @@ def main():
             pushed = False
             for attempt in (1, 2):
                 fetch_main('fetch before push')
-                run('rebase', [GIT, 'rebase', 'origin/main'])
-                if run('push attempt %d' % attempt, [GIT, 'push', '-q', 'origin', 'HEAD:main'], fatal=False) == 0:
+                run('rebase', [GIT, 'rebase', MAIN_REF])
+                if run('push attempt %d' % attempt, [GIT, 'push', '-q', REPO_URL, 'HEAD:main'], fatal=False) == 0:
                     pushed = True
                     break
             if not pushed:

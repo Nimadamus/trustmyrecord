@@ -133,6 +133,7 @@ jobs:
               # THE GATES run before the commit: a failing gate publishes nothing.
               node tests/playoff-bracket-test.js > g1.log 2>&1 || { tail -30 g1.log; return 1; }
               node tests/league-season-engine-test.js > g2.log 2>&1 || { tail -30 g2.log; return 1; }
+              node tests/league-tiebreakers-official-test.js > g2t.log 2>&1 || { tail -30 g2t.log; return 1; }
               node tests/nfl-accuracy-copy-test.js > g5.log 2>&1 || { tail -30 g5.log; return 1; }
               node tests/nfl-pages-consistency-test.js > g6.log 2>&1 || { tail -30 g6.log; return 1; }
               node tests/nfl-tbd-kickoff-test.js > g7.log 2>&1 || { tail -30 g7.log; return 1; }
