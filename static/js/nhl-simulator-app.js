@@ -39,7 +39,7 @@
             ? g.lastSeason.gs + ' GS last season' + (g.currentSeason ? ', ' + g.currentSeason.gs + ' this season' : '')
             : g.gamesStarted + ' GS';
           var o = el('option', '', g.name + ' (' + g.savePct.toFixed(3).replace(/^0/, '') + ' SV%, '
-            + gs + (g.projectedStarter ? ', projected starter' : '') + ')' + (g.replacementLevel ? ' - estimated' : ''));
+            + gs + (g.projectedStarter ? (g.starterStatus === 'confirmed' ? ', confirmed starter' : ', projected starter') : '') + ')' + (g.replacementLevel ? ' - estimated' : ''));
           o.value = g.id;
           if (i === 0) o.selected = true;
           sel.appendChild(o);
@@ -98,7 +98,7 @@
         row.appendChild(S.headshot('nhl', g, { team: t.abbr, size: 30 }));
         row.appendChild(el('b', '', g.name));
         var isProjected = g.projectedStarter || (t.goalies && t.goalies[0] === g);
-        row.appendChild(S.statusBadge(isProjected ? 'projected' : 'selected', g.starterReason || null));
+        row.appendChild(S.statusBadge(isProjected ? (g.starterStatus === 'confirmed' ? 'confirmed' : 'projected') : 'selected', g.starterReason || null));
         card.appendChild(row);
         if (isProjected && g.starterReason) card.appendChild(el('div', 'tsx-why', g.starterReason + '.'));
       }

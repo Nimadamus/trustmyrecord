@@ -33,7 +33,7 @@ assert.ok(fallback.includes('Starting lineups stay labelled projected'), fallbac
 assert.ok(!fallback.includes('Last roster change:'), fallback);
 
 const goalie = html('nhl', { built_at: '2026-10-27T13:33:13.504Z', freshness: 'current' });
-assert.ok(goalie.includes('Starting goalies stay labelled projected'), goalie);
+assert.ok(goalie.includes('labelled confirmed only when the club has reported him as its starter'), goalie);
 
 const missing = html('nfl', null);
 assert.ok(missing.includes('will not invent a timestamp'), missing);

@@ -60,7 +60,7 @@
     } else if (sport === 'nba') {
       lines.push('Starting lineups stay labelled projected until a verified confirmation source is available. Minute restrictions are a scenario you set. Injury rows are only the designations the feed returned.');
     } else if (sport === 'nhl') {
-      lines.push('Starting goalies stay labelled projected until a verified confirmation source is available. An empty injury note means the feed returned no current designation.');
+      lines.push('A starting goalie is labelled confirmed only when the club has reported him as its starter (Daily Faceoff); otherwise he is projected. An empty injury note means the feed returned no current designation.');
     } else if (sport === 'nfl') {
       lines.push('Skill player usage stays labelled projected. An empty inactive list means no inactive players were ingested for that game.');
     }
