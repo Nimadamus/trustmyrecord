@@ -11,7 +11,7 @@ self.onmessage = function (e) {
       if (!self.TMRNflSeason) importScripts('/static/js/nfl-playoff-engine.js?v=9292141731a0', '/static/js/nfl-season-project.js?v=75e01bbb4053');
       result = self.TMRNflSeason.project(m.inputs, m.n, m.seed, m.opts || {});
     } else {
-      if (!self.TMRLeagueSeason) importScripts('/static/js/league-season-engine.js?v=aceb1b1e35ec');
+      if (!self.TMRLeagueSeason) importScripts('/static/js/league-season-engine.js?v=61a061a40ad8');
       result = self.TMRLeagueSeason.project(m.inputs, m.n, m.seed, m.opts || {});
     }
     self.postMessage({ ok: true, result: result });
