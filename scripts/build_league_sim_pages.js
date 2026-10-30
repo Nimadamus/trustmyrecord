@@ -92,6 +92,20 @@ function ptDate(iso, withTime) {
   if (withTime) { o.hour = 'numeric'; o.minute = '2-digit'; }
   return new Date(iso).toLocaleString('en-US', o) + (withTime ? ' PT' : '');
 }
+/* LEAGUE_SIM_CLS_20261030: the shared header (tmr-ds-nav.js) lands after first
+   paint and pushed the whole page down (playoff page phone CLS 0.236). Reserve its
+   height (navbar CSS --nav-h plus the 1px border) and drop the reservation in the
+   frame it arrives, as the hubs and the MLB pages do. */
+const NAV_RESERVE = `<div id="dsNavReserve" aria-hidden="true" style="height:calc(var(--nav-h, 70px) + 1px)"></div>
+<script>
+(function () {
+  var drop = function () { var r = document.getElementById('dsNavReserve'); if (r && r.parentNode) r.parentNode.removeChild(r); };
+  if (document.querySelector('nav.ds-nav')) return drop();
+  var o = new MutationObserver(function () { if (document.querySelector('nav.ds-nav')) { o.disconnect(); drop(); } });
+  o.observe(document.documentElement, { childList: true, subtree: true });
+  window.addEventListener('load', function () { setTimeout(function () { o.disconnect(); drop(); }, 2000); });
+}());
+</script>`;
 const pctText = (v) => (v >= 0.995 ? 'better than 99%' : v < 0.005 ? 'under 1%' : Math.round(v * 100) + '%');
 const count = (n) => Number(n).toLocaleString('en-US');
 
@@ -319,6 +333,7 @@ ${shell.head}
 <style>${CSS}</style>
 </head>
 <body class="tmr-ds-shell tmr-ds--dark">
+${NAV_RESERVE}
 <main class="wrap lsim-wrap" id="lsim" data-sport="${sport}" data-mode="${mode}">
   <nav class="simcrumb" aria-label="Breadcrumb" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:.8rem;margin:0 0 14px;opacity:.85;">
     <a href="/" style="color:inherit;text-decoration:none;">Home</a><span aria-hidden="true" style="opacity:.45;">&rsaquo;</span>
@@ -557,6 +572,7 @@ ${shell.head}
 </style>
 </head>
 <body class="tmr-ds-shell tmr-ds--dark">
+${NAV_RESERVE}
 <main class="wrap lsim-wrap" id="lsim" data-sport="${sport}" data-mode="playoff">
   <nav class="simcrumb" aria-label="Breadcrumb" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:.8rem;margin:0 0 14px;opacity:.85;">
     <a href="/" style="color:inherit;text-decoration:none;">Home</a><span aria-hidden="true" style="opacity:.45;">&rsaquo;</span>
@@ -971,6 +987,7 @@ ${shell.head}
 </style>
 </head>
 <body class="tmr-ds-shell tmr-ds--dark">
+${NAV_RESERVE}
 <main class="wrap lsim-wrap">
   <nav class="simcrumb" aria-label="Breadcrumb" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:.8rem;margin:0 0 14px;opacity:.85;">
     <a href="/" style="color:inherit;text-decoration:none;">Home</a><span aria-hidden="true" style="opacity:.45;">&rsaquo;</span>
@@ -1172,6 +1189,7 @@ if (require.main === module) (async () => {
   const shell = shellAssets();
   for (const sport of ['nba', 'nhl']) {
     const inputs = await inputsFor(sport);
+    inputs.teams.forEach((t) => { t.logo = UI.smallLogo(t.logo); });   // LOGO_SIZE_20261030
     if (!inputs.teams || inputs.teams.length < 30 || !inputs.schedule || inputs.schedule.length < 1000) {
       throw new Error(`${sport}: inputs look incomplete (${(inputs.teams || []).length} teams, ${(inputs.schedule || []).length} games); nothing written`);
     }

@@ -33,7 +33,7 @@
 {"@type":"Question","name":"How does the simulator handle overtime?","acceptedAnswer":{"@type":"Answer","text":"A tie after four quarters goes to a five-minute overtime, and to another if it is still level. The closing possessions of a close fourth quarter are also played under endgame rules, so a team down five or less hunts three-pointers and a team ahead by five or less is fouled and shoots free throws, which is what makes close games finish like real ones."}},
 {"@type":"Question","name":"Why does the same matchup give a different result each time?","acceptedAnswer":{"@type":"Answer","text":"Because it is a simulation, not a formula. Each run is a fresh random draw from the same model, so the same two teams produce a different score, a different box score and a different hero every time, exactly as real games do. Simulate again to see the range. The link on a result pins that exact run so it can be shared and reproduced."}},
 {"@type":"Question","name":"How many simulations can I run?","acceptedAnswer":{"@type":"Answer","text":"You can run 100, 1,000, 5,000, 10,000, 25,000 or 50,000. The default is 10,000. The win probability, spread and total are averaged across whichever count you choose, and the exact count is shown on every result."}},
-{"@type": "Question", "name": "How accurate is the NBA simulator?", "acceptedAnswer": {"@type": "Answer", "text": "It was scored on 3,701 NBA games across four seasons, and every one of them was projected using only games that had already been played before it, so nothing the model saw had happened yet. It called the winner 66.7% of the time against 54.8% for always picking the home team, its projected margin missed by 11.0 points on average against 12.7 for the league average, and its calibration error was 1.9%, so a stated 70% has been close to a real 70%. Team strength is solved from the results by weighted ridge regression rather than read off points scored and allowed, so a team is measured against the opponents it actually faced. It knows less early in a season, and the published figures show that stage by stage."}},
+{"@type": "Question", "name": "How accurate is the NBA simulator?", "acceptedAnswer": {"@type": "Answer", "text": "Two models make the numbers, and both are measured. The season, playoff and team page odds come from NBA Forecasting V1, frozen before 2025-26 and scored once on all 1,231 games of that season: a Brier score of 0.206 (always saying 50% scores 0.250). The game simulator's win probability scored 0.240 on the same games; it is built for the score and the box score more than for picking the winner. Those are backtests. From October 30, 2026 both probabilities are frozen before every tip off and graded after the final, and the live record is published on this page."}},
 {"@type":"Question","name":"Is the NBA simulator free?","acceptedAnswer":{"@type":"Answer","text":"Yes. Your first simulation on TrustMyRecord is free, with no account needed. After that, a free account gives you one free run a day on every simulator, and each extra run costs 5 TMR. TMR Pro members run every simulator without limits. A run only counts once its result appears, so a run that fails or never finishes costs nothing."}}
 ]}
 </script>
@@ -45,21 +45,25 @@
 <script src="/static/js/config.js?v=430b4bba7b37"></script>
 <script src="/static/js/backend-api.js?v=e4eaeea31d19"></script>
 <script defer src="/static/js/sim-auth-gate.js?v=1b5002708e56"></script>
-<script defer src="/static/js/tmr-sim-core.7eb73969cb20.js"></script>
+<script defer src="/static/js/tmr-sim-core.36163e98e3b7.js"></script>
 <script defer src="/static/js/sim-run-gate.js?v=0ebda9de0b19" data-sport="nba"></script>
-<script defer src="/static/js/nba-simulator-app.js?v=4672546a2b72"></script>
+<script defer src="/static/js/nba-simulator-app.js?v=a09c88f3df9f"></script>
 <script defer src="/static/js/roster-clock.js?v=d4f49ef6fe7e"></script>
 <!-- Shell only: the nav and footer come from the shared design system, the tool
      keeps its own dark surface. Same hybrid arrangement the NFL simulator uses. -->
 <link rel="stylesheet" href="/static/css/tmr-ds.d4d41a955166.css">
 <link rel="stylesheet" href="/static/css/tmr-ds-header.cc364e352e74.css">
 <link rel="stylesheet" href="/static/css/tmr-sim-archive.css?v=c26240fef1ad">
-<script defer src="/static/js/tmr-sim-archive.js?v=9fa59f037200"></script>
+<script defer src="/static/js/tmr-sim-archive.js?v=2557a719f9f9"></script>
 <link rel="stylesheet" href="/static/css/tmr-light-surface.css?v=3bb2788875de">
 <!-- The one approved navbar: the shared header component (tmr-ds-nav.js)
      plus the homepage's own navbar rules, so every page renders the same bar. -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap">
 <link rel="stylesheet" href="/static/css/tmr-navbar.css?v=68ec3081d29a">
+<!-- NBA_HUB_CLS_20261030: roster-clock.js styles the clock and fills it after the status
+     call returns (23 px unstyled, 63 px desktop / 154 px phone when filled), which pushed the
+     whole tool down. Same box from first paint, with the filled height reserved. -->
+<style>.roster-clock{display:block;box-sizing:border-box;max-width:100%;margin:0 0 14px;padding:10px 14px;border:1px solid rgba(127,127,127,.35);border-left:4px solid #1D7FE8;border-radius:8px;font:500 14px/1.45 Inter,Arial,sans-serif;overflow-wrap:anywhere;white-space:normal;min-height:63px}@media (max-width:480px){.roster-clock{padding:10px 12px;font-size:13px;margin:0 0 12px;min-height:154px}}</style>
 </head>
 <body class="tmr-ds-shell tmr-ds--dark">
 <!-- CLS: the shared header is injected by tmr-ds-nav.js at the end of the body,
@@ -67,7 +71,7 @@
      to 0.30 CLS on its own. This reserves the header's height up front and drops
      the reservation in the SAME frame the real header lands, so the two cancel
      and nothing visibly moves. tmr-ds-nav.js is not modified. -->
-<div id="dsNavReserve" aria-hidden="true" style="height:70px"></div>
+<div id="dsNavReserve" aria-hidden="true" style="height:calc(var(--nav-h, 70px) + 1px)"></div>
 <script>
 (function () {
   var r = document.getElementById('dsNavReserve');
@@ -165,44 +169,44 @@
     <h2>Next NBA games: Friday, October 30, 2026</h2>
     <p>The percentage is each team's win probability from the same calibrated model this simulator runs. Choose the game in the simulator above to play it out with a full box score.</p>
     <div class="lsimh-games"><div class="lsimh-game">
-        <div class="lsimh-row"><img src="https://a.espncdn.com/i/teamlogos/nba/500/cha.png" alt="" width="24" height="24" loading="lazy" style="width:24px;height:24px"><span>Charlotte Hornets</span><b>66%</b></div>
-        <div class="lsimh-row"><img src="https://a.espncdn.com/i/teamlogos/nba/500/wsh.png" alt="" width="24" height="24" loading="lazy" style="width:24px;height:24px"><span>Washington Wizards</span><b>34%</b></div>
+        <div class="lsimh-row"><img src="https://a.espncdn.com/combiner/i?img=/i/teamlogos/nba/500/cha.png&amp;w=48&amp;h=48" alt="" width="24" height="24" loading="lazy" style="width:24px;height:24px"><span>Charlotte Hornets</span><b>66%</b></div>
+        <div class="lsimh-row"><img src="https://a.espncdn.com/combiner/i?img=/i/teamlogos/nba/500/wsh.png&amp;w=48&amp;h=48" alt="" width="24" height="24" loading="lazy" style="width:24px;height:24px"><span>Washington Wizards</span><b>34%</b></div>
         <div class="lsimh-meta">4:00 PM PT &middot; <span class="lsimh-bar"><i style="width:66%"></i></span></div>
       </div><div class="lsimh-game">
-        <div class="lsimh-row"><img src="https://a.espncdn.com/i/teamlogos/nba/500/chi.png" alt="" width="24" height="24" loading="lazy" style="width:24px;height:24px"><span>Chicago Bulls</span><b>20%</b></div>
-        <div class="lsimh-row"><img src="https://a.espncdn.com/i/teamlogos/nba/500/bos.png" alt="" width="24" height="24" loading="lazy" style="width:24px;height:24px"><span>Boston Celtics</span><b>80%</b></div>
+        <div class="lsimh-row"><img src="https://a.espncdn.com/combiner/i?img=/i/teamlogos/nba/500/chi.png&amp;w=48&amp;h=48" alt="" width="24" height="24" loading="lazy" style="width:24px;height:24px"><span>Chicago Bulls</span><b>20%</b></div>
+        <div class="lsimh-row"><img src="https://a.espncdn.com/combiner/i?img=/i/teamlogos/nba/500/bos.png&amp;w=48&amp;h=48" alt="" width="24" height="24" loading="lazy" style="width:24px;height:24px"><span>Boston Celtics</span><b>80%</b></div>
         <div class="lsimh-meta">4:30 PM PT &middot; <span class="lsimh-bar"><i style="width:20%"></i></span></div>
       </div><div class="lsimh-game">
-        <div class="lsimh-row"><img src="https://a.espncdn.com/i/teamlogos/nba/500/det.png" alt="" width="24" height="24" loading="lazy" style="width:24px;height:24px"><span>Detroit Pistons</span><b>80%</b></div>
-        <div class="lsimh-row"><img src="https://a.espncdn.com/i/teamlogos/nba/500/bkn.png" alt="" width="24" height="24" loading="lazy" style="width:24px;height:24px"><span>Brooklyn Nets</span><b>20%</b></div>
+        <div class="lsimh-row"><img src="https://a.espncdn.com/combiner/i?img=/i/teamlogos/nba/500/det.png&amp;w=48&amp;h=48" alt="" width="24" height="24" loading="lazy" style="width:24px;height:24px"><span>Detroit Pistons</span><b>80%</b></div>
+        <div class="lsimh-row"><img src="https://a.espncdn.com/combiner/i?img=/i/teamlogos/nba/500/bkn.png&amp;w=48&amp;h=48" alt="" width="24" height="24" loading="lazy" style="width:24px;height:24px"><span>Brooklyn Nets</span><b>20%</b></div>
         <div class="lsimh-meta">4:30 PM PT &middot; <span class="lsimh-bar"><i style="width:80%"></i></span></div>
       </div><div class="lsimh-game">
-        <div class="lsimh-row"><img src="https://a.espncdn.com/i/teamlogos/nba/500/ny.png" alt="" width="24" height="24" loading="lazy" style="width:24px;height:24px"><span>New York Knicks</span><b>34%</b></div>
-        <div class="lsimh-row"><img src="https://a.espncdn.com/i/teamlogos/nba/500/phi.png" alt="" width="24" height="24" loading="lazy" style="width:24px;height:24px"><span>Philadelphia 76ers</span><b>66%</b></div>
+        <div class="lsimh-row"><img src="https://a.espncdn.com/combiner/i?img=/i/teamlogos/nba/500/ny.png&amp;w=48&amp;h=48" alt="" width="24" height="24" loading="lazy" style="width:24px;height:24px"><span>New York Knicks</span><b>34%</b></div>
+        <div class="lsimh-row"><img src="https://a.espncdn.com/combiner/i?img=/i/teamlogos/nba/500/phi.png&amp;w=48&amp;h=48" alt="" width="24" height="24" loading="lazy" style="width:24px;height:24px"><span>Philadelphia 76ers</span><b>66%</b></div>
         <div class="lsimh-meta">4:30 PM PT &middot; <span class="lsimh-bar"><i style="width:34%"></i></span></div>
       </div><div class="lsimh-game">
-        <div class="lsimh-row"><img src="https://a.espncdn.com/i/teamlogos/nba/500/orl.png" alt="" width="24" height="24" loading="lazy" style="width:24px;height:24px"><span>Orlando Magic</span><b>37%</b></div>
-        <div class="lsimh-row"><img src="https://a.espncdn.com/i/teamlogos/nba/500/tor.png" alt="" width="24" height="24" loading="lazy" style="width:24px;height:24px"><span>Toronto Raptors</span><b>63%</b></div>
+        <div class="lsimh-row"><img src="https://a.espncdn.com/combiner/i?img=/i/teamlogos/nba/500/orl.png&amp;w=48&amp;h=48" alt="" width="24" height="24" loading="lazy" style="width:24px;height:24px"><span>Orlando Magic</span><b>37%</b></div>
+        <div class="lsimh-row"><img src="https://a.espncdn.com/combiner/i?img=/i/teamlogos/nba/500/tor.png&amp;w=48&amp;h=48" alt="" width="24" height="24" loading="lazy" style="width:24px;height:24px"><span>Toronto Raptors</span><b>63%</b></div>
         <div class="lsimh-meta">4:30 PM PT &middot; <span class="lsimh-bar"><i style="width:37%"></i></span></div>
       </div><div class="lsimh-game">
-        <div class="lsimh-row"><img src="https://a.espncdn.com/i/teamlogos/nba/500/ind.png" alt="" width="24" height="24" loading="lazy" style="width:24px;height:24px"><span>Indiana Pacers</span><b>41%</b></div>
-        <div class="lsimh-row"><img src="https://a.espncdn.com/i/teamlogos/nba/500/mia.png" alt="" width="24" height="24" loading="lazy" style="width:24px;height:24px"><span>Miami Heat</span><b>59%</b></div>
+        <div class="lsimh-row"><img src="https://a.espncdn.com/combiner/i?img=/i/teamlogos/nba/500/ind.png&amp;w=48&amp;h=48" alt="" width="24" height="24" loading="lazy" style="width:24px;height:24px"><span>Indiana Pacers</span><b>41%</b></div>
+        <div class="lsimh-row"><img src="https://a.espncdn.com/combiner/i?img=/i/teamlogos/nba/500/mia.png&amp;w=48&amp;h=48" alt="" width="24" height="24" loading="lazy" style="width:24px;height:24px"><span>Miami Heat</span><b>59%</b></div>
         <div class="lsimh-meta">5:00 PM PT &middot; <span class="lsimh-bar"><i style="width:41%"></i></span></div>
       </div><div class="lsimh-game">
-        <div class="lsimh-row"><img src="https://a.espncdn.com/i/teamlogos/nba/500/lac.png" alt="" width="24" height="24" loading="lazy" style="width:24px;height:24px"><span>LA Clippers</span><b>24%</b></div>
-        <div class="lsimh-row"><img src="https://a.espncdn.com/i/teamlogos/nba/500/min.png" alt="" width="24" height="24" loading="lazy" style="width:24px;height:24px"><span>Minnesota Timberwolves</span><b>76%</b></div>
+        <div class="lsimh-row"><img src="https://a.espncdn.com/combiner/i?img=/i/teamlogos/nba/500/lac.png&amp;w=48&amp;h=48" alt="" width="24" height="24" loading="lazy" style="width:24px;height:24px"><span>LA Clippers</span><b>24%</b></div>
+        <div class="lsimh-row"><img src="https://a.espncdn.com/combiner/i?img=/i/teamlogos/nba/500/min.png&amp;w=48&amp;h=48" alt="" width="24" height="24" loading="lazy" style="width:24px;height:24px"><span>Minnesota Timberwolves</span><b>76%</b></div>
         <div class="lsimh-meta">5:00 PM PT &middot; <span class="lsimh-bar"><i style="width:24%"></i></span></div>
       </div><div class="lsimh-game">
-        <div class="lsimh-row"><img src="https://a.espncdn.com/i/teamlogos/nba/500/hou.png" alt="" width="24" height="24" loading="lazy" style="width:24px;height:24px"><span>Houston Rockets</span><b>67%</b></div>
-        <div class="lsimh-row"><img src="https://a.espncdn.com/i/teamlogos/nba/500/dal.png" alt="" width="24" height="24" loading="lazy" style="width:24px;height:24px"><span>Dallas Mavericks</span><b>33%</b></div>
+        <div class="lsimh-row"><img src="https://a.espncdn.com/combiner/i?img=/i/teamlogos/nba/500/hou.png&amp;w=48&amp;h=48" alt="" width="24" height="24" loading="lazy" style="width:24px;height:24px"><span>Houston Rockets</span><b>67%</b></div>
+        <div class="lsimh-row"><img src="https://a.espncdn.com/combiner/i?img=/i/teamlogos/nba/500/dal.png&amp;w=48&amp;h=48" alt="" width="24" height="24" loading="lazy" style="width:24px;height:24px"><span>Dallas Mavericks</span><b>33%</b></div>
         <div class="lsimh-meta">5:00 PM PT &middot; <span class="lsimh-bar"><i style="width:67%"></i></span></div>
       </div><div class="lsimh-game">
-        <div class="lsimh-row"><img src="https://a.espncdn.com/i/teamlogos/nba/500/den.png" alt="" width="24" height="24" loading="lazy" style="width:24px;height:24px"><span>Denver Nuggets</span><b>55%</b></div>
-        <div class="lsimh-row"><img src="https://a.espncdn.com/i/teamlogos/nba/500/phx.png" alt="" width="24" height="24" loading="lazy" style="width:24px;height:24px"><span>Phoenix Suns</span><b>45%</b></div>
+        <div class="lsimh-row"><img src="https://a.espncdn.com/combiner/i?img=/i/teamlogos/nba/500/den.png&amp;w=48&amp;h=48" alt="" width="24" height="24" loading="lazy" style="width:24px;height:24px"><span>Denver Nuggets</span><b>55%</b></div>
+        <div class="lsimh-row"><img src="https://a.espncdn.com/combiner/i?img=/i/teamlogos/nba/500/phx.png&amp;w=48&amp;h=48" alt="" width="24" height="24" loading="lazy" style="width:24px;height:24px"><span>Phoenix Suns</span><b>45%</b></div>
         <div class="lsimh-meta">7:00 PM PT &middot; <span class="lsimh-bar"><i style="width:55%"></i></span></div>
       </div><div class="lsimh-game">
-        <div class="lsimh-row"><img src="https://a.espncdn.com/i/teamlogos/nba/500/lal.png" alt="" width="24" height="24" loading="lazy" style="width:24px;height:24px"><span>Los Angeles Lakers</span><b>57%</b></div>
-        <div class="lsimh-row"><img src="https://a.espncdn.com/i/teamlogos/nba/500/gs.png" alt="" width="24" height="24" loading="lazy" style="width:24px;height:24px"><span>Golden State Warriors</span><b>43%</b></div>
+        <div class="lsimh-row"><img src="https://a.espncdn.com/combiner/i?img=/i/teamlogos/nba/500/lal.png&amp;w=48&amp;h=48" alt="" width="24" height="24" loading="lazy" style="width:24px;height:24px"><span>Los Angeles Lakers</span><b>57%</b></div>
+        <div class="lsimh-row"><img src="https://a.espncdn.com/combiner/i?img=/i/teamlogos/nba/500/gs.png&amp;w=48&amp;h=48" alt="" width="24" height="24" loading="lazy" style="width:24px;height:24px"><span>Golden State Warriors</span><b>43%</b></div>
         <div class="lsimh-meta">7:00 PM PT &middot; <span class="lsimh-bar"><i style="width:57%"></i></span></div>
       </div></div>
   </section>
@@ -299,7 +303,7 @@
 
   <div class="panel" id="accuracyPanel">
     <div class="sechead">Measured accuracy</div>
-    <p class="dim">Scored against every completed regular-season game of two full seasons, projected from the season before each. <a href="#accuracy">What these numbers mean</a></p>
+    <p class="dim">Backtest of the team ratings this simulator starts from, scored against every completed regular season game of two full seasons, each projected from the season before. <a href="#accuracy">Which model makes which number</a></p>
     <div id="accuracyBody"><div class="state">Loading measured accuracy</div></div>
   </div>
 
@@ -349,15 +353,17 @@
   </ol>
 
   <h2 id="accuracy">How accurate is it?</h2>
-  <p class="lead">Every simulator says it is accurate. This one publishes the number and the method. The model was scored on <b>3,701 NBA games across four seasons</b>, and every one of them was projected using <b>only games that had already been played before it</b>. Nothing it saw had happened yet.</p>
+  <!-- NBA_ACCURACY_COPY_20261030: which model makes which number, its version, sample and period.
+       Backtests are labelled as backtests; the live record is graded from 2026-27 games only. -->
+  <p class="lead">Two models make the numbers on the NBA pages, and each one is measured on its own. Every figure in this list is a <b>backtest</b> on past seasons unless it says live.</p>
   <ul>
-    <li>It called the winner <b>66.7%</b> of the time, against <b>54.8%</b> for simply always picking the home team.</li>
-    <li>Its projected margin missed by <b>11.3 points</b> on average, against 12.7 for projecting the league average every time.</li>
-    <li>Its calibration error was <b>1.8%</b>, so a stated 70% has been close to a real 70%.</li>
+    <li><b>Season, playoff and team page odds</b> come from NBA Forecasting V1 (version nba-forecast-v1, fingerprint f8337522827f4d91: Elo, an opponent adjusted margin, rest and back to backs). It was trained on 2021-22 to 2023-24, chosen on 2024-25, frozen, and then scored once on all <b>1,231</b> games of 2025-26: a Brier score of <b>0.206</b>, where always saying 50% scores 0.250 and lower is better.</li>
+    <li><b>This game simulator's win probability</b> (version tmr-nba-sim-1.1.0) is the share of simulated games each team wins. Scored on the same 1,231 games of 2025-26 it had a Brier score of <b>0.240</b>. It is built for what a game looks like (the score, the pace, every player's line) more than for who wins, which is why the season and playoff pages use the forecast model.</li>
+    <li><b>The team ratings the simulator starts from</b> were scored walk forward on <b data-acc="games">3,701 NBA games</b> over three seasons (2023-24 to 2025-26), each projected only from games already played: the favourite won <b data-acc="accuracy">67.1%</b> of the time against <b data-acc="baseline">54.8%</b> for always picking the home team, the projected margin missed by <b data-acc="mae">11.1 points</b> against <b data-acc="baseline-mae">12.7</b> for the league average, and the calibration error was <b data-acc="cal">1.5%</b>. Measured August 2026.</li>
+    <li><b>Live, 2026-27.</b> From October 30, 2026 both probabilities are frozen before every tip off and graded after the final. <span id="nbaLiveRecord">The first graded games appear here once they are final.</span></li>
   </ul>
-  <p>Team strength is not read off points scored and points allowed. Those numbers do not know who a team played, and a soft schedule flatters them. Instead every team's offence and defence are solved together from the actual results by weighted ridge regression, so a team is measured against the opponents it really faced, recent games count more than old ones, and a team with little evidence is pulled toward the league average automatically. On the same games that fit called five to six more per hundred correctly than the raw season averages it replaced.</p>
-  <p>The win probability is then <b>calibrated</b>, not simply counted. Mapping a projected margin onto a probability is fitted from earlier seasons, never from the season being scored, which is what makes the percentage mean what it says.</p>
-  <p>It knows less at the start of a season, and the measurement says so: over the opening couple of weeks the model is barely better than a coin flip, and it reaches its full edge once a few hundred games have been played. The live figures, including the reliability curve, are on the tool above under <b>Measured accuracy</b>.</p>
+  <p>Team strength is not read off points scored and points allowed. Those numbers do not know who a team played, and a soft schedule flatters them. Instead every team's offence and defence are solved together from the actual results by weighted ridge regression, so a team is measured against the opponents it really faced.</p>
+  <p>Both models know less at the start of a season, and the measurement says so: over the opening couple of weeks the ratings are barely better than a coin flip, and they reach their full edge once a few hundred games have been played. The rating figures by season and stage, including the reliability curve, are on the tool above under <b>Measured accuracy</b>.</p>
   <h2>Limitations and responsible use</h2>
   <p>This is a model simulation, not a prediction of a real result, and it is not betting or financial advice. Season ratings are raw rather than schedule-adjusted, so each team's distance from average is deliberately shrunk before it is used. Rest, travel, back-to-backs, in-game injuries, trades made since the last data refresh, and coaching decisions are not modelled. Player plus-minus is weighted by minutes rather than tracked possession by possession, and simulated overtime happens slightly less often than real overtime. A single NBA game carries a lot of variance, which is why every result is shown as a range. Use the output as one research input, then decide for yourself. On TrustMyRecord, simulations are a research tool, while real picks are locked before game time, auto-graded, and counted toward a public, tamper-proof record.</p>
 
@@ -378,7 +384,7 @@
     <details><summary>How does the simulator handle overtime?</summary><p>A tie after four quarters goes to a five-minute overtime, and to another if it is still level. The closing possessions of a close fourth quarter are also played under endgame rules, so a team down five or less hunts three-pointers and a team ahead by five or less is fouled and shoots free throws, which is what makes close games finish like real ones.</p></details>
     <details><summary>Why does the same matchup give a different result each time?</summary><p>Because it is a simulation, not a formula. Each run is a fresh random draw from the same model, so the same two teams produce a different score, a different box score and a different hero every time, exactly as real games do. Simulate again to see the range. The link on a result pins that exact run so it can be shared and reproduced.</p></details>
     <details><summary>How many simulations can I run?</summary><p>You can run 100, 1,000, 5,000, 10,000, 25,000 or 50,000. The default is 10,000. The win probability, spread and total are averaged across whichever count you choose, and the exact count is shown on every result.</p></details>
-    <details><summary>How accurate is the NBA simulator?</summary><p>It was scored on 3,701 NBA games across four seasons, and every one of them was projected using only games that had already been played before it, so nothing the model saw had happened yet. It called the winner 66.7% of the time against 54.8% for always picking the home team, its projected margin missed by 11.0 points on average against 12.7 for the league average, and its calibration error was 1.9%, so a stated 70% has been close to a real 70%. Team strength is solved from the results by weighted ridge regression rather than read off points scored and allowed, so a team is measured against the opponents it actually faced. It knows less early in a season, and the published figures show that stage by stage.</p></details>
+    <details><summary>How accurate is the NBA simulator?</summary><p>Two models make the numbers, and both are measured. The season, playoff and team page odds come from NBA Forecasting V1, frozen before 2025-26 and scored once on all 1,231 games of that season: a Brier score of 0.206 (always saying 50% scores 0.250). The game simulator's win probability scored 0.240 on the same games; it is built for the score and the box score more than for picking the winner. Those are backtests. From October 30, 2026 both probabilities are frozen before every tip off and graded after the final, and the live record is published on this page.</p></details>
     <details><summary>Is the NBA simulator free?</summary><p>Yes. Your first simulation on TrustMyRecord is free, with no account needed. After that, a free account gives you one free run a day on every simulator, and each extra run costs 5 TMR. TMR Pro members run every simulator without limits. A run only counts once its result appears, so a run that fails or never finishes costs nothing.</p></details>
   </div>
 

@@ -31,8 +31,19 @@
     return Math.round(v * 100) + '%';
   }
   function one(v) { return (Math.round(v * 10) / 10).toFixed(1); }
+  /* LOGO_SIZE_20261030: crests are shown at 22 to 24 px, so they are fetched at
+     48 px through the CDN's resizer (about 2 KB) instead of the 500 px original
+     (about 45 KB; 35 of them were 1.6 MB on the NBA hub). One function for the
+     builder and the browser. */
+  function smallLogo(url, px) {
+    var u = String(url || '');
+    var m = u.match(/^https:\/\/a\.espncdn\.com(\/i\/teamlogos\/[^?#]+\.png)$/);
+    if (!m) return u;
+    var n = px || 48;
+    return 'https://a.espncdn.com/combiner/i?img=' + m[1] + '&w=' + n + '&h=' + n;
+  }
   function logo(t) {
-    return t.logo ? '<img src="' + esc(t.logo) + '" alt="" width="22" height="22" loading="lazy">' : '';
+    return t.logo ? '<img src="' + esc(smallLogo(t.logo)) + '" alt="" width="22" height="22" loading="lazy">' : '';
   }
   function slug(name) {
     return String(name).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
@@ -183,7 +194,7 @@
     });
   }
 
-  var renderers = { seasonTables: seasonTables, oddsTable: oddsTable, bracket: bracket, stamp: stamp, esc: esc };
+  var renderers = { seasonTables: seasonTables, oddsTable: oddsTable, bracket: bracket, stamp: stamp, esc: esc, smallLogo: smallLogo };
 
   /* ------------------------------------------------------------ controller */
 
@@ -294,7 +305,7 @@
             if (!h || !a || p == null) return '';
             var ph = Math.round(p * 100);
             var far = Date.parse(g.date) - now > 3 * 86400e3;
-            var img = function (t) { return t.logo ? '<img src="' + esc(t.logo) + '" alt="" width="22" height="22" loading="lazy">' : ''; };
+            var img = function (t) { return t.logo ? '<img src="' + esc(smallLogo(t.logo)) + '" alt="" width="22" height="22" loading="lazy">' : ''; };
             return '<div class="pick" data-game="' + esc(g.id) + '">'
               + '<button type="button" class="pk" data-side="away" aria-pressed="false">' + img(a) + '<span>' + esc(a.short) + '</span><small>' + (100 - ph) + '%</small></button>'
               + '<span class="at">' + esc(ptDay(g.date)) + (far ? '<br><em class="lsim-far">long range</em>' : '') + '</span>'
@@ -350,6 +361,7 @@
             return r.json();
           });
         got.then(function (inp) {
+          (inp.teams || []).forEach(function (t) { t.logo = smallLogo(t.logo); });
           inputs = inp;
           var E = root.TMRLeagueSeason;
           var n = Number(runsSel && runsSel.value) || 2000;

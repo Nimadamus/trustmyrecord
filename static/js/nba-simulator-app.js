@@ -674,37 +674,38 @@
    * it. Nothing else in the article is touched.
    */
   function syncAccuracyCopy(app) {
-    var h = document.getElementById('accuracy');
-    var list = h && h.nextElementSibling && h.nextElementSibling.nextElementSibling;
-    var lead = h && h.nextElementSibling;
-    if (!list || list.tagName !== 'UL') return;
+    // NBA_ACCURACY_COPY_20261030: the rating backtest figures are set by name
+    // (data-acc), never by list position, and the live record comes from the
+    // served-prediction ledger (/api/nba/ledger/report), graded games only.
+    var set = function (k, text) {
+      var b = document.querySelector('[data-acc="' + k + '"]');
+      if (b && text) b.textContent = text;
+    };
+    var p1 = function (v) { return (v * 100).toFixed(1) + '%'; };
     app.api('/accuracy').then(function (a) {
       var c = a && a.combined;
       if (!c) return;
-      var items = list.querySelectorAll('li');
-      var setB = function (li, i, text) {
-        var b = li && li.querySelectorAll('b')[i];
-        if (b && text) b.textContent = text;
-      };
-      var p1 = function (v) { return (v * 100).toFixed(1) + '%'; };
-      if (typeof c.accuracy === 'number') setB(items[0], 0, p1(c.accuracy));
-      if (typeof c.baselineAccuracy === 'number') setB(items[0], 1, p1(c.baselineAccuracy));
-      if (typeof c.marginMae === 'number') setB(items[1], 0, c.marginMae.toFixed(1) + ' points');
-      if (typeof c.calibrationError === 'number') setB(items[2], 0, p1(c.calibrationError));
-      if (items[1] && typeof c.baselineMarginMae === 'number') {
-        items[1].childNodes.forEach(function (node) {
-          if (node.nodeType === 3 && /against \d+(\.\d+)? for/.test(node.nodeValue)) {
-            node.nodeValue = node.nodeValue.replace(/against \d+(\.\d+)? for/, 'against ' + c.baselineMarginMae.toFixed(1) + ' for');
-          }
-        });
-      }
-      if (lead && typeof c.games === 'number') {
-        var lb = lead.querySelector('b');
-        if (lb && /NBA games/.test(lb.textContent)) {
-          lb.textContent = lb.textContent.replace(/^[\d,]+/, c.games.toLocaleString('en-US'));
-        }
-      }
+      if (typeof c.games === 'number') set('games', c.games.toLocaleString('en-US') + ' NBA games');
+      if (typeof c.accuracy === 'number') set('accuracy', p1(c.accuracy));
+      if (typeof c.baselineAccuracy === 'number') set('baseline', p1(c.baselineAccuracy));
+      if (typeof c.marginMae === 'number') set('mae', c.marginMae.toFixed(1) + ' points');
+      if (typeof c.baselineMarginMae === 'number') set('baseline-mae', c.baselineMarginMae.toFixed(1));
+      if (typeof c.calibrationError === 'number') set('cal', p1(c.calibrationError));
     }).catch(function () { /* the static figures stay */ });
+    var live = document.getElementById('nbaLiveRecord');
+    if (!live || typeof fetch !== 'function') return;
+    var base = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+    fetch(base + '/nba/ledger/report', { credentials: 'omit' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (r) {
+      if (!r || !(r.graded_games > 0)) return;
+      var f = r.forecast || {}, sm = r.sim || {};
+      var n = r.graded_games;
+      var txt = 'Graded so far: ' + n.toLocaleString('en-US') + (n === 1 ? ' game' : ' games') + ' (' + r.from + ' to ' + r.to + ').'
+        + (typeof f.brier === 'number' ? ' Season model Brier ' + f.brier.toFixed(3) + ', favourite won ' + p1(f.favourite_won) + '.' : '')
+        + (typeof sm.brier === 'number' && sm.games ? ' Game simulator Brier ' + sm.brier.toFixed(3) + ' over ' + sm.games + '.' : '')
+        + (typeof f.market_brier === 'number' && f.market_games ? ' The betting market scored ' + f.market_brier.toFixed(3) + ' on the ' + f.market_games + ' games with a price.' : '')
+        + (n < 100 ? ' Too few games to judge yet.' : '');
+      live.textContent = txt;
+    }).catch(function () { /* the sentence stays */ });
   }
 
   /**

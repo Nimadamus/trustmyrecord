@@ -1501,7 +1501,10 @@
     }
     var img = document.createElement('img');
     img.className = 'crest';
-    img.src = team.logo;
+    // LOGO_SIZE_20261030: a 500 px ESPN crest (about 45 KB) shown at 34 px; fetch it at
+    // twice the display size through the CDN's resizer (about 2 KB). Other hosts unchanged.
+    var m = String(team.logo).match(/^https:\/\/a\.espncdn\.com(\/i\/teamlogos\/[^?#]+\.png)$/);
+    img.src = m ? 'https://a.espncdn.com/combiner/i?img=' + m[1] + '&w=' + (px * 2) + '&h=' + (px * 2) : team.logo;
     img.alt = '';
     img.setAttribute('aria-hidden', 'true');
     img.width = px;
