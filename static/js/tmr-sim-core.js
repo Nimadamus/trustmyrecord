@@ -134,7 +134,19 @@
       self.run(seed ? { fresh: true, seed: seed } : { fresh: true });
     });
 
+    this.loadTeams();
+  };
+
+  /* SIM_UX_20261030 (#5): a failed teams request used to leave "Network error"
+     with no way back and an empty slate panel. It now says what failed, keeps the
+     slate panel honest, and offers Try again without a reload. */
+  SimApp.prototype.loadTeams = function () {
+    var self = this;
     this.setState('loading', 'Loading teams');
+    if (this.nodes.games && !this.teams.length) {
+      this.nodes.games.innerHTML = '';
+      this.nodes.games.appendChild(el('div', 'state', 'Loading the schedule'));
+    }
     this.api('/teams').then(function (d) {
       self.teams = d.teams || [];
       self.teams.forEach(function (t) { self.byRef[t.ref] = t; });
@@ -148,7 +160,12 @@
       self.loadSchedule();
       self.applyUrl();
     }).catch(function (e) {
-      self.setState('error', e.message || 'Could not load teams.');
+      self.setState('error', 'Could not load the teams' + (e && e.code === 'network' ? ': the connection failed.' : '.') + ' Nothing was simulated.',
+        function () { self.loadTeams(); });
+      if (self.nodes.games) {
+        self.nodes.games.innerHTML = '';
+        self.nodes.games.appendChild(el('div', 'unavail', 'Upcoming games load once the teams load.'));
+      }
     });
   };
 
@@ -466,8 +483,14 @@
       .catch(function () {
         // A schedule outage costs a convenience, never the tool.
         host.innerHTML = '';
-        host.appendChild(el('div', 'unavail',
-          'The schedule is unavailable right now. Custom Matchup still works: pick any two teams.'));
+        var u = el('div', 'unavail',
+          'The schedule is unavailable right now. Custom Matchup still works: pick any two teams. ');
+        var rb = el('button', 'retry', 'Try again');
+        rb.type = 'button';
+        rb.style.cssText = 'font:inherit;font-weight:700;padding:4px 10px;border-radius:8px;border:1px solid currentColor;background:transparent;color:inherit;cursor:pointer';
+        rb.addEventListener('click', function () { self.loadSchedule(date); });
+        u.appendChild(rb);
+        host.appendChild(u);
         if (self.nodes.slateLabel) self.nodes.slateLabel.textContent = '';
       });
   };
@@ -708,7 +731,7 @@
     }
   };
 
-  SimApp.prototype.setState = function (kind, message) {
+  SimApp.prototype.setState = function (kind, message, retry) {
     var box = this.nodes.result;
     box.innerHTML = '';
     if (kind === 'idle') return;
@@ -720,7 +743,16 @@
       return;
     }
     if (kind === 'error') {
-      box.appendChild(el('div', 'err', message || 'Something went wrong.'));
+      var e = el('div', 'err', message || 'Something went wrong.');
+      e.setAttribute('role', 'alert');
+      if (typeof retry === 'function') {
+        var b = el('button', 'retry', 'Try again');
+        b.type = 'button';
+        b.style.cssText = 'margin-left:12px;font:inherit;font-weight:700;padding:6px 12px;border-radius:9px;border:1px solid currentColor;background:transparent;color:inherit;cursor:pointer';
+        b.addEventListener('click', retry);
+        e.appendChild(b);
+      }
+      box.appendChild(e);
     }
   };
 

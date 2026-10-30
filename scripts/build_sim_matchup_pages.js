@@ -30,6 +30,7 @@
  */
 
 const fs = require('fs');
+const SIMUX = require('./sim-ux.js');   // SIM_UX_20261030: shared UX layer on every sim page
 const path = require('path');
 
 const ROOT = path.join(__dirname, '..');
@@ -692,6 +693,7 @@ function build() {
     for (const p of pages) {
       const file = path.join(p.dir, 'index.html');
       const existing = fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : null;
+      p.html = SIMUX.inject(p.html);
       if (existing === p.html) { written.push({ url: p.url, status: 'unchanged' }); continue; }
       if (!CHECK) {
         fs.mkdirSync(p.dir, { recursive: true });

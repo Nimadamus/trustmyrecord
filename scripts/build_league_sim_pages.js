@@ -23,6 +23,7 @@
 'use strict';
 
 const fs = require('fs');
+const SIMUX = require('./sim-ux.js');   // SIM_UX_20261030: shared UX layer on every sim page
 const path = require('path'); const RUN_POLICY = require('./sim-run-policy.js');   // SIM_RUN_POLICY_20261030: one source for free run copy
 const E = require('../static/js/league-season-engine.js');
 const UI = require('../static/js/league-season-sim.js');
@@ -184,7 +185,7 @@ const CSS = `
   table.lsim td.p{background:rgba(56,189,248,calc(var(--h,0)*.32));font-variant-numeric:tabular-nums}
   table.lsim td.num,table.lsim td.rng{font-variant-numeric:tabular-nums}
   table.lsim td.rng{color:var(--mut,#9fb0c6)}
-  .lz{opacity:.45}
+  .lz{color:#8b95a5}
   .lt{display:inline-flex;align-items:center;gap:7px}
   a.lt{color:inherit;text-decoration:none}
   a.lt:hover .ln,a.lt:hover .ls{text-decoration:underline}
@@ -225,6 +226,14 @@ function teamLinks(sport) {
   return fs.readdirSync(dir).filter((d) => fs.existsSync(path.join(dir, d, 'index.html'))).sort()
     .map((d) => `<a href="/${sport}-simulator/teams/${d}/">${esc(d.split('-').map((w) => w[0].toUpperCase() + w.slice(1)).join(' '))}<small>Team simulator</small></a>`)
     .join('\n    ');
+}
+
+/* SIM_DATE_MODIFIED_20261030: dateModified moves only when finals or the printed projections move. */
+function leagueDateModified(sport, mode, inputs, result) {
+  const DM = require('./sim-date-modified.js');
+  const finals = (inputs.schedule || []).filter((g) => g.final).map((g) => [g.id || g.date, g.home, g.away, g.home_score, g.away_score]);
+  const proj = result.teams.map((t) => [t.abbr, t.wins_mean, t.points_mean, t.playoffs * 100, t.champion * 100, t.final * 100]);
+  return DM.resolve(path.join(ROOT, `${sport}-${mode}-simulator`, 'index.html'), { finals, proj: DM.rounded(proj, 1) }, inputs.generated_at);
 }
 
 function page(sport, mode, inputs, result, shell) {
@@ -289,7 +298,7 @@ function page(sport, mode, inputs, result, shell) {
   const ld = [
     { '@context': 'https://schema.org', '@type': 'WebApplication', name: `TrustMyRecord ${h1}`, applicationCategory: 'SportsApplication',
       operatingSystem: 'Web', url: SITE + url, description: desc, offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
-      dateModified: inputs.generated_at },
+      dateModified: leagueDateModified(sport, mode, inputs, result).date },
     { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
       { '@type': 'ListItem', position: 1, name: 'Home', item: SITE + '/' },
       { '@type': 'ListItem', position: 2, name: 'Sports Simulators', item: SITE + '/sports-simulators/' },
@@ -330,6 +339,7 @@ function page(sport, mode, inputs, result, shell) {
 <link rel="icon" type="image/png" href="/static/favicon.png">
 ${ld.map((x) => `<script type="application/ld+json">${JSON.stringify(x)}</script>`).join('\n')}
 <script type="application/ld+json">${faq.ld}</script>
+${leagueDateModified(sport, mode, inputs, result).marker}
 <script>window.SIM_GATE_FLAGS = { gate: true, resume: true, autoSave: false, meter: true };</script>
 ${shell.head}
 <style>${CSS}</style>
@@ -529,7 +539,7 @@ function playoffPage(sport, inputs, result, shell) {
   const ld = [
     { '@context': 'https://schema.org', '@type': 'WebApplication', name: `TrustMyRecord ${h1}`, applicationCategory: 'SportsApplication',
       operatingSystem: 'Web', url: SITE + url, description: desc, offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
-      dateModified: inputs.generated_at },
+      dateModified: leagueDateModified(sport, 'playoff', inputs, result).date },
     { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
       { '@type': 'ListItem', position: 1, name: 'Home', item: SITE + '/' },
       { '@type': 'ListItem', position: 2, name: 'Sports Simulators', item: SITE + '/sports-simulators/' },
@@ -562,6 +572,7 @@ function playoffPage(sport, inputs, result, shell) {
 <link rel="icon" type="image/png" href="/static/favicon.png">
 ${ld.map((x) => `<script type="application/ld+json">${JSON.stringify(x)}</script>`).join('\n')}
 <script type="application/ld+json">${faq.ld}</script>
+${leagueDateModified(sport, 'playoff', inputs, result).marker}
 <script>window.SIM_GATE_FLAGS = { gate: true, resume: true, autoSave: false, meter: true };</script>
 ${shell.head}
 <link rel="stylesheet" href="/static/css/tmr-playoff-bracket.css?v=${PB_CSS_V}">
@@ -1026,7 +1037,7 @@ ${shell.tail}
 </html>
 `;
         fs.mkdirSync(path.dirname(file), { recursive: true });
-        fs.writeFileSync(file, html);
+        fs.writeFileSync(file, SIMUX.inject(html));
         made.push({ url, label: `${a.short} vs ${b.short}`, div: d, existing: false });
       }
     }
@@ -1249,7 +1260,7 @@ if (require.main === module) (async () => {
     for (const mode of ['season', 'playoff']) {
       const out = path.join(ROOT, `${sport}-${mode}-simulator`, 'index.html');
       fs.mkdirSync(path.dirname(out), { recursive: true });
-      fs.writeFileSync(out, page(sport, mode, inputs, result, shell));
+      fs.writeFileSync(out, SIMUX.inject(page(sport, mode, inputs, result, shell)));
       console.log(`wrote ${path.relative(ROOT, out)}`);
     }
     const rivalries = writeRivalries();

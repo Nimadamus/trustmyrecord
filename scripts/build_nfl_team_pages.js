@@ -21,6 +21,7 @@
 'use strict';
 
 const fs = require('fs');
+const SIMUX = require('./sim-ux.js'); const DM = require('./sim-date-modified.js');   // SIM_DATE_MODIFIED_20261030   // SIM_UX_20261030: shared UX layer on every sim page
 const path = require('path');
 const N = require('../static/js/nfl-season-project.js');
 const H = require('./build_league_sim_pages.js');
@@ -87,7 +88,7 @@ const EXTRA_CSS = `
 function shell(title, desc, url, crumbs, h1, bodyHtml, faqs, shellAssets, dateModified) {
   const faq = H.faqBlock(faqs);
   const ld = [
-    { '@context': 'https://schema.org', '@type': 'WebPage', name: h1, url: SITE + url, description: desc, dateModified },
+    { '@context': 'https://schema.org', '@type': 'WebPage', name: h1, url: SITE + url, description: desc, dateModified: DM.PLACEHOLDER },
     { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: crumbs.map((c, i) => ({ '@type': 'ListItem', position: i + 1, name: c[1], item: SITE + c[0] })) },
   ];
   const crumbHtml = crumbs.map((c, i) => (i === crumbs.length - 1
@@ -314,7 +315,7 @@ function patchSitemap(urls) {
     const pg = teamPage(d, t, teams, d.teams, shellAssets);
     const out = path.join(ROOT, pg.url.replace(/^\//, ''), 'index.html');
     fs.mkdirSync(path.dirname(out), { recursive: true });
-    fs.writeFileSync(out, pg.html);
+    fs.writeFileSync(out, DM.finalize(out, SIMUX.inject(pg.html), d.generated_at));
     written.push(pg.url);
   }
   const rivalries = [];
@@ -327,7 +328,7 @@ function patchSitemap(urls) {
         const pg = rivalryPage(d, g[i], g[j], teams, shellAssets);
         const out = path.join(ROOT, pg.url.replace(/^\//, ''), 'index.html');
         fs.mkdirSync(path.dirname(out), { recursive: true });
-        fs.writeFileSync(out, pg.html);
+        fs.writeFileSync(out, DM.finalize(out, SIMUX.inject(pg.html), d.generated_at));
         written.push(pg.url);
         rivalries.push({ url: pg.url, label: `${g[i].nickname} vs ${g[j].nickname}`, div: k });
       }

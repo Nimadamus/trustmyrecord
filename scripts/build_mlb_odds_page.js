@@ -24,6 +24,7 @@
 'use strict';
 
 const fs = require('fs');
+const SIMUX = require('./sim-ux.js'); const DM = require('./sim-date-modified.js');   // SIM_DATE_MODIFIED_20261030   // SIM_UX_20261030: shared UX layer on every sim page
 const path = require('path');
 const E = require('../static/js/league-season-engine.js');
 const UI = require('../static/js/league-season-sim.js');
@@ -323,7 +324,7 @@ function page(inp, result, shell, state) {
   ];
   const faq = H.faqBlock(faqs);
   const ld = [
-    { '@context': 'https://schema.org', '@type': 'WebPage', name: `MLB Playoff Odds ${inp.season}`, url: SITE + URL, description: desc, dateModified: inp.generated_at },
+    { '@context': 'https://schema.org', '@type': 'WebPage', name: `MLB Playoff Odds ${inp.season}`, url: SITE + URL, description: desc, dateModified: DM.PLACEHOLDER },
     { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
       { '@type': 'ListItem', position: 1, name: 'Home', item: SITE + '/' },
       { '@type': 'ListItem', position: 2, name: 'Sports Simulators', item: SITE + '/sports-simulators/' },
@@ -504,7 +505,7 @@ function teamPages(inp, result, shell, state) {
     ];
     const faq = H.faqBlock(faqs);
     const ld = [
-      { '@context': 'https://schema.org', '@type': 'WebPage', name: h1, url: SITE + url, description: desc, dateModified: inp.generated_at },
+      { '@context': 'https://schema.org', '@type': 'WebPage', name: h1, url: SITE + url, description: desc, dateModified: DM.PLACEHOLDER },
       { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
         { '@type': 'ListItem', position: 1, name: 'Home', item: SITE + '/' },
         { '@type': 'ListItem', position: 2, name: 'MLB Simulator', item: SITE + '/mlb-simulator/' },
@@ -635,12 +636,12 @@ if (require.main === module) (async () => {
   fs.mkdirSync(path.dirname(out), { recursive: true });
   const state = SS.readState(ROOT);
   if (!state || state.season !== inp.season) throw new Error('data/mlb-season-state.json missing or for another season: run scripts/mlb_season_state.js first');
-  fs.writeFileSync(out, page(inp, result, H.shellAssets(), state));
+  fs.writeFileSync(out, DM.finalize(out, SIMUX.inject(page(inp, result, H.shellAssets(), state)), inp.generated_at));
   const pages = teamPages(inp, result, H.shellAssets(), state);
   for (const pg of pages) {
     const f = path.join(ROOT, pg.url.replace(/^\//, ''), 'index.html');
     fs.mkdirSync(path.dirname(f), { recursive: true });
-    fs.writeFileSync(f, pg.html);
+    fs.writeFileSync(f, DM.finalize(f, SIMUX.inject(pg.html), inp.generated_at));
   }
   patchMlbHub(pages);
   console.log(`mlb: ${pages.length} team pages, ${patchSitemap(pages.map((p) => p.url))} new sitemap entries`);

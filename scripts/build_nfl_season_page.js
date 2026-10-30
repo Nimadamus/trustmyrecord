@@ -16,6 +16,7 @@
 'use strict';
 
 const fs = require('fs');
+const SIMUX = require('./sim-ux.js');   // SIM_UX_20261030: shared UX layer on every sim page
 const path = require('path'); const RUN_POLICY = require('./sim-run-policy.js');   // SIM_RUN_POLICY_20261030
 const N = require('../static/js/nfl-season-project.js');
 const H = require('./build_league_sim_pages.js');
@@ -161,9 +162,15 @@ function page(d, result, shell) {
     ['Can I pick the games myself?', 'Yes. Pick a winner for any remaining game, week by week or one club at a time. The standings, seeds and bracket redraw from your picks with the NFL tiebreakers, Run plays every simulated season with your results locked in, and Copy link gives you a link to exactly those picks. Picking is always free; a Run counts as a simulator run.'],
   ];
   const faq = H.faqBlock(faqs);
+  // SIM_DATE_MODIFIED_20261030: the date moves only when a final or a printed projection moves.
+  const DM = require('./sim-date-modified.js');
+  const dm = DM.resolve(path.join(ROOT, 'nfl-season-simulator', 'index.html'), {
+    finals: d.games.filter((g) => g.completed).map((g) => [g.id, g.home, g.away, g.home_score, g.away_score]),
+    proj: DM.rounded(result.teams.map((t) => [t.id, t.wins_mean, t.wins_p10, t.wins_p90, t.division_title * 100, t.playoffs * 100]), 1),
+  }, d.generated_at);
   const ld = [
     { '@context': 'https://schema.org', '@type': 'WebApplication', name: 'TrustMyRecord NFL Season Simulator', applicationCategory: 'SportsApplication',
-      operatingSystem: 'Web', url: SITE + URL, description: desc, offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' }, dateModified: d.generated_at },
+      operatingSystem: 'Web', url: SITE + URL, description: desc, offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' }, dateModified: dm.date },
     { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
       { '@type': 'ListItem', position: 1, name: 'Home', item: SITE + '/' },
       { '@type': 'ListItem', position: 2, name: 'Sports Simulators', item: SITE + '/sports-simulators/' },
@@ -195,6 +202,7 @@ function page(d, result, shell) {
 <link rel="icon" type="image/png" href="/static/favicon.png">
 ${ld.map((x) => `<script type="application/ld+json">${JSON.stringify(x)}</script>`).join('\n')}
 <script type="application/ld+json">${faq.ld}</script>
+${dm.marker}
 <script>window.SIM_GATE_FLAGS = { gate: true, resume: true, autoSave: false, meter: true };</script>
 ${shell.head}
 <style>${H.CSS}${PICK_CSS}</style>
@@ -273,6 +281,6 @@ ${shell.tail}
   const result = N.project(d, RUNS, seed);
   const out = path.join(ROOT, 'nfl-season-simulator', 'index.html');
   fs.mkdirSync(path.dirname(out), { recursive: true });
-  fs.writeFileSync(out, page(d, result, H.shellAssets()));
+  fs.writeFileSync(out, SIMUX.inject(page(d, result, H.shellAssets())));
   console.log('wrote nfl-season-simulator/index.html');
 })().catch((e) => { console.error('FAILED:', e.message); process.exit(1); });

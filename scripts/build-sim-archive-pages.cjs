@@ -40,6 +40,7 @@
  */
 
 const fs = require('fs');
+const SIMUX = require('./sim-ux.js');   // SIM_UX_20261030: shared UX layer on every sim page
 const path = require('path');
 const https = require('https');
 
@@ -155,7 +156,7 @@ function breadcrumbJsonLd(items) {
 function write(relDir, html) {
   const dir = path.join(ROOT, relDir);
   fs.mkdirSync(dir, { recursive: true });
-  fs.writeFileSync(path.join(dir, 'index.html'), html, 'utf8');
+  fs.writeFileSync(path.join(dir, 'index.html'), SIMUX.inject(html), 'utf8');
   return relDir + '/index.html';
 }
 

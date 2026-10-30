@@ -24,6 +24,7 @@
  */
 
 const fs = require('fs');
+const SIMUX = require('./sim-ux.js');   // SIM_UX_20261030: shared UX layer on every sim page
 
 /**
  * Conference and division, as reference data.
@@ -667,7 +668,7 @@ function profileBasis(t) {
     const file = path.join(p.dir, 'index.html');
     let html = p.html;
     if (p.sport === 'nba' && fs.existsSync(file)) html = keepShell(fs.readFileSync(file, 'utf8'), html);
-    fs.writeFileSync(file, html);
+    fs.writeFileSync(file, SIMUX.inject(html));
   }
 
   if (!CHECK && SPORTS.includes('nba') && SPORTS.includes('nhl')) {
