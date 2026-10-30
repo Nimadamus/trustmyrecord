@@ -225,7 +225,7 @@
         <p>What that means in practice. The token is on Base at a verified contract with a fixed supply of 1,000,000,000 and no mint function, so nobody can print more of it. It is not a promise, a voucher, or an IOU from us. It is a token you hold in your own wallet, and its price is whatever people are willing to pay for it at that moment.</p>
         <h3 class="tcoin-announce-sub">Two things we want you to hear from us first</h3>
         <ul class="tcoin-risk-list">
-            <li><strong>The market is one sided today.</strong> The Uniswap v3 TMR/WETH pool (0.3% fee tier) holds about 41.78 million TMR and 0 ETH. TMR can be bought from it, but there is no ETH in it to sell into, other than ETH that buyers have paid in. TrustMyRecord does not link to any place to trade.</li>
+            <li><strong>The market is one sided today.</strong> The Uniswap v3 TMR/WETH pool (0.3% fee tier) holds about 41.78 million TMR and 0 ETH. TMR can be bought from it, but there is no ETH in it to sell into, other than ETH that buyers have paid in. The Uniswap link in the live market section below goes straight to the pool; check the contract address before you trade.</li>
             <li><strong>Site credits are not TMR tokens.</strong> What you earn on the site is site credits, an internal balance in your TrustMyRecord wallet. Site credits and the TMR token are separate. Nothing converts one into the other, in either direction. Site credits cannot be withdrawn, sold or transferred off the site.</li>
         </ul>
         <h3 class="tcoin-announce-sub">What we are working on next</h3>
@@ -321,7 +321,9 @@
                 <div class="tcoin-links">
                     <a class="tmr-cta-secondary" id="tcoin-chart-link" href="#" rel="nofollow noopener" target="_blank">Live chart →</a>
                     <a class="tmr-cta-secondary" id="tcoin-pool-link" href="#" rel="nofollow noopener" target="_blank">Pool on Basescan →</a>
+                    <a class="tmr-cta-secondary" id="tcoin-trade-link" href="#" rel="nofollow noopener" target="_blank" hidden>Trade on Uniswap →</a>
                 </div>
+                <p id="tcoin-trade-notice" style="margin-top:12px;font-size:13.5px;" hidden></p>
                 <p style="margin-top:12px;font-size:13.5px;color:var(--tmrp-text-muted);">Read live from the pool on Base <span id="tcoin-read-at"></span>. TrustMyRecord does not sell TMR, does not take payment for it, and earns nothing from these links.</p>
             </div>
         </div>
@@ -532,6 +534,12 @@
             document.getElementById('tcoin-depth').textContent = (ms && !ms.genuine ? ms.text + ' ' : '') + m.depth_warning + ' ' + m.liquidity_custody;
             document.getElementById('tcoin-chart-link').href = m.links.chart;
             document.getElementById('tcoin-pool-link').href = m.links.pool_explorer;
+            // The trade link exists only when the API returns it (TMR_TRADE_LINK_ENABLED, live pool).
+            var tl = document.getElementById('tcoin-trade-link'), tn = document.getElementById('tcoin-trade-notice');
+            if (m.links.trade && /^https:\/\/app\.uniswap\.org\//.test(m.links.trade)) {
+                tl.href = m.links.trade; tl.hidden = false;
+                if (m.trade_notice) { tn.textContent = m.trade_notice; tn.hidden = false; }
+            }
             if (m.read_at) {
                 document.getElementById('tcoin-read-at').textContent = 'at ' + new Date(m.read_at).toUTCString();
             }
