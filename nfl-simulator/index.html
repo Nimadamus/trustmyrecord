@@ -32,7 +32,7 @@
 {"@type":"Question","name":"Does it use current NFL rosters?","acceptedAnswer":{"@type":"Answer","text":"Yes. Current mode is built on current projected 2026 rosters and depth charts, so the quarterback, running backs, receivers, defensive lineup, and specialists reflect who is expected to play now, and their real player usage drives how touches and targets are shared. A player who is out is excluded."}},
 {"@type":"Question","name":"Does it generate player statistics and box scores?","acceptedAnswer":{"@type":"Answer","text":"Yes. Every simulation produces a full box score with realistic player statistics: passing, rushing, and receiving lines, defensive stats such as sacks and interceptions, kicking, and a play-by-play scoring summary. The box score is reconciled by construction, so passing, rushing, receiving, and scoring add up exactly to the team totals and the final score."}},
 {"@type":"Question","name":"How accurate are the simulations?","acceptedAnswer":{"@type":"Answer","text":"In a backtest on 285 held-out 2025 games (the model re-run with only data available before each kickoff, not the live predictions shown on the page), the current model's calibrated win probabilities produced a Brier score of 0.2177, compared with about 0.25 for a coin flip, 0.2481 for always selecting the home team and 0.2104 for the closing market favourite. The closing market was more accurate, and across the 2022 to 2025 seasons the model does not beat it. Its mean absolute margin error was 10.0 points. The model did not demonstrate a profitable advantage against the spread or game totals in this test. Player-level box-score accuracy has not yet been validated. Results are shown as ranges, not guarantees, and this is not betting advice or a prediction of exact future results."}},
-{"@type":"Question","name":"Is the NFL simulator free?","acceptedAnswer":{"@type":"Answer","text":"Yes, free with a TrustMyRecord account. Creating one takes a moment and needs no card. With it you can simulate any matchup, review the projected score, win probability, player stats and box score, and keep your runs, then track real, verified betting records separately on TrustMyRecord."}},
+{"@type":"Question","name":"Is the NFL simulator free?","acceptedAnswer":{"@type":"Answer","text":"Yes. Your first simulation on TrustMyRecord is free, with no account needed. After that, a free account gives you one free run a day on every simulator, and each extra run costs 5 TMR. TMR Pro members run every simulator without limits. A run only counts once its result appears, so a run that fails or never finishes costs nothing."}},
 {"@type":"Question","name":"Can this simulate an NFL score or any matchup?","acceptedAnswer":{"@type":"Answer","text":"Yes. This page is the NFL game simulator, score simulator and matchup simulator. Pick a scheduled game or any two teams, run it, and read the projected score, win probability and box score. Season standings are on the NFL Season Simulator, and the bracket is on the NFL Playoff Simulator."}}
 ]}
 </script>
@@ -367,7 +367,7 @@
 <script src="/static/js/backend-api.js?v=e4eaeea31d19"></script>
 <script src="/static/js/roster-clock.js?v=d4f49ef6fe7e"></script>
 <script src="/static/js/analytics.js?v=471dc3fea1e5"></script>
-<script src="/static/js/sim-auth-gate.js?v=a4282de29394"></script>
+<script src="/static/js/sim-auth-gate.js?v=1b5002708e56"></script>
 <!-- SIM_ACTIVATION_20260808: measures the two activation milestones that
      happen away from the simulator - first verified pick and first TMR Coin
      after a simulator-sourced signup. Read-only observer. Kill switch:
@@ -628,7 +628,7 @@
     <details><summary>Does it use current NFL rosters?</summary><p>Yes. Current mode is built on current projected 2026 rosters and depth charts, so the quarterback, running backs, receivers, defensive lineup, and specialists reflect who is expected to play now, and their real player usage drives how touches and targets are shared. A player who is out is excluded.</p></details>
     <details><summary>Does it generate player statistics and box scores?</summary><p>Yes. Every simulation produces a full box score with realistic player statistics: passing, rushing, and receiving lines, defensive stats such as sacks and interceptions, kicking, and a play-by-play scoring summary. The box score is reconciled by construction, so passing, rushing, receiving, and scoring add up exactly to the team totals and the final score.</p></details>
     <details><summary>How accurate are the simulations?</summary><p>In a backtest on 285 held-out 2025 games (the model re-run with only data available before each kickoff, not the live predictions shown on the page), the current model's calibrated win probabilities produced a Brier score of 0.2177, compared with about 0.25 for a coin flip, 0.2481 for always selecting the home team and 0.2104 for the closing market favourite. The closing market was more accurate, and across the 2022 to 2025 seasons the model does not beat it. Its mean absolute margin error was 10.0 points. The model did not demonstrate a profitable advantage against the spread or game totals in this test. Player-level box-score accuracy has not yet been validated. Results are shown as ranges, not guarantees, and this is not betting advice or a prediction of exact future results.</p></details>
-    <details><summary>Is the NFL simulator free?</summary><p>Yes, free with a TrustMyRecord account. Creating one takes a moment and needs no card, and it is what lets your runs be saved to come back to. With it you can simulate any matchup and review the projected score, win probability, player stats and box score, then track real, verified betting records separately on TrustMyRecord.</p></details>
+    <details><summary>Is the NFL simulator free?</summary><p>Yes. Your first simulation on TrustMyRecord is free, with no account needed. After that, a free account gives you one free run a day on every simulator, and each extra run costs 5 TMR. TMR Pro members run every simulator without limits. A run only counts once its result appears, so a run that fails or never finishes costs nothing.</p></details>
     <details><summary>Can this simulate an NFL score or any matchup?</summary><p>Yes. This page is the NFL game simulator, score simulator and matchup simulator. Pick a scheduled game or any two teams, run it, and read the projected score, win probability and box score. Season standings are on the <a href="/nfl-season-simulator/">NFL Season Simulator</a>, and the bracket is on the <a href="/nfl-playoff-simulator/">NFL Playoff Simulator</a>.</p></details>
   </div>
 
@@ -2228,14 +2228,18 @@ function installSimGate(){
     if(seed!=null||!window.TMRSimGate.authorizeRun)return Promise.resolve(window.TMRSimGate.requireAuth(meta));
     return window.TMRSimGate.authorizeRun(meta);
   };
+  /* ANON_RUN_SETTLE_20261030: a run that ends without a result (an error, an
+     unavailable game) is reported, so it never spends the free run or TMR. */
+  let simDone=0;
+  const _settleRun=(p)=>{const before=simDone;return Promise.resolve(p).then(()=>{if(simDone===before&&window.TMRSimGate.runFailed)window.TMRSimGate.runFailed('no result')},e=>{if(window.TMRSimGate.runFailed)window.TMRSimGate.runFailed('run error');throw e})};
   runScheduled=function(ref,seed){
     if(RUN_BUSY&&RUN_BUSY===simRunKey('g:'+ref,seed))return Promise.resolve();
     STATE.selRef=ref;
-    return _authorizeRun({sim_mode:'weekly'},seed).then(ok=>ok?_runScheduled(ref,seed):undefined);
+    return _authorizeRun({sim_mode:'weekly'},seed).then(ok=>ok?_settleRun(_runScheduled(ref,seed)):undefined);
   };
   runCustom=function(seed){
     if(RUN_BUSY&&RUN_BUSY===simRunKey(simCustomTarget(),seed))return Promise.resolve();
-    return _authorizeRun({sim_mode:'custom'},seed).then(ok=>ok?_runCustom(seed):undefined);
+    return _authorizeRun({sim_mode:'custom'},seed).then(ok=>ok?_settleRun(_runCustom(seed)):undefined);
   };
   renderResult=function(out,d){
     if(SIM_VIEW&&d&&!d.unavailable){
@@ -2248,6 +2252,7 @@ function installSimGate(){
     const r=_renderResult(out,d);
     try{
       if(d&&!d.unavailable){
+        simDone++;
         window.TMRSimGate.markCompleted({simulation_type:'nfl_game',simulations:d.meta&&d.meta.simulations});
         simAutoSave(d);
         simRenderConversion(out,d);

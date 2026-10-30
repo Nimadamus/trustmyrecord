@@ -12,7 +12,8 @@
    visitor and locks:
 
    1. The first click on the NFL simulator is allowed and opens no gate.
-   2. The free run is recorded once.
+   2. The free run is recorded once, and only when the result appears
+      (ANON_RUN_SETTLE_20261030; it used to be spent on the click).
    3. The next click (a separate action) is gated with "You used your free
       simulation".
    4. The gate itself treats repeated checks inside one action as one check, so
@@ -72,7 +73,9 @@ const gateOpen = (w) => !!w.document.querySelector('.tsg-overlay');
         const first = await authorize({ sim_mode: 'weekly' });
         ok('first click by a new visitor is allowed', first === true, String(first));
         ok('first click opens no gate', !gateOpen(w));
-        ok('the free run is recorded after the first click', !!w.localStorage.getItem(FREE_KEY));
+        ok('the click alone does NOT spend the free run', !w.localStorage.getItem(FREE_KEY));
+        w.TMRSimGate.markCompleted({ simulation_type: 'nfl_game' });
+        ok('the free run is recorded when the result appears', !!w.localStorage.getItem(FREE_KEY));
 
         const later = realNow.call(w.Date) + 10000;
         w.Date.now = () => later;
@@ -97,7 +100,11 @@ const gateOpen = (w) => !!w.document.querySelector('.tsg-overlay');
     ok('gate: first requireAuth in an action is allowed', a === true);
     ok('gate: a repeated check in the same action is allowed', b === true, String(b));
     ok('gate: a repeated check opens no gate', !gateOpen(g));
-    ok('gate: the free run stamp is written once', g.localStorage.getItem(FREE_KEY) === stamp);
+    ok('gate: nothing is spent before a result', stamp === null && g.localStorage.getItem(FREE_KEY) === null);
+    g.TMRSimGate.runSucceeded();
+    const spent = g.localStorage.getItem(FREE_KEY);
+    g.TMRSimGate.runSucceeded();
+    ok('gate: the free run stamp is written once', !!spent && g.localStorage.getItem(FREE_KEY) === spent);
 
     // 5: the old double call must not return to the NFL page.
     ok('NFL page does not call requireAuth before authorizeRun on the same click',

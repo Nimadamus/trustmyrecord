@@ -83,12 +83,18 @@
             var t = self.currentTeams ? self.currentTeams() : null;
             if (!t || !t.away || !t.home || t.away.ref === t.home.ref) return run.apply(self, args);
         } catch (e) { /* fall through to the gate as before */ }
-        if (opts && opts.seed) {
-            if (!G.requireAuth({ sim_mode: 'rerun' })) return;
-            return run.apply(self, args);
-        }
-        G.authorizeRun({ sim_mode: opts && opts.fresh ? 'run' : 'again' }).then(function (go) {
-            if (!go) return;
+        /* A what-if on the result already on screen (same seed, a player held
+           out or a minutes cap changed) only needs the account. Any other seed,
+           e.g. one carried in from a shared link, is a new run and is metered.
+           ANON_RUN_SETTLE_20261030: both kinds report how the run ended, so the
+           anonymous free run is spent only on a result and given back on a
+           failure. */
+        var shownSeed = self.lastResult && self.lastResult.meta ? self.lastResult.meta.seed : null;
+        var whatIf = !!(opts && opts.seed && shownSeed != null && String(opts.seed) === String(shownSeed));
+        var go = whatIf ? Promise.resolve(G.requireAuth({ sim_mode: 'rerun' }))
+                        : G.authorizeRun({ sim_mode: opts && opts.fresh ? 'run' : 'again' });
+        go.then(function (ok) {
+            if (!ok) return;
             /* SIM_RUN_SETTLE_20261005: charged only when a NEW result lands. */
             var before = self.lastResult;
             run.apply(self, args);

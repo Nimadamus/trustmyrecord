@@ -16,7 +16,7 @@
 'use strict';
 
 const fs = require('fs');
-const path = require('path');
+const path = require('path'); const RUN_POLICY = require('./sim-run-policy.js');   // SIM_RUN_POLICY_20261030
 const N = require('../static/js/nfl-season-project.js');
 const H = require('./build_league_sim_pages.js');
 
@@ -70,7 +70,7 @@ function page(d, result, shell) {
     ['What does the 80% range mean?', 'Eight of every ten simulated seasons land inside it. It shows how far a team’s win total can swing on the same schedule and the same model.'.replace('’', "'")],
     ['Which tiebreakers does it use?', 'Head to head, division record, common games, conference record, strength of victory, strength of schedule and the points based steps, in the league’s order. Best net touchdowns and the coin toss cannot be computed from the data held, and a tie that reaches them is left tied rather than guessed.'.replace('’', "'")],
     ['Does it update during the season?', 'Yes. Each rebuild reads the schedule, every final score and the model’s probabilities again, so played games stop being simulated and the ranges narrow week by week.'.replace('’', "'")],
-    ['Is it free?', 'The published projection is free to read with no account. Running your own set of seasons needs a free account and uses the daily free simulator run.'],
+    ['Is it free?', RUN_POLICY.faqAnswer(RUN_POLICY.READ_FREE_SEASON)],
     ['Is this an NFL season predictor?', 'Yes. It is the season predictor and standings simulator for the current NFL season. It replays every remaining game and reports projected wins and division standings for all 32 teams. Picking games by hand and rebuilding the bracket is the job of the NFL Playoff Simulator.'],
   ];
   const faq = H.faqBlock(faqs);

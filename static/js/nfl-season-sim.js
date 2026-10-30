@@ -52,7 +52,9 @@
         var n = Number(runs && runs.value) || 10000;   // SIM_DEFAULT_20261006: matches the published 10,000-season tables
         status.textContent = 'Playing ' + n.toLocaleString('en-US') + ' seasons';
         var seed = (Math.random() * 4294967295) >>> 0;
-        runOff('nfl', { inputs: d, n: n, seed: seed }, function () {
+        /* returned, so a simulation that throws reaches the catch below and is
+           settled as failed (ANON_RUN_SETTLE_20261030) */
+        return runOff('nfl', { inputs: d, n: n, seed: seed }, function () {
           return window.TMRNflSeason.project(d, n, seed);
         }).then(function (result) {
           document.getElementById('lsimTables').innerHTML = window.TMRNflSeason.tables(result);

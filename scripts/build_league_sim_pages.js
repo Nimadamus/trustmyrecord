@@ -23,7 +23,7 @@
 'use strict';
 
 const fs = require('fs');
-const path = require('path');
+const path = require('path'); const RUN_POLICY = require('./sim-run-policy.js');   // SIM_RUN_POLICY_20261030: one source for free run copy
 const E = require('../static/js/league-season-engine.js');
 const UI = require('../static/js/league-season-sim.js');
 
@@ -259,13 +259,13 @@ function page(sport, mode, inputs, result, shell) {
     [`How many games are in the ${season} ${L.label} season?`, nba ? `Each NBA team plays 82 games. The league publishes 80 per team in advance and adds two per team in December after the NBA Cup group stage.` : `Each NHL team plays 84 games in ${season}, ${count(F.scheduled)} games in all.`],
     [`What does the 80% range mean?`, `Eight of every ten simulated seasons land inside it. The other two fall above or below. It shows how much a team's ${L.unit} can swing on the same schedule and the same ratings.`],
     [`Does the simulator update during the season?`, `Yes. Each time the page is rebuilt it reads the schedule and every final result again, so completed games stop being simulated and the projection narrows as the season goes on.`],
-    [`Is it free?`, `The published projection is free to read with no account. Running your own set of seasons needs a free account and uses the daily free simulator run.`],
+    [`Is it free?`, RUN_POLICY.faqAnswer(RUN_POLICY.READ_FREE_SEASON)],
   ] : [
     [`How does the ${L.label} playoff simulator work?`, `It plays out the rest of the ${season} regular season, seeds each conference with the real ${L.label} format, ${nba ? 'plays the play-in tournament, ' : ''}and then plays every series game by game, best of seven, with home ${nba ? 'court' : 'ice'} to the better regular season team. It repeats that ${count(result.runs)} times and counts how often each team reaches each round.`],
     [nba ? 'How is the NBA play-in tournament simulated?' : 'How are the NHL wild cards decided?', nba ? `Seven hosts eight for the 7 seed, nine hosts ten to stay alive, and the loser of seven against eight hosts the winner of nine against ten for the 8 seed. Each game uses the same win probability as any other game between those teams at that arena.` : `After the top three teams in each division, the next two teams in each conference by points are the wild cards. The division winner with more points plays the second wild card.`],
     [`Who is favored to win ${nba ? 'the NBA title' : 'the Stanley Cup'}?`, `In the current projection the ${fav.name} win it ${pctText(fav.champion)} of the time, ahead of the ${fav2.name} at ${pctText(fav2.champion)}. Those numbers move as results come in.`],
     [`Why does the simulated bracket change each time?`, `A single bracket is one season out of thousands. The odds table is the summary of all of them; the bracket shows what one of those seasons looked like.`],
-    [`Is it free?`, `The published odds and bracket are free to read with no account. Running your own set needs a free account and uses the daily free simulator run.`],
+    [`Is it free?`, RUN_POLICY.faqAnswer(RUN_POLICY.READ_FREE_ODDS)],
   ];
   const faq = faqBlock(faqs);
 
@@ -505,7 +505,7 @@ function playoffPage(sport, inputs, result, shell) {
       : ['How are the NHL wild cards decided?', 'After the top three teams in each division, the next two teams in each conference by points are the wild cards. The division winner with more points plays the second wild card and the other division winner plays the first.'],
     [`Who is favored to win the ${season} ${nba ? 'NBA title' : 'Stanley Cup'}?`, `In the current projection the ${fav.name} win it ${pctText(fav.champion)} of the time, ahead of the ${fav2.name} at ${pctText(fav2.champion)}. Those numbers move as results come in, and the page is rebuilt twice a day.`],
     [`Can I share my ${sportName} bracket?`, `Yes. Share bracket copies a link that carries your seeds and picks, and anyone who opens it sees the same bracket. Your bracket is also kept on your own device, so it is still there when you come back.`],
-    [`Is the ${sportName} playoff simulator free?`, `Yes. The bracket picker, the projected field and the published odds are free with no account. Running your own set of ${nba ? 'seasons' : 'seasons'} needs a free account and uses the daily free simulator run.`],
+    [`Is the ${sportName} playoff simulator free?`, RUN_POLICY.faqAnswer('Yes. The bracket picker, the projected field and the published odds are always free.')],
   ];
   const faq = faqBlock(faqs);
 

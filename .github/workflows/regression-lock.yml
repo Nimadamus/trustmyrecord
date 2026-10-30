@@ -51,6 +51,9 @@ jobs:
       # noindex, a redirect stub leaking into the sitemap, a /u/ profile that
       # stops baking its record (soft 404), or an internal link to a dead URL.
       - run: npm run test:seo
+      # SIM_RUN_POLICY_20261030: free run spent only on a result, no deep link
+      # auto run, one run at a time, one free run / pricing wording everywhere.
+      - run: npm run test:simgate
       # FEATURED_TRUE_LEADER_20261011: every /handicappers/ award card shows its category's real #1.
       - run: node tests/handicappers-featured-true-leader-test.js
       - run: npx playwright install --with-deps chromium

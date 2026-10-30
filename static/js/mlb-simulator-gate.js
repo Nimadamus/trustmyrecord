@@ -210,7 +210,11 @@
         captureState: captureState,
         describeState: describeState,
         restoreState: restoreState,
-        runNow: runNow
+        runNow: runNow,
+        /* ANON_RUN_SETTLE_20261030: this page reports a finished run
+           (markCompleted) but not a failed one, so a run with no result stops
+           blocking the next press after 15 seconds instead of 90. */
+        inflightMs: 15000
     });
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);

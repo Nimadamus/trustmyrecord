@@ -68,6 +68,7 @@
     // on the page could set one.
     this.minutes = { home: {}, away: {} };
     this.lastResult = null;
+    this.pendingSeed = null;   // a shared link's seed, used by the first Run press
     this.running = false;
   }
 
@@ -128,7 +129,10 @@
     if (this.nodes.swap) {
       this.nodes.swap.addEventListener('click', function () { self.swap(); });
     }
-    this.nodes.run.addEventListener('click', function () { self.run({ fresh: true }); });
+    this.nodes.run.addEventListener('click', function () {
+      var seed = self.takePendingSeed();
+      self.run(seed ? { fresh: true, seed: seed } : { fresh: true });
+    });
 
     this.setState('loading', 'Loading teams');
     this.api('/teams').then(function (d) {
@@ -600,10 +604,23 @@
       // that shows it selected rather than on a slate nobody asked for.
       this.setMode('custom');
       this.clearScenario();
-    if (this.cfg.onMatchupChanged) this.cfg.onMatchupChanged(this);
+      if (this.cfg.onMatchupChanged) this.cfg.onMatchupChanged(this);
       this.renderPrerun();
-      this.run({ seed: isFinite(seed) && seed > 0 ? seed : null });
+      // DEEP_LINK_NO_AUTORUN_20261030: a link only SELECTS the matchup. It used
+      // to run it on page load, which spent a visitor's free run (or a member's
+      // daily run / TMR) before they pressed anything, including on a reload of
+      // their own result URL. A seed in the link is kept and used by the first
+      // Run press on that same matchup, so a shared result still reproduces.
+      this.pendingSeed = isFinite(seed) && seed > 0 ? { seed: seed, away: a, home: h } : null;
     }
+  };
+
+  /** The seed a shared link carried, once, if the matchup is still the linked one. */
+  SimApp.prototype.takePendingSeed = function () {
+    var p = this.pendingSeed;
+    this.pendingSeed = null;
+    if (!p || p.away !== this.state.away || p.home !== this.state.home) return null;
+    return p.seed;
   };
 
   SimApp.prototype.swap = function () {
