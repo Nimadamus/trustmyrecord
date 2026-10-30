@@ -48,6 +48,19 @@
 <link rel="stylesheet" href="/static/css/tmr-navbar.css?v=68ec3081d29a">
 </head>
 <body class="tmr-ds tmr-polished-page mlb-simulator-page" data-mlb-simulator-build="mlb-simulator-blowout-calibration-20260727a">
+<!-- MLB_HUB_CLS_20261030: reserve the shared header (tmr-ds-nav.js lands after
+     first paint; its height is the navbar CSS --nav-h plus a 1px border) and
+     drop the reservation in the frame the header arrives. -->
+<div id="dsNavReserve" aria-hidden="true" style="height:calc(var(--nav-h, 70px) + 1px)"></div>
+<script>
+(function () {
+  var drop = function () { var r = document.getElementById('dsNavReserve'); if (r) r.parentNode.removeChild(r); };
+  if (document.querySelector('nav.ds-nav')) return drop();
+  var o = new MutationObserver(function () { if (document.querySelector('nav.ds-nav')) { o.disconnect(); drop(); } });
+  o.observe(document.documentElement, { childList: true, subtree: true });
+  window.addEventListener('load', function () { setTimeout(function () { o.disconnect(); drop(); }, 2000); });
+}());
+</script>
 
     <main class="sim-shell">
         <nav aria-label="Breadcrumb" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:.8rem;margin:0 0 14px;color:#a8b3c5;font-family:'Inter',system-ui,sans-serif;">
