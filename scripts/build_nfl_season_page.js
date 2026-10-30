@@ -258,7 +258,7 @@ ${P.data}
 <script defer src="/static/js/nfl-season-picks.js?v=${assetV('static/js/nfl-season-picks.js')}"></script>
 <script defer src="/static/js/nfl-season-sim.js?v=${assetV('static/js/nfl-season-sim.js')}"></script>
 <script defer src="/static/js/playoff-bracket.js?v=${assetV('static/js/playoff-bracket.js')}"></script>
-<script defer src="/static/js/sim-run-gate.js" data-sport="nfl_season"></script>
+<script defer src="/static/js/sim-run-gate.js?v=${assetV('static/js/sim-run-gate.js')}" data-sport="nfl_season"></script>
 ${shell.tail}
 </body>
 </html>
