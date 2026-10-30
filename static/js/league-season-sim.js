@@ -177,7 +177,7 @@
   function runOff(kind, payload, fallback) {
     return new Promise(function (resolve, reject) {
       var w;
-      try { w = new Worker('/static/js/sim-season-worker.js?v=6fca2ca26136'); } catch (e) { w = null; }
+      try { w = new Worker('/static/js/sim-season-worker.js?v=f6f7459b0996'); } catch (e) { w = null; }
       if (!w) { try { resolve(fallback()); } catch (err) { reject(err); } return; }
       var done = false;
       w.onmessage = function (e) {
