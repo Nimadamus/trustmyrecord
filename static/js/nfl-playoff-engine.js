@@ -513,7 +513,8 @@
       var t = teams.filter(function (x) { return x.id === teamId; })[0];
       return { status: inSeeds(s, t, teamId) ? 'clinched' : 'eliminated', exhaustive: true, checked: 1 };
     }
-    if (Math.pow(2, remaining.length) > cap) return { status: null, exhaustive: false, checked: 0, reason: 'too many outcomes' };
+    // NFL_CLINCH_COPY_20261030: report the count so the page can say exactly why it did not check.
+    if (Math.pow(2, remaining.length) > cap) return { status: null, exhaustive: false, checked: 0, reason: 'too many outcomes', remaining: remaining.length, maxGames: Math.floor(Math.log2(cap)) };
 
     var n = remaining.length, total = Math.pow(2, n);
     var anyIn = false, anyOut = false;
@@ -548,6 +549,45 @@
   }
 
   /**
+   * NFL_PLAYOFF_FIT_ONE_METHOD_20261030. Team strength implied by the model's own game
+   * probabilities: the least squares fit of logit(p_home) = home edge + rating(home) -
+   * rating(away) over every game the model priced. The model prices scheduled games
+   * only; this is how a January matchup gets a number. ONE implementation, used by the
+   * baked bracket (scripts/build_nfl_playoff_page.js) and by the in-browser conference
+   * and Super Bowl odds, so the page never states two methods for the same game.
+   */
+  function fitRatings(teams, games) {
+    var priced = games.filter(function (g) { return typeof g.home_win_prob === 'number' && g.home_win_prob > 0 && g.home_win_prob < 1; });
+    var r = {}; teams.forEach(function (t) { r[t.id] = 0; });
+    var h = 0, lr = 0.05;
+    for (var it = 0; it < 4000; it++) {
+      var gr = {}; teams.forEach(function (t) { gr[t.id] = 0; });
+      var gh = 0;
+      for (var i = 0; i < priced.length; i++) {
+        var g = priced[i];
+        var y = Math.log(g.home_win_prob / (1 - g.home_win_prob));
+        var e = (g.neutral ? 0 : h) + r[g.home] - r[g.away] - y;
+        gr[g.home] += e; gr[g.away] -= e;
+        if (!g.neutral) gh += e;
+      }
+      var n = priced.length / teams.length;
+      teams.forEach(function (t) { r[t.id] -= lr * gr[t.id] / n; });
+      h -= lr * gh / priced.length * 4;
+      var mean = teams.reduce(function (sm, t) { return sm + r[t.id]; }, 0) / teams.length;
+      teams.forEach(function (t) { r[t.id] -= mean; });
+    }
+    var out = {};
+    teams.forEach(function (t) { out[t.id] = Math.round(r[t.id] * 10000) / 10000; });
+    return { r: out, hfa: Math.round(h * 10000) / 10000, priced: priced.length };
+  }
+
+  /** Home win probability of a fitted matchup; neutral = no home edge (the Super Bowl). */
+  function matchupProb(fit, home, away, neutral) {
+    var x = (neutral ? 0 : fit.hfa) + (fit.r[home] || 0) - (fit.r[away] || 0);
+    return 1 / (1 + Math.exp(-x));
+  }
+
+  /**
    * Monte Carlo the rest of the season. User picks are LOCKED and never
    * redrawn; only unpicked games are simulated, from the model's own home win
    * probability when one is available and a coin flip when it is not.
@@ -557,6 +597,9 @@
     var rnd = mulberry32(seed || 20260913);
     var open = games.filter(function (g) { return !g.completed && !(picks && picks[g.id]); });
     var tally = {}, seedTally = {}, champTally = {}, sbTally = {};
+    // Playoff rounds use the fitted strengths (the same numbers the bracket shows),
+    // home field to the better seed, none in the Super Bowl.
+    var fit = opts.withBracket ? (opts.ratings || fitRatings(teams, games)) : null;
     teams.forEach(function (t) { tally[t.id] = 0; champTally[t.id] = 0; sbTally[t.id] = 0; seedTally[t.id] = 0; });
 
     for (var it = 0; it < iterations; it++) {
@@ -576,11 +619,11 @@
       if (opts.withBracket) {
         var champs = {};
         ['AFC', 'NFC'].forEach(function (c) {
-          var b = bracket(s[c].seeds, function (a, bb) { return rnd() < 0.5 ? a : bb; });
+          var b = bracket(s[c].seeds, function (a, bb) { return rnd() < matchupProb(fit, a, bb, false) ? a : bb; });
           if (b.champion) { champTally[b.champion] += 1; champs[c] = b.champion; }
         });
         if (champs.AFC && champs.NFC) {
-          var sb = rnd() < 0.5 ? champs.AFC : champs.NFC;
+          var sb = rnd() < matchupProb(fit, champs.AFC, champs.NFC, true) ? champs.AFC : champs.NFC;
           sbTally[sb] += 1;
         }
       }
@@ -603,7 +646,7 @@
     breakTie: breakTie, rankPool: rankPool, steps: steps, h2hSweep: h2hSweep, rankWildcardGroup: rankWildcardGroup,
     seedConference: seedConference, seedAll: seedAll,
     bracket: bracket, clinchStatus: clinchStatus,
-    simulateSeason: simulateSeason, mulberry32: mulberry32,
+    simulateSeason: simulateSeason, mulberry32: mulberry32, fitRatings: fitRatings, matchupProb: matchupProb,
     commonOpponents: commonOpponents, strengthOf: strengthOf,
     UNIMPLEMENTABLE: ['best net touchdowns in all games', 'a coin toss'],
   };

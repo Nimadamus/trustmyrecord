@@ -25,7 +25,7 @@ function decide({ now, lastBake, event }) {
   const slot = latestSlot(now);
   const last = lastBake ? +new Date(lastBake) : 0;
   const stale = !last || (+new Date(now) - last) / 3600000 > STALE_HOURS;
-  const due = event === 'workflow_dispatch' || last < slot;
+  const due = event === 'workflow_dispatch' || event === 'repository_dispatch' || last < slot;
   return { due, stale, slot: new Date(slot).toISOString() };
 }
 

@@ -64,34 +64,8 @@ async function inputs(season) {
   throw last;
 }
 
-/* Team strength implied by the model's own game probabilities: the least squares
-   fit of logit(p_home) = home edge + rating(home) - rating(away) over every game
-   the model priced. The model prices scheduled games only; this is what lets the
-   bracket give a January matchup a number rather than a coin flip. */
-function fitRatings(teams, games) {
-  const priced = games.filter((g) => typeof g.home_win_prob === 'number' && g.home_win_prob > 0 && g.home_win_prob < 1);
-  const r = {}; teams.forEach((t) => { r[t.id] = 0; });
-  let h = 0;
-  const lr = 0.05;
-  for (let it = 0; it < 4000; it++) {
-    const gr = {}; teams.forEach((t) => { gr[t.id] = 0; });
-    let gh = 0;
-    for (const g of priced) {
-      const y = Math.log(g.home_win_prob / (1 - g.home_win_prob));
-      const e = (g.neutral ? 0 : h) + r[g.home] - r[g.away] - y;
-      gr[g.home] += e; gr[g.away] -= e;
-      if (!g.neutral) gh += e;
-    }
-    const n = priced.length / teams.length;
-    teams.forEach((t) => { r[t.id] -= lr * gr[t.id] / n; });
-    h -= lr * gh / priced.length * 4;
-    const mean = teams.reduce((s, t) => s + r[t.id], 0) / teams.length;
-    teams.forEach((t) => { r[t.id] -= mean; });
-  }
-  const out = {};
-  teams.forEach((t) => { out[t.id] = Math.round(r[t.id] * 10000) / 10000; });
-  return { r: out, hfa: Math.round(h * 10000) / 10000, priced: priced.length };
-}
+/* NFL_PLAYOFF_FIT_ONE_METHOD_20261030: the fit lives in the engine, shared with the in-browser odds. */
+const fitRatings = (teams, games) => E.fitRatings(teams, games);
 
 function simulate(d, n) {
   const rnd = E.mulberry32(Number(String(d.generated_at).slice(0, 10).replace(/-/g, '')) || 1);
@@ -253,6 +227,7 @@ function patch(html, start, end, block, anchor, before) {
     console.log(`nfl playoff page: inputs look incomplete (${(d.teams || []).length} teams, ${(d.games || []).length} games), last bake left live`);
     return;
   }
+  if (!require('./nfl-bake-freshness').gate(d, 'nfl-playoff-simulator')) return;
   const out = build(d);
   let html = fs.readFileSync(PAGE, 'utf8');
   html = patch(html, '<!-- PB_NFL_HEAD:start -->', '<!-- PB_NFL_HEAD:end -->', STYLE, '</head>', true);

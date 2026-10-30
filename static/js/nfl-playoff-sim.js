@@ -619,15 +619,17 @@
     if (c.status === 'clinched') sec.appendChild(el('p', 'clinch in', 'Clinched a playoff place: in under every remaining combination.'));
     else if (c.status === 'eliminated') sec.appendChild(el('p', 'clinch out', 'Eliminated: out under every remaining combination.'));
     else if (c.exhaustive) sec.appendChild(el('p', 'clinch', 'Still alive and not yet clinched. Both outcomes remain possible.'));
+    // NFL_CLINCH_COPY_20261030: say why nothing was decided instead of staying silent.
+    else if (c.remaining) sec.appendChild(el('p', 'clinch', 'Clinching and elimination are checked exactly once ' + c.maxGames + ' or fewer games are left unpicked (every combination of their results, with the full tiebreakers). '
+      + c.remaining + ' games are unpicked now, so this club is not marked clinched or eliminated yet. Pick more games to check.'));
 
     if (S.sims && S.sims.probabilities[id]) {
       var p = S.sims.probabilities[id];
       var ul = el('ul', 'odds-list');
       // The first two come from simulating the remaining SCHEDULE with the
-      // model's own game probabilities. The last two add playoff rounds, and the
-      // model does not project hypothetical January matchups, so those rounds are
-      // coin flips. The labels say so rather than passing a 50/50 bracket off as
-      // a forecast.
+      // model's own game probabilities. The last two add playoff rounds, priced
+      // from each club's strength fitted to those same probabilities
+      // (E.fitRatings, the numbers the bracket shows). NFL_PLAYOFF_FIT_ONE_METHOD_20261030
       [['Make the playoffs', p.playoff], ['Take the 1 seed', p.topSeed],
         ['Win the conference \u2020', p.conference],
         ['Win the Super Bowl \u2020', p.superbowl]].forEach(function (r) {
@@ -638,8 +640,9 @@
       });
       sec.appendChild(ul);
       sec.appendChild(el('p', 'odds-note',
-        '\u2020 Playoff rounds are treated as 50/50. The model projects regular-season '
-        + 'games only, so these two figures measure seeding and the bye, not matchup quality.'));
+        '\u2020 Playoff games are priced from each club\u2019s strength fitted to the model\u2019s own '
+        + 'regular season probabilities, the same numbers the bracket shows, with home field to the better seed '
+        + 'and none in the Super Bowl.'));
     }
 
     var rem = S.data.games.filter(function (g) {

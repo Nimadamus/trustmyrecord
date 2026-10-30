@@ -22,6 +22,11 @@ on:
   schedule:
     - cron: '47 * * * *'
   workflow_dispatch:
+  # NFL_FINAL_REBAKE_20261030: the backend (services/nfl/nflFinalWatch.js) fires this
+  # when an NFL game goes final, so finals reach the pages within ~20 minutes
+  # instead of waiting 4 to 7 hours for the next slot. Always bakes.
+  repository_dispatch:
+    types: [nfl-game-final]
 
 permissions:
   contents: write
@@ -115,9 +120,14 @@ jobs:
               node scripts/build_mlb_odds_page.js > b4.log 2>&1 || { tail -30 b4.log; return 1; }
               # Never fails the bake; on bad inputs it leaves the last bake live.
               node scripts/build_nfl_playoff_page.js > b5.log 2>&1 || tail -10 b5.log
+              # NFL_ACCURACY_ONE_SOURCE_20261030: every accuracy figure from the API, incl. graded served predictions.
+              node scripts/build_nfl_accuracy_copy.js > b6.log 2>&1 || tail -10 b6.log
               # THE GATES run before the commit: a failing gate publishes nothing.
               node tests/playoff-bracket-test.js > g1.log 2>&1 || { tail -30 g1.log; return 1; }
               node tests/league-season-engine-test.js > g2.log 2>&1 || { tail -30 g2.log; return 1; }
+              node tests/nfl-accuracy-copy-test.js > g5.log 2>&1 || { tail -30 g5.log; return 1; }
+              node tests/nfl-pages-consistency-test.js > g6.log 2>&1 || { tail -30 g6.log; return 1; }
+              node tests/nfl-tbd-kickoff-test.js > g7.log 2>&1 || { tail -30 g7.log; return 1; }
               node tests/mlb-postseason-odds-test.js > g4.log 2>&1 || { tail -30 g4.log; return 1; }
               node tests/seo-indexability-regression-test.js > g3.log 2>&1 || { tail -40 g3.log; return 1; }
               node tests/sim-run-policy-test.js > g5.log 2>&1 || { tail -30 g5.log; return 1; }
@@ -130,5 +140,9 @@ jobs:
             return 1
           }
 
-          echo "=== bake at $(WHEN)"
-          if bake; then recovered; else alert "see the log for this run"; exit 1; fi
+          echo "=== bake at $(WHEN) (event ${GITHUB_EVENT_NAME})"
+          rm -f .nfl-freshness-flag
+          if ! bake; then alert "see the log for this run"; exit 1; fi
+          # NFL_BAKE_FRESHNESS_GATE_20261030: a page skipped or degraded by the API's
+          # freshness_status raises the same alert instead of passing silently.
+          if [ -s .nfl-freshness-flag ]; then alert "NFL freshness gate: $(tr "\n" " " < .nfl-freshness-flag)"; else recovered; fi

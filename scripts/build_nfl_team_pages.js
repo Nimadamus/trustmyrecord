@@ -59,7 +59,14 @@ async function inputs() {
 const simLink = (away, home) => `/nfl-simulator/?away=${encodeURIComponent(away.abbr)}&amp;home=${encodeURIComponent(home.abbr)}`;
 const logo = (abbr) => `https://a.espncdn.com/i/teamlogos/nfl/500/${String(abbr).toLowerCase()}.png`;
 const pct = (v) => (v >= 0.995 ? 'better than 99%' : v < 0.005 ? 'under 1%' : Math.round(v * 100) + '%');
-const dateOf = (iso) => new Date(iso).toLocaleString('en-US', { timeZone: 'America/Los_Angeles', weekday: 'short', month: 'short', day: 'numeric' });
+// NFL_TBD_KICKOFF_20261030: an unscheduled flex-week game is listed at exactly midnight Eastern;
+// in Pacific time that printed as a real Saturday. No NFL game kicks off at midnight ET.
+const isTbdKick = (iso) => {
+  const p = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(new Date(iso));
+  const h = p.find((x) => x.type === 'hour').value; const m = p.find((x) => x.type === 'minute').value;
+  return (h === '00' || h === '24') && m === '00';
+};
+const dateOf = (iso) => (isTbdKick(iso) ? 'TBD' : new Date(iso).toLocaleString('en-US', { timeZone: 'America/Los_Angeles', weekday: 'short', month: 'short', day: 'numeric' }));
 const teamSlug = (t) => H.slugOf(t.name);
 const nickSlug = (t) => H.slugOf(t.nickname);
 const pairSlug = (a, b) => [nickSlug(a), nickSlug(b)].sort().join('-vs-');
@@ -296,6 +303,7 @@ function patchSitemap(urls) {
 
 (async () => {
   const d = await inputs();
+  if (!require('./nfl-bake-freshness').gate(d, 'nfl team pages')) return;
   const seed = Number(String(d.generated_at || '').slice(0, 10).replace(/-/g, '')) || 1;
   const proj = N.project(d, RUNS, seed);
   const teams = proj.teams;

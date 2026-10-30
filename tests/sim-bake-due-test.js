@@ -45,4 +45,19 @@ for (const [drop, seed, minSlots] of [[0, 1, 119], [0.25, 3, 118], [0.25, 5, 118
   assert.strictEqual(r.dup, 0, 'two bakes in one slot');
   assert.ok(r.slotsCovered >= minSlots, 'missed slots at drop ' + drop);   // 120 slots in 30 days
 }
+// NFL_FINAL_REBAKE_20261030: a game-final dispatch always bakes, even right after a slot bake.
+assert.strictEqual(decide({ now: '2026-10-30T03:40:00Z', lastBake: '2026-10-30T03:30:00Z', event: 'repository_dispatch' }).due, true);
+assert.strictEqual(decide({ now: '2026-10-30T03:40:00Z', lastBake: '2026-10-30T03:30:00Z', event: 'schedule' }).due, false);
+const wf = require('fs').readFileSync(require('path').join(__dirname, '..', '.github', 'workflows', 'league-sim-bake.yml'), 'utf8');
+assert.ok(/repository_dispatch:\s*\n\s*types: \[nfl-game-final\]/.test(wf), 'bake listens for nfl-game-final');
+assert.ok(/-s \.nfl-freshness-flag/.test(wf), 'freshness flags raise the bake alert');
+// NFL_BAKE_FRESHNESS_GATE_20261030
+const F = require('../scripts/nfl-bake-freshness.js');
+assert.deepStrictEqual(F.verdict({ freshness_status: 'ok' }), { bake: true, flag: null });
+assert.strictEqual(F.verdict({ freshness_status: 'stale_projection' }).bake, true);
+assert.ok(F.verdict({ freshness_status: 'stale_projection' }).flag);
+assert.strictEqual(F.verdict({ freshness_status: 'stale_sources', source_data: { stale_feeds: ['nfl_scores'] } }).bake, false);
+assert.strictEqual(F.verdict({}).bake, false);
+for (const b of ['build_nfl_season_page.js', 'build_nfl_team_pages.js', 'build_nfl_playoff_page.js'])
+  assert.ok(/nfl-bake-freshness'\)\.gate\(d,/.test(require('fs').readFileSync(require('path').join(__dirname, '..', 'scripts', b), 'utf8')), b + ' must gate on freshness');
 console.log('SIM_BAKE_DUE PASSED');

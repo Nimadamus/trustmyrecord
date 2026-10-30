@@ -124,7 +124,7 @@ ${shell.head}
     <h1>NFL Season Simulator</h1>
     ${lead}
     <div class="lsim-run">
-      <label>Seasons <select id="lsimRuns"><option value="1000">1,000</option><option value="2000" selected>2,000</option><option value="5000">5,000</option><option value="10000">10,000</option></select></label>
+      <label>Seasons <select id="lsimRuns"><option value="1000">1,000</option><option value="2000">2,000</option><option value="5000">5,000</option><option value="10000" selected>10,000</option></select></label>
       <button class="btn primary" type="button" id="runSim">Run the season</button>
       <span id="lsimStatus" role="status" aria-live="polite"></span>
     </div>
@@ -173,6 +173,7 @@ ${shell.tail}
 
 (async () => {
   const d = await inputs();
+  if (!require('./nfl-bake-freshness').gate(d, 'nfl-season-simulator')) return;
   const seed = Number(String(d.generated_at || '').slice(0, 10).replace(/-/g, '')) || 1;
   const result = N.project(d, RUNS, seed);
   const out = path.join(ROOT, 'nfl-season-simulator', 'index.html');

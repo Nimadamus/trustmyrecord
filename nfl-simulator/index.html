@@ -31,7 +31,7 @@
 {"@type":"Question","name":"Can I simulate any two NFL teams, not just the schedule?","acceptedAnswer":{"@type":"Answer","text":"Yes. Custom Matchup mode lets you pick any two NFL teams and simulate them against each other with the same engine, rosters, injuries and box-score generation as scheduled games. You choose which team is home, or set a neutral field, and pick a kickoff window."}},
 {"@type":"Question","name":"Does it use current NFL rosters?","acceptedAnswer":{"@type":"Answer","text":"Yes. Current mode is built on current projected 2026 rosters and depth charts, so the quarterback, running backs, receivers, defensive lineup, and specialists reflect who is expected to play now, and their real player usage drives how touches and targets are shared. A player who is out is excluded."}},
 {"@type":"Question","name":"Does it generate player statistics and box scores?","acceptedAnswer":{"@type":"Answer","text":"Yes. Every simulation produces a full box score with realistic player statistics: passing, rushing, and receiving lines, defensive stats such as sacks and interceptions, kicking, and a play-by-play scoring summary. The box score is reconciled by construction, so passing, rushing, receiving, and scoring add up exactly to the team totals and the final score."}},
-{"@type":"Question","name":"How accurate are the simulations?","acceptedAnswer":{"@type":"Answer","text":"In a backtest on 285 held-out 2025 games (the model re-run with only data available before each kickoff, not the live predictions shown on the page), the current model's calibrated win probabilities produced a Brier score of 0.2177, compared with about 0.25 for a coin flip, 0.2481 for always selecting the home team and 0.2104 for the closing market favourite. The closing market was more accurate, and across the 2022 to 2025 seasons the model does not beat it. Its mean absolute margin error was 10.0 points. The model did not demonstrate a profitable advantage against the spread or game totals in this test. Player-level box-score accuracy has not yet been validated. Results are shown as ranges, not guarantees, and this is not betting advice or a prediction of exact future results."}},
+{"@type":"Question","name":"How accurate are the simulations?","acceptedAnswer":{"@type":"Answer","text":"In a backtest on 285 held-out 2025 games (a research configuration of the model re-run with only data available before each kickoff, not the predictions served on this page), calibrated win probabilities produced a Brier score of 0.2178, compared with about 0.25 for a coin flip, 0.2481 for always selecting the home team and 0.2104 for the closing market favourite. The closing market was more accurate, and across the 2022 to 2025 seasons the model does not beat it. Its mean absolute margin error was 10.1 points. The model did not demonstrate a profitable advantage against the spread or game totals in this test. Player-level box-score accuracy has not yet been validated. Results are shown as ranges, not guarantees, and this is not betting advice or a prediction of exact future results."}},
 {"@type":"Question","name":"Is the NFL simulator free?","acceptedAnswer":{"@type":"Answer","text":"Yes. Your first simulation on TrustMyRecord is free, with no account needed. After that, a free account gives you one free run a day on every simulator, and each extra run costs 5 TMR. TMR Pro members run every simulator without limits. A run only counts once its result appears, so a run that fails or never finishes costs nothing."}},
 {"@type":"Question","name":"Can this simulate an NFL score or any matchup?","acceptedAnswer":{"@type":"Answer","text":"Yes. This page is the NFL game simulator, score simulator and matchup simulator. Pick a scheduled game or any two teams, run it, and read the projected score, win probability and box score. Season standings are on the NFL Season Simulator, and the bracket is on the NFL Playoff Simulator."}}
 ]}
@@ -311,6 +311,12 @@
      Simulate buttons, progress state, one canonical headline. */
   .feat{background:linear-gradient(180deg,#10203a,#0c1526);border:1px solid #1d3352;border-radius:16px;padding:16px 18px;margin:14px 0 0}
   .feat[hidden]{display:none}
+  /* NFL_SIM_CLS_20261030: the hero is reserved from the first frame (it used to appear ~3 s in and push the setup panel down 184px) */
+  .feat{min-height:170px;box-sizing:border-box}
+  @media(max-width:640px){.feat{min-height:206px}}
+  .feat-m{min-height:30px}
+  @media(max-width:640px){.feat-m{min-height:70px}}
+  #boardAimNote{min-height:1.4em}
   .feat-k{font-size:.7rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
   .feat-m{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:8px 0 2px;font-size:1.08rem;font-weight:720;min-width:0}
   .feat-m .at{color:var(--dim);font-weight:600;font-size:.9rem}
@@ -388,6 +394,22 @@
 <link rel="stylesheet" href="/static/css/tmr-navbar.css?v=68ec3081d29a">
 </head>
 <body class="tmr-ds-shell tmr-ds--dark">
+<!-- NFL_SIM_CLS_20261030: tmr-ds-nav.js inserts the shared header as body.firstChild from a
+     script at the foot of the page, after first paint, which pushed the whole page down
+     (0.17 of the 0.447 desktop CLS). Hold its exact height (70px x --home-nav-scale + 1px
+     border, from tmr-navbar.css) and drop the hold in the frame the real header lands. -->
+<div id="dsNavReserve" aria-hidden="true" style="height:calc(70px * var(--home-nav-scale, 1) + 1px)"></div>
+<script>
+(function () {
+  var r = document.getElementById('dsNavReserve');
+  if (!r) return;
+  var drop = function () { if (r && r.parentNode) { r.parentNode.removeChild(r); r = null; } };
+  if (document.querySelector('nav.ds-nav')) return drop();
+  var o = new MutationObserver(function () { if (document.querySelector('nav.ds-nav')) { o.disconnect(); drop(); } });
+  o.observe(document.documentElement, { childList: true, subtree: true });
+  window.addEventListener('load', function () { setTimeout(function () { o.disconnect(); if (!document.querySelector('nav.ds-nav')) drop(); }, 0); });
+})();
+</script>
 
 <main class="wrap">
   <nav class="simcrumb" aria-label="Breadcrumb" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:.8rem;margin:0 0 14px;opacity:.85;">
@@ -400,15 +422,14 @@
     <h1>NFL Game Simulator</h1>
     <p>Simulate any 2026 NFL game for a projected score, win probability and full box score, built from real drive data and current rosters. Free with a TrustMyRecord account, no card needed.</p>
   </section>
-  <p class="roster-clock" data-roster-clock="nfl" role="status">Roster times: checking the live status.</p>
 
   <!-- NFL_SIM_UX_20261021: the next game, one tap from a result. Filled by renderFeatured(). -->
-  <section class="feat" id="featured" aria-labelledby="featTitle" hidden>
+  <section class="feat" id="featured" aria-labelledby="featTitle">
     <div class="feat-k" id="featKicker">Next game</div>
-    <h2 class="feat-m" id="featTitle"></h2>
-    <div class="feat-w" id="featWhen"></div>
+    <h2 class="feat-m" id="featTitle">Finding the next game&hellip;</h2>
+    <div class="feat-w" id="featWhen">&nbsp;</div>
     <div class="feat-a">
-      <button type="button" class="btn lg" id="featBtn">Simulate this game</button>
+      <button type="button" class="btn lg" id="featBtn" disabled>Simulate this game</button>
       <a href="#games" class="dim" id="featAlt">or pick another game</a>
     </div>
   </section>
@@ -478,9 +499,11 @@
 
   <p class="sr-only" id="simStatus" role="status" aria-live="polite"></p>
   <div id="result"></div>
-  <p id="boardAimNote" hidden></p>
+  <p id="boardAimNote"></p>
   <div id="games" class="games"></div>
 
+  <!-- NFL_SIM_CLS_20261030: below the grid; it expands when the roster API answers. -->
+  <p class="roster-clock" data-roster-clock="nfl" role="status">Roster times: checking the live status.</p>
   <div class="disc" id="globalDisc">Simulated model projections based on current available roster and injury data. Probability estimates, not guarantees, and not financial or betting advice.</div>
 <!--MK:blpCrossLink-->
   <p class="tmr-blpx" style="margin:26px 0 0;padding:14px 0 0;border-top:1px solid rgba(255,255,255,.09);font-size:14px;line-height:1.6;color:#8FA6BC">A simulation tells you what might happen. <a href="/betlegend-pro/" style="color:#F5A524;font-weight:700;text-decoration:none">BetLegend Pro</a> tells you what already did: search 130,000+ graded games across NFL, MLB, NBA and NHL for every comparable matchup and situation, and get the record with the sample size behind it. Free to try, 25 lookups a day.</p>
@@ -524,6 +547,11 @@
     <li>Use <b>Simulate again</b> to run a fresh variation with the same teams, count, venue and kickoff window.</li>
   </ol>
 
+  <!-- NFL_SERVED:start -->
+  <h2 id="live-accuracy">Live accuracy: the predictions this page served</h2>
+  <p class="acc-prov"><b>Live, graded:</b> every game's default prediction is recorded before kickoff and graded after the final. The first graded games appear here after they finish.</p>
+  <!-- NFL_SERVED:end -->
+
   <h2 id="accuracy">Backtest accuracy</h2>
   <!-- NFL_SIM_ACCURACY_LABELS_20261021: every figure in this section is a backtest
        (the research model re-run after the fact), not a grade of the predictions
@@ -532,21 +560,23 @@
   <p class="acc-prov" id="nflAccProv"><b>Backtest:</b> the model re-run after each game with only data available before kickoff. These are not the live predictions shown on this page.</p>
   <p>The model is scored on a strict chronological split. It was fitted on the 2021, 2022 and 2023 seasons, its win-probability calibration was chosen on 2024, and 2025 was held back and scored once. Nothing in the 2025 test informed a model coefficient or the calibration, and every game is simulated with team ratings and quarterback ratings built only from games played before its kickoff. One exception: the points scored per drive outcome and the game-flow constants were measured on 2019 to 2025 drives, so 2025 is not fully clean for those. On the 2025 holdout the closing betting market was more accurate than the model, and across the 2022 to 2025 seasons the model does not beat the closing market.</p>
   <div class="acc">
+    <!-- NFL_ACC_HOLD:start -->
     <table id="nflAccHold">
-      <caption id="nflAccHoldCap">Backtest. Model nfl-sim-drive-v1 as it runs today, re-run and regraded October 6, 2026. Training 2021 to 2023, validation 2024, holdout test 2025, 285 games.</caption>
-      <tr><th scope="row">Brier score, calibrated win probability</th><td class="n" data-k="model.brier">0.2177</td></tr>
-      <tr><th scope="row">Log loss, calibrated win probability</th><td class="n" data-k="model.log_loss">0.6265</td></tr>
+      <caption id="nflAccHoldCap">Backtest of the research configuration (team ratings as of each kickoff), model nfl-sim-drive-v1, regraded October 28, 2026. It is not the projected configuration the page serves; that one is graded above. Training 2021 to 2023, validation 2024, holdout test 2025, 285 games.</caption>
+      <tr><th scope="row">Brier score, calibrated win probability</th><td class="n" data-k="model.brier">0.2178</td></tr>
+      <tr><th scope="row">Log loss, calibrated win probability</th><td class="n" data-k="model.log_loss">0.6271</td></tr>
       <tr><th scope="row">Brier score, coin-flip baseline</th><td class="n" data-k="coin_flip.brier">0.2491</td></tr>
       <tr><th scope="row">Brier score, always select the home team</th><td class="n" data-k="home_team.brier">0.2481</td></tr>
       <tr><th scope="row">Winner accuracy</th><td class="n" data-k="model.winner_accuracy">63.38%</td></tr>
-      <tr><th scope="row">Mean absolute margin error</th><td class="n" data-k="model.margin_mae">10.0 points</td></tr>
+      <tr><th scope="row">Mean absolute margin error</th><td class="n" data-k="model.margin_mae">10.1 points</td></tr>
       <tr><th scope="row">Against the spread, 284 games</th><td class="n" data-k="model.ats_accuracy">50.35%</td></tr>
-      <tr><th scope="row">Game totals, 285 games</th><td class="n" data-k="model.totals_accuracy">52.63%</td></tr>
+      <tr><th scope="row">Game totals, 284 games</th><td class="n" data-k="model.totals_accuracy">52.82%</td></tr>
       <tr><th scope="row">Break-even rate at standard pricing</th><td class="n">52.38%</td></tr>
       <tr><th scope="row">Brier score, closing market favourite (no vig moneyline)</th><td class="n" data-k="market_favourite.brier">0.2104</td></tr>
       <tr><th scope="row">Winner accuracy, closing market favourite, 283 decided games</th><td class="n" data-k="market_favourite.winner_accuracy">66.08%</td></tr>
       <tr><th scope="row">Mean absolute margin error, closing spread</th><td class="n" data-k="market_favourite.margin_mae">9.7 points</td></tr>
     </table>
+    <!-- NFL_ACC_HOLD:end -->
   </div>
   <div class="acc" id="nflAccYtd" hidden></div>
   <script>
@@ -627,7 +657,7 @@
     <details><summary>Can I simulate any two NFL teams?</summary><p>Yes. Custom Matchup mode lets you pick any two NFL teams and simulate them with the same engine, rosters, injuries and box-score generation as scheduled games. You choose which team is home, or set a neutral field, and pick a kickoff window.</p></details>
     <details><summary>Does it use current NFL rosters?</summary><p>Yes. Current mode is built on current projected 2026 rosters and depth charts, so the quarterback, running backs, receivers, defensive lineup, and specialists reflect who is expected to play now, and their real player usage drives how touches and targets are shared. A player who is out is excluded.</p></details>
     <details><summary>Does it generate player statistics and box scores?</summary><p>Yes. Every simulation produces a full box score with realistic player statistics: passing, rushing, and receiving lines, defensive stats such as sacks and interceptions, kicking, and a play-by-play scoring summary. The box score is reconciled by construction, so passing, rushing, receiving, and scoring add up exactly to the team totals and the final score.</p></details>
-    <details><summary>How accurate are the simulations?</summary><p>In a backtest on 285 held-out 2025 games (the model re-run with only data available before each kickoff, not the live predictions shown on the page), the current model's calibrated win probabilities produced a Brier score of 0.2177, compared with about 0.25 for a coin flip, 0.2481 for always selecting the home team and 0.2104 for the closing market favourite. The closing market was more accurate, and across the 2022 to 2025 seasons the model does not beat it. Its mean absolute margin error was 10.0 points. The model did not demonstrate a profitable advantage against the spread or game totals in this test. Player-level box-score accuracy has not yet been validated. Results are shown as ranges, not guarantees, and this is not betting advice or a prediction of exact future results.</p></details>
+    <details><summary>How accurate are the simulations?</summary><p><!-- NFL_ACC_FAQ:start -->In a backtest on 285 held-out 2025 games (a research configuration of the model re-run with only data available before each kickoff, not the predictions served on this page), calibrated win probabilities produced a Brier score of 0.2178, compared with about 0.25 for a coin flip, 0.2481 for always selecting the home team and 0.2104 for the closing market favourite. The closing market was more accurate, and across the 2022 to 2025 seasons the model does not beat it. Its mean absolute margin error was 10.1 points. The model did not demonstrate a profitable advantage against the spread or game totals in this test. Player-level box-score accuracy has not yet been validated. Results are shown as ranges, not guarantees, and this is not betting advice or a prediction of exact future results.<!-- NFL_ACC_FAQ:end --></p></details>
     <details><summary>Is the NFL simulator free?</summary><p>Yes. Your first simulation on TrustMyRecord is free, with no account needed. After that, a free account gives you one free run a day on every simulator, and each extra run costs 5 TMR. TMR Pro members run every simulator without limits. A run only counts once its result appears, so a run that fails or never finishes costs nothing.</p></details>
     <details><summary>Can this simulate an NFL score or any matchup?</summary><p>Yes. This page is the NFL game simulator, score simulator and matchup simulator. Pick a scheduled game or any two teams, run it, and read the projected score, win probability and box score. Season standings are on the <a href="/nfl-season-simulator/">NFL Season Simulator</a>, and the bracket is on the <a href="/nfl-playoff-simulator/">NFL Playoff Simulator</a>.</p></details>
   </div>
@@ -1105,7 +1135,7 @@ function renderGames(){
     c.appendChild(away);c.appendChild(home);
     const meta=el('div','g-meta');
     const dt=g.kickoff_utc?new Date(g.kickoff_utc):null;
-    meta.appendChild(Object.assign(el('span'),{textContent:dt?dt.toLocaleDateString('en-US',{timeZone:'America/Los_Angeles',month:'short',day:'numeric'}):''}));
+    meta.appendChild(Object.assign(el('span'),{textContent:isTbdKick(g.kickoff_utc)?'TBD':dt?dt.toLocaleDateString('en-US',{timeZone:'America/Los_Angeles',month:'short',day:'numeric'}):''}));
     meta.appendChild(Object.assign(el('span','st '+g.status),{textContent:g.status}));
     /* NFL_SIM_UX_20261021: an explicit Simulate button on every card (the
        whole card stays tappable). The button is the keyboard and screen reader
@@ -1123,7 +1153,7 @@ function renderGames(){
   }
 }
 function defaultWindowFor(g){
-  if(!g||!g.kickoff_utc)return 'late';
+  if(!g||!g.kickoff_utc||isTbdKick(g.kickoff_utc))return 'late';
   const h=new Date(g.kickoff_utc).getUTCHours(); // ET ~ UTC-4/5; classify by UTC hour band
   if(h>=23||h<3)return 'night';        // ~7pm+ ET
   if(h>=20)return 'late';              // ~4-6pm ET
@@ -1428,7 +1458,11 @@ function resolveTeam(x){
 }
 
 /* ===================== NFL_SIM_UX_20261021: featured game hero ===================== */
-function kickoffPT(iso){try{return iso?new Date(iso).toLocaleString('en-US',{timeZone:'America/Los_Angeles',weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})+' PT':''}catch(e){return ''}}
+/* NFL_TBD_KICKOFF_20261030: the league lists unscheduled late-season games (flex weeks 15 to 18)
+   at exactly midnight Eastern as a placeholder; shown in Pacific time that read as a real
+   Saturday 9 PM kickoff. No NFL game kicks off at midnight ET, so that instant means "time TBD". */
+function isTbdKick(iso){try{if(!iso)return false;const p=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date(iso));const h=p.find(x=>x.type==='hour').value,m=p.find(x=>x.type==='minute').value;return (h==='00'||h==='24')&&m==='00'}catch(e){return false}}
+function kickoffPT(iso){if(isTbdKick(iso))return 'Date and time TBD';try{return iso?new Date(iso).toLocaleString('en-US',{timeZone:'America/Los_Angeles',weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})+' PT':''}catch(e){return ''}}
 function showGameWeek(g){
   if(!g)return;
   if(STATE.mode!=='weekly')setMode('weekly');
@@ -1454,7 +1488,7 @@ function renderFeatured(o){
   const side=(abbr,name)=>{const s=el('span','team');s.appendChild(teamMark(abbr,30));s.appendChild(Object.assign(el('span','tn'),{textContent:name}));return s};
   t.appendChild(side(a,aN));t.appendChild(Object.assign(el('span','at'),{textContent:o.neutral?'vs':'at'}));t.appendChild(side(h,hN));
   const w=$('#featWhen');w.textContent=when;w.hidden=!when;
-  const b=$('#featBtn');b.textContent=btn;b.setAttribute('aria-label',`${btn}: ${aN} ${o.neutral?'vs':'at'} ${hN}`);
+  const b=$('#featBtn');b.disabled=false;b.textContent=btn;b.setAttribute('aria-label',`${btn}: ${aN} ${o.neutral?'vs':'at'} ${hN}`);
   b.onclick=()=>{
     if(o.kind==='game'){showGameWeek(o.g);pickGame(o.g)}
     else{if(STATE.mode!=='custom')setMode('custom');
@@ -1599,7 +1633,7 @@ function renderResult(out,d){
   mh.appendChild(grid);
   if(g.final){mh.appendChild(Object.assign(el('div','hl-final'),{textContent:`Actual final: ${aAbbr} ${g.final.away}, ${hAbbr} ${g.final.home}`}))}
   let runAt='';try{runAt=new Date().toLocaleString('en-US',{timeZone:'America/Los_Angeles',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})+' PT'}catch(e){}
-  let kick='';try{if(g.kickoff_utc&&!g.is_custom)kick=new Date(g.kickoff_utc).toLocaleString('en-US',{timeZone:'America/Los_Angeles',weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})+' PT'}catch(e){}
+  let kick='';try{if(g.kickoff_utc&&!g.is_custom)kick=isTbdKick(g.kickoff_utc)?'TBD':new Date(g.kickoff_utc).toLocaleString('en-US',{timeZone:'America/Los_Angeles',weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})+' PT'}catch(e){}
   const hm=el('div','hl-meta');hm.id='simMeta';
   hm.innerHTML=[`<b>${nSims}</b> simulations`,d.meta&&d.meta.model?esc(d.meta.model):'',runAt?'Run '+esc(runAt):'',kick?'Kickoff '+esc(kick):''].filter(Boolean).join(' · ');
   mh.appendChild(hm);
