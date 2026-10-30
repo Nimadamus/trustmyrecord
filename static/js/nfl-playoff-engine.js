@@ -514,7 +514,13 @@
       return { status: inSeeds(s, t, teamId) ? 'clinched' : 'eliminated', exhaustive: true, checked: 1 };
     }
     // NFL_CLINCH_COPY_20261030: report the count so the page can say exactly why it did not check.
-    if (Math.pow(2, remaining.length) > cap) return { status: null, exhaustive: false, checked: 0, reason: 'too many outcomes', remaining: remaining.length, maxGames: Math.floor(Math.log2(cap)) };
+    // NFL_CLINCH_BOUND_20261030: too many to enumerate, so try the record bound first.
+    if (Math.pow(2, remaining.length) > cap) {
+      var bd = clinchBound(teams, games, picks, teamId);
+      var base = { exhaustive: false, checked: 0, remaining: remaining.length, maxGames: Math.floor(Math.log2(cap)) };
+      if (bd.status) return Object.assign(base, { status: bd.status, method: 'bound', division: !!bd.division });
+      return Object.assign(base, { status: null, reason: 'too many outcomes' });
+    }
 
     var n = remaining.length, total = Math.pow(2, n);
     var anyIn = false, anyOut = false;
@@ -529,6 +535,106 @@
       if (anyIn && anyOut) return { status: null, exhaustive: true, checked: mask + 1 };
     }
     return { status: anyIn ? 'clinched' : 'eliminated', exhaustive: true, checked: total };
+  }
+
+  /**
+   * NFL_CLINCH_BOUND_20261030. A record bound that is provably correct, used when
+   * there are too many remaining outcomes to enumerate. It never guesses: it
+   * answers 'clinched' or 'eliminated' only when the tiebreakers cannot matter,
+   * and null ("not checked") otherwise.
+   *
+   * Every club's final win percentage lies between losing and winning all of its
+   * unpicked games (a tie lands in between, so ties are covered too).
+   *
+   * Clinched. A = other conference clubs that can still finish level with or above
+   * T's worst case. If T misses, T's division winner D finished level or above T
+   * (so D is in A), and three wild cards that are not division winners finished
+   * level or above T (so they are in A too). Each of those wild cards trails its own
+   * division winner, who is then level or above T as well and so also in A. So every
+   * division d supplies at most |A in d| - 1 of the three wild cards: when the sum of
+   * max(0, |A in d| - 1) is 2 or less, T is in. No division rival in A means the
+   * division itself is clinched.
+   *
+   * Eliminated. B = other conference clubs certain to finish strictly above T's best
+   * case. A club strictly above T outranks it in the division and in the wild card
+   * order whatever the tiebreakers say. If a division rival is in B, T cannot win
+   * the division; a division has one winner, so at least |B in d| - 1 clubs of each
+   * division d are B clubs that are not division winners, and each takes a wild card
+   * ahead of T. Three of them fill the wild cards, so T is eliminated.
+   */
+  function clinchBound(teams, games, picks, teamId) {
+    var rec = {};
+    teams.forEach(function (t) { rec[t.id] = { pts: 0, g: 0, rem: 0 }; });
+    games.forEach(function (g) {
+      var h = rec[g.home], a = rec[g.away];
+      if (!h || !a) return;
+      h.g++; a.g++;
+      if (g.completed) {
+        if (g.home_score > g.away_score) h.pts += 1;
+        else if (g.away_score > g.home_score) a.pts += 1;
+        else { h.pts += 0.5; a.pts += 0.5; }
+      } else if (picks && picks[g.id]) {
+        if (picks[g.id] === g.home) h.pts += 1; else if (picks[g.id] === g.away) a.pts += 1;
+      } else { h.rem++; a.rem++; }
+    });
+    var me = teams.filter(function (x) { return x.id === teamId; })[0];
+    if (!me || !rec[teamId].g) return { status: null };
+    var lo = function (id) { var r = rec[id]; return r.g ? r.pts / r.g : 0.5; };
+    var hi = function (id) { var r = rec[id]; return r.g ? (r.pts + r.rem) / r.g : 0.5; };
+    var others = teams.filter(function (x) { return x.conference === me.conference && x.id !== teamId; });
+    var A = others.filter(function (x) { return hi(x.id) >= lo(teamId); });
+    var rivalsA = A.filter(function (x) { return x.division === me.division; }).length;
+    if (rivalsA === 0) return { status: 'clinched', division: true };
+    var aDiv = {};
+    A.forEach(function (x) { aDiv[x.division] = (aDiv[x.division] || 0) + 1; });
+    var could = 0;
+    Object.keys(aDiv).forEach(function (d) { could += Math.max(0, aDiv[d] - 1); });
+    if (could <= 2) return { status: 'clinched', division: false };
+    var B = others.filter(function (x) { return lo(x.id) > hi(teamId); });
+    var byDiv = {};
+    B.forEach(function (x) { byDiv[x.division] = (byDiv[x.division] || 0) + 1; });
+    if (byDiv[me.division]) {
+      var sure = 0;
+      Object.keys(byDiv).forEach(function (d) { sure += Math.max(0, byDiv[d] - 1); });
+      if (sure >= 3) return { status: 'eliminated' };
+    }
+    return { status: null };
+  }
+
+  /**
+   * NFL_PICKS_LINK_20261030. Share links name each picked game by its matchup, not
+   * by its position in the schedule list: "KC-BUF-h" is Kansas City at Buffalo, home
+   * team picked. A club hosts a given opponent at most once in a regular season, so
+   * away + home identifies the game even if the schedule list is reordered or a
+   * game's feed id changes (ids come from two feeds). The old position format
+   * ("12-h") still decodes for links shared before this change.
+   */
+  function gameKey(g) { return g.away + '-' + g.home; }
+  function encodePicks(games, picks) {
+    var out = [];
+    (games || []).forEach(function (g) {
+      var p = picks && picks[g.id];
+      if (p && !g.completed) out.push(gameKey(g) + '-' + (p === g.home ? 'h' : 'a'));
+    });
+    return out.join('.');
+  }
+  function decodePicks(games, str) {
+    var picks = {};
+    if (!str || !games) return picks;
+    var byKey = {};
+    games.forEach(function (g) { byKey[gameKey(g)] = g; });
+    String(str).split('.').forEach(function (tok) {
+      var m = /^([A-Z]{2,4})-([A-Z]{2,4})-(h|a)$/.exec(tok), g;
+      if (m) g = byKey[m[1] + '-' + m[2]];
+      else {
+        m = /^(\d+)-(h|a)$/.exec(tok);
+        if (!m) return;
+        g = games[Number(m[1])];
+        m = [null, null, null, m[2]];
+      }
+      if (g && !g.completed) picks[g.id] = m[3] === 'h' ? g.home : g.away;
+    });
+    return picks;
   }
 
   function inSeeds(seeded, team, teamId) {
@@ -645,7 +751,8 @@
     resolveResults: resolveResults, buildStandings: buildStandings,
     breakTie: breakTie, rankPool: rankPool, steps: steps, h2hSweep: h2hSweep, rankWildcardGroup: rankWildcardGroup,
     seedConference: seedConference, seedAll: seedAll,
-    bracket: bracket, clinchStatus: clinchStatus,
+    bracket: bracket, clinchStatus: clinchStatus, clinchBound: clinchBound,
+    gameKey: gameKey, encodePicks: encodePicks, decodePicks: decodePicks,
     simulateSeason: simulateSeason, mulberry32: mulberry32, fitRatings: fitRatings, matchupProb: matchupProb,
     commonOpponents: commonOpponents, strengthOf: strengthOf,
     UNIMPLEMENTABLE: ['best net touchdowns in all games', 'a coin toss'],

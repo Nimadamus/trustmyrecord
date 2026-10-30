@@ -20,18 +20,51 @@
     return sorted[Math.min(sorted.length - 1, Math.max(0, Math.round(q * (sorted.length - 1))))];
   }
 
-  function project(data, n, seed) {
+  /* NFL_SEASON_STRENGTH_NOISE_20261030 (CAND_NFL_SEASON_STRENGTH_NOISE_V1, lab
+     CHANGELOG 2026-10-30): every simulated season draws one strength shock per club,
+     z ~ N(0, SIGMA^2) on the logit scale, and every open game of that season is
+     played at logit(p) + z_home - z_away. A club's strength is not known exactly, so
+     its whole season can run hot or cold together. Walk-forward 2019-2025 in the lab
+     (scripts/nfl_season_noise_backtest.js) favours 0.5, but its playoff Brier gain does
+     not exclude 0, so it is NOT deployed: SIGMA stays 0 until approved. The shocks use
+     their own random stream, so SIGMA 0 reproduces the old numbers exactly. */
+  var SIGMA = 0;
+  function shifted(p, d) {
+    if (!d) return p;
+    var q = Math.min(0.999, Math.max(0.001, p));
+    return 1 / (1 + Math.exp(-(Math.log(q / (1 - q)) + d)));
+  }
+
+  /* opts.picks: { gameId: winnerId } results the visitor locked in (NFL_SEASON_PICKS_20261030).
+     opts.sigma: overrides SIGMA (tests and the lab). */
+  function project(data, n, seed, opts) {
+    opts = opts || {};
     var rnd = E.mulberry32(seed || 1);
-    var open = data.games.filter(function (g) { return !g.completed; });
+    var sigma = typeof opts.sigma === 'number' ? opts.sigma : SIGMA;
+    var noiseRnd = E.mulberry32(((seed || 1) ^ 0x9e3779b9) >>> 0);
+    var gauss = function () {
+      var u = 0; while (u === 0) u = noiseRnd();
+      return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * noiseRnd());
+    };
+    var picks = {};
+    var open = data.games.filter(function (g) {
+      if (g.completed) return false;
+      var w = opts.picks && opts.picks[g.id];
+      if (w === g.home || w === g.away) { picks[g.id] = w; return false; }
+      return true;
+    });
     var acc = {};
     data.teams.forEach(function (t) {
       acc[t.id] = { wins: [], division: 0, playoffs: 0, top: 0 };
     });
     for (var i = 0; i < n; i++) {
-      var sims = {};
+      var sims = {}, z = null;
+      if (sigma > 0) { z = {}; data.teams.forEach(function (t) { z[t.id] = sigma * gauss(); }); }
+      for (var pk in picks) sims[pk] = picks[pk];
       for (var k = 0; k < open.length; k++) {
         var g = open[k];
         var p = typeof g.home_win_prob === 'number' ? g.home_win_prob : 0.5;
+        if (z) p = shifted(p, (z[g.home] || 0) - (z[g.away] || 0));
         sims[g.id] = rnd() < p ? g.home : g.away;
       }
       var s = E.seedAll(data.teams, data.games, {}, sims);
@@ -60,7 +93,7 @@
         played: played[t.id] || 0,
       };
     });
-    return { runs: n, seed: seed, open: open.length, teams: teams };
+    return { runs: n, seed: seed, open: open.length + Object.keys(picks).length, picked: Object.keys(picks).length, sigma: sigma, teams: teams };
   }
 
   function esc(s) {
@@ -100,8 +133,9 @@
       month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }) + ' PT';
     var played = data.games.length - result.open;
     return result.runs.toLocaleString('en-US') + ' simulated ' + data.season + ' seasons, schedule and results read ' + esc(when)
-      + ', ' + played + ' of ' + data.games.length + ' regular season games final.';
+      + ', ' + played + ' of ' + data.games.length + ' regular season games final'
+      + (result.picked ? ', with your ' + result.picked + (result.picked === 1 ? ' pick' : ' picks') + ' locked in.' : '.');
   }
 
-  return { project: project, tables: tables, stamp: stamp };
+  return { project: project, tables: tables, stamp: stamp, SIGMA: SIGMA };
 }));

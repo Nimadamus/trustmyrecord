@@ -39,7 +39,7 @@ assert.ok(E.matchupProb(fit, 'AE1', 'AE4', false) > 0.5 && E.matchupProb(fit, 'A
 const many = Array.from({ length: 20 }, (_, i) => ({ id: 'x' + i, week: 18, home: 'AE1', away: 'AE2', completed: false }));
 const c = E.clinchStatus(teams, many, {}, 'AE1', { cap: 4096 });
 assert.strictEqual(c.exhaustive, false); assert.strictEqual(c.remaining, 20); assert.strictEqual(c.maxGames, 12);
-assert.ok(/else if \(c\.remaining\) sec\.appendChild\(el\('p', 'clinch', 'Clinching and elimination are checked exactly once/.test(read('static/js/nfl-playoff-sim.js')));
+assert.ok(/else if \(c\.remaining && !c\.status\) sec\.appendChild\(el\('p', 'clinch', 'Clinching and elimination are checked exactly once/.test(read('static/js/nfl-playoff-sim.js')));
 assert.ok(/once 12 or fewer games league wide are left unpicked/.test(read('nfl-playoff-simulator/index.html')));
 
 // --- season default ---

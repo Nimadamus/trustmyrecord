@@ -385,7 +385,8 @@
     var data = el.querySelector('script[type="application/json"]');
     if (!data) return;
     var cfg = JSON.parse(data.textContent);
-    var KEY = 'tmr-bracket-' + cfg.league + '-' + cfg.season;
+    /* cfg.key: a page that hosts a second bracket (the NFL season simulator) keeps its own saved bracket. */
+    var KEY = cfg.key || ('tmr-bracket-' + cfg.league + '-' + cfg.season);
     var board = el.querySelector('.pb-board');
     var editor = el.querySelector('.pb-editor');
     var status = el.querySelector('.pb-status');

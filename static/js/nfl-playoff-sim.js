@@ -49,27 +49,9 @@
 
   /* ------------------------------------------------------- share + storage */
 
-  /** Picks encode as winner initials keyed by game index: compact and readable. */
-  function encodePicks() {
-    if (!S.data) return '';
-    var out = [];
-    S.data.games.forEach(function (g, i) {
-      var p = S.picks[g.id];
-      if (p) out.push(i + '-' + (p === g.home ? 'h' : 'a'));
-    });
-    return out.join('.');
-  }
-  function decodePicks(str) {
-    var picks = {};
-    if (!str || !S.data) return picks;
-    str.split('.').forEach(function (tok) {
-      var m = /^(\d+)-(h|a)$/.exec(tok);
-      if (!m) return;
-      var g = S.data.games[Number(m[1])];
-      if (g && !g.completed) picks[g.id] = m[2] === 'h' ? g.home : g.away;
-    });
-    return picks;
-  }
+  /** NFL_PICKS_LINK_20261030: picks travel by matchup (engine codec), never by list position. */
+  function encodePicks() { return S.data ? E.encodePicks(S.data.games, S.picks) : ''; }
+  function decodePicks(str) { return S.data ? E.decodePicks(S.data.games, str) : {}; }
   function save() {
     try { localStorage.setItem(STORAGE, JSON.stringify({ picks: S.picks, focus: S.focus })); } catch (e) { /* private window */ }
   }
@@ -619,9 +601,14 @@
     if (c.status === 'clinched') sec.appendChild(el('p', 'clinch in', 'Clinched a playoff place: in under every remaining combination.'));
     else if (c.status === 'eliminated') sec.appendChild(el('p', 'clinch out', 'Eliminated: out under every remaining combination.'));
     else if (c.exhaustive) sec.appendChild(el('p', 'clinch', 'Still alive and not yet clinched. Both outcomes remain possible.'));
+    // NFL_CLINCH_BOUND_20261030: these come from a record bound that cannot be wrong, not from enumeration.
+    if (c.method === 'bound' && c.status === 'clinched') sec.appendChild(el('p', 'clinch in', c.division
+      ? 'Clinched the division: even losing every remaining game, no division rival can finish level with or above this record.'
+      : 'Clinched a playoff place: even losing every remaining game, too few clubs can finish level with or above this record to push it out.'));
+    else if (c.method === 'bound' && c.status === 'eliminated') sec.appendChild(el('p', 'clinch out', 'Eliminated: even winning every remaining game, a division rival and three wild card contenders finish ahead on record.'));
     // NFL_CLINCH_COPY_20261030: say why nothing was decided instead of staying silent.
-    else if (c.remaining) sec.appendChild(el('p', 'clinch', 'Clinching and elimination are checked exactly once ' + c.maxGames + ' or fewer games are left unpicked (every combination of their results, with the full tiebreakers). '
-      + c.remaining + ' games are unpicked now, so this club is not marked clinched or eliminated yet. Pick more games to check.'));
+    else if (c.remaining && !c.status) sec.appendChild(el('p', 'clinch', 'Clinching and elimination are checked exactly once ' + c.maxGames + ' or fewer games are left unpicked (every combination of their results, with the full tiebreakers). '
+      + 'Before that a record bound is checked, which settles only the clear cases. ' + c.remaining + ' games are unpicked now, so this club is not marked clinched or eliminated yet. Pick more games to check.'));
 
     if (S.sims && S.sims.probabilities[id]) {
       var p = S.sims.probabilities[id];

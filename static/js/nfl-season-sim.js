@@ -8,7 +8,7 @@
   function runOff(kind, payload, fallback) {
     return new Promise(function (resolve, reject) {
       var w;
-      try { w = new Worker('/static/js/sim-season-worker.js?v=6fca2ca26136'); } catch (e) { w = null; }
+      try { w = new Worker('/static/js/sim-season-worker.js?v=f6f7459b0996'); } catch (e) { w = null; }
       if (!w) { try { resolve(fallback()); } catch (err) { reject(err); } return; }
       var done = false;
       w.onmessage = function (e) {
@@ -54,12 +54,15 @@
         var seed = (Math.random() * 4294967295) >>> 0;
         /* returned, so a simulation that throws reaches the catch below and is
            settled as failed (ANON_RUN_SETTLE_20261030) */
-        return runOff('nfl', { inputs: d, n: n, seed: seed }, function () {
-          return window.TMRNflSeason.project(d, n, seed);
+        /* NFL_SEASON_PICKS_20261030: the visitor's picks, matched to the live games by matchup,
+           are locked in for every season of this run. */
+        var picks = window.TMRNflSeasonPicks ? window.TMRNflSeasonPicks.current(d.games) : {};
+        return runOff('nfl', { inputs: d, n: n, seed: seed, opts: { picks: picks } }, function () {
+          return window.TMRNflSeason.project(d, n, seed, { picks: picks });
         }).then(function (result) {
           document.getElementById('lsimTables').innerHTML = window.TMRNflSeason.tables(result);
           document.getElementById('lsimStamp').innerHTML = window.TMRNflSeason.stamp(result, d);
-          status.textContent = 'Done. Press again for a fresh set of seasons.';
+          status.textContent = 'Done' + (result.picked ? ', with your ' + result.picked + (result.picked === 1 ? ' pick' : ' picks') + ' locked in' : '') + '. Press again for a fresh set of seasons.';
           btn.disabled = false;
           settle(true);
         });

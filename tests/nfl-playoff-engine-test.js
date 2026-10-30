@@ -479,4 +479,56 @@ ok('OFFICIAL: full-season seeding never lists a club ahead of a higher-ranked cl
   }
 });
 
+/* NFL_CLINCH_BOUND_20261030: the record bound must never disagree with full enumeration. */
+ok('clinch bound is sound: every bound answer matches exhaustive enumeration (fuzz)', () => {
+  const rnd = E.mulberry32(424242);
+  const fired = { clinched: 0, eliminated: 0 };
+  for (let k = 0; k < 60; k += 1) {
+    let budget = 4;
+    const str = {}; TEAMS.forEach((t) => { str[t.id] = rnd() * 3 - 1.5; });
+    const games = []; let n = 0;
+    for (let r = 0; r < 16; r += 1) {
+      const ids = TEAMS.map((t) => t.id).sort(() => rnd() - 0.5);
+      for (let i = 0; i < ids.length; i += 2) {
+        const h = ids[i], a = ids[i + 1]; n += 1;
+        const g = { id: 'f' + k + '_' + n, week: r + 1, home: h, away: a, neutral: false, completed: true };
+        const p = 1 / (1 + Math.exp(-(str[h] - str[a])));
+        if (rnd() < 0.004) { g.home_score = 20; g.away_score = 20; } else if (rnd() < p) { g.home_score = 24; g.away_score = 17; } else { g.home_score = 17; g.away_score = 24; }
+        games.push(g);
+      }
+    }
+    const open = 5 + Math.floor(rnd() * 3);
+    games.slice(-open).forEach((g) => { g.completed = false; delete g.home_score; delete g.away_score; });
+    const rem = games.filter((g) => !g.completed);
+    TEAMS.slice().sort(() => rnd() - 0.5).forEach((t) => {
+      const b = E.clinchBound(TEAMS, games, {}, t.id);
+      if (!b.status || budget <= 0) return;
+      budget -= 1; fired[b.status] += 1;
+      const ex = E.clinchStatus(TEAMS, games, {}, t.id, { cap: 1 << 11 });
+      assert.ok(ex.exhaustive, 'enumeration ran');
+      assert.strictEqual(ex.status, b.status, `k=${k} ${t.id}: bound ${b.status}, enumeration ${ex.status}`);
+      if (b.division) {
+        for (let m = 0; m < Math.pow(2, open); m += 1) {
+          const sims = {}; rem.forEach((g, i) => { sims[g.id] = (m >> i) & 1 ? g.home : g.away; });
+          const s = E.seedAll(TEAMS, games, {}, sims);
+          assert.ok(s[t.conference].divisionWinners.indexOf(t.id) !== -1, `k=${k} ${t.id}: division clinch broken`);
+        }
+      }
+    });
+  }
+  assert.ok(fired.clinched > 15 && fired.eliminated > 15, 'fuzz must exercise both answers: ' + JSON.stringify(fired));
+});
+
+ok('clinch bound answers when enumeration is too big, and stays silent when unsure', () => {
+  const games = [];
+  TEAMS.filter((t) => t.conference === 'AFC' && t.id !== 'AE1').forEach((t) => { for (let i = 0; i < 10; i += 1) games.push(game('NE1', t.id, 30, 3)); });
+  for (let i = 0; i < 13; i += 1) games.push(game('AE1', 'NW1', 30, 3));
+  for (let i = 0; i < 20; i += 1) games.push(game('NN1', 'NS1'));
+  games.push(game('AE1', 'AE2'));
+  const c = E.clinchStatus(TEAMS, games, {}, 'AE1', { cap: 1024 });
+  assert.strictEqual(c.status, 'clinched'); assert.strictEqual(c.method, 'bound'); assert.strictEqual(c.exhaustive, false);
+  const u = E.clinchStatus(TEAMS, games, {}, 'NN1', { cap: 1024 });
+  assert.strictEqual(u.status, null); assert.strictEqual(u.reason, 'too many outcomes');
+});
+
 console.log(`\nnfl-playoff-engine: ${passed} passed${process.exitCode === 1 ? ', FAILURES' : ', 0 failed'}`);
