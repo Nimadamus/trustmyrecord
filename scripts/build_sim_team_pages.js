@@ -104,10 +104,61 @@ function requireBackend(rel) {
   return require(path.join(BACKEND, rel));
 }
 
-const nbaTeams = requireBackend('routes/nbaPublic').listTeams;
-const nhlTeams = requireBackend('routes/nhlPublic').listTeams;
-const nbaModel = requireBackend('services/nba/nbaRatings').getModel;
-const nhlModel = requireBackend('services/nhl/nhlRatings').getModel;
+/* NBA_TEAM_PAGES_LIVE_20261030. NBA team pages read the LIVE production data
+   (/api/nba/public/teams: the refreshed model, current rotations and injury
+   list; /api/nba/public/season-inputs: the league's own schedule and results
+   with an explicit season id), never the snapshot committed in the backend
+   repository. Reading the committed August 25 snapshot put 2025-26 records on
+   all 30 pages as "this season" two weeks into 2026-27. The record printed is
+   counted from the season inputs' final games and always carries its season
+   label. `--nba-live-dir DIR` (teams.json + season-inputs.json) is for tests. */
+const API = 'https://trustmyrecord-api.onrender.com/api/';
+let LIVE_NBA = null;
+async function loadLiveNba() {
+  const dir = arg('--nba-live-dir', null);
+  const read = async (name, url) => {
+    if (dir) return JSON.parse(fs.readFileSync(path.join(dir, name), 'utf8'));
+    let last;
+    for (let i = 0; i < 3; i += 1) {
+      try {
+        const r = await fetch(API + url, { signal: AbortSignal.timeout(180000) });
+        if (!r.ok) throw new Error('HTTP ' + r.status + ' for ' + url);
+        return await r.json();
+      } catch (e) { last = e; }
+    }
+    throw last;
+  };
+  const teams = await read('teams.json', 'nba/public/teams');
+  const inputs = await read('season-inputs.json', 'nba/public/season-inputs');
+  const list = teams.teams || teams;
+  if (!Array.isArray(list) || list.length < 30) throw new Error('live NBA teams incomplete');
+  if (!inputs.season || !inputs.season_label || !Array.isArray(inputs.schedule)) throw new Error('live NBA season inputs incomplete');
+  const rec = {};
+  for (const t of inputs.teams) rec[t.espn_abbr] = { wins: 0, losses: 0 };
+  for (const g of inputs.schedule) {
+    if (!g.final || g.home_score == null || g.away_score == null || g.home_score === g.away_score) continue;
+    const w = g.home_score > g.away_score ? g.home : g.away, l = w === g.home ? g.away : g.home;
+    if (rec[w]) rec[w].wins += 1;
+    if (rec[l]) rec[l].losses += 1;
+  }
+  const byName = new Map(inputs.teams.map((t) => [String(t.name).toLowerCase(), t.espn_abbr]));
+  const out = list.map((t) => {
+    const ea = inputs.teams.some((x) => x.espn_abbr === t.abbr) ? t.abbr : byName.get(String(t.name).toLowerCase());
+    const r = ea ? rec[ea] : null;
+    return Object.assign({}, t, {
+      record: r ? { wins: r.wins, losses: r.losses, season: inputs.season, label: inputs.season_label } : null,
+    });
+  });
+  return { teams: out, season: inputs.season, seasonLabel: inputs.season_label };
+}
+const nbaTeams = () => {
+  if (!LIVE_NBA) throw new Error('live NBA data not loaded');
+  return LIVE_NBA.teams;
+};
+// Loaded only when NHL pages are built (`--sports nba` needs no backend checkout).
+const nhlTeams = (...a) => requireBackend('routes/nhlPublic').listTeams(...a);
+const nhlModel = (...a) => requireBackend('services/nhl/nhlRatings').getModel(...a);
+const SPORTS = String(arg('--sports', 'nba,nhl')).split(',').map((x) => x.trim());
 
 const esc = (s) => String(s == null ? '' : s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -249,7 +300,7 @@ function rankOf(list, key, higherIsBetter) {
 
 function nbaPages(matchupsBySlug) {
   const teams = nbaTeams();
-  const fit = (nbaModel().ratingFit) || null;
+  const fit = null;   // the committed model's fit is not the live one; the sentence is dropped
   const netRank = rankOf(teams, (t) => t.season.netRating, true);
   const paceRank = rankOf(teams, (t) => t.season.pace, true);
   const out = [];
@@ -283,8 +334,7 @@ ${table(['Season profile', 'Team', 'Rank of ' + teams.length], [
     ['Net rating', (s.netRating >= 0 ? '+' : '') + n1(s.netRating), ord(nr)],
     ['Pace', n1(s.pace), ord(pr)],
   ])}
-    <p class="disc">Season figures from the current data snapshot. Ranks are among
-    the ${teams.length} clubs in that snapshot.</p>
+    <p class="disc">${esc(profileBasis(t))} Ranks are among the ${teams.length} clubs.</p>
   </section>
 
   <section class="panel">
@@ -332,12 +382,13 @@ ${links.map((l) => `      <li><a href="${l.href}">${esc(l.label)}</a></li>`).joi
   </section>`;
 
     out.push({
+      sport: 'nba',
       dir: path.join(ROOT, 'nba-simulator', 'teams', t.slug),
       url: `${SITE}/nba-simulator/teams/${t.slug}/`,
       html: pageShell({
         title: `${t.name} Simulator: Simulate ${t.nickname} Games & Box Scores | TrustMyRecord`,
         ogTitle: `${t.name} game simulator`,
-        description: `Simulate any ${t.name} matchup. ${rec ? `${rec.wins}-${rec.losses} this season, ` : ''}`
+        description: `Simulate any ${t.name} matchup. ${rec ? `${rec.wins}-${rec.losses} in ${rec.label}, ` : ''}`
           + `${n1(s.ppg)} points a game at a ${n1(s.pace)} pace, ${ord(nr)} of ${teams.length} by net rating. `
           + `Full box score, quarter scores and win probability.`,
         url: `${SITE}/nba-simulator/teams/${t.slug}/`,
@@ -349,7 +400,7 @@ ${links.map((l) => `      <li><a href="${l.href}">${esc(l.label)}</a></li>`).joi
         h1: `${t.name} Simulator`,
         nickname: t.nickname,
         simLink: `/nba-simulator/?home=${t.slug}`,
-        standfirst: `${rec ? `${rec.wins}-${rec.losses}. ` : ''}`
+        standfirst: `${rec ? `${rec.wins}-${rec.losses} in ${rec.label}. ` : ''}`
           + `${n1(s.ppg)} points a game, ${n1(s.oppPpg)} allowed, ${ord(nr)} of ${teams.length} by net rating. `
           + `Simulate any ${t.nickname} matchup with the current rotation and get a full box score.`,
         body,
@@ -543,7 +594,39 @@ ${links.map((l) => `      <li><a href="${l.href}">${esc(l.label)}</a></li>`).joi
 
 /* ------------------------------------------------------------------ main -- */
 
-(function main() {
+/* NBA_TEAM_SHELL_KEEP_20261030. This builder owns a team page's CONTENT; the
+   page's asset shell (hashed stylesheets and scripts, the shared navbar, fonts,
+   the session and nav scripts) is re-pinned in place by the asset and nav
+   automation, and the season projection block is spliced in by
+   build_league_sim_pages.js. A rebuild keeps all three from the page on disk
+   rather than reverting them to the hashes typed into pageShell(). */
+function keepShell(old, fresh) {
+  let html = fresh;
+  const headRe = /<link rel="stylesheet" href="\/static\/css\/tmr-sim-arena\.css[\s\S]*?<\/head>/;
+  const tailRe = /<\/main>[\s\S]*<\/body>/;
+  const oh = old.match(headRe), ot = old.match(tailRe);
+  if (oh && headRe.test(html)) html = html.replace(headRe, () => oh[0]);
+  if (ot && tailRe.test(html)) html = html.replace(tailRe, () => ot[0]);
+  const block = old.match(/  <!--MK:leagueSimTeam-->[\s\S]*?<!--\/MK:leagueSimTeam-->\s*/);
+  if (block && !html.includes('<!--MK:leagueSimTeam-->')) {
+    const first = html.indexOf('<section class="panel">');
+    const second = first >= 0 ? html.indexOf('<section class="panel">', first + 10) : -1;
+    if (second >= 0) html = html.slice(0, second) + block[0] + html.slice(second);
+  }
+  return html;
+}
+
+function profileBasis(t) {
+  const i = t.inputs || {};
+  if (i.basis === 'blend' && i.lastSeason && i.currentSeason) {
+    return `The model's team profile: ${i.lastSeason} blended with ${i.currentSeason} so far`
+      + (Number.isFinite(i.weightCurrent) ? ` (${Math.round(i.weightCurrent * 100)}% weight on ${i.currentSeason}).` : '.');
+  }
+  return i.lastSeason ? `The model's team profile: ${i.lastSeason} regular season.` : "The model's team profile.";
+}
+
+(async function main() {
+  if (SPORTS.includes('nba')) LIVE_NBA = await loadLiveNba();
   // Which matchup pages each club already appears in, so a team page links to
   // the pages that exist rather than to guesses.
   const listFile = path.join(ROOT, 'scripts', 'sim-matchup-urls.txt');
@@ -551,8 +634,8 @@ ${links.map((l) => `      <li><a href="${l.href}">${esc(l.label)}</a></li>`).joi
   const bySlugNhl = new Map();
   if (fs.existsSync(listFile)) {
     const slugOf = new Map();
-    for (const t of nbaTeams()) slugOf.set('nba:' + t.slug.split('-').pop(), t.abbr);
-    for (const t of nhlTeams()) slugOf.set('nhl:' + t.slug.split('-').pop(), t.abbr);
+    if (SPORTS.includes('nba')) for (const t of nbaTeams()) slugOf.set('nba:' + t.slug.split('-').pop(), t.abbr);
+    if (SPORTS.includes('nhl')) for (const t of nhlTeams()) slugOf.set('nhl:' + t.slug.split('-').pop(), t.abbr);
     for (const raw of fs.readFileSync(listFile, 'utf8').split(NL)) {
       const u = raw.trim();
       if (!u) continue;
@@ -573,16 +656,19 @@ ${links.map((l) => `      <li><a href="${l.href}">${esc(l.label)}</a></li>`).joi
     }
   }
 
-  const pages = [...nbaPages(bySlugNba), ...nhlPages(bySlugNhl)];
+  const pages = [...(SPORTS.includes('nba') ? nbaPages(bySlugNba) : []), ...(SPORTS.includes('nhl') ? nhlPages(bySlugNhl) : [])];
   const urls = [];
   for (const p of pages) {
     urls.push(p.url);
     if (CHECK) continue;
     fs.mkdirSync(p.dir, { recursive: true });
-    fs.writeFileSync(path.join(p.dir, 'index.html'), p.html);
+    const file = path.join(p.dir, 'index.html');
+    let html = p.html;
+    if (p.sport === 'nba' && fs.existsSync(file)) html = keepShell(fs.readFileSync(file, 'utf8'), html);
+    fs.writeFileSync(file, html);
   }
 
-  if (!CHECK) {
+  if (!CHECK && SPORTS.includes('nba') && SPORTS.includes('nhl')) {
     fs.writeFileSync(path.join(ROOT, 'scripts', 'sim-team-urls.txt'), urls.join(NL) + NL);
   }
   const words = pages.length
@@ -590,4 +676,4 @@ ${links.map((l) => `      <li><a href="${l.href}">${esc(l.label)}</a></li>`).joi
     : 0;
   process.stdout.write((CHECK ? '[check] ' : '') + pages.length + ' team pages, '
     + words + ' words each on average' + NL);
-}());
+}()).catch((e) => { console.error('FAILED:', e.message); process.exit(1); });

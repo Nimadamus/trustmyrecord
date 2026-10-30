@@ -284,9 +284,10 @@
           var list = d.getElementById('lsimFullList');
           var note = d.getElementById('lsimFullNote');
           function prob(g) {
-            if (g.p_home != null) return g.p_home;
-            var c = inp.matchups[g.home] && inp.matchups[g.home][g.away];
-            return c ? c.p : null;
+            if (!(inp.matchups[g.home] && inp.matchups[g.home][g.away]) && typeof g.p_home !== 'number') return null;
+            var LS = root.TMRLeagueSeason;   // GAME_PROB_20261030: one source per game
+            if (LS && LS.gameProb) return LS.gameProb(inp, g).p;
+            return typeof g.p_home === 'number' ? g.p_home : inp.matchups[g.home][g.away].p;
           }
           function row(g) {
             var h = teamBy[g.home], a = teamBy[g.away], p = prob(g);

@@ -126,7 +126,7 @@ def nhl_pages():
              ('nhl: backend reset', [GIT, '-C', be, 'reset', '-q', '--hard', 'origin/master']),
              ('nhl: snapshot', [NODE, os.path.join(be, 'scripts', 'build_nhl_snapshot.js')]),
              ('nhl: matchup pages', [NODE, r'scripts\build_sim_matchup_pages.js', '--backend', be]),
-             ('nhl: team pages', [NODE, r'scripts\build_sim_team_pages.js', '--backend', be])]
+             ('nhl: team pages', [NODE, r'scripts\build_sim_team_pages.js', '--backend', be, '--sports', 'nhl'])]
     for name, cmd in steps:
         if run(name, cmd, fatal=False) != 0:
             log('nhl pages: %s failed, kept as committed' % name)
@@ -173,12 +173,17 @@ def main():
         run('fetch', [GIT, 'fetch', '-q', '--no-tags', 'origin', 'main'])
         run('reset', [GIT, 'reset', '-q', '--hard', 'origin/main'])
         nhl_pages()
+        # NBA_TEAM_PAGES_LIVE_20261030: NBA team pages from the LIVE API (records with their
+        # season, rotations, injuries). Never fatal: a failure keeps the committed pages.
+        if run('nba: team pages', [NODE, r'scripts\build_sim_team_pages.js', '--sports', 'nba'], fatal=False) != 0:
+            run('nba: undo team pages', [GIT, 'checkout', '-q', '--', 'nba-simulator/teams'], fatal=False)
         run('league pages', [NODE, r'scripts\build_league_sim_pages.js'])
         run('nfl season page', [NODE, r'scripts\build_nfl_season_page.js'])
         run('nfl team pages', [NODE, r'scripts\build_nfl_team_pages.js'])
         run('mlb odds page', [NODE, r'scripts\build_mlb_odds_page.js'])
         run('nfl playoff page', [NODE, r'scripts\build_nfl_playoff_page.js'], fatal=False)
-        for t in ['playoff-bracket-test.js', 'league-season-engine-test.js', 'mlb-postseason-odds-test.js', 'seo-indexability-regression-test.js']:
+        for t in ['playoff-bracket-test.js', 'league-season-engine-test.js', 'mlb-postseason-odds-test.js', 'seo-indexability-regression-test.js',
+                  'league-sim-consistency-test.js', 'nba-team-season-label-test.js']:
             run('test ' + t, [NODE, 'tests\\' + t])
         run('git add', [GIT, 'add'] + ADD)
         if subprocess.run([GIT, 'diff', '--cached', '--quiet'], cwd=ROOT).returncode == 0:

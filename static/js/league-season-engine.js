@@ -93,6 +93,18 @@
     return c;
   }
 
+  /* GAME_PROB_20261030: the probability of ONE scheduled game, the only one
+     any page may print or simulate. A scheduled game carries its own forecast
+     (p_home, built for its date by the season inputs); the pair table is the
+     fallback for a game without one and for hypothetical (playoff) pairings.
+     Team pages, the hub slate, the pick board, rivalry pages and the season
+     engine all read this, so the printed odds and the projection agree. */
+  function gameProb(inputs, g) {
+    var c = prob(inputs, g.home, g.away);
+    if (typeof g.p_home === 'number') return { p: g.p_home, ot: c.ot, pp: c.pp };
+    return c;
+  }
+
   /* ---------------------------------------------------------------- season */
 
   function blankRecord(t) {
@@ -138,7 +150,20 @@
       for (var i = pool.length - 1; i > 0; i--) {
         var j = Math.floor(rng() * (i + 1)), t = pool[i]; pool[i] = pool[j]; pool[j] = t;
       }
+      /* A club owed two games must not be paired with itself (that game was
+         dropped, leaving it at 81): pair everything first, swapping a self
+         pair with a later club or an earlier pair that has neither club. */
       for (var k = 0; k + 1 < pool.length; k += 2) {
+        if (pool[k] !== pool[k + 1]) continue;
+        for (var x = k + 2; x < pool.length; x++) {
+          if (pool[x] !== pool[k]) { var sw = pool[k + 1]; pool[k + 1] = pool[x]; pool[x] = sw; break; }
+        }
+        for (var y = 0; pool[k] === pool[k + 1] && y < k; y++) {
+          var mate = pool[y % 2 ? y - 1 : y + 1];
+          if (pool[y] !== pool[k] && mate !== pool[k]) { var sv = pool[k + 1]; pool[k + 1] = pool[y]; pool[y] = sv; }
+        }
+      }
+      for (k = 0; k + 1 < pool.length; k += 2) {
         var home = pool[k], away = pool[k + 1];
         if (home === away) continue;
         applyGame('nba', recs, home, away, rng() < prob(inputs, home, away).p, false);
@@ -158,10 +183,8 @@
         applyGame(sport, recs, g.home, g.away, g.home_score > g.away_score, !!g.extra_time);
         return;
       }
-      var c = prob(inputs, g.home, g.away);
-      /* A scheduled game can carry its own forecast for that date (rest, back
-         to backs); the pair table is the fallback. */
-      var ph = typeof g.p_home === 'number' ? g.p_home : c.p;
+      var c = gameProb(inputs, g);
+      var ph = c.p;
       var homeWon = forced[g.id] ? forced[g.id] === 'home' : rng() < ph;
       var extra = sport === 'nhl' ? rng() < (c.ot || 0) : false;
       applyGame(sport, recs, g.home, g.away, homeWon, extra);
@@ -537,6 +560,7 @@
   return {
     mulberry32: mulberry32,
     simulateSeason: simulateSeason,
+    gameProb: gameProb,
     order: order,
     seedNba: seedNba,
     seedNhl: seedNhl,

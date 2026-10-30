@@ -685,7 +685,7 @@ function pickPanel(sport, inputs) {
   const rows = days.map((day) => {
     const games = open.filter((g) => ptDate(g.date) === day).slice(0, 16).map((g) => {
       const h = team(g.home), a = team(g.away);
-      const cell = inputs.matchups[g.home] && inputs.matchups[g.home][g.away];
+      const cell = inputs.matchups[g.home] && inputs.matchups[g.home][g.away] && E.gameProb(inputs, g);
       if (!h || !a || !cell) return '';
       const ph = Math.round(cell.p * 100);
       return `<div class="pick" data-game="${esc(g.id)}">
@@ -727,7 +727,7 @@ function weekBlock(sport, inputs, result) {
   const shortDay = (iso) => new Date(iso).toLocaleString('en-US', { timeZone: 'America/Los_Angeles', weekday: 'short', month: 'short', day: 'numeric' });
   const time = (iso) => new Date(iso).toLocaleString('en-US', { timeZone: 'America/Los_Angeles', hour: 'numeric', minute: '2-digit' }) + ' PT';
   const rows = games.map((g) => {
-    const h = team(g.home), a = team(g.away), ph = inputs.matchups[g.home][g.away].p;
+    const h = team(g.home), a = team(g.away), ph = E.gameProb(inputs, g).p;
     const fav = ph >= 0.5 ? h : a, pf = ph >= 0.5 ? ph : 1 - ph;
     return { g, h, a, ph, fav, dog: fav === h ? a : h, pf, favHome: fav === h };
   });
@@ -806,7 +806,7 @@ function hubBlock(sport, inputs, rivalries, result) {
   const time = (iso) => new Date(iso).toLocaleString('en-US', { timeZone: 'America/Los_Angeles', hour: 'numeric', minute: '2-digit' }) + ' PT';
   const cards = games.map((g) => {
     const h = team(g.home), a = team(g.away);
-    const c = inputs.matchups[g.home] && inputs.matchups[g.home][g.away];
+    const c = inputs.matchups[g.home] && inputs.matchups[g.home][g.away] && E.gameProb(inputs, g);
     const ph = c ? Math.round(c.p * 100) : null;
     return `<div class="lsimh-game">
         <div class="lsimh-row">${img(a)}<span>${esc(a.name)}</span><b>${ph == null ? '' : 100 - ph + '%'}</b></div>
@@ -918,7 +918,7 @@ function writeRivalriesDisabled(sport, inputs, result, shell) {
         const day = (iso) => new Date(iso).toLocaleString('en-US', { timeZone: 'America/Los_Angeles', weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
         const rows = meets.map((g) => {
           const h = byAbbr[g.home], w = byAbbr[g.away];
-          const c = inputs.matchups[g.home] && inputs.matchups[g.home][g.away];
+          const c = inputs.matchups[g.home] && inputs.matchups[g.home][g.away] && E.gameProb(inputs, g);
           const res = g.final && g.home_score != null ? `Final: ${esc(w.short)} ${g.away_score}, ${esc(h.short)} ${g.home_score}`
             : c ? `${esc(h.short)} ${Math.round(c.p * 100)}%, ${esc(w.short)} ${100 - Math.round(c.p * 100)}%` : '';
           return `<tr><td>${esc(day(g.date))}</td><td>${esc(w.name)} at ${esc(h.name)}</td><td class="r">${res}</td></tr>`;
@@ -930,7 +930,7 @@ function writeRivalriesDisabled(sport, inputs, result, shell) {
         const desc = `${a.name} vs ${b.name} in ${inputs.season_label}: all ${meets.length} meetings with the model's win probability, and each team's projected ${L.unit}, ${d} Division title and playoff odds.`;
         const faqs = [
           [`Who wins ${a.short} vs ${b.short}?`, meets.filter((g) => !g.final).slice(0, 4).map((g) => {
-            const c = inputs.matchups[g.home][g.away];
+            const c = E.gameProb(inputs, g);
             return `${day(g.date)}: the ${byAbbr[g.home].short} win at home ${Math.round(c.p * 100)}% of the time.`;
           }).join(' ') || 'Every meeting this season is final.'],
           [`Who is favored in the ${d} Division?`, `Across ${count(result.runs)} simulated seasons the ${a.short} win the division ${pctText(a.division_title)} of the time and the ${b.short} ${pctText(b.division_title)}.`],
@@ -1056,7 +1056,7 @@ function patchTeams(sport, inputs, result) {
         const tag = us > them ? 'W' : (sport === 'nhl' && g.extra_time ? (g.shootout ? 'SOL' : 'OTL') : 'L');
         cell = `<b style="color:${us > them ? '#34d399' : (tag === 'L' ? '#f87171' : '#fbbf24')}">${tag} ${us} to ${them}</b>`;
       } else {
-        const c = inputs.matchups[g.home] && inputs.matchups[g.home][g.away];
+        const c = inputs.matchups[g.home] && inputs.matchups[g.home][g.away] && E.gameProb(inputs, g);
         cell = c ? `${Math.round((home ? c.p : 1 - c.p) * 100)}% to win` : '';
       }
       return `<tr><td>${esc(day(g.date))}</td><td>${home ? 'vs' : 'at'} <a href="/${sport}-simulator/teams/${slugOf(opp.name)}/">${esc(opp.name)}</a></td><td style="text-align:right">${cell}</td></tr>`;
@@ -1178,6 +1178,9 @@ if (require.main === module) (async () => {
     // A stable seed per day: a rebuild the same day bakes the same numbers.
     const seed = Number(String(inputs.generated_at || '').slice(0, 10).replace(/-/g, '')) || 1;
     const result = E.project(inputs, RUNS, seed);
+    // LEAGUE_SIM_CONSISTENCY_20261030: printed odds and projections must agree, or nothing ships.
+    const problems = require('./league-sim-consistency.js').checkProjection(inputs, result);
+    if (problems.length) throw new Error(`${sport}: consistency gate failed (${problems.length}): ${problems.slice(0, 6).join('; ')}`);
     for (const mode of ['season', 'playoff']) {
       const out = path.join(ROOT, `${sport}-${mode}-simulator`, 'index.html');
       fs.mkdirSync(path.dirname(out), { recursive: true });
