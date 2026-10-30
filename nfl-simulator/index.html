@@ -1120,7 +1120,7 @@ async function loadSchedule(pickDefaultWeek){
     if(!STATE.featSrc){const [stc,wk]=(STATE.week||'2:1').split(':').map(Number);
       const nx=nextGameOf(d.games.filter(g=>g.week===wk&&g.is_postseason===(stc===3)))||nextGameOf(d.games);
       if(nx)renderFeatured({kind:'game',g:nx,kicker:nx.status==='live'?'Live now':'Next game',src:'next'})}
-  }catch(e){errNode($('#games'),e)}
+  }catch(e){errNode($('#games'),e);/* SIM_UX_20261030 (#5): a schedule outage offers a retry, not a dead end */const bx=$('#games .err');if(bx){const b=el('button','btn','Try again');b.type='button';b.style.marginLeft='10px';b.onclick=()=>loadSchedule(pickDefaultWeek);bx.appendChild(b)}}
 }
 function selectedGame(){return STATE.games.find(g=>g.ref===STATE.selRef)||null}
 function renderGames(){
