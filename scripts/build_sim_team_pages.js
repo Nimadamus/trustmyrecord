@@ -459,6 +459,8 @@ function nhlPages(matchupsBySlug) {
 
     const dr = diffRank.get(t.abbr);
     const starter = goalies[0];
+    // NHL_STARTER_REPORTS_20261030: confirmed (reported by Daily Faceoff) or projected, as the model says.
+    const starterRole = starter && starter.starterStatus === 'confirmed' ? 'confirmed starter for the next game (Daily Faceoff)' : 'projected starter';
     const links = matchupsBySlug.get(t.abbr) || [];
 
     const body = `  <section class="panel">
@@ -483,7 +485,7 @@ ${table(['Season profile', 'Team', 'Rank of ' + teams.length], [
     <h2>The lineup the simulator dresses</h2>
     <p>Twelve forwards and six defencemen, at the ice time their roles carry, each
     scoring, shooting, hitting and taking penalties at his own per-sixty rate.
-    ${starter ? `${esc(starter.name)} is the projected starter on a ${starter.savePct.toFixed(3).replace(/^0/, '')} save percentage` : 'The starting goaltender is chosen on the simulator itself'}.</p>
+    ${starter ? `${esc(starter.name)} is the ${starterRole} on a ${starter.savePct.toFixed(3).replace(/^0/, '')} save percentage` : 'The starting goaltender is chosen on the simulator itself'}.</p>
 ${table(['Forward', 'Line', 'TOI', 'G', 'A', 'P'],
     fwd.slice(0, 12).map((p) => [p.name, 'F' + (p.line || 1), n1(p.toi),
       p.season ? p.season.g : '--', p.season ? p.season.a : '--', p.season ? p.season.pts : '--']))}
@@ -572,7 +574,7 @@ ${links.map((l) => `      <li><a href="${l.href}">${esc(l.label)}</a></li>`).joi
           {
             q: `Does the starting goaltender matter?`,
             a: `Yes, and it is a control rather than an assumption. `
-              + `${starter ? `${starter.name} is the projected starter on a ${starter.savePct.toFixed(3).replace(/^0/, '')} save percentage. ` : ''}`
+              + `${starter ? `${starter.name} is the ${starterRole} on a ${starter.savePct.toFixed(3).replace(/^0/, '')} save percentage. ` : ''}`
               + `Choosing a different goaltender changes the expected goals against and moves the projection, `
               + `because his save percentage is an input to the model rather than a note on the page. `
               + `Starters are labelled projected, not confirmed.`,
