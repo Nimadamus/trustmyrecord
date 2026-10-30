@@ -4214,8 +4214,16 @@
                 // (statsapi boxscores): starts with 5+ ER ended under 70 pitches in 48.6%
                 // of simulated starts against a real 16.2%. The run and hit hooks now wait
                 // for 70 pitches unless the damage is extreme (6+ runs, 8+ hits).
-                if (apptRuns >= 6 || (apptRuns >= 5 && (a.pitches || 0) >= 70)) { reason = 'removed after allowing ' + apptRuns + ' runs'; kind = 'damage'; }
-                else if (aHits >= 8 || (aHits >= 7 && (a.pitches || 0) >= 70)) { reason = 'removed after allowing ' + aHits + ' hits'; kind = 'damage'; }
+                // SHELLED_STARTER_LEASH_20261030: real managers let a starter who is
+                // hit early wear it until his pitch count is up (real 5+ ER starts last
+                // 12.7 outs and 83 pitches; only 16.2% end under 70 pitches). The 6-run
+                // mid-inning hook and the 3-inning boundary hook below pulled them at
+                // 10.3 outs / 71 pitches (41.8% under 70). Measured on 700 real 2025-26
+                // matchups x 4, real rosters: 15.8% under 70, 5+ ER starts 11.5 outs /
+                // 78 pitches, start (ER x length) distance to real 0.154 -> 0.136, runs,
+                // hits and pitchers per game unchanged or closer.
+                if (apptRuns >= 7 || (apptRuns >= 5 && (a.pitches || 0) >= 75)) { reason = 'removed after allowing ' + apptRuns + ' runs'; kind = 'damage'; }
+                else if (aHits >= 9 || (aHits >= 7 && (a.pitches || 0) >= 75)) { reason = 'removed after allowing ' + aHits + ' hits'; kind = 'damage'; }
                 else if (onBase && aBf >= 3 && (a.pitches || 0) >= spLim) { reason = 'pitch count (' + a.pitches + ') with a runner on'; kind = 'workload'; }
                 // Past his planned length with a man on: lifted, unless he is
                 // cruising and this manager rides a hot starter (the same test
@@ -5117,7 +5125,7 @@
         // trigger that would look erratic across many merely-mediocre starts.
         if (arms.length && !arms[0].removed && outsRecorded < starterOuts) {
             var spAcc = arms[0].acc, spOuts = spAcc.outs || 0, spEr = spAcc.er || 0;
-            if (spOuts >= (workloadV2() ? 9 : 6) && ((spOuts < 15 && spEr >= 5) || (spOuts < 18 && spEr >= 6))) { // STARTER_HOOK_CALIBRATION_20261024: three innings in under the flag
+            if (spOuts >= (workloadV2() ? 9 : 6) && (!workloadV2() || (spAcc.pitches || 0) >= 70) && ((spOuts < 15 && spEr >= 5) || (spOuts < 18 && spEr >= 6))) { // STARTER_HOOK_CALIBRATION_20261024: three innings in under the flag
                 starterOuts = Math.min(starterOuts, spOuts);
             }
             // POSTSEASON_MODE_20261001: a quicker hook in October, one earned run

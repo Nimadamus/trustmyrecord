@@ -529,6 +529,23 @@ console.log('STRIKEOUT RATE (600 league games)');
   check('strikeout rate within the real 2025-26 band (21.5% to 23.5%)', kp >= 0.215 && kp <= 0.235, (100 * kp).toFixed(1) + '%');
 }
 
+// ------------------------------------------------------ shelled starter leash
+// SHELLED_STARTER_LEASH_20261030: of real 2025-26 starts with 5+ ER, 16.2% end
+// under 70 pitches (700 statsapi boxscores). The 6-run / 3-inning hooks put
+// 43.7% of them under 70 here; the leash fix reads 19.1%.
+console.log('SHELLED STARTERS (1200 league games)');
+{
+  const cur = sim.localTeams.current;
+  let shelled = 0, early = 0;
+  for (let i = 0; i < 1200; i++) {
+    const a = cur[i % cur.length], h = cur[(i * 7 + 3) % cur.length];
+    if (a === h) continue;
+    const r = sim.simulate(a, h, sim.state.liveContext, 'shell|' + i, false, 'clear', { wpSamples: 1 });
+    ['away', 'home'].forEach((k) => { const sp = r.boxScore.players[k].pitchers[0]; if (sp.er >= 5) { shelled++; if (sp.pitches < 70) early++; } });
+  }
+  check('5+ ER starts ending under 70 pitches near the real 16.2% (<= 28%)', shelled > 100 && early / shelled <= 0.28, (100 * early / shelled).toFixed(1) + '% of ' + shelled);
+}
+
 // ------------------------------------------------------------- determinism
 {
   const a = run(7, { tag: 'det', ps: true }).boxScore.players.home.pitchers.map((p) => p.name + p.outs + '/' + p.pitches).join();
