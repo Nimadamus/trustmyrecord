@@ -24,11 +24,12 @@
      CHANGELOG 2026-10-30): every simulated season draws one strength shock per club,
      z ~ N(0, SIGMA^2) on the logit scale, and every open game of that season is
      played at logit(p) + z_home - z_away. A club's strength is not known exactly, so
-     its whole season can run hot or cold together. Walk-forward 2019-2025 in the lab
-     (scripts/nfl_season_noise_backtest.js) favours 0.5, but its playoff Brier gain does
-     not exclude 0, so it is NOT deployed: SIGMA stays 0 until approved. The shocks use
-     their own random stream, so SIGMA 0 reproduces the old numbers exactly. */
-  var SIGMA = 0;
+     its whole season can run hot or cold together. SIGMA 0.5 was fitted walk-forward on
+     2019-2025 (lab scripts/nfl_season_noise_backtest.js): 80% win range coverage 70.6% ->
+     76.6% (+6.0 pts, CI 4.2 to 7.8), playoff Brier -0.0014 (CI includes 0, not worse).
+     Deployed 2026-10-30 on the remediation coordinator's decision. The shocks use their
+     own random stream, so SIGMA 0 reproduces the pre-change numbers exactly. */
+  var SIGMA = 0.5;
   function shifted(p, d) {
     if (!d) return p;
     var q = Math.min(0.999, Math.max(0.001, p));
