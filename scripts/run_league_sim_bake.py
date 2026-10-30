@@ -114,6 +114,24 @@ def run(stage, cmd, fatal=True):
     return rc
 
 
+def fetch_main(stage):
+    """FETCH_RETRY_20261030: fetch origin/main, retrying a dropped connection.
+
+    Between 10/26 and 10/30 seven of fourteen scheduled bakes died in this one step
+    ("curl 56 schannel: server closed abruptly", "fetch-pack: early EOF"), every one
+    leaving the NBA/NHL pages on the previous bake, the overnight 23:50 run among
+    them. A dropped fetch is a network fault, not a reason to skip a bake: try three
+    times, HTTP/1.1, with a short pause, and fail only if all three do."""
+    for attempt in (1, 2, 3):
+        last = attempt == 3
+        name = stage if attempt == 1 else '%s retry %d' % (stage, attempt)
+        rc = run(name, [GIT, '-c', 'http.version=HTTP/1.1', 'fetch', '-q', '--no-tags', 'origin', 'main'], fatal=last)
+        if rc == 0:
+            return 0
+        time.sleep(20 * attempt)
+    return rc
+
+
 def nhl_pages():
     """NHL_PAGE_DATA_20261006: matchup and team pages from a fresh NHL snapshot. Never fatal."""
     be = r'C:\Users\BL\tmrbe-sim-bake'
@@ -174,7 +192,7 @@ def main():
     result = 'OK'
     try:
         # Only main, no tags: fetching all 90 branches took 45 s to 7 min on this repo (20:12 run).
-        run('fetch', [GIT, 'fetch', '-q', '--no-tags', 'origin', 'main'])
+        fetch_main('fetch')
         run('reset', [GIT, 'reset', '-q', '--hard', 'origin/main'])
         nhl_pages()
         # NBA_TEAM_PAGES_LIVE_20261030: NBA team pages from the LIVE API (records with their
@@ -197,7 +215,7 @@ def main():
             run('commit', [GIT, 'commit', '-q', '-m', 'chore(sims): bake NBA and NHL season and playoff simulators [skip ci]'])
             pushed = False
             for attempt in (1, 2):
-                run('fetch before push', [GIT, 'fetch', '-q', '--no-tags', 'origin', 'main'])
+                fetch_main('fetch before push')
                 run('rebase', [GIT, 'rebase', 'origin/main'])
                 if run('push attempt %d' % attempt, [GIT, 'push', '-q', 'origin', 'HEAD:main'], fatal=False) == 0:
                     pushed = True
