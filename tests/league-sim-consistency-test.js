@@ -37,7 +37,7 @@ function league(finalShare, seed) {
   const teams = [];
   const divs = { East: ['Atlantic', 'Central', 'Southeast'], West: ['Northwest', 'Pacific', 'Southwest'] };
   Object.entries(divs).forEach(([conf, ds]) => ds.forEach((d) => {
-    for (let i = 0; i < 5; i++) teams.push({ espn_abbr: d.slice(0, 3).toUpperCase() + i, name: d + ' ' + i, short: d + i, conference: conf, division: d });
+    for (let i = 0; i < 5; i++) teams.push({ espn_abbr: 'T' + String(teams.length).padStart(2, '0'), name: d + ' ' + i, short: d + i, conference: conf, division: d });
   }));
   const s = {}; teams.forEach((t) => { s[t.espn_abbr] = (rnd() - 0.5) * 2.4; });
   const matchups = {};
