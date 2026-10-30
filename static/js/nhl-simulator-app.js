@@ -650,11 +650,16 @@
       }
       row.appendChild(what);
       var right = el('span', 'score');
-      right.appendChild(el('span', 'tag', STRENGTH[r.strength] || r.strength));
+      // An empty-net goal on a power play is a power-play goal too (NHL rule),
+      // so the tag says both.
+      var tag = STRENGTH[r.strength] || r.strength;
+      if (r.strength === 'EN' && (r.situation === 'PP' || r.situation === 'SH')) tag += ', ' + STRENGTH[r.situation].toLowerCase();
+      right.appendChild(el('span', 'tag', tag));
       right.appendChild(document.createTextNode(' ' + r.score.away + '-' + r.score.home));
       row.appendChild(right);
       wrap.appendChild(row);
     });
+    if (d.result.shootout) wrap.appendChild(shootoutRounds(d));
     wrap.appendChild(el('div', 'disc',
       'Every goal above is an event this simulation played, in the order it played '
       + 'them. The running score is the score after that goal, and it reconciles '
@@ -671,6 +676,35 @@
    * counted from the penalties running at that moment, so two men in the box
    * reads as five on three rather than being assumed to be five on four.
    */
+  /**
+   * THE SHOOTOUT, round by round: three rounds, then sudden death. Shootout goals
+   * are not goals; the winner is credited one on the scoreboard and nobody's line.
+   */
+  function shootoutRounds(d) {
+    var so = d.result.shootout;
+    var wrap = el('div');
+    wrap.appendChild(el('div', 'teamhead', 'Shootout'));
+    (so.rounds || []).forEach(function (rd) {
+      var row = el('div', 'evrow');
+      row.appendChild(el('span', 'when', 'Round ' + rd.round));
+      var what = el('span', 'what');
+      var order = so.first === 'away' ? ['away', 'home'] : ['home', 'away'];
+      order.forEach(function (k, i) {
+        if (i) what.appendChild(document.createTextNode('  ·  '));
+        what.appendChild(el('b', '', d.matchup[k].abbr + ' '));
+        what.appendChild(document.createTextNode(rd[k] ? rd[k].shooter + (rd[k].scored ? ' scores' : ' stopped') : 'not needed'));
+      });
+      row.appendChild(what);
+      wrap.appendChild(row);
+    });
+    var g = so.goals || { home: 0, away: 0 };
+    wrap.appendChild(el('div', 'disc', d.matchup[so.winner].abbr + ' win the shootout '
+      + Math.max(g.home, g.away) + '-' + Math.min(g.home, g.away)
+      + (so.decisive_shooter ? ' (decided by ' + so.decisive_shooter + ')' : '')
+      + '. Shootout goals are not counted in any player or goaltender line; the winner is credited one goal on the scoreboard.'));
+    return wrap;
+  }
+
   function penaltySummary(d) {
     var wrap = el('div');
     var pens = d.result.penalty_summary || [];
@@ -686,7 +720,7 @@
       what.appendChild(document.createTextNode(r.player + ' — ' + r.infraction
         + ', ' + r.minutes + ' minutes'));
       row.appendChild(what);
-      row.appendChild(el('span', 'tag', r.manpower));
+      row.appendChild(el('span', 'tag', r.coincidental ? (r.manpower_effect ? r.manpower + ', coincidental' : 'coincidental') : r.manpower));
       wrap.appendChild(row);
     });
     var pp = { home: d.result.box_score.home.totals, away: d.result.box_score.away.totals };
@@ -696,7 +730,8 @@
       + pp.home.powerPlayOpportunities + '. The infraction is drawn from how often each '
       + 'minor is really called; this engine simulates that a penalty happened and who '
       + 'took it, not what he did to earn it. Everything counted against it -- the '
-      + 'minutes, the power play, any goal it conceded -- came from the game.'));
+      + 'minutes, the power play, any goal it conceded -- came from the game. '
+      + 'Coincidental penalties, fighting majors and misconducts give nobody a power play.'));
     return wrap;
   }
 
@@ -1639,8 +1674,8 @@
         var spacer = el('div'); spacer.style.height = '18px'; node.appendChild(spacer);
         node.appendChild(skaterTable(d.result.box_score.home, home.name));
         node.appendChild(el('div', 'disc',
-          'Every team number above is the sum of the skater lines beneath it. Penalty minutes always equal twice '
-          + 'the other team\'s power plays. Plus-minus is weighted by ice time rather than tracked shift by shift.'));
+          'Every team number above is the sum of the skater lines beneath it. Penalty minutes are every minute in '
+          + 'the penalty summary, including coincidental minors, fighting majors and misconducts, which give nobody a power play.'));
       } },
       { id: 'scoring', label: 'Scoring summary', build: function (node) {
         node.appendChild(scoringSummary(d));
