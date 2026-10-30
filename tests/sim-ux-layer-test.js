@@ -83,5 +83,15 @@ for (const bld of ['scripts/build_league_sim_pages.js', 'scripts/build_nfl_seaso
   ok('7d. ' + bld + ' takes dateModified from the substance fingerprint', !/dateModified:\s*(inputs|inp|d)\.generated_at/.test(s) && /sim-date-modified/.test(s));
 }
 
+// 8. Season workers are pinned to the current worker build, and the NFL season page
+//    pins its script by content hash at bake time (SIM_WORKER_PIN_20261030).
+const crypto = require('crypto');
+const wHash = crypto.createHash('sha256').update(fs.readFileSync(path.join(ROOT, 'static/js/sim-season-worker.js'))).digest('hex').slice(0, 12);
+for (const f of ['static/js/nfl-season-sim.js', 'static/js/league-season-sim.js']) {
+  const refs = read(f).match(/sim-season-worker\.js\?v=([0-9a-f]+)/g) || [];
+  ok('8a. ' + f + ' pins the current sim-season-worker.js (' + wHash + ')', refs.length > 0 && refs.every((r) => r.endsWith(wHash)), refs.join(','));
+}
+ok('8b. NFL season builder pins nfl-season-sim.js by content hash', /nfl-season-sim\.js\?v=\$\{assetV\('static\/js\/nfl-season-sim\.js'\)\}/.test(read('scripts/build_nfl_season_page.js')));
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

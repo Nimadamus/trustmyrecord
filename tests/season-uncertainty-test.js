@@ -28,4 +28,13 @@ const nOff = E.project(nba, 1500, 5, { uncertainty: false });
 const nOn = E.project(nba, 1500, 5, {});
 const wWidth = (r) => r.teams.reduce((s, t) => s + (t.wins_p90 - t.wins_p10), 0) / r.teams.length;
 assert.ok(wWidth(nOn) > wWidth(nOff) * 1.4, `NBA win ranges widen with rating uncertainty (${wWidth(nOff).toFixed(1)} -> ${wWidth(nOn).toFixed(1)})`);
+/* SIM_COPY_UNCERTAINTY_20261030: the NHL copy said its ranges cover "the luck of the
+   schedule only" although the NHL season sim has carried rating noise since 10/07. The
+   page copy must say what the engine does, in the same terms as the NBA/NFL wording. */
+const fs = require('fs');
+const path = require('path');
+const B = fs.readFileSync(path.join(__dirname, '..', 'scripts', 'build_league_sim_pages.js'), 'utf8');
+assert.ok(!/luck of the schedule only/i.test(B) && !/not the chance that the ratings themselves are wrong/i.test(B), 'no season copy may claim schedule-luck-only ranges');
+const nhlU = (B.match(/const nhlUncertainty = `([^`]*)`/) || [])[1] || '';
+assert.ok(/luck of the schedule/.test(nhlU) && /rating is off/.test(nhlU), 'NHL uncertainty copy names both schedule luck and rating uncertainty');
 process.stdout.write('SEASON_UNCERTAINTY PASSED\n');
