@@ -285,7 +285,8 @@
     '/sports-gaming/nhl/'
   ];
   var COMPETE = [
-    ['/contests/justbet-mlb/', 'Contest Results'],
+    /* CONTEST_RETIRED_20261029: the JustBet MLB contest is over; its pages stay
+       live at their URLs but the menu no longer promotes it. */
     /* Named 'Handicapper Challenges' from 2026-08-27. The bare word 'Challenges'
        meant three different products across this site -- pick vs pick here, TMR
        Coin below, and console games in Sports Gaming -- and this menu was where

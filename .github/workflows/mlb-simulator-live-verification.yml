@@ -1,7 +1,14 @@
 name: MLB Simulator Live Verification
 
+# MLB_LIVE_VERIFY_ALERT_20261030: this proof failed on every run from 2026-10-09
+# to 2026-10-29 (the anonymous free run had changed the gate contract) and nobody
+# saw it, because a failed push-triggered run only notifies the pusher, usually a
+# bot. It now also runs daily and a failure opens (or comments on) one labelled
+# issue, the same pattern as matchup-of-the-day-watchdog.yml.
 on:
   workflow_dispatch:
+  schedule:
+    - cron: '23 16 * * *'
   push:
     paths:
       - 'mlb-simulator/**'
@@ -11,6 +18,10 @@ on:
       - 'scripts/tools-live-browser-proof.js'
       - 'docs/sportsbook-workflow-protocol.md'
       - '.github/workflows/mlb-simulator-live-verification.yml'
+
+permissions:
+  contents: read
+  issues: write
 
 jobs:
   verify-mlb-simulator-live:
@@ -36,3 +47,26 @@ jobs:
           path: |
             artifacts/mlb-simulator-live-browser-addressbar-proof.png
             artifacts/mlb-simulator-live-browser-proof.json
+      - name: Raise it where it will be seen
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = 'MLB Simulator live verification is failing';
+            const run = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const body = [
+              `The live MLB Simulator proof failed on ${new Date().toISOString().slice(0, 10)} (${context.eventName}).`,
+              '',
+              `- Run and logs: ${run}`,
+              '- Reproduce: TMR_ONLY_MLB_SIMULATOR=1 node scripts/tools-live-browser-proof.js',
+            ].join(String.fromCharCode(10));
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner, repo: context.repo.repo, state: 'open', labels: 'mlb-simulator-live',
+            });
+            if (existing.data.length) {
+              await github.rest.issues.createComment({ owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: existing.data[0].number, body });
+            } else {
+              await github.rest.issues.create({ owner: context.repo.owner, repo: context.repo.repo,
+                title, body, labels: ['mlb-simulator-live'] });
+            }

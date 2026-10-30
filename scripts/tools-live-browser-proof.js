@@ -140,7 +140,14 @@ async function verifyTrendspotter(page) {
 // through its own documented kill switch (window.SIM_GATE_FLAGS.gate). Using
 // the real kill switch rather than a fake session means this proof also
 // confirms the rollback path still works on production every time it runs.
+// MLB_PROOF_ANON_FREE_RUN_20261030: since ANON_FREE_RUN_20260928 a signed-out
+// visitor's FIRST run in a browser is free, so a fresh proof browser got a
+// projection instead of the gate and this proof failed on every run from
+// 2026-10-09 on. The gate contract is now "the free run is used, the next run
+// opens the gate": mark the anonymous free run as already used (the same
+// localStorage key sim-auth-gate.js sets) before any page script runs.
 async function verifyMlbSimulatorGate(page) {
+  await page.addInitScript(() => { try { localStorage.setItem('tmr_sim_anon_free_used', String(Date.now())); } catch (e) {} });
   await page.goto(SIM_URL, { waitUntil: 'domcontentloaded' });
   await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => {});
   await page.waitForFunction(() => {
@@ -338,6 +345,11 @@ async function verifyLinkedWorkflow(page, url, requiredText) {
   fs.mkdirSync(OUT_DIR, { recursive: true });
   const browser = await chromium.launch({ headless: false, args: ['--window-size=1440,1100', '--no-sandbox'] });
   const page = await browser.newPage({ viewport: { width: 1320, height: 940 } });
+  // MLB_PROOF_NO_WRITES_20261030: this proof runs against production on a
+  // schedule. It reads pages and runs the simulator in the browser; it must not
+  // write anything (archived runs, meter charges, analytics rows) as a visitor.
+  if (process.env.TMR_ONLY_MLB_SIMULATOR === '1') await page.route('**/*', (route) => (route.request().method() === 'GET' || route.request().method() === 'HEAD'
+    ? route.continue() : route.abort()));
   const consoleErrors = [];
   page.on('console', (message) => {
     if (message.type() === 'error') consoleErrors.push(message.text());

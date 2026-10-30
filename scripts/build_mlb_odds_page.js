@@ -28,6 +28,7 @@ const path = require('path');
 const E = require('../static/js/league-season-engine.js');
 const UI = require('../static/js/league-season-sim.js');
 const H = require('./build_league_sim_pages.js');
+const SS = require('./mlb_season_state.js');
 
 const ROOT = path.resolve(__dirname, '..');
 const SITE = 'https://trustmyrecord.com';
@@ -255,15 +256,54 @@ async function buildInputs(opts = {}) {
   };
 }
 
-function page(inp, result, shell) {
+/* MLB_SEASON_COMPLETE_20261030: once a club has won the World Series every
+   number on this page is a fact. The table shows exactly 100% and 0% (never
+   "better than 99%" / "under 1%"), the lead states the champion, and nothing is
+   offered as a simulation of the rest of a season that is over. A projection
+   that is not exactly 0 or 1 here means the inputs and the season state
+   disagree, so the bake fails and the last good build stays live. */
+const SETTLED_KEYS = ['playoffs', 'round2', 'conf_final', 'final', 'champion', 'division_title', 'direct'];
+function settledHtml(html) {
+  return html.replace(/&gt;99%/g, '100%').replace(/&lt;1%/g, '0%');
+}
+function assertSettled(result, state) {
+  for (const t of result.teams) {
+    for (const k of SETTLED_KEYS) {
+      if (t[k] != null && t[k] !== 0 && t[k] !== 1) throw new Error(`season complete but ${t.abbr} ${k} = ${t[k]}, not settled`);
+    }
+  }
+  const champs = result.teams.filter((t) => t.champion === 1).map((t) => t.abbr);
+  if (champs.length !== 1 || champs[0] !== state.champion.abbr) {
+    throw new Error(`season state says ${state.champion.abbr} won the World Series, the inputs say ${champs.join(',') || 'nobody'}`);
+  }
+}
+const ROUND_ORDER_DESC = ['W', 'L', 'D', 'F'];
+function realPostseason(inp) {
+  const nameOf = Object.fromEntries(inp.teams.map((t) => [t.espn_abbr, t.name]));
+  const rows = [];
+  for (const r of ROUND_ORDER_DESC) {
+    for (const s of inp.postseason.series.filter((x) => x.round === r)) {
+      const wa = s.wins[s.a] || 0, wb = s.wins[s.b] || 0;
+      const [w, l] = wa > wb ? [s.a, s.b] : [s.b, s.a];
+      rows.push(`<li><b>${esc(ROUND_NAME[r])}:</b> ${esc(nameOf[w])} beat the ${esc(nameOf[l])}, ${Math.max(wa, wb)} games to ${Math.min(wa, wb)}</li>`);
+    }
+  }
+  return `<ul class="series">${rows.join('')}</ul>`;
+}
+
+function page(inp, result, shell, state) {
   const nl = (s) => s;
+  const done = SS.isComplete(state);
+  if (done) assertSettled(result, state);
   const remaining = inp.schedule.length - inp.games_final;
   const byTitle = result.teams.slice().sort((a, b) => b.champion - a.champion);
   const bubble = result.teams.filter((t) => t.playoffs > 0.1 && t.playoffs < 0.9).sort((a, b) => b.playoffs - a.playoffs);
   const last = inp.schedule[inp.schedule.length - 1];
   const ptDay = (iso) => H.ptDate(iso);
   const title = `MLB Playoff Odds ${inp.season} | Live Postseason Chances, Byes and World Series Odds`;
-  const desc = `Live ${inp.season} MLB playoff odds for all 30 teams from ${H.count(result.runs)} simulations of the ${remaining} games left: division titles, first round byes, the Wild Card Series and World Series chances.`;
+  const desc = done
+    ? `${inp.season} MLB playoff odds, final: the ${state.champion.name} won the World Series over the ${state.runner_up.name}, ${state.world_series.games[0]} games to ${state.world_series.games[1]}. Every club's playoff, division, pennant and title result for the ${inp.season} season.`
+    : `Live ${inp.season} MLB playoff odds for all 30 teams from ${H.count(result.runs)} simulations of the ${remaining} games left: division titles, first round byes, the Wild Card Series and World Series chances.`;
   const status = postseasonStatus(inp);
   const nameOf = Object.fromEntries(inp.teams.map((t) => [t.espn_abbr, t.name]));
   const gone = status ? Object.keys(status).filter((k) => status[k].state === 'eliminated').map((k) => nameOf[k]).sort() : [];
@@ -271,13 +311,15 @@ function page(inp, result, shell) {
   /* MLB_ELIMINATED_ZERO_20261005: after the regular season the page describes
      the real postseason, not a replay of a season that is over. */
   const psLead = status ? `<p>The ${inp.season} regular season is over and ${live} clubs are still alive in the postseason. Every completed series keeps its real result and each series in progress starts from its real score. Across ${H.count(result.runs)} simulations of the rest of the postseason the ${esc(byTitle[0].name)} win the World Series ${H.pctText(byTitle[0].champion)} of the time, ahead of the ${esc(byTitle[1].name)} at ${H.pctText(byTitle[1].champion)}.${gone.length ? ` Eliminated, at 0%: ${gone.map(esc).join(', ')}.` : ''}</p>` : '';
-  const lead = psLead || `<p>${remaining} regular season games are left, the last on ${esc(ptDay(last.date))}. Across ${H.count(result.runs)} simulated finishes the ${esc(byTitle[0].name)} win the World Series ${H.pctText(byTitle[0].champion)} of the time, ahead of the ${esc(byTitle[1].name)} at ${H.pctText(byTitle[1].champion)}. ${bubble.length ? `The races still open: ${bubble.slice(0, 6).map((t) => `${esc(t.name)} ${Math.round(t.playoffs * 100)}%`).join(', ')}.` : ''}</p>`;
+  const clinched = done && state.world_series.clinched_at ? H.ptDate(state.world_series.clinched_at) : '';
+  const doneLead = done ? `<p class="mlb-season-final"><strong>${inp.season} season complete: the ${esc(state.champion.name)} won the World Series.</strong> They beat the ${esc(state.runner_up.name)} ${state.world_series.games[0]} games to ${state.world_series.games[1]}${clinched ? `, clinching on ${esc(clinched)}` : ''}. Every number below is the real ${inp.season} result, 100% for what a club reached and 0% for what it did not.${state.next_opening_day ? ` The ${state.next_season} season opens on ${esc(SS.ptLongDate(state.next_opening_day))}.` : ''}</p>` : '';
+  const lead = doneLead || psLead || `<p>${remaining} regular season games are left, the last on ${esc(ptDay(last.date))}. Across ${H.count(result.runs)} simulated finishes the ${esc(byTitle[0].name)} win the World Series ${H.pctText(byTitle[0].champion)} of the time, ahead of the ${esc(byTitle[1].name)} at ${H.pctText(byTitle[1].champion)}. ${bubble.length ? `The races still open: ${bubble.slice(0, 6).map((t) => `${esc(t.name)} ${Math.round(t.playoffs * 100)}%`).join(', ')}.` : ''}</p>`;
   const faqs = [
-    [`What are the ${inp.season} MLB playoff odds?`, status ? `Each team's chance comes from ${H.count(result.runs)} simulations of the rest of the ${inp.season} postseason, starting from the real result of every game already played. Eliminated clubs and clubs that missed the postseason are at 0%. The current favourite to win the World Series is the ${byTitle[0].name} at ${H.pctText(byTitle[0].champion)}.` : `Each team's chance comes from ${H.count(result.runs)} simulations of the rest of the ${inp.season} regular season and the postseason. The current favourite to win the World Series is the ${byTitle[0].name} at ${H.pctText(byTitle[0].champion)}.`],
+    [`What are the ${inp.season} MLB playoff odds?`, done ? `The ${inp.season} season is over. The ${state.champion.name} won the World Series, beating the ${state.runner_up.name} ${state.world_series.games[0]} games to ${state.world_series.games[1]}, so they are at 100% and every other club is at 0%. The table records what each club actually reached.` : status ? `Each team's chance comes from ${H.count(result.runs)} simulations of the rest of the ${inp.season} postseason, starting from the real result of every game already played. Eliminated clubs and clubs that missed the postseason are at 0%. The current favourite to win the World Series is the ${byTitle[0].name} at ${H.pctText(byTitle[0].champion)}.` : `Each team's chance comes from ${H.count(result.runs)} simulations of the rest of the ${inp.season} regular season and the postseason. The current favourite to win the World Series is the ${byTitle[0].name} at ${H.pctText(byTitle[0].champion)}.`],
     ['How does the MLB playoff format work?', 'Twelve teams make it, six per league. The three division winners take seeds 1 to 3 by record and the three best remaining records are seeds 4 to 6. Seeds 1 and 2 get a bye. The Wild Card Series is best of three with every game at the higher seed, the Division Series best of five, and the League Championship Series and World Series best of seven.'],
     ['How is each game decided?', `A team's strength is its Pythagorean record from runs scored and allowed (the Pythagenpat method, exponent 0.287), pulled toward .500 by ${REGRESS_GAMES} games of average play so a hot or cold stretch does not overstate it. A game is log5 of the two strengths with a home field edge worth a .540 home winning rate. No betting line is used.`],
     ['Which tiebreakers are applied?', 'Head to head record between the tied teams, then a random draw. MLB’s later steps, such as intradivision record, are not applied and are listed here rather than approximated. There is no tiebreaker game.'.replace('’', "'")],
-    ['How often is it updated?', 'The standings, results and schedule are read from MLB twice a day, so finished games stop being simulated and the odds tighten every day to the end of the season.'],
+    done ? ['When do the odds start again?', `${state.next_opening_day ? `The ${state.next_season} season opens on ${SS.ptLongDate(state.next_opening_day)}. ` : ''}Odds for the ${state.next_season} season are published once it is under way; until then this page keeps the final ${inp.season} results.`] : ['How often is it updated?', 'The standings, results and schedule are read from MLB twice a day, so finished games stop being simulated and the odds tighten every day to the end of the season.'],
   ];
   const faq = H.faqBlock(faqs);
   const ld = [
@@ -324,28 +366,30 @@ ${shell.head}
   <section class="hero lsim-hero">
     <h1>MLB Playoff Odds ${inp.season}</h1>
     ${lead}
-    <div class="lsim-run">
+    ${done ? '' : `<div class="lsim-run">
       <label>Simulations <select id="lsimRuns"><option value="2000">2,000</option><option value="5000" selected>5,000</option><option value="10000">10,000</option></select></label>
       <button class="btn primary" type="button" id="runSim">Run the rest of the season</button>
       <span id="lsimStatus" role="status" aria-live="polite"></span>
-    </div>
-    <p id="lsimStamp">${UI.stamp(result, inp)}</p>
+    </div>`}
+    <p id="lsimStamp">${done ? `Final ${inp.season} results from MLB, read ${esc(H.ptDate(inp.generated_at, true))}: all ${inp.schedule.length.toLocaleString('en-US')} regular season games and every postseason series.` : UI.stamp(result, inp)}</p>
   </section>
 
-  <section class="panel"><h2>${inp.season} World Series and playoff odds</h2>
-  <div id="lsimOdds">${UI.oddsTable(result)}</div></section>
+  <section class="panel"><h2>${inp.season} World Series and playoff odds${done ? ', final' : ''}</h2>
+  <div id="lsimOdds">${done ? settledHtml(UI.oddsTable(result)) : UI.oddsTable(result)}</div></section>
 
-  <section class="panel"><h2>Projected final standings</h2>
-  <div id="lsimTables" class="lsim-grid">${UI.seasonTables(result)}</div></section>
+  <section class="panel"><h2>${done ? `Final ${inp.season} standings` : 'Projected final standings'}</h2>
+  <div id="lsimTables" class="lsim-grid">${done ? settledHtml(UI.seasonTables(result)) : UI.seasonTables(result)}</div></section>
 
-  ${picks}
+  ${done ? '' : picks}
 
-  <section class="panel"><h2>One simulated ${inp.season} postseason</h2>
-  <div id="lsimBracket">${UI.bracket(result)}</div></section>
+  ${done ? `<section class="panel"><h2>How the ${inp.season} postseason went</h2>
+  <div id="lsimBracket">${realPostseason(inp)}</div></section>` : `<section class="panel"><h2>One simulated ${inp.season} postseason</h2>
+  <div id="lsimBracket">${UI.bracket(result)}</div></section>`}
 
   <section class="lsim-copy">
     <h2>How the MLB playoff odds are calculated</h2>
-    ${status ? `<p>The regular season is complete, so the official seeds are used as MLB set them. Every postseason game that is final keeps its real result: a decided series is decided, a series in progress starts from its real score and its remaining home parks, and an eliminated club cannot advance. Only the games left are played out, ${H.count(result.runs)} times, with the same game model described here.</p>` : ''}
+    ${done ? `<p>During the ${inp.season} season these odds came from simulating every game left. Now that the ${esc(state.champion.name)} have won the World Series nothing is left to simulate, so the page shows the final results. The model below is the one that produced the odds during the season.</p>` : ''}
+    ${status && !done ? `<p>The regular season is complete, so the official seeds are used as MLB set them. Every postseason game that is final keeps its real result: a decided series is decided, a series in progress starts from its real score and its remaining home parks, and an eliminated club cannot advance. Only the games left are played out, ${H.count(result.runs)} times, with the same game model described here.</p>` : ''}
     <p>${status ? '' : `Every game that is final keeps its real score. The ${remaining} games left are each played out ${H.count(result.runs)} times. `}A team's strength is its Pythagorean record from the runs it has scored and allowed this season, using the Pythagenpat exponent of 0.287, pulled toward .500 by ${REGRESS_GAMES} games of average play so a hot or cold month does not overstate it. A single game is log5 of the two strengths, with a home field edge worth a .540 home winning rate. No betting line is used.</p>
     ${status ? '' : `<p>After each simulated regular season the ${inp.season} postseason is seeded and played: division winners take seeds 1 to 3 by record, the three best remaining records take 4 to 6, seeds 1 and 2 get a bye, and the Wild Card Series, Division Series, League Championship Series and World Series are played game by game at the correct home parks.</p>`}
     <h2>Tiebreakers</h2>
@@ -369,9 +413,9 @@ ${shell.head}
   </section>
 </main>
 <div class="foot wrap">TrustMyRecord MLB Playoff Odds &middot; a model projection, not betting advice &middot; <a href="${URL}#faq">FAQ</a></div>
-<script defer src="/static/js/league-season-engine.js"></script>
+${done ? '' : `<script defer src="/static/js/league-season-engine.js"></script>
 <script defer src="/static/js/league-season-sim.js"></script>
-<script defer src="/static/js/sim-run-gate.js" data-sport="mlb_odds"></script>
+<script defer src="/static/js/sim-run-gate.js" data-sport="mlb_odds"></script>`}
 ${shell.tail}
 </body>
 </html>
@@ -415,7 +459,8 @@ function postseasonAnswer(inp, t, st, p, pct, result) {
   return `They are the ${st.league} ${st.seed} seed and ${st.text}. Every completed series keeps its real result and the series in progress starts from its real score. Across ${H.count(result.runs)} simulations of the rest of the postseason they win the World Series ${pct(p.champion, true)} of the time.`;
 }
 
-function teamPages(inp, result, shell) {
+function teamPages(inp, result, shell, state) {
+  const done = SS.isComplete(state);
   const status = postseasonStatus(inp);
   const byAbbr = Object.fromEntries(inp.teams.map((t) => [t.espn_abbr, t]));
   const dayOf = (iso) => new Date(iso).toLocaleString('en-US', { timeZone: 'America/Los_Angeles', weekday: 'short', month: 'short', day: 'numeric' });
@@ -443,7 +488,8 @@ function teamPages(inp, result, shell) {
     const url = `/mlb-simulator/teams/${slug(t)}/`;
     const h1 = `${t.name} Simulator`;
     const title = `${t.name} Simulator ${inp.season} | Playoff Odds, Projected Wins and Schedule`;
-    const desc = `${t.name} ${inp.season}: ${t.w} and ${t.l}, ${H.UI_one(p.wins_mean)} projected wins, ${pct(p.playoffs)} playoff odds, ${pct(p.division_title)} to win the ${t.division} and ${pct(p.champion, true)} to win the World Series, with every game left simulated.`;
+    const desc = done ? `${t.name} ${inp.season} final: ${t.w} and ${t.l}, ${pct(p.playoffs) === '100%' ? 'made the postseason' : 'missed the postseason'}${st && st.text ? ', ' + st.text : ''}.${st && st.state === 'champion' ? '' : ` The ${state.champion.name} won the World Series.`}`
+      :  `${t.name} ${inp.season}: ${t.w} and ${t.l}, ${H.UI_one(p.wins_mean)} projected wins, ${pct(p.playoffs)} playoff odds, ${pct(p.division_title)} to win the ${t.division} and ${pct(p.champion, true)} to win the World Series, with every game left simulated.`;
     const sched = [...last10.map((g) => {
       const r = res(g);
       return `<tr><td>${esc(dayOf(g.date))}</td><td>${r.home ? 'vs' : 'at'} <a href="/mlb-simulator/teams/${slug(r.opp)}/">${esc(r.opp.name)}</a></td><td class="r"><span class="${r.won ? 'w' : 'l'}">${r.won ? 'W' : 'L'} ${r.us} to ${r.them}</span></td></tr>`;
@@ -522,7 +568,7 @@ ${shell.head}
     <div class="linkgrid">
       <a href="/mlb-simulator/">MLB Simulator<small>Any ${esc(t.short)} game, pitch by pitch</small></a>
       <a href="${URL}">MLB Playoff Odds<small>All 30 teams, live</small></a>
-      <a href="/mlb-playoff-simulator/">MLB Playoff Simulator<small>Build and lock your bracket</small></a>
+      <a href="/mlb-playoff-simulator/">MLB Playoff Simulator<small>${done ? `The ${inp.season} postseason bracket` : 'Build and lock your bracket'}</small></a>
       <a href="/handicapping/mlb/">MLB Matchups Today<small>Today's board</small></a>
     </div>
   </section>
@@ -577,7 +623,7 @@ function patchSitemap(urls) {
   return add.length;
 }
 
-module.exports = { buildInputs, postseasonState, postseasonStatus, mlbPct, strength, homeWin };
+module.exports = { page, assertSettled, settledHtml, buildInputs, postseasonState, postseasonStatus, mlbPct, strength, homeWin };
 
 if (require.main === module) (async () => {
   const inp = await buildInputs();
@@ -587,8 +633,10 @@ if (require.main === module) (async () => {
   fs.writeFileSync(path.join(ROOT, DATA.replace(/^\//, '')), JSON.stringify(inp));
   const out = path.join(ROOT, 'mlb-playoff-odds', 'index.html');
   fs.mkdirSync(path.dirname(out), { recursive: true });
-  fs.writeFileSync(out, page(inp, result, H.shellAssets()));
-  const pages = teamPages(inp, result, H.shellAssets());
+  const state = SS.readState(ROOT);
+  if (!state || state.season !== inp.season) throw new Error('data/mlb-season-state.json missing or for another season: run scripts/mlb_season_state.js first');
+  fs.writeFileSync(out, page(inp, result, H.shellAssets(), state));
+  const pages = teamPages(inp, result, H.shellAssets(), state);
   for (const pg of pages) {
     const f = path.join(ROOT, pg.url.replace(/^\//, ''), 'index.html');
     fs.mkdirSync(path.dirname(f), { recursive: true });

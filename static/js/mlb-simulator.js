@@ -215,6 +215,9 @@
         { key: 'heat', label: 'Extreme Heat', description: 'High heat; ball carries a bit more and pitcher stamina drops faster.', hr: 1.05, bb: 1.00, err: 1.00, fatigue: 1.09, delayChance: 0 },
         { key: 'cold', label: 'Cold', description: 'Cold conditions; reduced carry, grip and feel affected.', hr: 0.93, bb: 1.04, err: 1.00, fatigue: 1.04, delayChance: 0 }
     ];
+    // Home parks with a roof, from MLB's venue fieldInfo.roofType (2026).
+    var COVERED_PARKS = { TB: 'fixed dome', ARI: 'retractable roof', AZ: 'retractable roof', HOU: 'retractable roof',
+        MIA: 'retractable roof', MIL: 'retractable roof', SEA: 'retractable roof', TEX: 'retractable roof', TOR: 'retractable roof' };
     function simWeatherByKey(key) {
         for (var i = 0; i < SIM_WEATHER_CONDITIONS.length; i++) if (SIM_WEATHER_CONDITIONS[i].key === key) return SIM_WEATHER_CONDITIONS[i];
         return SIM_WEATHER_CONDITIONS[0];
@@ -5995,9 +5998,13 @@
         if (value <= 0.97) return 'Low';
         return 'Medium';
     }
-    function confidenceLabel(winPct, strengthGap) {
-        if (winPct >= 0.64 || strengthGap >= 9) return 'Strong lean';
-        if (winPct >= 0.56 || strengthGap >= 5) return 'Moderate lean';
+    // MLB_CONFIDENCE_FROM_PROBABILITY_20261030: the label describes the win
+    // probability the visitor is shown, nothing else. It used to also fire on a
+    // rating gap, so a 52% projection could read "Strong lean" next to its own
+    // number. One input now: the projected winner's simulated win probability.
+    function confidenceLabel(winPct) {
+        if (winPct >= 0.64) return 'Strong lean';
+        if (winPct >= 0.56) return 'Moderate lean';
         return 'Tight matchup';
     }
     function eraAdjustmentNote(away, home) {
@@ -6599,6 +6606,15 @@
         // as before.
         simOpts = simOpts || {};
         var simWeather = simWeatherByKey(simWeatherKey || 'clear');
+        // MLB_DOME_WEATHER_20261030: a chosen condition only reaches the field when
+        // the home park is open air. Tropicana Field is a fixed dome and the seven
+        // retractable roofs close for rain, wind, heat and cold, so a "Heavy Rain"
+        // game in Tampa Bay no longer gets a rain delay or a suspension.
+        var roofNote = '';
+        if (simWeather.key !== 'clear' && simWeather.key !== 'cloudy' && home && COVERED_PARKS[home.abbreviation] && home.era !== 'historical') {
+            roofNote = 'Roof: ' + home.name + ' play under a ' + COVERED_PARKS[home.abbreviation] + ', so the chosen ' + simWeather.label.toLowerCase() + ' condition does not apply.';
+            simWeather = simWeatherByKey('clear');
+        }
         // Home-field run environment (Layer 3 calibration). HOME_FIELD_HOME_BONUS +
         // HOME_FIELD_AWAY_BONUS is held CONSTANT (= 0.32) so total runs/game and
         // league runs/team are unchanged; only the home/away split shifts. Shifting
@@ -6610,6 +6626,7 @@
         var awayRuns = expectedRunsFor(away, home, HOME_FIELD_AWAY_BONUS);
         var homeRuns = expectedRunsFor(home, away, HOME_FIELD_HOME_BONUS);
         var liveFactors = [];
+        if (roofNote) liveFactors.push(roofNote);
         var awayPitcherPre = simOpts.awayPitcher || selectedPitcher('away', away, context);
         var homePitcherPre = simOpts.homePitcher || selectedPitcher('home', home, context);
         var homePitcherHand = homePitcherPre && homePitcherPre.mlbId ? pitchHandOf(homePitcherPre.mlbId) : null;
@@ -6979,8 +6996,8 @@
             runEnvironment: totalRuns >= 9.8 ? 'Elevated' : (totalRuns <= 7.4 ? 'Suppressed' : 'Balanced'),
             volatility: volatilityLabel(volatility),
             strengthGap: round1(Math.abs(homeStrength - awayStrength)),
-            confidence: confidenceLabel(winnerPct, Math.abs(homeStrength - awayStrength)),
-            confidenceBand: confidenceLabel(winnerPct, Math.abs(homeStrength - awayStrength)),
+            confidence: confidenceLabel(winnerPct),
+            confidenceBand: confidenceLabel(winnerPct),
             eraAdjustment: eraAdjustmentNote(away, home),
             simulationMode: simulationModeLabel(),
             // Everything the page needs to say honestly where this number came from.

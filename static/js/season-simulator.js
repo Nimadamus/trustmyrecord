@@ -425,7 +425,9 @@
   }
   function loadTeams(attempt) {
     showBuilderLoading();
-    if (attempt === 0) setStatus('<i class="fas fa-spinner fa-spin"></i> Warming up the simulator...', 'ok');
+    /* MLB_SEASON_CLS_20261030: once entries are closed the closed status is already
+       showing; replacing it with a spinner and back moved the whole page. */
+    if (attempt === 0 && !closed) setStatus('<i class="fas fa-spinner fa-spin"></i> Warming up the simulator...', 'ok');
     fetch(API + '/api/season-simulator/teams')
       .then(function (r) { if (!r.ok) throw new Error('http ' + r.status); return r.json(); })
       .then(function (d) {

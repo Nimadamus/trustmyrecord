@@ -60,10 +60,11 @@
             <div>
                 <p class="simv2-kicker">TrustMyRecord Data Lab</p>
                 <h1>MLB Simulator</h1>
+<!--MK:mlbSeasonState--><style>[data-mlb-season-only]{display:none!important}</style><p class="mlb-season-banner" data-mlb-phase="complete" role="status" style="margin:14px 0;padding:12px 14px;border-left:4px solid #e0a800;border-radius:10px;background:rgba(224,168,0,.12);font-size:.95rem;line-height:1.5;color:inherit;"><strong>2026 season complete: the Milwaukee Brewers won the World Series.</strong> They beat the Tampa Bay Rays 4 games to 1. The 2027 season opens on March 25, 2027. <a href="/mlb-playoff-odds/" style="color:inherit;font-weight:700;">Final 2026 results</a></p><!--/MK:mlbSeasonState-->
                 <p class="simv2-headline">Simulate Any MLB Matchup.<br>Then Put Your Prediction <em>on the Record.</em></p>
                 <p class="simv2-sub">Run data-driven MLB simulations using current teams, projected starters, verified inputs, and thousands of simulated outcomes. Create a free account to lock in your prediction and build a record nobody can fake.</p>
                 <div class="simv2-hero-ctas">
-                    <a id="simv2HeroPrimary" class="simv2-btn simv2-btn-primary" href="#todaysMatchups">Run Today's Matchups</a>
+                    <a id="simv2HeroPrimary" data-mlb-season-only class="simv2-btn simv2-btn-primary" href="#todaysMatchups">Run Today's Matchups</a>
                     <a id="simv2HeroSecondary" class="simv2-btn simv2-btn-ghost" href="/register/">Create Free Account</a>
                 </div>
                 <div class="simv2-trust">
@@ -82,14 +83,13 @@
                 <span id="simDataSourceDetail">Preparing baseline team library...</span>
                 <div class="simv2-hc-rows">
                     <div><span>Engine</span><b>Plate-appearance simulation</b></div>
-                    <div><span>Winner accuracy (out-of-sample)</span><b>~55&ndash;60%</b></div>
-                    <div><span>Probability calibration</span><b>Brier &asymp; 0.244</b></div>
+                    <div><span>Model accuracy</span><b><a href="#modelAccuracy" style="color:inherit;">2025 backtest below</a></b></div>
                 </div>
             </aside>
         </section>
         <p class="roster-clock" data-roster-clock="mlb" role="status">Roster times: checking the live status.</p>
 
-        <section id="todaysMatchups" class="simv2-slate" aria-label="Today's MLB matchups" hidden>
+        <section id="todaysMatchups" data-mlb-season-only class="simv2-slate" aria-label="Today's MLB matchups" hidden>
             <div class="simv2-sechead">
                 <div>
                     <p class="simv2-kicker">Today's Slate</p>
@@ -605,7 +605,7 @@
         </section>
 
         <!-- MODEL_ACCURACY_HOW_TO_READ_20260630 -->
-        <section class="sim-panel sim-accuracy-panel" aria-label="Model accuracy and how to read this">
+        <section id="modelAccuracy" class="sim-panel sim-accuracy-panel" aria-label="Model accuracy and how to read this">
             <div class="sim-panel-heading compact">
                 <p class="sim-label">Model Accuracy</p>
                 <h2>How Accurate Is This Simulator?</h2>
@@ -614,8 +614,9 @@
                 We hold this to the same standard as the picks we track: real, measured, out-of-sample results, not marketing. This is a realistic plate-appearance simulation, not a crystal ball. Scored on the 2,434 games of a season the model never saw, each projected from the season before it, it called the winner <strong>56.2% of the time</strong> against 54.3% for always picking the home team, with a Brier score of 0.244. That scoring run used team-level ratings and league-average lineups, so it is not evidence about individual batters or announced starters. That is better than a coin flip and useful as research, but it is <strong>not a guaranteed betting edge</strong>, and we have not validated it against closing market prices.
             </p>
             <div class="input-summary" style="margin:0 0 14px;">
-                <div><strong>Winner accuracy (out-of-sample)</strong><span>56.2% on 2,434 holdout games (home team alone: 54.3%)</span></div>
+                <div><strong>Winner accuracy (out-of-sample backtest)</strong><span>56.2% on the 2,434 games of the 2025 regular season (home team alone: 54.3%)</span></div>
                 <div><strong>Probability calibration</strong><span>Brier ~0.244 vs 0.248 for the home-team baseline</span></div>
+                <div><strong>Model version and method</strong><span>Last re-derived August 27, 2026, before later engine updates; team-level ratings with league-average lineups. A backtest, not a record of live picks.</span></div>
                 <div><strong>Honest benchmark</strong><span>Better than a coin flip, not a sharp's edge</span></div>
                 <div><strong>Best use</strong><span>A research input, not a standalone bet signal</span></div>
             </div>
@@ -671,12 +672,11 @@
                     <a href="/handicappers/" style="background:transparent;border:1px solid #2a2a4a;color:#e8e8f0;font-weight:700;padding:13px 22px;border-radius:12px;text-decoration:none;font-family:'Barlow',sans-serif;">Verified Handicappers</a>
                     <a href="/stats/" style="background:transparent;border:1px solid #2a2a4a;color:#e8e8f0;font-weight:700;padding:13px 22px;border-radius:12px;text-decoration:none;font-family:'Barlow',sans-serif;">Stats Hub</a>
                     <a href="/tools/" style="background:transparent;border:1px solid #2a2a4a;color:#e8e8f0;font-weight:700;padding:13px 22px;border-radius:12px;text-decoration:none;font-family:'Barlow',sans-serif;">All Tools</a>
-                    <a href="/contests/justbet-mlb/" style="background:transparent;border:1px solid #2a2a4a;color:#e8e8f0;font-weight:700;padding:13px 22px;border-radius:12px;text-decoration:none;font-family:'Barlow',sans-serif;">JustBet MLB Contest Results</a>
                 </div>
             </div>
 
             <!--SIM_CONTEXT_20261001-->
-            <div style="margin-top:18px;">
+            <div data-mlb-season-only style="margin-top:18px;">
                 <h2 style="font-family:'Barlow','Inter',sans-serif;color:#fff;font-size:1.6rem;margin:0 0 12px;text-align:center;">MLB postseason mode</h2>
                 <p style="color:#c9c9d6;line-height:1.65;max-width:860px;margin:0 auto 12px;">From the Wild Card round through the World Series, playoff games run in postseason mode. The simulator uses each club's 26 man playoff roster, pulls starters a little earlier, leans on the three best relievers, lets the closer get more than three outs in an elimination game, and shows where the series stands.</p>
                 <p style="color:#c9c9d6;line-height:1.65;max-width:860px;margin:0 auto 12px;">You can also simulate the whole series: best of three in the Wild Card round, best of five in the Division Series, and best of seven in the League Championship Series and World Series, with the real home field pattern and a starter plan for every game.</p>
@@ -765,7 +765,7 @@ window.TMR_MLB_WORKLOAD_V2 = true;
 }());
 </script>
     <script src="/static/js/roster-clock.js?v=d4f49ef6fe7e"></script>
-    <script src="/static/js/mlb-simulator.js?v=d4796bd96a9c-recap"></script>
+    <script src="/static/js/mlb-simulator.js?v=ed1aaf0e48ab"></script>
 
     <!-- MLB_SIM_CONVERSION_20260728: post-result save/signup panel. Flip
          any value to false + redeploy to disable instantly; the simulator

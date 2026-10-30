@@ -37,7 +37,7 @@
         body.tmr-site-shell { background: var(--bg-dark); color: var(--text); font-family: var(--font-body); min-height: 100vh; }
         .ss-wrap a { color: var(--primary); text-decoration: none; }
         .ss-wrap a:hover { color: var(--accent-gold); }
-        .ss-wrap { max-width: 1140px; margin: 0 auto; padding: 0 20px 80px; }
+        .ss-wrap { max-width: 1140px; margin: 0 auto; padding: 0 20px 80px; display: flow-root; }
 
         /* HERO */
         .ss-hero { position: relative; overflow: hidden; border-radius: 24px; margin-top: 28px; padding: 44px 36px;
@@ -214,17 +214,48 @@
 <link rel="stylesheet" href="/static/css/tmr-navbar.css?v=68ec3081d29a">
 </head>
 <body class="tmr-site-shell tmr-ds-shell tmr-light">
+<!-- MLB_SEASON_CLS_20261030: the shared header (tmr-ds-nav.js) lands after first
+     paint and pushed the page down (0.53 of the 0.87 phone CLS). Same fix as
+     scripts/build_sim_matchup_pages.js: reserve its height, drop the reservation
+     in the frame the header arrives. -->
+<div id="dsNavReserve" aria-hidden="true" style="height:71px"></div>
+<script>
+(function () {
+  /* Two late arrivals, two reservations: the shared header (nav.ds-nav, 71px,
+     tmr-ds-nav.js) and the breadcrumb tmr-linkhub.js puts at the top of <main>
+     (44px). Each reservation is dropped in the same frame its element lands. */
+  var pairs = [['dsNavReserve', 'nav.ds-nav'], ['lhCrumbReserve', '.tmrlh-crumbs']];
+  var check = function () {
+    pairs = pairs.filter(function (p) {
+      if (!document.querySelector(p[1])) return true;
+      var r = document.getElementById(p[0]);
+      if (r) r.parentNode.removeChild(r);
+      return false;
+    });
+    if (!pairs.length && o) o.disconnect();
+  };
+  var o = new MutationObserver(check);
+  o.observe(document.documentElement, { childList: true, subtree: true });
+  check();
+  /* If a script never runs, give the space back rather than leaving a gap. */
+  window.addEventListener('load', function () {
+    setTimeout(function () { o.disconnect(); pairs.forEach(function (p) { var r = document.getElementById(p[0]); if (r) r.parentNode.removeChild(r); }); }, 2000);
+  });
+}());
+</script>
 
 <!-- Sitewide global nav + footer are injected by tmr-sitewide.js?v=20260729navclean1 -->
 
 <main class="ss-wrap">
+<div id="lhCrumbReserve" aria-hidden="true" style="height:44px"></div>
 
     <!-- HERO -->
     <section class="ss-hero">
         <span class="ss-kicker"><i class="fas fa-lock"></i> 2026 Season &middot; Entries closed</span>
         <h1>MLB Season <span class="gold">Simulator</span></h1>
+<!--MK:mlbSeasonState--><style>[data-mlb-season-only]{display:none!important}</style><p class="mlb-season-banner" data-mlb-phase="complete" role="status" style="margin:14px 0;padding:12px 14px;border-left:4px solid #e0a800;border-radius:10px;background:rgba(224,168,0,.12);font-size:.95rem;line-height:1.5;color:inherit;"><strong>2026 season complete: the Milwaukee Brewers won the World Series.</strong> They beat the Tampa Bay Rays 4 games to 1. The 2027 season opens on March 25, 2027. <a href="/mlb-playoff-odds/" style="color:inherit;font-weight:700;">Final 2026 results</a></p><!--/MK:mlbSeasonState-->
         <p class="sub">Call the entire 2026 MLB season: division winners, wild cards, both pennants, the World Series champion, and win totals. Log in, lock your entry, and put your name on a timestamped, public record.</p>
-        <div class="ss-auth-cta" id="ss-auth-cta">
+        <div class="ss-auth-cta" id="ss-auth-cta" data-mlb-season-only>
             <p><i class="fas fa-circle-info"></i> You can build your predictions below. Log in or create a free account to submit and lock them.</p>
             <span class="sp">
                 <a class="btn btn-gold" href="/login/"><i class="fas fa-right-to-bracket"></i> Log In</a>
@@ -235,8 +266,11 @@
 
     <!-- SIMULATOR -->
     <section class="ss-sim" id="ss-builder">
-        <div class="ss-statusbar" id="ss-status"></div>
-        <div class="ss-progress" id="ss-progress"></div>
+        <!-- MLB_SEASON_CLS_20261030: the closed-entries status and the progress pills are
+             written here as season-simulator.js will render them, so the steps below
+             do not jump when it does. -->
+        <div class="ss-statusbar locked" id="ss-status" style="display:block"><i class="fas fa-lock"></i> <b>Entries are closed.</b> The 2026 entry window closed at first pitch on the final day of the regular season, Sep 27, 10:05 AM PT. Every prediction locked before then stays public on the board below and is graded against the real results.</div>
+        <div class="ss-progress" id="ss-progress"><span class="ss-pill"><i class="fas fa-circle"></i>Divisions <b>0/6</b></span><span class="ss-pill"><i class="fas fa-circle"></i>Wild Cards <b>0/6</b></span><span class="ss-pill"><i class="fas fa-circle"></i>Champions <b>0/3</b></span><span class="ss-pill"><i class="fas fa-circle"></i>Win Totals <b>0/30</b></span></div>
 
         <div class="ss-step">
             <h2><span class="n">1</span> Division Winners</h2>
@@ -264,7 +298,7 @@
         </div>
 
         <div class="ss-step">
-            <div class="ss-actions" id="ss-actions">
+            <div class="ss-actions" id="ss-actions" data-mlb-season-only>
                 <button type="button" class="btn btn-gold" id="ss-lock-btn" disabled><i class="fas fa-lock"></i> Submit &amp; Lock Predictions</button>
                 <button type="button" class="btn btn-outline" id="ss-draft-btn"><i class="fas fa-floppy-disk"></i> Save Draft</button>
                 <button type="button" class="btn btn-outline" id="ss-clear-btn"><i class="fas fa-eraser"></i> Clear</button>
@@ -443,7 +477,7 @@
   <!--/MK:nflSimCrossLink-->
 </main>
 
-<script defer src="/static/js/season-simulator.js?v=5501c3eed5a3"></script>
+<script defer src="/static/js/season-simulator.js?v=345c8ebeef72"></script>
 
 <!-- tmr-internal-cluster : SEO internal linking (insert-only) -->
 <section class="tmr-internal-cluster" aria-label="Related pages on TrustMyRecord" style="max-width:1140px;margin:46px auto 0;padding:26px 22px;background:#FFFFFF;border:1px solid #D2DEEA;border-radius:18px;font-family:'Inter',system-ui,sans-serif;">
@@ -454,7 +488,6 @@
     <a href="/model-builder/" style="color:#0B4FA8;text-decoration:none;font-weight:600;font-size:0.95rem;padding:4px 0;display:inline-flex;align-items:center;gap:8px;"><span style="color:#8A6206;">&rsaquo;</span>Build your own prediction model</a>
     <a href="/leaderboards/" style="color:#0B4FA8;text-decoration:none;font-weight:600;font-size:0.95rem;padding:4px 0;display:inline-flex;align-items:center;gap:8px;"><span style="color:#8A6206;">&rsaquo;</span>See the verified sports betting leaderboards</a>
     <a href="/sportsbook/" style="color:#0B4FA8;text-decoration:none;font-weight:600;font-size:0.95rem;padding:4px 0;display:inline-flex;align-items:center;gap:8px;"><span style="color:#8A6206;">&rsaquo;</span>Make and lock a verified pick</a>
-    <a href="/free-sports-betting-contest/" style="color:#0B4FA8;text-decoration:none;font-weight:600;font-size:0.95rem;padding:4px 0;display:inline-flex;align-items:center;gap:8px;"><span style="color:#8A6206;">&rsaquo;</span>Enter the free sports betting contest</a>
   </div>
 </section>
 

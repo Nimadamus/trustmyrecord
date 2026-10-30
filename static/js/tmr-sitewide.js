@@ -87,7 +87,8 @@
         ["/arena/leagues/", "Gaming Leagues"]
     ];
     const competeMenuRoutes = [
-        ["/contests/justbet-mlb/", "Contest"],
+        /* CONTEST_RETIRED_20261029: the JustBet MLB contest is over; its pages stay
+           live at their URLs but the menu no longer promotes it. */
         ["/challenges/", "Handicapper Challenges"],
         // TMR Challenges was in tmr-ds-nav.js from 2026-08-18 and never added
         // here, so half the site had no nav route to it. Added 2026-08-27.

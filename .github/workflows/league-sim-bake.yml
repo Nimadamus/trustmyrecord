@@ -117,7 +117,10 @@ jobs:
               node scripts/build_league_sim_pages.js > b1.log 2>&1 || { tail -30 b1.log; return 1; }
               node scripts/build_nfl_season_page.js > b2.log 2>&1 || { tail -30 b2.log; return 1; }
               node scripts/build_nfl_team_pages.js > b3.log 2>&1 || { tail -30 b3.log; return 1; }
+              # MLB_SEASON_STATE_20261030: one season state (phase + champion) that every MLB builder reads.
+              node scripts/mlb_season_state.js > b4s.log 2>&1 || { tail -30 b4s.log; return 1; }
               node scripts/build_mlb_odds_page.js > b4.log 2>&1 || { tail -30 b4.log; return 1; }
+              node scripts/build_mlb_season_pages.js >> b4s.log 2>&1 || { tail -30 b4s.log; return 1; }
               # Never fails the bake; on bad inputs it leaves the last bake live.
               node scripts/build_nfl_playoff_page.js > b5.log 2>&1 || tail -10 b5.log
               # NFL_ACCURACY_ONE_SOURCE_20261030: every accuracy figure from the API, incl. graded served predictions.
@@ -129,9 +132,10 @@ jobs:
               node tests/nfl-pages-consistency-test.js > g6.log 2>&1 || { tail -30 g6.log; return 1; }
               node tests/nfl-tbd-kickoff-test.js > g7.log 2>&1 || { tail -30 g7.log; return 1; }
               node tests/mlb-postseason-odds-test.js > g4.log 2>&1 || { tail -30 g4.log; return 1; }
+              node tests/mlb-season-state-gate-test.js > g6.log 2>&1 || { tail -30 g6.log; return 1; }
               node tests/seo-indexability-regression-test.js > g3.log 2>&1 || { tail -40 g3.log; return 1; }
               node tests/sim-run-policy-test.js > g5.log 2>&1 || { tail -30 g5.log; return 1; }
-              git add mlb-playoff-odds mlb-simulator data/mlb-playoff-odds-inputs.json nfl-season-simulator nfl-simulator nfl-playoff-simulator sitemap.xml nba-season-simulator nba-playoff-simulator nhl-season-simulator nhl-playoff-simulator nba-simulator nhl-simulator
+              git add mlb-playoff-odds mlb-simulator data/mlb-playoff-odds-inputs.json data/mlb-season-state.json mlb-game-simulator mlb-season-simulator mlb-playoff-simulator mlb-predictions-simulator mlb-simulation-predictions nfl-season-simulator nfl-simulator nfl-playoff-simulator sitemap.xml nba-season-simulator nba-playoff-simulator nhl-season-simulator nhl-playoff-simulator nba-simulator nhl-simulator
               if git diff --cached --quiet; then echo "Simulator pages already current."; return 0; fi
               git commit -q -m "chore(sims): bake NBA and NHL season and playoff simulators [skip ci]"
               if git push -q origin HEAD:main; then git show --stat --oneline HEAD | head -20; return 0; fi

@@ -130,7 +130,10 @@ if (built.postseason) {
         const ws1 = (desc.match(/([^ ]+) to win the World Series/) || [])[1];
         const st = status[t.espn_abbr].state;
         if (st !== 'alive' && st !== 'champion') {
-            ok(t.name + ' (' + st + ') page says 0% to win the World Series', ws1 === '0%', ws1);
+            /* MLB_SEASON_COMPLETE_20261030: once the World Series is over the
+               description states the final result instead of a percentage. */
+            const finalDesc = / final: /.test(desc) && / won the World Series\.$/.test(desc) && !desc.startsWith(t.name + ' ' + built.season + ' final: ' + t.w + ' and ' + t.l + ', made the postseason, won');
+            ok(t.name + ' (' + st + ') page says 0% to win the World Series', ws1 === '0%' || finalDesc, ws1 || desc);
         }
         if (/under 1%/.test(html)) ok(t.name + ' page has no "under 1%" after the regular season', false);
         pages++;
