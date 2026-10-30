@@ -53,4 +53,13 @@ assert.ok(/<div id="dsNavReserve" aria-hidden="true" style="height:calc\(70px \*
 assert.ok(/<section class="feat" id="featured" aria-labelledby="featTitle">/.test(sim), 'hero visible (reserved) from the first frame');
 assert.ok(/\.feat\{min-height:170px/.test(sim) && /<p id="boardAimNote"><\/p>/.test(sim));
 assert.ok(sim.indexOf('data-roster-clock="nfl"') > sim.indexOf('<div id="games"'), 'roster clock sits below the game grid');
+// --- NFL_ACC_NO_STALE_FALLBACK_20261030: no silent fallback to a frozen accuracy file ---
+assert.ok(!sim.includes("get('/nfl-simulator/accuracy-ytd.json')"), 'the season-to-date table must not fall back to the static file');
+// --- NFL_WP_PAIR_ROUNDING_20261030: paired win chances add up ---
+const m = /const wpPair=[^\n]*/.exec(sim); assert.ok(m, 'wpPair helper');
+const wpPair = new Function(m[0] + '\nreturn wpPair;')();
+for (let i = 0; i <= 1000; i++) { const h = i / 1000; const [a, b] = wpPair(h, 1 - h); assert.strictEqual(a + b, 100, 'pair ' + h); const [c, d] = wpPair(1 - h, h); assert.strictEqual(c, b); assert.strictEqual(d, a); }
+assert.deepStrictEqual(wpPair(0.605, 0.395), [61, 39]);
+assert.strictEqual(wpPair(0.6, 0.395).reduce((x, y) => x + y), 100, 'with a 0.5% tie chance the pair still totals the rounded 100');
+assert.ok(!sim.includes('${pct(homeWP)}</span>') && !sim.includes("{textContent:pct(wpv)+' to win'}"), 'paired displays use wpTxt');
 console.log('NFL_PAGES_CONSISTENCY PASSED');

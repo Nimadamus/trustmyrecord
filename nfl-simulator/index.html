@@ -549,7 +549,7 @@
 
   <!-- NFL_SERVED:start -->
   <h2 id="live-accuracy">Live accuracy: the predictions this page served</h2>
-  <p class="acc-prov" id="nflServedProv"><b>Live, graded:</b> The win probability the public NFL simulator serves for each game by default (10,000 simulations, projected rosters, no what-if changes, the game's real home team), recorded before kickoff and graded against the final score. Between 10 and 90 minutes before kickoff, timestamped by the database clock. A record can never be changed after it is written.</p>
+  <p class="acc-prov" id="nflServedProv"><b>Live, graded:</b> The win probability the public NFL simulator serves for each game by default (10,000 simulations, projected rosters, no what-if changes, the game's real home team), recorded before kickoff and graded against the final score. Between 10 and 75 minutes before kickoff, timestamped by the database clock. A record can never be changed after it is written.</p>
   <div class="acc" id="nflServed">
     <table>
       <caption>2026 season, 44 graded games, Oct 8, 2026 to Oct 29, 2026 (weeks 5, 6, 7, 8). Model nfl-sim-drive-v1; configuration hash not recorded for these games; engine 6881a3e4, 7a39756f, a6456808, 97dc4369, 3b66b517.</caption>
@@ -601,9 +601,11 @@
   (function(){
     var box=document.getElementById('nflAccYtd');if(!box||!window.fetch)return;
     // ACCURACY_AUTOMATION_20261006: the automated report from the API (refreshed
-    // every Tuesday and Wednesday morning), with the committed file as fallback.
+    // every Tuesday and Wednesday morning). NFL_ACC_NO_STALE_FALLBACK_20261030: no fallback to the
+    // committed accuracy-ytd.json (frozen at week 4, Oct 6): if the API does not answer, the
+    // season-to-date table stays hidden rather than showing old numbers as current.
     var get=function(u){return fetch(u,{cache:'no-cache'}).then(function(r){return r.ok?r.json():null})};
-    get('https://trustmyrecord-api.onrender.com/api/nfl/public/accuracy').catch(function(){return null}).then(function(d){return d&&d.ytd?d:get('/nfl-simulator/accuracy-ytd.json')}).then(function(d){
+    get('https://trustmyrecord-api.onrender.com/api/nfl/public/accuracy').catch(function(){return null}).then(function(d){
       if(!d||!d.ytd||!d.ytd.model||!d.games||!d.games.length)return;
       if(d.holdout&&d.holdout.model){var ht=document.getElementById('nflAccHold');if(ht){[].forEach.call(ht.querySelectorAll('[data-k]'),function(td){var k=td.getAttribute('data-k').split('.'),v=d.holdout[k[0]]&&d.holdout[k[0]][k[1]];if(v==null)return;td.textContent=/accuracy/.test(k[1])?(v*100).toFixed(2)+'%':(k[1]==='margin_mae'?v.toFixed(1)+' points':v.toFixed(4))});}}
       var M=d.ytd.model,K=d.ytd.market_favourite||{};
@@ -795,6 +797,11 @@ const $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const el=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e};
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const pct=(v,d=0)=>v==null?'n/a':(v*100).toFixed(d)+'%';
+/* NFL_WP_PAIR_ROUNDING_20261030: two win chances shown side by side are rounded as a pair
+   (largest remainder) so they add up to the rounded total (100%, or less when ties are
+   possible); rounding each on its own printed 61% + 40% = 101%. */
+const wpPair=(v,o)=>{if(v==null||o==null)return [v==null?null:Math.round(v*100),o==null?null:Math.round(o*100)];const t=Math.round((v+o)*100),fv=v*100,fo=o*100;let a=Math.floor(fv),b=Math.floor(fo),r=t-a-b;const firstA=(fv-a)>(fo-b)||((fv-a)===(fo-b)&&v>=o);while(r>0){if(firstA){a++;r--;if(r>0){b++;r--}}else{b++;r--;if(r>0){a++;r--}}}return [a,b]};
+const wpTxt=(v,o)=>{const x=wpPair(v,o)[0];return x==null?'n/a':x+'%'};
 const nz=v=>v==null?'n/a':v;
 const fmtN=n=>Number(n).toLocaleString();
 const TEAMCOL={ARI:'#97233F',ATL:'#A71930',BAL:'#241773',BUF:'#00338D',CAR:'#0085CA',CHI:'#0B162A',CIN:'#FB4F14',CLE:'#311D00',DAL:'#003594',DEN:'#FB4F14',DET:'#0076B6',GB:'#203731',HOU:'#03202F',IND:'#002C5F',JAX:'#006778',KC:'#E31837',LV:'#000000',LAC:'#0080C6',LA:'#003594',MIA:'#008E97',MIN:'#4F2683',NE:'#002244',NO:'#D3BC8D',NYG:'#0B2265',NYJ:'#125740',PHI:'#004C54',PIT:'#FFB612',SF:'#AA0000',SEA:'#002244',TB:'#D50A0A',TEN:'#0C2340',WAS:'#5A1414'};
@@ -1616,7 +1623,7 @@ function renderResult(out,d){
   const mg=p.margin!=null?p.margin:p.median_margin;
   const byTxt=v=>{if(v==null||!Number.isFinite(+v))return 'n/a';const n=Math.round(Math.abs(+v)*10)/10;return n<0.05?'even':`${+v>0?hAbbr:aAbbr} by ${n}`};
   const favAbbr=homeWP>=awayWP?hAbbr:aAbbr;
-  const headTxt=(mg==null||!Number.isFinite(+mg))?`Model: ${favAbbr} ${pct(Math.max(homeWP,awayWP))} to win`
+  const headTxt=(mg==null||!Number.isFinite(+mg))?`Model: ${favAbbr} ${wpTxt(Math.max(homeWP,awayWP),Math.min(homeWP,awayWP))} to win`
     :(Math.abs(+mg)<0.05?'Model: even game':`Model: ${byTxt(mg)}`);
   const mh=el('section','mh');mh.id='simHeadline';mh.setAttribute('aria-labelledby','resultHeading');
   mh.style.borderTop=`2px solid ${col(favAbbr)}`;
@@ -1632,7 +1639,7 @@ function renderResult(out,d){
     const pt=Object.assign(el('div','pts'+(won===false?' l':'')),{textContent:nz(ptsv)});
     pt.style.borderBottomColor=col(abbr);
     s.appendChild(pt);
-    s.appendChild(Object.assign(el('div','wp'),{textContent:pct(wpv)+' to win'}));
+    s.appendChild(Object.assign(el('div','wp'),{textContent:wpTxt(wpv,wpv===homeWP?awayWP:homeWP)+' to win'}));
     return s;
   };
   const neutral=env&&env.neutral;
@@ -1719,7 +1726,7 @@ function renderResult(out,d){
   /* ---- charts (from real sim output) ---- */
   const charts=el('div','chartgrid');
   charts.appendChild(chartCard('Win probability',svgWinDonut(homeWP,awayWP,hAbbr,aAbbr),
-    `<div class="legend"><span><i style="background:${col(hAbbr)}"></i>${esc(hAbbr)} ${pct(homeWP)}</span><span><i style="background:${col(aAbbr)}"></i>${esc(aAbbr)} ${pct(awayWP)}</span></div>`));
+    `<div class="legend"><span><i style="background:${col(hAbbr)}"></i>${esc(hAbbr)} ${wpTxt(homeWP,awayWP)}</span><span><i style="background:${col(aAbbr)}"></i>${esc(aAbbr)} ${wpTxt(awayWP,homeWP)}</span></div>`));
   charts.appendChild(chartCard('Projected points by team · average of '+nSims+' simulations',svgPointsByTeam(p.score.home,p.score.away,hAbbr,aAbbr,g.home,g.away)));
   if(p.distributions&&p.distributions.margin&&p.distributions.margin.length){
     // MARKER_COLLISION_20260817: both markers were always drawn, so on a
@@ -2752,7 +2759,7 @@ function resultCard(S){
   c.innerHTML=`<div class="brand">TrustMyRecord NFL Simulator</div>`
     +(S.scenario!=='Real availability'?`<div class="dim" style="margin-top:4px;font-size:.8rem">${esc(S.scenario)}</div>`:'');
   const teams=el('div','teams');
-  const tm=(abbr,wp)=>{const t=el('div','tm');t.appendChild(teamMark(abbr,48));t.appendChild(Object.assign(el('div','ab'),{textContent:abbr}));const w=Object.assign(el('div','wp'),{textContent:pct(wp)});w.style.color=abbr===fav?'var(--good)':'var(--ink)';t.appendChild(w);return t};
+  const tm=(abbr,wp)=>{const t=el('div','tm');t.appendChild(teamMark(abbr,48));t.appendChild(Object.assign(el('div','ab'),{textContent:abbr}));const w=Object.assign(el('div','wp'),{textContent:wpTxt(wp,abbr===S.home?S.awayWP:S.homeWP)});w.style.color=abbr===fav?'var(--good)':'var(--ink)';t.appendChild(w);return t};
   teams.appendChild(tm(S.away,S.awayWP));
   const mid=el('div','mid');mid.innerHTML=`<div>projected</div><div class="sc">${esc(S.score.away)}<span style="color:var(--dim)"> to </span>${esc(S.score.home)}</div><div>${S.sims?fmtN(S.sims)+' sims':''}</div>`;
   teams.appendChild(mid);teams.appendChild(tm(S.home,S.homeWP));c.appendChild(teams);
@@ -2782,8 +2789,8 @@ async function drawCardPng(S,withImages){
   await logo(S.away,230);await logo(S.home,970);
   x.textAlign='center';
   const fav=S.homeWP>=S.awayWP?S.home:S.away;
-  x.font=`800 64px ${F}`;x.fillStyle=S.away===fav?'#34d399':'#e8eef7';x.fillText(pct(S.awayWP),230,380);
-  x.fillStyle=S.home===fav?'#34d399':'#e8eef7';x.fillText(pct(S.homeWP),970,380);
+  x.font=`800 64px ${F}`;x.fillStyle=S.away===fav?'#34d399':'#e8eef7';x.fillText(wpTxt(S.awayWP,S.homeWP),230,380);
+  x.fillStyle=S.home===fav?'#34d399':'#e8eef7';x.fillText(wpTxt(S.homeWP,S.awayWP),970,380);
   x.font=`600 22px ${F}`;x.fillStyle='#94a3b8';x.fillText('win probability',230,412);x.fillText('win probability',970,412);
   x.fillStyle='#94a3b8';x.font=`600 24px ${F}`;x.fillText('projected score',600,200);
   x.fillStyle='#e8eef7';x.font=`800 96px ui-monospace,Menlo,Consolas,monospace`;x.fillText(`${S.score.away}  ${S.score.home}`,600,300);
