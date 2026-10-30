@@ -128,6 +128,8 @@ jobs:
               node scripts/build_nfl_playoff_page.js > b5.log 2>&1 || tail -10 b5.log
               # NFL_ACCURACY_ONE_SOURCE_20261030: every accuracy figure from the API, incl. graded served predictions.
               node scripts/build_nfl_accuracy_copy.js > b6.log 2>&1 || tail -10 b6.log
+              # NHL_EVALUATION_20261030: hub accuracy from the live ledger + accuracy report; keeps the last good copy on failure.
+              node scripts/stamp-nhl-evaluation.js --fetch > b7.log 2>&1 || { tail -10 b7.log; git checkout -q -- data/nhl-evaluation.json nhl-simulator/index.html; }
               # THE GATES run before the commit: a failing gate publishes nothing.
               node tests/playoff-bracket-test.js > g1.log 2>&1 || { tail -30 g1.log; return 1; }
               node tests/league-season-engine-test.js > g2.log 2>&1 || { tail -30 g2.log; return 1; }
@@ -141,7 +143,8 @@ jobs:
               node tests/league-sim-consistency-test.js > g8.log 2>&1 || { tail -30 g8.log; return 1; }
               node tests/nba-team-season-label-test.js > g9.log 2>&1 || { tail -30 g9.log; return 1; }
               node tests/nba-accuracy-copy-test.js > g10.log 2>&1 || { tail -30 g10.log; return 1; }
-              git add mlb-playoff-odds mlb-simulator data/mlb-playoff-odds-inputs.json data/mlb-season-state.json mlb-game-simulator mlb-season-simulator mlb-playoff-simulator mlb-predictions-simulator mlb-simulation-predictions nfl-season-simulator nfl-simulator nfl-playoff-simulator sitemap.xml nba-season-simulator nba-playoff-simulator nhl-season-simulator nhl-playoff-simulator nba-simulator nhl-simulator
+              node tests/nhl-evaluation-page-test.js > g11.log 2>&1 || { tail -30 g11.log; return 1; }
+              git add mlb-playoff-odds mlb-simulator data/mlb-playoff-odds-inputs.json data/mlb-season-state.json mlb-game-simulator mlb-season-simulator mlb-playoff-simulator mlb-predictions-simulator mlb-simulation-predictions nfl-season-simulator nfl-simulator nfl-playoff-simulator sitemap.xml nba-season-simulator nba-playoff-simulator nhl-season-simulator nhl-playoff-simulator nba-simulator nhl-simulator data/nhl-evaluation.json
               if git diff --cached --quiet; then echo "Simulator pages already current."; return 0; fi
               git commit -q -m "chore(sims): bake NBA and NHL season and playoff simulators [skip ci]"
               if git push -q origin HEAD:main; then git show --stat --oneline HEAD | head -20; return 0; fi
