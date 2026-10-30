@@ -3844,6 +3844,10 @@
             if (!el || !defSide || !Array.isArray(defSide.pitchers)) return;
             var arms = defSide.pitchers, idx = arms.indexOf(pitcher);
             if (idx < 0 || idx >= arms.length - 1) return; // no arm available to replace him
+            // NO_ZERO_WORK_LINE_20261030: a reliever who has not yet faced a batter
+            // cannot leave on this check; he would carry a 0 BF / 0 out box line
+            // (seed recon-962). His appearance is checked at his next boundary.
+            if (workloadV2() && ((pitcher.acc && pitcher.acc.bf) || 0) === 0) return;
             var injMult = (typeof window !== 'undefined' && Number(window.__EL_INJURY_MULT)) || 1;
             var ejMult = (typeof window !== 'undefined' && Number(window.__EL_EJECT_MULT)) || 1;
             var injured = random() < EL_INJURY.perPitcherAppearance * injMult;
@@ -5467,7 +5471,10 @@
         // long-relief outing, not an unbounded one.
         var EMERGENCY_ARM_CEILING = 12;
         var relievers = side.pitchers.filter(function (p) { return p.role === 'CL' || p.role === 'SU' || p.role === 'RP' || p.role === 'BULK'; });
-        var allSpent = relievers.length > 0 && relievers.every(function (p) { return p.removed || armOutsThisGame(p) >= EMERGENCY_ARM_CEILING; });
+        // The depth arm's next inning is a full one: from 11 outs it would end at
+        // 14, past any one-role relief outing, so he is spent at 11.
+        function emergencySpent(p) { return armOutsThisGame(p) >= (workloadV2() && p === side.depthArm ? 11 : EMERGENCY_ARM_CEILING); }
+        var allSpent = relievers.length > 0 && relievers.every(function (p) { return p.removed || emergencySpent(p); });
         if (allSpent) {
             // EMERGENCY_DEPTH_ARM_20260727: only 3 relief arms are ever named (the
             // ones with real season stats worth tracking - see evRelieverArms), so
@@ -5488,7 +5495,10 @@
             // (its role is 'RP', included in `relievers` above) and the position
             // player fallback below still applies.
             evDepthArm(side);
-            if (side.depthArm && armUnderCap(side.depthArm)) { side.minArmIdx = side.depthArmIdx; return side.depthArm; }
+            // DEPTH_ARM_CEILING_20261030: the depth arm is held to the same
+            // emergency ceiling as everyone else (a 14-inning stress game had him
+            // at 14 outs / 88 pitches); past it a position player takes the ball.
+            if (side.depthArm && armUnderCap(side.depthArm) && !emergencySpent(side.depthArm)) { side.minArmIdx = side.depthArmIdx; return side.depthArm; }
             if (workloadV2() && side.posPitcher && side.posPitcher.removed) side.posPitcher = null;
             if (!side.posPitcher) {
                 var pp2 = evMakePositionPitcher(side);
