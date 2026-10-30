@@ -114,6 +114,9 @@ jobs:
           bake() {
             for attempt in 1 2 3; do
               git fetch -q origin main && git reset -q --hard origin/main || return 1
+              # NBA_TEAM_PAGES_LIVE_20261030: NBA team pages from the live API (season-labelled records,
+              # rotations, injuries); never fatal, a failure keeps the committed pages.
+              node scripts/build_sim_team_pages.js --sports nba > bt.log 2>&1 || { tail -10 bt.log; git checkout -q -- nba-simulator/teams; }
               node scripts/build_league_sim_pages.js > b1.log 2>&1 || { tail -30 b1.log; return 1; }
               node scripts/build_nfl_season_page.js > b2.log 2>&1 || { tail -30 b2.log; return 1; }
               node scripts/build_nfl_team_pages.js > b3.log 2>&1 || { tail -30 b3.log; return 1; }
@@ -135,6 +138,9 @@ jobs:
               node tests/mlb-season-state-gate-test.js > g6.log 2>&1 || { tail -30 g6.log; return 1; }
               node tests/seo-indexability-regression-test.js > g3.log 2>&1 || { tail -40 g3.log; return 1; }
               node tests/sim-run-policy-test.js > g5.log 2>&1 || { tail -30 g5.log; return 1; }
+              node tests/league-sim-consistency-test.js > g8.log 2>&1 || { tail -30 g8.log; return 1; }
+              node tests/nba-team-season-label-test.js > g9.log 2>&1 || { tail -30 g9.log; return 1; }
+              node tests/nba-accuracy-copy-test.js > g10.log 2>&1 || { tail -30 g10.log; return 1; }
               git add mlb-playoff-odds mlb-simulator data/mlb-playoff-odds-inputs.json data/mlb-season-state.json mlb-game-simulator mlb-season-simulator mlb-playoff-simulator mlb-predictions-simulator mlb-simulation-predictions nfl-season-simulator nfl-simulator nfl-playoff-simulator sitemap.xml nba-season-simulator nba-playoff-simulator nhl-season-simulator nhl-playoff-simulator nba-simulator nhl-simulator
               if git diff --cached --quiet; then echo "Simulator pages already current."; return 0; fi
               git commit -q -m "chore(sims): bake NBA and NHL season and playoff simulators [skip ci]"
