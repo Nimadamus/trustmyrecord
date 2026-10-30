@@ -351,3 +351,51 @@ Expected game total vs actual, 2026 holdout (n=42, 95% bootstrap CI):
   (0.676 to 0.699).
 - Not scaled to >= 300 games: the run guard (>= 1500 MB free RAM, >= 8 GiB disk)
   was not met (581 MB, 6 GB).
+
+---
+
+## 2026-10-30: release integration onto main, strikeout trim, shelled-starter leash
+
+Integrated onto origin/main 83ee8d02 by cherry-picking 30ce580aa, e49e6ef9d and
+bf8ff2e0b (only conflict: mlb-simulator/index.html; main's header reserve,
+roster clock and season banner kept). Two measured fixes on top, both under
+`workloadV2()`:
+
+* `K_TRIM_RECAL_20261030`: `EV_K_TRIM` 0.88 (fitted in June) over-trimmed after
+  later engine changes. 0.95 under the flag.
+* `SHELLED_STARTER_LEASH_20261030`: mid-inning run hook 7 runs (5 at 75+
+  pitches), hit hook 9 (7 at 75+), boundary rocky hook needs 70+ pitches.
+
+Sample: 700 real 2025-26 matchups (the `_audit/bt/games600.json` set), 4 games
+each, REAL current rosters captured through the engine's own fetch path
+(30 clubs, 684 player lines), same seeds for live and candidate. Real column =
+the same 700 statsapi boxscores. Default starters (as a visitor runs it):
+
+| metric | real | live (main) | this release |
+|---|---|---|---|
+| runs / team-game | 4.50 | 4.42 | 4.51 |
+| hits | 8.19 | 8.56 | 8.49 |
+| HR | 1.17 | 1.27 | 1.25 |
+| walks | 3.34 | 3.32 | 3.35 |
+| strikeouts (K%) | 8.43 (~22%) | 7.89 (20.3%) | 8.35 (21.6%) |
+| pitchers / team-game | 4.32 | 4.85 | 4.55 |
+| starter pitches p10/50/90 | 64/88/100 | 48/76/102 | 65/87/101 |
+| starts 100+ / 105+ pitches | 10.2% / 2.8% | 15.5% / 6.3% | 13.8% / 3.3% |
+| starts under 70 pitches | 14.0% | 38.5% | 13.5% |
+| 5+ ER starts under 70 pitches | 16.2% | 60.4% | 17.1% |
+| starts of 6+ IP | 35.6% | 26.6% | 27.5% |
+| closer 7+ outs / 35+ pitches | ~0 / ~1.5% | 4.1% / 5.5% | 0 / 1.8% |
+| position player pitched | 2.7-2.9% | 8.9% | 3.9% |
+| extra innings / halves with runner | 9.7% / all | 10.5% / 0 of 1,396 | 10.0% / 840 of 840 |
+
+Misiorowski (WS fixture, 1,000 seeded games each, regular / postseason):
+live p50 78 / 74 pitches, 31.8% / 40.2% of starts under 70, dominant starts
+lifted before 6 IP under 80 pitches 44.7% / 58.5%. This release: p50 89 / 84
+(real 2026: 93 regular, 88 postseason), under 70 10.9% / 22.2% (real 3 of 30),
+dominant early lift 18.4% / 27.6% (real league 19.8% / 30.6%).
+
+Open (measured, not fixed): 6+ IP starts 27.5% vs 35.6% and 100-pitch starts
+13.8% vs 10.2% (pitches per out run high late in starts); hits +0.3 and HR +0.07
+a team-game; elite hit suppression is capped (`hitFactor` floor 0.78), so
+Misiorowski allows 4.3 H a start against a real 3.3 and the 7-hit hook fires in
+~10% of his starts.
