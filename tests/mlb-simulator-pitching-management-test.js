@@ -511,6 +511,24 @@ console.log('RECONCILIATION (roster-less clubs)');
   sim.state.liveContext.teamRosters.TB = savedTB; sim.state.liveContext.teamRosters.MIL = savedMIL;
 }
 
+// ---------------------------------------------------------- strikeout rate
+// K_TRIM_RECAL_20261030: real MLB strikes out 22.2% (2025) / ~22% (2026) of
+// batters. The June trim left the shipped build at 20.4-21.0% here, which is
+// what this band rejects; the recalibrated build reads 22.5%.
+console.log('STRIKEOUT RATE (600 league games)');
+{
+  const cur = sim.localTeams.current;
+  let so = 0, bf = 0;
+  for (let i = 0; i < 600; i++) {
+    const a = cur[i % cur.length], h = cur[(i * 7 + 3) % cur.length];
+    if (a === h) continue;
+    const r = sim.simulate(a, h, sim.state.liveContext, 'krate|' + i, false, 'clear', { wpSamples: 1 });
+    ['away', 'home'].forEach((k) => r.boxScore.players[k].pitchers.forEach((p) => { so += p.so; bf += p.bf; }));
+  }
+  const kp = so / bf;
+  check('strikeout rate within the real 2025-26 band (21.5% to 23.5%)', kp >= 0.215 && kp <= 0.235, (100 * kp).toFixed(1) + '%');
+}
+
 // ------------------------------------------------------------- determinism
 {
   const a = run(7, { tag: 'det', ps: true }).boxScore.players.home.pitchers.map((p) => p.name + p.outs + '/' + p.pitches).join();

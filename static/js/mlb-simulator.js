@@ -2685,6 +2685,15 @@
     // to in-play outs so on-base/run rates stay anchored. Applied inside
     // evCombine so the anchor and live play see the same distribution.
     var EV_K_TRIM = 0.88;
+    // K_TRIM_RECAL_20261030 (workloadV2 only, so the flag-off path is unchanged):
+    // the 0.88 trim was fitted in June, before the plate appearance engine and
+    // the pitching-management layer changed who faces whom. Measured 2026-10-30
+    // on 700 real 2025-26 matchups x 4 games, real current rosters, same seeds:
+    // 0.88 gave 7.78 K per team-game (20.2%) against a real 8.43 on the same
+    // games; 0.95 gives 8.37 (21.7%), +0.59 [+0.51, +0.68], with runs, hits,
+    // walks, homers and pitcher usage unchanged inside their 95% intervals.
+    var EV_K_TRIM_V2 = 0.95;
+    function evKTrim() { return workloadV2() ? EV_K_TRIM_V2 : EV_K_TRIM; }
     // log5/odds-ratio bias correction (Morey & Cohen 2015): the odds-ratio combine is the
     // correct standard for batter x pitcher matchups, but it is documented to OVER-skew at
     // probabilities far from .500. Walks (~0.085) and HR (~0.030) are low-base events, so
@@ -2714,7 +2723,7 @@
         function deskew(raw, league, k) { return raw > league ? league + (raw - league) * k : raw; }
         var hf = pv && pv.hitFactor != null ? pv.hitFactor : 1;
         var soRaw = orc(bv.so, pv.so, EV_LEAGUE.so);
-        var soTrimmed = soRaw * EV_K_TRIM;
+        var soTrimmed = soRaw * evKTrim();
         var bb = clamp(deskew(orc(bv.bb, pv.bb, EV_LEAGUE.bb), EV_LEAGUE.bb, EV_BB_BIAS), 0.02, 0.150);
         var hr = clamp(deskew(orc(bv.hr, pv.hr, EV_LEAGUE.hr), EV_LEAGUE.hr, EV_HR_BIAS), 0.004, 0.090);
         var b3Raw = bv.b3 * hf, b2Raw = bv.b2 * hf, b1Raw = bv.b1 * hf;
