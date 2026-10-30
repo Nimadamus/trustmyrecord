@@ -297,6 +297,23 @@ def avail(section):
 # ---------------------------------------------------------------------------
 # data gathering
 # ---------------------------------------------------------------------------
+OFFSEASON_LOOKAHEAD_DAYS = 14
+
+
+def mlb_next_game_date(today):
+    """First date with any MLB game (any game type) in the next
+    OFFSEASON_LOOKAHEAD_DAYS days, or None. Raises like get_json on a feed error,
+    so an outage can never pass for an off season."""
+    start = dt.date.fromisoformat(today)
+    end = start + dt.timedelta(days=OFFSEASON_LOOKAHEAD_DAYS)
+    d = get_json("%s/schedule?sportId=1&startDate=%s&endDate=%s"
+                 % (STATS_API, start.isoformat(), end.isoformat()))
+    for day in d.get("dates") or []:
+        if day.get("games"):
+            return day.get("date")
+    return None
+
+
 def fetch_schedule(date):
     # venue(location) rather than plain venue: the location block is where the
     # feed keeps the park's real postal address, which Google asks for inside
@@ -2034,6 +2051,13 @@ def build(dates, today, dry_run=False, workers=4):
         trends_by_date[date] = day_trends
 
     if not hub_rows_by_date:
+        nxt = mlb_next_game_date(today)
+        if nxt is None:
+            # Season over (or not started): an empty window is the calendar, not a
+            # provider blip. Leave the last good bake live and succeed quietly.
+            print("\n  OFF-SEASON: no MLB game on %s or in the next %d days; "
+                  "nothing written, the last bake stays live." % (", ".join(dates), OFFSEASON_LOOKAHEAD_DAYS))
+            return 0
         raise BuildError("no MLB games found for %s, refusing to write an empty slate"
                          % ", ".join(dates))
 
