@@ -820,16 +820,16 @@
                 'midnight Pacific. Until then, each extra run costs <b>' + METER_COST + ' TMR</b>.</p>' +
                 (hasBalance ? '<div class="tsg-bal"><span>Your TMR balance</span><b>' + fmtTmr(st.balance) + ' TMR</b></div>' +
                     '<div class="tsg-cost"><span>This run</span><b>' + METER_COST + ' TMR</b></div>' : '') +
-                '<div class="tsg-actions">' +
+                /* PRO_FIRST_METER_20261031 (Nima "go"): every Pro buyer so far came through the
+                   simulators, and TMR credit sales are closed (10/25), so the old primary
+                   "Buy TMR" button led to a closed store. TMR Pro is now the primary action;
+                   spending TMR the member already holds stays available as the secondary. */
+                '<a class="tsg-btn is-primary" id="tsgMeterPro" href="/premium/?from=sim_meter&src=sim_meter#pricing">Go unlimited with TMR Pro</a>' +
+                '<p class="tsg-note" style="margin-top:6px">Unlimited runs on every simulator, the Handicapper Watchdog board of graded handicappers outside TMR, and BetLegend Pro. $49.99/month, cancel any time.</p>' +
                 (canAfford
-                    ? '<button type="button" class="tsg-btn is-primary" id="tsgMeterPay">Run it for ' + METER_COST + ' TMR</button>' +
-                      '<button type="button" class="tsg-btn is-ghost" id="tsgMeterBuy">Buy more TMR</button>'
-                    : '<button type="button" class="tsg-btn is-primary" id="tsgMeterBuy">Buy TMR</button>') +
-                '</div>' +
-                '<a class="tsg-btn is-ghost" id="tsgMeterPro" href="/premium/" style="margin-top:10px">Go unlimited with TMR Pro</a>' +
-                '<p class="tsg-note" style="margin-top:6px">TMR Pro includes unlimited runs on every simulator plus BetLegend Pro, $49.99/month or $500/year.</p>' +
+                    ? '<div class="tsg-actions"><button type="button" class="tsg-btn is-ghost" id="tsgMeterPay">Or run it for ' + METER_COST + ' TMR from your balance</button></div>'
+                    : '') +
                 '<button type="button" class="tsg-later" id="tsgMeterLater">Not right now</button>' +
-                '<p class="tsg-note">Pay by card. TMR goes straight into your TrustMyRecord wallet. $5 buys 250 TMR.</p>' +
                 '</div>';
             document.body.appendChild(overlay);
             modalEl = overlay;
@@ -850,7 +850,6 @@
                 closeModal(null);
                 resolve(chargeRun());
             });
-            qs('tsgMeterBuy').addEventListener('click', function () { finish(false, null); goBuy(); });
             qs('tsgMeterLater').addEventListener('click', function () { finish(false, 'not_now'); });
             qs('tsgMeterPro').addEventListener('click', function () { track('simulator_pro_clicked', { simulator: meterKey() }); finish(false, null); });
             qs('tsgMeterClose').addEventListener('click', function () { finish(false, 'close_button'); });
@@ -860,7 +859,7 @@
                 if (!overlay.parentNode) { clearInterval(watch); finish(false, null); }
             }, 250);
             track('simulator_meter_impression', { simulator: meterKey(), can_afford: canAfford ? 'yes' : 'no' });
-            setTimeout(function () { try { (pay || qs('tsgMeterBuy')).focus(); } catch (e) { } }, 30);
+            setTimeout(function () { try { (qs('tsgMeterPro') || pay).focus(); } catch (e) { } }, 30);
         });
     }
 

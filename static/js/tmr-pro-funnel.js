@@ -60,10 +60,10 @@
     }
     /* PAYWALL_20261024 (Nima): which games the proven handicappers are on is TMR Pro only. The API
        answers it to a signed in Pro member only; everyone else gets no game lines at all. */
-    var gamesP = null;
+    var gamesP = null, proMember = false;
     function proGames() {
         if (!signedIn()) return Promise.resolve({ games: [] });
-        if (!gamesP) gamesP = authGet('/pro/watchdog/games').then(function (b) { return b.__status === 200 ? b : { games: [] }; })
+        if (!gamesP) gamesP = authGet('/pro/watchdog/games').then(function (b) { if (b.__status === 200) { proMember = true; return b; } return { games: [] }; })
             .catch(function () { gamesP = null; return { games: [] }; });
         return gamesP;
     }
@@ -155,6 +155,13 @@
             '.tpf-simline{margin:14px 0 6px}.tpf-simline .tpf-chip{max-width:100%;white-space:normal;border-radius:14px}',
             '.tpf-simlink{display:block;padding:10px 14px;border-radius:12px;border:1px solid rgba(140,196,255,.25);background:rgba(140,196,255,.06);color:inherit;text-decoration:none;font:500 13.5px/1.5 Inter,system-ui,sans-serif}',
             '.tpf-simlink u{color:#F5C542;font-weight:800}.tpf-simlink:hover{border-color:#F5C542}',
+            '.tpf-offer{margin:14px 0;padding:16px 18px;border-radius:14px;border:1px solid rgba(245,197,66,.45);background:linear-gradient(180deg,rgba(245,197,66,.10),rgba(140,196,255,.05));color:inherit;font:500 14px/1.5 Inter,system-ui,sans-serif;max-width:100%;box-sizing:border-box}',
+            '.tpf-offer-k{font:800 11px/1.3 Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#F5C542;margin-bottom:6px}',
+            '.tpf-offer-h{display:block;font:800 17px/1.3 Inter,system-ui,sans-serif;margin-bottom:8px}',
+            '.tpf-offer ul{margin:0 0 10px;padding-left:18px}.tpf-offer li{margin:3px 0}',
+            '.tpf-spot{margin:0 0 12px;padding:8px 10px;border-radius:10px;background:rgba(140,196,255,.08);font-size:13px}',
+            '.tpf-offer-btn{display:inline-block;padding:11px 22px;border-radius:10px;background:#F5C542;color:#111;font:800 15px/1 Inter,system-ui,sans-serif;text-decoration:none}.tpf-offer-btn:hover{filter:brightness(1.06)}',
+            '@media (max-width:480px){.tpf-offer{padding:14px}.tpf-offer-btn{display:block;text-align:center}}',
             '.tpf-proof{display:block;margin-top:3px;font-weight:600;font-size:11.5px;color:#cbd8e6}',
             '.tpf-sbhead{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;margin:0 0 12px;padding:10px 14px;border-radius:12px;border:1px solid rgba(245,197,66,.45);background:rgba(245,197,66,.08);color:#dce8f5;text-decoration:none;font:600 14px/1.45 Inter,system-ui,sans-serif}',
             '.tpf-sbhead b{color:#fff}.tpf-sbhead u{color:#F5C542;font-weight:800}.tpf-sbhead:hover{border-color:#F5C542}',
@@ -436,6 +443,50 @@
         host.parentNode.insertBefore(f, host);
     }
 
+    /* PRO_SPOTLIGHT_20261031 (Nima "go"): names stay anonymous (10/26), so the proof is a record,
+       never a name and never a game. Reads the public Around the Web directory (anonymous ids,
+       refreshed by every Watchdog publish), once per visit and only after a finished run. Picks
+       the best unit result among handicappers with 200+ unit graded picks who posted in the last
+       3 days. Shows the record exactly as graded, with the sample size. Omitted silently on any
+       failure. */
+    var spotP = null;
+    function spotlight() {
+        if (spotP) return spotP;
+        try { var c = JSON.parse(sessionStorage.getItem('tpf_spot') || 'null'); if (c && c.handle) return (spotP = Promise.resolve(c)); } catch (e) { }
+        spotP = fetch('/around-the-web/', { cache: 'default' }).then(function (r) { if (!r.ok) throw new Error('atw ' + r.status); return r.text(); }).then(function (t) {
+            var i = t.indexOf('__ATW_DATA = '); if (i < 0) return null;
+            var j = t.indexOf('</script>', i);
+            var d = JSON.parse(t.slice(i + 13, j).trim().replace(/;\s*$/, ''));
+            var cut = Date.now() - 3 * 864e5, best = null;
+            (d.handicappers || []).forEach(function (h) {
+                if (!h || (h.unit_picks || 0) < 200 || typeof h.units !== 'number' || h.units <= 0) return;
+                if (!h.last_pick_at || Date.parse(h.last_pick_at) < cut) return;
+                if (!/^Tracked Handicapper #\d+$/.test(h.handle || '')) return;   /* anonymous ids only */
+                if (!best || h.units > best.units) best = h;
+            });
+            if (!best) return null;
+            var out = { handle: best.handle, record: best.record, units: best.units, roi: best.roi, n: best.unit_picks, src: best.source_label || '' };
+            try { sessionStorage.setItem('tpf_spot', JSON.stringify(out)); } catch (e) { }
+            return out;
+        }).catch(function () { return null; });
+        return spotP;
+    }
+    function spotlightHtml(s) {
+        if (!s) return '';
+        return '<p class="tpf-spot">&#128269; Watchdog record: <b>' + esc(s.handle) + '</b>' + (s.src ? ' (' + esc(s.src) + ')' : '') + ' is <b>' + esc(s.record) + '</b>, <b>+' + esc(s.units.toFixed(1)) + ' units</b> over ' + s.n + ' graded picks. Pro shows their picks before the games start.</p>';
+    }
+    function simOfferHtml(comp, sport, s) {
+        return '<div class="tpf-offer">'
+            + '<div class="tpf-offer-k">TMR Pro &middot; $49.99/month &middot; cancel any time</div>'
+            + '<b class="tpf-offer-h">Run this ' + esc(sport.toUpperCase()) + ' simulator as often as you want</b>'
+            + '<ul><li>Unlimited runs on every simulator, every day</li>'
+            + '<li>The Handicapper Watchdog board: pending picks of graded handicappers outside TMR, before kickoff</li>'
+            + '<li>BetLegend Pro research included</li></ul>'
+            + spotlightHtml(s)
+            + '<a class="tpf-offer-btn" data-tpf-cta="' + comp + '" href="' + proHref(comp, '#pricing') + '">Get TMR Pro</a>'
+            + '</div>';
+    }
+
     function mountSimPostRun(cfg) {
         var comp = 'sim_postrun_' + cfg.sport;
         var shownFor = null;
@@ -480,14 +531,24 @@
                         + ' on ' + esc(g.away) + ' at ' + esc(g.home) + (g.proven ? ' &middot; <b>' + g.proven + ' proven</b>' : '') + ' &middot; <u>See who and what they picked</u>'
                         + (proof ? '<small class="tpf-proof">' + proof + '</small>' : '') + '</span></button>';
                     wrap.querySelector('button').addEventListener('click', function () { preview({ game: g, component: comp }); });
+                } else if (proMember) {
+                    return;   /* a Pro member with no Watchdog game here: nothing to sell */
                 } else {
-                    wrap.innerHTML = '<a class="tpf-simlink" data-tpf-cta="' + comp + '" href="' + proHref(comp, '#top') + '">Your simulation is free. TMR Pro adds the pending picks of graded handicappers outside TMR, game by game, before kickoff. <u>See what Pro includes</u></a>';
-                    wireCtas(wrap);
+                    /* PRO_SIM_OFFER_20261031 (Nima "go"): all three Pro buyers so far landed on a
+                       simulator. After a finished run, a compact offer card replaces the one line link.
+                       Still never before a run and never on the landing state. */
+                    return spotlight().then(function (s) {
+                        if (shownFor !== sig) return;
+                        wrap.innerHTML = simOfferHtml(comp, cfg.sport, s);
+                        wireCtas(wrap);
+                        res.parentNode.insertBefore(wrap, res.nextSibling);
+                        track('tmr_pro_impression', { component: comp, matched_game: 'no', spotlight: s ? 'yes' : 'no' });
+                    });
                 }
                 var cap = captureForm('sim_' + cfg.sport);
                 if (cap) wrap.appendChild(cap);
                 res.parentNode.insertBefore(wrap, res.nextSibling);
-                track('tmr_pro_impression', { component: comp, matched_game: g ? 'yes' : 'no' });
+                track('tmr_pro_impression', { component: comp, matched_game: 'yes' });
             });
         }
         new MutationObserver(function () { clearTimeout(render.t); render.t = setTimeout(render, 400); })
