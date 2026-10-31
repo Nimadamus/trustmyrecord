@@ -28,6 +28,8 @@
         t.title = p.exit.kind === 'injury' ? 'Left the game injured and did not return'
           : (p.exit.why === 'flagrant 2' ? 'Ejected for a Flagrant 2 foul'
             : (p.exit.why === 'two technicals' ? 'Ejected after a second technical foul' : 'Ejected'));
+        t.style.cssText = 'margin-left:6px;padding:0 4px;border:1px solid currentColor;border-radius:4px;'
+          + 'font-size:10px;font-weight:700;letter-spacing:.02em;white-space:nowrap;color:#f59e0b';
         wrap.appendChild(t);
       }
       return wrap;
