@@ -137,8 +137,8 @@
         <div id="tcoin-chain-body" class="tcoin-hidden">
             <div class="tcoin-metrics">
                 <div class="tcoin-metric"><div class="tcoin-metric-label">Wallets holding TMR</div><div class="tcoin-metric-val" id="c-holders">&hellip;</div><div class="tcoin-metric-sub">any balance above zero</div></div>
-                <div class="tcoin-metric"><div class="tcoin-metric-label">Holders excluding us</div><div class="tcoin-metric-val" id="c-external">&hellip;</div><div class="tcoin-metric-sub">not the treasury, not the pool</div></div>
-                <div class="tcoin-metric"><div class="tcoin-metric-label">Transfers, all time</div><div class="tcoin-metric-val" id="c-transfers">&hellip;</div><div class="tcoin-metric-sub" id="c-last">&nbsp;</div></div>
+                <div class="tcoin-metric"><div class="tcoin-metric-label">Holders excluding us</div><div class="tcoin-metric-val" id="c-external">&hellip;</div><div class="tcoin-metric-sub">not the company, not the pools</div></div>
+                <div class="tcoin-metric" id="c-transfers-tile"><div class="tcoin-metric-label">Transfers, all time</div><div class="tcoin-metric-val" id="c-transfers">&hellip;</div><div class="tcoin-metric-sub" id="c-last">&nbsp;</div></div>
             </div>
         </div>
         <h3 class="tcoin-sub">Site credits on TrustMyRecord (not TMR tokens)</h3>
@@ -329,7 +329,12 @@
         if (c && c.live === true) {
             set('c-holders', num(c.holders_total));
             set('c-external', num(c.external_holders));
-            set('c-transfers', num(c.transfers_total));
+            if (c.transfers_total === null || c.transfers_total === undefined) {
+                var tt = document.getElementById('c-transfers-tile');
+                if (tt) tt.style.display = 'none';
+            } else {
+                set('c-transfers', num(c.transfers_total));
+            }
             var last = document.getElementById('c-last');
             if (last) {
                 last.textContent = c.last_transfer_at
