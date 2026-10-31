@@ -2702,7 +2702,7 @@
     // leaving average matchups byte-identical. Walks are NO LONGER scaled by the run anchor
     // (see evScale), so this correction is the only walk adjustment and it is principled,
     // not a run-target hack.
-    var EV_BB_BIAS = 0.80; // shrink the above-league walk excess (1.0 = raw log5)
+    var EV_BB_BIAS = 1.0; // shrink the above-league walk excess (1.0 = raw log5)
     var EV_HR_BIAS = 0.92; // light same-direction shrink for the low-base HR combine
     // HIT_RATE_TRIM_20260725: hits/team ran +0.9-1.0 hot (audit measured ~9.4 vs
     // real 2025 MLB ~8.4-8.5, TeamRankings/Covers-sourced) - an UNGATED metric the
@@ -2724,8 +2724,10 @@
         var hf = pv && pv.hitFactor != null ? pv.hitFactor : 1;
         var soRaw = orc(bv.so, pv.so, EV_LEAGUE.so);
         var soTrimmed = soRaw * evKTrim();
-        var bb = clamp(deskew(orc(bv.bb, pv.bb, EV_LEAGUE.bb), EV_LEAGUE.bb, EV_BB_BIAS), 0.02, 0.150);
-        var hr = clamp(deskew(orc(bv.hr, pv.hr, EV_LEAGUE.hr), EV_LEAGUE.hr, EV_HR_BIAS), 0.004, 0.090);
+        var bbBase = clamp(deskew(orc(bv.bb, pv.bb, EV_LEAGUE.bb), EV_LEAGUE.bb, EV_BB_BIAS), 0.02, 0.150);
+        var bb = bbBase * (workloadV2() ? 1.04 : 1);
+        var hrUntrimmed = clamp(deskew(orc(bv.hr, pv.hr, EV_LEAGUE.hr), EV_LEAGUE.hr, EV_HR_BIAS), 0.004, 0.090);
+        var hr = hrUntrimmed * (workloadV2() ? 0.95 : 1);
         var b3Raw = bv.b3 * hf, b2Raw = bv.b2 * hf, b1Raw = bv.b1 * hf;
         var b3T = b3Raw * EV_HIT_TRIM, b2T = b2Raw * EV_HIT_TRIM, b1T = b1Raw * EV_HIT_TRIM;
         return evNormalize({
@@ -2733,7 +2735,7 @@
             so: soTrimmed,
             hr: hr,
             b3: b3T, b2: b2T, b1: b1T,
-            out: Math.max(0.02, bv.out) + (soRaw - soTrimmed) + (b3Raw - b3T) + (b2Raw - b2T) + (b1Raw - b1T)
+            out: Math.max(0.02, bv.out) + (soRaw - soTrimmed) + (b3Raw - b3T) + (b2Raw - b2T) + (b1Raw - b1T) + (hrUntrimmed - hr) - (bb - bbBase)
         });
     }
     // ULTRA_REAL_20260628: the run anchor flexes a lineup to its target run level by
@@ -2914,7 +2916,11 @@
     }
     function evAnchorFactor(combinedVectors, targetRuns) {
         var t = clamp(targetRuns, 1.4, 11);
-        var target = t * evAnchorTargetCorrection(t);
+        // GAME_REALISM_20261030: with the baserunning fixes the engine turns more
+        // baserunners into runs (runs per hit 0.525 -> 0.540, real 0.549), so the
+        // run target needs fewer hits: hits per team-game 8.38 -> 8.29 (real 8.19),
+        // runs 4.40 -> 4.48 (4.50), AVG .244 -> .243 (.244), OBP .317 (.317).
+        var target = t * evAnchorTargetCorrection(t) * (workloadV2() ? 0.98 : 1);
         function runsAt(f) {
             var avg = { bb: 0, so: 0, hr: 0, b3: 0, b2: 0, b1: 0, out: 0 };
             combinedVectors.forEach(function (v) { var sv = evScale(v, f); for (var k in avg) avg[k] += sv[k] / combinedVectors.length; });
@@ -2940,7 +2946,8 @@
     // (identical base state to a walk), so run scoring / win probability are byte-
     // unchanged; only the free pass's LABEL changes. ~0.13 of walks -> ~0.42 HBP/team-
     // game (real MLB 2025 ~0.40), leaving BB ~2.8/team (well within the validator tol).
-    var EV_HBP_SHARE = 0.13;
+    // GAME_REALISM_20261030: 0.13 gave 0.456 HBP a team-game against a real 0.395.
+    var EV_HBP_SHARE = 0.115;
     // Build per-team lineup (anchored batter vectors + display rows) and staff.
     function evBuildSide(team, oppPitcher, ownStarter, targetRuns, rosterContext, parkHr, simWeather, parkHrByHand, postseasonOpts) {
         var roster = rosterForTeam(team, rosterContext);
@@ -3116,7 +3123,7 @@
             // ERROR_GAME_CAP_20260725: applied per-team-per-game in evPlayHalf via
             // defSide.gameErrors / ERROR_GAME_CAP, not here (this object is built once
             // per team, before any game is played).
-            errRate: clamp(clamp(0.034 + (100 - (team && team.runPrevention || 100)) * 0.0006, 0.016, 0.055) * ((simWeather && simWeather.err) || 1), 0.016, 0.075),
+            errRate: clamp(clamp(0.028 + (100 - (team && team.runPrevention || 100)) * 0.0006, 0.013, 0.055) * ((simWeather && simWeather.err) || 1), 0.016, 0.075),
             // DEFENSE_REALISM_20260727: two more places a fielding team's real
             // quality now moves the outcome, beyond the flat error rate and the
             // team-wide OAA run-scale (defenseRunAdjustment). No per-fielder
@@ -4257,7 +4264,7 @@
                 var blowoutPos = lead !== null && lead <= -8;
                 if ((!blowoutPos && (apptRuns >= 5 || aHits >= 6)) || (blowoutPos && (apptRuns >= 6 || aHits >= 6))) { reason = 'position player removed after allowing ' + (apptRuns >= 5 ? apptRuns + ' runs' : aHits + ' hits'); kind = 'damage'; }
             } else if (aBf >= 3) { // three-batter minimum
-                var midCeil = RELIEF_PITCH_CEILING[pitcher.role] ? RELIEF_PITCH_CEILING[pitcher.role] + (pitcher.role === 'CL' ? 5 : 8 + (pitcher._postseason ? 5 : 0)) - (pitcher.limited ? 12 : 0) : null;
+                var midCeil = RELIEF_PITCH_CEILING[pitcher.role] ? RELIEF_PITCH_CEILING[pitcher.role] + (pitcher._long ? LONG_RELIEF_EXTRA : 0) + (pitcher.role === 'CL' ? 5 : 8 + (pitcher._postseason ? 5 : 0)) - (pitcher.limited ? 12 : 0) : null;
                 if (apptRuns >= 3) { reason = 'allowed ' + apptRuns + ' runs'; kind = 'damage'; }
                 else if (aHits >= 4) { reason = 'allowed ' + aHits + ' hits'; kind = 'damage'; }
                 else if (midCeil && pitcher.role !== 'BULK' && (onBase || pitcher.limited) && (a.pitches || 0) >= midCeil) { reason = 'reliever pitch count (' + a.pitches + ')'; kind = 'workload'; }
@@ -4269,7 +4276,7 @@
                 // October from the 6th within two. Measured: the wider regular
                 // season window used 4.62 pitchers a team-game against a real
                 // 4.21-4.26 (2023-2025), with 6+ pitchers in 22% of games (real 14%).
-                else if (pitcher.role !== 'CL' && outsNow >= (defSide.postseason ? 15 : 18) && onBase && aBf >= (idx === 1 ? 5 : 3) && lead !== null && Math.abs(lead) <= (defSide.postseason ? 2 : 1) && (aHits >= 1 || apptRuns >= 1)) {
+                else if (pitcher.role !== 'CL' && outsNow >= (defSide.postseason ? 15 : 18) && onBase && aBf >= (idx === 1 ? 5 : 3) && lead !== null && Math.abs(lead) <= (defSide.postseason ? 2 : 1) && (defSide.postseason || lead >= 0) && (aHits >= 1 || apptRuns >= 1)) {
                     reason = 'leverage change with runners on (' + (lead === 0 ? 'tie game' : (lead > 0 ? lead + '-run lead' : 'trailing by ' + (-lead))) + ')';
                     kind = 'leverage';
                 }
@@ -4341,7 +4348,7 @@
             apptStartHits = pitcher.acc.h;
             pitcher._apptStartHits = apptStartHits; pitcher._apptStartRuns = pitcher.acc.r; pitcher._apptStartBf = pitcher.acc.bf;
             pitcher._entryReason = reason;
-            if (pitcher._enterMargin === undefined && lead !== null) pitcher._enterMargin = lead;
+            if (pitcher._enterMargin === undefined && lead !== null) pitcher._enterMargin = lead; if (pitcher._longSet === undefined) { pitcher._longSet = true; pitcher._long = pitcher.role === 'RP' && !defSide.postseason && outsNow < LONG_RELIEF_BEFORE_OUTS; }
             // The ladder floor only moves up within the named ladder; a depth or
             // position arm does not lock the closer out of the 9th.
             var closerIdx = -1;
@@ -4598,7 +4605,9 @@
             // and the offline calibration harness never trigger it (calibration-neutral).
             if (bases[0] === null && (bases[1] !== null || bases[2] !== null) && outs >= 1 && b.realOps != null && b.realOps >= 0.830) {
                 var onDeck = lineup[(side.idx + 1) % 9];
-                var ibbProb = outs === 2 ? 0.85 : 0.30;
+                // GAME_REALISM_20261030: 0.85 / 0.30 gave 0.30 IBB a team-game against
+                // a real 0.117 (700 real 2025-26 games); 0.34 / 0.12 measured 0.12.
+                var ibbProb = outs === 2 ? 0.34 : 0.12;
                 if (onDeck && (onDeck.realOps == null || onDeck.realOps < b.realOps - 0.070) && random() < ibbProb) {
                     var ibbBefore = baseSnapshot(), ibbName = bname(bi);
                     b.acc.pa++; b.acc.bb++; b.acc.ibb = (b.acc.ibb || 0) + 1; pitcher.acc.bb++; pitcher.acc.bf++;
@@ -4657,6 +4666,7 @@
             evRuns = [];
             var preOuts = outs;
             var rispAtBat = bases[1] !== null || bases[2] !== null;
+            var paTookThrow = false;
             var runnersOnBefore = (bases[0] !== null ? 1 : 0) + (bases[1] !== null ? 1 : 0) + (bases[2] !== null ? 1 : 0);
             var abBefore = acc.ab, hBefore = acc.h;
             var rbi = 0;
@@ -4680,7 +4690,7 @@
                 acc.ab++; acc.h++; acc.b2++; pitcher.acc.h++;
                 if (bases[2] !== null) { score(bases[2], !bu[2], bp[2]); rbi++; bases[2] = null; bp[2] = null; bu[2] = false; }
                 if (bases[1] !== null) { score(bases[1], !bu[1], bp[1]); rbi++; bases[1] = null; bp[1] = null; bu[1] = false; }
-                if (bases[0] !== null) { if (random() < clamp(0.40 * (lineup[bases[0]].speed || 1) * (defSide.armFactor || 1), 0.18, 0.72)) { score(bases[0], !bu[0], bp[0]); rbi++; } else { bases[2] = bases[0]; bp[2] = bp[0]; bu[2] = bu[0]; } bases[0] = null; bp[0] = null; bu[0] = false; }
+                if (bases[0] !== null) { if (random() < clamp((outs === 2 ? 0.62 : 0.36) * (lineup[bases[0]].speed || 1) * (defSide.armFactor || 1), 0.18, 0.82)) { score(bases[0], !bu[0], bp[0]); rbi++; } else { bases[2] = bases[0]; bp[2] = bp[0]; bu[2] = bu[0]; } bases[0] = null; bp[0] = null; bu[0] = false; }
                 bases[1] = bi; bp[1] = pitcher; bu[1] = false;
             } else if (ev === 'b1') {
                 acc.ab++; acc.h++; acc.b1 = (acc.b1 || 0) + 1; pitcher.acc.h++;
@@ -4691,14 +4701,14 @@
                     // strong D) scales the send probability directly and the kill
                     // window inversely, so a good outfield arm both holds runners
                     // more AND throws out more of the ones who still go.
-                    var scoreT = clamp(0.60 * sp2 * (defSide.armFactor || 1), 0.42, 0.82), outT = scoreT + 0.10 / (defSide.armFactor || 1);
+                    var scoreT = clamp((outs === 2 ? 0.86 : 0.56) * sp2 * (defSide.armFactor || 1), 0.42, 0.95), outT = scoreT + 0.04 / (defSide.armFactor || 1);
                     var send = random();
-                    if (send < scoreT) { score(bases[1], !bu[1], bp[1]); rbi++; bases[1] = null; bp[1] = null; bu[1] = false; }
+                    if (send < scoreT) { score(bases[1], !bu[1], bp[1]); rbi++; bases[1] = null; bp[1] = null; bu[1] = false; if (workloadV2() && random() < 0.22) paTookThrow = true; }
                     else if (send < outT) { ofAssists++; paOfAssist = true; pitcher.acc.outs++; outs++; bases[1] = null; bp[1] = null; bu[1] = false; } // thrown out at home (outfield assist)
                     else { bases[2] = bases[1]; bp[2] = bp[1]; bu[2] = bu[1]; bases[1] = null; bp[1] = null; bu[1] = false; }
                 }
-                if (bases[0] !== null) { if (random() < clamp(0.28 * (lineup[bases[0]].speed || 1) * (defSide.armFactor || 1), 0.12, 0.5) && bases[2] === null) { bases[2] = bases[0]; bp[2] = bp[0]; bu[2] = bu[0]; } else { bases[1] = bases[0]; bp[1] = bp[0]; bu[1] = bu[0]; } bases[0] = null; bp[0] = null; bu[0] = false; }
-                bases[0] = bi; bp[0] = pitcher; bu[0] = false;
+                if (bases[0] !== null) { if (random() < clamp(0.28 * (lineup[bases[0]].speed || 1) * (defSide.armFactor || 1), 0.12, 0.5) && bases[2] === null) { if (workloadV2() && random() < OOB_FIRST_TO_THIRD) { ofAssists++; paOfAssist = true; pitcher.acc.outs++; outs++; } else { bases[2] = bases[0]; bp[2] = bp[0]; bu[2] = bu[0]; } } else { bases[1] = bases[0]; bp[1] = bp[0]; bu[1] = bu[0]; } bases[0] = null; bp[0] = null; bu[0] = false; }
+                if (workloadV2() && outs < 3 && random() < OOB_STRETCH) { ofAssists++; paOfAssist = true; pitcher.acc.outs++; outs++; } else if (paTookThrow && bases[1] === null) { bases[1] = bi; bp[1] = pitcher; bu[1] = false; } else { bases[0] = bi; bp[0] = pitcher; bu[0] = false; }
             } else { // out in play, with a small chance of a reach-on-error (unearned)
                 // ERROR_ATTRIBUTION_FIX_20260725: an error is a FIELDING mistake, so it
                 // must roll off the team in the field (defSide), not the team at bat
@@ -4739,7 +4749,9 @@
                     // engine recorded 0.122. Roughly half of real fly-ball outs
                     // with a runner on third and fewer than two out are deep
                     // enough to score him, which is the quantity this now is.
-                    var sfAir = 0.50;
+                    // GAME_REALISM_20261030: 0.50 measured 0.18 SF a team-game against a
+                    // real 0.279 on 700 real 2025-26 games; 0.66 measured 0.25.
+                    var sfAir = 0.66;
                     var dpGround = 0.21 / lg;
                 }
                 var errRateNow = isGround === null ? defSide.errRate : (isGround ? errG : errA);
@@ -4761,7 +4773,7 @@
                         score(bases[2], !bu[2], bp[2]); rbi++; bases[2] = null; bp[2] = null; bu[2] = false; outs++;
                         logEvent({ type: 'SF', batter: bname(bi), pitcher: pitcher.name, rbi: 1 });
                     }
-                    else if (outs < 2 && bases[2] === null && (bases[1] !== null || bases[0] !== null) && (b.realOps == null || b.realOps < 0.680) && random() < 0.026) {
+                    else if (outs < 2 && bases[2] === null && (bases[1] !== null || bases[0] !== null) && (b.realOps == null || b.realOps < 0.680) && random() < 0.065) {
                         // SAC_BUNT_20260703: weak hitter, <2 outs, a runner to advance and
                         // third base open -> lay one down. Batter out (no AB, official
                         // scoring), the lead runner(s) move up one base, no run scores, so
@@ -5015,8 +5027,24 @@
     // (so a full 8th plus the 9th, the real six-out save, stays possible) and
     // under his pitch ceiling. Every relief role gets a pitch ceiling for
     // starting another frame; BULK (behind an opener) is the long role.
-    var ROLE_OUT_CAP_V2 = { CL: 4, SU: 6, RP: 9, BULK: 18 };
-    var RELIEF_PITCH_CEILING = { CL: 25, SU: 28, RP: 32, BULK: 75 };
+    // GAME_REALISM_20261030 (workloadV2 only; the flag-off path is unchanged).
+    // Measured on the same 700 real 2025-26 games x 4 with real rosters
+    // (statsapi boxscores, identical counting both sides), before -> after (real):
+    //   relief outings <=2 outs 24.1% -> 20.9% (21.3), exactly 3 outs 49.0 -> 54.4
+    //   (54.0), 4-6 outs 22.3 -> 19.4 (19.3), 7+ 4.5 -> 5.3 (5.5); 30+ pitch
+    //   outings 16.2 -> 14.5 (12.6); position players pitching 3.9% -> 2.0% of
+    //   team-games. RELIEF_INNING_HEADROOM: a reliever who has pitched goes back
+    //   out for another inning only with an inning's worth of pitches left under
+    //   his ceiling (he was sent out at 25 pitches and finished at 40).
+    //   LONG_RELIEF_*: the first RP in before the 15th out is the long man (real
+    //   long relief exists; the engine had almost none). POS_WILLING: a club down
+    //   8+ late uses a position player about half the time, not every time.
+    //   OOB_*: outs on the bases (runner thrown out going first to third, batter
+    //   thrown out stretching): the engine made 0.4 fewer such outs a team-game
+    //   than real, which is why it sent 0.5 extra batters to the plate and
+    //   recorded too many hits.
+    var ROLE_OUT_CAP_V2 = { CL: 4, SU: 6, RP: 9, BULK: 18 }; var OOB_FIRST_TO_THIRD = 0.07, OOB_STRETCH = 0.012; var POS_WILLING = 0.5; var LONG_RELIEF_BEFORE_OUTS = 15, LONG_RELIEF_EXTRA = 20;
+    var RELIEF_PITCH_CEILING = { CL: 25, SU: 28, RP: 32, BULK: 75 }; var RELIEF_INNING_HEADROOM = 13;
     function armCap(p) {
         var cap = p.capOverride || (workloadV2() ? ROLE_OUT_CAP_V2 : ROLE_OUT_CAP)[p.role];
         // A reliever the workload ledger marks limited (worked hard in the last
@@ -5034,8 +5062,8 @@
             // The postseason ceiling is five pitches higher: one more hitter.
             // The postseason ceiling is five pitches higher (one more hitter) for
             // everyone but the closer: October closers still rarely pass 35.
-            var ceiling = RELIEF_PITCH_CEILING[p.role] + (p.capOverride ? 10 : 0) + (p._postseason && p.role !== 'CL' ? 5 : 0) - (p.limited ? 8 : 0);
-            if (((p.acc && p.acc.pitches) || 0) >= ceiling) return false;
+            var ceiling = RELIEF_PITCH_CEILING[p.role] + (p._long ? LONG_RELIEF_EXTRA : 0) + (p.capOverride ? 10 : 0) + (p._postseason && p.role !== 'CL' ? 5 : 0) - (p.limited ? 8 : 0);
+            if (((p.acc && p.acc.pitches) || 0) >= ceiling) return false; if (p.role !== 'BULK' && ((p.acc && p.acc.bf) || 0) > 0 && ((p.acc.pitches || 0) + RELIEF_INNING_HEADROOM) > ceiling) return false;
             // HIT_AT_BOUNDARY_20261023: a reliever who has been squared up this
             // outing (3+ hits) is not sent back out for another inning, whatever
             // his outs and pitches. The 12,000-game suite found the line it
@@ -5445,7 +5473,7 @@
         // A position player squared up for 3+ hits is not sent back out for
         // another inning; the next volunteer goes (HIT_AT_BOUNDARY_20261023).
         if (workloadV2() && side.posPitcher && !side.posPitcher.removed && ((side.posPitcher.acc.h || 0) - (side.posPitcher._apptStartHits || 0)) >= 3) side.posPitcher.removed = true;
-        if (inn >= 7 && (oppRuns - defRuns) >= 8) {
+        if (inn >= 7 && (oppRuns - defRuns) >= 8 && (!workloadV2() || side._posWilling)) {
             if (workloadV2() && side.posPitcher && side.posPitcher.removed) side.posPitcher = null;
             if (!side.posPitcher) {
                 var pp = evMakePositionPitcher(side);
@@ -5554,7 +5582,7 @@
         // didn't personally allow enough runs to erase the lead he inherited).
         // Captured once per appearance (not overwritten on repeat half-inning
         // calls for the same still-active arm).
-        if (chosen._enterMargin === undefined) chosen._enterMargin = defRuns - oppRuns;
+        if (chosen._enterMargin === undefined) chosen._enterMargin = defRuns - oppRuns; if (chosen._longSet === undefined && chosen.role !== 'SP') { chosen._longSet = true; chosen._long = chosen.role === 'RP' && !side.postseason && outsRecorded < LONG_RELIEF_BEFORE_OUTS; }
         // MOP_UP_EFFECTIVENESS_20260727: a team already trailing by a lot from the
         // 6th inning on has conceded the game - the manager stops using trusted
         // bullpen arms at full effort/quality and rides out whoever is left. Real
@@ -5633,7 +5661,7 @@
             s.starterOutsGame = clamp(s.starterOuts + Math.round((random() + random() - 1) * 6) + dealingBonus, 9, 27);
             s.lineup.forEach(function (b) { b.acc = evNewBat(); });
             s.pitchers.forEach(function (p) {
-                p.acc = evNewPit(); p.removed = false; p._enterMargin = undefined;
+                p.acc = evNewPit(); p.removed = false; p._enterMargin = undefined; p._longSet = undefined; p._long = false;
                 // APPEARANCE_SNAPSHOT_RESET_20261023: these appearance snapshots
                 // were never cleared between games. The same side objects play the
                 // win-probability sample and then the displayed game, so the
@@ -5659,7 +5687,7 @@
             // difference; the ride rates below land the simulated figures at 18%
             // and 27% on the reported Rays-Brewers matchup.
             s._spPlanOuts = s.starterOutsGame; s._spExtended = 0;
-            s._spRide = workloadV2() ? random() < (s.postseason ? 0.60 : 0.62) : false;
+            s._spRide = workloadV2() ? random() < (s.postseason ? 0.60 : 0.62) : false; s._posWilling = workloadV2() ? random() < POS_WILLING : true;
             s._halfEndPitcher = null;
         });
         var aRuns = 0, hRuns = 0, aErr = 0, hErr = 0, aInn = [], hInn = [], walkOff = false;
