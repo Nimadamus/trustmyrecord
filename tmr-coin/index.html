@@ -536,8 +536,9 @@
             document.getElementById('tcoin-pool-link').href = m.links.pool_explorer;
             // The trade link exists only when the API returns it (TMR_TRADE_LINK_ENABLED, live pool).
             var tl = document.getElementById('tcoin-trade-link'), tn = document.getElementById('tcoin-trade-notice');
-            if (m.links.trade && /^https:\/\/app\.uniswap\.org\//.test(m.links.trade)) {
+            if (m.links.trade && /^https:\/\/(app\.uniswap\.org|kyberswap\.com)\//.test(m.links.trade)) {
                 tl.href = m.links.trade; tl.hidden = false;
+                tl.textContent = /kyberswap/.test(m.links.trade) ? 'Trade on KyberSwap →' : 'Trade on Uniswap →';
                 if (m.trade_notice) { tn.textContent = m.trade_notice; tn.hidden = false; }
             }
             if (m.read_at) {
