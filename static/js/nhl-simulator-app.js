@@ -253,11 +253,14 @@
     });
     var t = side.totals;
     var footer = {
-      name: 'TEAM', g: t.goals, a: t.assists, pts: t.goals + t.assists, shots: t.shots,
+      name: 'TEAM', g: t.goals, a: t.assists, pts: t.goals + t.assists, shots: t.shots, attempts: t.attempts,
       shootingPct: t.shootingPct, ppG: t.powerPlayGoals, shG: t.shortHandedGoals,
       plusMinus: 0, pim: t.pim, hits: t.hits, blocks: t.blocks,
       giveaways: t.giveaways, takeaways: t.takeaways,
+      // The API totals carry wins and draws taken but not losses; the FO column
+      // prints won-lost, so the TEAM row read "28-undefined" (E2E_SIMS_LIVE_20261030).
       faceoffWins: t.faceoffWins, faceoffs: t.faceoffs, faceoffPct: t.faceoffPct,
+      faceoffLosses: t.faceoffLosses != null ? t.faceoffLosses : (t.faceoffs || 0) - (t.faceoffWins || 0),
       toi: 300,
     };
     var wrap = el('div');
