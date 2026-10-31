@@ -952,7 +952,7 @@
      is). Live Handicapper Watchdog counts on the Picks Board, homepage, Around the Web
      and leaderboards, the one-a-day free reveal, GA4 on pages that lacked it, and funnel
      source tracking. Adds page elements after load only; no URL or metadata change. */
-  loadChain(['/static/js/tmr-pro-funnel.ca16dcdfe30b.js']);
+  loadChain(['/static/js/tmr-pro-funnel.5ddaa34acccf.js']);
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();

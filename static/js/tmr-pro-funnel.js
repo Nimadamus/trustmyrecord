@@ -485,7 +485,7 @@
             + '<li>BetLegend Pro research included</li></ul>'
             + spotlightHtml(s)
             + '<a class="tpf-offer-btn" data-tpf-cta="' + comp + '" href="' + proHref(comp, '#pricing') + '">Start 3 days free</a>'
-            + '<small class="tpf-offer-fine">Card required. Cancel before the trial ends and you pay nothing.</small>'
+            + '<small class="tpf-offer-fine">Card required, one trial per person and card. Cancel before it ends and you pay nothing.</small>'
             + '</div>';
     }
 
