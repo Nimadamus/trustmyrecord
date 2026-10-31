@@ -139,6 +139,7 @@
     var weeks = panel.querySelector('#nspWeeks');
     var teamSel = panel.querySelector('#nspTeam');
     var linkMsg = panel.querySelector('#nspLinkMsg');
+    var shareBtn = panel.querySelector('[data-nsp="share"]');
     var seedsEl = document.getElementById('nspSeeds');
     var noteEl = document.getElementById('nspNote');
     var picker = document.querySelector('[data-playoff-bracket]');
@@ -166,6 +167,8 @@
       var ids = byId(data.games, picks);
       var n = Object.keys(ids).length;
       count.textContent = n ? n + (n === 1 ? ' game picked.' : ' games picked.') : 'No games picked yet.';
+      // NFL_SHARE_AFTER_RESULT_20261030: nothing to share until there is a pick.
+      if (shareBtn) { shareBtn.disabled = n === 0; shareBtn.title = n ? '' : 'Pick at least one game to get a link to your picks'; }
       if (seedsEl) seedsEl.innerHTML = seedsHtml(data, ids);
       if (noteEl) noteEl.textContent = noteText(data, ids);
       var s = E.seedAll(data.teams, data.games, ids, null);
@@ -206,6 +209,7 @@
       }
       if (a === 'clear') picks = {};
       if (a === 'share') {
+        if (act.disabled) return;
         var code = E.encodePicks(data.games, byId(data.games, picks));
         var url = location.origin + location.pathname + location.search + (code ? '#picks=' + code : '');
         try { history.replaceState(null, '', url); } catch (err) { /* file:// */ }

@@ -1996,12 +1996,18 @@ function renderTab(body,id,d,g,hAbbr,aAbbr){
       ['Sacks allowed',s.sacks_allowed],['Penalties',`${s.penalties}-${s.penalty_yards}`],['Time of possession',s.top],
       ['Drives',s.drives],['Plays',s.plays],
     ]);
-    for(const [side,abbr,name,score] of [[rep.away,aAbbr,g.away,rep.away_score],[rep.home,hAbbr,g.home,rep.home_score]]){
+    for(const [side,abbr,name,score,sd] of [[rep.away,aAbbr,g.away,rep.away_score,'away'],[rep.home,hAbbr,g.home,rep.home_score,'home']]){
       const wrap=el('div');wrap.style.marginTop='22px';
       const th=el('div','teamhead');th.appendChild(teamMark(abbr,30));th.appendChild(Object.assign(el('span','nm'),{textContent:name}));th.appendChild(Object.assign(el('span','rec'),{textContent:'simulated '+score+' pts'}));
       wrap.appendChild(th);
       const passT=mkTable(['Passing','C/ATT','Yds','Y/A','TD','INT','Rtg'],side.passing.map(pp=>[pp.name,`${pp.comp}/${pp.att}`,pp.yards,pp.ypa,pp.td,pp.int,pp.rating]));
       wrap.appendChild(grp(block('',passT), block('',teamTotals(side.summary))));
+      /* NFL_LATE_GAME_20261030: a quarterback who left this simulated game (hurt, or rested in a blowout); both lines are above. */
+      for(const c of (rep.qb_changes||[]).filter(x=>x.side===sd)){
+        const n=el('p','dim qbchange');n.style.margin='6px 0 0';
+        n.textContent=c.reason==='injury'?`Quarterback change: ${c.out} was hurt (${c.quarter}, ${c.clock}) and ${c.in} played the rest of the game.`:`Quarterback change: ${c.in} replaced ${c.out} with the game decided (${c.quarter}, ${c.clock}).`;
+        wrap.appendChild(n);
+      }
       const rushT=mkTable(['Rushing','Car','Yds','TD','Y/C','Lng','FUM'],side.rushing.map(pp=>[pp.name,pp.carries,pp.yards,pp.td,pp.ypc,pp.long,pp.fumbles]));
       const recT=mkTable(['Receiving','Rec/Tgt','Yds','TD','Y/R','Lng'],side.receiving.map(pp=>[pp.name,`${pp.rec}/${pp.targets}`,pp.yards,pp.td,pp.ypr,pp.long]));
       wrap.appendChild(grp(block('',rushT),block('',recT)));

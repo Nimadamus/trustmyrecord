@@ -62,7 +62,7 @@ function picksPanels(d, result) {
       <button type="button" class="btn" data-nsp="favweek">Model favorites for this view</button>
       <button type="button" class="btn" data-nsp="fav">Model favorites for every game</button>
       <button type="button" class="btn" data-nsp="clear">Clear picks</button>
-      <button type="button" class="btn" data-nsp="share">Copy link</button>
+      <button type="button" class="btn" data-nsp="share" disabled title="Pick at least one game to get a link to your picks">Copy link</button>
     </div>
     <p class="small" role="status" aria-live="polite"><span id="nspCount">No games picked yet.</span> <span id="nspLinkMsg"></span></p>
     <p class="small dim">${esc(RUN_POLICY.INLINE)}</p>
@@ -104,6 +104,7 @@ const PICK_CSS = `
   .wkb:focus-visible{outline:3px solid #38bdf8;outline-offset:2px}
   #nspTeam{font:inherit;font-size:.9rem;max-width:100%;min-height:36px;background:var(--card,#111a2b);color:inherit;border:1px solid var(--line,#23324a);border-radius:8px;padding:4px 8px}
   .nsp-act .btn{min-height:40px}
+  .nsp-act .btn:disabled{opacity:.5;cursor:not-allowed}
   .pick .wkc{font-size:.72rem;color:var(--mut,#9fb0c6);min-width:28px}
   .pick.fin{opacity:.75}
   .pk:disabled{cursor:default}

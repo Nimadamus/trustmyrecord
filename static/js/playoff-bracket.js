@@ -401,7 +401,18 @@
 
     function say(msg) { if (status) status.textContent = msg || ''; }
     function store() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* private mode */ } }
+    /* SHARE_AFTER_RESULT_20261030: a bracket link is only offered once the
+       reader has a bracket of his own (at least one pick); before that it would
+       share the empty projection. */
+    var shareBtn = el.querySelector('[data-pb="share"]');
+    function syncShare() {
+      if (!shareBtn) return;
+      var n = Object.keys(state.picks || {}).length;
+      shareBtn.disabled = n === 0;
+      shareBtn.title = n ? '' : 'Pick at least one winner to share your bracket';
+    }
     function paint() {
+      syncShare();
       board.innerHTML = render(cfg, state);
       if (editor && !editor.hidden) editor.innerHTML = seedEditor(cfg, state);
     }
@@ -432,6 +443,7 @@
         return;
       }
       if (act === 'share') {
+        if (btn.disabled) return;
         var url = location.origin + location.pathname + '#bracket=' + encode(state);
         var done = function () { say('Link copied. Anyone who opens it sees this bracket.'); };
         if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(done, function () { say(url); });
