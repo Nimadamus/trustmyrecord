@@ -102,7 +102,10 @@
     var s = line.summaryStats || {};
     return {
       runs: num(line.runs), hits: num(line.hits), errors: num(line.errors),
-      innings: Array.isArray(line.innings) ? line.innings.slice(0, 20).map(num) : [],
+      // The engine plays up to 30 innings and the API accepts total_innings 1-30;
+      // slicing at 20 recorded a 22-inning game with a line that stopped at 20
+      // and did not add up to the final (run 25575).
+      innings: Array.isArray(line.innings) ? line.innings.slice(0, 30).map(num) : [],
       doubles: num(s.doubles), triples: num(s.triples), home_runs: num(s.homeRuns),
       total_bases: num(s.totalBases), rbi: num(s.rbi), walks: num(s.walks),
       strikeouts: num(s.strikeouts), left_on_base: num(s.leftOnBase),
