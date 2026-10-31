@@ -21,6 +21,15 @@
       if (p.id != null) wrap.appendChild(S.headshot('nba', p, { size: 24 }));
       wrap.appendChild(el('span', 'nm', p.name));
       if (p.pos) wrap.appendChild(el('span', 'pos', p.pos));
+      // Left the game for good (engine NBA_INGAME_EXITS_20261030): his line is
+      // what he did before he went.
+      if (p.exit && p.exit.kind) {
+        var t = el('span', 'tag', (p.exit.kind === 'injury' ? 'INJ ' : 'EJ ') + (p.exit.period || ''));
+        t.title = p.exit.kind === 'injury' ? 'Left the game injured and did not return'
+          : (p.exit.why === 'flagrant 2' ? 'Ejected for a Flagrant 2 foul'
+            : (p.exit.why === 'two technicals' ? 'Ejected after a second technical foul' : 'Ejected'));
+        wrap.appendChild(t);
+      }
       return wrap;
     } },
     { h: 'MIN', title: 'Minutes played', sortValue: function (p) { return p.min; },
