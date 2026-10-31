@@ -30,6 +30,13 @@ const arg = (f, d) => {
 };
 const SITE = arg('--site', 'https://trustmyrecord.com');
 const API = arg('--host', 'https://trustmyrecord-api.onrender.com');
+// LIVE_RUN_GUARD_20261030: every run this test makes is recorded in the production
+// sim archive as if a visitor ran it (10 such rows had to be deleted on 10/30).
+// It only runs against production when asked to explicitly.
+if (/onrender\.com|trustmyrecord\.com/.test(API + SITE) && process.env.TMR_ALLOW_LIVE_SIM_RUNS !== '1') {
+  console.log('nba-nhl-simulator-integrity-test: SKIP (production host; set TMR_ALLOW_LIVE_SIM_RUNS=1 to run)');
+  process.exit(0);
+}
 
 async function json(url) {
   const r = await fetch(url, { headers: { Accept: 'application/json' } });
