@@ -925,7 +925,33 @@ async function copyShare(btn){
     catch(e2){done(false)}
   }
 }
-/** A shared link runs that exact simulation on load. */
+/* NFL_RUN_DATE_PT_20261030: the API stamps meta.data_freshness with the UTC
+   date of the run (nowIso.slice(0,10)), so an evening run in Pacific time read
+   "run dated" tomorrow beside a header that said "Run Oct 30, 6:31 PM PT".
+   Show the run's Pacific date; a value that is not today's UTC date (an old
+   saved payload) is shown as it came. */
+function runDatedPT(v){
+  try{
+    const now=new Date();
+    if(!v||String(v).slice(0,10)===now.toISOString().slice(0,10))
+      return now.toLocaleDateString('en-US',{timeZone:'America/Los_Angeles',month:'short',day:'numeric',year:'numeric'});
+    if(/T\d\d:/.test(String(v))){const t=new Date(v);if(!isNaN(t))return t.toLocaleDateString('en-US',{timeZone:'America/Los_Angeles',month:'short',day:'numeric',year:'numeric'})}
+  }catch(e){}
+  return String(v||'');
+}
+/* NFL_DEEP_LINK_NO_AUTORUN_20261030: a shared link only SELECTS the game or
+   matchup. It used to run the seeded simulation on page load, which called the
+   live API (and the free run / meter gate) before the visitor pressed anything.
+   The seed is kept and used by the first Simulate press on that same game, so
+   a shared result still reproduces exactly. A reload of this tab's own run is
+   still shown from the tab's copy, which costs nothing. Mirrors
+   DEEP_LINK_NO_AUTORUN_20261030 in tmr-sim-core.js (NBA/NHL). */
+let PENDING_SEED=null;   // {key,seed}: key is 'g:<ref>' or the custom target
+function takePendingSeed(key){
+  const p=PENDING_SEED;PENDING_SEED=null;
+  return p&&p.key===key?p.seed:null;
+}
+/** A shared link selects that exact simulation; the first press replays it. */
 async function runFromUrl(){
   let q;try{q=new URLSearchParams(location.search)}catch(e){return false}
   const seed=q.get('seed');
@@ -956,7 +982,8 @@ async function runFromUrl(){
     if(g)renderFeatured({kind:'game',g,kicker:seedN!=null?'Shared simulation':'Selected game',src:'url'});
     if(seedN==null&&g)return true;            // a game link preselects; Simulate runs it
     if(cached){STATE.lastRun=cached.run;renderResult($('#result'),cached.d);simAfterRender($('#result'),cached.d);return true}
-    await runScheduled(ref,seedN);return true;
+    if(g)PENDING_SEED={key:'g:'+ref,seed:seedN};
+    return true;
   }
   const home=q.get('home'),away=q.get('away');
   if(home!=null||away!=null){
@@ -988,7 +1015,7 @@ async function runFromUrl(){
     renderFeatured({kind:'custom',a:A,h:H,neutral:STATE.venue==='neutral',kicker:seedN!=null?'Shared simulation':'Your matchup',src:'url'});
     if(seedN==null)return true;
     if(cached){STATE.lastRun=cached.run;renderResult($('#result'),cached.d);simAfterRender($('#result'),cached.d);return true}
-    await runCustom(seedN);
+    PENDING_SEED={key:simCustomTarget(),seed:seedN};
     return true;
   }
   return false;
@@ -1340,6 +1367,7 @@ function venueParamWeekly(){
    Either way the effective seed comes back in meta.seed and is stored, so the
    game on screen can always be re-run or shared. */
 async function runScheduled(ref,seed){
+  if(seed==null)seed=takePendingSeed('g:'+ref);
   STATE.selRef=ref;
   const out=$('#result');
   const rk=simRunKey('g:'+ref,seed);
@@ -1359,6 +1387,7 @@ async function runScheduled(ref,seed){
   finally{simRunEnd(my)}
 }
 async function runCustom(seed){
+  if(seed==null)seed=takePendingSeed(simCustomTarget());
   const a=teamByRef(STATE.t1),b=teamByRef(STATE.t2);
   const out=$('#result');
   if(!a||!b){errNode(out,{msg:'Pick two teams first.'});return}
@@ -1787,7 +1816,7 @@ function renderResult(out,d){
   const pd=d.meta&&d.meta.player_data;
   const partial=pd&&pd.status&&pd.status!=='FRESH';
   const lowUse=d.roster&&((d.roster.home&&d.roster.home.confidence!=null&&d.roster.home.confidence<0.5)||(d.roster.away&&d.roster.away.confidence!=null&&d.roster.away.confidence<0.5));
-  meta.innerHTML=`Model: <b>${esc(d.meta.model)}</b> · <b>${fmtN(d.meta.simulations)}</b> simulations · calibration: ${esc(d.meta.calibration)} · run dated ${esc(d.meta.data_freshness)}${lowUse?' · <span class="pill warn">player usage confidence is low</span>':''}${partial?' · <span class="pill warn">player usage feed incomplete</span>':''}. ${esc(d.disclaimer)}`;
+  meta.innerHTML=`Model: <b>${esc(d.meta.model)}</b> · <b>${fmtN(d.meta.simulations)}</b> simulations · calibration: ${esc(d.meta.calibration)} · run dated ${esc(runDatedPT(d.meta.data_freshness))}${lowUse?' · <span class="pill warn">player usage confidence is low</span>':''}${partial?' · <span class="pill warn">player usage feed incomplete</span>':''}. ${esc(d.disclaimer)}`;
   out.appendChild(meta);
   const clock=el('div','disc');
   clock.textContent='Roster table age: checking the live status.';
@@ -2288,11 +2317,13 @@ function installSimGate(){
   let simDone=0;
   const _settleRun=(p)=>{const before=simDone;return Promise.resolve(p).then(()=>{if(simDone===before&&window.TMRSimGate.runFailed)window.TMRSimGate.runFailed('no result')},e=>{if(window.TMRSimGate.runFailed)window.TMRSimGate.runFailed('run error');throw e})};
   runScheduled=function(ref,seed){
+    if(seed==null)seed=takePendingSeed('g:'+ref);
     if(RUN_BUSY&&RUN_BUSY===simRunKey('g:'+ref,seed))return Promise.resolve();
     STATE.selRef=ref;
     return _authorizeRun({sim_mode:'weekly'},seed).then(ok=>ok?_settleRun(_runScheduled(ref,seed)):undefined);
   };
   runCustom=function(seed){
+    if(seed==null)seed=takePendingSeed(simCustomTarget());
     if(RUN_BUSY&&RUN_BUSY===simRunKey(simCustomTarget(),seed))return Promise.resolve();
     return _authorizeRun({sim_mode:'custom'},seed).then(ok=>ok?_settleRun(_runCustom(seed)):undefined);
   };
