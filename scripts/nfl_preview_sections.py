@@ -54,7 +54,13 @@ def _get(url, timeout=HTTP_TIMEOUT):
     # NO browser User-Agent. site.api.espn.com answers 403 to anything that
     # looks like Chrome and 200 to urllib's own default, which is the opposite
     # of the usual trap and cost a build to find.
-    req = urllib.request.Request(url, headers={"Accept": "application/json"})
+    hdr = {"Accept": "application/json"}
+    # SIM_BAKE_NO_ARCHIVE_20261031: the bake's simulator reads stay out of the
+    # public run archive (TrustMyRecord API only; unset = archived as before).
+    bake_key = os.environ.get("TMR_BAKE_KEY", "")
+    if bake_key and url.startswith(TMR_API + "/"):
+        hdr["x-tmr-bake-key"] = bake_key
+    req = urllib.request.Request(url, headers=hdr)
     try:
         with urllib.request.urlopen(req, timeout=timeout) as r:
             data = json.loads(r.read().decode("utf-8"))

@@ -65,6 +65,11 @@ CACHE_TTL = int(os.environ.get("TMR_HX_CACHE_TTL", "10800"))  # 3h
 UA = {}
 
 TMR_API = os.environ.get("TMR_API", "https://trustmyrecord-api.onrender.com/api")
+# SIM_BAKE_NO_ARCHIVE_20261031. The page bake is not a visitor: with this key the
+# NFL simulator answers exactly as it does for anyone, but does not write the run
+# into the public run archive (sim_runs). Sent to the TrustMyRecord API only,
+# never to a third-party feed. Unset = the old behaviour (runs are archived).
+BAKE_KEY = os.environ.get("TMR_BAKE_KEY", "")
 
 # ESPN's own path segments per sport. A sport that is not in here simply gets no
 # enrichment, which is what keeps tennis and soccer from crashing the builder.
@@ -113,6 +118,8 @@ def get(url, ttl=None, quiet=True):
             for k, v in UA.items():
                 req.add_header(k, v)
             req.add_header("Accept", "application/json")
+            if BAKE_KEY and url.startswith(TMR_API + "/"):
+                req.add_header("x-tmr-bake-key", BAKE_KEY)
             with urllib.request.urlopen(req, timeout=45) as r:
                 data = json.loads(r.read().decode("utf-8"))
             try:

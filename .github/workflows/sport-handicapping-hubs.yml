@@ -65,6 +65,11 @@ jobs:
       - name: Bake the sport hubs and their matchup pages
         env:
           BETLEGEND_PRO_SERVICE_KEY: ${{ secrets.BETLEGEND_PRO_SERVICE_KEY }}
+          # SIM_BAKE_NO_ARCHIVE_20261031: the bake's NFL simulator reads are not
+          # visitor runs; with this key the API serves the same projection without
+          # writing it to the public run archive. Must equal TMR_BAKE_KEY on the
+          # API (Render). Unset = runs are archived exactly as before.
+          TMR_BAKE_KEY: ${{ secrets.TMR_BAKE_KEY }}
         run: python scripts/build_sport_matchup_pages.py ${{ inputs.sports }}
 
       - uses: actions/setup-node@v5
