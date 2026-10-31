@@ -3455,7 +3455,79 @@
     // against a real 5.51 and ran out of pitches an inning early. 0.527 / 0.37
     // measured 3.85 and 5.51.
     var BIP_FOUL = 0.527, BIP_TWO_STRIKE_FOUL = 0.37;
+    // PITCH_COUNT_SHAPE_20261031 (workloadV2 only; the flag-off path is unchanged).
+    // The sequence generator below matched the MEAN pitches per plate appearance
+    // but not the shape: on 700 real 2025-26 games' worth of simulated PAs it gave
+    // 31% one-pitch balls in play (real 17%), 8% balls in play after 9+ pitches
+    // (real 0.5%), strikeouts on three pitches 30% of the time (real 17%) and
+    // walks of 9+ pitches 16% (real 2%). That spread is what put one-inning relief
+    // outings at 30+ pitches twice as often as real (5.1% vs 2.7%). The length of
+    // each plate appearance is now drawn from the measured distribution for its
+    // outcome (statsapi pitch-by-pitch, 17,508 PAs from 230 games of 2025), and a
+    // legal count is built to that length. Outcome rates are untouched: only how
+    // many pitches each PA takes.
+    var EV_PA_LEN = {
+        bip: [0.1714, 0.2166, 0.1943, 0.1668, 0.1187, 0.081, 0.0318, 0.0127, 0.0034, 0.0021, 0.0007, 0.0006],
+        so: [0, 0, 0.1656, 0.267, 0.2576, 0.1882, 0.078, 0.0264, 0.0119, 0.0041, 0.0005, 0.0008],
+        bb: [0, 0, 0, 0.1627, 0.2856, 0.2938, 0.1444, 0.0719, 0.0202, 0.0113, 0.0013, 0.0025],
+        hbp: [0.2203, 0.2034, 0.2203, 0.1186, 0.1356, 0.0734, 0.0169, 0.0113, 0, 0, 0, 0]
+    };
+    function evDrawPaLength(table, random) {
+        var tot = 0, i;
+        for (i = 0; i < table.length; i++) tot += table[i];
+        var r = random() * tot;
+        for (i = 0; i < table.length; i++) { r -= table[i]; if (r < 0) return i + 1; }
+        return table.length;
+    }
+    function evPitchSequenceShaped(code, isHbp, random) {
+        var kind = isHbp ? 'hbp' : (code === 'bb' ? 'bb' : (code === 'so' ? 'so' : 'bip'));
+        var len = evDrawPaLength(EV_PA_LEN[kind], random);
+        var pre = len - 1;
+        // How many of the non-final pitches are balls. A walk needs exactly
+        // three before ball four; a strikeout needs room for two strikes
+        // before strike three; nobody gets past three balls otherwise.
+        var balls;
+        if (kind === 'bb') balls = 3;
+        else {
+            var cap = Math.min(3, kind === 'so' ? Math.max(0, pre - 2) : pre);
+            balls = 0;
+            for (var k = 0; k < pre && balls < cap; k++) if (random() < 0.42) balls++;
+        }
+        var calls = [], j;
+        for (j = 0; j < balls; j++) calls.push('B');
+        for (j = balls; j < pre; j++) calls.push('S');
+        for (j = calls.length - 1; j > 0; j--) { var x = Math.floor(random() * (j + 1)), t = calls[j]; calls[j] = calls[x]; calls[x] = t; }
+        // A strikeout's last strike must come at two strikes, so the two
+        // count strikes are guaranteed by moving strike-type pitches ahead of
+        // any trailing balls only when needed (the count stays legal).
+        var seq = [], b = 0, s = 0;
+        function add(call) {
+            seq.push({ n: seq.length + 1, call: call, b: b, s: s });
+            if (call === 'B') b++;
+            else if (call === 'F') { if (s < 2) s++; }
+            else if (call === 'CS' || call === 'SS') s++;
+        }
+        for (j = 0; j < calls.length; j++) {
+            if (calls[j] === 'B') { add('B'); continue; }
+            if (s >= 2) { add('F'); continue; }
+            var u = random();
+            add(u < 0.40 ? 'F' : (u < 0.72 ? 'CS' : 'SS'));
+        }
+        if (kind === 'bb') add('B');
+        else if (kind === 'hbp') add('H');
+        else if (kind === 'so') {
+            while (s < 2) add(random() < 0.5 ? 'CS' : 'SS'); // only if the draw left too few strikes
+            add(random() < 0.52 ? 'SS' : 'CS');
+        } else add('X');
+        var strikes = 0;
+        for (var i2 = 0; i2 < seq.length; i2++) {
+            var c2 = seq[i2].call;
+            if (c2 === 'CS' || c2 === 'SS' || c2 === 'F' || c2 === 'X') strikes++;
+        }
+        return { pitches: seq, count: seq.length, strikes: strikes };
+    }
     function evPitchSequence(code, isHbp, random) {
+        if (workloadV2()) return evPitchSequenceShaped(code, isHbp, random);
         var seq = [], b = 0, s = 0, MAX = 14;
         function add(call) {
             seq.push({ n: seq.length + 1, call: call, b: b, s: s });
@@ -4989,7 +5061,9 @@
     // STARTER_PITCH_LIMIT_V2_20261030: with pitches per out corrected, a 100
     // limit put 15.5% of simulated starts at 100+ pitches against a real 10.2%
     // (700 real 2025-26 games); 98 measured 9.8% (105+: 2.1%, real 2.8%).
-    var STARTER_PITCH_LIMIT_V2 = 98;
+    // PITCH_COUNT_SHAPE_20261031: with real per-PA pitch counts (less spread),
+    // 98 left 7.9% of starts at 100+ (real 10.2%); 99 measured 11.5%.
+    var STARTER_PITCH_LIMIT_V2 = 99;
     function starterPitchLimit(side) {
         return side.postseason ? POSTSEASON_PITCH_LIMIT : (workloadV2() ? STARTER_PITCH_LIMIT_V2 : STARTER_PITCH_LIMIT);
     }
