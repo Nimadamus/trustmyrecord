@@ -215,7 +215,7 @@
                 <h3>Running today</h3>
                 <ul>
                     <li>Fixed supply token on Base with no privileged functions</li>
-                    <li>Uniswap v3 TMR/WETH pool (0.3% fee tier): selling limited to about $10 of ETH plus what buyers pay in</li>
+                    <li>Uniswap v3 TMR/WETH pool (0.3% fee tier): open for buying and selling, about $30 of ETH</li>
                     <li>Company TMR in a 2 of 3 multisig Safe, a vesting contract and two public notice timelocks (since 30 October 2026)</li>
                     <li>Site credits earned from sign up, first pick and forum threads</li>
                     <li>Site credits used for simulator runs, tips and the marketplace</li>
@@ -289,7 +289,11 @@
         if (!m || m.live !== true) throw new Error('not live');
         // MARKET_STATUS_20261019: price, pool value and FDV are market figures only when a holder could sell.
         var ms = m.market_status, market = !ms || ms.show_price;
-        if (market) {
+        if (market && ms && !ms.genuine) {
+            set('m-price', usd(m.price_usd), 'per TMR, thin market');
+            set('m-tvl', usd(m.pool_weth_usd) + ' of ETH', num(m.pool_tmr) + ' TMR and ' + Number(m.pool_weth).toFixed(6) + ' WETH');
+            set('m-fdv', 'Not shown', 'the market is too thin for a supply wide value');
+        } else if (market) {
             set('m-price', usd(m.price_usd), 'per TMR');
             set('m-tvl', usd(m.tvl_usd), num(m.pool_tmr) + ' TMR and ' + Number(m.pool_weth).toFixed(6) + ' WETH');
             set('m-fdv', usd(m.fdv_usd));
