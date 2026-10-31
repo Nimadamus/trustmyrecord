@@ -60,4 +60,9 @@ assert.strictEqual(F.verdict({ freshness_status: 'stale_sources', source_data: {
 assert.strictEqual(F.verdict({}).bake, false);
 for (const b of ['build_nfl_season_page.js', 'build_nfl_team_pages.js', 'build_nfl_playoff_page.js'])
   assert.ok(/nfl-bake-freshness'\)\.gate\(d,/.test(require('fs').readFileSync(require('path').join(__dirname, '..', 'scripts', b), 'utf8')), b + ' must gate on freshness');
+// BAKE_ORDER_20261030: the NHL evaluation refresh must run before the league page builder that
+// prints its live Brier (6:17 PM PDT 10/30 bake failed nhl-evaluation-page-test on the old order).
+{ const iStamp = wf.indexOf('node scripts/stamp-nhl-evaluation.js --fetch'); const iLeague = wf.indexOf('node scripts/build_league_sim_pages.js');
+  assert.ok(iStamp > 0 && iLeague > 0 && iStamp < iLeague, 'stamp-nhl-evaluation --fetch must run before build_league_sim_pages.js'); }
+assert.ok(!/fetch-depth: 0/.test(wf), 'the bake checks out the tip only (full history cost 13 min a bake)');
 console.log('SIM_BAKE_DUE PASSED');

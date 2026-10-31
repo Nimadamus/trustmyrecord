@@ -79,7 +79,10 @@ jobs:
       - name: Checkout main
         uses: actions/checkout@v5
         with:
-          fetch-depth: 0
+          # BAKE_SHALLOW_20261030: the bake only needs the tip of main (it fetches, resets, commits,
+          # pushes). fetch-depth 0 pulled every branch's full history: 13 min 16 s of the 6:04 PM PDT
+          # 10/30 run, more than every build and gate together.
+          fetch-depth: 1
 
       - uses: actions/setup-node@v5
         with:
@@ -117,6 +120,10 @@ jobs:
               # NBA_TEAM_PAGES_LIVE_20261030: NBA team pages from the live API (season-labelled records,
               # rotations, injuries); never fatal, a failure keeps the committed pages.
               node scripts/build_sim_team_pages.js --sports nba > bt.log 2>&1 || { tail -10 bt.log; git checkout -q -- nba-simulator/teams; }
+              # NHL_EVALUATION_20261030: hub accuracy from the live ledger + accuracy report; keeps the last good copy on failure.
+              # BAKE_ORDER_20261030: BEFORE build_league_sim_pages.js, which prints the same live Brier on the NHL
+              # season/playoff pages; stamping after it left those pages one refresh behind and the gate failed the bake.
+              node scripts/stamp-nhl-evaluation.js --fetch > b7.log 2>&1 || { tail -10 b7.log; git checkout -q -- data/nhl-evaluation.json nhl-simulator/index.html; }
               node scripts/build_league_sim_pages.js > b1.log 2>&1 || { tail -30 b1.log; return 1; }
               node scripts/build_nfl_season_page.js > b2.log 2>&1 || { tail -30 b2.log; return 1; }
               node scripts/build_nfl_team_pages.js > b3.log 2>&1 || { tail -30 b3.log; return 1; }
@@ -128,8 +135,6 @@ jobs:
               node scripts/build_nfl_playoff_page.js > b5.log 2>&1 || tail -10 b5.log
               # NFL_ACCURACY_ONE_SOURCE_20261030: every accuracy figure from the API, incl. graded served predictions.
               node scripts/build_nfl_accuracy_copy.js > b6.log 2>&1 || tail -10 b6.log
-              # NHL_EVALUATION_20261030: hub accuracy from the live ledger + accuracy report; keeps the last good copy on failure.
-              node scripts/stamp-nhl-evaluation.js --fetch > b7.log 2>&1 || { tail -10 b7.log; git checkout -q -- data/nhl-evaluation.json nhl-simulator/index.html; }
               # THE GATES run before the commit: a failing gate publishes nothing.
               node tests/playoff-bracket-test.js > g1.log 2>&1 || { tail -30 g1.log; return 1; }
               node tests/league-season-engine-test.js > g2.log 2>&1 || { tail -30 g2.log; return 1; }
