@@ -322,6 +322,9 @@
    */
   function goalieTable(side) {
     var g = side.goalie;
+    // NHL_GOALIE_RELIEF_20261030: a starter can be pulled or hurt; every
+    // goaltender who played gets his own line, in the order they played.
+    var rows = (side.goalies && side.goalies.length) ? side.goalies : [g];
     var wrap = el('div');
     wrap.appendChild(el('div', 'sechead', 'Goaltending'));
     wrap.appendChild(S.table([
@@ -352,8 +355,18 @@
         fmt: function (r) { return strengthCell(r.shortHandedSaves, r.shortHandedShots); } },
       { h: 'SH SV', title: 'Saves made while his own side was on the power play',
         fmt: function (r) { return strengthCell(r.powerPlaySaves, r.powerPlayShots); } },
-    ], [g], { sortable: false }));
+    ], rows, { sortable: false }));
 
+    if (rows.length > 1 && rows[0].left) {
+      var lf = rows[0].left;
+      var per = lf.period === '1' ? '1st' : (lf.period === '2' ? '2nd' : (lf.period === '3' ? '3rd' : lf.period));
+      wrap.appendChild(el('div', 'disc',
+        (lf.reason === 'injury'
+          ? rows[0].name + ' left the game ' + (lf.time === '0:00' ? 'before the ' + per + ' period' : 'at ' + lf.time + ' of the ' + per + ' period')
+          : rows[0].name + ' was pulled ' + (lf.time === '0:00' ? 'before the ' + per + ' period' : 'at ' + lf.time + ' of the ' + per + ' period')
+            + ' after ' + rows[0].goalsAgainst + ' goals on ' + rows[0].shotsAgainst + ' shots')
+        + '; ' + rows[1].name + ' played the rest. Shots and goals are split at the change, and the decision goes to the goaltender in net when the deciding goal went in.'));
+    }
     wrap.appendChild(el('div', 'disc',
       (g.season
         ? g.name + ' came in on ' + g.season.gp + ' games'
@@ -416,8 +429,15 @@
       { label: 'PIM', away: a.pim, home: h.pim },
     ]));
 
-    var ag = d.result.box_score.away.goalie;
-    var hg = d.result.box_score.home.goalie;
+    // NHL_GOALIE_RELIEF_20261030: the team's goaltending, every man who played.
+    var teamG = function (b) {
+      var gl = (b.goalies && b.goalies.length) ? b.goalies : [b.goalie];
+      var sa = 0; var sv = 0;
+      gl.forEach(function (x) { sa += x.shotsAgainst || 0; sv += x.saves || 0; });
+      return { saves: sv, shotsAgainst: sa, savePct: sa ? sv / sa : 1 };
+    };
+    var ag = teamG(d.result.box_score.away);
+    var hg = teamG(d.result.box_score.home);
     var s = el('div', 'statstrip');
     [
       [d.matchup.away.abbr + ' saves', ag.saves + '/' + ag.shotsAgainst],

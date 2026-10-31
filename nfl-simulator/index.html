@@ -2011,6 +2011,12 @@ function renderTab(body,id,d,g,hAbbr,aAbbr){
       const rushT=mkTable(['Rushing','Car','Yds','TD','Y/C','Lng','FUM'],side.rushing.map(pp=>[pp.name,pp.carries,pp.yards,pp.td,pp.ypc,pp.long,pp.fumbles]));
       const recT=mkTable(['Receiving','Rec/Tgt','Yds','TD','Y/R','Lng'],side.receiving.map(pp=>[pp.name,`${pp.rec}/${pp.targets}`,pp.yards,pp.td,pp.ypr,pp.long]));
       wrap.appendChild(grp(block('',rushT),block('',recT)));
+      /* NFL_SKILL_INJURY_20261030: a back, receiver or tight end hurt and out of this simulated game; his line stops there and the men behind him took his work. */
+      for(const c of (rep.injuries||[]).filter(x=>x.side===sd)){
+        const n=el('p','dim injnote');n.style.margin='6px 0 0';
+        n.textContent=`Injury: ${c.out} (${c.pos}) was hurt (${c.quarter}, ${c.clock}) and did not return${c.next?`; ${c.next} and the other ${c.pos==='RB'?'backs':(c.pos==='TE'?'tight ends':'receivers')} took his snaps`:''}.`;
+        wrap.appendChild(n);
+      }
       const defT=side.defense?mkTable(['Defense (team)','Value'],[['Sacks',side.defense.sacks],['Interceptions',side.defense.interceptions],['Fumble recoveries',side.defense.fumble_recoveries],['Takeaways',side.defense.takeaways],['Defensive TD',side.defense.defensive_tds],['Safeties',side.defense.safeties]]):null;
       const st=side.special_teams;
       const kick=el('div');
