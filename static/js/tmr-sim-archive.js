@@ -936,6 +936,7 @@
     var box = d.box_score;
     var away = null;
     var home = null;
+    var labels = null;
 
     // Each engine names its per-period array differently. Read whichever shape
     // this sport produced rather than assuming one of them.
@@ -947,6 +948,31 @@
     } else if (line && Array.isArray(line.periods)) {
       away = line.periods.map(function (q) { return Array.isArray(q) ? q[0] : null; });
       home = line.periods.map(function (q) { return Array.isArray(q) ? q[1] : null; });
+    } else if (line && line.quarters && Array.isArray(line.quarters.away) && Array.isArray(line.quarters.home)) {
+      // NBA engine: { quarters: { away: [..], home: [..] }, overtime: { away: [..], home: [..] } }
+      var ot = line.overtime && typeof line.overtime === 'object' ? line.overtime : {};
+      away = line.quarters.away.concat(Array.isArray(ot.away) ? ot.away : []);
+      home = line.quarters.home.concat(Array.isArray(ot.home) ? ot.home : []);
+    } else if (line && line.periods && Array.isArray(line.periods.away) && Array.isArray(line.periods.home)) {
+      // NHL engine: { periods: { away, home }, overtime, overtime_goals, shootout, shootout_goals }
+      away = line.periods.away.slice();
+      home = line.periods.home.slice();
+      var extra = [];
+      if (line.overtime || run.overtime) {
+        var og = line.overtime_goals || {};
+        away.push(Number(og.away) || 0); home.push(Number(og.home) || 0); extra.push('OT');
+      }
+      if (line.shootout || run.shootout) {
+        // The shootout adds one goal to the winner's final, whatever the attempt count.
+        away.push(run.winner_abbr === run.away.abbr ? 1 : 0);
+        home.push(run.winner_abbr === run.home.abbr ? 1 : 0);
+        extra.push('SO');
+      }
+      labels = line.periods.away.map(function (_, i) { return String(i + 1); }).concat(extra);
+    } else if (d.team_stats && d.team_stats.away && Array.isArray(d.team_stats.away.innings)
+      && d.team_stats.home && Array.isArray(d.team_stats.home.innings)) {
+      // MLB client engine archives its innings under team_stats.
+      away = d.team_stats.away.innings; home = d.team_stats.home.innings;
     }
     if (!Array.isArray(away) || !Array.isArray(home) || !away.length) return null;
 
@@ -957,7 +983,8 @@
     hr.appendChild(el('th', null, ''));
     away.forEach(function (_, i) {
       var label = String(i + 1);
-      if (meta.regulation_periods && i >= meta.regulation_periods) {
+      if (labels && labels[i]) label = labels[i];
+      else if (meta.regulation_periods && i >= meta.regulation_periods) {
         label = (meta.period_noun === 'inning') ? String(i + 1) : 'OT' + (i - meta.regulation_periods + 1);
       }
       hr.appendChild(el('th', null, label));
