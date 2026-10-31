@@ -4707,7 +4707,7 @@
                     else if (send < outT) { ofAssists++; paOfAssist = true; pitcher.acc.outs++; outs++; bases[1] = null; bp[1] = null; bu[1] = false; } // thrown out at home (outfield assist)
                     else { bases[2] = bases[1]; bp[2] = bp[1]; bu[2] = bu[1]; bases[1] = null; bp[1] = null; bu[1] = false; }
                 }
-                if (bases[0] !== null) { if (random() < clamp(0.28 * (lineup[bases[0]].speed || 1) * (defSide.armFactor || 1), 0.12, 0.5) && bases[2] === null) { if (workloadV2() && random() < OOB_FIRST_TO_THIRD) { ofAssists++; paOfAssist = true; pitcher.acc.outs++; outs++; } else { bases[2] = bases[0]; bp[2] = bp[0]; bu[2] = bu[0]; } } else { bases[1] = bases[0]; bp[1] = bp[0]; bu[1] = bu[0]; } bases[0] = null; bp[0] = null; bu[0] = false; }
+                if (bases[0] !== null) { if (random() < clamp(0.28 * (lineup[bases[0]].speed || 1) * (defSide.armFactor || 1), 0.12, 0.5) && bases[2] === null) { if (workloadV2() && outs < 3 && random() < OOB_FIRST_TO_THIRD) { ofAssists++; paOfAssist = true; pitcher.acc.outs++; outs++; } else { bases[2] = bases[0]; bp[2] = bp[0]; bu[2] = bu[0]; } } else { bases[1] = bases[0]; bp[1] = bp[0]; bu[1] = bu[0]; } bases[0] = null; bp[0] = null; bu[0] = false; }
                 if (workloadV2() && outs < 3 && random() < OOB_STRETCH) { ofAssists++; paOfAssist = true; pitcher.acc.outs++; outs++; } else if (paTookThrow && bases[1] === null) { bases[1] = bi; bp[1] = pitcher; bu[1] = false; } else { bases[0] = bi; bp[0] = pitcher; bu[0] = false; }
             } else { // out in play, with a small chance of a reach-on-error (unearned)
                 // ERROR_ATTRIBUTION_FIX_20260725: an error is a FIELDING mistake, so it
