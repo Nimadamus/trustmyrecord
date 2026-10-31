@@ -47,7 +47,7 @@
           "name": "Is TMR Coin tradable?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Yes. Trading is open in a Uniswap v3 TMR/WETH pool on Base in the 0.3% fee tier, where TMR can be bought and sold. The pool is small: it holds about $30 of ETH (31 October 2026), so large sales move the price sharply or may not fill. Site credits in your TrustMyRecord account are not TMR tokens, stay within the site and cannot be withdrawn."
+            "text": "Yes. TMR trades in a Uniswap v3 TMR/WETH pool on Base in the 0.3% fee tier, where it can be bought and sold. Prices can move sharply. Site credits in your TrustMyRecord account are not TMR tokens, stay within the site and cannot be withdrawn."
           }
         },
         {
@@ -219,13 +219,13 @@
     </header>
 
     <section class="tmr-glass tcoin-announce">
-        <span class="tcoin-announce-kick">Update &middot; 31 October 2026</span>
-        <h2 class="tmr-h2">TMR Coin trading is open on Base</h2>
-        <p class="tcoin-announce-lede">TMR Coin can now be bought and sold. Anyone with a wallet can trade it in a public pool on Base without going through TrustMyRecord. The pool is small, about $30 of ETH today, so prices can move sharply and a large sale may not fill. Only use money you can afford to lose.</p>
+        <span class="tcoin-announce-kick">Announcement</span>
+        <h2 class="tmr-h2">TMR Coin is live on Base</h2>
+        <p class="tcoin-announce-lede">TMR Coin is a real cryptocurrency on Base. Anyone with a wallet can buy or sell it in a public pool without going through TrustMyRecord, and there is more in the works. Only use money you can afford to lose.</p>
         <p>What that means in practice. The token is on Base at a verified contract with a fixed supply of 1,000,000,000 and no mint function, so nobody can print more of it. It is not a promise, a voucher, or an IOU from us. It is a token you hold in your own wallet, and its price is whatever people are willing to pay for it at that moment.</p>
         <h3 class="tcoin-announce-sub">Two things we want you to hear from us first</h3>
         <ul class="tcoin-risk-list">
-            <li><strong>The market is open but thin.</strong> The Uniswap v3 TMR/WETH pool (0.3% fee tier) holds about 41.78 million TMR and about $30 of ETH, so TMR can be bought and sold, but large trades move the price sharply. The trade link in the live market section below opens KyberSwap, which routes through this pool; select TMR by pasting the contract address, and check it before you trade.</li>
+            <li><strong>Where it trades.</strong> TMR trades in the Uniswap v3 TMR/WETH pool (0.3% fee tier) on Base. The trade link in the live market section below opens KyberSwap, which routes through this pool; select TMR by pasting the contract address, and check it before you trade.</li>
             <li><strong>Site credits are not TMR tokens.</strong> What you earn on the site is site credits, an internal balance in your TrustMyRecord wallet. Site credits and the TMR token are separate. Nothing converts one into the other, in either direction. Site credits cannot be withdrawn, sold or transferred off the site.</li>
         </ul>
         <h3 class="tcoin-announce-sub">What we are working on next</h3>
@@ -255,7 +255,7 @@
                 <h3>TMR Coin, on chain</h3>
                 <ul>
                     <li>A fixed supply ERC-20 you hold in your own wallet.</li>
-                    <li>Transferable, and can be bought and sold on a decentralised exchange. The pool is small, about $30 of ETH, so large sales move the price sharply.</li>
+                    <li>Transferable, and can be bought and sold on a decentralised exchange.</li>
                     <li>Has a market price, set entirely by whatever people trade at.</li>
                     <li>Bought with ETH, never earned on the site.</li>
                 </ul>
@@ -287,10 +287,10 @@
                 <ul>
                     <li>Swap ETH for TMR on Base using the verified contract address below.</li>
                     <li>It sits in your own wallet. We never hold it and never see your keys.</li>
-                    <li>Selling works, but the pool is small: it holds about $30 of ETH, so a large sale gets a much lower price.</li>
+                    <li>Can be sold back into the pool for ETH.</li>
                     <li>The price is set by trading. It can fall to nothing.</li>
                 </ul>
-                <p style="margin:10px 0 0;font-size:13.5px;color:var(--tmrp-text-muted);">The pool holds about $30 of ETH today, so prices can move sharply and a large purchase may not be possible to reverse at the same price. Keep your wallet's slippage protection on.</p>
+                <p style="margin:10px 0 0;font-size:13.5px;color:var(--tmrp-text-muted);">Prices can move sharply. Keep your wallet's slippage protection on.</p>
             </div>
         </div>
         <div class="tcoin-verify-banner">Earning site credits never puts tokens in your wallet, and buying tokens never adds to your site balance. Site credits cannot be cashed out.</div>
@@ -322,6 +322,23 @@
                     <a class="tmr-cta-secondary" id="tcoin-chart-link" href="#" rel="nofollow noopener" target="_blank">Live chart →</a>
                     <a class="tmr-cta-secondary" id="tcoin-pool-link" href="#" rel="nofollow noopener" target="_blank">Pool on Basescan →</a>
                     <a class="tmr-cta-secondary" id="tcoin-trade-link" href="#" rel="nofollow noopener" target="_blank" hidden>Trade on KyberSwap →</a>
+                    <button type="button" class="tmr-cta-secondary" id="tcoin-add-wallet" hidden>Add TMR to your wallet</button>
+                    <span id="tcoin-add-wallet-msg" style="font-size:13px;color:var(--tmrp-text-muted);" hidden></span>
+                    <script>
+                    // ADD_WALLET_20261031: asks the visitor's own wallet to show TMR (EIP-747). Nothing is sent or signed.
+                    (function () {
+                        var btn = document.getElementById('tcoin-add-wallet'), msg = document.getElementById('tcoin-add-wallet-msg');
+                        if (!btn || !window.ethereum || !window.ethereum.request) return;
+                        btn.hidden = false;
+                        btn.addEventListener('click', function () {
+                            window.ethereum.request({ method: 'wallet_watchAsset', params: { type: 'ERC20', options: {
+                                address: '0x522ddf023d0E2Cab5cB05660573165301519AE9e', symbol: 'TMR', decimals: 18,
+                                image: 'https://trustmyrecord.com/static/branding/tmr-coin/tmr-coin-256.png' } } })
+                            .then(function (ok) { msg.textContent = ok ? 'TMR added. Switch your wallet to Base to see it.' : 'Not added.'; msg.hidden = false; })
+                            .catch(function () { msg.textContent = 'Your wallet did not add it. You can import the contract address above by hand.'; msg.hidden = false; });
+                        });
+                    })();
+                    </script>
                 </div>
                 <p id="tcoin-trade-notice" style="margin-top:12px;font-size:13.5px;" hidden></p>
                 <p style="margin-top:12px;font-size:13.5px;color:var(--tmrp-text-muted);">Read live from the pool on Base <span id="tcoin-read-at"></span>. TrustMyRecord does not sell TMR, does not take payment for it, and earns nothing from these links.</p>
@@ -359,7 +376,7 @@
 
     <section class="tmr-glass">
         <h2 class="tmr-h2">How To Buy, Hold or Sell TMR</h2>
-        <p>TMR is bought on a decentralised exchange, so there is no account to open and nothing to buy from TrustMyRecord. TMR can be sold the same way; the pool is small, about $30 of ETH, so keep trades small. You will need a self-custody wallet and ETH on the Base network.</p>
+        <p>TMR is bought on a decentralised exchange, so there is no account to open and nothing to buy from TrustMyRecord. TMR can be sold the same way. You will need a self-custody wallet and ETH on the Base network.</p>
         <div class="tcoin-grid">
             <div class="tcoin-item">
                 <span class="tcoin-amt">1</span>
@@ -383,11 +400,11 @@
             </div>
             <div class="tcoin-item">
                 <span class="tcoin-amt">6</span>
-                <div><strong>Start small and set slippage</strong><span>The pool holds about $30 of ETH, so a large sale gets a much lower price than a small one. Keep trades small and leave your wallet's slippage protection on. It will refuse a trade that would fill at a bad price, which is exactly what you want here.</span></div>
+                <div><strong>Start small and set slippage</strong><span>Start with a small trade and leave your wallet's slippage protection on. It will refuse a trade that would fill at a bad price, which is exactly what you want.</span></div>
             </div>
             <div class="tcoin-item">
                 <span class="tcoin-amt">7</span>
-                <div><strong>Selling</strong><span>Use the same screen with TMR as the token you pay and ETH as the token you receive. All sellers together can take out only the ETH in the pool, about $30 today plus whatever buyers pay in, so a large sale fills at a much lower price.</span></div>
+                <div><strong>Selling</strong><span>Use the same screen with TMR as the token you pay and ETH as the token you receive. Check the quote before you confirm.</span></div>
             </div>
         </div>
     </section>
@@ -460,7 +477,7 @@
         <h2 class="tmr-h2">Risks, Please Read</h2>
         <ul class="tcoin-risk-list">
             <li><strong>You can lose everything you put in.</strong> Crypto prices are volatile. TMR could fall to effectively zero and stay there. Never spend money you cannot afford to lose.</li>
-            <li><strong>The pool is small.</strong> It holds about 41.78 million TMR and about $30 of ETH, so a large sale gets a much lower price and you may not be able to sell everything you buy at the price you paid. Keep slippage protection on.</li>
+            <li><strong>Prices move fast.</strong> Check every quote before you confirm and keep slippage protection on.</li>
             <li><strong>The liquidity lock is a timelock, not a burn.</strong> The pool position can be withdrawn, but only by a call scheduled on chain in public 365 days in advance. Collecting pool fees goes through the same delay.</li>
             <li><strong>The company still owns most of the supply.</strong> It is locked as described above, but from 25 October 2027 vested TMR reaches the company Safe, and any 30 day reserve use is announced on chain first. Like any holder, the company could then sell. Any movement is visible on chain.</li>
             <li><strong>Nothing here is an investment offer.</strong> No return, profit, price increase or future listing is promised or implied. TrustMyRecord does not sell TMR tokens and takes no payment for them.</li>
@@ -526,7 +543,7 @@
             // MARKET_STATUS_20261019: a quoted price with no buyers behind it is not shown as a price.
             var ms = m.market_status, market = !ms || ms.show_price;
             document.getElementById('tcoin-price').textContent = market ? '$' + Number(m.price_usd).toPrecision(4) : 'No market yet';
-            document.getElementById('tcoin-price-eth').textContent = market ? Number(m.price_eth).toExponential(3) + ' ETH per TMR' + (ms && !ms.genuine ? ', thin market' : '')
+            document.getElementById('tcoin-price-eth').textContent = market ? Number(m.price_eth).toExponential(3) + ' ETH per TMR'
                 : 'last pool price $' + Number(m.price_usd).toPrecision(3) + ' is not a sale price';
             document.getElementById('tcoin-tvl').textContent = (!ms || ms.genuine) ? money(m.tvl_usd, 2) : money(m.pool_weth_usd, 2) + ' of ETH';
             document.getElementById('tcoin-tvl-sub').textContent = whole(m.pool_tmr) + ' TMR + ' + Number(m.pool_weth).toFixed(6) + ' WETH';
