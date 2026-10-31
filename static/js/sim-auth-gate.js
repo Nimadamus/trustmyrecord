@@ -824,8 +824,8 @@
                    simulators, and TMR credit sales are closed (10/25), so the old primary
                    "Buy TMR" button led to a closed store. TMR Pro is now the primary action;
                    spending TMR the member already holds stays available as the secondary. */
-                '<a class="tsg-btn is-primary" id="tsgMeterPro" href="/premium/?from=sim_meter&src=sim_meter#pricing">Go unlimited with TMR Pro</a>' +
-                '<p class="tsg-note" style="margin-top:6px">Unlimited runs on every simulator, the Handicapper Watchdog board of graded handicappers outside TMR, and BetLegend Pro. $49.99/month, cancel any time.</p>' +
+                '<a class="tsg-btn is-primary" id="tsgMeterPro" href="/premium/?from=sim_meter&src=sim_meter#pricing">Try TMR Pro free for 3 days</a>' +
+                '<p class="tsg-note" style="margin-top:6px">Unlimited runs on every simulator, the Handicapper Watchdog board of graded handicappers outside TMR, and BetLegend Pro. 3 days free, then $49.99/month. Cancel before the trial ends and you pay nothing.</p>' +
                 (canAfford
                     ? '<div class="tsg-actions"><button type="button" class="tsg-btn is-ghost" id="tsgMeterPay">Or run it for ' + METER_COST + ' TMR from your balance</button></div>'
                     : '') +

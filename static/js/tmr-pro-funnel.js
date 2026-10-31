@@ -157,6 +157,7 @@
             '.tpf-simlink u{color:#F5C542;font-weight:800}.tpf-simlink:hover{border-color:#F5C542}',
             '.tpf-offer{margin:14px 0;padding:16px 18px;border-radius:14px;border:1px solid rgba(245,197,66,.45);background:linear-gradient(180deg,rgba(245,197,66,.10),rgba(140,196,255,.05));color:inherit;font:500 14px/1.5 Inter,system-ui,sans-serif;max-width:100%;box-sizing:border-box}',
             '.tpf-offer-k{font:800 11px/1.3 Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#F5C542;margin-bottom:6px}',
+            '.tpf-offer-fine{display:block;margin-top:8px;font-size:12px;opacity:.75}',
             '.tpf-offer-h{display:block;font:800 17px/1.3 Inter,system-ui,sans-serif;margin-bottom:8px}',
             '.tpf-offer ul{margin:0 0 10px;padding-left:18px}.tpf-offer li{margin:3px 0}',
             '.tpf-spot{margin:0 0 12px;padding:8px 10px;border-radius:10px;background:rgba(140,196,255,.08);font-size:13px}',
@@ -477,13 +478,14 @@
     }
     function simOfferHtml(comp, sport, s) {
         return '<div class="tpf-offer">'
-            + '<div class="tpf-offer-k">TMR Pro &middot; $49.99/month &middot; cancel any time</div>'
+            + '<div class="tpf-offer-k">TMR Pro &middot; 3 days free, then $49.99/month</div>'
             + '<b class="tpf-offer-h">Run this ' + esc(sport.toUpperCase()) + ' simulator as often as you want</b>'
             + '<ul><li>Unlimited runs on every simulator, every day</li>'
             + '<li>The Handicapper Watchdog board: pending picks of graded handicappers outside TMR, before kickoff</li>'
             + '<li>BetLegend Pro research included</li></ul>'
             + spotlightHtml(s)
-            + '<a class="tpf-offer-btn" data-tpf-cta="' + comp + '" href="' + proHref(comp, '#pricing') + '">Get TMR Pro</a>'
+            + '<a class="tpf-offer-btn" data-tpf-cta="' + comp + '" href="' + proHref(comp, '#pricing') + '">Start 3 days free</a>'
+            + '<small class="tpf-offer-fine">Card required. Cancel before the trial ends and you pay nothing.</small>'
             + '</div>';
     }
 

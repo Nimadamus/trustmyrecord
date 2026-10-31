@@ -1637,20 +1637,25 @@
             btn.textContent = label;
         }
         var foundingFull = false;
+        /* PRO_TRIAL_20261031: free days on Pro monthly. Signed in: the server's answer
+           (me.trial.days). Signed out: the standard 3 day offer; the server still decides at checkout. */
+        var trialDays = 0;
         function paintButtons(foundingOffered) {
             Array.prototype.forEach.call(buttons, function (btn) {
                 var kind = btn.getAttribute('data-pro-buy');
+                var trialLabel = kind === 'monthly' && trialDays > 0 ? 'Start ' + trialDays + ' days free' : null;
                 if (mode === 'buy') {
-                    setButton(btn, true, LABEL[kind]);
+                    setButton(btn, true, trialLabel || LABEL[kind]);
                 } else if (mode === 'signin') {
-                    setButton(btn, true, LABEL[kind]);
+                    setButton(btn, true, trialLabel || LABEL[kind]);
                 } else if (mode === 'subscribed') {
                     setButton(btn, false, 'You are subscribed');
                 } else {
                     setButton(btn, false, 'Coming soon');
                 }
             });
-            if (monthlyNote) monthlyNote.textContent = '\u00a0';
+            if (monthlyNote) monthlyNote.textContent = (trialDays > 0 && (mode === 'buy' || mode === 'signin'))
+                ? trialDays + ' days free, then $49.99/month. Cancel before the trial ends and you pay nothing.' : '\u00a0';
             var signinNote = document.getElementById('proSigninNote');
             if (signinNote) signinNote.hidden = mode !== 'signin';
             var open = mode === 'buy' || mode === 'signin' || mode === 'subscribed';
@@ -1751,6 +1756,7 @@
                 : 'You are on the free plan, and everything free stays free. Subscriptions are not open yet.',
                 false, !!(me && me.can_manage_billing));
             foundingFull = !!(me && me.founding && me.founding.seats_left === 0);
+            trialDays = (me && me.trial && me.trial.days) || 0;
             paintButtons(false);
             loadBoard(false, true);
             var intent = mode === 'buy' ? takeIntent() : null;
@@ -2317,7 +2323,7 @@
                 paintStatus('Not signed in', 'Pick a plan below, then sign in or create a free account. Checkout opens right after, with the plan you picked.', false, false);
                 loadBoard(false);
                 fetch(API + '/premium/checkout-status', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (b) {
-                    if (b && b.open_to_public) { mode = 'signin'; paintButtons(false); }
+                    if (b && b.open_to_public) { mode = 'signin'; trialDays = 3; paintButtons(false); }
                     paintUltimate(!!(b && b.ultimate_open_to_public), null);
                 }).catch(function () {});
                 return;
