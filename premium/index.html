@@ -909,7 +909,7 @@
                         <a class="pro-cta" id="proHeroCta" href="#pricing">Get TMR Pro</a>
                         <a class="pxh-ghost" href="#board">See today's board <span aria-hidden="true">&rarr;</span></a>
                     </div>
-                    <p class="pro-hero-price"><b>$49.99 a month</b> or <b>$500 a year</b> <span class="pro-save">Save $99.88</span></p>
+                    <p class="pro-hero-price" id="proHeroPrice"><b>$49.99 a month</b> or <b>$500 a year</b> <span class="pro-save">Save $99.88</span></p>
                 </div>
                 <aside class="pxh-panel" id="pxhPanel" aria-label="Handicapper Watchdog live numbers">
                     <div class="pxh-panel-k"><span class="pxh-dot" aria-hidden="true"></span>Handicapper Watchdog &middot; live</div>
@@ -1656,6 +1656,18 @@
             });
             if (monthlyNote) monthlyNote.textContent = (trialDays > 0 && (mode === 'buy' || mode === 'signin'))
                 ? trialDays + ' days free, then $49.99/month. One trial per person and card. Cancel before it ends and you pay nothing.' : '\u00a0';
+            /* PRO_HERO_TRIAL_20261101: the live 3 day trial was only named in the pricing table,
+               thousands of pixels below the hero on a phone. 30 days to 11/01: 108 users saw this
+               page and 7 opened checkout. The hero now leads with the offer that is actually live.
+               Terms unchanged: monthly only, card required, one trial per person and card. */
+            var heroCta = document.getElementById('proHeroCta');
+            var heroPrice = document.getElementById('proHeroPrice');
+            if (heroCta && (mode === 'buy' || mode === 'signin')) {
+                heroCta.textContent = trialDays > 0 ? 'Start ' + trialDays + ' days free' : 'Get TMR Pro';
+                if (heroPrice && trialDays > 0) {
+                    heroPrice.innerHTML = '<b>' + trialDays + ' days free</b>, then <b>$49.99 a month</b>. Cancel before the trial ends and you pay nothing. Or <b>$500 a year</b> <span class="pro-save">Save $99.88</span>';
+                }
+            }
             var signinNote = document.getElementById('proSigninNote');
             if (signinNote) signinNote.hidden = mode !== 'signin';
             var open = mode === 'buy' || mode === 'signin' || mode === 'subscribed';
