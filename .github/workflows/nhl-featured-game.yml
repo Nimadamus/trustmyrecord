@@ -74,6 +74,9 @@ jobs:
       - name: Refresh every 30 minutes for five and a half hours
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Sent as x-tmr-bake-key so the 30-minute re-reads of the seeded NHL
+          # simulation stay out of the public run archive (SIM_BAKE_NO_ARCHIVE_20261031).
+          TMR_BAKE_KEY: ${{ secrets.TMR_BAKE_KEY }}
         run: |
           set -o pipefail
           git config user.name "tmr-nhl-featured-bot"
