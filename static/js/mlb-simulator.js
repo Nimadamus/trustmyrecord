@@ -3127,6 +3127,7 @@
         var starterVec = evPitcherVector(ownStarter, 100);
         var penVec = evStaffVector(team, true);
         var starterOutsInfo = evStarterOuts(ownStarter, team);
+        var spPitchLimit = evStarterPitchLimit(ownStarter);
         var starterOuts = starterOutsInfo.outs;
         var isOpenerGame = starterOutsInfo.isOpener;
         // POSTSEASON_MODE_20261001: the starter leash. In October managers go to
@@ -3211,7 +3212,7 @@
             postseason: postseasonOpts ? { round: postseasonOpts.round || null } : null,
             elimination: !!(postseasonOpts && postseasonOpts.elimination),
             team: team, lineup: lineup, benchPool: benchPool, anchorFactor: anchorFactor, pitchers: pitchers,
-            starterOuts: starterOuts, isOpener: !!isOpenerGame, roster: roster, hasNamedLineup: !!(roster && roster.players && roster.players.length),
+            starterOuts: starterOuts, spPitchLimit: spPitchLimit, isOpener: !!isOpenerGame, roster: roster, hasNamedLineup: !!(roster && roster.players && roster.players.length),
             // Error-rate calibration (June 4, 2026 vs real MLB 2025): engine ran
             // 0.31 errors/team vs real 0.504 — reach-on-error base raised to match.
             // ERROR_GAME_CAP_20260725: applied per-team-per-game in evPlayHalf via
@@ -5224,7 +5225,29 @@
     // 98 left 7.9% of starts at 100+ (real 10.2%); 99 measured 11.5%.
     var STARTER_PITCH_LIMIT_V2 = 99;
     function starterPitchLimit(side) {
+        if (!side.postseason && workloadV2() && side.spPitchLimit) return side.spPitchLimit;
         return side.postseason ? POSTSEASON_PITCH_LIMIT : (workloadV2() ? STARTER_PITCH_LIMIT_V2 : STARTER_PITCH_LIMIT);
+    }
+    // STARTER_PITCH_LIMIT_BY_PITCHER_20261101: one leash for every starter flattened
+    // the real spread. 871 real 2025 starts by regular starters (gs >= 4, half his
+    // games started), by his season pitches per appearance as of the game date:
+    //   pitches/app    under 80   80-86   86-90   90-94   94+
+    //   real 100+ %        3.3     5.9    11.2    16.1   35.5
+    //   real 6+ IP %      31.7    31.0    43.9    49.8   58.7
+    //   engine 100+ %      7.8     9.0    10.1    11.6   12.4  (fixed 99)
+    //   engine 6+ IP %    32.2    35.5    38.1    42.0   41.6
+    // His limit is now 99 + (pitches per appearance - 88), held to [97, 106]. Paired
+    // 7,000 games (same seeds): bucket error 100+ 9.7 -> 4.1 pts, 6+ IP 8.6 -> 5.3,
+    // outs 0.72 -> 0.49; runs, hits, walks, strikeouts and the scoring tails unchanged;
+    // pitchers per team-game 4.38 -> 4.36 (real 4.32). Swingmen, openers and a
+    // pitcher with no line keep the league limit; October keeps its own.
+    var STARTER_LIMIT_MID_PPS = 88, STARTER_LIMIT_LO = 97, STARTER_LIMIT_HI = 106;
+    function evStarterPitchLimit(starter) {
+        if (!workloadV2() || !starter || !starter.mlbId) return null;
+        var st = cachedPlayerStat(starter.mlbId, 'pitching'); if (!st) return null;
+        var gs = Number(st.gamesStarted || 0), gp = Number(st.gamesPitched || st.gamesPlayed || 0), np = Number(st.numberOfPitches || 0);
+        if (gs < 4 || !gp || gs / gp < 0.5 || !np) return null;
+        return Math.round(clamp(STARTER_PITCH_LIMIT_V2 + (np / gp - STARTER_LIMIT_MID_PPS), STARTER_LIMIT_LO, STARTER_LIMIT_HI));
     }
     // STARTER_HAS_GAS_20261030: the planned length is drawn before the first
     // pitch, so an efficient starter was lifted at his plan with pitches to
@@ -10698,6 +10721,7 @@
             evSimGame: evSimGame,
             eventWinProbability: eventWinProbability,
             evActivePitcher: evActivePitcher,
+            starterPitchLimit: starterPitchLimit,
             evDefPitcher: evDefPitcher,
             MOP_UP_FACTOR: MOP_UP_FACTOR,
             evRelieverArms: evRelieverArms,
