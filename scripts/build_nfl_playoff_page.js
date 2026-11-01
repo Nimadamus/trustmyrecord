@@ -232,6 +232,11 @@ function patch(html, start, end, block, anchor, before) {
   let html = fs.readFileSync(PAGE, 'utf8');
   html = patch(html, '<!-- PB_NFL_HEAD:start -->', '<!-- PB_NFL_HEAD:end -->', STYLE, '</head>', true);
   html = patch(html, '<!-- PB_NFL:start', '<!-- PB_NFL:end -->', out.html, '<div id="app" aria-live="polite"><p class="muted">Loading the 2026 schedule&hellip;</p></div>', false);
+  // LEAGUE_SIM_CLS_20261101: reserve the shared header before tmr-ds-nav.js lands
+  // (live 1366 CLS 0.058 from <main> moving down when the nav arrived).
+  html = patch(html, '<!-- PB_NFL_NAV:start -->', '<!-- PB_NFL_NAV:end -->',
+    '<!-- PB_NFL_NAV:start -->' + require('./build_league_sim_pages.js').NAV_RESERVE + '<!-- PB_NFL_NAV:end -->',
+    '<body class="tmr-ds-shell tmr-ds--dark">', false);
   html = patch(html, '<!-- PB_NFL_TAIL:start -->', '<!-- PB_NFL_TAIL:end -->', TAIL, '</body>', true);
   fs.writeFileSync(PAGE, html);
   // The snapshot the page falls back to when the API does not answer.

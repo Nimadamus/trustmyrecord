@@ -4,13 +4,14 @@
  * header's height before tmr-ds-nav.js lands. /mlb-playoff-odds/ and the 30 MLB
  * team odds pages had no reservation (built by build_mlb_odds_page.js, not the
  * league builder) and measured CLS 0.108 at 390 px, 0.054 at 1366 (live, 4x CPU,
- * slow 4G, 11/01 12:15 AM PDT). Fails on the builder before this change.
+ * slow 4G, 11/01 12:15 AM PDT); /nfl-season-simulator/ 0.089 / 0.054 and
+ * /nfl-playoff-simulator/ 0.058 desktop the same way. Fails on the old pages.
  */
 const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
 const root = path.join(__dirname, '..');
-const pages = ['mlb-playoff-odds/index.html', 'nba-playoff-odds/index.html', 'nhl-playoff-odds/index.html'];
+const pages = ['mlb-playoff-odds/index.html', 'nfl-season-simulator/index.html', 'nfl-playoff-simulator/index.html'];
 const teamDir = path.join(root, 'mlb-simulator', 'teams');
 if (fs.existsSync(teamDir)) for (const d of fs.readdirSync(teamDir)) {
   const f = path.join('mlb-simulator', 'teams', d, 'index.html');
@@ -28,5 +29,5 @@ for (const rel of pages) {
   const main = html.indexOf('<main', body);
   assert.ok(reserve > body && reserve < main, `${rel}: header height not reserved before <main>`);
 }
-assert.ok(checked >= 31, `only ${checked} pages checked`);
+assert.ok(checked >= 33, `only ${checked} pages checked`);
 console.log(`league-sim-nav-reserve-test: ok (${checked} pages)`);
