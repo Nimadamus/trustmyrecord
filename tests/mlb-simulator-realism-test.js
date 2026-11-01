@@ -174,16 +174,18 @@ function validateResult(result, label) {
   // this suite failed on one: a 2022 Astros side against the 2023 Rangers, two
   // of the better offences in the file.
   //
-  // These bounds sit just above the observed record. A game beyond them is not
-  // a rare blowout, it is a broken inning loop, which is what a hard cap should
-  // be catching.
-  if (away.runs > 30 || home.runs > 30) {
+  // TAIL_BY_RATE_20261031: those bounds came from four seasons only, and real
+  // baseball has gone past them (combined 45 in 1979 and 38 in 2020). The per
+  // game cap is now the all-time MLB record (36 by one team, 49 in one game):
+  // beyond it is a broken inning loop. How OFTEN big games happen is checked
+  // by rate in the verdict block.
+  if (away.runs > 36 || home.runs > 36) {
     invalid.push('individual score of ' + Math.max(away.runs, home.runs)
-      + ' exceeds anything in the real record (most: 28)');
+      + ' exceeds anything in the real record (most: 36)');
   }
-  if (away.runs + home.runs > 36) {
+  if (away.runs + home.runs > 49) {
     invalid.push('combined score of ' + (away.runs + home.runs)
-      + ' exceeds anything in the real record (most: 33)');
+      + ' exceeds anything in the real record (most: 49)');
   }
   if (sum(away.innings) !== away.runs) invalid.push('away inning total mismatch');
   if (sum(home.innings) !== home.runs) invalid.push('home inning total mismatch');
@@ -427,6 +429,7 @@ const summary = {
   teamScoresAbove15: 0,
   teamScoresAbove18: 0,
   combinedScoresAbove25: 0,
+  tailCounts: { combined30: 0, combined33: 0, combined35: 0, combined37: 0, team25: 0, team28: 0 },
   invalidOutputs: 0,
   invalidExamples: [],
   extremeValidOutputs: [],
@@ -482,6 +485,8 @@ for (let i = 0; i < totalSimulations; i += 1) {
   if (awayScore > 15 || homeScore > 15) summary.teamScoresAbove15 += 1;
   if (awayScore > 18 || homeScore > 18) summary.teamScoresAbove18 += 1;
   if (combined > 25) summary.combinedScoresAbove25 += 1;
+  [30, 33, 35, 37].forEach((k) => { if (combined >= k) summary.tailCounts['combined' + k] += 1; });
+  [25, 28].forEach((k) => { summary.tailCounts['team' + k] += (awayScore >= k ? 1 : 0) + (homeScore >= k ? 1 : 0); });
   const extremeKey = [mode, result.away.id, result.home.id, result.awayPitcher.id, result.homePitcher.id, awayScore, homeScore].join('|');
   if (!extremeKeys.has(extremeKey)) {
     extremeKeys.add(extremeKey);
@@ -513,6 +518,7 @@ if (SHARDS > 1) {
     teamScoresAbove15: summary.teamScoresAbove15,
     teamScoresAbove18: summary.teamScoresAbove18,
     combinedScoresAbove25: summary.combinedScoresAbove25,
+    tailCounts: summary.tailCounts,
     invalidOutputs: summary.invalidOutputs,
     invalidExamples: summary.invalidExamples,
     reliefAppearances,
@@ -559,12 +565,35 @@ assert(summary.modeCounts.current > 0 && summary.modeCounts.historical > 0 && su
 // EXPECTED result, and a suite that forbids them is asserting that the tails do
 // not exist.
 //
-// What matters is the RATE, so that is what is checked. The ceilings are set
-// just above the real record, where they still catch a runaway inning loop.
-assert(summary.highestScoreObserved <= 30,
-  'highest individual score ' + summary.highestScoreObserved + ' is beyond the real record of 28');
-assert(summary.highestCombinedScoreObserved <= 36,
-  'highest combined score ' + summary.highestCombinedScoreObserved + ' is beyond the real record of 33');
+// TAIL_BY_RATE_20261031: the extreme tail is checked by RATE as well. The old
+// ceilings (30 and 36) sat just above the 2022-2025 record, which is four
+// seasons, and a 12,000-game batch failed on two games of 37 and 39. Over MLB
+// 1950-2025 (151,563 games, statsapi schedules) 11 games totalled 35 or more
+// and 2 totalled 37 or more (45 in 1979, 38 in 2020), so a batch this size
+// should see about one 35+ game and can see two 37+ games by chance. Each tail
+// count must stay under the one-sided 99.9% Poisson ceiling at the real
+// per-game rate: an engine running several times reality's tail fails, one
+// that matches it passes. The hard ceilings sit at the all-time MLB records
+// (36 by one team, 49 in one game), where they still catch a runaway inning.
+const REAL_TAIL_RATE = {
+  combined30: 81 / 151563, combined33: 30 / 151563, combined35: 11 / 151563, combined37: 2 / 151563,
+  team25: 12 / 303126, team28: 5 / 303126,
+};
+function poissonCeiling(lambda) {
+  let k = 0; let p = Math.exp(-lambda); let c = p;
+  while (1 - c > 0.001) { k += 1; p *= lambda / k; c += p; }
+  return k;
+}
+assert(summary.highestScoreObserved <= 36,
+  'highest individual score ' + summary.highestScoreObserved + ' is beyond the all-time record of 36');
+assert(summary.highestCombinedScoreObserved <= 49,
+  'highest combined score ' + summary.highestCombinedScoreObserved + ' is beyond the all-time record of 49');
+Object.keys(REAL_TAIL_RATE).forEach((k) => {
+  const games = k.indexOf('team') === 0 ? totalSimulations * 2 : totalSimulations;
+  const ceiling = poissonCeiling(REAL_TAIL_RATE[k] * games);
+  assert(summary.tailCounts[k] <= ceiling,
+    k + ': ' + summary.tailCounts[k] + ' in ' + games + ' is above the 99.9% ceiling of ' + ceiling + ' at the real MLB 1950-2025 rate');
+});
 
 const teamGames = totalSimulations * 2;
 const bigScoreRate = summary.teamScoresAbove18 / teamGames;

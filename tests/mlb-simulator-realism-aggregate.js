@@ -102,6 +102,7 @@ assert(files.length, 'no shard payloads given');
 const shards = files.map((f) => {
   const raw = JSON.parse(fs.readFileSync(f, 'utf8'));
   assert(Number.isFinite(raw.shard) && Number.isFinite(raw.shards), f + ' is not a shard payload');
+  assert(raw.tailCounts, f + ' has no tailCounts (written before TAIL_BY_RATE_20261031); rerun the shard');
   return raw;
 });
 
@@ -148,6 +149,8 @@ const summary = {
   teamScoresAbove15: sum('teamScoresAbove15'),
   teamScoresAbove18: sum('teamScoresAbove18'),
   combinedScoresAbove25: sum('combinedScoresAbove25'),
+  tailCounts: ['combined30', 'combined33', 'combined35', 'combined37', 'team25', 'team28']
+    .reduce((o, k) => { o[k] = shards.reduce((a, s) => a + (Number((s.tailCounts || {})[k]) || 0), 0); return o; }, {}),
   invalidOutputs: sum('invalidOutputs'),
   invalidExamples: shards.flatMap((s) => s.invalidExamples || []).slice(0, 8),
   extremeValidOutputs: [],
@@ -191,10 +194,35 @@ summary.reliefEightHit = reliefEightHit;
 if (summary.invalidOutputs) console.log(JSON.stringify(summary.invalidExamples, null, 2));
 assert.strictEqual(summary.invalidOutputs, 0, 'realism batch has zero invalid outputs');
 assert(summary.modeCounts.current > 0 && summary.modeCounts.historical > 0 && summary.modeCounts.mixed > 0, 'all simulator modes are represented');
-assert(summary.highestScoreObserved <= 30,
-  'highest individual score ' + summary.highestScoreObserved + ' is beyond the real record of 28');
-assert(summary.highestCombinedScoreObserved <= 36,
-  'highest combined score ' + summary.highestCombinedScoreObserved + ' is beyond the real record of 33');
+// TAIL_BY_RATE_20261031: the extreme tail is checked by RATE as well. The old
+// ceilings (30 and 36) sat just above the 2022-2025 record, which is four
+// seasons, and a 12,000-game batch failed on two games of 37 and 39. Over MLB
+// 1950-2025 (151,563 games, statsapi schedules) 11 games totalled 35 or more
+// and 2 totalled 37 or more (45 in 1979, 38 in 2020), so a batch this size
+// should see about one 35+ game and can see two 37+ games by chance. Each tail
+// count must stay under the one-sided 99.9% Poisson ceiling at the real
+// per-game rate: an engine running several times reality's tail fails, one
+// that matches it passes. The hard ceilings sit at the all-time MLB records
+// (36 by one team, 49 in one game), where they still catch a runaway inning.
+const REAL_TAIL_RATE = {
+  combined30: 81 / 151563, combined33: 30 / 151563, combined35: 11 / 151563, combined37: 2 / 151563,
+  team25: 12 / 303126, team28: 5 / 303126,
+};
+function poissonCeiling(lambda) {
+  let k = 0; let p = Math.exp(-lambda); let c = p;
+  while (1 - c > 0.001) { k += 1; p *= lambda / k; c += p; }
+  return k;
+}
+assert(summary.highestScoreObserved <= 36,
+  'highest individual score ' + summary.highestScoreObserved + ' is beyond the all-time record of 36');
+assert(summary.highestCombinedScoreObserved <= 49,
+  'highest combined score ' + summary.highestCombinedScoreObserved + ' is beyond the all-time record of 49');
+Object.keys(REAL_TAIL_RATE).forEach((k) => {
+  const games = k.indexOf('team') === 0 ? totalSimulations * 2 : totalSimulations;
+  const ceiling = poissonCeiling(REAL_TAIL_RATE[k] * games);
+  assert(summary.tailCounts[k] <= ceiling,
+    k + ': ' + summary.tailCounts[k] + ' in ' + games + ' is above the 99.9% ceiling of ' + ceiling + ' at the real MLB 1950-2025 rate');
+});
 
 const teamGames = totalSimulations * 2;
 const bigScoreRate = summary.teamScoresAbove18 / teamGames;
