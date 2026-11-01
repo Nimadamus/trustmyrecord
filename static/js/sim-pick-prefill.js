@@ -156,6 +156,7 @@
 
     var tries = 0;
     var switchedSport = false;
+    var staleGames = null;
     // Which board to open. Written by the simulator that created the intent
     // (MLB Simulator -> 'MLB', NFL Simulator -> 'NFL'); older intents that
     // predate the field are MLB by definition.
@@ -183,8 +184,23 @@
             showBanner('Your pick (' + (intent.pick_team ? intent.pick_team + ' ML' : (intent.side || '') + ' ' + (intent.line || '')) + ') is saved — the game board has not loaded it yet. Find the matchup below to place it.', false);
             return;
         }
-        armSubmitObserver();
+        /* SIMPICK_SPORT_SWITCH_20261101: the board opens on NBA with games, so
+           the "no games yet" switch above never fired for an NFL or NHL intent
+           and the matchup was reported as off the board. If the matchup is
+           not on the board that loaded and that board is another sport, open
+           the intent's sport once and wait for its own board. */
+        if (staleGames && games === staleGames && tries < 100) { setTimeout(attempt, 400); return; }
         var idx = findGameIndex(games);
+        var shownSport = (window.TMR && window.TMR.selectedSport) || '';
+        if (idx === -1 && !switchedSport && shownSport !== INTENT_SPORT &&
+            typeof window.selectSportAndShowGames === 'function') {
+            switchedSport = true;
+            staleGames = games;
+            try { window.selectSportAndShowGames(INTENT_SPORT); } catch (e) { }
+            setTimeout(attempt, 400);
+            return;
+        }
+        armSubmitObserver();
         if (idx === -1) {
             showBanner('Your simulated matchup (' + (intent.away_team_name || '') + ' @ ' + (intent.home_team_name || '') + ') is not on the current board — it may have started or moved. Choose any game below; nothing was submitted.', false);
             return;
