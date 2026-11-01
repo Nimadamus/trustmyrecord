@@ -19,44 +19,63 @@
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <style>
-      /* Single column at every width. This page exists for someone who just
-         signed up on a phone, so the phone layout is the layout and the desktop
-         one is simply the same thing centred. */
-      .wc-wrap{max-width:640px;margin:0 auto}
-      .wc-hero{text-align:center}
-      .wc-eyebrow{display:inline-block;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#7FB6FF;margin-bottom:8px}
-      .wc-sub{color:#DCE7F4;font-size:15px;line-height:1.6;margin-top:6px}
-
-      /* Every row reserves its full height from the first paint - status chip
-         included - so resolving three async checks cannot shift the page under
-         a thumb that is already reaching for a button. */
-      .wc-step{display:flex;gap:14px;align-items:flex-start;padding:16px;border:1px solid #D2DEEA;border-radius:14px;background:#0E1620;margin-top:12px;min-height:104px}
-      .wc-step.is-done{border-color:rgba(10,139,78,.28);background:rgba(10,139,78,0.1)}
-      .wc-num{flex:0 0 auto;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#121C28;color:#DCE7F4;font-weight:800;font-size:15px;border:1px solid #D2DEEA}
-      .wc-step.is-done .wc-num{background:#0A8B4E;color:#DCE7F4;border-color:rgba(10,139,78,.28)}
-      .wc-body{flex:1 1 auto;min-width:0}
-      .wc-title{margin:0;font-size:16px;font-weight:800;color:#DCE7F4;line-height:1.3}
-      .wc-why{margin:4px 0 0;font-size:13.5px;color:#C3D6EA;line-height:1.5}
-      .wc-status{display:block;margin-top:8px;font-size:12.5px;font-weight:700;min-height:1.2em;color:#C3D6EA}
-      .wc-status.ok{color:#2ECC71}
-      .wc-status.warn{color:#8A6206}
-      .wc-act{display:inline-flex;align-items:center;justify-content:center;gap:8px;margin-top:11px;
-              background:#0B4FA8;color:#04121f;border:0;border-radius:10px;padding:12px 18px;
-              font-weight:800;font-size:14.5px;text-decoration:none;cursor:pointer;min-height:44px}
-      .wc-act:hover{background:#DEF4F2;color:#04121f}
-      .wc-act.secondary{background:transparent;color:#DCE7F4;border:1px solid #D2DEEA}
-      .wc-step.is-done .wc-act{background:transparent;color:#DCE7F4;border:1px solid #D2DEEA}
-
-      .wc-optional{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#C3D6EA;
-                   border:1px solid #D2DEEA;border-radius:999px;padding:2px 9px;margin-left:8px;white-space:nowrap}
-
+      /* WELCOME_SIM_FIRST_20261101. Signup data (60 day cohort to 11/01): members who
+         arrived on a simulator ran one 62 to 79% of the time; members sent here ran
+         one 27% of the time, because this page never mentioned the simulators. Every
+         paying member so far came through a simulator. The simulator is now step one. */
+      .wc-wrap{max-width:720px;margin:0 auto}
+      .wc-hero{text-align:left;margin-bottom:6px}
+      .wc-eyebrow{display:inline-block;font:800 12px/1 Inter,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#0B4FA8;margin-bottom:10px}
+      body.tmr-light .wc-hero h1{font-family:'Barlow Condensed',Barlow,Inter,sans-serif;font-weight:800;font-size:clamp(34px,6vw,48px);line-height:1.02;letter-spacing:-.01em;color:#0B1B2E;margin:0}
+      body.tmr-light .wc-sub{color:#3A4E66;font-size:16px;line-height:1.55;margin:10px 0 0;max-width:56ch}
+      .wc-panel{margin-top:22px;border-radius:18px;background:#0B1624;border:1px solid #1C2C40;padding:20px;color:#E9F1FA;box-shadow:0 18px 40px -24px rgba(11,27,46,.55)}
+      .wc-panel-h{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+      body.tmr-light .wc-panel-h h2{margin:0;font:800 19px/1.25 Inter,sans-serif;color:#F4F8FD}
+      .wc-free{font:700 12.5px/1 Inter,sans-serif;color:#7FE0A9;white-space:nowrap}
+      .wc-sports{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:16px}
+      body.tmr-light a.wc-sport{position:relative;display:flex;flex-direction:column;gap:6px;min-height:112px;padding:16px;border-radius:14px;background:#122236;border:1px solid #23384F;color:#F4F8FD;text-decoration:none;transition:border-color .15s,background .15s,transform .15s}
+      body.tmr-light a.wc-sport:hover,body.tmr-light a.wc-sport:focus-visible{border-color:#5AA2FF;background:#16304C;transform:translateY(-1px);outline:none}
+      body.tmr-light .wc-sport b{font-family:'Barlow Condensed',Barlow,Inter,sans-serif;font-size:26px;font-weight:800;letter-spacing:.02em;line-height:1;color:#F4F8FD}
+      body.tmr-light .wc-sport .wc-desc{font-size:13.5px;line-height:1.4;color:#B8CBE0;padding-right:4px}
+      body.tmr-light .wc-sport .wc-go{margin-top:auto;font:800 13.5px/1 Inter,sans-serif;color:#7FB6FF}
+      .wc-tag{position:absolute;top:14px;right:14px;font:800 10.5px/1 Inter,sans-serif;letter-spacing:.08em;text-transform:uppercase;padding:5px 8px;border-radius:999px;background:rgba(46,204,113,.14);color:#7FE0A9}
+      .wc-tag:empty{display:none}
+      .wc-tag.off{background:rgba(184,203,224,.12);color:#B8CBE0}
+      body.tmr-light a.wc-sport.is-first{border-color:#3D7FD6;background:#15304F}
+      .wc-get{list-style:none;margin:16px 0 0;padding:14px 0 0;border-top:1px solid #1E3047;display:grid;gap:8px}
+      body.tmr-light .wc-get li{position:relative;padding-left:22px;font-size:14px;line-height:1.5;color:#D3E1F0}
+      .wc-get li:before{content:"";position:absolute;left:4px;top:8px;width:7px;height:7px;border-radius:50%;background:#5AA2FF}
+      .wc-grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+      .wc-card{border:1px solid #D6E1EC;border-radius:16px;background:#FFFFFF;padding:18px;color:#0B1B2E}
+      body.tmr-light .wc-card h3{margin:0 0 6px;font:800 16px/1.3 Inter,sans-serif;color:#0B1B2E}
+      body.tmr-light .wc-card ul{margin:8px 0 0;padding-left:18px;font-size:14px;line-height:1.6;color:#22364D}
+      .wc-card.pro{border-color:#B9D2F2;background:linear-gradient(180deg,#F3F8FF,#FFFFFF)}
+      body.tmr-light a.wc-btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;margin-top:12px;padding:0 16px;border-radius:10px;font:800 14px/1 Inter,sans-serif;text-decoration:none;border:1px solid #0B4FA8;color:#0B4FA8;background:#FFFFFF}
+      body.tmr-light a.wc-btn:hover{background:#0B4FA8;color:#FFFFFF}
+      body.tmr-light .wc-fine{margin:8px 0 0;font-size:12.5px;line-height:1.5;color:#5A6E86}
+      body.tmr-light .wc-more-h{margin:26px 0 0;font:800 13px/1 Inter,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5A6E86}
+      .wc-links{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:12px}
+      body.tmr-light a.wc-link{display:flex;flex-direction:column;gap:4px;padding:14px;border:1px solid #D6E1EC;border-radius:14px;background:#FFFFFF;text-decoration:none;color:#0B1B2E;min-height:44px}
+      body.tmr-light .wc-link b{font-size:14.5px;color:#0B1B2E}
+      body.tmr-light .wc-link span{font-size:13px;line-height:1.45;color:#4A5E76}
+      body.tmr-light a.wc-link:hover{border-color:#0B4FA8}
       .wc-skip{text-align:center;margin-top:22px}
-      .wc-skip a{color:#C3D6EA;font-size:14px;font-weight:600;text-decoration:underline;min-height:44px;display:inline-flex;align-items:center}
-      .wc-skip a:hover{color:#DCE7F4}
-
-      @media(max-width:520px){
-        .wc-step{padding:14px;gap:11px}
-        .wc-act{width:100%}
+      body.tmr-light .wc-skip a{color:#3A4E66;font-size:14px;font-weight:600;text-decoration:underline;min-height:44px;display:inline-flex;align-items:center}
+      body.tmr-light .wc-panel .wc-panel-h h2{color:#F4F8FD !important;margin:0 !important}
+      body.tmr-light .wc-panel .wc-get li{color:#D3E1F0 !important;opacity:1 !important}
+      body.tmr-light .wc-wrap .wc-hero{background:linear-gradient(135deg,#0B1B2E 0%,#123A66 100%) !important;border:0 !important;border-radius:18px !important;padding:24px 22px !important;margin:0 !important;max-width:none !important;width:100% !important;box-sizing:border-box}
+      body.tmr-light .wc-wrap .wc-hero .wc-eyebrow{color:#7FB6FF !important}
+      body.tmr-light .wc-wrap .wc-hero h1{color:#FFFFFF !important}
+      body.tmr-light .wc-wrap .wc-hero .wc-sub{color:#D3E1F0 !important}
+      .wc-panel{margin-top:14px}
+      #wcRepHost{margin-top:14px}
+      #wcRepHost:empty{display:none}
+      @media(max-width:620px){
+        .wc-panel{padding:16px;border-radius:16px}
+        .wc-sports{gap:8px}
+        body.tmr-light a.wc-sport{min-height:118px;padding:14px}
+        .wc-tag{top:12px;right:12px}
+        .wc-grid2,.wc-links{grid-template-columns:1fr}
       }
     </style>
 <script type="application/ld+json">
@@ -75,66 +94,66 @@
 <body class="tmr-ds-shell tmr-polished-page tmr-light">
 <main class="tmr-shell">
   <div class="wc-wrap">
-
-    <header class="tmr-page-header wc-hero">
-      <span class="wc-eyebrow" id="wcEyebrow">New member</span>
-      <h1 class="tmr-h1" id="wcTitle">You&rsquo;re in.</h1>
-      <p class="wc-sub" id="wcSub">Here are three things you can do right now. All free, none of them require betting.</p>
+    <header class="wc-hero">
+      <span class="wc-eyebrow">Welcome to TrustMyRecord</span>
+      <h1 id="wcTitle">Start by simulating a game.</h1>
+      <p class="wc-sub" id="wcSub">Pick a sport and a matchup. The simulator plays the game thousands of times and shows each team&rsquo;s win probability, plus a full box score from one of those simulated games.</p>
     </header>
 
-    <section aria-labelledby="wcTitle">
-
-      <!-- 1. Today's prediction quiz -->
-      <div class="wc-step" id="wcStepPoll">
-        <span class="wc-num" aria-hidden="true">1</span>
-        <div class="wc-body">
-          <h2 class="wc-title">Answer today&rsquo;s prediction quiz</h2>
-          <p class="wc-why">Call today&rsquo;s games. It grades itself against the real results tonight.</p>
-          <span class="wc-status" id="wcPollStatus">Checking today&rsquo;s quiz&hellip;</span>
-          <a class="wc-act" id="wcPollCta" href="/polls/" data-action="poll">Play today&rsquo;s quiz</a>
-        </div>
+    <div class="wc-panel" role="region" aria-labelledby="wcSimH">
+      <div class="wc-panel-h">
+        <h2 id="wcSimH">Choose a simulator</h2>
+        <span class="wc-free">One free run a day on each</span>
       </div>
-
-      <!-- 2. Daily trivia -->
-      <div class="wc-step" id="wcStepTrivia">
-        <span class="wc-num" aria-hidden="true">2</span>
-        <div class="wc-body">
-          <h2 class="wc-title">Play sports trivia</h2>
-          <p class="wc-why">Over 2,000 questions across the NFL, NBA, MLB, NHL and more. Your score ranks you.</p>
-          <span class="wc-status" id="wcTriviaStatus">Checking your trivia record&hellip;</span>
-          <a class="wc-act" id="wcTriviaCta" href="/trivia/" data-action="trivia">Play trivia</a>
-        </div>
+      <div class="wc-sports" id="wcSports">
+        <a class="wc-sport" data-sport="nfl" href="/nfl-simulator/?src=welcome"><span class="wc-tag" data-season></span><b>NFL</b><span class="wc-desc">This week&rsquo;s games or any matchup.</span><span class="wc-go">Run an NFL sim &rarr;</span></a>
+        <a class="wc-sport" data-sport="nba" href="/nba-simulator/?src=welcome"><span class="wc-tag" data-season></span><b>NBA</b><span class="wc-desc">Tonight&rsquo;s games or any matchup.</span><span class="wc-go">Run an NBA sim &rarr;</span></a>
+        <a class="wc-sport" data-sport="nhl" href="/nhl-simulator/?src=welcome"><span class="wc-tag" data-season></span><b>NHL</b><span class="wc-desc">Tonight&rsquo;s games or any matchup.</span><span class="wc-go">Run an NHL sim &rarr;</span></a>
+        <a class="wc-sport" data-sport="mlb" href="/mlb-simulator/?src=welcome"><span class="wc-tag" data-season></span><b>MLB</b><span class="wc-desc">Any matchup, starting pitchers included.</span><span class="wc-go">Run an MLB sim &rarr;</span></a>
       </div>
-
-      <!-- 3. Capper lane, clearly optional -->
-      <div class="wc-step" id="wcStepPick">
-        <span class="wc-num" aria-hidden="true">3</span>
-        <div class="wc-body">
-          <h2 class="wc-title">Browse today&rsquo;s games<span class="wc-optional">Optional</span></h2>
-          <p class="wc-why">Want a permanent, public betting record? Lock a pick before game time and we grade it automatically. You can skip this entirely and still use everything else.</p>
-          <span class="wc-status" id="wcPickStatus">Checking your record&hellip;</span>
-          <a class="wc-act secondary" id="wcPickCta" href="/sportsbook/" data-action="pick">See today&rsquo;s board</a>
-        </div>
-      </div>
-
-    </section>
-
-    <div class="wc-skip">
-      <a href="/today/" id="wcSkip" data-action="skip">Skip for now &mdash; see today&rsquo;s card</a>
+      <ul class="wc-get">
+        <li>Your free run resets every day, separately on each simulator.</li>
+        <li>Like a side? Take it as a free pick straight from the result. It is graded automatically when the game ends, so your record builds as you go.</li>
+      </ul>
     </div>
 
-    <!-- No "more on TrustMyRecord" block here on purpose: tmr-linkhub.js
-         appends the sitewide one to every polished page, and shipping our own
-         rendered the same heading twice on the live page. -->
+    <div class="wc-grid2">
+      <div class="wc-card">
+        <h3>Free with your account</h3>
+        <ul>
+          <li>One run a day on every simulator</li>
+          <li>A public pick record, graded automatically</li>
+          <li>The daily prediction quiz and sports trivia</li>
+        </ul>
+      </div>
+      <div class="wc-card pro">
+        <h3>TMR Pro</h3>
+        <ul>
+          <li>Unlimited runs on every simulator</li>
+          <li>The Handicapper Watchdog board of graded handicappers outside TMR</li>
+          <li>BetLegend Pro</li>
+        </ul>
+        <a class="wc-btn" id="wcPro" href="/premium/?from=welcome&amp;src=welcome#pricing">See what Pro includes</a>
+        <p class="wc-fine">3 days free, then $49.99/month. One trial per person and card. The free daily run never needs Pro.</p>
+      </div>
+    </div>
 
+    <section id="wcRepHost" aria-label="Your favorite team"></section>
+
+    <h2 class="wc-more-h">More free things to do</h2>
+    <div class="wc-links">
+      <a class="wc-link" href="/polls/" data-action="poll"><b>Prediction quiz</b><span>Call today&rsquo;s games. Graded against the real results.</span></a>
+      <a class="wc-link" href="/trivia/" data-action="trivia"><b>Sports trivia</b><span>Questions across the NFL, NBA, MLB, NHL and more.</span></a>
+      <a class="wc-link" href="/sportsbook/" data-action="pick"><b>Today&rsquo;s board</b><span>Lock a pick before game time to start a verified record.</span></a>
+    </div>
+    <div class="wc-skip"><a href="/today/" id="wcSkip" data-action="skip">Skip for now, see today&rsquo;s card</a></div>
   </div>
 </main>
 
 <script src="/static/js/config.js?v=430b4bba7b37"></script>
-<script src="/static/js/welcome-checklist.js?v=c21cc2fde355"></script>
+<script src="/static/js/welcome-sim-first.js?v=9110e1afb8df"></script>
 <script src="/static/js/welcome-rep.js?v=32346a1ad9d6"></script>
   <script src="/static/js/analytics.js?v=471dc3fea1e5"></script>
-  <script defer src="/static/js/first-pick-onboarding.js?v=eb65434956ed"></script>
 <script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-ds-nav.88bd53e6d519.js"></script>
     <script src="/static/js/tmr-live-chat.js?v=816ec6f0a118"></script>
 <style id="dark-text-fix-20260913">

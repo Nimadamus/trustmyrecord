@@ -140,12 +140,15 @@ check('page is self-canonical and indexable (no noindex)', () => {
   assert.ok(!/noindex/i.test(html), 'the page carries a noindex');
 });
 
-check('the three actions are present and the pick step is marked optional', () => {
+check('the simulator chooser comes first and the other actions remain', () => {
+  // WELCOME_SIM_FIRST_20261101: the simulators lead; quiz, trivia and the board stay as links.
+  ['nfl', 'nba', 'nhl', 'mlb'].forEach((sp) => {
+    assert.ok(html.includes('href="/' + sp + '-simulator/?src=welcome"'), sp + ' simulator tile missing');
+  });
+  assert.ok(html.indexOf('id="wcSports"') < html.indexOf('data-action="poll"'), 'simulators are not first');
   assert.ok(html.includes('data-action="poll"'), 'poll CTA missing');
   assert.ok(html.includes('data-action="trivia"'), 'trivia CTA missing');
   assert.ok(html.includes('data-action="pick"'), 'pick CTA missing');
-  const pickStep = html.slice(html.indexOf('id="wcStepPick"'), html.indexOf('data-action="pick"'));
-  assert.ok(/wc-optional/.test(pickStep), 'the tracked-record step is not marked optional');
 });
 
 check('skip is plain HTML and works without JavaScript', () => {
@@ -167,13 +170,9 @@ check('every CTA has a real href even before JavaScript runs', () => {
 });
 
 check('tap targets meet the 44px minimum', () => {
-  assert.ok(/\.wc-act\{[^}]*min-height:44px/.test(html), 'primary CTA under 44px');
+  assert.ok(/a\.wc-sport\{[^}]*min-height:\d{3}px/.test(html), 'simulator tile under 44px');
+  assert.ok(/a\.wc-link\{[^}]*min-height:44px/.test(html), 'secondary links under 44px');
   assert.ok(/\.wc-skip a\{[^}]*min-height:44px/.test(html), 'skip link under 44px');
-});
-
-check('rows reserve their height so resolving checks cannot shift the page', () => {
-  assert.ok(/\.wc-step\{[^}]*min-height:\d+px/.test(html), 'step rows do not reserve height');
-  assert.ok(/\.wc-status\{[^}]*min-height:/.test(html), 'status line does not reserve height');
 });
 
 /* ------------------------------------------------------------- 4. sitemap */

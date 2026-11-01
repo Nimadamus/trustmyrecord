@@ -725,6 +725,20 @@
 
     function meterKey() { return (cfg && (cfg.meterKey || cfg.simulator)) || null; }
 
+    /* METER_OTHER_SIMS_20261101: 74 of 174 members who ran a sim (60 day cohort to
+       11/01) ran exactly one, and the meter was where most of them stopped. The free
+       run is per simulator, so a member who used today's NBA run still has free runs
+       on the others. Say so, with links, instead of ending at "Not right now". */
+    function otherSimsNote() {
+        var all = { nfl: 'NFL', nba: 'NBA', nhl: 'NHL', mlb: 'MLB' };
+        var k = String(meterKey() || '').toLowerCase();
+        if (!all[k]) return '';
+        var links = Object.keys(all).filter(function (s) { return s !== k; }).map(function (s) {
+            return '<a href="/' + s + '-simulator/?src=sim_meter_other" style="font-weight:800">' + all[s] + '</a>';
+        }).join(' &middot; ');
+        return '<p class="tsg-note">The free run is separate on each simulator. If you have not used it there today: ' + links + '</p>';
+    }
+
     function fmtTmr(v) { return Number(v || 0).toLocaleString('en-US'); }
 
     function meterRequest(path, opts) {
@@ -830,6 +844,7 @@
                     ? '<div class="tsg-actions"><button type="button" class="tsg-btn is-ghost" id="tsgMeterPay">Or run it for ' + METER_COST + ' TMR from your balance</button></div>'
                     : '') +
                 '<button type="button" class="tsg-later" id="tsgMeterLater">Not right now</button>' +
+                otherSimsNote() +
                 '</div>';
             document.body.appendChild(overlay);
             modalEl = overlay;
