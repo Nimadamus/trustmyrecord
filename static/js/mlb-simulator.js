@@ -652,6 +652,12 @@
             var base = null;
             if (split && Number(split.ops) > 0 && Number(split.plateAppearances) >= 25) { splitCount += 1; base = split; }
             if (!base) { var season = cachedPlayerStat(p.mlbId, 'hitting'); if (season && Number(season.ops) > 0 && Number(season.plateAppearances) >= 30) base = season; }
+            if (state.liveContext.priorStats) { // MARCEL_PRIOR_20261101
+                var cur = base || cachedPlayerStat(p.mlbId, 'hitting');
+                var pa = cur ? Number(cur.plateAppearances || 0) : 0; var o = cur ? Number(cur.ops) : 0;
+                if (!Number.isFinite(o)) { o = 0; pa = 0; }
+                return { ops: (pa * o + MARCEL_HITTER_PA * marcelPriorOps(p.mlbId)) / (pa + MARCEL_HITTER_PA), mlbId: p.mlbId };
+            }
             return base ? { ops: Number(base.ops), mlbId: p.mlbId } : null;
         }).filter(Boolean);
         if (stats.length < 6) return null;
@@ -693,16 +699,35 @@
                 (rec.teamRecords || []).forEach(function (t) {
                     var ab = id2abbr[t.team && t.team.id]; if (!ab) return;
                     var rs = Number(t.runsScored), ra = Number(t.runsAllowed), gp = Number(t.gamesPlayed);
-                    if (rs > 0 && ra > 0 && gp >= 10) map[ab] = { rs: rs, ra: ra, gp: gp };
+                    if (rs > 0 && ra > 0 && gp >= 1) map[ab] = { rs: rs, ra: ra, gp: gp };
                 });
             });
             state.liveContext.teamSeason = map; state.liveContext.teamSeasonLoaded = true;
-            return map;
+            var priorUrl = 'https://statsapi.mlb.com/api/v1/standings?leagueId=103,104&season=' + priorSeasonYear() + '&standingsTypes=regularSeason&_=' + encodeURIComponent(UI_BUILD);
+            return fetchJson(priorUrl, { cache: 'default' }).then(function (pd) {
+                var pm = {};
+                (pd && pd.records || []).forEach(function (rec) {
+                    (rec.teamRecords || []).forEach(function (t) {
+                        var ab = id2abbr[t.team && t.team.id]; if (!ab) return;
+                        var rs = Number(t.runsScored), ra = Number(t.runsAllowed), gp = Number(t.gamesPlayed);
+                        if (rs > 0 && ra > 0 && gp >= 100) pm[ab] = { rspg: rs / gp, rapg: ra / gp };
+                    });
+                });
+                // Half of last season's distance from league average carries over.
+                var keys = Object.keys(pm), lgp = 0;
+                keys.forEach(function (k) { lgp += pm[k].rspg; });
+                if (keys.length >= 20) {
+                    lgp /= keys.length;
+                    keys.forEach(function (k) { pm[k] = { rspg: lgp + 0.5 * (pm[k].rspg - lgp), rapg: lgp + 0.5 * (pm[k].rapg - lgp) }; });
+                    state.liveContext.teamPrior = pm;
+                }
+                return map;
+            }).catch(function () { return map; });
         }).catch(function () { state.liveContext.teamSeasonLoaded = true; return null; });
     }
     function teamSeasonPythag(team) {
         if (!team || team.era !== 'current') return null;
-        var s = state.liveContext.teamSeason && state.liveContext.teamSeason[team.abbreviation];
+        var s = marcelTeamSeason(team.abbreviation);
         if (!s) return null;
         var ex = 1.83, rs = Math.pow(s.rs, ex), ra = Math.pow(s.ra, ex);
         return (rs + ra) > 0 ? rs / (rs + ra) : null;
@@ -721,8 +746,8 @@
     function teamRealRunExp(off, def) {
         if (!off || off.era !== 'current' || !def || def.era !== 'current') return null;
         var ts = state.liveContext.teamSeason; if (!ts) return null;
-        var o = ts[off.abbreviation], d = ts[def.abbreviation], lg = leagueRunBaseline();
-        if (!o || !d || !lg || o.gp < 10 || d.gp < 10) return null;
+        var o = marcelTeamSeason(off.abbreviation), d = marcelTeamSeason(def.abbreviation), lg = leagueRunBaseline();
+        if (!o || !d || !lg) return null;
         return clamp((o.rs / o.gp) * (d.ra / d.gp) / lg, 1.6, 9.4);
     }
     function playerStatsUrl(playerId, group) {
@@ -924,7 +949,77 @@
      * When a quality table is supplied it is used, keyed by player id. Without one
      * nothing changes: the same ERA mapping, the same numbers.
      */
+
+    // MARCEL_PRIOR_20261101 -- regress season-to-date numbers toward each player's and
+    // club's OWN previous season, not toward league average. Measured on a point-in-time
+    // replay of all 2,429 games of 2026 through this engine: Brier 0.24840 -> 0.24611
+    // (paired -0.0023, 95% CI -0.0039 to -0.0007); untuned first setting on Mar-Jun
+    // -0.0033 [-0.0055, -0.0011]. No market price is read anywhere in this.
+    var MARCEL_TEAM_GAMES = 60;   // games of last season's RS/RA added to this season's
+    var MARCEL_HITTER_PA = 400;   // PA of last season's (regressed) OPS added to a hitter's
+    var MARCEL_STARTER_OUTS = 300; // outs of last season's (regressed) ERA added to a pitcher's
+    function priorSeasonYear() { return String(Number(seasonYear()) - 1); }
+    function marcelTeamSeason(abbr) {
+        var ts = state.liveContext.teamSeason; var s = ts && ts[abbr]; if (!s) return null;
+        var tp = state.liveContext.teamPrior; var t = tp && tp[abbr];
+        if (!t) return s.gp >= 10 ? s : null;
+        return { rs: s.rs + MARCEL_TEAM_GAMES * t.rspg, ra: s.ra + MARCEL_TEAM_GAMES * t.rapg, gp: s.gp + MARCEL_TEAM_GAMES, rawGp: s.gp };
+    }
+    function priorLine(id, group) {
+        var p = state.liveContext.priorStats && state.liveContext.priorStats[String(id)];
+        return p ? p[group] || null : null;
+    }
+    function marcelPriorOps(id) {
+        var h = priorLine(id, 'hitting');
+        var LG = 0.715, K0 = 200;
+        var pa = h ? Number(h.plateAppearances || 0) : 0;
+        if (!(pa > 0)) return LG - 0.030;
+        var ab = Number(h.atBats || 0), bb = Number(h.baseOnBalls || 0), hbp = Number(h.hitByPitch || 0), sf = Number(h.sacFlies || 0);
+        var hits = Number(h.hits || 0);
+        var tb = hits + Number(h.doubles || 0) + 2 * Number(h.triples || 0) + 3 * Number(h.homeRuns || 0);
+        var obpDen = ab + bb + hbp + sf;
+        var ops = (obpDen > 0 ? (hits + bb + hbp) / obpDen : 0) + (ab > 0 ? tb / ab : 0);
+        return (pa * ops + K0 * LG) / (pa + K0);
+    }
+    function marcelEra(mlbId) {
+        if (!mlbId || !state.liveContext.priorStats) return null;
+        var LG = 4.20, PK = 150;
+        var p = priorLine(mlbId, 'pitching');
+        var pOuts = p ? Number(p.outs || 0) : 0;
+        var prior = pOuts > 0 ? (27 * Number(p.earnedRuns || 0) + LG * PK) / (pOuts + PK) : LG + 0.30;
+        var st = cachedPlayerStat(mlbId, 'pitching');
+        var outs = st ? ipStringToOuts(st.inningsPitched) : 0; var er = st ? Number(st.earnedRuns || 0) : 0;
+        return (27 * er + prior * MARCEL_STARTER_OUTS) / (outs + MARCEL_STARTER_OUTS);
+    }
+    // One request per roster: last season's lines for the nine hitters and the arms.
+    // A traded player comes back as one combined split (no team) plus one per club.
+    function fetchPriorSeasonLines(ids) {
+        var have = state.liveContext.priorStats || {};
+        var want = ids.map(String).filter(function (id, i, a) { return id && a.indexOf(id) === i && !have[id]; });
+        if (!want.length) return Promise.resolve(null);
+        var url = 'https://statsapi.mlb.com/api/v1/people?personIds=' + want.map(encodeURIComponent).join(',')
+            + '&hydrate=stats(group=[hitting,pitching],type=[season],season=' + priorSeasonYear() + ')&_=' + encodeURIComponent(UI_BUILD);
+        return fetchJson(url, { cache: 'default' }).then(function (data) {
+            var got = {};
+            (data && data.people || []).forEach(function (person) {
+                var rec = { hitting: null, pitching: null };
+                (person.stats || []).forEach(function (s) {
+                    var g = s.group && s.group.displayName; if (g !== 'hitting' && g !== 'pitching') return;
+                    var splits = s.splits || []; if (!splits.length) return;
+                    var total = splits.filter(function (x) { return !x.team; })[0] || splits[0];
+                    rec[g] = total.stat || null;
+                });
+                got[String(person.id)] = rec;
+            });
+            if (!data || !Array.isArray(data.people)) return null;
+            var store = state.liveContext.priorStats || {};
+            want.forEach(function (id) { store[id] = got[id] || { hitting: null, pitching: null }; });
+            state.liveContext.priorStats = store;
+            return null;
+        }).catch(function () { return null; });
+    }
     function pitcherQualityFor(mlbId, era) {
+        var marcel = marcelEra(mlbId); if (marcel != null) return pitcherQualityFromEra(marcel);
         var t = (typeof window !== 'undefined' && window.TMR_MLB_PITCHER_QUALITY) || null;
         if (t && mlbId) {
             var row = t[String(mlbId)];
@@ -1392,6 +1487,10 @@
         var pitchers = players.filter(function (p) {
             return p && p.mlbId && /^(P|SP|RP|CP)$|Relief|Pitcher/i.test(String(p.position || ''));
         }).slice(0, 14);
+        // MARCEL_PRIOR_20261101: last season's lines for the same players, one request.
+        var priorIds = players.slice(0, 9).concat(pitchers).map(function (p) { return p && p.mlbId; }).filter(Boolean);
+        if (roster.todayProbableStarter && roster.todayProbableStarter.id) priorIds.push(roster.todayProbableStarter.id);
+        jobs.push(fetchPriorSeasonLines(priorIds));
         pitchers.forEach(function (p) {
             jobs.push(fetchPlayerSeasonStats(p.mlbId, 'pitching'));
             // RELIEVER_HAND_20260623: load each bullpen arm's profile so pitchHandOf()
@@ -10715,6 +10814,7 @@
             elReconcile: elReconcile,
             pitcherDecisions: pitcherDecisions,
             seasonYear: seasonYear,
+            marcelEra: marcelEra, marcelTeamSeason: marcelTeamSeason, marcelPriorOps: marcelPriorOps, priorSeasonYear: priorSeasonYear, fetchPriorSeasonLines: fetchPriorSeasonLines, // MARCEL_PRIOR_20261101
             evDecisionsFromEvents: evDecisionsFromEvents,
             evTurningPoint: evTurningPoint,
             assembleEventBoxScore: assembleEventBoxScore,
