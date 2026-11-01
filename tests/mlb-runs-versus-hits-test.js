@@ -93,7 +93,11 @@ function measure(sim) {
     const away = pool[i % pool.length];
     const home = pool[(i + 7 + (i % 5)) % pool.length];
     if (!away || !home || away === home) continue;
-    const r = sim.simulate(away, home, {}, null, false, null);
+    // RVH_SEEDED_20261031: one fixed seed per game, so production and candidate play
+    // the same games. Unseeded, the worst-gap comparison below was a race between
+    // two sample maxima and failed on chance (63,000 paired seeded games: worst gap
+    // 7 in both engines, gaps of 6+ 6 vs 5).
+    const r = sim.simulate(away, home, {}, 'rvh|' + i, false, null);
     if (!r || !r.boxScore) continue;
     for (const side of ['away', 'home']) {
       const line = r.boxScore[side];
