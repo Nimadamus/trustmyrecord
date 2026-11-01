@@ -113,7 +113,9 @@ function routedFetch(url) {
   // Today's league-wide schedule: no games today, so the engine falls back to the
   // most recent finished game - the deterministic path this fixture exercises.
   if (/\/schedule\?sportId=1&date=/.test(u)) return body({ dates: [] });
-  m = /\/schedule\?sportId=1&teamId=(\d+)/.exec(u);
+  // The coming week's schedule (next probable starter): none announced.
+  if (/\/schedule\?sportId=1&startDate=/.test(u)) return body({ dates: [] });
+  m =/\/schedule\?sportId=1&teamId=(\d+)/.exec(u);
   if (m) {
     const teamId = Number(m[1]);
     return body({

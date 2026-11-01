@@ -501,6 +501,45 @@
             return state.liveContext.todaySchedule;
         });
     }
+    // NEXT_PROBABLE_STARTER_20261101: with no game today the default starter was
+    // the first arm of a static list (regenerated 10/12), the same man every
+    // time. The club's next scheduled game in the coming week usually already
+    // has an announced probable; that real pitcher is now the default.
+    var UPCOMING_SCHEDULE_TTL_MS = 1800000;
+    function upcomingScheduleUrl() {
+        var start = new Date(); start.setDate(start.getDate() + 1);
+        var end = new Date(); end.setDate(end.getDate() + 7);
+        var iso = function (d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+        return 'https://statsapi.mlb.com/api/v1/schedule?sportId=1&startDate=' + encodeURIComponent(iso(start)) + '&endDate=' + encodeURIComponent(iso(end)) +
+            '&hydrate=' + encodeURIComponent('probablePitcher') + '&_=' + encodeURIComponent(UI_BUILD);
+    }
+    function fetchUpcomingSchedule() {
+        var cached = state.liveContext.upcomingSchedule;
+        if (cached && cached.uiBuild === UI_BUILD && (Date.now() - (cached.fetchedAt || 0)) < UPCOMING_SCHEDULE_TTL_MS) return Promise.resolve(cached);
+        return fetchJson(upcomingScheduleUrl(), { cache: 'no-store' }).then(function (data) {
+            var games = (Array.isArray(data && data.dates) ? data.dates : []).reduce(function (all, day) {
+                return all.concat((Array.isArray(day && day.games) ? day.games : []).map(function (g) { return { g: g, date: day.date }; }));
+            }, []);
+            state.liveContext.upcomingSchedule = { uiBuild: UI_BUILD, fetchedAt: Date.now(), games: games };
+            return state.liveContext.upcomingSchedule;
+        }).catch(function () { return null; });
+    }
+    function nextProbableStarterForTeam(upcoming, team) {
+        var expectedId = team && MLB_TEAM_IDS[team.abbreviation];
+        if (!expectedId || !upcoming || !Array.isArray(upcoming.games)) return null;
+        for (var i = 0; i < upcoming.games.length; i += 1) {
+            var row = upcoming.games[i], g = row && row.g;
+            if (!g || !g.teams) continue;
+            var side = String(g.teams.away && g.teams.away.team && g.teams.away.team.id) === String(expectedId) ? 'away'
+                : (String(g.teams.home && g.teams.home.team && g.teams.home.team.id) === String(expectedId) ? 'home' : null);
+            if (!side) continue;
+            var pp = g.teams[side].probablePitcher;
+            // His club's next game decides it: no announced probable there means none.
+            if (!pp || !pp.id) return null;
+            return { id: pp.id, name: pp.fullName || ((pp.firstName || '') + ' ' + (pp.lastName || '')).trim(), date: row.date || null };
+        }
+        return null;
+    }
     function todaysGameForTeam(games, team) {
         var expectedId = team && MLB_TEAM_IDS[team.abbreviation];
         if (!expectedId || !Array.isArray(games)) return null;
@@ -790,7 +829,14 @@
     function fetchInjuredRoster(team) {
         if (!team || team.era !== 'current') return Promise.resolve(null);
         state.liveContext.teamInjured = state.liveContext.teamInjured || {};
-        if (Object.prototype.hasOwnProperty.call(state.liveContext.teamInjured, team.abbreviation)) {
+        // INJURED_LIST_TTL_20261101: the injured list was cached for the whole
+        // browser session, so a pitcher activated (or placed on the IL) after the
+        // first simulation stayed wrong until a reload. It now refreshes on the
+        // same clock as the transaction feed.
+        state.liveContext.teamInjuredAt = state.liveContext.teamInjuredAt || {};
+        var injAt = state.liveContext.teamInjuredAt[team.abbreviation];
+        if (Object.prototype.hasOwnProperty.call(state.liveContext.teamInjured, team.abbreviation)
+            && (!injAt || (Date.now() - injAt) < TRANSACTIONS_TTL_MS)) {
             return Promise.resolve(state.liveContext.teamInjured[team.abbreviation]);
         }
         var url = injuredRosterUrl(team);
@@ -807,6 +853,7 @@
                 };
             });
             state.liveContext.teamInjured[team.abbreviation] = list;
+            state.liveContext.teamInjuredAt[team.abbreviation] = Date.now();
             if (state.liveContext.injuryFetchFailed) delete state.liveContext.injuryFetchFailed[team.abbreviation];
             return list;
         }).catch(function () {
@@ -1445,14 +1492,17 @@
             fetchJson(url, { cache: 'no-store' }),
             fetchInjuredRoster(team).then(function () { return fetchRecentStartingLineup(team); }),
             fetchTodaysSchedule(),
-            fetchTodaysTransactions(team)
+            fetchTodaysTransactions(team),
+            fetchUpcomingSchedule()
         ]).then(function (results) {
             var roster = collectMlbTeamRoster(results[0], team, results[1]);
             var probable = results[2] ? todaysProbableStarterForTeam(results[2].games, team) : null;
+            var hasGameToday = !!(results[2] && todaysGameForTeam(results[2].games, team));
             if (roster) {
                 roster.uiBuild = UI_BUILD;
                 roster.fetchedAt = Date.now();
                 roster.todayProbableStarter = probable || null;
+                roster.nextProbableStarter = (!probable && !hasGameToday && results[4]) ? nextProbableStarterForTeam(results[4], team) : null;
                 roster.todayTransactions = results[3] || [];
                 roster.txnSignature = transactionSignature(team);
             }
@@ -1599,6 +1649,26 @@
                     : "Today's MLB probable starter from the official schedule"
             });
         }
+        var nextProbable = !todayProbable && state.liveContext.teamRosters && state.liveContext.teamRosters[team.abbreviation] && state.liveContext.teamRosters[team.abbreviation].nextProbableStarter;
+        if (nextProbable && nextProbable.name && verifiedPitchers.filter(function (player) { return normalizeName(player.name) === normalizeName(nextProbable.name); }).length) {
+            var nStat = cachedPlayerStat(nextProbable.id, 'pitching');
+            var nEra = nStat ? Number(nStat.era) : null;
+            var nRates = pitcherRealRates(Number.isFinite(nEra) ? nStat : null);
+            addOption({
+                id: pitcherId(side, 'next-' + slugify(nextProbable.name)),
+                name: nextProbable.name,
+                quality: pitcherQualityFor(nextProbable.id, nEra),
+                era: Number.isFinite(nEra) ? nEra : null,
+                whip: nRates.whip,
+                kbbPct: nRates.kbbPct,
+                source: 'Next scheduled MLB probable starter' + (nextProbable.date ? ' (' + nextProbable.date + ')' : ''),
+                verified: true,
+                mlbId: nextProbable.id || null,
+                note: nStat
+                    ? ('Real ' + seasonYear() + ' season' + (Number.isFinite(nEra) ? ' ERA ' + nEra.toFixed(2) : '') + (nStat.whip ? ', WHIP ' + nStat.whip : '') + ', ' + (nStat.wins || 0) + '-' + (nStat.losses || 0))
+                    : 'Next scheduled MLB probable starter from the official schedule'
+            });
+        }
         if (liveStarter && liveStarter.name && verifiedPitchers.filter(function (player) { return normalizeName(player.name) === normalizeName(liveStarter.name); }).length) {
             addOption({
                 id: pitcherId(side, 'live-' + slugify(liveStarter.name)),
@@ -1613,6 +1683,13 @@
         var rosterRows = verifiedPitchers.filter(function (player) {
             return !addedNames[normalizeName(player.name)];
         }).sort(function (a, b) {
+            // ROTATION_FROM_STARTS_20261101: the club's real starters first, by
+            // starts made this season (the static list only breaks ties and covers
+            // pitchers with no cached line), so a curated arm who has left the
+            // rotation is not the default ahead of the men actually starting.
+            var aSt = a.mlbId ? cachedPlayerStat(a.mlbId, 'pitching') : null, bSt = b.mlbId ? cachedPlayerStat(b.mlbId, 'pitching') : null;
+            var aGs = aSt ? Number(aSt.gamesStarted || 0) : 0, bGs = bSt ? Number(bSt.gamesStarted || 0) : 0;
+            if ((aGs >= 5 || bGs >= 5) && aGs !== bGs) return bGs - aGs;
             var aCurated = curatedMatch(a.name);
             var bCurated = curatedMatch(b.name);
             if (aCurated && bCurated) return curatedPitchers.indexOf(aCurated) - curatedPitchers.indexOf(bCurated);
@@ -3134,7 +3211,7 @@
             postseason: postseasonOpts ? { round: postseasonOpts.round || null } : null,
             elimination: !!(postseasonOpts && postseasonOpts.elimination),
             team: team, lineup: lineup, benchPool: benchPool, anchorFactor: anchorFactor, pitchers: pitchers,
-            starterOuts: starterOuts, roster: roster, hasNamedLineup: !!(roster && roster.players && roster.players.length),
+            starterOuts: starterOuts, isOpener: !!isOpenerGame, roster: roster, hasNamedLineup: !!(roster && roster.players && roster.players.length),
             // Error-rate calibration (June 4, 2026 vs real MLB 2025): engine ran
             // 0.31 errors/team vs real 0.504 — reach-on-error base raised to match.
             // ERROR_GAME_CAP_20260725: applied per-team-per-game in evPlayHalf via
@@ -3282,12 +3359,45 @@
         }
         return { setup: setup, closer: closer, bridge: bridge, ordered: ordered, reserve: reserve.concat(reserveStarters) };
     }
+    var RELIEF_SECOND_INNING_P = 0.22;
+    var RELIEF_OUTS_PER_APP = 3.5, STARTER_RELIEF_PRIOR_K = 1.6, BULK_POCKET_OUTS = 9;
     function evStarterOuts(starter, team) {
         var quality = Number(starter && starter.quality); if (!Number.isFinite(quality)) quality = 100;
         var era = Number(starter && starter.era);
         var stat = starter && starter.mlbId ? cachedPlayerStat(starter.mlbId, 'pitching') : null;
         if (stat) {
             var starterOutsTotal = ipStringToOuts(stat.inningsPitched); var gs = Number(stat.gamesStarted || 0);
+            // STARTER_LEN_FROM_STARTS_20261101: the season line mixes starts and
+            // relief. ip/gs charged every relief inning to his starts, so a reliever
+            // making a spot start or opening (2 GS in 31 games, 48 IP) read as a
+            // 24-out starter and was regressed only toward 16. Measured on 1,400 real
+            // 2025 starts (statsapi season line as of the game date, real boxscore
+            // length): probable starters with no start yet went 7.2 outs (engine plan
+            // 15.6), those with fewer than half their games started 10.6 (plan 20.0),
+            // regular starters 15.9 (16.3). Relief appearances are now charged at the
+            // real relief average (3.5 outs, capped at his own outs per game) before
+            // dividing by starts, and a relief-first pitcher's prior is his relief
+            // length (1.6 x outs per appearance: 5.1 outs real for a 3-out reliever,
+            // 12.2 for a 6+ out long man) instead of a full start. Under the flag only.
+            if (workloadV2() && starterOutsTotal > 0) {
+                var gp = Number(stat.gamesPitched || stat.gamesPlayed || 0);
+                if (gp >= gs && gp > 0) {
+                    var reliefApps = gp - gs;
+                    var openerLen = clamp(STARTER_RELIEF_PRIOR_K * starterOutsTotal / gp, 3, 15);
+                    var lenOut;
+                    if (gs === 0) lenOut = Math.round(openerLen);
+                    else {
+                        var perStart = Math.max(3, (starterOutsTotal - reliefApps * Math.min(RELIEF_OUTS_PER_APP, starterOutsTotal / gp)) / gs);
+                        if (gs >= 8 && perStart < 9) lenOut = clamp(Math.round(perStart), 3, 9);
+                        else {
+                            var wS = clamp(gs / 12, 0, 1);
+                            lenOut = clamp(Math.round(perStart * wS + (gs / gp >= 0.5 ? 16 : openerLen) * (1 - wS)), 3, 21);
+                        }
+                    }
+                    // Under three innings he is an opener: the next arm is the bulk man.
+                    return { outs: lenOut, isOpener: lenOut < 9 };
+                }
+            }
             if (starterOutsTotal > 0 && gs > 0) {
                 var perStartOuts = starterOutsTotal / gs;
                 // OPENER_DETECTION_20260727: a real opener's per-start average is
@@ -5126,8 +5236,12 @@
     // 700 real 2025-26 games x 4: 6+ inning starts 27.5% -> 33.7% (real 35.6%),
     // 5+ 59.1% -> 67.2% (67.9%), pitchers per team-game 4.55 -> 4.45 (4.32).
     var STARTER_EFFICIENT_PITCHES = 65;
+    // STARTER_LEN_FROM_STARTS_20261101: an opener is planned short however few
+    // pitches he has thrown (real openers: 5.1 outs, 32 pitches); neither the
+    // has-gas nor the cruising extension applies to him.
+    function evOpenerSide(side) { return workloadV2() && !!side.isOpener; }
     function evStarterHasGas(side, sp) {
-        return !side.postseason && (sp.pitches || 0) < STARTER_EFFICIENT_PITCHES && (sp.er || 0) <= 3;
+        return !evOpenerSide(side) && !side.postseason && (sp.pitches || 0) < STARTER_EFFICIENT_PITCHES && (sp.er || 0) <= 3;
     }
     // STARTER_HOOK_CALIBRATION_20261024: inning-boundary headroom (see evActivePitcher).
     var STARTER_BOUNDARY_HEADROOM = 10;
@@ -5302,6 +5416,7 @@
     function evStarterCruising(side, sp) {
         var spLimit = starterPitchLimit(side);
         var runners = (sp.h || 0) + (sp.bb || 0) + (sp.hbp || 0);
+        if (evOpenerSide(side)) return false;
         return (sp.pitches || 0) + STARTER_PITCHES_PER_INNING <= spLimit
             && (sp.r || 0) <= (side.postseason ? 1 : 2)
             && runners <= Math.floor((sp.outs || 0) / 3) + (side.postseason ? 0 : 1);
@@ -5481,6 +5596,17 @@
                 // not a flat one. These weights reproduce that shape; they do not
                 // change the total, only who covers which part of it.
                 var RELIEF_SHARE = workloadV2() ? [1.50, 1.12, 1.00, 1.00, 1.00] : [1, 1, 1, 1, 1];
+                // STARTER_LEN_FROM_STARTS_20261101: behind an opener the first arm is
+                // the bulk man, and a share of 1.5 of the span left him about five
+                // outs. Real bulk relievers (the second arm when the listed starter
+                // had no start yet, 55 real 2025 games) worked 7.45 outs and those
+                // games used 4.84 pitchers; his pocket is now BULK_POCKET_OUTS long
+                // and the arms behind him split the rest as before.
+                if (workloadV2() && side.isOpener && arms[1] && arms[1].role === 'BULK' && midCount > 1 && span > BULK_POCKET_OUTS + 3) {
+                    var restW = 0;
+                    for (var rw = 1; rw < midCount; rw++) restW += (RELIEF_SHARE[rw] || 1);
+                    RELIEF_SHARE = [BULK_POCKET_OUTS * restW / (span - BULK_POCKET_OUTS)].concat(RELIEF_SHARE.slice(1));
+                }
                 var k = 0;
                 if (span > 0 && midCount > 0) {
                     var total = 0, wi;
@@ -5685,6 +5811,20 @@
                 var alt2 = evUnusedReliefArm(side, !closerEntryOk(side, outsRecorded, lead, false)) || evDepthArm(side);
                 if (alt2 && alt2 !== chosen && armUnderCap(alt2)) chosen = alt2;
             }
+            // RELIEF_SECOND_INNING_20261101: the bridge schedule gave every arm
+            // after the first reliever exactly one inning. Real 2025 relievers
+            // (second man out of the pen or later) who started an inning and
+            // finished it went back out for another 22-28% of the time (statsapi
+            // play-by-play, 700 games); the engine's schedule sent them out 10-14%,
+            // so it used more arms for shorter outings (reliever outs 3.38 vs real
+            // 3.47; outings of 4-6 outs 14.7% vs 20.3% for the second reliever).
+            // Before the 9th, a setup or middle man in his first inning, under his
+            // out and pitch limits (the inning headroom rule still applies), keeps
+            // the ball for one more inning with probability RELIEF_SECOND_INNING_P.
+            if (onMound && chosen !== onMound && side._rng && outsRecorded <= 21 && onMound === side._activePitcher
+                && (onMound.role === 'RP' || onMound.role === 'SU') && !onMound.removed && armOutsThisGame(onMound) === 3 && armUnderCap(onMound)
+                && side.pitchers.some(function (q) { return q !== onMound && q.role !== 'SP' && ((q.acc && q.acc.bf) || 0) > 0; })
+                && side._rng() < RELIEF_SECOND_INNING_P) chosen = onMound;
             if (onMound && chosen !== onMound) changeReason = evBoundaryChangeReason(side, onMound, outsRecorded);
         }
         // ARM_REMOVAL_TRACKING_20260725: the moment a half-inning boundary hands
@@ -5788,7 +5928,13 @@
             // of the starter's normal baseline, matching how real complete games
             // actually happen.
             var dealingBonus = random() < 0.019 ? (4 + Math.floor(random() * 5)) : 0;
-            s.starterOutsGame = clamp(s.starterOuts + Math.round((random() + random() - 1) * 6) + dealingBonus, 9, 27);
+            // STARTER_LEN_FROM_STARTS_20261101: the 9-out floor lifted a detected
+            // opener's 3-8 out plan to three innings; an opener keeps his own range
+            // (half the swing: real opener outings 1-15 outs around a 5-7 mean).
+            var openerPlan = workloadV2() && s.isOpener;
+            s.starterOutsGame = openerPlan
+                ? clamp(s.starterOuts + Math.round((random() + random() - 1) * 3) + dealingBonus, 3, 27)
+                : clamp(s.starterOuts + Math.round((random() + random() - 1) * 6) + dealingBonus, 9, 27);
             s.lineup.forEach(function (b) { b.acc = evNewBat(); });
             s.pitchers.forEach(function (p) {
                 p.acc = evNewPit(); p.removed = false; p._appearSeq = undefined; p._enterMargin = undefined; p._longSet = undefined; p._long = false;
@@ -5819,6 +5965,7 @@
             s._spPlanOuts = s.starterOutsGame; s._spExtended = 0;
             s._spRide = workloadV2() ? random() < (s.postseason ? 0.60 : 0.62) : false; s._posWilling = workloadV2() ? random() < POS_WILLING : true;
             s._halfEndPitcher = null;
+            s._rng = workloadV2() ? random : null;
         });
         var aRuns = 0, hRuns = 0, aErr = 0, hErr = 0, aInn = [], hInn = [], walkOff = false;
         // WEATHER_DELAY_20260726: at most one delay per game, and only within
