@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Dashboard | TrustMyRecord</title>
+    <meta name="description" content="Your TrustMyRecord dashboard: your recent simulations and how they did, today's games in your sports, and your free simulator runs.">
+    <link rel="canonical" href="https://trustmyrecord.com/home/">
+    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=859cacfb660e">
+    <link rel="stylesheet" href="/static/css/tmr-page-polish.css?v=dcde044bca53">
+    <script defer src="/static/js/tmr-sitewide.js?v=26c51709cf47"></script>
+    <link rel="stylesheet" href="/static/css/tmr-ds.d4d41a955166.css">
+    <link rel="stylesheet" href="/static/css/tmr-ds-header.cc364e352e74.css">
+    <link rel="stylesheet" href="/static/css/tmr-light.css?v=21433b023833">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap">
+    <link rel="stylesheet" href="/static/css/tmr-navbar.css?v=68ec3081d29a">
+    <style>
+      /* MEMBER_HOME_20261101: returning member dashboard. Day 7 return was 15% (60 day
+         cohort to 11/01) and a login used to land on the pick record page, which most
+         simulator members never use. Everything here reads existing endpoints. */
+      .mh-wrap{max-width:980px;margin:0 auto}
+      body.tmr-light .mh-wrap .mh-hero{background:linear-gradient(135deg,#0B1B2E 0%,#123A66 100%) !important;border:0 !important;border-radius:18px !important;padding:24px 22px !important;margin:0 !important;max-width:none !important;width:100% !important;box-sizing:border-box;display:flex;gap:18px;align-items:flex-end;justify-content:space-between;flex-wrap:wrap}
+      body.tmr-light .mh-hero .mh-eyebrow{display:block;font:800 12px/1 Inter,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#7FB6FF;margin-bottom:10px}
+      body.tmr-light .mh-wrap .mh-hero h1{margin:0;font-family:'Barlow Condensed',Inter,sans-serif;font-weight:800;font-size:clamp(30px,5vw,42px);line-height:1.04;color:#fff !important}
+      body.tmr-light .mh-wrap .mh-hero p{margin:8px 0 0;font-size:15px;line-height:1.5;color:#D3E1F0 !important;max-width:56ch}
+      body.tmr-light a.mh-cta{display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:0 20px;border-radius:12px;background:#FFFFFF;color:#0B1B2E;font:800 15px/1 Inter,sans-serif;text-decoration:none;white-space:nowrap}
+      body.tmr-light a.mh-cta:hover{background:#DCEBFF}
+      .mh-grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:14px;margin-top:14px;align-items:start}
+      .mh-col{display:grid;gap:14px}
+      .mh-col > section.mh-card{margin:0 !important}
+      .mh-card{background:#FFFFFF;border:1px solid #D6E1EC;border-radius:16px;padding:18px}
+      .mh-card-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:12px}
+      body.tmr-light .mh-card-h h2{margin:0;font:800 17px/1.25 Inter,sans-serif;color:#0B1B2E}
+      body.tmr-light a.mh-more{font:700 13px/1 Inter,sans-serif;color:#0B4FA8;text-decoration:none;white-space:nowrap}
+      .mh-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+      body.tmr-light .mh-tabs button{min-height:36px;padding:0 12px;border-radius:999px;border:1px solid #C9D7E6;background:#fff;color:#22364D;font:700 13px/1 Inter,sans-serif;cursor:pointer}
+      body.tmr-light .mh-tabs button[aria-selected="true"]{background:#0B1B2E;border-color:#0B1B2E;color:#fff}
+      .mh-games{display:grid;gap:8px}
+      .mh-game{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;padding:11px 12px;border:1px solid #E1E9F2;border-radius:12px;background:#F8FBFE}
+      .mh-game.fav{border-color:#9CC1EE;background:#F0F6FF}
+      body.tmr-light .mh-game b{display:block;font-size:14.5px;color:#0B1B2E;line-height:1.3}
+      body.tmr-light .mh-game span{display:block;margin-top:2px;font-size:12.5px;color:#5A6E86}
+      body.tmr-light a.mh-sim{display:inline-flex;align-items:center;min-height:38px;padding:0 13px;border-radius:10px;background:#0B4FA8;color:#fff;font:800 13px/1 Inter,sans-serif;text-decoration:none;white-space:nowrap}
+      body.tmr-light a.mh-sim:hover{background:#093F86}
+      body.tmr-light .mh-chip{display:inline-block;margin-left:6px;font:800 10.5px/1 Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;padding:4px 7px;border-radius:999px;vertical-align:2px}
+      .mh-chip.free{background:rgba(10,139,78,.12);color:#08703F}
+      .mh-chip.used{background:#EEF3F9;color:#41556D}
+      .mh-chip.pro{background:rgba(11,79,168,.12);color:#0B4FA8}
+      .mh-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:12px}
+      .mh-stat{border:1px solid #E1E9F2;border-radius:12px;padding:10px 12px;background:#F8FBFE}
+      body.tmr-light .mh-stat b{display:block;font-family:'Barlow Condensed',Inter,sans-serif;font-size:26px;font-weight:800;line-height:1;color:#0B1B2E}
+      body.tmr-light .mh-stat span{display:block;margin-top:5px;font-size:11.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#5A6E86}
+      .mh-sims{display:grid;gap:8px}
+      .mh-simrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 0;border-top:1px solid #EDF2F7}
+      .mh-simrow:first-child{border-top:0;padding-top:0}
+      body.tmr-light .mh-simrow b{display:block;font-size:14px;color:#0B1B2E}
+      body.tmr-light .mh-simrow span{display:block;margin-top:2px;font-size:12.5px;color:#5A6E86}
+      .mh-badge{font:800 11px/1 Inter,sans-serif;letter-spacing:.07em;text-transform:uppercase;padding:7px 9px;border-radius:999px;white-space:nowrap}
+      .mh-badge.hit{background:rgba(10,139,78,.12);color:#08703F}
+      .mh-badge.miss{background:rgba(192,57,43,.11);color:#A8301F}
+      .mh-badge.pending{background:#EEF3F9;color:#41556D}
+      .mh-badge.none{background:#F3F5F8;color:#6A7B90}
+      body.tmr-light .mh-empty{margin:0;font-size:14px;line-height:1.55;color:#3A4E66}
+      .mh-links{display:grid;gap:8px}
+      body.tmr-light a.mh-link{display:flex;justify-content:space-between;align-items:center;gap:10px;min-height:44px;padding:0 12px;border:1px solid #E1E9F2;border-radius:12px;color:#0B1B2E;text-decoration:none;font:700 14px/1.2 Inter,sans-serif;background:#fff}
+      body.tmr-light a.mh-link:hover{border-color:#0B4FA8}
+      body.tmr-light a.mh-link small{font-weight:600;color:#5A6E86;font-size:12.5px}
+      .mh-pro{background:linear-gradient(180deg,#F3F8FF,#FFFFFF);border-color:#B9D2F2}
+      body.tmr-light .mh-pro p{margin:0;font-size:14px;line-height:1.55;color:#22364D}
+      body.tmr-light .mh-pro .mh-fine{margin-top:8px;font-size:12.5px;color:#5A6E86}
+      body.tmr-light a.mh-probtn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;margin-top:12px;padding:0 16px;border-radius:10px;background:#0B4FA8;color:#fff;font:800 14px/1 Inter,sans-serif;text-decoration:none}
+      .mh-skel{height:58px;border-radius:12px;background:linear-gradient(90deg,#EEF3F9,#F7FAFD,#EEF3F9);background-size:200% 100%;animation:mhs 1.2s linear infinite}
+      @keyframes mhs{to{background-position:-200% 0}}
+      .mh-gate{background:#fff;border:1px solid #D6E1EC;border-radius:16px;padding:22px;margin-top:14px;text-align:center}
+      body.tmr-light .mh-gate h2{margin:0 0 6px;font:800 18px/1.3 Inter,sans-serif;color:#0B1B2E}
+      body.tmr-light .mh-gate p{margin:0 auto;max-width:52ch;font-size:14.5px;line-height:1.55;color:#3A4E66}
+      @media(max-width:820px){ .mh-grid{grid-template-columns:1fr} }
+      @media(max-width:520px){
+        body.tmr-light a.mh-cta{width:100%}
+        .mh-stats{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+        .mh-card{padding:15px}
+      }
+    </style>
+</head>
+<body class="tmr-ds-shell tmr-polished-page tmr-light">
+<main class="tmr-shell">
+  <div class="mh-wrap">
+    <header class="mh-hero">
+      <div>
+        <span class="mh-eyebrow">Your dashboard</span>
+        <h1 id="mhTitle">Welcome back.</h1>
+        <p id="mhSub">Your simulations, how they did, and today&rsquo;s games in your sports.</p>
+      </div>
+      <a class="mh-cta" id="mhCta" href="/welcome/?from=home">Run a simulation</a>
+    </header>
+    <div id="mhRoot">
+      <div class="mh-grid">
+        <div class="mh-col"><div class="mh-card"><div class="mh-skel"></div></div><div class="mh-card"><div class="mh-skel"></div></div></div>
+        <div class="mh-col"><div class="mh-card"><div class="mh-skel"></div></div></div>
+      </div>
+    </div>
+  </div>
+</main>
+<script src="/static/js/config.js?v=430b4bba7b37"></script>
+<script src="/static/js/analytics.js?v=471dc3fea1e5"></script>
+<script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-ds-nav.88bd53e6d519.js"></script>
+<script src="/static/js/member-home.js?v=11029e7b8905"></script>
+</body>
+</html>

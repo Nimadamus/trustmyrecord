@@ -564,8 +564,10 @@
                     return;
                 }
 
-                var uname = user.username || user.displayName || user.email || '';
-                window.location.replace('/profile/' + (uname ? '?user=' + encodeURIComponent(uname) : ''));
+                // MEMBER_HOME_20261101: a plain login lands on the member dashboard
+                // (sims vs results, games to simulate, record link) instead of the
+                // pick record page most simulator members never use.
+                window.location.replace('/home/');
             }
 
             document.getElementById('direct-login-form').addEventListener('submit', async function(event) {
