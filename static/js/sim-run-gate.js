@@ -105,6 +105,65 @@
         });
     };
 
+    /* SIM_TAKE_SIDES_NBA_NHL_20261101: the same post-result "Take the {team}"
+       buttons NFL and MLB have. One tap writes tmr_sim_pick_intent and opens
+       /sportsbook/?simpick=1 (sim-pick-prefill.js pre-selects the moneyline).
+       Nothing here submits a pick. Any failure leaves the result untouched. */
+    var SPORT_CODE = { nba: 'NBA', nhl: 'NHL' }[sport];
+    function takeLabel(t) {
+        var nick = t.common || t.nickname || String(t.name || '').trim().split(/\s+/).pop();
+        return nick ? 'Take the ' + nick : 'Take this side';
+    }
+    function goPick(t, m) {
+        try {
+            localStorage.setItem('tmr_sim_pick_intent', JSON.stringify({
+                v: 1, ts: Date.now(), pick_team: t.name,
+                away_team_name: m.away.name, home_team_name: m.home.name,
+                board_game_id: null, sport: SPORT_CODE, source: sport + '-simulator'
+            }));
+        } catch (e) { }
+        try { G.track('simulator_pick_started', { simulation_type: sport + '_game', pick_team: t.name }); } catch (e) { }
+        window.location.href = '/sportsbook/?simpick=1';
+    }
+    function renderTakePanel(box, d) {
+        var m = d && d.matchup;
+        if (!SPORT_CODE || !box || !m || !m.away || !m.home || !m.away.name || !m.home.name) return;
+        if (!d.projection || !d.projection.win_probability) return;
+        if (box.querySelector('#simConvertPanel')) return;
+        var panel = document.createElement('div');
+        panel.className = 'panel';
+        panel.id = 'simConvertPanel';
+        panel.style.cssText = 'margin-top:12px;border:1px solid rgba(29,127,232,.35);background:linear-gradient(180deg,rgba(29,127,232,.07),transparent)';
+        panel.innerHTML = '<h3 style="margin:0 0 6px">Take a side on TMR</h3>'
+            + '<p class="dim" style="font-size:.9rem;margin:0 0 12px">The sim is research. Tap a team and the sportsbook opens that moneyline. Confirm there to put it on your public record.</p>';
+        var row = document.createElement('div');
+        row.style.cssText = 'display:flex;flex-wrap:wrap;gap:10px';
+        [m.away, m.home].forEach(function (t) {
+            var b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'btn';
+            b.setAttribute('data-sim-take-team', t.name);
+            b.textContent = takeLabel(t);
+            b.onclick = function () { goPick(t, m); };
+            row.appendChild(b);
+        });
+        panel.appendChild(row);
+        var hero = null;
+        for (var i = 0; i < box.children.length; i++) {
+            if (box.children[i].classList && box.children[i].classList.contains('mh')) { hero = box.children[i]; break; }
+        }
+        if (hero) box.insertBefore(panel, hero.nextSibling);
+        else box.appendChild(panel);
+    }
+    if (SPORT_CODE && S.SimApp.prototype.render) {
+        var render = S.SimApp.prototype.render;
+        S.SimApp.prototype.render = function (d) {
+            var r = render.apply(this, arguments);
+            try { renderTakePanel(this.nodes && this.nodes.result, d); } catch (e) { }
+            return r;
+        };
+    }
+
     function app() { return window[page.global] || null; }
 
     G.register({
