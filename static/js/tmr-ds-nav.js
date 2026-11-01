@@ -816,6 +816,7 @@
           av + '<span class="v2nav-name">' + esc(name) + '</span>' +
         '</button>' +
         '<div class="ds-menu-panel v2nav-menu-panel" role="menu" aria-label="Account menu">' +
+          '<a href="/home/" role="menuitem">My Dashboard</a>' +  // MEMBER_HOME_20261101
           '<a href="/u/' + encodeURIComponent(name) + '/" role="menuitem">My Profile</a>' +
           '<a href="/profile/?action=edit" role="menuitem">Settings</a>' +
           '<a href="/premium/#dashboard" role="menuitem">TMR Pro Dashboard</a>' +
