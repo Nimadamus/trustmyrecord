@@ -148,6 +148,22 @@
             row.appendChild(b);
         });
         panel.appendChild(row);
+        /* MY_SIMS_20261101: a signed-in run is saved to the member's account and
+           graded against the real final on /my-sims/. Give them the reason to come back. */
+        var signedIn = false;
+        try { signedIn = !!(localStorage.getItem('trustmyrecord_token') || localStorage.getItem('tmr_token') || localStorage.getItem('accessToken')); } catch (e) { }
+        if (signedIn) {
+            var back = document.createElement('p');
+            back.className = 'dim';
+            back.style.cssText = 'font-size:.88rem;margin:12px 0 0';
+            back.appendChild(document.createTextNode('This run is saved to your account. After the game, see how it did: '));
+            var a = document.createElement('a');
+            a.href = '/my-sims/?src=postrun_' + sport;
+            a.textContent = 'My sims vs real results';
+            a.style.fontWeight = '700';
+            back.appendChild(a);
+            panel.appendChild(back);
+        }
         var hero = null;
         for (var i = 0; i < box.children.length; i++) {
             if (box.children[i].classList && box.children[i].classList.contains('mh')) { hero = box.children[i]; break; }

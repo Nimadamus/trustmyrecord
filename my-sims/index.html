@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Simulations vs Real Results | TrustMyRecord</title>
+    <meta name="description" content="Every game you simulated on TrustMyRecord next to the real final score: the simulated favorite, the actual winner, hits and misses.">
+    <link rel="canonical" href="https://trustmyrecord.com/my-sims/">
+    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=859cacfb660e">
+    <link rel="stylesheet" href="/static/css/tmr-page-polish.css?v=dcde044bca53">
+    <script defer src="/static/js/tmr-sitewide.js?v=26c51709cf47"></script>
+    <link rel="stylesheet" href="/static/css/tmr-ds.d4d41a955166.css">
+    <link rel="stylesheet" href="/static/css/tmr-ds-header.cc364e352e74.css">
+    <link rel="stylesheet" href="/static/css/tmr-light.css?v=21433b023833">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap">
+    <link rel="stylesheet" href="/static/css/tmr-navbar.css?v=68ec3081d29a">
+    <style>
+      /* MY_SIMS_20261101: a member's simulations next to the real final scores.
+         Data: GET /api/sim-archive/mine (own rows only). */
+      .ms-wrap{max-width:860px;margin:0 auto}
+      body.tmr-light .ms-wrap .ms-hero{background:linear-gradient(135deg,#0B1B2E 0%,#123A66 100%) !important;border:0 !important;border-radius:18px !important;padding:24px 22px !important;margin:0 !important;max-width:none !important;width:100% !important;box-sizing:border-box;color:#fff}
+      body.tmr-light .ms-hero .ms-eyebrow{display:block;font:800 12px/1 Inter,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#7FB6FF;margin-bottom:10px}
+      body.tmr-light .ms-wrap .ms-hero h1{color:#fff !important;margin:0;font-family:'Barlow Condensed',Inter,sans-serif;font-weight:800;font-size:clamp(32px,5.5vw,44px);line-height:1.04;color:#fff}
+      body.tmr-light .ms-wrap .ms-hero p{margin:10px 0 0;font-size:15.5px;line-height:1.55;color:#D3E1F0 !important;max-width:62ch}
+      .ms-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:14px}
+      .ms-stat{background:#FFFFFF;border:1px solid #D6E1EC;border-radius:14px;padding:14px 16px}
+      body.tmr-light .ms-stat b{display:block;font-family:'Barlow Condensed',Inter,sans-serif;font-size:30px;font-weight:800;line-height:1;color:#0B1B2E}
+      body.tmr-light .ms-stat span{display:block;margin-top:6px;font-size:12.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#5A6E86}
+      body.tmr-light .ms-note{margin:12px 2px 0;font-size:13.5px;line-height:1.55;color:#3A4E66}
+      .ms-filters{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
+      body.tmr-light .ms-filters button{min-height:40px;padding:0 14px;border-radius:999px;border:1px solid #C9D7E6;background:#fff;color:#22364D;font:700 13.5px/1 Inter,sans-serif;cursor:pointer}
+      body.tmr-light .ms-filters button[aria-pressed="true"]{background:#0B1B2E;border-color:#0B1B2E;color:#fff}
+      .ms-list{display:grid;gap:10px;margin-top:14px}
+      .ms-row{display:grid;grid-template-columns:minmax(0,1fr) 250px 96px;gap:16px;align-items:center;background:#FFFFFF;border:1px solid #D6E1EC;border-radius:14px;padding:14px 16px}
+      body.tmr-light .ms-match{font:800 16px/1.3 Inter,sans-serif;color:#0B1B2E}
+      body.tmr-light .ms-meta{margin-top:3px;font-size:12.5px;color:#5A6E86}
+      .ms-bar{display:flex;height:8px;border-radius:999px;overflow:hidden;background:#E3EBF4;margin-top:9px}
+      .ms-bar i{display:block;height:100%}
+      .ms-bar i.a{background:#7FA6D6}.ms-bar i.h{background:#0B4FA8}
+      body.tmr-light .ms-prob{display:flex;justify-content:space-between;margin-top:5px;font-size:12.5px;font-weight:700;color:#22364D}
+      body.tmr-light .ms-res{font-size:13.5px;line-height:1.45;color:#22364D}
+      body.tmr-light .ms-res b{color:#0B1B2E}
+      .ms-badge{justify-self:end;min-width:76px;text-align:center;font:800 11.5px/1 Inter,sans-serif;letter-spacing:.07em;text-transform:uppercase;padding:8px 10px;border-radius:999px}
+      .ms-badge.hit{background:rgba(10,139,78,.12);color:#08703F}
+      .ms-badge.miss{background:rgba(192,57,43,.11);color:#A8301F}
+      .ms-badge.pending{background:#EEF3F9;color:#41556D}
+      .ms-badge.none{background:#F3F5F8;color:#6A7B90}
+      .ms-empty,.ms-gate{background:#fff;border:1px solid #D6E1EC;border-radius:16px;padding:22px;margin-top:14px;text-align:center}
+      body.tmr-light .ms-empty h2,body.tmr-light .ms-gate h2{margin:0 0 6px;font:800 18px/1.3 Inter,sans-serif;color:#0B1B2E}
+      body.tmr-light .ms-empty p,body.tmr-light .ms-gate p{margin:0 auto;max-width:52ch;font-size:14.5px;line-height:1.55;color:#3A4E66}
+      body.tmr-light a.ms-btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;margin:14px 6px 0;padding:0 18px;border-radius:10px;background:#0B4FA8;color:#fff;font:800 14px/1 Inter,sans-serif;text-decoration:none}
+      body.tmr-light a.ms-btn.ghost{background:#fff;color:#0B4FA8;border:1px solid #0B4FA8}
+      body.tmr-light a.ms-rerun{font-size:12.5px;font-weight:700;color:#0B4FA8;text-decoration:none}
+      .ms-loading{margin-top:14px;color:#5A6E86;font-size:14px}
+      @media(max-width:640px){
+        .ms-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+        .ms-row{grid-template-columns:1fr;gap:10px}
+        .ms-badge{justify-self:start}
+      }
+    </style>
+</head>
+<body class="tmr-ds-shell tmr-polished-page tmr-light">
+<main class="tmr-shell">
+  <div class="ms-wrap">
+    <header class="ms-hero">
+      <span class="ms-eyebrow">My simulations</span>
+      <h1>Your sims vs the real results</h1>
+      <p>Every game you simulated in the last 60 days, next to the final score once it is played. The simulated favorite is the side with the higher win probability across all simulated games. Hits and misses are counted the same way.</p>
+    </header>
+    <div id="msRoot"><p class="ms-loading">Loading your simulations&hellip;</p></div>
+  </div>
+</main>
+<script src="/static/js/config.js?v=430b4bba7b37"></script>
+<script src="/static/js/analytics.js?v=471dc3fea1e5"></script>
+<script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-ds-nav.88bd53e6d519.js"></script>
+<script src="/static/js/my-sims.js?v=922cb3f0beb9"></script>
+</body>
+</html>
