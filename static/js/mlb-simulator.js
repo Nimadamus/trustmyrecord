@@ -1944,20 +1944,6 @@
         if (Number.isFinite(weather.precipitation) && weather.precipitation > 0) adjustment -= 0.08;
         return clamp(adjustment, -0.22, 0.24);
     }
-    function applyMarketTotalCalibration(awayRuns, homeRuns, total, strengthShare) {
-        var marketTotal = Number(total);
-        if (!Number.isFinite(marketTotal) || marketTotal < 5.5 || marketTotal > 14.5) return { awayRuns: awayRuns, homeRuns: homeRuns, applied: false };
-        var currentTotal = awayRuns + homeRuns;
-        if (!Number.isFinite(currentTotal) || currentTotal <= 0) return { awayRuns: awayRuns, homeRuns: homeRuns, applied: false };
-        var targetTotal = (currentTotal * 0.78) + (marketTotal * 0.22);
-        var scale = clamp(targetTotal / currentTotal, 0.9, 1.1);
-        var awayShare = clamp(strengthShare || 0.5, 0.38, 0.62);
-        return {
-            awayRuns: clamp((awayRuns * scale * 0.88) + (targetTotal * awayShare * 0.12), 1.5, 8.8),
-            homeRuns: clamp((homeRuns * scale * 0.88) + (targetTotal * (1 - awayShare) * 0.12), 1.5, 8.8),
-            applied: true
-        };
-    }
     // REMOVED 27 Aug 2026 -- buildBoxScoreLegacy and controlledFinalScore.
     //
     // A Poisson final-score generator and the box score it fed. Both were
@@ -7889,7 +7875,11 @@
         var marketWin = null;
         // See MARKET_MODE_20260827 on state.marketMode. In pure mode the board is
         // not consulted at all, even when it is sitting right there in context.
-        var marketAllowed = state.marketMode === 'market';
+        // NO_MARKET_INPUT_20261101 -- Nima: "no odds as a variable". The
+        // market-informed mode (22% of the posted total into the run environment)
+        // is gone; no sportsbook price or total may reach any simulator input.
+        // The market is a yardstick to grade against, never an input.
+        var marketAllowed = false;
         var marketInfluence = {
             mode: state.marketMode,
             // The win probability takes nothing from the market: see
@@ -7930,23 +7920,6 @@
                     + ' moneyline is displayed beside this projection'
                     + (context.odds.updatedAt ? ' (snapshot ' + context.odds.updatedAt + ')' : '')
                     + '. It is not blended into the win probability.');
-            }
-            if (context.odds.total != null) {
-                var calibrated = applyMarketTotalCalibration(awayRuns, homeRuns, context.odds.total, awayStrength / (awayStrength + homeStrength));
-                awayRuns = calibrated.awayRuns;
-                homeRuns = calibrated.homeRuns;
-                if (calibrated.applied) {
-                    marketInfluence.appliedToRunEnvironment = true;
-                    marketInfluence.runEnvironmentWeight = 0.22;
-                    liveFactors.push('MARKET-INFORMED: 22% of the ' + context.odds.book
-                        + ' posted total of ' + context.odds.total + ' runs is blended into the '
-                        + 'projected scoring environment'
-                        + (context.odds.updatedAt ? ' (snapshot ' + context.odds.updatedAt + ')' : '')
-                        + '. The projected score is therefore part sportsbook.');
-                } else {
-                    liveFactors.push('Market total snapshot: ' + context.odds.total
-                        + ' runs, outside the range this model will anchor to, so it was not used.');
-                }
             }
         }
         var volatility = clamp((away.volatility + home.volatility) / 2, 0.92, 1.16);
@@ -10605,7 +10578,7 @@
         if (marketModeSelect) {
             marketModeSelect.value = state.marketMode;
             marketModeSelect.addEventListener('change', function () {
-                state.marketMode = marketModeSelect.value === 'market' ? 'market' : 'pure';
+                state.marketMode = 'pure'; // NO_MARKET_INPUT_20261101
                 // The note describes the mode before a run and the actual influence
                 // after one, so it is never stale against the selector.
                 renderMarketModeNote(null);

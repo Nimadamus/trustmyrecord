@@ -25,9 +25,9 @@
   if (FLAGS.conversionPanel === false) return;
 
   var API_BASE_ENDPOINT = '/mlb-simulator-save';
-  var FIELD_IDS = ['awayPoolSelect', 'awayTeamSelect', 'awayPitcherSelect', 'homePoolSelect', 'homeTeamSelect', 'homePitcherSelect', 'simWeatherSelect', 'simulationCountSelect', 'simDepthSelect', 'simMarketModeSelect'];
+  var FIELD_IDS = ['awayPoolSelect', 'awayTeamSelect', 'awayPitcherSelect', 'homePoolSelect', 'homeTeamSelect', 'homePitcherSelect', 'simWeatherSelect', 'simulationCountSelect', 'simDepthSelect'];
   // MLB_SAVED_SETTINGS_20260913: saved since this date. Older saves do not have them.
-  var SETTING_IDS = ['simDepthSelect', 'simMarketModeSelect'];
+  var SETTING_IDS = ['simDepthSelect'];
   var MODE_BUTTON_IDS = { current: 'currentModeButton', historical: 'historicalModeButton', mixed: 'mixedModeButton' };
 
   function qs(id) { return document.getElementById(id); }
@@ -422,7 +422,7 @@
     var old = qs('simcSettingsNotice');
     if (old) old.remove();
     var e = escHtml;
-    var names = { simDepthSelect: 'Simulation depth', simMarketModeSelect: 'Market mode' };
+    var names = { simDepthSelect: 'Simulation depth' };
     var main = document.querySelector('main') || document.body;
     var box = document.createElement('div');
     box.className = 'simc-panel';

@@ -117,44 +117,29 @@ check('pure mode says so and claims no market influence', () => {
     'a pure run must not carry a market-informed line');
 });
 
-check('market mode actually moves the number', () => {
-  // Through the run environment, which is the only channel that survives. The
-  // posted total feeds the anchor that builds the plate-appearance inputs, so it
-  // moves the projection, the box score AND the win probability that is sampled
-  // from them.
-  assert.notStrictEqual(marketWithBoard.box, pureNoBoard.box,
-    'a 12.5 total left the simulated game identical');
-  assert.notStrictEqual(marketWithBoard.away + marketWithBoard.home,
-    pureNoBoard.away + pureNoBoard.home, 'the projected total did not move');
-});
-
-check('the moneyline is compared, never blended', () => {
-  // DEAD_MONEYLINE_BLEND_20260827. The old 15% blend was overwritten by the
-  // Monte Carlo before anything read it. Nothing may claim otherwise.
+check('NO_MARKET_INPUT_20261101: even a forced market mode ignores the board', () => {
+  // Nima 2026-11-01: "no odds as a variable". The market-informed mode is gone;
+  // setting the old state value by hand must not let a price or total in.
+  assert.strictEqual(marketWithBoard.homeWin, pureNoBoard.homeWin, 'win probability moved');
+  assert.strictEqual(marketWithBoard.away, pureNoBoard.away, 'projected away runs moved');
+  assert.strictEqual(marketWithBoard.home, pureNoBoard.home, 'projected home runs moved');
+  assert.strictEqual(marketWithBoard.box, pureNoBoard.box, 'box score moved');
+  assert.strictEqual(marketWithBoard.influence.appliedToRunEnvironment, false);
+  assert.strictEqual(marketWithBoard.influence.runEnvironmentWeight, 0);
   assert.strictEqual(marketWithBoard.influence.appliedToWinProbability, false);
   assert.strictEqual(marketWithBoard.influence.winProbabilityWeight, 0);
-  assert.strictEqual(marketWithBoard.influence.moneylineShownForComparison, true);
-  assert.ok(!/blended into this win probability/.test(marketWithBoard.factors),
-    'the page must not claim a moneyline blend that does not happen');
+  assert.ok(!/MARKET-INFORMED|posted total/.test(marketWithBoard.factors),
+    'no factor may describe a market blend');
 });
 
-check('market mode reports the book and the snapshot', () => {
-  assert.strictEqual(marketWithBoard.label, 'Market-informed');
-  assert.strictEqual(marketWithBoard.influence.book, 'Test Book');
-  assert.strictEqual(marketWithBoard.influence.snapshotAt, '2026-08-27T17:05:00Z');
-  assert.ok(/MARKET-INFORMED/.test(marketWithBoard.factors),
-    'the visitor-facing factor list must name the blend');
-  assert.ok(/2026-08-27T17:05:00Z/.test(marketWithBoard.factors),
-    'the snapshot timestamp must reach the visitor');
+check('the page offers no market-informed option', () => {
+  const html = fs.readFileSync(path.join(__dirname, '..', 'mlb-simulator', 'index.html'), 'utf8');
+  assert.ok(!/simMarketModeSelect|Market-informed/.test(html), 'market mode selector is still on the page');
+  const js = fs.readFileSync(ENGINE, 'utf8');
+  assert.ok(!/applyMarketTotalCalibration/.test(js), 'the posted-total blend is still in the engine');
 });
 
-check('the posted total reaches the run environment and is disclosed', () => {
-  assert.strictEqual(marketWithBoard.influence.appliedToRunEnvironment, true);
-  assert.strictEqual(marketWithBoard.influence.runEnvironmentWeight, 0.22);
-  assert.ok(/posted total/.test(marketWithBoard.factors));
-});
-
-check('market mode with no board is reported as a pure run', () => {
+check('forced market mode with no board is a pure run', () => {
   assert.strictEqual(marketNoBoard.influence.appliedToRunEnvironment, false);
   assert.strictEqual(marketNoBoard.influence.moneylineShownForComparison, false);
   assert.strictEqual(marketNoBoard.homeWin, pureNoBoard.homeWin,
