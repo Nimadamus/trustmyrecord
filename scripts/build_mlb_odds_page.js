@@ -357,6 +357,7 @@ ${shell.head}
 <style>${H.CSS}</style>
 </head>
 <body class="tmr-ds-shell tmr-ds--dark">
+${H.NAV_RESERVE}
 <main class="wrap lsim-wrap" id="lsim" data-sport="mlb" data-mode="odds" data-inputs="${DATA}">
   <nav class="simcrumb" aria-label="Breadcrumb" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:.8rem;margin:0 0 14px;opacity:.85;">
     <a href="/" style="color:inherit;text-decoration:none;">Home</a><span aria-hidden="true" style="opacity:.45;">&rsaquo;</span>
@@ -536,6 +537,7 @@ ${shell.head}
 <style>${H.CSS}${TEAM_CSS}</style>
 </head>
 <body class="tmr-ds-shell tmr-ds--dark">
+${H.NAV_RESERVE}
 <main class="wrap lsim-wrap">
   <nav class="simcrumb" aria-label="Breadcrumb" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:.8rem;margin:0 0 14px;opacity:.85;">
     <a href="/" style="color:inherit;text-decoration:none;">Home</a><span aria-hidden="true" style="opacity:.45;">&rsaquo;</span>

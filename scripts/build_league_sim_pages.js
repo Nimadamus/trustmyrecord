@@ -1230,7 +1230,7 @@ function inputsProblem(inputs, now) {
   return null;
 }
 
-module.exports = { inputsProblem, MAX_INPUT_AGE_H, shellAssets, CSS, faqBlock, ptDate, pctText, count, slugOf, esc, UI_one, pickPanel, seasonState, seasonStateLine };
+module.exports = { NAV_RESERVE, inputsProblem, MAX_INPUT_AGE_H, shellAssets, CSS, faqBlock, ptDate, pctText, count, slugOf, esc, UI_one, pickPanel, seasonState, seasonStateLine };
 
 if (require.main === module) (async () => {
   const shell = shellAssets();
