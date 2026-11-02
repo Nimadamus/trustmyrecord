@@ -938,6 +938,117 @@
 #board .wd-net span{padding:6px 10px;font-size:12.5px}
 @media (max-width:600px){#board .wd-net{display:none!important}#board .wdb-lede{font-size:14px}#board .pro-section-head h2{font-size:26px!important}}
 </style>
+<style id="wdb-v2-20261102">
+/* WDB_V2_20261102 (Nima): Watchdog board redesign. Dark Pro header like /premium/ and the simulators,
+   clean light cards below, league accent per game, locked card for non members (counts only). */
+.pro-board-page{--wdb-navy:#0a1220;--wdb-card:#0f1a2e;--wdb-line:#dfe7f1;--wdb-ink:#0b1424;--wdb-body:#3a4c62;--wdb-mut:#65788f;--wdb-blue:#1667c4;--wdb-gold:#f5c542}
+.pro-board-page main{background:#f4f7fa!important}
+html body.pro-board-page main section#board.pro-section{background:transparent!important;box-shadow:none!important;border:0!important;padding-top:20px!important;padding-bottom:56px!important}
+#board .pro-wrap{max-width:1120px}
+/* header */
+#board .pro-section-head.wdb-hero{width:auto!important;max-width:none!important;text-align:left!important;}
+#board .wdb-hero{position:relative;overflow:hidden;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:28px;align-items:center;
+  margin:0 0 22px!important;padding:34px 36px;border-radius:20px;text-align:left;max-width:none;
+  background:radial-gradient(120% 140% at 0% 0%,#16325a 0%,rgba(22,50,90,0) 55%),radial-gradient(90% 120% at 100% 100%,#122a4a 0%,rgba(18,42,74,0) 60%),#0a1220;
+  border:1px solid rgba(148,163,184,.18);box-shadow:0 18px 40px rgba(7,18,36,.18)}
+#board .wdb-kick{display:inline-flex;align-items:center;gap:8px;font:800 12px/1 Inter,system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--wdb-gold)}
+#board .wdb-kick i{width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 4px rgba(34,197,94,.18)}
+#board .wdb-hero h2{margin:12px 0 10px!important;font-family:Anton,"Barlow Condensed",Inter,sans-serif!important;font-weight:400!important;font-size:clamp(34px,4.4vw,52px)!important;line-height:1!important;letter-spacing:.01em;text-transform:uppercase;color:#fff!important}
+#board .wdb-hero .wdb-lede{margin:0!important;max-width:560px!important;font:500 16px/1.55 Inter,system-ui,sans-serif!important;color:#b9c7d9!important;text-align:left}
+#board .wdb-cta{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;margin-top:20px}
+.wdb-btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 24px;border-radius:12px;background:linear-gradient(135deg,#f5c542,#e0a91d);color:#1a1200!important;
+  font:800 15px/1 Inter,system-ui,sans-serif;letter-spacing:.02em;text-decoration:none!important;box-shadow:0 10px 24px rgba(245,197,66,.22);transition:transform .15s,box-shadow .15s}
+.wdb-btn:hover{transform:translateY(-1px);box-shadow:0 14px 28px rgba(245,197,66,.3)}
+.wdb-cta-note{font:500 13.5px/1.3 Inter,system-ui,sans-serif;color:#9fb0c6}
+/* live tiles */
+#board .wdb-hero .wd-net{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:0}
+#board .wdb-hero .wd-net[hidden]{display:none!important}
+#board .wdb-hero .wd-net .wdb-tile{text-align:left;display:flex;flex-direction:column;gap:4px;padding:16px 18px;border-radius:14px;background:rgba(15,26,46,.72);border:1px solid rgba(148,163,184,.18);font-size:inherit}
+#board .wdb-tile b{font:800 30px/1 "Barlow Condensed",Inter,sans-serif;color:#fff;font-variant-numeric:tabular-nums;letter-spacing:.01em}
+#board .wdb-tile em{font:600 12.5px/1.3 Inter,system-ui,sans-serif;font-style:normal;color:#94a7bf}
+#board .wdb-hero .wd-net .wdb-fresh{grid-column:1/-1;display:block;text-align:left;padding:2px 4px 0;border:0;background:none;font:500 12.5px/1.3 Inter,system-ui,sans-serif;color:#94a7bf}
+#board .wdb-fresh b{color:#dbe5f1;font-size:inherit;font-weight:700}
+#board .wdb-fresh i{display:inline-block;vertical-align:middle;margin:-2px 8px 0 0;width:7px;height:7px;border-radius:50%;background:#22c55e}
+#board .wdb-net-inline{display:flex;flex-wrap:wrap;gap:8px}
+#board .wdb-net-inline .wdb-tile{display:inline-flex;flex-direction:row;align-items:baseline;gap:6px;padding:8px 12px;border-radius:10px;background:#f4f7fa;border:1px solid var(--wdb-line)}
+#board .wdb-net-inline .wdb-tile b{font-size:16px;color:var(--wdb-ink)}#board .wdb-net-inline .wdb-tile em{color:var(--wdb-mut)}
+#board .wdb-net-inline .wdb-fresh{color:var(--wdb-mut)}#board .wdb-net-inline .wdb-fresh b{color:var(--wdb-ink)}
+/* locked card (non members) */
+.wdb-lock{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);border-radius:20px;overflow:hidden;background:#fff;border:1px solid var(--wdb-line);box-shadow:0 10px 30px rgba(11,20,36,.06)}
+.wdb-lock-preview{position:relative;padding:22px;background:linear-gradient(180deg,#f7f9fc,#eef3f8);border-right:1px solid var(--wdb-line);display:grid;gap:10px;align-content:center}
+.wdb-sk{display:grid;grid-template-columns:44px 1fr 74px 54px;gap:12px;align-items:center;padding:14px 16px;border-radius:12px;background:#fff;border:1px solid var(--wdb-line);filter:blur(1.5px);opacity:.85}
+.wdb-sk i{display:block;height:10px;border-radius:6px;background:#dbe4ee}
+.wdb-sk .sk-lg{height:18px;background:rgba(245,197,66,.35)}.wdb-sk .sk-b{background:#cfe0f5}.wdb-sk .sk-c{background:#d6f0e0}
+.wdb-lock-ico{position:absolute;inset:0;margin:auto;width:64px;height:64px;border-radius:50%;display:grid;place-items:center;background:#0a1220;color:var(--wdb-gold);box-shadow:0 12px 30px rgba(10,18,32,.35)}
+.wdb-lock-body{padding:34px 36px;display:flex;flex-direction:column;justify-content:center}
+.wdb-lock-k{align-self:flex-start;padding:6px 12px;border-radius:999px;background:#0a1220;color:var(--wdb-gold);font:800 11.5px/1 Inter,system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase}
+.wdb-lock-body h3{margin:16px 0 8px;font:800 clamp(22px,2.4vw,28px)/1.2 Inter,system-ui,sans-serif;color:var(--wdb-ink);letter-spacing:-.01em}
+.wdb-lock-sub{margin:0 0 16px;font:500 15px/1.5 Inter,system-ui,sans-serif;color:var(--wdb-body)}
+.wdb-lock-list{list-style:none;margin:0 0 22px;padding:0;display:grid;gap:9px}
+.wdb-lock-list li{position:relative;padding-left:28px;font:600 14.5px/1.4 Inter,system-ui,sans-serif;color:var(--wdb-ink)}
+.wdb-lock-list li::before{content:"";position:absolute;left:0;top:1px;width:18px;height:18px;border-radius:50%;background:#e7f6ee url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23138a4b' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.2 4.2L19 7'/%3E%3C/svg%3E") center/11px no-repeat}
+.wdb-lock-cta{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px}
+.wdb-lock-cta .wdb-cta-note{color:var(--wdb-mut)}
+.wdb-lock-login{margin:16px 0 0;font:500 14px/1.4 Inter,system-ui,sans-serif;color:var(--wdb-mut)}
+.wdb-lock-login a{color:var(--wdb-blue);font-weight:700}
+/* member board */
+#board .wd-since{background:#fff;border:1px solid var(--wdb-line);border-left:4px solid var(--wdb-blue);border-radius:14px;padding:16px 18px;box-shadow:0 4px 14px rgba(11,20,36,.04)}
+#board .wdg-switch{margin:0 0 10px}
+#board .wdg-switch [data-view]{min-height:40px;padding:0 18px;border-color:var(--wdb-line);background:#fff;color:var(--wdb-body)}
+#board .wdg-switch [data-view].on{background:#0a1220;border-color:#0a1220;color:#fff}
+#board .wd-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:12px;margin:0 0 18px;border-radius:14px;background:#fff;border:1px solid var(--wdb-line);box-shadow:0 4px 14px rgba(11,20,36,.04)}
+#board .wd-bar input[type=search],#board .wd-bar select{min-height:40px;border-radius:10px;border:1px solid var(--wdb-line);background:#f7f9fc;color:var(--wdb-ink);font:600 13.5px Inter,system-ui,sans-serif;padding:0 12px}
+#board .wd-bar input[type=search]:focus,#board .wd-bar select:focus{outline:2px solid rgba(22,103,196,.35);border-color:var(--wdb-blue);background:#fff}
+#board .wd-bar .wd-count{flex-basis:100%;font:500 12.5px/1.2 Inter,system-ui,sans-serif;color:var(--wdb-mut);padding:2px 2px 0}
+#board .wd-cons h3{margin:4px 0 10px;font:800 13px/1 Inter,system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--wdb-mut)}
+#board .wd-cons-card{border:1px solid var(--wdb-line);border-radius:14px;padding:14px;background:#fff;box-shadow:0 4px 14px rgba(11,20,36,.04);gap:14px}
+#board .wd-cons-n{min-width:60px;padding:8px 6px;border-radius:10px;background:#0a1220;color:#94a7bf;font-size:11px}
+#board .wd-cons-n b{color:var(--wdb-gold);font:800 24px/1 "Barlow Condensed",Inter,sans-serif}
+#board .wd-cons-sel{font-size:15px;color:var(--wdb-ink)}
+#board .wdg-list{gap:14px}
+#board .wdg-game{--lg:#1667c4;border:1px solid var(--wdb-line);border-left:4px solid var(--lg);border-radius:14px;background:#fff;box-shadow:0 4px 14px rgba(11,20,36,.04)}
+#board .wdg-game[data-lg=NFL]{--lg:#6d6ef0}#board .wdg-game[data-lg=NCAAF]{--lg:#8b5cf6}#board .wdg-game[data-lg=NBA]{--lg:#f28c28}#board .wdg-game[data-lg=NCAAB]{--lg:#ea580c}
+#board .wdg-game[data-lg=NHL]{--lg:#0ea5e9}#board .wdg-game[data-lg=MLB]{--lg:#e8553d}
+#board .wdg-head{background:#f7f9fc;color:var(--wdb-ink);border-bottom:1px solid var(--wdb-line);padding:12px 18px}
+#board .wdg-lg{background:var(--lg);color:#fff;border-radius:6px;padding:4px 8px;font-size:10.5px}
+#board .wdg-head .wdg-mu{color:var(--wdb-ink);font:800 16px/1.25 Inter,system-ui,sans-serif;letter-spacing:-.005em}
+#board .wdg-when{color:var(--wdb-mut);font-weight:600}
+#board .wdg-n{color:var(--wdb-mut);padding:4px 10px;border-radius:999px;background:#fff;border:1px solid var(--wdb-line)}
+#board .wdg-pick{padding:12px 18px;border-top-color:#edf1f6}
+#board .wdg-pick:hover{background:#fafcfe}
+#board .wdg-sel b{font-size:15.5px;color:var(--wdb-ink)}
+#board .wdg-sel .wd-odds{display:inline-block;margin-left:4px;padding:2px 7px;border-radius:6px;background:#eef3f8;color:var(--wdb-body);font-size:12.5px;font-weight:700}
+#board .wdg-name{color:var(--wdb-blue)}
+#board .wdg-stats{color:var(--wdb-body)}
+#board .wdg-prof{padding:8px 12px;border-radius:9px;border:1px solid var(--wdb-line);color:var(--wdb-blue)}
+#board .wdg-prof:hover{border-color:var(--wdb-blue);background:#f2f7fd}
+#board .wd-badge{background:#fff4d6;color:#8a6200}
+@media (max-width:860px){
+  #board .wdb-hero{grid-template-columns:1fr;padding:26px 22px;gap:20px}
+  .wdb-lock{grid-template-columns:1fr}
+  .wdb-lock-preview{border-right:0;border-bottom:1px solid var(--wdb-line);padding:16px}
+  .wdb-lock-body{padding:26px 22px}
+}
+@media (max-width:600px){
+  #board.pro-section{padding-top:12px!important}
+  #board .wdb-hero{border-radius:16px;padding:22px 18px}
+  #board .wdb-hero h2{font-size:34px!important}
+  #board .wdb-kick{font-size:10.5px;letter-spacing:.1em}
+  #board .wd-cons-grid{display:grid;grid-auto-flow:column;grid-auto-columns:84%;grid-template-columns:none;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:6px;-webkit-overflow-scrolling:touch}
+  #board .wd-cons-card{scroll-snap-align:start}
+  #board .wdb-hero .wd-net{display:grid!important;gap:8px}
+  #board .wdb-hero .wd-net .wdb-tile{padding:12px 14px}
+  #board .wdb-tile b{font-size:24px}
+  #board .wdb-tile em{font-size:11.5px}
+  .wdb-sk{grid-template-columns:34px 1fr 54px;padding:12px}.wdb-sk .sk-c{display:none}
+  .wdb-lock-preview .wdb-sk:nth-child(n+4){display:none}
+  .wdb-btn{width:100%}
+  #board .wdg-head{padding:10px 14px}#board .wdg-pick{padding:10px 14px}
+  #board .wd-bar{padding:10px}
+  #board .wd-bar input[type=search]{flex:1 1 100%}
+  #board .wd-bar select{flex:1 1 calc(50% - 4px);min-width:0}
+}
+</style>
 </head>
 <body class="tmr-site-shell tmr-ds-shell tmr-light pro-page pro-board-page">
     <!-- Sitewide global nav is injected by tmr-sitewide.js -->
@@ -1331,10 +1442,13 @@
         <!-- ============================================ the pending board -->
         <section class="pro-section" id="board">
             <div class="pro-wrap">
-                <div class="pro-section-head">
-                    <span class="pxs-k">Today</span>
-                    <h2>The Watchdog board</h2>
-                    <p class="wdb-lede">Picks posted by tracked outside handicappers for games that have not started, each beside that handicapper&rsquo;s record as graded by TMR. TMR members are never included. Every record is free on <a href="/around-the-web/">Handicappers Around the Web</a>.</p>
+                <!-- WDB_V2_20261102 (Nima): dark Pro header, live network tiles, no free records plug -->
+                <div class="pro-section-head wdb-hero">
+                    <div class="wdb-hero-copy">
+                        <span class="wdb-kick"><i aria-hidden="true"></i>Handicapper Watchdog &middot; TMR Pro</span>
+                        <h2>The Watchdog Board</h2>
+                        <p class="wdb-lede">Pregame picks from tracked outside handicappers, each beside the record TMR graded for them. Games drop off the board the moment they start. TMR members are never included.</p>
+                    </div>
                     <div class="wd-net" id="wdNet" hidden></div>
                 </div>
                 <div id="proBoard">
@@ -1811,28 +1925,28 @@
                buyer what was missing. The proven count now shows only when it is
                above zero, the leagues are named, and a locked preview shows one row
                per real handicapper on the board (never invented data). */
-            var n = summary && summary.picks, t;
-            if (n) {
-                var lg = (summary.leagues || []).filter(Boolean);
-                t = '<b>' + n + ' pending pick' + (n === 1 ? '' : 's') + '</b> from <b>' + summary.handicappers + ' tracked handicapper' + (summary.handicappers === 1 ? '' : 's') + '</b> '
-                    + (summary.handicappers === 1 ? 'is' : 'are') + ' on the board right now' + (lg.length ? ' (' + esc(lg.join(', ')) + ')' : '') + '.'
-                    + (summary.proven_handicappers > 0 ? ' ' + summary.proven_handicappers + ' of them ' + (summary.proven_handicappers === 1 ? 'has' : 'have') + ' 25 or more graded picks.' : '');
-            } else {
-                t = 'The board fills up as the handicappers we track post their picks for the next games.';
+            /* WDB_V2_20261102 (Nima): counts only, never a game, pick or handicapper. The preview rows are
+               decorative bars, not data. The CTA goes to /premium/ checkout (#pricing is hidden on this page). */
+            var n = summary && summary.picks;
+            var fmt = function (v) { return Number(v).toLocaleString('en-US'); };
+            var head = n ? fmt(n) + ' pending pick' + (n === 1 ? ' is' : 's are') + ' on the board right now' : 'The board fills up as tracked handicappers post';
+            var sub = n ? 'From ' + fmt(summary.handicappers) + ' tracked handicapper' + (summary.handicappers === 1 ? '' : 's')
+                + (summary.proven_handicappers > 0 ? ', ' + fmt(summary.proven_handicappers) + ' with 25 or more graded picks' : '') + '.'
+                : 'Pregame picks appear here as they are collected, each beside the record TMR graded for that handicapper.';
+            var signedOut = true;
+            try { signedOut = !localStorage.getItem('trustmyrecord_token'); } catch (e) { }
+            var bars = '';
+            for (var r = 0; r < 6; r++) {
+                bars += '<div class="wdb-sk"><i class="sk-lg"></i><i class="sk-a" style="width:' + [62, 48, 70, 55, 66, 44][r] + '%"></i><i class="sk-b"></i><i class="sk-c"></i></div>';
             }
-            var rows = '';
-            var k = 0;   // PAYWALL_20261024 (Nima): no game or pick preview on this page, counts only
-            for (var r = 0; r < k; r++) {
-                rows += '<div style="display:flex;gap:12px;align-items:center;padding:10px 14px;border-top:1px solid rgba(127,127,127,.18)">'
-                    + '<span aria-hidden="true">&#128274;</span>'
-                    + '<span style="flex:1;height:10px;border-radius:5px;background:rgba(127,127,127,.22)"></span>'
-                    + '<span style="width:22%;height:10px;border-radius:5px;background:rgba(127,127,127,.16)"></span>'
-                    + '<span style="width:14%;height:10px;border-radius:5px;background:rgba(127,127,127,.12)"></span></div>';
-            }
-            boardEl.innerHTML = '<div class="pro-teaser">' + t + ' TMR Pro shows every pick, each handicapper&#39;s record, units and streak, and where the proven handicappers agree.'
-                + (rows ? '<div aria-label="Locked preview" style="margin-top:14px;border:1px solid rgba(127,127,127,.22);border-radius:10px;overflow:hidden">'
-                    + '<div style="padding:8px 14px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;opacity:.7">Handicapper, pending pick, record</div>' + rows + '</div>' : '')
-                + '<p style="margin:14px 0 0"><a href="#pricing" style="display:inline-flex;align-items:center;min-height:44px;padding:0 18px;border-radius:10px;background:#F5C542;color:#1a1400;font-weight:800;text-decoration:none">Unlock with TMR Pro, $49.99/month</a></p></div>';
+            boardEl.innerHTML = '<div class="wdb-lock">'
+                + '<div class="wdb-lock-preview" aria-hidden="true">' + bars + '<span class="wdb-lock-ico"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span></div>'
+                + '<div class="wdb-lock-body"><span class="wdb-lock-k">TMR Pro members only</span>'
+                + '<h3>' + head + '</h3><p class="wdb-lock-sub">' + sub + '</p>'
+                + '<ul class="wdb-lock-list"><li>Every pregame pick with the posted price</li><li>Record, units, ROI and streak beside each handicapper</li><li>Where the proven handicappers agree</li><li>Filter by league, source and start time</li></ul>'
+                + '<div class="wdb-lock-cta"><a class="wdb-btn" href="/premium/#pricing">Start 3 days free</a><span class="wdb-cta-note">then $49.99 a month, cancel any time</span></div>'
+                + (signedOut ? '<p class="wdb-lock-login">Already a member? <a href="/login/?next=' + encodeURIComponent('/pro/board/') + '">Log in</a></p>' : '')
+                + '</div></div>';
         }
         function sortVal(c, k) {
             if (k === 'name') return String(c.name || '').toLowerCase();
@@ -1904,7 +2018,7 @@
             });
             if (!list.length) return { n: 0, html: '<div class="pro-teaser">No upcoming picks match these filters right now. The board fills up as the handicappers post for the next games.</div>' };
             return { n: total, games: list.length, html: '<div class="wdg-list">' + list.map(function (g) {
-                return '<div class="wdg-game"><div class="wdg-head"><span class="wdg-lg">' + esc(g.league) + '</span><b class="wdg-mu">' + esc(g.matchup) + '</b>'
+                return '<div class="wdg-game" data-lg="' + esc(String(g.league || '').toUpperCase()) + '"><div class="wdg-head"><span class="wdg-lg">' + esc(g.league) + '</span><b class="wdg-mu">' + esc(g.matchup) + '</b>'
                     + '<span class="wdg-when">' + esc(localKick(g.start)) + '</span><span class="wdg-n">' + g.rows.length + ' pick' + (g.rows.length === 1 ? '' : 's') + '</span></div>'
                     + '<ul class="wdg-picks">' + g.rows.map(function (x) {
                         var c = x.c, p = x.p;
@@ -2141,17 +2255,19 @@
         }
         function netStats(n) {
             if (!n) return [];
+            /* WDB_V2_20261102: four tiles plus one freshness line (was seven loose chips). */
             var out = [], d = n.directory || {}, src = n.sources || [];
-            if (d.accounts) out.push(['<b>' + Number(d.accounts).toLocaleString('en-US') + '</b> accounts monitored', '']);
-            if (d.with_record) out.push(['<b>' + Number(d.with_record).toLocaleString('en-US') + '</b> handicappers with graded records', '']);
-            if (d.graded) out.push(['<b>' + Number(d.graded).toLocaleString('en-US') + '</b> graded picks', '']);
-            if (n.picks_harvested_24h != null) out.push(['<b>' + Number(n.picks_harvested_24h).toLocaleString('en-US') + '</b> picks collected in the last 24 hours', '']);
-            var newAcc = src.reduce(function (a, x) { return a + (Number(x.new_accounts_24h) || 0); }, 0);
-            if (newAcc) out.push(['<b>' + newAcc.toLocaleString('en-US') + '</b> new accounts found in 24 hours', '']);
+            var fmt = function (v) { return Number(v).toLocaleString('en-US'); };
+            if (d.accounts) out.push('<span class="wdb-tile"><b>' + fmt(d.accounts) + '</b><em>accounts monitored</em></span>');
+            if (d.with_record) out.push('<span class="wdb-tile"><b>' + fmt(d.with_record) + '</b><em>handicappers with graded records</em></span>');
+            if (d.graded) out.push('<span class="wdb-tile"><b>' + fmt(d.graded) + '</b><em>picks graded</em></span>');
+            if (n.picks_harvested_24h != null) out.push('<span class="wdb-tile"><b>' + fmt(n.picks_harvested_24h) + '</b><em>picks collected in 24 hours</em></span>');
             var last = src.map(function (x) { return x.last_check; }).filter(Boolean).sort().pop();
-            if (last) out.push(['Sources last checked <b>' + agoText(last) + '</b>', '']);
-            if (n.last_graded) out.push(['Last grading run <b>' + agoText(n.last_graded) + '</b>', '']);
-            return out.map(function (x) { return '<span>' + x[0] + '</span>'; });
+            var fresh = [];
+            if (last) fresh.push('Sources checked <b>' + agoText(last) + '</b>');
+            if (n.last_graded) fresh.push('graded <b>' + agoText(n.last_graded) + '</b>');
+            if (fresh.length) out.push('<span class="wdb-fresh"><i aria-hidden="true"></i>' + fresh.join(' &middot; ') + '</span>');
+            return out;
         }
         function paintNet(n) {
             netData = n || netData;
@@ -2166,7 +2282,7 @@
             var items = document.getElementById('wdNet') && !document.getElementById('wdNet').hidden ? [] : netStats(netData);
             return '<div class="wd-empty"><h3>No pending picks right now</h3>'
                 + '<p>No pending picks are currently available. The Watchdog is continuing to monitor tracked sources, and this board updates as new pregame picks are collected.</p>'
-                + (items.length ? '<div class="wd-net" style="margin:0 0 14px">' + items.join('') + '</div>' : '')
+                + (items.length ? '<div class="wd-net wdb-net-inline" style="margin:0 0 14px">' + items.join('') + '</div>' : '')
                 + '<a class="px-link" href="/around-the-web/">Browse Handicappers Around the Web</a></div>';
         }
         /* WATCHDOG_SCALE_20260929: the Watchdog module's numbers, live from the ledger. Nothing is typed in;
@@ -2249,18 +2365,7 @@
             /* PRO_SUNDAY_FREE_20261019: on Sundays from 8 AM ET until the first NFL kickoff the API
                may open the board to signed in free members (flag PRO_SUNDAY_FREE_BOARD). The page
                says so plainly, with the exact closing time, and only when the API says so. */
-            if (!isPro && signedIn && S && S.authFetch) {
-                S.authFetch(API + '/pro/pending-board').then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
-                    if (!d || d.access !== 'sunday_free') return;
-                    boardData = d; drawBoard();
-                    var until = d.free_until ? new Date(d.free_until).toLocaleString('en-US', { weekday: 'long', hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' }) + ' PT' : 'the first NFL kickoff';
-                    var note = document.createElement('p');
-                    note.className = 'pro-teaser';
-                    note.textContent = 'Free Sunday board: open to every signed in member until ' + until + ', the first NFL kickoff today. After that the full board is part of TMR Pro again.';
-                    boardEl.parentNode.insertBefore(note, boardEl);
-                    ga('pro_sunday_free_view', { component: 'pro_page_board' });
-                }).catch(function () { });
-            }
+            /* WDB_V2_20261102 (Nima): no free board for non Pro members, Sunday or otherwise. */
             fetch(API + '/pro/pending-board/summary', { cache: 'no-store' }).then(function (r) { return r.json(); })
                 .then(function (sm) { paintNet(sm && sm.network); if (!isPro) teaser(sm); })
                 .catch(function () { if (!isPro) teaser(null); });
