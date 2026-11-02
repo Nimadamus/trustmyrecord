@@ -894,6 +894,50 @@
 .pro-board-page .pro-hero, .pro-board-page main > section:not(#board), .pro-board-page .pd-recap { display: none !important; }
 .pro-board-page main { padding-top: 24px; }
 </style>
+
+<style id="pro-board-games-20261102">
+/* PRO_BOARD_GAMES_20261102 */
+.wdg-switch{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:6px 0 12px}
+.wdg-switch [data-view]{min-height:38px;padding:0 16px;border-radius:999px;border:1px solid var(--pro-line,#d2deea);background:var(--pro-surface,#fff);color:var(--pro-ink,#07182a);font:700 13.5px/1 Inter,system-ui,sans-serif;cursor:pointer}
+.wdg-switch [data-view].on{background:#0b2a4d;border-color:#0b2a4d;color:#fff}
+.wdg-upd{margin-left:auto;font:600 12.5px/1.2 Inter,system-ui,sans-serif;color:var(--pro-muted,#5b6b80)}
+.wdg-upd button{margin-left:6px;min-height:32px;padding:0 12px;border-radius:8px;border:1px solid var(--pro-line,#d2deea);background:var(--pro-surface,#fff);color:var(--pro-ink,#07182a);font:700 12.5px Inter,system-ui,sans-serif;cursor:pointer}
+.wdg-list{display:grid;gap:12px}
+.wdg-game{margin:0!important;border:1px solid var(--pro-line,#d2deea);border-radius:14px;background:var(--pro-surface,#fff);overflow:hidden}
+.wdg-head{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:12px 16px;background:linear-gradient(90deg,#07182a,#0b2a4d);color:#fff}
+.wdg-lg{padding:3px 8px;border-radius:6px;background:rgba(245,197,66,.16);color:#f5c542;font:800 11px/1.2 Inter,system-ui,sans-serif;letter-spacing:.06em}
+.wdg-head .wdg-mu{font:800 16px/1.25 Barlow,Inter,sans-serif;color:#fff}
+.wdg-when{font:700 13px/1.2 Inter,system-ui,sans-serif;color:#c9d8e8}
+.wdg-n{margin-left:auto;font:700 12px/1 Inter,system-ui,sans-serif;color:#9fb3c8}
+.wdg-picks{list-style:none;margin:0;padding:0}
+.wdg-pick{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1.6fr) auto;align-items:center;gap:10px 14px;padding:10px 16px;border-top:1px solid var(--pro-line,#e3eaf2)}
+.wdg-pick:first-child{border-top:0}
+.wdg-sel b{display:block;font:800 15px/1.25 Inter,system-ui,sans-serif;color:var(--pro-ink,#07182a)}
+.wdg-sel .wd-muted{font-size:12.5px}
+.wdg-cap{all:unset;cursor:pointer;display:flex;flex-direction:column;gap:3px;padding:6px 10px;border-radius:10px;border:1px solid transparent;min-width:0}
+.wdg-cap:hover,.wdg-cap:focus-visible{border-color:#0b4fa8;background:rgba(11,79,168,.05)}
+.wdg-cap:focus-visible{outline:2px solid #f5c542}
+.wdg-name{font:700 13.5px/1.2 Inter,system-ui,sans-serif;color:#0b4fa8}
+.wdg-stats{display:flex;flex-wrap:wrap;gap:4px 12px;font:700 12.5px/1.2 Inter,system-ui,sans-serif;color:var(--pro-body,#33465e);font-variant-numeric:tabular-nums}
+.wdg-stats .up{color:#067647}.wdg-stats .down{color:#b42318}
+.wdg-prof{font:700 12.5px/1 Inter,system-ui,sans-serif;color:#0b4fa8;text-decoration:none;white-space:nowrap}
+@media (max-width:640px){
+  .wdg-pick{grid-template-columns:1fr auto;grid-template-areas:"sel prof" "cap cap"}
+  .wdg-sel{grid-area:sel}.wdg-cap{grid-area:cap;padding:6px 0}.wdg-prof{grid-area:prof}
+  .wdg-upd{margin-left:0;width:100%}
+  .wdg-n{margin-left:0}
+}
+</style>
+<style id="pro-board-compact-20261102">
+/* PRO_BOARD_GAMES_20261102: the picks start above the fold */
+#board.pro-section{padding-top:22px!important}
+#board .pro-section-head{text-align:left;max-width:none;margin:0 0 10px}
+#board .pro-section-head h2{margin:6px 0 6px!important;font-size:clamp(28px,3.2vw,38px)!important}
+#board .wdb-lede{margin:0;max-width:820px;font:500 15px/1.5 Inter,system-ui,sans-serif;color:var(--pro-body,#33465e)}
+#board .wd-net{margin-top:10px;gap:6px}
+#board .wd-net span{padding:6px 10px;font-size:12.5px}
+@media (max-width:600px){#board .wd-net{display:none!important}#board .wdb-lede{font-size:14px}#board .pro-section-head h2{font-size:26px!important}}
+</style>
 </head>
 <body class="tmr-site-shell tmr-ds-shell tmr-light pro-page pro-board-page">
     <!-- Sitewide global nav is injected by tmr-sitewide.js -->
@@ -1290,16 +1334,7 @@
                 <div class="pro-section-head">
                     <span class="pxs-k">Today</span>
                     <h2>The Watchdog board</h2>
-                    <p>
-                        Handicapper Watchdog continuously monitors supported outside handicapping
-                        sources, discovers new accounts, collects qualifying pregame picks, grades
-                        completed picks and updates records automatically. It runs around the clock
-                        in the cloud, and new handicappers are added as they are discovered.
-                        TrustMyRecord members are never included.
-                    </p>
-                    <p class="wd-split"><b>Public:</b> every tracked handicapper's record and history on
-                        <a href="/around-the-web/">Handicappers Around the Web</a>.
-                        <b>TMR Pro:</b> the pending picks below, before the games start.</p>
+                    <p class="wdb-lede">Picks posted by tracked outside handicappers for games that have not started, each beside that handicapper&rsquo;s record as graded by TMR. TMR members are never included. Every record is free on <a href="/around-the-web/">Handicappers Around the Web</a>.</p>
                     <div class="wd-net" id="wdNet" hidden></div>
                 </div>
                 <div id="proBoard">
@@ -1713,7 +1748,28 @@
         var boardData = null;
         /* 2026-09-29: Proven was on by default, so a board with no handicapper at 25+ graded
            picks looked empty to a paying member. Every pending pick shows first; Proven is a filter. */
-        var boardFilter = { proven: false, league: 'all', source: 'all', q: '' };
+        var boardFilter = { proven: false, league: 'all', source: 'all', q: '', view: 'games', win: 'all', sortG: 'time' };
+        /* PRO_BOARD_GAMES_20261102: the board opens on upcoming games; the view and filters live in the URL */
+        try {
+            var bq = new URLSearchParams(window.location.search);
+            ['view', 'league', 'source', 'win', 'sortG'].forEach(function (k) { if (bq.get(k)) boardFilter[k] = bq.get(k); });
+            if (bq.get('proven') === '1') boardFilter.proven = true;
+            if (bq.get('q')) boardFilter.q = bq.get('q');
+        } catch (eq) { }
+        function boardUrl() {
+            try {
+                var p = new URLSearchParams(), f = boardFilter;
+                if (f.view !== 'games') p.set('view', f.view);
+                if (f.league !== 'all') p.set('league', f.league);
+                if (f.source !== 'all') p.set('source', f.source);
+                if (f.win !== 'all') p.set('win', f.win);
+                if (f.sortG !== 'time') p.set('sortG', f.sortG);
+                if (f.proven) p.set('proven', '1');
+                if (f.q) p.set('q', f.q);
+                var qs = p.toString();
+                history.replaceState(history.state, '', window.location.pathname + (qs ? '?' + qs : '') + window.location.hash);
+            } catch (e) { }
+        }
         var boardSort = { key: 'units', dir: -1 };
         var followKeys = {};
         var settledHtml = '';
@@ -1810,9 +1866,59 @@
                 + (more > 0 ? '<p class="wd-muted">' + more + ' more new picks are in the table below.</p>' : '')
                 + settledHtml + '</div>';
         }
+        function upcoming(p) { var t = Date.parse(p.start); return !isNaN(t) && t > Date.now(); }
+        function inWindow(p) { var f = boardFilter; if (f.win === 'all') return true; return Date.parse(p.start) - Date.now() <= Number(f.win) * 3600000; }
+        function localKick(iso) {
+            var d = new Date(iso); if (isNaN(d.getTime())) return '';
+            var today = new Date(), tm = new Date(Date.now() + 864e5);
+            var dayLabel = d.toDateString() === today.toDateString() ? 'Today' : d.toDateString() === tm.toDateString() ? 'Tomorrow' : d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+            return dayLabel + ' ' + d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+        }
+        function capLine(c) {
+            var r = c.record || { w: 0, l: 0, p: 0 };
+            return '<span class="wdg-rec">' + r.w + '-' + r.l + (r.p ? '-' + r.p : '') + '</span>'
+                + '<span class="' + unitsCls(c.units) + '">' + signed(c.units) + 'u</span>'
+                + '<span class="hide-s ' + unitsCls(c.roi) + '">' + (c.roi == null ? 'ROI n/a' : signed(c.roi, 1) + '% ROI') + '</span>'
+                + '<span class="hide-s">' + streakTag(c.streak) + '</span>';
+        }
+        function drawGames(d, f, q) {
+            var games = {}, total = 0;
+            d.handicappers.forEach(function (c) {
+                if (f.proven && !c.proven) return;
+                if (f.source !== 'all' && c.source !== f.source) return;
+                if (q && String(c.name).toLowerCase().indexOf(q) === -1) return;
+                c.picks.forEach(function (p) {
+                    if (!upcoming(p) || !inWindow(p)) return;
+                    if (f.league !== 'all' && p.league !== f.league) return;
+                    var k = p.league + '|' + p.matchup + '|' + p.start;
+                    (games[k] = games[k] || { league: p.league, matchup: p.matchup, start: p.start, rows: [] }).rows.push({ c: c, p: p });
+                    total++;
+                });
+            });
+            var list = Object.keys(games).map(function (k) { return games[k]; });
+            list.forEach(function (g) { g.rows.sort(function (a, b) { return (b.c.units == null ? -999 : b.c.units) - (a.c.units == null ? -999 : a.c.units); }); g.best = g.rows[0] && g.rows[0].c.units; });
+            list.sort(function (a, b) {
+                if (f.sortG === 'record') return (b.best == null ? -999 : b.best) - (a.best == null ? -999 : a.best) || Date.parse(a.start) - Date.parse(b.start);
+                if (f.sortG === 'count') return b.rows.length - a.rows.length || Date.parse(a.start) - Date.parse(b.start);
+                return Date.parse(a.start) - Date.parse(b.start) || b.rows.length - a.rows.length;
+            });
+            if (!list.length) return { n: 0, html: '<div class="pro-teaser">No upcoming picks match these filters right now. The board fills up as the handicappers post for the next games.</div>' };
+            return { n: total, games: list.length, html: '<div class="wdg-list">' + list.map(function (g) {
+                return '<div class="wdg-game"><div class="wdg-head"><span class="wdg-lg">' + esc(g.league) + '</span><b class="wdg-mu">' + esc(g.matchup) + '</b>'
+                    + '<span class="wdg-when">' + esc(localKick(g.start)) + '</span><span class="wdg-n">' + g.rows.length + ' pick' + (g.rows.length === 1 ? '' : 's') + '</span></div>'
+                    + '<ul class="wdg-picks">' + g.rows.map(function (x) {
+                        var c = x.c, p = x.p;
+                        return '<li class="wdg-pick"><div class="wdg-sel"><b>' + pickLabel(p) + '</b><span class="wd-muted">' + esc(p.bet_type || '') + (p.units != null ? ' &middot; ' + esc(p.units) + 'u stated' : '') + '</span></div>'
+                            + '<button type="button" class="wdg-cap wd-row" data-key="' + esc(c.key) + '" aria-label="Open the record of ' + esc(c.name) + '"><span class="wdg-name">' + esc(c.name) + (c.proven ? ' <span class="wd-badge">Proven</span>' : '') + '</span><span class="wdg-stats">' + capLine(c) + '</span></button>'
+                            + (c.profile_url ? '<a class="wdg-prof" href="' + esc(c.profile_url) + '">Profile</a>' : '')
+                            + '</li>';
+                    }).join('') + '</ul></div>';
+            }).join('') + '</div>' };
+        }
         function drawBoard() {
             if (!boardEl || !boardData) return;
             var d = boardData, f = boardFilter;
+            boardUrl();
             var canFollow = d.access !== 'sunday_free';
             var q = f.q.trim().toLowerCase();
             var rows = d.handicappers.filter(function (c) {
@@ -1821,7 +1927,7 @@
                 if (q && String(c.name).toLowerCase().indexOf(q) === -1) return false;
                 return true;
             }).map(function (c) {
-                c.shown = c.picks.filter(function (p) { return f.league === 'all' || p.league === f.league; });
+                c.shown = c.picks.filter(function (p) { return upcoming(p) && (f.league === 'all' || p.league === f.league); });
                 return c;
             }).filter(function (c) { return c.shown.length; });
             rows.sort(function (a, b) {
@@ -1835,11 +1941,18 @@
                 var on = boardSort.key === k;
                 return '<th class="' + (cls || '') + '"><button type="button" class="wd-sort' + (on ? ' on' : '') + '" data-sort="' + k + '">' + label + (on ? (boardSort.dir < 0 ? ' &darr;' : ' &uarr;') : '') + '</button></th>';
             };
-            var html = sinceStrip(d) + '<div class="wd-bar">' +
+            var games = f.view === 'games' ? drawGames(d, f, q) : null;
+            var html = sinceStrip(d) + '<div class="wdg-switch" role="tablist" aria-label="Board view">'
+                + '<button type="button" role="tab" data-view="games" aria-selected="' + (f.view === 'games') + '" class="' + (f.view === 'games' ? 'on' : '') + '">By game</button>'
+                + '<button type="button" role="tab" data-view="cappers" aria-selected="' + (f.view !== 'games') + '" class="' + (f.view !== 'games' ? 'on' : '') + '">By handicapper</button>'
+                + '<span class="wdg-upd">Updated ' + esc(new Date(d.generated_at).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })) + ' <button type="button" id="wdRefresh">Refresh</button></span></div>'
+                + '<div class="wd-bar">' +
                 '<input type="search" id="wdSearch" class="wd-search" placeholder="Search handicappers" value="' + esc(f.q) + '" aria-label="Search handicappers">' +
                 '<label class="wd-check"><input type="checkbox" id="wdProven"' + (f.proven ? ' checked' : '') + '> Proven (25+ graded)</label>' +
                 '<select id="wdLeague" aria-label="League"><option value="all">All leagues</option>' + (d.summary.leagues || []).map(function (l) { return opt(l, f.league); }).join('') + '</select>' +
                 '<select id="wdSource" aria-label="Source"><option value="all">All sources</option>' + sources.map(function (s) { return opt(s, f.source); }).join('') + '</select>' +
+                (f.view === 'games' ? '<select id="wdWin" aria-label="Starts within">' + [['all', 'Any start time'], ['3', 'Starts within 3 hours'], ['12', 'Starts within 12 hours'], ['24', 'Starts within 24 hours']].map(function (o) { return '<option value="' + o[0] + '"' + (f.win === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select>'
+                    + '<select id="wdSortG" aria-label="Sort games">' + [['time', 'Soonest first'], ['record', 'Best record first'], ['count', 'Most picks first']].map(function (o) { return '<option value="' + o[0] + '"' + (f.sortG === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select>' : '') +
                 '<span class="wd-count"><b>' + picks + '</b> pending picks &middot; <b>' + rows.length + '</b> handicappers &middot; updated ' + esc(new Date(d.generated_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' })) + ' PT</span></div>';
             var cons = (d.consensus || []).filter(function (g) { return g.proven >= 2 && (f.league === 'all' || g.league === f.league); }).slice(0, 6);
             if (cons.length) {
@@ -1849,6 +1962,9 @@
             }
             if (!(d.handicappers || []).length) {
                 html = sinceStrip(d) + emptyBoard();
+            } else if (games) {
+                html = html.replace(/<span class="wd-count">[\s\S]*?<\/span>(?=<\/div>)/, '<span class="wd-count"><b>' + games.n + '</b> upcoming picks &middot; <b>' + (games.games || 0) + '</b> games</span>');
+                html += games.html;
             } else if (!rows.length) {
                 html += '<div class="pro-teaser">No pending picks match these filters right now. The board fills up as the handicappers post for the next games.</div>';
             } else {
@@ -1876,6 +1992,12 @@
             on('wdProven', 'change', function (e) { boardFilter.proven = e.target.checked; drawBoard(); });
             on('wdLeague', 'change', function (e) { boardFilter.league = e.target.value; drawBoard(); });
             on('wdSource', 'change', function (e) { boardFilter.source = e.target.value; drawBoard(); });
+            on('wdWin', 'change', function (e) { boardFilter.win = e.target.value; drawBoard(); });
+            on('wdSortG', 'change', function (e) { boardFilter.sortG = e.target.value; drawBoard(); });
+            on('wdRefresh', 'click', function () { refreshBoard(true); });
+            Array.prototype.forEach.call(boardEl.querySelectorAll('.wdg-switch [data-view]'), function (b) {
+                b.addEventListener('click', function () { boardFilter.view = b.getAttribute('data-view'); drawBoard(); });
+            });
             on('wdSearch', 'input', function (e) { boardFilter.q = e.target.value; var pos = e.target.selectionStart; drawBoard(); var s = document.getElementById('wdSearch'); if (s) { s.focus(); try { s.setSelectionRange(pos, pos); } catch (x) { } } });
             Array.prototype.forEach.call(boardEl.querySelectorAll('.wd-sort'), function (b) {
                 b.addEventListener('click', function () {
@@ -1919,10 +2041,11 @@
                 btn.addEventListener('keydown', function (e) { e.stopPropagation(); });
             });
         }
-        function closePanel() { var p = document.getElementById('wdPanel'); if (p) { p.hidden = true; p.innerHTML = ''; } document.body.classList.remove('wd-locked'); }
+        var lockY = null;
+        function closePanel() { var p = document.getElementById('wdPanel'); if (p) { p.hidden = true; p.innerHTML = ''; } document.body.classList.remove('wd-locked'); if (lockY != null) { window.scrollTo(0, lockY); lockY = null; } }
         function openCapper(key) {
             var panel = document.getElementById('wdPanel'); if (!panel) return;
-            panel.hidden = false; document.body.classList.add('wd-locked');
+            panel.hidden = false; (lockY == null && (lockY = window.scrollY)), document.body.classList.add('wd-locked');
             panel.innerHTML = '<div class="wd-sheet"><button type="button" class="wd-close" aria-label="Close">&times;</button><div class="wd-muted">Loading profile</div></div>';
             panel.querySelector('.wd-close').addEventListener('click', closePanel);
             ga('pro_watchdog_profile_open', {});
@@ -2154,12 +2277,35 @@
                         (s.following_without_pending || []).forEach(function (k) { followKeys[k] = true; });
                     }
                     drawBoard();
+                    startRefresh();
                     if (s) loadSettled();
                 }).catch(function () {
                     boardEl.innerHTML = '<div class="pro-teaser">The board could not load right now. Refresh in a minute.</div>';
                 });
                 return;
             }
+        }
+        var refreshTimer = null;
+        function refreshBoard(manual) {
+            if (!S || !S.authFetch || !boardData) return;
+            var btn = document.getElementById('wdRefresh'); if (btn && manual) { btn.disabled = true; btn.textContent = 'Refreshing'; }
+            S.authFetch(API + '/pro/pending-board').then(function (r) { if (!r.ok) throw new Error('board ' + r.status); return r.json(); })
+                .then(function (d) {
+                    var y = window.scrollY; boardData = d; drawBoard();
+                    if (!manual) window.scrollTo(0, y);   /* a background refresh never moves the page */
+                })
+                .catch(function () { if (btn) { btn.disabled = false; btn.textContent = 'Refresh'; } });
+        }
+        function startRefresh() {
+            if (refreshTimer) return;
+            var ticks = 0;
+            refreshTimer = setInterval(function () {
+                if (document.hidden) return;
+                if (document.getElementById('wdPanel') && !document.getElementById('wdPanel').hidden) return;   /* never redraw under an open record */
+                var a = document.activeElement; if (a && /^(INPUT|SELECT)$/.test(a.tagName) && boardEl.contains(a)) return;
+                ticks++;
+                if (ticks % 3 === 0) refreshBoard(false); else { var y = window.scrollY; drawBoard(); window.scrollTo(0, y); }
+            }, 60000);
         }
         function showCheckoutHello() {
             if (!fromCheckout || !boardEl || document.getElementById('wdHello')) return;
