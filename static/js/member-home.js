@@ -264,7 +264,11 @@
       pcard.appendChild(el('p', null, used.length
         ? 'You have used today’s free ' + used.map(function (s) { return SPORTS[s].label; }).join(' and ') + ' run. Pro gives you unlimited runs on every simulator, plus the Handicapper Watchdog board and BetLegend Pro.'
         : 'Unlimited runs on every simulator, the Handicapper Watchdog board of graded handicappers outside TMR, and BetLegend Pro.'));
-      pcard.appendChild(link('mh-probtn', '/premium/?from=home&src=home' + (used.length ? '_used' : '') + '#pricing', d.trialDays > 0 ? 'Try TMR Pro free for ' + d.trialDays + ' days' : 'See TMR Pro', 'pro_cta'));
+      var pb = link('mh-probtn', '/premium/?from=home&src=home' + (used.length ? '_used' : '') + '#pricing', d.trialDays > 0 ? 'Try TMR Pro free for ' + d.trialDays + ' days' : 'See TMR Pro', 'pro_cta');
+      // METER_TRIAL_DIRECT_20261101: an eligible member goes straight to Stripe checkout via the
+      // Pro page's existing monthly intent; Stripe shows $0 today and when $49.99 starts.
+      if (d.trialDays > 0) pb.addEventListener('click', function () { try { localStorage.setItem('tmr_pro_intent', JSON.stringify({ plan: 'monthly', at: Date.now() })); } catch (e) {} });
+      pcard.appendChild(pb);
       if (d.trialDays > 0) pcard.appendChild(el('p', 'mh-fine', d.trialDays + ' days free, then $49.99/month. One trial per person and card.'));
     }
     right.appendChild(pcard);

@@ -839,7 +839,7 @@
                    "Buy TMR" button led to a closed store. TMR Pro is now the primary action;
                    spending TMR the member already holds stays available as the secondary. */
                 '<a class="tsg-btn is-primary" id="tsgMeterPro" href="/premium/?from=sim_meter&src=sim_meter#pricing">Try TMR Pro free for 3 days</a>' +
-                '<p class="tsg-note" style="margin-top:6px">Unlimited runs on every simulator, the Handicapper Watchdog board of graded handicappers outside TMR, and BetLegend Pro. 3 days free, then $49.99/month. Cancel before the trial ends and you pay nothing.</p>' +
+                '<p class="tsg-note" id="tsgMeterProNote" style="margin-top:6px">Unlimited runs on every simulator, the Handicapper Watchdog board of graded handicappers outside TMR, and BetLegend Pro. 3 days free, then $49.99/month. Cancel before the trial ends and you pay nothing.</p>' +
                 (canAfford
                     ? '<div class="tsg-actions"><button type="button" class="tsg-btn is-ghost" id="tsgMeterPay">Or run it for ' + METER_COST + ' TMR from your balance</button></div>'
                     : '') +
@@ -866,7 +866,32 @@
                 resolve(chargeRun());
             });
             qs('tsgMeterLater').addEventListener('click', function () { finish(false, 'not_now'); });
-            qs('tsgMeterPro').addEventListener('click', function () { track('simulator_pro_clicked', { simulator: meterKey() }); finish(false, null); });
+            /* METER_TRIAL_DIRECT_20261101: 30d to 11/01, ~137 members saw this meter and
+               only a handful reached checkout; the button led to the long Pro page. When the
+               server says this account can still take the trial, the button now records the
+               monthly intent the Pro page already honours (tmr_pro_intent), so the Pro page
+               opens Stripe checkout straight away (Stripe shows $0 today and the date the
+               $49.99 starts). If the account has used its trial, the button no longer
+               promises free days and just opens the Pro page. */
+            var trialOk = false;
+            var proBtn = qs('tsgMeterPro');
+            try {
+                meterRequest('/premium/me').then(function (me) {
+                    var days = me && me.trial ? Number(me.trial.days) || 0 : 0;
+                    if (me && me.subscription) days = 0;
+                    trialOk = days > 0 && !!me.checkout_open;
+                    if (!trialOk && proBtn) {
+                        proBtn.textContent = 'See TMR Pro';
+                        var note = qs('tsgMeterProNote');
+                        if (note) note.textContent = 'Unlimited runs on every simulator, the Handicapper Watchdog board of graded handicappers outside TMR, and BetLegend Pro. $49.99/month.';
+                    }
+                }, function () { });
+            } catch (e) { }
+            proBtn.addEventListener('click', function () {
+                track('simulator_pro_clicked', { simulator: meterKey(), direct_trial: trialOk ? 'yes' : 'no' });
+                if (trialOk) { try { localStorage.setItem('tmr_pro_intent', JSON.stringify({ plan: 'monthly', at: Date.now() })); } catch (e) { } }
+                finish(false, null);
+            });
             qs('tsgMeterClose').addEventListener('click', function () { finish(false, 'close_button'); });
             overlay.addEventListener('click', function (e) { if (e.target === overlay) finish(false, 'backdrop'); });
             // Escape goes through closeModal(); make sure the promise still settles.
