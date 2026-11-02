@@ -2315,6 +2315,37 @@ function simRenderConversion(out,d){
   const after=$('#nflScenario',out)||$('#simHeadline',out);
   if(after&&after.parentNode===out)out.insertBefore(panel,after.nextSibling);
   else out.appendChild(panel);
+  try{simRenderNextGames(out,panel)}catch(e){}
+}
+/* NEXT_GAMES_20261101: the rest of this week's unplayed games, right under the result.
+   Each button presses that game's own Simulate button on the slate, so the gate and the
+   run meter apply exactly as before. */
+function simRenderNextGames(out,after){
+  const old=$('#simNextGames',out);if(old)old.remove();
+  const cards=$$('#games .game').filter(c=>c.dataset.ref&&c.dataset.ref!==STATE.selRef);
+  const pick=[];
+  for(const c of cards){
+    const sb=$('.g-sim',c),st=$('.st',c);
+    if(!sb||(st&&/final|live|in progress/i.test(st.textContent||'')))continue;
+    if(/final/i.test(sb.getAttribute('aria-label')||''))continue;
+    const nm=$$('.nm',c).map(n=>n.textContent);
+    if(nm.length<2)continue;
+    pick.push({sb,label:nm[0]+' at '+nm[1]});
+    if(pick.length>=4)break;
+  }
+  if(!pick.length)return;
+  const p=el('div','panel');p.id='simNextGames';p.style.marginTop='12px';
+  p.appendChild(Object.assign(el('h3'),{textContent:'Simulate the next game'}));
+  p.appendChild(Object.assign(el('p','muted'),{textContent:'More games this week:'}));
+  const row=el('div','cv-row');
+  for(const g of pick){
+    const b=el('button','btn ghost',g.label);b.type='button';b.style.minHeight='44px';
+    b.onclick=()=>{try{window.TMRSimGate.track('simulator_next_game_clicked',{simulator:'nfl'})}catch(e){}g.sb.click()};
+    row.appendChild(b);
+  }
+  p.appendChild(row);
+  if(after&&after.parentNode)after.parentNode.insertBefore(p,after.nextSibling);else out.appendChild(p);
+  try{window.TMRSimGate.track('simulator_next_game_shown',{simulator:'nfl',games:pick.length})}catch(e){}
 }
 
 /* ---- install: wrap the run + render entry points, then register ---- */
