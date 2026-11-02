@@ -19,7 +19,10 @@ assert(reliability.includes('function extractBoardGames(response)'), 'sportsbook
 assert(reliability.includes('function normalizeBoardGameShape(game)'), 'sportsbook board runtime must normalize common team-name fields before dropping games');
 assert(reliability.includes('const boardResponse = normalizeBoardResponse(response, sport);'), 'cached board renders must use the same normalization as fresh board responses');
 assert(reliability.includes('function ensureVisibleMarketGroups(card)'), 'renderer must recover visible priced lines when a stale market filter hides the active group');
-assert(/sportsbook-production-fix-persist-reliability\.js\?v=[^"']+&cb=[^"']+/.test(html), 'sportsbook page must request the repaired runtime with cache-busting params');
+// The asset pipeline now pins every static ref to a content hash (?v=<hash>),
+// which changes whenever the file changes, so the old extra &cb= param is gone.
+// The invariant is unchanged: the runtime is requested with a cache buster.
+assert(/sportsbook-production-fix-persist-reliability\.js\?v=[0-9a-zA-Z]+(?:&cb=[^"']+)?["']/.test(html), 'sportsbook page must request the repaired runtime with cache-busting params');
 
 const fixture = [
   { id: 'pending-a', commence_time: '2026-05-09T01:00:00Z', priced: false },
