@@ -110,7 +110,21 @@ function createSimulator() {
     const bb = process.env.TMR_MLB_BB_TABLE_PATH;
     if (bb && fs.existsSync(bb)) context.window.TMR_MLB_BB_TABLE = JSON.parse(fs.readFileSync(bb, 'utf8'));
   }
-  vm.runInNewContext(script, context);
+  // SPEED_20261102: same script, same context, same Math.random. Inside a vm
+  // context every bare global (Math, window, Object ...) is resolved through the
+  // context's interceptor, which a CPU profile showed eating over half the run
+  // (clamp -> Math.min, workloadV2 -> window). Binding the globals that EXIST in
+  // the context to function locals first makes those lookups ordinary variable
+  // reads. Names absent from the context are not declared, so a bare reference
+  // to one still throws exactly as before. Nothing the engine computes changes.
+  vm.createContext(context);
+  const GLOBAL_NAMES = ['window', 'document', 'console', 'Math', 'Number', 'Date', 'Promise', 'Blob',
+    'navigator', 'fetch', 'CONFIG', 'Object', 'Array', 'JSON', 'String', 'Boolean', 'parseInt',
+    'parseFloat', 'isFinite', 'isNaN', 'Error', 'TypeError', 'RangeError', 'Map', 'Set', 'WeakMap',
+    'RegExp', 'Symbol', 'setTimeout', 'clearTimeout', 'localStorage', 'sessionStorage'];
+  const bound = GLOBAL_NAMES.filter((n) => vm.runInContext('typeof ' + n + " !== 'undefined'", context));
+  const prelude = bound.map((n) => 'var ' + n + ' = globalThis.' + n + ';').join(' ');
+  vm.runInContext('(function () { ' + prelude + '\n' + script + '\n}).call(globalThis);', context, { filename: scriptPath });
   return context.window.TMRMlbSimulator;
 }
 
