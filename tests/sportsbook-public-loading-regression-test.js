@@ -8,7 +8,8 @@ const root = path.resolve(__dirname, '..');
 const page = fs.readFileSync(path.join(root, 'sportsbook', 'index.html'), 'utf8');
 const reliability = fs.readFileSync(path.join(root, 'static', 'js', 'sportsbook-production-fix-persist-reliability.js'), 'utf8');
 
-assert(/sportsbook-production-fix-persist-reliability\.js\?v=[^"']+&cb=[^"']+/.test(page), 'sportsbook page must load the repaired reliability bundle with cache-busting params');
+// Content-hash cache buster (?v=<hash>) since the asset pipeline re-pins refs; &cb= is optional.
+assert(/sportsbook-production-fix-persist-reliability\.js\?v=[0-9a-zA-Z]+(?:&cb=[^"']+)?["']/.test(page), 'sportsbook page must load the repaired reliability bundle with cache-busting params');
 assert(page.includes('board loading guard replaced frozen spinner') || reliability.includes('board loading guard replaced frozen spinner'), 'runtime must include the board loading guard');
 assert(page.includes("cache: 'no-store'") || reliability.includes("cache: 'no-store'"), 'runtime must bypass stale API cache when loading boards');
 assert(page.includes('AbortController') || reliability.includes('AbortController'), 'runtime must abort stuck board requests instead of freezing the sportsbook');

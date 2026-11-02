@@ -625,7 +625,10 @@ test.describe('sportsbook functional locks', () => {
 
   test('market tabs and unsupported props behavior stay locked', async ({ page }) => {
     await waitForSportsbook(page);
-    await clickSport(page, 'MLB');
+    // 2026-11-02: was clickSport(page, 'MLB'), which out of season is an empty
+    // slate with no market switcher at all, so the lock failed every day from
+    // the end of the World Series. Lock the switcher on a sport that has lines.
+    await selectSportWithPostedLines(page);
     const markets = page.locator('button:has-text("Game Lines"), button:has-text("Team Totals"), button:has-text("5 Inning")');
     await expect(markets.first(), 'market tabs should exist').toBeVisible({ timeout: 30000 });
     // The classic switcher was a tablist; the v2 switcher is a row of
@@ -832,7 +835,11 @@ test.describe('handicappers directory canonical profile links', () => {
 
     await gotoRoute(page, '/handicappers/');
     const newestLink = page.locator('#hmNewestMember a, .hm-newest-member a').first();
-    await expect(newestLink, 'newest member link should render').toBeVisible({ timeout: 20000 });
+    // The approved Trading desk redesign (adad1e08, 2026-10-10) hides this line
+    // with CSS (tmr-hc-electric.css). The lock is on the URL it carries, which
+    // must still be the canonical one, so it waits for the link to be rendered
+    // into the DOM rather than painted.
+    await expect(newestLink, 'newest member link should render').toBeAttached({ timeout: 20000 });
 
     const newestHref = await newestLink.getAttribute('href');
     // The API's profile_url IS the canonical answer (backend utils/profileUrl.js).

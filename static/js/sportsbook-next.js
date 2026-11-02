@@ -766,8 +766,12 @@
         for (var i = 0; i < SPORTS.length; i++) if (SPORTS[i].key === key) return SPORTS[i];
         return SPORTS[0];
     }
-    function load(sportKey) {
+    function load(sportKey, fallback) {
         var meta = sportMeta(sportKey);
+        // DEFAULT_SPORT_FALLBACK_20261102: only the automatic first load passes
+        // a fallback list. A visitor who picks a sport (rail or ?sport=) always
+        // gets that sport, empty or not.
+        fallback = Array.isArray(fallback) ? fallback : null;
         var id = ++state.reqId;
         state.sport = sportKey; state.cat = 'game_lines'; state.loading = true; state.error = null; state.games = [];
         // PROPS_LAZY_20260911: prop loads are per game and per slate. A new
@@ -864,6 +868,15 @@
                     // earlier failures: no stale error, no stuck spinner, and
                     // the lazy props path works from here exactly as it does on
                     // a first-try load.
+                    // DEFAULT_SPORT_FALLBACK_20261102: the page opened on MLB all
+                    // year, so out of season every visitor landed on "No
+                    // upcoming MLB games" with NBA/NHL/NFL boards full. On the
+                    // automatic first load only, an empty slate moves on to the
+                    // next sport that has games.
+                    if (!state.games.length && fallback && fallback.length) {
+                        load(fallback[0], fallback.slice(1));
+                        return;
+                    }
                     state.loading = false;
                     state.error = null;
                     render();
@@ -2854,7 +2867,8 @@
         document.addEventListener('change', onChange, false);
         var q = new URLSearchParams(location.search || '');
         var s = q.get('sport');
-        load(s && sportMeta(s).key === s ? s : 'MLB');
+        if (s && sportMeta(s).key === s) load(s);
+        else load('MLB', ['NFL', 'NBA', 'NHL', 'NCAAF', 'NCAAB', 'Soccer', 'UFC', 'WNBA', 'NPB']);
         window.__sbNext = { state: state, load: load, validOdds: validOdds, singleBook: singleBook,
             monotonic: monotonic, categories: categories, render: render,
             loadLive: loadLive, normaliseLive: normaliseLive, liveHtml: liveHtml, validLiveOdds: validLiveOdds,

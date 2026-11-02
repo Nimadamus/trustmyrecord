@@ -51,7 +51,12 @@ check('season-simulator loadTeams(attempt) retries with a hard cap and backoff, 
   const src = read('static/js/season-simulator.js');
   const start = src.indexOf('function loadTeams(attempt)');
   assert(start !== -1, 'loadTeams must be extractable');
-  const body = src.slice(start, start + 2200);
+  // The whole function, not a fixed 2,200 char window: loadTeams grew (closed
+  // state, saved draft) and the retry branch moved past the old slice.
+  const next = src.indexOf('\n  function ', start + 10);
+  const tail = src.indexOf('\n  if (document.readyState', start);
+  const ends = [next, tail].filter((i) => i > start);
+  const body = src.slice(start, ends.length ? Math.min(...ends) : src.length);
   assert(/if \(attempt < 4\)/.test(body), 'loadTeams retry must be capped (attempt < 4)');
   assert(/setTimeout\(function \(\) \{ loadTeams\(attempt \+ 1\); \}, 3000 \+ attempt \* 2000\)/.test(body), 'loadTeams retry must back off (increasing delay), not tight-loop');
 });
