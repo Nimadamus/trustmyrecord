@@ -171,11 +171,68 @@
         if (hero) box.insertBefore(panel, hero.nextSibling);
         else box.appendChild(panel);
     }
+    /* NEXT_GAMES_20261101: 74 of 174 members who ran a sim (60 day cohort to 11/01) ran
+       exactly one. The result used to end at the box score; the slate sat above it. This
+       puts the rest of tonight's upcoming games right under the result. Each button is the
+       same slate card the page already has (same gate, same meter), just within reach. */
+    function renderNextGames(appRef, d) {
+        var box = appRef && appRef.nodes && appRef.nodes.result;
+        var slate = appRef && appRef.slate;
+        var m = d && d.matchup;
+        if (!box || !slate || !slate.games || !m || !m.away || !m.home) return;
+        var old = box.querySelector('#simNextGames');
+        if (old) old.parentNode.removeChild(old);
+        var cur = (m.away.name || '') + '@' + (m.home.name || '');
+        var games = slate.games.filter(function (g) {
+            return g && g.away && g.home && g.state !== 'post' && g.state !== 'in' && (g.away.name + '@' + g.home.name) !== cur;
+        }).slice(0, 4);
+        if (!games.length) return;
+        var cards = appRef.nodes.games ? appRef.nodes.games.querySelectorAll('.game') : [];
+        var panel = document.createElement('div');
+        panel.className = 'panel';
+        panel.id = 'simNextGames';
+        panel.style.cssText = 'margin-top:12px';
+        var h = document.createElement('h3');
+        h.style.cssText = 'margin:0 0 4px';
+        h.textContent = 'Simulate the next game';
+        panel.appendChild(h);
+        var p = document.createElement('p');
+        p.className = 'dim';
+        p.style.cssText = 'font-size:.9rem;margin:0 0 12px';
+        p.textContent = 'More ' + SPORT_CODE + ' games on this slate:';
+        panel.appendChild(p);
+        var row = document.createElement('div');
+        row.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px';
+        games.forEach(function (g) {
+            var label = 'Simulate ' + g.away.name + ' at ' + g.home.name;
+            var card = null;
+            for (var i = 0; i < cards.length; i++) if (cards[i].getAttribute('aria-label') === label) { card = cards[i]; break; }
+            if (!card) return;
+            var b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'btn ghost';
+            b.style.cssText = 'min-height:44px';
+            b.textContent = (g.away.abbr || g.away.name) + ' at ' + (g.home.abbr || g.home.name);
+            b.onclick = function () {
+                try { G.track('simulator_next_game_clicked', { simulator: sport }); } catch (e) { }
+                card.click();
+            };
+            row.appendChild(b);
+        });
+        if (!row.children.length) return;
+        panel.appendChild(row);
+        var take = box.querySelector('#simConvertPanel');
+        if (take && take.nextSibling) box.insertBefore(panel, take.nextSibling);
+        else if (take) box.appendChild(panel);
+        else box.appendChild(panel);
+        try { G.track('simulator_next_game_shown', { simulator: sport, games: row.children.length }); } catch (e) { }
+    }
     if (SPORT_CODE && S.SimApp.prototype.render) {
         var render = S.SimApp.prototype.render;
         S.SimApp.prototype.render = function (d) {
             var r = render.apply(this, arguments);
             try { renderTakePanel(this.nodes && this.nodes.result, d); } catch (e) { }
+            try { renderNextGames(this, d); } catch (e) { }
             return r;
         };
     }
