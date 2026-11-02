@@ -60,3 +60,195 @@ body.tmr-light .simux-state{background:#f4f7fa;color:#1f2d3d;border-color:#d2dee
 /* 6. Live help launcher steps aside while it would cover a control or a table
       cell (CHECKLIST #15); see tmr-sim-ux.js. */
 .tmr-lc:not(.is-open) .tmr-lc-launcher.simux-yield{opacity:0 !important;visibility:hidden !important;pointer-events:none !important}
+
+/* =============================================================================
+   7. SIM DESIGN SYSTEM                                         SIM_DS_20261102
+   One visual language for every simulator page: shared width and gutters, one
+   page-title style, one primary action, the cross-simulator switcher, dark
+   scrollbars on wide tables. Presentation only: nothing here hides, adds or
+   reorders data, and no simulator script reads these classes.
+   ============================================================================= */
+:root{
+  --simds-maxw:1200px;--simds-gutter:20px;
+  --simds-card:#0f1a2e;--simds-card2:#0c1526;--simds-line:rgba(148,163,184,.18);--simds-line-hi:rgba(148,163,184,.34);
+  --simds-ink:#e8eef8;--simds-mut:#a9b8cc;--simds-dim:#8193aa;
+  --simds-blue:#1d7fe8;--simds-blue-d:#1667c4;--simds-gold:#f5c542;
+  --simds-mlb:#e8553d;--simds-nfl:#8b8cf8;--simds-nba:#f28c28;--simds-nhl:#38bdf8;
+  --simds-radius:14px;--simds-display:"Barlow Condensed","Anton",Inter,system-ui,sans-serif;
+}
+@media (max-width:640px){:root{--simds-gutter:16px}}
+
+/* 7a. Width and gutters. Game hubs ran edge to edge at 16px, season pages at
+       1120px, and the archive embed sat outside main with no gutter at all. */
+main#simux-main.wrap, main.wrap.lsim-wrap, body.tmr-ds-shell > main.wrap{
+  max-width:var(--simds-maxw) !important;margin-left:auto !important;margin-right:auto !important;
+  padding-left:var(--simds-gutter) !important;padding-right:var(--simds-gutter) !important;box-sizing:border-box}
+body > .sa-root, body > section.seo{
+  max-width:var(--simds-maxw);margin-left:auto;margin-right:auto;padding-left:var(--simds-gutter);padding-right:var(--simds-gutter);box-sizing:border-box}
+
+/* 7b. Page title. Four fonts and five sizes became one. */
+main.wrap > .hero h1, main.wrap > header.hero h1, .lsim-hero h1, .ss-hero h1, .cl-hero h1{
+  font-family:var(--simds-display) !important;font-weight:800 !important;text-transform:uppercase;letter-spacing:.01em !important;
+  font-size:clamp(30px,3.6vw,44px) !important;line-height:1.02 !important;margin:0 0 10px !important}
+main.wrap > .hero > p, .lsim-hero > p{max-width:780px}
+
+/* 7c. One primary action. Run buttons were cyan, blue, orange or purple
+       depending on the page; brand blue now always means "run". */
+#runBtn, #featBtn, #runSimulationButton, #runSim, [data-nsp="run"], button.primary[data-pb="sim"], main.wrap > .hero a.btn:not(.ghost){
+  background:linear-gradient(180deg,var(--simds-blue),var(--simds-blue-d)) !important;color:#fff !important;border:1px solid var(--simds-blue-d) !important;
+  border-radius:10px !important;font-weight:800 !important;letter-spacing:.01em;min-height:44px;padding-left:20px !important;padding-right:20px !important;
+  box-shadow:0 6px 18px rgba(29,127,232,.28);transition:filter .15s,transform .15s}
+#runBtn:hover:not(:disabled), #featBtn:hover:not(:disabled), #runSimulationButton:hover:not(:disabled), #runSim:hover:not(:disabled), [data-nsp="run"]:hover:not(:disabled), button.primary[data-pb="sim"]:hover:not(:disabled){filter:brightness(1.08)}
+#runBtn:active:not(:disabled), #featBtn:active:not(:disabled), #runSimulationButton:active:not(:disabled), #runSim:active:not(:disabled), [data-nsp="run"]:active:not(:disabled), button.primary[data-pb="sim"]:active:not(:disabled){transform:translateY(1px)}
+main.wrap > .hero a.btn:not(.ghost){display:inline-flex;align-items:center;text-decoration:none !important}
+#runBtn:disabled, #featBtn:disabled, #runSimulationButton:disabled, #runSim:disabled, [data-nsp="run"]:disabled, button.primary[data-pb="sim"]:disabled{opacity:.55 !important;box-shadow:none}
+
+/* 7d. Cross-simulator switcher (tmr-sim-ux.js inserts it under the crumbs). */
+.simds-switch{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin:0 0 18px;padding:6px;border:1px solid var(--simds-line);
+  border-radius:var(--simds-radius);background:linear-gradient(180deg,rgba(15,26,46,.92),rgba(12,21,38,.92));font:600 14px/1 Inter,system-ui,sans-serif}
+.simds-switch a{text-decoration:none !important;color:var(--simds-mut);border-radius:9px;display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:38px;padding:0 14px;white-space:nowrap;transition:background .15s,color .15s}
+.simds-switch a:hover{color:var(--simds-ink);background:rgba(148,163,184,.10)}
+.simds-switch a:focus-visible{outline:2px solid #38bdf8;outline-offset:1px}
+.simds-sports{display:flex;gap:2px}
+.simds-sports a{font-family:var(--simds-display);font-weight:800;font-size:17px;letter-spacing:.05em}
+.simds-sports a i{width:8px;height:8px;border-radius:50%;background:var(--c);display:inline-block}
+.simds-sports a.is-on{color:#fff;background:rgba(148,163,184,.14);box-shadow:inset 0 -2px 0 var(--c)}
+.simds-modes{display:flex;gap:2px;padding:3px;border-radius:11px;background:rgba(2,6,23,.45);border:1px solid var(--simds-line)}
+.simds-modes a{min-height:32px;padding:0 14px;font-size:13.5px}
+.simds-modes a[aria-current="page"]{background:var(--simds-blue-d);color:#fff}
+.simds-extra{margin-left:auto;display:flex;gap:2px}
+.simds-extra a{font-size:13.5px}
+@media (max-width:760px){
+  .simds-switch{display:grid;grid-template-columns:1fr;gap:6px}
+  .simds-sports{display:grid;grid-template-columns:repeat(4,1fr)}
+  .simds-sports a, .simds-modes a{padding:0 4px}
+  .simds-modes{display:grid;grid-template-columns:repeat(3,1fr)}
+  .simds-extra{margin:0;display:grid;grid-template-columns:1fr 1fr}
+  .simds-extra a{min-height:34px}
+}
+body.tmr-light .simds-switch{background:#fff;border-color:#d2deea}
+body.tmr-light .simds-switch a{color:#33475e}
+body.tmr-light .simds-switch a:hover{background:#eef3f8;color:#0b1424}
+body.tmr-light .simds-sports a.is-on{color:#0b1424;background:#eef3f8}
+body.tmr-light .simds-modes{background:#f4f7fa;border-color:#d2deea}
+body.tmr-light .simds-modes a[aria-current="page"]{background:#1667c4 !important;color:#fff !important}
+
+/* 7e. Wide-table scrollbars: the native white bar under the NHL and NBA
+       weekly tables read as a rendering fault on a dark page. */
+.simux-scroll, .tscroll, .tablewrap{scrollbar-width:thin;scrollbar-color:rgba(148,163,184,.45) transparent}
+main, main *, body > .sa-root, body > .sa-root *{scrollbar-color:rgba(148,163,184,.45) transparent}
+[role="tablist"]{scrollbar-width:thin}
+.simux-scroll::-webkit-scrollbar, .tscroll::-webkit-scrollbar, .tablewrap::-webkit-scrollbar{height:8px;width:8px}
+.simux-scroll::-webkit-scrollbar-track, .tscroll::-webkit-scrollbar-track, .tablewrap::-webkit-scrollbar-track{background:transparent}
+.simux-scroll::-webkit-scrollbar-thumb, .tscroll::-webkit-scrollbar-thumb, .tablewrap::-webkit-scrollbar-thumb{background:rgba(148,163,184,.4);border-radius:8px}
+body.tmr-light main, body.tmr-light main *{scrollbar-color:#b6c4d4 transparent}
+
+/* 7f. MLB game simulator. */
+/* Step tracker: at phone width five labels and five badges fought for 65px
+   each and overprinted. Phone shows every badge plus the active step label. */
+@media (max-width:640px){
+  .simv2-steps button{gap:6px;padding:10px 4px;font-size:12px}
+  .simv2-steps li:not(.is-active) button{font-size:0;gap:0}
+  .simv2-steps li:not(.is-active) button .n{font-size:11px}
+  .simv2-steps li.is-active{flex:2.4}
+}
+/* Empty box score: a full-width white sheet before any run. The filled box
+   score keeps its broadcast white sheet; only the waiting state goes dark. */
+.box-score-panel[data-box-score-state="empty"]{background:linear-gradient(180deg,var(--simds-card),var(--simds-card2)) !important;border:1px dashed var(--simds-line-hi) !important;border-radius:var(--simds-radius) !important}
+.box-score-panel[data-box-score-state="empty"] .box-score-heading{background:transparent !important;border-bottom:0 !important;padding:16px 18px !important}
+.box-score-panel[data-box-score-state="empty"] .box-score-heading h2{color:var(--simds-ink) !important}
+.box-score-panel[data-box-score-state="empty"] .box-score-heading strong{color:var(--simds-mut) !important;font-size:15px !important;font-weight:600 !important}
+.box-score-panel[data-box-score-state="empty"] .sim-label{color:var(--simds-dim) !important}
+.box-score-panel[data-box-score-state="empty"] .box-score-actions{display:none}
+.box-score-panel[data-box-score-state="empty"] > :not(.box-score-heading){display:none !important}
+
+/* 7g. NBA and NHL result: the final score is the headline. It sat under the
+       view tabs, the data note and six buttons; now it leads the result, with
+       the winner marked and the score at scoreboard size. Same nodes, same
+       numbers; only the visual order and sizes change. Tab and button order
+       is untouched, so keyboard order still matches what is on screen. */
+@media screen{
+  #result:has(> .mh){display:flex;flex-direction:column}
+  #result > .mh{order:-1;margin-bottom:14px;padding:20px 24px 22px;border-color:var(--simds-line-hi);
+    background:radial-gradient(120% 140% at 50% -40%,rgba(29,127,232,.16),transparent 60%),linear-gradient(180deg,#101c33,#0b1322)}
+  #result > .mh .mh-colorbar{height:5px;margin:-6px 0 16px}
+  #result > .mh .mh-team .pts{font-family:var(--simds-display);font-size:clamp(3rem,7vw,4.4rem);font-weight:800;letter-spacing:.01em;color:var(--simds-dim)}
+  #result > .mh .mh-team.won .pts{color:#fff}
+  #result > .mh .mh-team .nm{font-family:var(--simds-display);font-size:clamp(1.05rem,2vw,1.35rem);font-weight:800;text-transform:uppercase;letter-spacing:.03em}
+  #result > .mh .mh-team .crest{width:56px;height:56px;object-fit:contain}
+  #result > .mh .mh-team.won .role::after{content:"Win";margin-left:8px;padding:2px 7px;border-radius:999px;background:rgba(34,197,94,.16);color:#4ade80;font-size:.68rem;letter-spacing:.08em;vertical-align:1px}
+  #result:has(> .nhl-sample) > .mh:not(.nhl-sample) .mh-team.won .role::after{content:none}  /* NHL: first card is win probability, not a game */
+  #result > .mh + .mh{margin-top:-2px}
+  #result > .mh .mh-team .wp{font-size:.84rem}
+  #result > .mh .mh-mid{display:flex;flex-direction:column;align-items:center;gap:4px}
+  #result > .mh .mh-mid > div:nth-child(2){padding:4px 12px;border-radius:999px;border:1px solid var(--simds-line-hi);color:var(--simds-ink);font-size:.74rem;letter-spacing:.12em;text-transform:uppercase}
+  #result > .actionbar button.primary{background:linear-gradient(180deg,var(--simds-blue),var(--simds-blue-d));border-color:var(--simds-blue-d);color:#fff}
+}
+@media (max-width:640px){
+  #result > .mh{padding:16px 12px 18px}
+  #result > .mh .mh-grid{gap:8px}
+  #result > .mh .mh-team .crest{width:42px;height:42px}
+  #result > .mh .mh-team .nm{white-space:normal;line-height:1.05}
+  #result > .mh .mh-mid{font-size:.7rem;max-width:90px}
+}
+
+/* MLB result actions: "View All Simulations Today" wrapped to two lines and
+   sat taller than its neighbours. One row height, wraps as whole buttons. */
+.result-jump-actions{align-items:center;flex-wrap:wrap;gap:8px}
+.result-jump-actions .sim-button{white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;min-height:38px;line-height:1.1}
+/* MLB playoff series panel: the only white card in a dark result column, and
+   its heading inherited a near-white ink (unreadable). Same dark card as
+   every other result panel. */
+.ps-panel{background:linear-gradient(180deg,var(--simds-card),var(--simds-card2)) !important;border-color:var(--simds-line) !important;color:var(--simds-ink) !important}
+.ps-panel .ps-head h3{color:var(--simds-ink) !important}
+.ps-panel .ps-kicker{color:#5aa9ff}
+.ps-panel[data-ps-state="done"] .ps-kicker{color:#f5b041}
+.ps-panel :where(.ps-source,.ps-meta,.ps-foot,.ps-notes,.ps-empty,.ps-field){color:var(--simds-mut) !important}
+.ps-panel .ps-loading{color:#5aa9ff !important}
+.ps-panel :where(p,li,strong,b,span,label){color:inherit}
+.ps-panel .ps-card{background:rgba(8,15,28,.55) !important;border-color:var(--simds-line) !important}
+.ps-panel .ps-card h4{color:#c9d6e6 !important}
+.ps-panel .ps-table{color:var(--simds-ink) !important}
+.ps-panel .ps-table :where(th,td){border-color:var(--simds-line) !important}
+.ps-panel .ps-table thead th, .ps-panel .ps-table tbody th small, .ps-panel .ps-sp small{color:var(--simds-dim) !important}
+.ps-panel .ps-odds-row .probability-track{background:rgba(148,163,184,.2) !important}
+.ps-panel .ps-odds-row.is-lower .probability-track span{background:#8193aa !important}
+.ps-panel button{background:rgba(29,127,232,.12) !important;color:#e8eef8 !important;border:1px solid rgba(29,127,232,.6) !important;border-radius:10px !important}
+.ps-panel button:hover:not(:disabled){background:rgba(29,127,232,.22) !important}
+/* Archive pages (results, run, team, matchup) shipped with the browser's
+   default 8px white body margin around the dark page. */
+body.tmr-ds--dark:has(> main.sa-root){margin:0;background:#0a1220;min-height:100vh}
+
+/* 7h. MLB season, playoff, game and predictions pages (body.simds-dark). They
+       were the only simulator pages left on the light workspace; same dark
+       tokens as every other simulator page. Colour only: no layout, no
+       control and no season-entry behaviour changes. */
+body.simds-dark{
+  --bg-dark:#0a1220;--bg-surface:#0f1a2e;--bg-card:#0f1a2e;--bg-card-hover:#14223a;
+  --bg:#0a1220;--surface:#0f1a2e;--card:#0f1a2e;
+  --border:rgba(148,163,184,.2);--primary:#5aa9ff;--primary-dim:rgba(29,127,232,.16);
+  --accent-gold:#f5c542;--gold:#f5c542;--accent-green:#4ade80;--green:#4ade80;--accent-red:#f87171;--accent-purple:#a78bfa;--purple:#a78bfa;
+  --text:#e8eef8;--text-dim:#a9b8cc;--text-muted:#8193aa;--dim:#a9b8cc;
+  background:radial-gradient(64rem 26rem at 50% -12rem,rgba(29,127,232,.12),transparent 70%),#0a1220 !important;color:var(--text)}
+body.simds-dark :where(.ss-wrap,.cl-wrap) a{color:#5aa9ff}
+body.simds-dark :where(.ss-wrap,.cl-wrap) a:hover{color:#f5c542}
+body.simds-dark :where(.cl-sec,.cl-angle,.cl-faq,.cl-cluster) :where(h2,p,ul,summary){color:var(--text) !important}
+body.simds-dark :where(.cl-sec,.cl-angle,.cl-faq) p{color:var(--text-dim) !important}
+body.simds-dark :where(.cl-sec,.cl-angle,.cl-faq,.cl-cluster,.cl-card,.ss-card,.ss-sec,.ss-angle,.ss-pillar,.ss-faq details,.ss-panel){
+  background:linear-gradient(180deg,var(--simds-card),var(--simds-card2)) !important;border-color:var(--simds-line) !important}
+body.simds-dark .btn-gold{background:linear-gradient(135deg,#f5c542,#e0a91d) !important;color:#1a1200 !important;box-shadow:0 8px 22px rgba(245,197,66,.18) !important}
+body.simds-dark .btn-green{background:linear-gradient(135deg,#22c55e,#16a34a) !important;color:#04140a !important}
+body.simds-dark .ss-team-btn.sel{color:#fff !important}
+body.simds-dark :where(.ss-wt-row,.ss-pub-row){border-bottom-color:var(--simds-line) !important}
+body.simds-dark .ss-bracket-ws{background:linear-gradient(180deg,rgba(245,197,66,.08),rgba(2,6,23,.4)) !important}
+body.simds-dark .ss-modal{background:rgba(2,6,23,.82) !important}
+body.simds-dark .ss-statusbar.ok{color:#86efac !important}
+body.simds-dark .ss-statusbar.err{color:#fca5a5 !important}
+body.simds-dark .ss-statusbar.locked{color:#fde68a !important}
+body.simds-dark :where(input,select,textarea){background:#0b1424;color:var(--text);border-color:var(--simds-line-hi)}
+body.simds-dark .tmr-internal-cluster{background:linear-gradient(180deg,var(--simds-card),var(--simds-card2)) !important;border-color:var(--simds-line) !important}
+body.simds-dark .tmr-internal-cluster h2{color:var(--text) !important}
+body.simds-dark .tmr-internal-cluster a{color:#5aa9ff !important}
+/* The dark shell sizes every input to 100%; the win-total box is a 74px field. */
+body.simds-dark .ss-wt-row input{width:74px !important;flex:0 0 74px;min-width:0}
+body.simds-dark .ss-wt-team{min-width:0}

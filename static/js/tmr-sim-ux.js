@@ -195,7 +195,54 @@
 
   window.TMRSimUX = { state: state, refresh: queue };
 
+  /* SIM_DS_20261102: one switcher on every simulator page so a visitor can move
+     between sports and between game, season and playoff simulators without
+     going back to the hub. Links only; it never touches simulator state. */
+  var SPORTS = [['mlb', 'MLB', 'var(--simds-mlb)'], ['nfl', 'NFL', 'var(--simds-nfl)'], ['nba', 'NBA', 'var(--simds-nba)'], ['nhl', 'NHL', 'var(--simds-nhl)']];
+  function simHref(sport, mode) {
+    if (mode === 'season') return '/' + sport + '-season-simulator/';
+    if (mode === 'playoff') return sport === 'mlb' ? '/mlb-playoff-odds/' : '/' + sport + '-playoff-simulator/';
+    return '/' + sport + '-simulator/';
+  }
+  function switcher() {
+    var path = location.pathname;
+    if (path === '/sports-simulators/' || path === '/sports-simulators/index.html' || doc.querySelector('.simds-switch')) return;
+    var main = doc.querySelector('main');
+    if (!main) return;
+    var m = path.match(/^\/(mlb|nfl|nba|nhl)-/);
+    var sport = m ? m[1] : '';
+    var saved = /^\/sports-simulators\/saved/.test(path);
+    if (!sport && !saved) return;
+    var mode = /season/.test(path) ? 'season' : (/playoff/.test(path) ? 'playoff' : 'game');
+    var isHome = sport && path === simHref(sport, mode);
+    var nav = doc.createElement('nav');
+    nav.className = 'simds-switch';
+    nav.setAttribute('aria-label', 'Simulators');
+    var html = '<div class="simds-sports">';
+    for (var i = 0; i < SPORTS.length; i++) {
+      var s = SPORTS[i], on = s[0] === sport;
+      html += '<a href="' + simHref(s[0], sport ? mode : 'game') + '"' + (on ? ' class="is-on"' + (isHome ? ' aria-current="page"' : '') : '') +
+        ' style="--c:' + s[2] + '"><i aria-hidden="true"></i>' + s[1] + '</a>';
+    }
+    html += '</div>';
+    if (sport) {
+      html += '<div class="simds-modes">';
+      var modes = [['game', 'Game'], ['season', 'Season'], ['playoff', 'Playoffs']];
+      for (var j = 0; j < modes.length; j++) {
+        var cur = modes[j][0] === mode;
+        html += '<a href="' + simHref(sport, modes[j][0]) + '"' + (cur ? ' aria-current="page"' : '') + '>' + modes[j][1] + '</a>';
+      }
+      html += '</div>';
+    }
+    html += '<div class="simds-extra"><a href="/sports-simulators/">All simulators</a><a href="/sports-simulators/saved/"' + (saved ? ' aria-current="page"' : '') + '>Saved</a></div>';
+    nav.innerHTML = html;
+    var crumb = main.querySelector('nav.simcrumb, nav[aria-label="Breadcrumb"], nav[aria-label="breadcrumb"], .crumbs, .ss-crumb, .breadcrumbs');
+    if (crumb && crumb.parentNode) crumb.parentNode.insertBefore(nav, crumb.nextSibling);
+    else main.insertBefore(nav, main.firstChild);
+  }
+
   function start() {
+    try { switcher(); } catch (e) {}
     skipLink();
     run();
     window.addEventListener('scroll', function () { try { bubble(); } catch (e) {} }, { passive: true });

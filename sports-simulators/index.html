@@ -60,7 +60,7 @@
       linear-gradient(180deg, var(--sim-bg) 0%, #0b1220 100%);
     -webkit-font-smoothing:antialiased;
   }
-  .simhub{width:min(1180px,calc(100% - 32px)); margin:0 auto; padding:96px 0 72px;}
+  .simhub{width:min(1180px,calc(100% - 32px)); margin:0 auto; padding:28px 0 72px;}
   .simhub h1,.simhub h2,.simhub h3{font-family:"Barlow Condensed","Barlow",Inter,sans-serif; letter-spacing:.2px; margin:0;}
 
   .simcrumb{font-size:.82rem; color:var(--sim-muted); margin:0 0 18px; display:flex; flex-wrap:wrap; gap:6px; align-items:center;}
@@ -204,13 +204,94 @@
     .simcard,.simactions a,.simcta a.run{transition:none;}
     .simcard:hover,.simactions a:hover,.simcta a.run:hover{transform:none;}
   }
+
+  /* SIM_DS_20261102: launcher hero, fact strip, live activity. */
+  .simhero{grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);}
+  .simhero-copy{display:flex; flex-direction:column; border-radius:16px;}
+  .simsteps{list-style:none; margin:22px 0 0; padding:0; display:grid; gap:10px;}
+  .simsteps li{display:flex; align-items:center; gap:12px; color:#d5deea; font-size:.95rem;}
+  .simsteps b{width:28px; height:28px; flex:0 0 28px; display:grid; place-items:center; border-radius:50%; background:rgba(29,127,232,.16); border:1px solid rgba(29,127,232,.55); color:#7cc0ff; font-size:.8rem;}
+  .simactions{margin-top:auto; padding-top:24px;}
+  .simactions a{border-radius:10px; background:transparent; color:var(--sim-text); border-color:var(--sim-border-hi);}
+  .simactions a:hover{border-color:var(--sim-teal); box-shadow:none;}
+  .simlaunch{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px;}
+  .simtile{position:relative; display:flex; flex-direction:column; border:1px solid var(--sim-border); border-radius:16px; overflow:hidden;
+    background:linear-gradient(160deg, var(--sim-panel-2), rgba(9,17,32,.94)); transition:border-color .16s ease, transform .16s ease, box-shadow .16s ease;}
+  .simtile::before{content:""; position:absolute; inset:0 0 auto 0; height:3px; background:var(--accent);}
+  .simtile::after{content:""; position:absolute; width:200px; height:200px; right:-90px; top:-100px; border-radius:50%; background:radial-gradient(circle, var(--accent), transparent 68%); opacity:.14; pointer-events:none;}
+  .simtile:hover{border-color:var(--sim-border-hi); transform:translateY(-2px); box-shadow:0 20px 50px rgba(0,0,0,.35);}
+  .simtile-main{flex:1; display:flex; flex-direction:column; gap:14px; padding:20px 20px 14px; text-decoration:none; color:inherit; position:relative; z-index:1;}
+  .simtile-mark{width:46px; height:46px; display:grid; place-items:center; border-radius:12px; border:1px solid var(--sim-border); background:rgba(8,15,28,.85);}
+  .simtile-mark svg{width:26px; height:26px;}
+  .simtile-txt{display:flex; flex-direction:column; gap:3px;}
+  .simtile-lg{font-size:.7rem; letter-spacing:.16em; font-weight:800; color:var(--accent);}
+  .simtile-name{font-family:"Barlow Condensed",Inter,sans-serif; font-size:1.75rem; line-height:1; font-weight:900; text-transform:uppercase; color:var(--sim-text);}
+  .simtile-sub{font-size:.84rem; line-height:1.45; color:var(--sim-muted);}
+  .simtile-go{position:absolute; right:18px; top:20px; width:34px; height:34px; display:grid; place-items:center; border-radius:50%;
+    background:linear-gradient(180deg,#1d7fe8,#1667c4); color:#fff; font-weight:800; transition:transform .16s ease;}
+  .simtile:hover .simtile-go{transform:translateX(3px);}
+  .simtile-links{display:flex; border-top:1px solid var(--sim-border); position:relative; z-index:1;}
+  .simtile-links a{flex:1; text-align:center; padding:11px 4px; font-size:.82rem; font-weight:700; color:var(--sim-muted); text-decoration:none !important; white-space:nowrap;}
+  .simtile-links a + a{border-left:1px solid var(--sim-border);}
+  .simtile-links a:hover{color:var(--sim-text); background:rgba(148,163,184,.08);}
+  .simtile-main:focus-visible, .simtile-links a:focus-visible{outline:2px solid #38bdf8; outline-offset:-2px;}
+
+  .simstrip{list-style:none; margin:0 0 22px; padding:0; display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px;}
+  .simstrip li{padding:14px 16px; border:1px solid var(--sim-border); border-radius:14px; background:var(--sim-panel);}
+  .simstrip span{font-size:.66rem; letter-spacing:.16em; text-transform:uppercase; color:var(--sim-teal); font-weight:800;}
+  .simstrip strong{display:block; font-family:"Barlow Condensed",sans-serif; font-size:1.3rem; font-weight:800; margin:2px 0 4px; text-transform:uppercase;}
+  .simstrip p{margin:0; font-size:.8rem; line-height:1.5; color:var(--sim-muted);}
+
+  .simlive{border:1px solid var(--sim-border); border-radius:16px; background:var(--sim-panel); padding:20px 22px; margin-bottom:22px;}
+  .simlive-head{display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:6px 18px; margin-bottom:14px;}
+  .simlive-head h2{font-size:1.45rem; font-weight:800; text-transform:uppercase;}
+  .simlive-head p{margin:0; color:var(--sim-muted); font-size:.86rem;}
+  .simlive-grid{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px;}
+  .simlive-cell{min-width:0; display:flex; flex-direction:column; gap:8px; padding:14px; border-radius:12px; border:1px solid var(--sim-border); background:rgba(8,15,28,.55); border-top:3px solid var(--accent);}
+  .simlive-cell .lg{font-size:.7rem; letter-spacing:.16em; font-weight:800; color:var(--accent);}
+  .simlive-cell .num{font-family:"Barlow Condensed",sans-serif; font-size:1.9rem; font-weight:800; line-height:1; color:var(--sim-text);}
+  .simlive-cell .cap{font-size:.78rem; color:var(--sim-muted);}
+  .simlive-cell .mu{flex-wrap:wrap; display:flex; align-items:center; gap:6px; font-size:.84rem; font-weight:600; color:#d5deea; line-height:1.35;}
+  .simlive-cell .mu img{width:22px; height:22px; object-fit:contain; flex:0 0 22px;}
+  .simlive-cell a{margin-top:auto; font-size:.8rem; font-weight:700; color:#7cc0ff; text-decoration:none !important;}
+  .simlive-cell a:hover{text-decoration:underline !important;}
+
+  .simscore-d{margin-top:18px; border:1px solid var(--sim-border); border-radius:10px; background:rgba(8,15,28,.6);}
+  .simscore-d summary{cursor:pointer; list-style:none; padding:11px 14px; font-size:.82rem; font-weight:700; color:var(--sim-text); display:flex; justify-content:space-between; align-items:center;}
+  .simscore-d summary::-webkit-details-marker{display:none;}
+  .simscore-d summary::after{content:"+"; color:var(--sim-muted); font-weight:800;}
+  .simscore-d[open] summary::after{content:"\2212";}
+  .simscore-d .simscore{margin:0; border:0; border-top:1px solid var(--sim-border); background:transparent;}
+  .simcard, .simsec, .simscore{border-radius:16px;}
+  .simcta a.run{border-radius:10px; color:#fff; background:linear-gradient(180deg,#1d7fe8,#1667c4); border-color:#1667c4;}
+
+  @media (max-width:1000px){
+    .simhero{grid-template-columns:1fr;}
+    .simstrip, .simlive-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+  }
+  @media (max-width:640px){
+    .simhub{padding-top:18px; width:calc(100% - 32px);}
+    .simlaunch{grid-template-columns:1fr 1fr; gap:10px;}
+    .simtile-main{padding:16px 14px 12px; gap:10px;}
+    .simtile-mark{width:38px; height:38px;}
+    .simtile-name{font-size:1.4rem;}
+    .simtile-sub{display:none;}
+    .simtile-go{right:12px; top:16px; width:30px; height:30px;}
+    .simtile-links a{font-size:.74rem; padding:10px 2px;}
+    .simsteps{display:none;}
+    .simactions{padding-top:16px;}
+    .simstrip{grid-template-columns:1fr 1fr; gap:8px;}
+    .simstrip li{padding:12px;}
+    .simlive{padding:16px;}
+    .simlive-grid{grid-template-columns:1fr 1fr; gap:8px;}
+  }
 </style>
 <link rel="stylesheet" href="/static/css/tmr-light-surface.css?v=3bb2788875de">
 <!-- The one approved navbar: the shared header component (tmr-ds-nav.js)
      plus the homepage's own navbar rules, so every page renders the same bar. -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap">
 <link rel="stylesheet" href="/static/css/tmr-navbar.css?v=68ec3081d29a">
-<!--SIM_UX--><link rel="stylesheet" href="/static/css/tmr-sim-ux.css?v=4c66cd86aaa4"><script defer src="/static/js/tmr-sim-ux.js?v=539ea49bdfe1"></script><!--/SIM_UX-->
+<!--SIM_UX--><link rel="stylesheet" href="/static/css/tmr-sim-ux.css?v=f70e7f2b899b"><script defer src="/static/js/tmr-sim-ux.js?v=21a024cf4de7"></script><!--/SIM_UX-->
 </head>
 <body class="tmr-ds-shell tmr-ds--dark">
 <!-- CLS: tmr-ds-nav.js injects the shared header at the end of the body, which
@@ -247,32 +328,64 @@
       <p class="kicker">Sports Simulators</p>
       <h1 id="simhub-title">TMR Sports Simulators</h1>
       <p class="simlead">Advanced sports simulation engines built to produce realistic game outcomes, probabilities, statistics and box scores. Four sports, four engines, one idea: play the game out instead of guessing at the result.</p>
-      <div class="simactions" aria-label="Jump to a simulator">
-        <a href="/mlb-simulator/">Run MLB Simulation <span aria-hidden="true">&rarr;</span></a>
-        <a class="ghost" href="/nfl-simulator/">NFL</a>
-        <a class="ghost" href="/nba-simulator/">NBA</a>
-        <a class="ghost" href="/nhl-simulator/">NHL</a>
-        <a class="ghost" href="/sports-simulators/saved/">My saved simulations</a>
+      <ol class="simsteps" aria-label="How it works">
+        <li><b>1</b><span>Pick a sport and a matchup</span></li>
+        <li><b>2</b><span>Choose how many games to simulate</span></li>
+        <li><b>3</b><span>Read the score, the odds and the box score</span></li>
+      </ol>
+      <div class="simactions" aria-label="Your simulations">
+        <a href="/sports-simulators/saved/">My saved simulations <span aria-hidden="true">&rarr;</span></a>
       </div>
     </div>
-    <aside class="simstats" aria-label="What the suite covers">
-      <div class="simstat">
-        <span>Sports</span><strong>Four engines</strong>
-        <p>MLB, NFL, NBA and NHL, each modelled on the things that actually decide a game in that sport.</p>
+    <nav class="simlaunch" aria-label="Choose a simulator">
+      <div class="simtile" style="--accent:var(--mlb);">
+        <a class="simtile-main" href="/mlb-simulator/">
+          <span class="simtile-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="var(--mlb)" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M7.2 4.2c2 2.2 3 4.8 3 7.8s-1 5.6-3 7.8"/><path d="M16.8 4.2c-2 2.2-3 4.8-3 7.8s1 5.6 3 7.8"/></svg></span>
+          <span class="simtile-txt"><span class="simtile-lg">MLB</span><span class="simtile-name">Baseball</span><span class="simtile-sub">Plate appearance by plate appearance, real starters</span></span>
+          <span class="simtile-go" aria-hidden="true">&rarr;</span>
+        </a>
+        <span class="simtile-links"><a href="/mlb-simulator/">Game</a><a href="/mlb-season-simulator/">Season</a><a href="/mlb-playoff-odds/">Playoffs</a></span>
       </div>
-      <div class="simstat">
-        <span>Output</span><strong>Full box score</strong>
-        <p>Named players, reconciled totals, and a scoring line that adds up to the final score.</p>
+      <div class="simtile" style="--accent:var(--nfl);">
+        <a class="simtile-main" href="/nfl-simulator/">
+          <span class="simtile-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="var(--nfl)" stroke-width="1.7" stroke-linecap="round"><path d="M4.2 19.8C2.6 14.4 3 7.6 4.4 4.4 7.6 3 14.4 2.6 19.8 4.2c1.6 5.4 1.2 12.2-.2 15.4-3.2 1.4-10 1.8-15.4.2Z"/><path d="M9.5 14.5 14.5 9.5"/><path d="M10.6 11.4l1.4 1.4M12.6 9.4l1.4 1.4M8.6 13.4l1.4 1.4"/></svg></span>
+          <span class="simtile-txt"><span class="simtile-lg">NFL</span><span class="simtile-name">Football</span><span class="simtile-sub">Drive by drive from current depth charts</span></span>
+          <span class="simtile-go" aria-hidden="true">&rarr;</span>
+        </a>
+        <span class="simtile-links"><a href="/nfl-simulator/">Game</a><a href="/nfl-season-simulator/">Season</a><a href="/nfl-playoff-simulator/">Playoffs</a></span>
       </div>
-      <div class="simstat">
-        <span>Method</span><strong>Repeatable runs</strong>
-        <p>Set a simulation count and read the win probability and distribution from the whole batch.</p>
+      <div class="simtile" style="--accent:var(--nba);">
+        <a class="simtile-main" href="/nba-simulator/">
+          <span class="simtile-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="var(--nba)" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3v18"/><path d="M5.2 5.2c4 3.6 4 9.9 0 13.6M18.8 5.2c-4 3.6-4 9.9 0 13.6"/></svg></span>
+          <span class="simtile-txt"><span class="simtile-lg">NBA</span><span class="simtile-name">Basketball</span><span class="simtile-sub">Possession by possession with real rotations</span></span>
+          <span class="simtile-go" aria-hidden="true">&rarr;</span>
+        </a>
+        <span class="simtile-links"><a href="/nba-simulator/">Game</a><a href="/nba-season-simulator/">Season</a><a href="/nba-playoff-simulator/">Playoffs</a></span>
       </div>
-      <div class="simstat">
-        <span>Price</span><strong>Free to start</strong>
-        <p>Visitors get one free run. A free account gets a free run every day on each simulator. TMR Pro makes every run unlimited.</p>
+      <div class="simtile" style="--accent:var(--nhl);">
+        <a class="simtile-main" href="/nhl-simulator/">
+          <span class="simtile-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="var(--nhl)" stroke-width="1.7" stroke-linecap="round"><ellipse cx="12" cy="8.6" rx="8" ry="3.4"/><path d="M4 8.6v6.8c0 1.9 3.6 3.4 8 3.4s8-1.5 8-3.4V8.6"/><path d="M4 12c0 1.9 3.6 3.4 8 3.4s8-1.5 8-3.4"/></svg></span>
+          <span class="simtile-txt"><span class="simtile-lg">NHL</span><span class="simtile-name">Hockey</span><span class="simtile-sub">Shots and goaltending with the starter you pick</span></span>
+          <span class="simtile-go" aria-hidden="true">&rarr;</span>
+        </a>
+        <span class="simtile-links"><a href="/nhl-simulator/">Game</a><a href="/nhl-season-simulator/">Season</a><a href="/nhl-playoff-simulator/">Playoffs</a></span>
       </div>
-    </aside>
+    </nav>
+  </section>
+
+  <ul class="simstrip" aria-label="What the suite covers">
+    <li><span>Sports</span><strong>Four engines</strong><p>MLB, NFL, NBA and NHL, each modelled on the things that actually decide a game in that sport.</p></li>
+    <li><span>Output</span><strong>Full box score</strong><p>Named players, reconciled totals, and a scoring line that adds up to the final score.</p></li>
+    <li><span>Method</span><strong>Repeatable runs</strong><p>Set a simulation count and read the win probability and distribution from the whole batch.</p></li>
+    <li><span>Price</span><strong>Free to start</strong><p>Visitors get one free run. A free account gets a free run every day on each simulator. TMR Pro makes every run unlimited.</p></li>
+  </ul>
+
+  <section class="simlive" id="simlive" aria-labelledby="simlive-title" hidden>
+    <div class="simlive-head">
+      <h2 id="simlive-title">Simulation activity</h2>
+      <p>What TrustMyRecord members and visitors are simulating, from the simulation archive.</p>
+    </div>
+    <div class="simlive-grid" id="simliveGrid"></div>
   </section>
 
   <aside class="simpro" aria-label="TMR Pro" style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px;border:1px solid rgba(245,197,66,.45);background:rgba(245,197,66,.07);border-radius:12px;padding:16px 20px;margin:0 0 22px">
@@ -280,7 +393,7 @@
     <a href="/premium/" style="display:inline-flex;align-items:center;min-height:44px;padding:0 18px;border-radius:10px;background:#F5C542;color:#1a1400;font-weight:800;text-decoration:none;white-space:nowrap">See TMR Pro <span aria-hidden="true">&rarr;</span></a>
   </aside>
 
-  <p class="kicker" style="margin:26px 0 12px;">Choose a simulator</p>
+  <p class="kicker" style="margin:30px 0 12px;">How each engine works</p>
   <div class="simgrid">
 
     <article class="simcard" style="--accent:var(--mlb);" aria-labelledby="sim-mlb">
@@ -299,7 +412,7 @@
         <li><b>Run distribution</b> and win probability across as many simulations as you want to run.</li>
         <li><b>Current, classic and mixed-era</b> matchups, plus a separate season and playoff simulator.</li>
       </ul>
-      <p class="simscore">Scored out of sample on the <b>2,434 games</b> of a season the model never saw, each projected from the season before it. The home side won <b>54.3%</b> of them, which is the bar any model has to clear. The engine's own score is not published here yet, and it will be a TEAM-level number when it is: the scoring run uses league-average lineups, so it says nothing about individual batters or announced starters.</p>
+      <details class="simscore-d"><summary>How accurate it is</summary><p class="simscore">Scored out of sample on the <b>2,434 games</b> of a season the model never saw, each projected from the season before it. The home side won <b>54.3%</b> of them, which is the bar any model has to clear. The engine's own score is not published here yet, and it will be a TEAM-level number when it is: the scoring run uses league-average lineups, so it says nothing about individual batters or announced starters.</p></details>
       <div class="simcta">
         <a class="run" href="/mlb-simulator/">Run MLB Simulation <span aria-hidden="true">&rarr;</span></a>
         <a class="more" href="/mlb-season-simulator/">Season simulator</a>
@@ -323,7 +436,7 @@
         <li><b>Special teams</b> included: field-goal accuracy by distance, punting and return threat.</li>
         <li><b>Venue and kickoff window,</b> plus pace, drives per game, turnovers and defensive scores.</li>
       </ul>
-      <p class="simscore">Held to the same discipline in code: <b>training, calibration and test seasons are kept disjoint</b>, and the test season is scored once so nothing in it can tune the model. In a backtest on <b>285 held-out 2025 games</b> (the model re-run with only pre-kickoff data, not a grade of live predictions), it called the winner correctly <b>63.86%</b> of the time, compared with 53.33% for always selecting the home team, with calibration error of approximately <b>3.3%</b>. The closing betting market was more accurate, and the model does not beat it. Single-game margins remain highly variable.</p>
+      <details class="simscore-d"><summary>How accurate it is</summary><p class="simscore">Held to the same discipline in code: <b>training, calibration and test seasons are kept disjoint</b>, and the test season is scored once so nothing in it can tune the model. In a backtest on <b>285 held-out 2025 games</b> (the model re-run with only pre-kickoff data, not a grade of live predictions), it called the winner correctly <b>63.86%</b> of the time, compared with 53.33% for always selecting the home team, with calibration error of approximately <b>3.3%</b>. The closing betting market was more accurate, and the model does not beat it. Single-game margins remain highly variable.</p></details>
       <div class="simcta">
         <a class="run" href="/nfl-simulator/">Run NFL Simulation <span aria-hidden="true">&rarr;</span></a>
         <a class="more" href="/nfl-simulator/#accuracy">How it was scored</a>
@@ -348,7 +461,7 @@
         <li><b>Endgame and overtime</b> played under real closing rules rather than extrapolated.</li>
         <li><b>Home court</b> worth roughly two and a half to three points, removable for a neutral floor.</li>
       </ul>
-      <p class="simscore">Scored on <b>3,701 games</b> across four seasons, each projected only from games played before it: winner called <b>66.7%</b> (home team alone: 54.8%), calibration error <b>1.9%</b>.</p>
+      <details class="simscore-d"><summary>How accurate it is</summary><p class="simscore">Scored on <b>3,701 games</b> across four seasons, each projected only from games played before it: winner called <b>66.7%</b> (home team alone: 54.8%), calibration error <b>1.9%</b>.</p></details>
       <div class="simcta">
         <a class="run" href="/nba-simulator/">Run NBA Simulation <span aria-hidden="true">&rarr;</span></a>
         <a class="more" href="/nba-simulator/#accuracy">How it was scored</a>
@@ -373,7 +486,7 @@
         <li><b>Goals and assists</b> dealt to named skaters from their real per-sixty rates and ice time.</li>
         <li><b>Score effects, overtime, the shootout</b> and the empty net all handled explicitly.</li>
       </ul>
-      <p class="simscore">Scored on <b>3,939 games</b> across four seasons out of sample: winner called <b>57.6%</b> (home team alone: 54.2%), calibration error <b>1.8%</b>. A real edge, and a small one. Hockey is like that.</p>
+      <details class="simscore-d"><summary>How accurate it is</summary><p class="simscore">Scored on <b>3,939 games</b> across four seasons out of sample: winner called <b>57.6%</b> (home team alone: 54.2%), calibration error <b>1.8%</b>. A real edge, and a small one. Hockey is like that.</p></details>
       <div class="simcta">
         <a class="run" href="/nhl-simulator/">Run NHL Simulation <span aria-hidden="true">&rarr;</span></a>
         <a class="more" href="/nhl-simulator/#accuracy">How it was scored</a>
@@ -499,6 +612,49 @@
   <p class="simfoot">Simulator output is a model-based estimate produced for research and entertainment. It is not betting advice, not a guarantee, and not a prediction of an exact future result.</p>
 
 </main>
+<script>
+/* SIM_DS_20261102: live simulation activity from the archive API. Read only;
+   the section stays hidden unless at least one sport answers. */
+(function () {
+  var grid = document.getElementById('simliveGrid'), sec = document.getElementById('simlive');
+  if (!grid || !sec || !window.fetch) return;
+  var base = (typeof CONFIG !== 'undefined' && CONFIG && CONFIG.api && CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+  var SPORTS = [['mlb', 'MLB', 'var(--mlb)'], ['nfl', 'NFL', 'var(--nfl)'], ['nba', 'NBA', 'var(--nba)'], ['nhl', 'NHL', 'var(--nhl)']];
+  function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+  function cell(s, d) {
+    var c = el('div', 'simlive-cell'); c.style.setProperty('--accent', s[2]);
+    c.appendChild(el('span', 'lg', s[1]));
+    var n = d && d.counters ? d.counters.last_7_days : null;
+    c.appendChild(el('span', 'num', n == null ? '0' : Number(n).toLocaleString('en-US')));
+    c.appendChild(el('span', 'cap', 'simulations in the last 7 days'));
+    var mu = d && (d.most_simulated_today || d.most_simulated_all_time);
+    if (mu && mu.teams && mu.teams.length === 2) {
+      c.appendChild(el('span', 'cap', d.most_simulated_today ? 'Most simulated today' : 'Most simulated all time'));
+      var row = el('span', 'mu');
+      mu.teams.forEach(function (t, i) {
+        if (t.logo && /^https:\/\//.test(t.logo)) { var im = el('img'); im.src = t.logo; im.alt = ''; im.loading = 'lazy'; im.width = 22; im.height = 22; row.appendChild(im); }
+        row.appendChild(el('span', '', t.abbr || t.name));
+        if (i === 0) row.appendChild(el('span', 'cap', 'vs'));
+      });
+      c.appendChild(row);
+    }
+    var a = el('a', '', 'See all ' + s[1] + ' results'); a.setAttribute('aria-label', 'See all ' + s[1] + ' simulation results'); a.href = '/' + s[0] + '-simulator/results/';
+    c.appendChild(a);
+    return c;
+  }
+  var got = 0, cells = [];
+  Promise.all(SPORTS.map(function (s, i) {
+    return fetch(base + '/sim-archive/overview?sport=' + s[0], { credentials: 'omit' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .catch(function () { return null; })
+      .then(function (d) { if (d && d.counters) got++; cells[i] = cell(s, d); });
+  })).then(function () {
+    if (!got) return;
+    cells.forEach(function (c) { grid.appendChild(c); });
+    sec.hidden = false;
+  });
+})();
+</script>
 
 <script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-ds-nav.abcf0579d7bc.js"></script>
     <script src="/static/js/tmr-live-chat.js?v=816ec6f0a118"></script>
