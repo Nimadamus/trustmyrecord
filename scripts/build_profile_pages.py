@@ -48,6 +48,7 @@ Add --dry-run to print the eligible/excluded sets without writing files.
 import gzip, json, os, sys, html, urllib.request, urllib.error, urllib.parse, datetime, re, shutil
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from prerender_report import record
+import api_etag_cache
 import profile_research
 
 API   = "https://trustmyrecord-api.onrender.com/api"
@@ -444,12 +445,8 @@ def sport_cell(lab):
     return f'<a href="{href}">{html.escape(lab)}</a>' if href else html.escape(lab)
 
 def get(url):
-    req = urllib.request.Request(url, headers={"Accept": "application/json", "Accept-Encoding": "gzip"})
-    with urllib.request.urlopen(req, timeout=45) as r:
-        raw = r.read()
-        if (r.headers.get("Content-Encoding") or "").lower() == "gzip":
-            raw = gzip.decompress(raw)
-        return json.loads(raw.decode("utf-8"))
+    # BANDWIDTH_ETAG_20261102: conditional GET via scripts/api_etag_cache.py (304 = reuse last run's body).
+    return api_etag_cache.get_json(url, {"Accept": "application/json", "Accept-Encoding": "gzip"}, timeout=45)
 
 def list_users():
     """Every verified public-directory member, regardless of graded-pick count.

@@ -19,6 +19,7 @@ Idempotent: re-running replaces content between <!--MK:key--> markers, so a
 import gzip, json, os, sys, re, html, math, time, datetime, urllib.request, urllib.parse
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from prerender_report import record
+import api_etag_cache
 
 API  = "https://trustmyrecord-api.onrender.com/api"
 SITE = "https://trustmyrecord.com"
@@ -82,12 +83,8 @@ def get(url, attempts=3):
         if i:
             time.sleep(2 * i)
         try:
-            req = urllib.request.Request(url, headers={"Accept": "application/json", "Accept-Encoding": "gzip"})
-            with urllib.request.urlopen(req, timeout=45) as r:
-                raw = r.read()
-                if (r.headers.get("Content-Encoding") or "").lower() == "gzip":
-                    raw = gzip.decompress(raw)
-                return json.loads(raw.decode("utf-8"))
+            # BANDWIDTH_ETAG_20261102: conditional GET via scripts/api_etag_cache.py (304 = reuse last run's body).
+            return api_etag_cache.get_json(url, {"Accept": "application/json", "Accept-Encoding": "gzip"}, timeout=45)
         except Exception as err:
             last = err
     raise last

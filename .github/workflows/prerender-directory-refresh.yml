@@ -69,6 +69,19 @@ jobs:
       - name: Install Pillow for featured game share cards
         run: python -m pip install --quiet --disable-pip-version-check pillow
 
+      # BANDWIDTH_ETAG_20261102: Render bills every API response body. The generators
+      # send If-None-Match from the previous run's ETags (scripts/api_etag_cache.py)
+      # and reuse the stored body on a 304, so unchanged members cost no body bytes.
+      # The cache lives outside the repo (never committed) and is restored/saved
+      # every run; a missing cache just means plain requests, as before.
+      - name: Restore API ETag cache
+        continue-on-error: true
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ runner.temp }}/api-etag-cache
+          key: prerender-api-etag-${{ github.run_id }}
+          restore-keys: prerender-api-etag-
+
       - name: Rebuild every prerendered page (isolated per stage, page, validator and gate)
         id: run
         # Stages, in order: directory (/handicappers/, /leaderboards/), homepage
@@ -80,7 +93,17 @@ jobs:
         # indexability, /u/ edge fallback, Game File logos. A gate failure caused
         # by this run reverts the stage that caused it; a pre-existing one is a
         # warning and does not block the pages that rebuilt correctly.
+        env:
+          PRERENDER_ETAG_CACHE: ${{ runner.temp }}/api-etag-cache
         run: python scripts/prerender_run.py
+
+      - name: Save API ETag cache
+        if: always()
+        continue-on-error: true
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ runner.temp }}/api-etag-cache
+          key: prerender-api-etag-${{ github.run_id }}
 
       - name: Commit only if generated output changed
         run: |
