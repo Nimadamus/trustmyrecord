@@ -50,6 +50,10 @@ async function waitForSportsbook(page) {
   await expect(visibleBoard(page)).toBeVisible({ timeout: 30000 });
   await page.waitForTimeout(2500);
   await expect(page.locator('body')).not.toContainText(/Loading live odds/i, { timeout: 45000 });
+  // v3 board: wait for its own loading flag (the first load may walk past an
+  // empty sport, DEFAULT_SPORT_FALLBACK_20261102). Absent on the classic board.
+  await page.waitForFunction(() => !(window.__sbNext && window.__sbNext.state && window.__sbNext.state.loading),
+    null, { timeout: 45000 });
 }
 
 // SPORTSBOOK_V2_20260904: /sportsbook/ now serves the v2 board (#sbnBoard, rows

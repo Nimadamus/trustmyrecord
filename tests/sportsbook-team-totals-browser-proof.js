@@ -43,8 +43,13 @@ async function waitForBoardSettled(page) {
     const board = document.querySelector('#sbnBoardRows')
       || document.querySelector('#lobbyBoardRows')
       || document.querySelector('#gamesListContainer');
+    // The v3 board says "Loading NFL odds..." (per sport), and since
+    // DEFAULT_SPORT_FALLBACK_20261102 the first load can walk past an empty
+    // sport, so settle on the board's own loading flag, not one phrase.
+    const sb = window.__sbNext && window.__sbNext.state;
+    if (sb && sb.loading) return false;
     return board && (board.textContent || '').trim().length > 0
-      && !/Loading live odds/i.test(board.textContent || '');
+      && !/Loading [^.]*odds/i.test(board.textContent || '');
   }, null, { timeout: 30000 });
 }
 
