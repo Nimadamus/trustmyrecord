@@ -105,7 +105,9 @@ for (const selector of RELOCATED_SELECTORS) {
     `design selector missing from every sitewide stylesheet: ${selector}`);
 }
 
-assert(css.includes('linear-gradient') && css.includes('rgba(45, 212, 191'), 'sitewide design system must keep dark premium accent treatments');
+// The teal rgba(45, 212, 191) accent was retired with the 2026-08 nav/palette
+// rework; the invariant is that gradient accent treatments remain at all.
+assert((css.match(/linear-gradient\(/g) || []).length >= 5, 'sitewide design system must keep dark premium accent treatments');
 assert(css.includes('body.tmr-site-shell .btn-primary') && css.includes('body.tmr-site-shell button[type="submit"]'), 'sitewide primary button styles must remain');
 assert(css.includes('body.tmr-site-shell input') && css.includes('body.tmr-site-shell select') && css.includes('body.tmr-site-shell textarea'), 'sitewide form control styles must remain');
 assert(css.includes('display: inline-flex') && css.includes('justify-content: center'), 'sitewide button alignment must remain stable');
@@ -134,7 +136,7 @@ for (const selector of [
 
 assert(pagePolish.includes('linear-gradient(135deg, var(--tmrp-neon-cyan), var(--tmrp-neon-purple))'), 'page polish premium gradient treatment must remain');
 assert(pagePolish.includes('backdrop-filter: blur(20px) saturate(140%)'), 'page polish glass card treatment must remain');
-assert(pagePolish.includes('border-color: var(--tmrp-neon-cyan)') && pagePolish.includes('background: rgba(0, 255, 255, 0.04)'), 'page polish form focus treatment must remain');
+assert(pagePolish.includes('border-color: var(--tmrp-neon-cyan)') && /\.tmr-input:focus[\s\S]{0,120}background: rgba\(\d+, \d+, \d+, 0\.04\)/.test(pagePolish), 'page polish form focus treatment must remain');
 
 for (const required of [
   'tmr-global-nav',
@@ -166,8 +168,11 @@ const LEGACY_SHELL_PAGES = [
 ];
 for (const page of LEGACY_SHELL_PAGES) {
   const html = fs.readFileSync(path.join(root, page), 'utf8');
-  assert(/tmr-sitewide\.css\?v=/.test(html), `${page} must load cache-busted sitewide CSS`);
-  assert(/tmr-sitewide\.js\?v=/.test(html), `${page} must load cache-busted sitewide nav JS`);
+  // Pages keep migrating to the design-system nav (marketplace did). Each must
+  // load ONE complete chrome: the legacy cache-busted pair or the hashed DS pair.
+  const legacyChrome = /tmr-sitewide\.css\?v=/.test(html) && /tmr-sitewide\.js\?v=/.test(html);
+  const dsChrome = /tmr-ds-nav\.[0-9a-f]{12}\.js/.test(html) && /tmr-ds\.[0-9a-f]{12}\.css/.test(html);
+  assert(legacyChrome || dsChrome, `${page} must load cache-busted sitewide CSS + nav JS, or the hashed design-system nav + stylesheet`);
 }
 
 const DS_SHELL_PAGES = [

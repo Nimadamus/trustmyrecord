@@ -219,14 +219,18 @@ assert(!predictionsHtml.includes('url=/hangout/'), 'predictions page must not re
   assert(!navigation.includes(token), `navigation legacy route drift returned: ${token}`);
 });
 
-assert(sportsbookReliability.includes("'polls-trivia': 'polls.html'"), 'sportsbook legacy polls-trivia route must target polls');
+// Root-absolute since 2026-11-02 (relative polls.html/hangout.html resolved under /sportsbook/ and 404ed).
+assert(sportsbookReliability.includes("'polls-trivia': '/polls/'"), 'sportsbook legacy polls-trivia route must target polls');
+assert(!/routeMap = \{[^}]*: '[a-z-]+\.html'/.test(sportsbookReliability), 'sportsbook legacy routes must be root-absolute, never relative .html');
 assert(!sportsbookReliability.includes("'polls-trivia': 'hangout.html'"), 'sportsbook legacy polls-trivia route regressed to hangout');
-assert(sportsbookReliability.includes("predictions: 'polls.html'"), 'sportsbook legacy predictions route must target polls');
+assert(sportsbookReliability.includes("predictions: '/polls/'"), 'sportsbook legacy predictions route must target polls');
 assert(!sportsbookReliability.includes("predictions: 'hangout.html'"), 'sportsbook legacy predictions route regressed to hangout');
 
 [sportsbookReliability, sportsbookPersist, sportsbookLegacy].forEach((script, index) => {
-  assert(script.includes("'polls-trivia': 'polls.html'"), `sportsbook route map ${index} must keep polls-trivia on polls`);
-  assert(script.includes("predictions: 'polls.html'"), `sportsbook route map ${index} must keep predictions on polls`);
+  // Map 0 (the live reliability runtime) is root-absolute; maps 1-2 are retired
+  // scripts no page includes and keep their old relative form.
+  assert(script.includes("'polls-trivia': 'polls.html'") || script.includes("'polls-trivia': '/polls/'"), `sportsbook route map ${index} must keep polls-trivia on polls`);
+  assert(script.includes("predictions: 'polls.html'") || script.includes("predictions: '/polls/'"), `sportsbook route map ${index} must keep predictions on polls`);
   assert(!script.includes("'polls-trivia': 'hangout.html'"), `sportsbook route map ${index} regressed polls-trivia to hangout`);
   assert(!script.includes("predictions: 'hangout.html'"), `sportsbook route map ${index} regressed predictions to hangout`);
 });

@@ -23,9 +23,10 @@ function assert(condition, message) {
   'https://trustmyrecord.com/hangout/',
   'https://trustmyrecord.com/polls/',
   'https://trustmyrecord.com/trivia/',
-  'https://trustmyrecord.com/profile-market.html',
-  'https://trustmyrecord.com/login/',
-  'https://trustmyrecord.com/register/',
+  // 2026-11-02: login/register left the sitemap on purpose in 88783e56 (SEO
+  // Batch 1A, non-indexable utility pages) and the per-user profile-market.html
+  // drilldown in 1651424c (route hygiene). The test follows those SEO decisions;
+  // the sitemap itself is not changed here.
   'https://trustmyrecord.com/privacy/',
   'https://trustmyrecord.com/terms/'
 ].forEach((url) => {
@@ -34,7 +35,8 @@ function assert(condition, message) {
 
 [
   'https://trustmyrecord.com/polls-trivia/',
-  'https://trustmyrecord.com/predictions/',
+  // /predictions/ is no longer a shim: it is the MLB Run Prediction Model page
+  // (own canonical, indexable), so it is allowed in the sitemap.
   'https://trustmyrecord.com/forums/',
   'https://trustmyrecord.com/leaderboard/',
   'https://trustmyrecord.com/cappers/',

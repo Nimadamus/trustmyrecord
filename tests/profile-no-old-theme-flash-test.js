@@ -32,7 +32,11 @@ const darkLayerIndex = profile.indexOf('body.profile-page.tmr-social-profile {')
 const legacyLightIndex = profile.indexOf('--bg-primary: #f3f5f8');
 const bodyLightIndex = profile.indexOf('background: var(--bg-primary);');
 const bodyIndex = profile.indexOf('<body');
-const bodyClassIndex = profile.indexOf('<body class="profile-page tmr-social-profile">');
+// The body may carry other classes too (the sitewide tmr-ds-shell was added);
+// what must hold is that both profile classes are on the first <body> tag.
+const bodyTag = (profile.match(/<body\b[^>]*>/) || [''])[0];
+const bodyClasses = ((bodyTag.match(/class="([^"]*)"/) || [, ''])[1]).split(/\s+/);
+const bodyClassIndex = bodyClasses.includes('profile-page') && bodyClasses.includes('tmr-social-profile') ? bodyIndex : -1;
 const headEndIndex = profile.indexOf('</head>');
 
 assert(darkLayerIndex !== -1, 'dark profile redesign layer is missing');

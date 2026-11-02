@@ -38,7 +38,14 @@ const sandbox = {
   isNaN,
 };
 
-const exported = vm.runInNewContext(`${source}\n({ StatsEngine, statsEngine });`, sandbox);
+/* 2026-11-02: stats-engine.js no longer computes streaks itself; it delegates to
+   the ONE client streak formula in static/js/streaks.js (window.TMR.calculateStreaks)
+   and reports zeros when that module is absent. Pages load streaks.js first, so
+   the harness does too, exactly as the browser would. */
+sandbox.window = sandbox;
+vm.createContext(sandbox);
+vm.runInContext(fs.readFileSync(path.join(root, 'static', 'js', 'streaks.js'), 'utf8'), sandbox);
+const exported = vm.runInContext(`${source}\n({ StatsEngine, statsEngine });`, sandbox);
 const engine = new exported.StatsEngine();
 
 /* Rewritten 2026-08-16 to the engine's current API. actualRiskUnits(),

@@ -38,7 +38,8 @@ assert(profile.includes("body.tmrx-is-own-profile #profileHeader .profile-avatar
    header reads p.avatar_url directly now. What these assertions were protecting
    -- that a user-supplied avatar URL and display name are ESCAPED before they
    are interpolated into attributes -- is asserted directly. */
-assert(profile.includes('p.avatar_url ? \'<img src="\' + escapeHtml(p.avatar_url)'), 'profile header must escape the avatar URL before interpolating it');
+// Whitespace tolerant: the ternary now breaks across lines; what matters is the escape.
+assert(/p\.avatar_url\s*\?\s*'<img src="' \+ escapeHtml\(p\.avatar_url\)/.test(profile), 'profile header must escape the avatar URL before interpolating it');
 assert(profile.includes('alt="\' + escapeHtml(name) + \'"'), 'profile header must escape the display name in the avatar alt text');
 assert(profile.includes('loading="eager"'), 'profile avatar should load eagerly in the header');
 assert(profile.includes('decoding="async"'), 'profile avatar should use async decoding');

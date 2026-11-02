@@ -4364,19 +4364,22 @@
     }
 
     function redirectLegacySportsbookSection(sectionId) {
+        // Root-absolute canonical routes (2026-11-02). The old relative
+        // 'feed.html' style targets resolved under /sportsbook/ and every one
+        // of them was a 404 (/sportsbook/feed.html, /sportsbook/hangout.html ...).
         const routeMap = {
-            feed: 'feed.html',
-            forums: 'forum.html',
-            arena: 'arena.html',
-            trivia: 'trivia.html',
-            'polls-trivia': 'hangout.html',
-            predictions: 'hangout.html',
-            contests: 'arena.html',
-            profile: 'profile.html',
-            messages: 'messages.html',
-            groups: 'friends.html',
-            marketplace: 'premium.html',
-            premium: 'premium.html'
+            feed: '/feed/',
+            forums: '/forum/',
+            arena: '/arena/',
+            trivia: '/trivia/',
+            'polls-trivia': '/polls/',
+            predictions: '/polls/',
+            contests: '/arena/',
+            profile: '/profile/',
+            messages: '/messages/',
+            groups: '/friends/',
+            marketplace: '/premium/',
+            premium: '/premium/'
         };
         const route = routeMap[sectionId];
         if (!route) return false;

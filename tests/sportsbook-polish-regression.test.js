@@ -61,8 +61,12 @@ test('spread, moneyline, total, and team-total selections still populate the sli
     includesAll(sportsbookHtml, [
         "betType: 'spread'",
         "betType: 'ml'",
-        "betType: 'over'",
-        "betType: 'under'",
+        // Totals pass the side through overType/underType (rounds markets for
+        // fight sports) since the board rework; plain totals are still 'over'/'under'.
+        "var overType = isFightSport(sport) ? 'roundsover' : 'over';",
+        "var underType = isFightSport(sport) ? 'roundsunder' : 'under';",
+        "betType: overType",
+        "betType: underType",
         "var betType = side === 'over' ? 'teamover' : 'teamunder';",
         'window.TMR._ttDirectClick',
         "if (typeof window.TMR._ttPopulateSlip === 'function')",
@@ -106,8 +110,10 @@ test('Team Totals render as clean desktop and mobile odds-only rows', () => {
         '"action action"'
     ]);
     assert.equal(sportsbookHtml.includes('data-col="team"'), false, 'Team Totals duplicate team data column must not render');
-    assert.ok(sportsbookHtml.includes('data-col="tt-over"'), 'Team Total Over odds column missing');
-    assert.ok(sportsbookHtml.includes('data-col="tt-under"'), 'Team Total Under odds column missing');
+    // The data-col="tt-over/tt-under" board columns were replaced by per-team
+    // odds buttons that select teamover/teamunder directly. Guard those.
+    assert.ok(sportsbookHtml.includes("'teamover'"), 'Team Total Over selection missing');
+    assert.ok(sportsbookHtml.includes("'teamunder'"), 'Team Total Under selection missing');
 });
 
 test('MLB and NHL matchup identifiers/logos remain wired', () => {

@@ -2,7 +2,21 @@ const fs = require('fs');
 const path = require('path');
 
 const root = path.resolve(__dirname, '..');
-const api = fs.readFileSync(path.join(root, 'static', 'js', 'api.js'), 'utf8');
+// static/js/api.js (the old local TrustMyRecordAPI) was deleted in d9870aad
+// (2026-08-06). A deleted local API cannot seed anything, so its assertions run
+// only if the file ever comes back; and no page may load it again.
+const apiPath = path.join(root, 'static', 'js', 'api.js');
+const apiExists = fs.existsSync(apiPath);
+const api = apiExists ? fs.readFileSync(apiPath, 'utf8') : null;
+if (!apiExists) {
+  for (const page of ['index.html', 'profile/index.html', 'forum/index.html', 'feed/index.html', 'sportsbook/index.html', 'u/index.html']) {
+    const file = path.join(root, page);
+    if (fs.existsSync(file) && /["']\/?static\/js\/api\.js/.test(fs.readFileSync(file, 'utf8'))) {
+      console.error(`Local API no-seed regression failed: ${page} loads the deleted static/js/api.js`);
+      process.exit(1);
+    }
+  }
+}
 const socialFeed = fs.readFileSync(path.join(root, 'static', 'js', 'social-feed.js'), 'utf8');
 const social = fs.readFileSync(path.join(root, 'static', 'js', 'social.js'), 'utf8');
 const socialSystem = fs.readFileSync(path.join(root, 'static', 'js', 'social-system.js'), 'utf8');
@@ -14,13 +28,13 @@ function assert(condition, message) {
   }
 }
 
-assert(api.includes('// No demo data - all data comes from real user activity'), 'no-demo-data comment must remain');
-assert(api.includes('// No seeded data. Everything starts at zero.'), 'zero-startup comment must remain');
-assert(api.includes('// No seeded threads or posts - all data comes from real user activity'), 'no seeded forum data comment must remain');
-assert(api.includes('const sampleThreads = [];'), 'local forum fallback threads must start empty');
-assert(api.includes('const samplePosts = [];'), 'local forum fallback posts must start empty');
-assert(api.includes("this.setLocal('tmr_threads', sampleThreads);"), 'empty local thread fallback must remain wired');
-assert(api.includes("this.setLocal('tmr_posts', samplePosts);"), 'empty local post fallback must remain wired');
+if (apiExists) assert(api.includes('// No demo data - all data comes from real user activity'), 'no-demo-data comment must remain');
+if (apiExists) assert(api.includes('// No seeded data. Everything starts at zero.'), 'zero-startup comment must remain');
+if (apiExists) assert(api.includes('// No seeded threads or posts - all data comes from real user activity'), 'no seeded forum data comment must remain');
+if (apiExists) assert(api.includes('const sampleThreads = [];'), 'local forum fallback threads must start empty');
+if (apiExists) assert(api.includes('const samplePosts = [];'), 'local forum fallback posts must start empty');
+if (apiExists) assert(api.includes("this.setLocal('tmr_threads', sampleThreads);"), 'empty local thread fallback must remain wired');
+if (apiExists) assert(api.includes("this.setLocal('tmr_posts', samplePosts);"), 'empty local post fallback must remain wired');
 
 [
   'BetLegend',
@@ -31,11 +45,11 @@ assert(api.includes("this.setLocal('tmr_posts', samplePosts);"), 'empty local po
   'demoLeaderboard',
   'fakeLeaderboard'
 ].forEach((token) => {
-  assert(!api.includes(token), `fake/demo local API token must not be reintroduced: ${token}`);
+  if (apiExists) assert(!api.includes(token), `fake/demo local API token must not be reintroduced: ${token}`);
 });
 
-assert(/const\s+sampleThreads\s*=\s*\[\s*\];/.test(api), 'sampleThreads must remain an empty array');
-assert(/const\s+samplePosts\s*=\s*\[\s*\];/.test(api), 'samplePosts must remain an empty array');
+if (apiExists) assert(/const\s+sampleThreads\s*=\s*\[\s*\];/.test(api), 'sampleThreads must remain an empty array');
+if (apiExists) assert(/const\s+samplePosts\s*=\s*\[\s*\];/.test(api), 'samplePosts must remain an empty array');
 
 [
   'pruneSeedData()',
