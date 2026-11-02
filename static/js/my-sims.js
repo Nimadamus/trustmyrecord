@@ -102,7 +102,10 @@
       l2.textContent = 'No scheduled game found for this matchup after your run.';
     }
     mid.appendChild(l2);
-    var re = link('ms-rerun', '/' + it.sport + '-simulator/?src=my_sims', 'Simulate again');
+    // NBA/NHL simulators preselect ?away=&home= (never auto-run), so the link opens this matchup.
+    var reHref = '/' + it.sport + '-simulator/?src=my_sims';
+    if ((it.sport === 'nba' || it.sport === 'nhl') && it.away.abbr && it.home.abbr) reHref = '/' + it.sport + '-simulator/?away=' + encodeURIComponent(it.away.abbr) + '&home=' + encodeURIComponent(it.home.abbr) + '&src=my_sims';
+    var re = link('ms-rerun', reHref, 'Simulate again');
     re.addEventListener('click', function () { track('my_sims_rerun_click', { sport: it.sport }); });
     var l3 = el('div'); l3.style.marginTop = '4px'; l3.appendChild(re); mid.appendChild(l3);
     r.appendChild(mid);
