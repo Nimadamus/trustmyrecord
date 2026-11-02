@@ -118,7 +118,24 @@
     }
 
     var inSeason = order.filter(function (s) { return SPORTS[s].months.indexOf(month) !== -1; }).slice(0, 3);
-    var gamesP = Promise.all(inSeason.map(function (s) { return soft(getPublic('/games?sport=' + SPORTS[s].key + '&limit=40')); }));
+    /* NBA and NHL: the simulators' own schedule (today + tomorrow), which carries team
+       abbreviations, so "Simulate" opens that exact matchup (?away=&home= preselects it and
+       never auto-runs). Other sports: the general games list. */
+    function ymd(off) { return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date(Date.now() + off * 86400000)); }
+    function simSchedule(s) {
+      return Promise.all([0, 1].map(function (o) { return soft(getPublic('/' + s + '/public/schedule?date=' + ymd(o))); })).then(function (rs) {
+        var games = [];
+        rs.forEach(function (r) { ((r && r.games) || []).forEach(function (g) {
+          if (g.state && g.state !== 'pre') return;
+          games.push({ away_team: g.away.name, home_team: g.home.name, away_abbr: g.away.abbr, home_abbr: g.home.abbr,
+            commence_time: g.startsAt, completed: false });
+        }); });
+        return { games: games };
+      });
+    }
+    var gamesP = Promise.all(inSeason.map(function (s) {
+      return (s === 'nba' || s === 'nhl') ? simSchedule(s) : soft(getPublic('/games?sport=' + SPORTS[s].key + '&limit=40'));
+    }));
     var statusP = Promise.all(inSeason.map(function (s) { return soft(getAuth('/simulator-runs/status?sim=' + s)); }));
 
     Promise.all([gamesP, statusP]).then(function (gs) {
@@ -170,7 +187,9 @@
           info.appendChild(el('b', null, x.away_team + ' at ' + x.home_team));
           info.appendChild(el('span', null, whenPT(x.commence_time) + (fav ? ' · your team' : '')));
           r.appendChild(info);
-          r.appendChild(link('mh-sim', '/' + s + '-simulator/?src=home_game', 'Simulate', 'game_' + s));
+          var href = '/' + s + '-simulator/?src=home_game';
+          if (x.away_abbr && x.home_abbr) href = '/' + s + '-simulator/?away=' + encodeURIComponent(x.away_abbr) + '&home=' + encodeURIComponent(x.home_abbr) + '&src=home_game';
+          r.appendChild(link('mh-sim', href, 'Simulate', 'game_' + s));
           list.appendChild(r);
         });
         var note = list.appendChild(el('div'));
