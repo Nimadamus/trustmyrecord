@@ -496,7 +496,7 @@
 
         var headline = (cfg && cfg.gateHeadline) || (anonFreeRunAvailable()
             ? 'Create a free TrustMyRecord account to run your simulation and save your results.'
-            : 'You used your free simulation. Create a free TrustMyRecord account to run another one and save your results.');
+            : 'You used your free simulation. Run this one with a free account.');
         var label = (cfg && cfg.label) || 'simulation';
 
         var overlay = document.createElement('div');
@@ -512,8 +512,13 @@
             (ctxLine ? '<div class="tsg-ctx">' + ctxLine + '</div>' : '') +
             '<p>Your ' + esc(label) + ' setup is already saved. Finish in about 30 seconds and it runs the moment you land back here, with nothing to re-pick.</p>' +
             '<ul class="tsg-list">' +
-            '<li>' + esc(SIM_RUN_POLICY.short) + '</li>' +
-            '<li>Every run saved to your simulation history</li>' +
+            /* GATE_COPY_20261101: 30d to 11/01, 543 people saw this, 394 closed it. The first
+               line used to end "then 5 TMR a run" (TMR credit sales closed 10/25, and a new
+               visitor does not know what TMR is); the price itself is unchanged and still in
+               SIM_RUN_POLICY. The second line now names what an account actually adds:
+               every run graded against the real final score on /my-sims/. */
+            '<li>One free run a day on every simulator, unlimited with TMR Pro</li>' +
+            '<li>Every run saved and checked against the real final score</li>' +
             '<li>Turn a projection into a timestamped, auto-graded verified pick</li>' +
             '</ul>' +
             '<div class="tsg-actions">' +
