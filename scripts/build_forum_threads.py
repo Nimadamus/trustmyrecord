@@ -27,6 +27,7 @@ Add --dry-run to print what would be written without touching files.
 import gzip, json, os, sys, html, re, urllib.request, urllib.error, datetime, shutil
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from prerender_report import record
+import api_etag_cache
 # DATELESS_THREAD_URLS_20260924: the published slug of a thread whose API slug
 # carried a date is frozen in data/forum-slug-overrides.json (SEO 301 plan).
 from dateless_slug import public_slug
@@ -78,12 +79,8 @@ UA = {"User-Agent": "TMR-ForumThreadBuilder/1.0", "Accept": "application/json"}
 
 
 def get(url):
-    req = urllib.request.Request(url, headers={**UA, "Accept-Encoding": "gzip"})
-    with urllib.request.urlopen(req, timeout=45) as f:
-        raw = f.read()
-        if (f.headers.get("Content-Encoding") or "").lower() == "gzip":
-            raw = gzip.decompress(raw)
-        return json.loads(raw.decode("utf-8"))
+    # BANDWIDTH_ETAG_20261102: conditional GET via scripts/api_etag_cache.py (304 = reuse last run's body).
+    return api_etag_cache.get_json(url, {**UA, "Accept-Encoding": "gzip"}, timeout=45)
 
 
 def list_threads():
