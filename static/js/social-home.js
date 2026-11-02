@@ -1162,6 +1162,7 @@ async function handleSignup() {
     const email = document.getElementById('signupEmail').value.trim();
     const pass = document.getElementById('signupPass').value;
     if (!username || !email || !pass) { showErr('signupError', 'All fields required.'); return; }
+    if (!/^[A-Za-z0-9_]{3,50}$/.test(username)) { showErr('signupError', 'Username: 3 to 50 letters, numbers or underscores. It is your public name, not your email.'); return; }  // USERNAME_FIX_20261101
     if (pass.length < 8) { showErr('signupError', 'Password must be 8+ characters.'); return; }
     try {
         if (typeof auth !== 'undefined' && auth.register) {
