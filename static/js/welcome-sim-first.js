@@ -21,10 +21,15 @@
     mlb: [3, 4, 5, 6, 7, 8, 9, 10]
   };
 
+  /* This file loads before analytics.js defines gtag, so an event sent at page start was
+     dropped (11/01: welcome_viewed never reached GA4). Events wait for gtag, up to 10 s. */
   function track(name, params) {
     var p = Object.assign({ variant: 'sim_first_20261101' }, params || {});
-    try { if (typeof window.gtag === 'function') window.gtag('event', name, p); } catch (e) {}
-    try { window.dataLayer = window.dataLayer || []; window.dataLayer.push(Object.assign({ event: name }, p)); } catch (e) {}
+    var tries = 0;
+    (function send() {
+      if (typeof window.gtag === 'function') { try { window.gtag('event', name, p); } catch (e) {} return; }
+      if (++tries < 40) setTimeout(send, 250);
+    })();
   }
 
   function pacificMonth() {
