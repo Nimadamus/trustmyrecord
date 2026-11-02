@@ -145,7 +145,9 @@ jobs:
               echo "Pushed refreshed prerender output."
               exit 0
             fi
-            git pull --rebase origin main || { git rebase --abort; echo "::error::rebase onto main conflicted; this run's bake was not published"; exit 1; }
+            # PRERENDER_REBASE_20261102: resolves the asset re-pin conflicts that failed ~1 in 4 runs
+            # (this run wins for u/ forum/ static/prerender/, main wins elsewhere, then re-pin).
+            bash scripts/prerender_rebase_onto_main.sh || { echo "::error::rebase onto main conflicted; this run's bake was not published"; exit 1; }
           done
           echo "::error::push to main failed three times; this run's bake was not published"
           exit 1
