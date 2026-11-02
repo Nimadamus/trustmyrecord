@@ -512,6 +512,8 @@
             (ctxLine ? '<div class="tsg-ctx">' + ctxLine + '</div>' : '') +
             '<p>Your ' + esc(label) + ' setup is already saved. Finish in about 30 seconds and it runs the moment you land back here, with nothing to re-pick.</p>' +
             '<ul class="tsg-list">' +
+            /* (Republished under a new hash 11/01: the previous hash URL was fetched before its deploy
+               landed and Cloudflare cached the old bytes for 4 hours. Never GET a hashed URL early.) */
             /* GATE_COPY_20261101: 30d to 11/01, 543 people saw this, 394 closed it. The first
                line used to end "then 5 TMR a run" (TMR credit sales closed 10/25, and a new
                visitor does not know what TMR is); the price itself is unchanged and still in
