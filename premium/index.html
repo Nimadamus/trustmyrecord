@@ -440,6 +440,55 @@
         .pro-benefits li::before { content: ""; position: absolute; left: 4px; top: .5em; width: 10px; height: 10px; border-radius: 50%; background: var(--pro-brand); }
         .pro-hero-price { margin: 18px 0 0; color: var(--pro-body); font-size: 1rem; }
         .pro-hero-price b { color: var(--pro-ink); }
+        /* PRO_COMPARE_20261101 */
+        .pcx { padding-block: 34px 10px; }
+        body.is-pro-member .pcx { display: none; }
+        .pcx-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 22px; align-items: start; }
+        .pcx-k { display: inline-flex; align-items: center; gap: 8px; font: 800 12px/1 Inter, sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--pro-brand); }
+        .pcx-dot { width: 8px; height: 8px; border-radius: 50%; background: #18A35B; box-shadow: 0 0 0 4px rgba(24,163,91,.15); }
+        .pcx h2, .pcx-h2 { margin: 10px 0 14px; font-size: 1.5rem; line-height: 1.2; color: var(--pro-ink); }
+        .pcx-h2 { margin-top: 0; }
+        .pcx-card { background: linear-gradient(160deg, #0B1B2E, #123A66); border-radius: 18px; padding: 20px; color: #E9F1FA; box-shadow: 0 18px 40px -26px rgba(7,24,42,.7); }
+        .pcx-match { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline; font-weight: 800; font-size: 1.08rem; color: #fff; }
+        .pcx-match b { font-weight: 600; color: #9FB8D3; font-size: .9rem; }
+        .pcx-wp { margin-top: 16px; }
+        .pcx-wp-row { display: flex; justify-content: space-between; font-size: .92rem; color: #C9D8E8; }
+        .pcx-wp-row strong { font-size: 1.6rem; line-height: 1.1; color: #fff; font-family: 'Barlow Condensed', Inter, sans-serif; }
+        .pcx-bar { display: flex; height: 10px; border-radius: 999px; overflow: hidden; background: rgba(255,255,255,.12); margin: 8px 0; }
+        .pcx-bar i { display: block; height: 100%; width: 50%; transition: width .6s ease; }
+        .pcx-bar i:first-child { background: #7FA6D6; } .pcx-bar i:last-child { background: #4DA3FF; }
+        .pcx-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 16px 0 0; }
+        .pcx-facts div { background: rgba(255,255,255,.06); border-radius: 12px; padding: 10px 12px; }
+        .pcx-facts dt { font-size: .72rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: #9FB8D3; }
+        .pcx-facts dd { margin: 4px 0 0; font-weight: 800; color: #fff; font-size: 1rem; }
+        .pcx-note { margin: 14px 0 0; font-size: .85rem; line-height: 1.5; color: #B8CBE0; }
+        .pcx-try { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; margin-top: 10px; font-weight: 800; color: var(--pro-brand); text-decoration: none; }
+        .pcx-side { background: var(--pro-surface); border: 1px solid var(--pro-line-soft); border-radius: 18px; padding: 20px; }
+        .pcx-cmp { display: grid; font-size: .92rem; }
+        .pcx-r { display: grid; grid-template-columns: minmax(0, 1fr) 84px 84px; align-items: center; border-bottom: 1px solid var(--pro-line-soft); }
+        .pcx-r > span { padding: 9px 6px; text-align: center; color: var(--pro-body); }
+        .pcx-r > span:first-child { overflow-wrap: anywhere; }
+        .pcx-r > span:first-child { text-align: left; padding-left: 0; font-weight: 600; color: var(--pro-ink); }
+        .pcx-r > .is-pro { color: var(--pro-brand); font-weight: 800; background: var(--pro-tint); align-self: stretch; display: flex; align-items: center; justify-content: center; }
+        .pcx-hd > span { font-size: .78rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--pro-muted); }
+        .pcx-bill { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 7px; }
+        .pcx-bill li { position: relative; padding-left: 20px; font-size: .9rem; line-height: 1.5; color: var(--pro-body); }
+        .pcx-bill li:before { content: ""; position: absolute; left: 3px; top: 8px; width: 8px; height: 8px; border-radius: 50%; background: var(--pro-brand); }
+        .pcx-cta { margin-top: 16px; display: inline-flex; }
+        /* Sitewide light-theme rules recolour text and uppercase table headers; pin this block. */
+        .pcx .pcx-card, .pcx .pcx-card * { color: inherit; }
+        .pcx .pcx-card { color: #E9F1FA !important; }
+        .pcx .pcx-match span, .pcx .pcx-wp-row strong, .pcx .pcx-facts dd { color: #FFFFFF !important; }
+        .pcx .pcx-match b, .pcx .pcx-facts dt, .pcx .pcx-wp-row span { color: #9FB8D3 !important; }
+        .pcx .pcx-note { color: #B8CBE0 !important; }
+        @media (max-width: 860px) { .pcx-grid { grid-template-columns: minmax(0, 1fr); } .pcx-k { flex-wrap: wrap; } }
+        @media (max-width: 520px) {
+            .pcx-facts { grid-template-columns: 1fr 1fr; }
+            .pcx-facts div:last-child { grid-column: 1 / -1; }
+            .pcx-cmp { font-size: .84rem; } .pcx-r { grid-template-columns: minmax(0, 1fr) 70px 84px; } .pcx-r > span { padding-inline: 4px; }
+            .pcx-side, .pcx-card { padding: 16px; }
+            .pcx-cta { width: 100%; justify-content: center; }
+        }
         .pro-cta { display: inline-block; margin-top: 16px; padding: 14px 28px; border-radius: 12px; background: var(--pro-brand-dark); color: #fff !important; font-family: 'Barlow', sans-serif; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; text-decoration: none; }
         .pro-cta:hover, .pro-cta:focus-visible { filter: brightness(1.12); }
         .pro-save { display: inline-block; margin-left: 6px; padding: 2px 8px; border-radius: 999px; background: #E3F4EA; color: #1D7A46; font-size: .78rem; font-weight: 800; }
@@ -891,12 +940,12 @@
             <div class="pxh-grid">
                 <div class="pxh-copy">
                     <span class="pro-eyebrow">The TrustMyRecord research membership</span>
-                    <h1>TMR Pro <span class="pxh-h1-sub">Run every simulator without limits, then see what verified handicappers are betting <em>before the game starts.</em></span></h1>
+                    <h1>TMR Pro <span class="pxh-h1-sub">Unlimited simulations on every NFL, NBA, NHL and MLB game, <em>plus the Handicapper Watchdog board.</em></span></h1>
                     <p class="pro-lede">
-                        Run any MLB, NFL, NBA or NHL game as often as you like. Then check the Handicapper
-                        Watchdog: thousands of outside handicappers graded on the final score, and the picks
-                        they post before games start. Bet Legend Pro, TrendSpotter money figures and 15 tracked
-                        models included. Research tools and verified records, not a promise of profit.
+                        Free members get one simulator run a day per sport. Pro removes the limit, so you can run
+                        tonight&rsquo;s whole slate, re-run a matchup with new inputs, and check how every call did
+                        against the final score. Pro also opens the Handicapper Watchdog board of pending picks from
+                        graded outside handicappers, plus Bet Legend Pro. Research tools, not a promise of profit.
                     </p>
                     <ul class="pro-benefits">
                         <li><b>Unlimited simulators</b> for every MLB, NFL, NBA and NHL game, season and playoff race</li>
@@ -1028,6 +1077,57 @@
 
     <main>
         <!-- ================================================= the products -->
+        <!-- PRO_COMPARE_20261101: what a buyer needs before the long tour. 30 days to 11/01:
+             108 users saw this page, ~30-40 s average engagement, 7 opened checkout, and every
+             paying member so far bought for the simulators. So: a live example of what a run
+             returns, a plain free vs Pro table, and the billing facts, right under the hero.
+             Hidden for members. Every claim matches the live product and the live Stripe terms. -->
+        <section class="pro-section pcx" id="compare" aria-labelledby="pcxH">
+            <div class="pro-wrap">
+                <div class="pcx-grid">
+                    <div class="pcx-demo" id="pcxDemo">
+                        <span class="pcx-k"><span class="pcx-dot" aria-hidden="true"></span>Live example &middot; a real recent run</span>
+                        <h2 id="pcxH">What one simulation gives you</h2>
+                        <div class="pcx-card" id="pcxCard" aria-live="polite">
+                            <div class="pcx-match"><span id="pcxAway">Away</span><b>at</b><span id="pcxHome">Home</span></div>
+                            <div class="pcx-wp">
+                                <div class="pcx-wp-row"><span id="pcxAwayAbbr">AWY</span><strong id="pcxAwayPct">&nbsp;</strong></div>
+                                <div class="pcx-bar"><i id="pcxBarA"></i><i id="pcxBarH"></i></div>
+                                <div class="pcx-wp-row"><span id="pcxHomeAbbr">HME</span><strong id="pcxHomePct">&nbsp;</strong></div>
+                            </div>
+                            <dl class="pcx-facts">
+                                <div><dt>Projected score</dt><dd id="pcxScore">&nbsp;</dd></div>
+                                <div><dt>Middle 50% of totals</dt><dd id="pcxTotal">&nbsp;</dd></div>
+                                <div><dt>Simulated games</dt><dd id="pcxN">&nbsp;</dd></div>
+                            </dl>
+                            <p class="pcx-note" id="pcxNote">Win probability across every simulated game, plus a full box score from one of them. Probabilities, not guarantees.</p>
+                        </div>
+                        <a class="pcx-try" id="pcxTry" href="/nba-simulator/?src=pro_demo">Run one yourself, free <span aria-hidden="true">&rarr;</span></a>
+                    </div>
+                    <div class="pcx-side">
+                        <h2 class="pcx-h2">Free vs TMR Pro</h2>
+                        <div class="pcx-cmp" role="table" aria-label="Free vs TMR Pro">
+                            <div class="pcx-r pcx-hd" role="row"><span role="columnheader"><span class="pst-sr">Feature</span></span><span role="columnheader">Free</span><span role="columnheader" class="is-pro">Pro</span></div>
+                            <div class="pcx-r" role="row"><span role="rowheader">Simulator runs (NFL, NBA, NHL, MLB)</span><span role="cell">1 a day each</span><span role="cell" class="is-pro">Unlimited</span></div>
+                            <div class="pcx-r" role="row"><span role="rowheader">Your sims vs the real results</span><span role="cell">Yes</span><span role="cell" class="is-pro">Yes</span></div>
+                            <div class="pcx-r" role="row"><span role="rowheader">Handicapper Watchdog pending picks</span><span role="cell">Locked</span><span role="cell" class="is-pro">Full board</span></div>
+                            <div class="pcx-r" role="row"><span role="rowheader">Bet Legend Pro</span><span role="cell">No</span><span role="cell" class="is-pro">Included</span></div>
+                            <div class="pcx-r" role="row"><span role="rowheader">TrendSpotter units, ROI and price</span><span role="cell">No</span><span role="cell" class="is-pro">Yes</span></div>
+                            <div class="pcx-r" role="row"><span role="rowheader">Tracked betting models</span><span role="cell">2</span><span role="cell" class="is-pro">15</span></div>
+                            <div class="pcx-r" role="row"><span role="rowheader">Public graded pick record, quiz, trivia</span><span role="cell">Yes</span><span role="cell" class="is-pro">Yes</span></div>
+                        </div>
+                        <ul class="pcx-bill">
+                            <li id="pcxTrialLine"><b>3 days free</b> on the monthly plan, then $49.99/month. Card required, one trial per person and card.</li>
+                            <li>Or $500 a year (saves $99.88). Secure checkout by Stripe.</li>
+                            <li>Cancel any time on this page. You keep access to the end of the period you paid for.</li>
+                            <li>Research tools, not betting advice and not a promise of profit.</li>
+                        </ul>
+                        <a class="pro-cta pcx-cta" id="pcxCta" href="#pricing">Choose a plan</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <section class="pro-section" id="tools">
             <div class="pro-wrap">
                 <div class="pro-section-head">
@@ -1664,6 +1764,8 @@
             var heroPrice = document.getElementById('proHeroPrice');
             if (heroCta && (mode === 'buy' || mode === 'signin')) {
                 heroCta.textContent = trialDays > 0 ? 'Start ' + trialDays + ' days free' : 'Get TMR Pro';
+                var tl = document.getElementById('pcxTrialLine');
+                if (tl && trialDays === 0 && mode === 'buy') tl.innerHTML = '<b>$49.99/month</b> on the monthly plan. This account has already used its free trial.';
                 if (heroPrice && trialDays > 0) {
                     heroPrice.innerHTML = '<b>' + trialDays + ' days free</b>, then <b>$49.99 a month</b>. Cancel before the trial ends and you pay nothing. Or <b>$500 a year</b> <span class="pro-save">Save $99.88</span>';
                 }
@@ -2494,5 +2596,56 @@ body.tmr-light .px-watch .pro-cta { background: #F5C542 !important; border-color
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 })();
 </script>
+    <script>
+    /* PRO_COMPARE_20261101: fill the live example from the public simulation archive
+       (GET /api/sim-archive/recent + /runs/:id). Read only. If it fails, the card keeps its
+       explanatory text and the "run one yourself" link, and nothing else on the page changes. */
+    (function () {
+        var card = document.getElementById('pcxCard');
+        if (!card) return;
+        var API = 'https://trustmyrecord-api.onrender.com/api/sim-archive';
+        var month = new Date().getMonth() + 1;
+        var order = [];
+        if ([10, 11, 12, 1, 2, 3, 4, 5, 6].indexOf(month) !== -1) order.push('nba', 'nhl');
+        if ([9, 10, 11, 12, 1, 2].indexOf(month) !== -1) order.push('nfl');
+        if ([3, 4, 5, 6, 7, 8, 9, 10].indexOf(month) !== -1) order.push('mlb');
+        function j(u) { return fetch(u, { credentials: 'omit' }).then(function (r) { if (!r.ok) throw 0; return r.json(); }); }
+        function set(id, v) { var e = document.getElementById(id); if (e) e.textContent = v; }
+        function pct(v) { v = Number(v); if (v > 1) v = v / 100; return Math.round(v * 100); }
+        function tryNext(i) {
+            if (i >= order.length) return;
+            var sport = order[i];
+            j(API + '/recent?sport=' + sport + '&limit=5').then(function (d) {
+                var run = (d.runs || [])[0];
+                if (!run) throw 0;
+                return j(API + '/runs/' + encodeURIComponent(run.id)).then(function (r) {
+                    var p = r.projection || (r.details && r.details.projection) || null;
+                    var wp = (p && p.win_probability) || (r.team_stats && r.team_stats.win_probability);
+                    if (!wp || wp.away == null || wp.home == null) throw 0;
+                    var a = pct(wp.away), h = pct(wp.home);
+                    set('pcxAway', r.away.name || r.away.abbr); set('pcxHome', r.home.name || r.home.abbr);
+                    set('pcxAwayAbbr', r.away.abbr); set('pcxHomeAbbr', r.home.abbr);
+                    set('pcxAwayPct', a + '%'); set('pcxHomePct', h + '%');
+                    document.getElementById('pcxBarA').style.width = a + '%';
+                    document.getElementById('pcxBarH').style.width = h + '%';
+                    var sr = p && p.score_range, ps = p && (p.projected_score || p.score);
+                    if (ps && ps.away != null) set('pcxScore', r.away.abbr + ' ' + Math.round(ps.away) + ', ' + r.home.abbr + ' ' + Math.round(ps.home));
+                    else if (sr && sr.away) set('pcxScore', r.away.abbr + ' ' + sr.away.mid + ', ' + r.home.abbr + ' ' + sr.home.mid);
+                    else set('pcxScore', 'In the full result');
+                    var t = p && p.total;
+                    var pt = p && p.percentiles && p.percentiles.total;
+                    if (t && t.p25 != null) set('pcxTotal', t.p25 + ' to ' + t.p75);
+                    else if (pt && pt.p25 != null) set('pcxTotal', pt.p25 + ' to ' + pt.p75);
+                    else set('pcxTotal', 'In the full result');
+                    var n = Number(r.n_sims || (p && p.simulations) || 0);
+                    set('pcxN', n ? n.toLocaleString('en-US') : 'Thousands');
+                    var tryA = document.getElementById('pcxTry');
+                    if (tryA) tryA.href = '/' + sport + '-simulator/?src=pro_demo';
+                });
+            }).catch(function () { tryNext(i + 1); });
+        }
+        tryNext(0);
+    })();
+    </script>
 </body>
 </html>
