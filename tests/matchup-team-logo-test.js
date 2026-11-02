@@ -192,8 +192,8 @@ for (const dir of dirs) {
       bad(dir + ': the card says ' + JSON.stringify(name) +
           ' and the mark is ' + base);
     }
-    if (alt.toLowerCase() !== (name + ' logo').toLowerCase() &&
-        alt.toLowerCase().indexOf(slug(nick).replace(/-/g, ' ')) === -1) {
+    if (decode(alt).toLowerCase() !== (name + ' logo').toLowerCase() &&
+        decode(alt).toLowerCase().indexOf(slug(nick).replace(/-/g, ' ')) === -1) {
       bad(dir + ' / ' + name + ': alt text is ' + JSON.stringify(alt));
     }
 
