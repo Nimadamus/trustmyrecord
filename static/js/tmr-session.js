@@ -51,6 +51,13 @@
     ls(function () { ACCESS_KEYS.forEach(function (k) { localStorage.setItem(k, t); }); });
   }
 
+  /* JWT_ROTATION_20261103: after a signing secret rotation the API may hand back a new refresh
+     token on /auth/refresh; keep it so the session survives the end of the migration window. */
+  function saveRefreshToken(t) {
+    if (!t) return;
+    ls(function () { REFRESH_KEYS.forEach(function (k) { localStorage.setItem(k, t); }); });
+  }
+
   function clearTokens() {
     ls(function () {
       ACCESS_KEYS.concat(REFRESH_KEYS).forEach(function (k) { localStorage.removeItem(k); });
@@ -124,6 +131,8 @@
           var t = d && (d.accessToken || d.access_token);
           if (!t) return 'network';
           saveAccessToken(t);
+          var nr = d.refreshToken || d.refresh_token;
+          if (nr) { saveRefreshToken(nr); if (window.api) { try { window.api.refreshToken = nr; } catch (e) {} } }
           if (window.api) { try { window.api.token = t; } catch (e) {} }
           scheduleProactiveRefresh();
           return 'success';
