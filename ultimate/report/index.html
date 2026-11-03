@@ -73,6 +73,13 @@
     var asof = document.querySelector('[data-ult-asof]');
     if (asof && r.generated_at) asof.textContent = 'Built from your ' + r.overall.n + ' graded picks. Updated ' +
       new Date(r.generated_at).toLocaleString('en-US', { timeZone: 'America/Los_Angeles', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) + ' PT.';
+    /* ULT_THIN_SAMPLE_20261103: under the minimum sample the report says so first, before any numbers. */
+    var minS = (r.method && r.method.min_sample) || 30, thin = document.querySelector('[data-ult-thin]');
+    if (!thin && asof) { thin = document.createElement('p'); thin.setAttribute('data-ult-thin', ''); thin.setAttribute('role', 'note');
+      thin.style.cssText = 'margin:12px 0 0;padding:10px 14px;border-radius:10px;background:#FFF6DB;border:1px solid #F0D27A;color:#5A4500;font:500 14px/1.45 Inter,sans-serif;max-width:640px';
+      asof.parentNode.insertBefore(thin, asof.nextSibling); }
+    if (thin) { thin.hidden = r.overall.n >= minS;
+      thin.textContent = r.overall.n + ' graded pick' + (r.overall.n === 1 ? '' : 's') + ' so far. That is too few to judge your betting: verdicts start at ' + minS + ' graded picks per category, so every figure below is early and could be chance. Keep making picks and this report fills in.'; }
     R.renderProfile(document.querySelector('[data-ult-profile]'), r);
     /* ULTIMATE_PDF_20261103: the PDF is built from this same response, in the browser. */
     var pdfBtn = document.querySelector('[data-ult-pdf]'), pdfMsg = document.querySelector('[data-ult-pdf-msg]');

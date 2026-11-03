@@ -124,6 +124,8 @@
       doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor.apply(doc, INK);
       doc.text('Overall assessment: ' + clean(o.verdict.label), M, y + 4); y += 14;
     }
+    var minN = (r.method && r.method.min_sample) || 30;
+    if (Number(o.n) < minN) { para(int(o.n) + ' graded pick' + (Number(o.n) === 1 ? '' : 's') + ' so far. That is too few to judge: verdicts start at ' + minN + ' graded picks per category, so every figure in this report is early and could be chance.', 10, INK); }
     if (num(o.beat_close_pct) !== null && o.clv_moved) { para('Price against the close: ' + pct(o.beat_close_pct, 0) + ' of ' + int(o.clv_moved) + ' picks whose line moved were taken at a better price than the close.', 9, MUTED); }
 
     /* ---- evaluation ---- */
