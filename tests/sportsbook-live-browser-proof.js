@@ -67,6 +67,22 @@ async function pollLiveProof(page, callback, { timeout = 30000, interval = 1000,
 
 async function main() {
   fs.mkdirSync(path.dirname(OUT), { recursive: true });
+  /* MLB_OFFSEASON_SKIP_20261102. This proof submits an MLB First 5 pick; out of
+     season there is no MLB slate and no F5 market anywhere, so it can only time
+     out (failed every run after the World Series). Skip, loudly, when the live
+     MLB board has no game, before logging in or touching the browser. It must
+     not be pointed at another sport instead: that would put new proof picks on
+     the QA account for markets this proof was never written for. */
+  try {
+    const res = await fetch('https://trustmyrecord-api.onrender.com/api/games/board/baseball_mlb?limit=5', { cache: 'no-store' });
+    const board = res.ok ? await res.json() : null;
+    if (board && Array.isArray(board.games) && board.games.length === 0) {
+      console.log('SKIP: no MLB games on the live board (offseason); the MLB F5 submit proof has nothing to submit against.');
+      return;
+    }
+  } catch (err) {
+    console.log('MLB board pre-check failed (' + (err && err.message) + '); running the proof anyway.');
+  }
   const browser = await chromium.launch({
     headless: false,
     args: ['--window-size=1440,1200', '--no-sandbox'],
