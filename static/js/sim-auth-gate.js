@@ -214,6 +214,7 @@
     /* ---------------------------------------------------------------- utils */
 
     function qs(id) { return document.getElementById(id); }
+    function proPulse(step, entry, plan) { try { var b = JSON.stringify({ milestone: 'pro_prompt_' + step, simulator: 'unknown', detail: entry, arm: plan || 'pro' }); fetch('https://trustmyrecord-api.onrender.com/api/activation/pulse', { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' }, body: b }).catch(function () { }); } catch (e) { } }
 
     function esc(s) {
         return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
@@ -906,6 +907,10 @@
                 if (!overlay.parentNode) { clearInterval(watch); finish(false, null); }
             }, 250);
             track('simulator_meter_impression', { simulator: meterKey(), can_afford: canAfford ? 'yes' : 'no' });
+            /* PRO_FUNNEL_20261103 */
+            proPulse('view', 'sim_meter', 'pro');
+            var proBtn = qs('tsgMeterPro');
+            if (proBtn) proBtn.addEventListener('click', function () { proPulse('click', 'sim_meter', 'pro'); try { sessionStorage.setItem('tmr_pro_entry', 'sim_meter'); } catch (e) { } });
             setTimeout(function () { try { (qs('tsgMeterPro') || pay).focus(); } catch (e) { } }, 30);
         });
     }

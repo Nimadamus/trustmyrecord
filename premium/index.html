@@ -936,6 +936,18 @@
         var REGISTER = '/register/?return=' + encodeURIComponent('/premium/' + (location.search || ''));
         /* PRO_INTENT_20260929: the plan a signed-out visitor picked opens checkout when they come back signed in. 30 minutes. */
         var INTENT_KEY = 'tmr_pro_intent';
+        /* PRO_FUNNEL_20261103: which entry point brought this buyer here (fixed list on the server). */
+        function proPulse(step, entry, plan) { try { var b = JSON.stringify({ milestone: 'pro_prompt_' + step, simulator: 'unknown', detail: entry, arm: plan || 'pro' }); fetch('https://trustmyrecord-api.onrender.com/api/activation/pulse', { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' }, body: b }).catch(function () { }); } catch (e) { } }
+        var PRO_ENTRY = (function () {
+            var q = ''; try { q = new URLSearchParams(location.search).get('src') || new URLSearchParams(location.search).get('from') || ''; } catch (e) { }
+            var map = { sim_meter: 'sim_meter', atw_profile: 'handicapper_profile', watchdog_board: 'watchdog_board' };
+            var e = map[q] || (/^email/.test(q) ? 'email' : '');
+            if (!e) { try { e = sessionStorage.getItem('tmr_pro_entry') || ''; } catch (x) { } }
+            e = e || 'premium_page';
+            try { sessionStorage.setItem('tmr_pro_entry', e); } catch (x) { }
+            return e;
+        })();
+        setTimeout(function () { if (!document.body.classList.contains('is-pro-member')) proPulse('view', 'premium_page', 'pro'); }, 3000);
         function saveIntent(kind) { try { localStorage.setItem(INTENT_KEY, JSON.stringify({ plan: kind, at: Date.now() })); } catch (e) { } }
         function takeIntent() {
             try {
@@ -1282,13 +1294,14 @@
             if (mode !== 'buy') return;
             busy = true;
             ga('pro_checkout_click', { plan: kind, value: PRICE[kind], currency: 'USD' });
+            proPulse('click', 'premium_page', 'pro');
             var btn = document.querySelector('[data-pro-buy="' + kind + '"]');
             if (btn) { btn.classList.add('is-busy'); btn.textContent = 'Opening checkout'; }
             banner('');
             S.authFetch(API + '/premium/upgrade', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ tier: 'pro', billing_period: kind === 'annual' ? 'yearly' : 'monthly' })
+                body: JSON.stringify({ tier: 'pro', billing_period: kind === 'annual' ? 'yearly' : 'monthly', entry: PRO_ENTRY })
             }).then(function (r) {
                 return r.json().catch(function () { return {}; }).then(function (b) { return { r: r, b: b }; });
             }).then(function (x) {

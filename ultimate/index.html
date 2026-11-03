@@ -229,6 +229,9 @@
   var PLAN_START = '2026-08-01';
   var S = null, status = null, busy = false;
   function ev(name, params) { try { if (window.gtag) gtag('event', name, params || {}); } catch (e) { } }
+  /* PRO_FUNNEL_20261103 */
+  function proPulse(step, entry, plan) { try { var b = JSON.stringify({ milestone: 'pro_prompt_' + step, simulator: 'unknown', detail: entry, arm: plan || 'pro' }); fetch('https://trustmyrecord-api.onrender.com/api/activation/pulse', { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' }, body: b }).catch(function () { }); } catch (e) { } }
+  setTimeout(function () { proPulse('view', 'ultimate_page', 'ultimate'); }, 3000);
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
 
   function demo() {
@@ -267,6 +270,7 @@
   }
   function cta(where, confirmed) {
     ev('tmr_ultimate_cta_click', { location: where });
+    proPulse('click', 'ultimate_page', 'ultimate');
     if (busy) return;
     if (!status || !status.ultimate_open_to_public) {
       notice('<b>TMR Ultimate opens soon at $99.99 a month.</b> In the meantime <a href="/premium/">TMR Pro</a> includes every research tool Ultimate is built on, and Pro members will be able to upgrade in place.');
@@ -289,7 +293,7 @@
         return null;
       }
       var path = onCard ? '/premium/change-plan' : '/premium/upgrade';
-      return S.authFetch(API + path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tier: 'ultimate', billing_period: period }) })
+      return S.authFetch(API + path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tier: 'ultimate', billing_period: period, entry: 'ultimate_page' }) })
         .then(function (r) { return r.json().catch(function () { return {}; }).then(function (b) { return { r: r, b: b, change: onCard }; }); });
     }).then(function (x) {
       if (!x) return;

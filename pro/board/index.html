@@ -1917,9 +1917,12 @@ html body.pro-board-page main section#board.pro-section{background:transparent!i
             var hasLine = p.line != null && sel.indexOf(String(Math.abs(Number(p.line)))) === -1;
             return esc(sel) + (hasLine ? ' ' + esc(p.line) : '') + (p.odds != null ? ' <span class="wd-odds">' + odds(p.odds) + '</span>' : '');
         }
+        /* PRO_FUNNEL_20261103 */
+        window.proPulse = window.proPulse || function(step, entry, plan) { try { var b = JSON.stringify({ milestone: 'pro_prompt_' + step, simulator: 'unknown', detail: entry, arm: plan || 'pro' }); fetch('https://trustmyrecord-api.onrender.com/api/activation/pulse', { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' }, body: b }).catch(function () { }); } catch (e) { } };
         function teaser(summary) {
             if (!boardEl) return;
             ga('watchdog_paywall_view', { component: 'pro_page_board' });
+            if (!teaser.counted) { teaser.counted = 1; window.proPulse('view', 'watchdog_board', 'pro'); }
             /* 2026-09-29: the teaser used to print "0 of them with 25 or more graded
                picks" whenever nobody on the board had reached 25, which only told a
                buyer what was missing. The proven count now shows only when it is
@@ -1944,7 +1947,7 @@ html body.pro-board-page main section#board.pro-section{background:transparent!i
                 + '<div class="wdb-lock-body"><span class="wdb-lock-k">TMR Pro members only</span>'
                 + '<h3>' + head + '</h3><p class="wdb-lock-sub">' + sub + '</p>'
                 + '<ul class="wdb-lock-list"><li>Every pregame pick with the posted price</li><li>Record, units, ROI and streak beside each handicapper</li><li>Where the proven handicappers agree</li><li>The full graded pick history behind every record</li></ul>'
-                + '<div class="wdb-lock-cta"><a class="wdb-btn" href="/premium/#pricing">Start 3 days free</a><span class="wdb-cta-note">then $49.99 a month, cancel any time</span></div>'
+                + '<div class="wdb-lock-cta"><a class="wdb-btn" href="/premium/?src=watchdog_board#pricing" onclick="try{window.proPulse(\'click\',\'watchdog_board\',\'pro\');sessionStorage.setItem(\'tmr_pro_entry\',\'watchdog_board\')}catch(e){}">Start 3 days free</a><span class="wdb-cta-note">then $49.99 a month, cancel any time</span></div>'
                 + (signedOut ? '<p class="wdb-lock-login">Already a member? <a href="/login/?next=' + encodeURIComponent('/pro/board/') + '">Log in</a></p>' : '')
                 + '</div></div>';
         }

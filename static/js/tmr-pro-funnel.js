@@ -45,6 +45,29 @@
             if (typeof window.gtag !== 'function') window.gtag = function () { window.dataLayer.push(arguments); };
             window.gtag('event', name, p);
         } catch (e) { }
+        try { proCount(name, p); } catch (e) { }
+    }
+    /* PRO_FUNNEL_20261103: anonymous counters of Pro prompts by entry point (no id, no IP). */
+    function proPulse(step, entry, plan) { try { var b = JSON.stringify({ milestone: 'pro_prompt_' + step, simulator: 'unknown', detail: entry, arm: plan || 'pro' }); fetch('https://trustmyrecord-api.onrender.com/api/activation/pulse', { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' }, body: b }).catch(function () { }); } catch (e) { } }
+    function proEntry(c) {
+        c = String(c || '');
+        if (/^atw/.test(c)) return /\/around-the-web\/th-\d+/.test(location.pathname) ? 'handicapper_profile' : 'atw_directory';
+        if (/^sim/.test(c)) return 'simulator';
+        if (/^home/.test(c)) return 'home';
+        if (/^picks_board/.test(c)) return 'picks_board';
+        if (/^sportsbook/.test(c)) return 'sportsbook';
+        if (/^watchdog|^wd/.test(c)) return 'watchdog_preview';
+        return 'other';
+    }
+    var pulsed = {};
+    function proCount(name, p) {
+        var step = (name === 'tmr_pro_impression' || name === 'watchdog_paywall_view') ? 'view'
+            : ((name === 'tmr_pro_cta_click' || name === 'watchdog_preview_click') ? 'click' : null);
+        if (!step) return;
+        var e = name.indexOf('watchdog_') === 0 ? 'watchdog_preview' : proEntry(p && p.component);
+        if (step === 'view') { if (pulsed[e]) return; pulsed[e] = 1; }
+        proPulse(step, e, 'pro');
+        if (step === 'click') { try { sessionStorage.setItem('tmr_pro_entry', e); } catch (x) { } }
     }
     var seen = {};
     function once(name, params) { if (seen[name + (params && params.component || '')]) return; seen[name + (params && params.component || '')] = 1; track(name, params); }
