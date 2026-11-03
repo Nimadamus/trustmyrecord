@@ -107,7 +107,15 @@ function createSimulator() {
   if (process.env.TMR_MLB_RC) {
     context.window.TMR_MLB_WORKLOAD_V2 = true;
     context.window.TMR_MLB_STARTER_RESIDUAL = 0.010;
-    const bb = process.env.TMR_MLB_BB_TABLE_PATH;
+    // 2026-11-02: with no explicit path, use the exact batted-ball table the live
+    // page fetches (mlb-simulator/index.html), so TMR_MLB_RC=1 alone measures
+    // what visitors run.
+    let bb = process.env.TMR_MLB_BB_TABLE_PATH;
+    if (!bb) {
+      const pageHtml = fs.readFileSync(path.join(root, 'mlb-simulator', 'index.html'), 'utf8');
+      const m = pageHtml.match(/fetch\('\/(static\/data\/mlb-battedball-[^']+\.json)'/);
+      if (m) bb = path.join(root, m[1]);
+    }
     if (bb && fs.existsSync(bb)) context.window.TMR_MLB_BB_TABLE = JSON.parse(fs.readFileSync(bb, 'utf8'));
   }
   // SPEED_20261102: same script, same context, same Math.random. Inside a vm

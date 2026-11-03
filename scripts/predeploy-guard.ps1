@@ -211,6 +211,9 @@ try {
     # Quarantined, so its verdict is ignored here; 12,000 simulations at ~8 s each
     # would only ever end in the job timeout. Short pass, as the test itself documents.
     $env:TMR_MLB_SIMS = "40"
+    # Measure the engine visitors run: the live page sets WORKLOAD_V2, the starter
+    # residual and the batted-ball table; TMR_MLB_RC=1 mirrors exactly that.
+    $env:TMR_MLB_RC = "1"
     Invoke-StaleQuarantineCommand "MLB simulator realism regression test" @("node", "tests/mlb-simulator-realism-test.js") "simulator snapshot drift (same class as boxscore/page); re-validate"
     Invoke-GuardCommand "MLB simulator roster source (no stale fixtures) test" @("node", "tests/mlb-simulator-roster-source-test.js")
     # RECAP_LANGUAGE_20260831: offline, deterministic, seconds to run. Hard guard.
