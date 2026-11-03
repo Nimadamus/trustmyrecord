@@ -113,7 +113,15 @@ async function main() {
       throw new Error(
         `no card on the team-totals board exposes any team-total line (${cardCount} card(s) on the board)`);
     }
-    await card.scrollIntoViewIfNeeded();
+    /* The v3 board re-renders in place (live scores, starters, odds refresh), so
+       the card node can be swapped between finding it and scrolling to it
+       ("Element is not attached to the DOM"). Re-resolve by content, not by
+       index, and allow a couple of re-renders before calling it a failure. */
+    card = cards.filter({ has: page.locator('.sbn-ttrow') }).first();
+    for (let attempt = 0; ; attempt += 1) {
+      try { await card.scrollIntoViewIfNeeded({ timeout: 5000 }); break; }
+      catch (err) { if (attempt >= 3) throw err; await page.waitForTimeout(500); }
+    }
     await page.waitForTimeout(800);
 
     const checks = await card.evaluate((node) => {
