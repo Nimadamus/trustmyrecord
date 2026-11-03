@@ -741,7 +741,7 @@
             </div>
             <!-- SIM_RECAP_20261017: the member's own simulations from yesterday next to the final scores. -->
             <div class="pm-recap" id="pdRecap" hidden>
-                <h3>Your simulations from yesterday</h3>
+                <h3 id="pdRecapTitle">Your simulations from yesterday</h3>
                 <ul id="pdRecapList"></ul>
                 <p class="pm-recap-note" id="pdRecapNote"></p>
             </div>
@@ -1219,27 +1219,53 @@
             if (intent) { ga('pro_intent_resumed', { plan: intent }); startCheckout(intent); }
         }
 
-        /* SIM_RECAP_20261017: yesterday's simulations next to the final scores, member's own runs only. */
+        /* SIM_RECAP_20261103: the member's own simulations next to the final scores. The recap
+           endpoint this used (/sim-archive/mine/recap) was never released; MY_SIMS_20261101 shipped
+           GET /sim-archive/mine instead (the member's own runs, latest per matchup per day, joined
+           to the real final). This reads that endpoint: yesterday's games (Eastern) when there are
+           any, otherwise the most recent finished games. Nothing is shown that the server did not return. */
         function loadRecap() {
             var box = document.getElementById('pdRecap');
             if (!box || !S || !S.authFetch) return;
-            S.authFetch(API + '/sim-archive/mine/recap').then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
-                if (!d || !d.games || !d.games.length) return;
-                var esc = function (t) { return String(t == null ? '' : t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
-                document.getElementById('pdRecapList').innerHTML = d.games.map(function (g) {
-                    var L = g.latest || {}, wp = L.win_probability || {};
-                    var fav = L.favored, favPct = wp.home != null ? Math.round(100 * (fav === g.home ? wp.home : wp.away)) : null;
-                    var res = g.final ? (esc(g.away) + ' ' + g.final.away + ', ' + esc(g.home) + ' ' + g.final.home) : 'Not final yet';
-                    var verdict = g.favored_won === true ? '<span class="pd-recap-hit">Favorite won</span>' : g.favored_won === false ? '<span class="pd-recap-miss">Favorite lost</span>' : '';
-                    return '<li><b>' + esc(g.away) + ' at ' + esc(g.home) + '</b><span>Your sim: ' + esc(fav) + (favPct != null ? ' ' + favPct + '% to win' : '')
-                        + (L.simulations ? ' over ' + Number(L.simulations).toLocaleString('en-US') + ' simulations' : '')
-                        + (L.sampling_margin_pts != null ? ' (±' + L.sampling_margin_pts + ' pts from run to run)' : '') + '</span>'
+            var esc = function (t) { return String(t == null ? '' : t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+            var etDay = function (d) { return new Date(d).toLocaleDateString('en-CA', { timeZone: 'America/New_York' }); };
+            var yday = etDay(Date.now() - 864e5);
+            S.authFetch(API + '/sim-archive/mine').then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
+                if (!d || !Array.isArray(d.items)) return;
+                var title = document.getElementById('pdRecapTitle'), list = document.getElementById('pdRecapList'), note = document.getElementById('pdRecapNote');
+                var withGame = d.items.filter(function (x) { return x.game && x.game.start; });
+                var picked = withGame.filter(function (x) { return etDay(x.game.start) === yday; });
+                var label = 'Your simulations from yesterday';
+                if (!picked.length) {
+                    picked = withGame.filter(function (x) { return x.game.status === 'final'; })
+                        .sort(function (a, b) { return Date.parse(b.game.start) - Date.parse(a.game.start); }).slice(0, 4);
+                    label = 'Your latest simulated games';
+                }
+                if (!picked.length) {
+                    title.textContent = 'Your simulations, next to the real results';
+                    list.innerHTML = '';
+                    note.innerHTML = d.items.length
+                        ? 'None of the games you simulated has been played yet. Check back after they finish, or see <a class="pm-link" href="/my-sims/">all your simulations</a>.'
+                        : 'Run a simulation on any MLB, NFL, NBA or NHL game and it shows up here next to the final score. <a class="pm-link" href="/sports-simulators/">Run your first simulation</a>.';
+                    box.hidden = false;
+                    return;
+                }
+                title.textContent = label;
+                list.innerHTML = picked.map(function (x) {
+                    var wp = x.win_probability, g = x.game;
+                    var side = x.call === 'home' ? x.home : x.call === 'away' ? x.away : null;
+                    var pctTxt = wp && x.call ? ' ' + Math.round(100 * wp[x.call]) + '% to win' : '';
+                    var res = g.status === 'final' && g.final ? esc(x.away.abbr) + ' ' + g.final.away + ', ' + esc(x.home.abbr) + ' ' + g.final.home : 'Not final yet';
+                    var verdict = x.hit === true ? '<span class="pd-recap-hit">Your sim called it</span>' : x.hit === false ? '<span class="pd-recap-miss">Your sim missed</span>' : '';
+                    return '<li><b>' + esc(x.away.abbr) + ' at ' + esc(x.home.abbr) + ' <span style="font-weight:600;color:#5E7088">' + esc(String(x.sport || '').toUpperCase()) + '</span></b>'
+                        + '<span>Your sim: ' + (side ? esc(side.abbr) + pctTxt : 'a coin flip, no call') + '</span>'
                         + '<span>Final: ' + res + '</span>' + verdict + '</li>';
                 }).join('');
-                var s2 = d.summary || {};
-                document.getElementById('pdRecapNote').textContent = (s2.decided ? 'The favorite in your simulations won ' + s2.favored_won + ' of ' + s2.decided + ' finished games. ' : '') + (d.note || '');
+                var sm = d.summary || {};
+                note.innerHTML = (sm.graded ? 'Over your last 60 days, your simulations called ' + sm.hits + ' of ' + sm.graded + ' finished games. ' : '')
+                    + 'A call is the side with the higher simulated win probability; probabilities, not guarantees. <a class="pm-link" href="/my-sims/">See all your simulations</a>.';
                 box.hidden = false;
-                ga('pro_recap_view', { games: d.games.length });
+                ga('pro_recap_view', { games: picked.length });
             }).catch(function () { });
         }
 
