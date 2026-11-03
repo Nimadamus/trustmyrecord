@@ -30,7 +30,7 @@ SKIP_DIRS = {"node_modules", "tests", ".git", ".github", "scripts"}
 MAN = json.loads((ROOT / "static" / "ds-assets.json").read_text())
 DS_CSS = MAN["static/css/tmr-ds.css"]
 NAV_JS = MAN["static/js/tmr-ds-nav.js"]
-SESSION_JS = "/static/js/tmr-session.63f50f4d0988.js"
+SESSION_JS = "/static/js/tmr-session.b423be9e9588.js"
 
 
 def pages():

@@ -251,7 +251,7 @@ ${o.seo}
   <a href="${o.hubPath}#faq">How it works</a>
 </div>
 
-<script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-ds-nav.6a5aef783912.js"></script>
+<script src="/static/js/tmr-session.b423be9e9588.js"></script><script src="/static/js/tmr-ds-nav.6a5aef783912.js"></script>
 </body>
 </html>
 `;
