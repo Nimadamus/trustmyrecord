@@ -87,7 +87,9 @@ def main():
                 settle(pg)
                 check(tag + ': /premium/ opens at the top', pg.evaluate('scrollY') == 0, pg.evaluate('scrollY'))
                 if member:
-                    check(tag + ': member dashboard shown', pg.is_visible('#proWelcome') and pg.is_hidden('#pricing'))
+                    # PREMIUM_REDESIGN_20261102: the member dashboard is the membership card (#proStatus) plus
+                    # "Good places to start" (#start, members only); the sales explainer (#why) is hidden.
+                    check(tag + ': member dashboard shown', pg.is_visible('#proStatus') and pg.is_visible('#start') and pg.is_hidden('#why'))
                     facts = pg.inner_text('#pdxFacts')
                     want = 'TMR Ultimate' if state == 'ultimate' else 'TMR Pro'
                     check(tag + ': tier, status and date from the account', want in facts and ('2026' in facts or '2027' in facts), facts)
@@ -95,17 +97,19 @@ def main():
                         check(tag + ': cancelling shown', 'cancelled' in facts.lower() and 'access until' in facts.lower(), facts)
                     if state == 'pro_pastdue':
                         check(tag + ': payment problem shown', 'payment failed' in facts.lower(), facts)
-                    check(tag + ': one status block (old status strip text hidden)', pg.is_hidden('#proStatusText'))
+                    check(tag + ': one status block (status line lives in the membership card)',
+                          pg.evaluate("document.querySelectorAll('#proStatusText').length === 1 && !!document.querySelector('#proStatus #proStatusText')"))
                     if state in ('pro', 'pro_cancel', 'pro_pastdue'):
                         check(tag + ': manage billing button available', pg.is_visible('#proManage'))
-                    hrefs = pg.eval_on_selector_all('#proWelcome a.pdx-card:not([hidden])', 'els => els.map(e => e.getAttribute("href"))')
-                    check(tag + ': feature cards present', len(hrefs) >= 6, hrefs)
+                    tools = pg.eval_on_selector_all('#tools .pm-tool', 'els => els.length')
+                    hrefs = pg.eval_on_selector_all('#start .pm-step, #proStatus a, #tools .pm-tool a', 'els => els.filter(e => e.offsetParent).map(e => e.getAttribute("href"))')
+                    check(tag + ': feature cards present', tools >= 6 and len([h for h in hrefs if h]) >= 3, (tools, hrefs))
                     if state == 'ultimate':
                         check(tag + ': Ultimate report card', '/ultimate/report/' in hrefs, hrefs)
                     if SHOTS:
                         pg.screenshot(path=os.path.join(SHOTS, '%s_%s.png' % (vp_name, state)), full_page=True)
                 else:
-                    check(tag + ': sales page shown', pg.is_visible('#pricing') and pg.is_hidden('#proWelcome'))
+                    check(tag + ': sales page shown', pg.is_visible('#pricing') and pg.is_visible('#why') and pg.is_hidden('#start'))
                 # wheel and keyboard scroll the page
                 pg.mouse.wheel(0, 700)
                 pg.wait_for_timeout(400)

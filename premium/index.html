@@ -49,7 +49,7 @@
     .pm-wrap{max-width:1180px;margin:0 auto;padding:0 24px}
     .pm [hidden]{display:none !important}
     .pm-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
-    .pm section[id], .pm [id].pm-anchor, .pm .pm-tool[id], .pm .pm-plan[id]{scroll-margin-top:92px}
+    .pm section[id], .pm [id].pm-anchor, .pm .pm-tool[id], .pm .pm-plan[id], .pm .pm-perf[id]{scroll-margin-top:92px}
     .pm-anchor{display:block;height:0}
 
     /* ---------- buttons ---------- */
@@ -1180,6 +1180,13 @@
             if (id === 'dashboard') { window.scrollTo(0, 0); return; }
             if (el && el.getClientRects().length) el.scrollIntoView({ block: 'start' });
         }
+        /* An in-page #link (same document, no reload) gets the same rule as a fresh load:
+           #dashboard is the top of the page, and a target this visitor cannot see leaves them at the top
+           instead of wherever the browser happened to be. */
+        window.addEventListener('hashchange', function () {
+            var id = decodeURIComponent((window.location.hash || '').slice(1)), el = id ? document.getElementById(id) : null;
+            if (id === 'dashboard' || (id && (!el || !el.getClientRects().length))) window.scrollTo(0, 0);
+        });
 
         function drawAccount(me) {
             var sub = me && me.subscription;
