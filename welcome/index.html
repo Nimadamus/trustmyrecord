@@ -23,6 +23,19 @@
          arrived on a simulator ran one 62 to 79% of the time; members sent here ran
          one 27% of the time, because this page never mentioned the simulators. Every
          paying member so far came through a simulator. The simulator is now step one. */
+      /* WELCOME_VERIFIED_20261103 */
+      .wc-ver{margin-top:16px;padding:20px;border-radius:16px;background:#fff;border:1px solid #DCE6F2}
+      .wc-ver-k{display:inline-block;font:800 11.5px/1 Inter,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#0B4FA8}
+      body.tmr-light .wc-ver h2{margin:8px 0 6px;font:800 20px/1.25 Inter,sans-serif;color:#0B1B2E;text-transform:none;letter-spacing:0}
+      body.tmr-light .wc-ver p{margin:0;color:#3A4E66;font-size:15px;line-height:1.55}
+      .wc-ver-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}
+      .wc-ver-stats[hidden]{display:none}
+      .wc-ver-stats div{padding:12px 14px;border-radius:12px;background:#F3F7FC;border:1px solid #E1EAF5}
+      body.tmr-light .wc-ver-stats b{display:block;font:800 24px/1.1 'Barlow Condensed',Inter,sans-serif;color:#0B1B2E}
+      body.tmr-light .wc-ver-stats span{display:block;margin-top:2px;font-size:13px;color:#4A5D74}
+      .wc-ver-links{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:14px}
+      body.tmr-light .wc-ver-links a{display:inline-flex;align-items:center;min-height:40px;font:800 14px/1.2 Inter,sans-serif;color:#0B4FA8;text-decoration:none}
+      @media (max-width:520px){.wc-ver{padding:16px}.wc-ver-stats{grid-template-columns:1fr 1fr}}
       .wc-wrap{max-width:720px;margin:0 auto}
       .wc-hero{text-align:left;margin-bottom:6px}
       .wc-eyebrow{display:inline-block;font:800 12px/1 Inter,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#0B4FA8;margin-bottom:10px}
@@ -131,13 +144,41 @@
         <h3>TMR Pro</h3>
         <ul>
           <li>Unlimited runs on every simulator</li>
-          <li>The Handicapper Watchdog board of graded handicappers outside TMR</li>
+          <li>The full graded pick history behind every tracked handicapper</li>
+          <li>Their pending picks on the Watchdog board before the game starts</li>
           <li>BetLegend Pro</li>
         </ul>
-        <a class="wc-btn" id="wcPro" href="/premium/?from=welcome&amp;src=welcome#pricing">See what Pro includes</a>
+        <a class="wc-btn" id="wcPro" href="/premium/?from=welcome&amp;src=welcome#pricing" onclick="try{fetch('https://trustmyrecord-api.onrender.com/api/activation/pulse',{method:'POST',keepalive:true,headers:{'Content-Type':'application/json'},body:JSON.stringify({milestone:'pro_prompt_click',simulator:'unknown',detail:'welcome',arm:'pro'})});sessionStorage.setItem('tmr_pro_entry','welcome')}catch(e){}">See what Pro includes</a>
         <p class="wc-fine">3 days free, then $49.99/month. One trial per person and card. The free daily run never needs Pro.</p>
       </div>
     </div>
+
+    <!-- WELCOME_VERIFIED_20261103 (Nima: explain what TMR does and show the independent tracking in the
+         first session). Live counts from the public Watchdog stats; no claim about results. -->
+    <section class="wc-ver" aria-labelledby="wcVerH">
+      <span class="wc-ver-k">What TrustMyRecord does</span>
+      <h2 id="wcVerH">Records nobody can edit</h2>
+      <p>Every record on TMR is graded by TMR, not reported by the person. Your picks are locked before the game and graded on the final score. The Handicapper Watchdog does the same for handicappers outside TMR: it reads their public posts, stamps the time, and grades every pick.</p>
+      <div class="wc-ver-stats" id="wcVerStats" hidden>
+        <div><b data-wv="accounts"></b><span>outside handicapper accounts tracked</span></div>
+        <div><b data-wv="graded_picks"></b><span>of their picks graded so far</span></div>
+      </div>
+      <div class="wc-ver-links">
+        <a href="/around-the-web/?src=welcome">Browse their records, free &rarr;</a>
+        <a href="/pro/board/?src=welcome">See how many picks are pending today &rarr;</a>
+      </div>
+    </section>
+    <script>
+      (function () {
+        fetch('https://trustmyrecord-api.onrender.com/api/pro/watchdog/stats', { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
+          if (!d || !d.accounts || !d.graded_picks) return;
+          var box = document.getElementById('wcVerStats'); if (!box) return;
+          box.querySelectorAll('[data-wv]').forEach(function (el) { el.textContent = Number(d[el.getAttribute('data-wv')]).toLocaleString('en-US'); });
+          box.hidden = false;
+        }).catch(function () { });
+        try { fetch('https://trustmyrecord-api.onrender.com/api/activation/pulse', { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ milestone: 'pro_prompt_view', simulator: 'unknown', detail: 'welcome', arm: 'pro' }) }).catch(function () { }); } catch (e) { }
+      })();
+    </script>
 
     <section id="wcRepHost" aria-label="Your favorite team"></section>
 
