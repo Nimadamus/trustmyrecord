@@ -142,6 +142,12 @@
       + 'units, ROI and average price in TrendSpotter, and unlimited simulations. '
       + '<a href="/premium/?from=modelbuilder_lock&src=modelbuilder_lock#pricing">See what TMR Pro includes</a>'
       + '<span class="mb-pro-live" data-tpf-live="modelbuilder_lock" hidden></span>';
+    /* PRO_FUNNEL_20261103: anonymous Pro prompt counters */
+    function proPulse(step) { try { fetch('https://trustmyrecord-api.onrender.com/api/activation/pulse', { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ milestone: 'pro_prompt_' + step, simulator: 'unknown', detail: 'model_builder', arm: 'pro' }) }).catch(function () {}); } catch (x) {} }
+    if (!box.getAttribute('data-counted')) { box.setAttribute('data-counted', '1'); proPulse('view'); }
+    var a = box.querySelector('a[href^="/premium/"]');
+    if (a) a.addEventListener('click', function () { proPulse('click'); });
   }
 
   function setMessage(text, kind) {

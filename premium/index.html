@@ -940,7 +940,7 @@
         function proPulse(step, entry, plan) { try { var b = JSON.stringify({ milestone: 'pro_prompt_' + step, simulator: 'unknown', detail: entry, arm: plan || 'pro' }); fetch('https://trustmyrecord-api.onrender.com/api/activation/pulse', { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' }, body: b }).catch(function () { }); } catch (e) { } }
         var PRO_ENTRY = (function () {
             var q = ''; try { q = new URLSearchParams(location.search).get('src') || new URLSearchParams(location.search).get('from') || ''; } catch (e) { }
-            var map = { sim_meter: 'sim_meter', atw_profile: 'handicapper_profile', watchdog_board: 'watchdog_board' };
+            var map = { sim_meter: 'sim_meter', atw_profile: 'handicapper_profile', watchdog_board: 'watchdog_board', modelbuilder_lock: 'model_builder', trendspotter: 'trendspotter' };
             var e = map[q] || (/^email/.test(q) ? 'email' : '');
             if (!e) { try { e = sessionStorage.getItem('tmr_pro_entry') || ''; } catch (x) { } }
             e = e || 'premium_page';
