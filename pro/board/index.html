@@ -1834,7 +1834,8 @@ html body.pro-board-page main section#board.pro-section{background:transparent!i
                     document.getElementById('proWelcomeTitle').textContent = fresh ? 'Welcome to TMR Pro' : 'Your TMR Pro';
                     document.getElementById('proWelcomeText').textContent = (fresh ? 'Your membership is active. ' : '') + line;
                     showOnboarding(fresh);
-                    loadRecap();
+                    /* The board page hides .pd-recap (pro-board-page), and /mine/recap was never released;
+                       the member recap lives on /premium/ (SIM_RECAP_20261103). No call here. */
                 }
                 var cta = document.getElementById('proHeroCta');
                 if (cta) { cta.textContent = 'Open the pending picks'; cta.setAttribute('href', '#board'); }
