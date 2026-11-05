@@ -71,3 +71,18 @@ html.simbc-game[data-bc="mlb"] .bc-note{margin:10px 0 0;text-align:center;color:
 }
 html.bc-idle[data-bc="mlb"] .bc-afterbox{display:none}
 html.simbc-game[data-bc="mlb"] .tpf-offer-btn{color:#0a1424 !important;-webkit-text-fill-color:#0a1424 !important}
+
+/* Game settings: the stage already chooses teams, so Current mode shows only what it adds */
+html.simbc-game[data-bc="mlb"] .bc-pick-head h2{color:var(--bc-ink) !important;-webkit-text-fill-color:var(--bc-ink) !important}
+html.simbc-game[data-bc="mlb"]:not(.bc-era) .bc-set :is(.team-picker-identity,.compact-field,.team-meta,label.sim-field:has(#awayTeamSelect),label.sim-field:has(#homeTeamSelect)){display:none}
+html.simbc-game[data-bc="mlb"] .bc-set :is(.pitcher-meta,#modeHelpText,.sim-control-panel > .sim-panel-heading){display:none}
+html.simbc-game[data-bc="mlb"] .bc-set #simv2SwapTeams{display:none}
+html.simbc-game[data-bc="mlb"] .bc-set .sim-mode-toggle,html.simbc-game[data-bc="mlb"] .bc-set [role=tablist]{flex-wrap:nowrap}
+html.simbc-game[data-bc="mlb"] .bc-set :is(#currentModeButton,#historicalModeButton,#mixedModeButton){white-space:nowrap;min-height:44px;padding:8px 10px;font-size:.84rem}
+html.simbc-game[data-bc="mlb"] .bc-set .team-picker-grid{gap:10px}
+html.simbc-game[data-bc="mlb"] .bc-set .team-picker-card{padding:12px}
+html.simbc-game[data-bc="mlb"] .bc-set :is(#simBoardMessage,#simMarketModeNote,#viewBoxScoreControl,.pitcher-picker-hs){display:none}
+html.simbc-game[data-bc="mlb"] .bc-set :is(#simDepthNote,#simWeatherNote){margin:6px 0 0;color:var(--bc-mut) !important;font-size:.82rem;line-height:1.4}
+@media (max-width:480px){
+  html.simbc-game[data-bc="mlb"] .bc-set :is(#currentModeButton,#historicalModeButton,#mixedModeButton){flex:1 1 0;min-width:0;padding:8px 4px;font-size:.76rem}
+}

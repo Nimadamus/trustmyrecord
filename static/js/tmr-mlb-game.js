@@ -77,8 +77,16 @@
     });
   }
 
+  /* Teams are chosen on the stage. The team selects only matter for Classic and Mixed. */
+  function era() {
+    var api = global.TMRMlbSimulator;
+    var st = api && api.state;
+    var cur = !st || (st.awayPool === 'current' && st.homePool === 'current');
+    doc.documentElement.classList.toggle('bc-era', !cur);
+  }
+
   function after() {
-    settle(); tally(); coreTables();
+    era(); settle(); tally(); coreTables();
     var t = $('.bc-try');
     if (t) t.textContent = 'New matchup';
   }
@@ -109,6 +117,10 @@
       timers.push(global.setTimeout(land, 700));
     }
     new global.MutationObserver(soon).observe(top, { childList: true });
+    ['#currentModeButton', '#historicalModeButton', '#mixedModeButton'].forEach(function (id) {
+      var b = $(id);
+      if (b) b.addEventListener('click', function () { global.setTimeout(era, 0); });
+    });
     var panel = $('.sim-score-panel');
     if (panel) new global.MutationObserver(settle).observe(panel, { childList: true });
     soon();

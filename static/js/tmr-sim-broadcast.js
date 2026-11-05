@@ -44,6 +44,8 @@
     return '#1f8fff';
   }
   function nick(name) {
+    var two = /(Red Sox|White Sox|Blue Jays|Trail Blazers|Maple Leafs|Golden Knights|Blue Jackets|Red Wings)$/.exec(String(name || ''));
+    if (two) return two[1];
     var parts = String(name || '').split(' ');
     return parts[parts.length - 1];
   }
