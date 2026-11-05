@@ -16,8 +16,8 @@
  * carries a genuinely different projection, a different team comparison and
  * different players, because the numbers come out of the real model.
  *
- * The projection printed on a matchup page is a PINNED run (a fixed seed), so
- * the page is stable for a crawler and for anyone linking to it. The button on
+ * The projection printed on a matchup page is a fixed-seed run of the current
+ * data, so it only moves when the data does. The button on
  * the page opens the live simulator with both teams selected, where every press
  * is a fresh simulation.
  *
@@ -57,10 +57,53 @@ function requireBackend(rel) {
   return require(p);
 }
 
-const { simulateNbaGame } = requireBackend('services/nba/nbaSimEngine');
-const { getModel: nbaModel } = requireBackend('services/nba/nbaRatings');
-const { simulateNhlGame } = requireBackend('services/nhl/nhlSimEngine');
-const { getModel: nhlModel } = requireBackend('services/nhl/nhlRatings');
+// Loaded only when NHL pages are built: the cloud bake has no backend checkout.
+const simulateNhlGame = (...a) => requireBackend('services/nhl/nhlSimEngine').simulateNhlGame(...a);
+const nhlModel = (...a) => requireBackend('services/nhl/nhlRatings').getModel(...a);
+const SPORTS = String(arg('--sports', 'nba,nhl')).split(',').map((x) => x.trim());
+
+/* NBA_MATCHUP_BAKE_20261105. NBA matchup pages come from the LIVE data, in the cloud bake.
+   They were built from a laptop's backend checkout and the laptop runner threw its NBA output
+   away, so all 30 sat on Aug 25 numbers: mean 10 points off, 7 naming the wrong favourite.
+   /api/nba/public/matchup-cards plays each pair with the anchored engine, a fixed seed and no
+   archive write (a bake must never call /simulate, which records publicly); season inputs give
+   the real record and scoring. `--nba-live-dir DIR` (cards.json + season-inputs.json) is for
+   tests. A 404 means the API has not shipped the route: the committed pages stay, quietly. */
+const API = 'https://trustmyrecord-api.onrender.com/api/';
+let NBA = null;
+async function loadNba() {
+  const dir = arg('--nba-live-dir', null);
+  const pairs = NBA_MATCHUPS.map((m) => m[0] + '@' + m[1]).join(',');
+  const read = async (name, url) => {
+    if (dir) return JSON.parse(fs.readFileSync(path.join(dir, name), 'utf8'));
+    let last;
+    for (let i = 0; i < 3; i += 1) {
+      try {
+        const r = await fetch(API + url, { signal: AbortSignal.timeout(180000) });
+        if (r.status === 404) return null;
+        if (!r.ok) throw new Error('HTTP ' + r.status + ' for ' + url.split('?')[0]);
+        return await r.json();
+      } catch (e) { last = e; await new Promise((res) => setTimeout(res, 15000)); }
+    }
+    throw last;
+  };
+  const cards = await read('cards.json', 'nba/public/matchup-cards?pairs=' + pairs);
+  if (!cards) return null;
+  const inputs = await read('season-inputs.json', 'nba/public/season-inputs');
+  if (!inputs || !Array.isArray(inputs.schedule)) throw new Error('live NBA season inputs incomplete');
+  for (const m of NBA_MATCHUPS) {
+    if (!cards.cards || !cards.cards[m[0] + '@' + m[1]]) throw new Error('no matchup card for ' + m[0] + '@' + m[1]);
+  }
+  const actual = {};
+  const row = (k) => actual[k] || (actual[k] = { w: 0, l: 0, pf: 0, pa: 0 });
+  for (const g of inputs.schedule) {
+    if (!g.final || g.home_score == null || g.away_score == null) continue;
+    const h = row(g.home), a = row(g.away);
+    h.pf += g.home_score; h.pa += g.away_score; a.pf += g.away_score; a.pa += g.home_score;
+    if (g.home_score > g.away_score) { h.w += 1; a.l += 1; } else { a.w += 1; h.l += 1; }
+  }
+  return { cards: cards.cards, at: cards.availability_at || cards.generated_at, actual, label: inputs.season_label };
+}
 
 /* ------------------------------------------------------------------------- */
 /* The curated matchup lists.                                                 */
@@ -262,18 +305,22 @@ ${o.seo}
 /* ------------------------------------------------------------------------- */
 
 function nbaPage(awayAbbr, homeAbbr, cssHash, siblings) {
-  const model = nbaModel();
-  const away = model.byAbbr.get(awayAbbr);
-  const home = model.byAbbr.get(homeAbbr);
-  if (!away || !home) throw new Error('Unknown NBA team in the matchup list: ' + awayAbbr + ' or ' + homeAbbr);
-
-  const d = simulateNbaGame({ homeKey: homeAbbr, awayKey: awayAbbr, seed: PAGE_SEED, nSims: PAGE_SIMS });
+  const d = NBA.cards[awayAbbr + '@' + homeAbbr];
+  const { away, home } = d;
   const p = d.projection;
+  const PAGE_RUNS = d.simulations;
   const slug = slugify(away.nickname) + '-vs-' + slugify(home.nickname);
   const url = SITE + '/nba-simulator/' + slug + '/';
   const favourite = p.win_probability.home >= p.win_probability.away ? home : away;
   const favWp = Math.max(p.win_probability.home, p.win_probability.away);
   const margin = Math.abs(p.spread.home);
+  const updated = new Date(NBA.at).toLocaleString('en-US', { timeZone: 'America/Los_Angeles', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) + ' PT';
+  const basis = d.inputs_basis === 'blend' && d.current_season ? d.season + ' blended with ' + d.current_season + ' so far' : d.season;
+  const real = (t) => {
+    const r = NBA.actual[t.abbr];
+    return r && r.w + r.l ? { rec: r.w + '-' + r.l, ppg: n1(r.pf / (r.w + r.l)), opp: n1(r.pa / (r.w + r.l)) } : { rec: '0-0', ppg: '--', opp: '--' };
+  };
+  const out = (t) => (t.unavailable.length ? esc(t.nickname) + ' listed out: ' + esc(t.unavailable.join(', ')) + '.' : '');
 
   const topPlayers = (t) => t.rotation.slice(0, 5).map((pl) => '<tr><td>' + esc(pl.name) + '</td><td>'
     + esc(pl.pos || '') + '</td><td>' + n1(pl.season.mpg) + '</td><td>' + n1(pl.season.ppg) + '</td><td>'
@@ -281,7 +328,7 @@ function nbaPage(awayAbbr, homeAbbr, cssHash, siblings) {
     + n1(pl.season.threePct) + '%</td></tr>').join('\n          ');
 
   const body = `  <div class="panel">
-    <div class="sechead">Model projection</div>
+    <div class="sechead">Model projection, updated ${esc(updated)}</div>
     <div class="mh">
       ${colorBar(away, home, p.win_probability.away, p.win_probability.home)}
       <div class="mh-grid">
@@ -292,7 +339,7 @@ function nbaPage(awayAbbr, homeAbbr, cssHash, siblings) {
           <div class="pts">${n1(p.projected_score.away)}</div>
           <div class="wp">${pctOf(p.win_probability.away)} win probability</div>
         </div>
-        <div class="mh-mid"><div class="at">at</div><div>${PAGE_SIMS.toLocaleString('en-US')} simulations</div></div>
+        <div class="mh-mid"><div class="at">at</div><div>${PAGE_RUNS.toLocaleString('en-US')} simulations</div></div>
         <div class="mh-team">
           <div class="role">Home</div>
           ${crestImg(home)}
@@ -305,19 +352,21 @@ function nbaPage(awayAbbr, homeAbbr, cssHash, siblings) {
     <div class="kpis">
       <div class="kpi"><div class="k">Projected spread</div><div class="v">${margin < 0.5 ? 'Pick &rsquo;em' : esc(favourite.abbr) + ' ' + signed(-margin)}</div><div class="s">Margin standard deviation ${p.spread.sd}</div></div>
       <div class="kpi"><div class="k">Projected total</div><div class="v">${n1(p.total.mean)}</div><div class="s">Middle half ${p.total.p25} to ${p.total.p75}</div></div>
-      <div class="kpi"><div class="k">Projected pace</div><div class="v">${n1(d.matchup.projected_pace)}</div><div class="s">Possessions per team</div></div>
+      <div class="kpi"><div class="k">Projected pace</div><div class="v">${n1(d.pace)}</div><div class="s">Possessions per team</div></div>
       <div class="kpi"><div class="k">Decided by a possession</div><div class="v">${pctOf(p.close_game_share)}</div><div class="s">Within three points</div></div>
     </div>
   </div>
 
   <div class="panel">
-    <div class="sechead">${esc(away.name)} against ${esc(home.name)}, ${esc(d.meta.season)} season</div>
+    <div class="sechead">${esc(away.name)} against ${esc(home.name)}</div>
+    <p class="dim">Record and scoring are ${esc(NBA.label)} so far. The other rows are the model profile: ${esc(basis)}.</p>
     <div class="tablewrap"><table>
       <thead><tr><th>${crestImg(away, 22)} ${esc(away.abbr)}</th><th>Metric</th><th>${crestImg(home, 22)} ${esc(home.abbr)}</th></tr></thead>
       <tbody>
         ${cmpRows([
-    { label: 'Points per game', away: n1(away.ppg), home: n1(home.ppg) },
-    { label: 'Points allowed', away: n1(away.oppPpg), home: n1(home.oppPpg) },
+    { label: 'Record', away: real(away).rec, home: real(home).rec },
+    { label: 'Points per game', away: real(away).ppg, home: real(home).ppg },
+    { label: 'Points allowed', away: real(away).opp, home: real(home).opp },
     { label: 'Offensive rating', away: n1(away.ortg), home: n1(home.ortg) },
     { label: 'Defensive rating', away: n1(away.drtg), home: n1(home.drtg) },
     { label: 'Net rating', away: signed(away.ortg - away.drtg), home: signed(home.ortg - home.drtg) },
@@ -341,6 +390,7 @@ function nbaPage(awayAbbr, homeAbbr, cssHash, siblings) {
           ${topPlayers(away)}
           </tbody>
         </table></div>
+        <p class="dim">${out(away)}</p>
       </div>
       <div>
         <div class="teamhead"><div class="nm">${esc(home.name)}</div></div>
@@ -350,6 +400,7 @@ function nbaPage(awayAbbr, homeAbbr, cssHash, siblings) {
           ${topPlayers(home)}
           </tbody>
         </table></div>
+        <p class="dim">${out(home)}</p>
       </div>
     </div>
   </div>
@@ -362,17 +413,17 @@ function nbaPage(awayAbbr, homeAbbr, cssHash, siblings) {
   </div>`;
 
   const seo = `  <h2>What this ${esc(away.nickname)} vs ${esc(home.nickname)} simulation is</h2>
-  <p class="lead">This page runs the TrustMyRecord NBA simulator on ${esc(away.name)} at ${esc(home.name)} and prints the result of ${PAGE_SIMS.toLocaleString('en-US')} simulated games. The numbers above are the average of those runs, not a single guess: the projected score, the win probability, the spread and the total all come out of the same possession-level model that powers the full simulator. To play the game out possession by possession and get a full player box score, open it live.</p>
+  <p class="lead">This page runs the TrustMyRecord NBA simulator on ${esc(away.name)} at ${esc(home.name)} and prints the result of ${PAGE_RUNS.toLocaleString('en-US')} simulated games, refreshed with the rosters and injury list. The numbers above are the average of those runs, not a single guess: team strength comes from the same forecast as the season and playoff pages, and the score, the spread and the total come out of the possession-level simulator. To play the game out possession by possession and get a full player box score, open it live.</p>
 
   <h2>How the projection is built</h2>
-  <p>Expected efficiency for each side is the league average moved by that offense's distance from average and by the opposing defense's distance from average, both measured per 100 possessions so speed of play does not distort the comparison. ${esc(away.name)} scored ${n1(away.ortg)} per 100 last season and allowed ${n1(away.drtg)}; ${esc(home.name)} scored ${n1(home.ortg)} and allowed ${n1(home.drtg)}. Projected pace for this matchup is ${n1(d.matchup.projected_pace)} possessions against a league average of ${n1(nbaModel().league.pace)}, which is what sets the total.</p>
-  <p>${esc(home.name)} hold the home floor here, worth roughly two and a half to three points. Across ${PAGE_SIMS.toLocaleString('en-US')} runs the model made ${esc(favourite.name)} a ${pctOf(favWp)} favourite by an average of ${n1(margin)} points, with a total of ${n1(p.total.mean)}. The middle half of simulated totals landed between ${p.total.p25} and ${p.total.p75}, and ${pctOf(p.close_game_share)} of runs finished within three points.</p>
+  <p>Expected efficiency for each side is the league average moved by that offense's distance from average and by the opposing defense's distance from average, both measured per 100 possessions so speed of play does not distort the comparison. On the model's profile (${esc(basis)}) ${esc(away.name)} score ${n1(away.ortg)} per 100 and allow ${n1(away.drtg)}; ${esc(home.name)} score ${n1(home.ortg)} and allow ${n1(home.drtg)}. Projected pace for this matchup is ${n1(d.pace)} possessions, which is what sets the total. Who wins is then set by the forecast model, and any player listed out moves the answer by what his minutes are worth.</p>
+  <p>${esc(home.name)} hold the home floor here, worth roughly two and a half to three points. Across ${PAGE_RUNS.toLocaleString('en-US')} runs the model made ${esc(favourite.name)} a ${pctOf(favWp)} favourite by an average of ${n1(margin)} points, with a total of ${n1(p.total.mean)}. The middle half of simulated totals landed between ${p.total.p25} and ${p.total.p75}, and ${pctOf(p.close_game_share)} of runs finished within three points.</p>
 
   <h2>Run it yourself</h2>
-  <p>The projection above is a pinned run so the page stays stable. The live simulator is not: every press of <b>Simulate again</b> is a new random draw, so the same two teams give a different final score, a different box score and a different leading scorer each time. That is the point of a simulator rather than a formula. <a href="/nba-simulator/?away=${away.abbr}&amp;home=${home.abbr}">Open ${esc(away.nickname)} vs ${esc(home.nickname)} in the live simulator</a> to get quarter-by-quarter scoring, both full box scores, shooting splits, rebounds, assists, turnovers, steals, blocks and fouls.</p>
+  <p>The projection above is a fixed run of today's data, so it only moves when the data does. The live simulator is different: every press of <b>Simulate again</b> is a new random draw, so the same two teams give a different final score, a different box score and a different leading scorer each time. That is the point of a simulator rather than a formula. <a href="/nba-simulator/?away=${away.abbr}&amp;home=${home.abbr}">Open ${esc(away.nickname)} vs ${esc(home.nickname)} in the live simulator</a> to get quarter-by-quarter scoring, both full box scores, shooting splits, rebounds, assists, turnovers, steals, blocks and fouls.</p>
 
   <h2>Is this a prediction?</h2>
-  <p>No. It is a model simulation of a hypothetical game between these two teams, built on last completed season production and current rosters. It is not a forecast of a scheduled game, it does not know about rest, travel, trades since the last data refresh, or who is available tonight, and it is not betting advice. Use it as one research input. On TrustMyRecord, real picks are locked before game time, auto-graded and counted toward a public record that cannot be edited afterwards.</p>
+  <p>No. It is a model simulation of these two teams on today's rosters, with the players listed out removed. If they meet on the next slate this is that game, with its real rest; otherwise it is a night with both clubs rested. It does not know travel, a trade since the last data refresh, or how a questionable player will be used, and it is not betting advice. Use it as one research input. On TrustMyRecord, real picks are locked before game time, auto-graded and counted toward a public record that cannot be edited afterwards.</p>
 
   <hr class="divider" />
   <h2>More NBA matchups to simulate</h2>
@@ -398,9 +449,9 @@ ${siblings}
     html: pageShell({
       title: away.nickname + ' vs ' + home.nickname + ' Simulation: Score Prediction & Box Score | TrustMyRecord',
       ogTitle: away.nickname + ' vs ' + home.nickname + ' Simulation',
-      description: 'Simulated ' + away.name + ' at ' + home.name + ': projected score '
-        + n1(p.projected_score.away) + ' to ' + n1(p.projected_score.home) + ', ' + favourite.nickname + ' '
-        + pctOf(favWp) + ' to win, total ' + n1(p.total.mean) + '. Run it live for a full box score.',
+      // No odds in a meta description: a search snippet outlives the bake that wrote it.
+      description: 'Simulate the ' + away.name + ' at the ' + home.name + ': projected score, win probability, '
+        + 'spread and total from current rosters and who is out. Run it live for a full box score.',
       url,
       hubName: 'NBA Simulator',
       hubPath: '/nba-simulator/',
@@ -409,8 +460,8 @@ ${siblings}
       sportLabel: 'NBA',
       aboutTeams: [away.name, home.name],
       standfirst: 'A full simulation of ' + away.name + ' at ' + home.name + ', run '
-        + PAGE_SIMS.toLocaleString('en-US') + ' times on current rosters and '
-        + d.meta.season + ' production. Projected score, win probability, spread, total and the model drivers, '
+        + PAGE_RUNS.toLocaleString('en-US') + ' times on current rosters. Team profiles: '
+        + basis + '. Projected score, win probability, spread, total and the model drivers, '
         + 'plus a live run for the complete quarter-by-quarter box score.',
       runHref: '/nba-simulator/?away=' + away.abbr + '&amp;home=' + home.abbr,
       cssHash: cssHash,
@@ -681,6 +732,50 @@ function updateHub(hubFile, pages, hub) {
   return html.replace(re, '$1\n' + grid + '\n  $2');
 }
 
+/* The cloud bake owns only a matchup page's numbers: <main>, the numbers-bearing half of the
+   SEO section and the descriptions. The asset shell, navbar, MK blocks and everything else
+   stay as committed (the same split as scripts/refresh_nhl_sim_pages.py). A page whose title
+   or canonical would change is an error, never a write. */
+function spliceNbaMatchup(live, gen) {
+  const span = (t, a, b) => { const i = t.indexOf(a); const j = t.indexOf(b, i); if (i < 0 || j < 0) throw new Error('marker missing: ' + a); return [i, j]; };
+  let [li, lj] = span(live, '<main class="wrap">', '</main>');
+  let [gi, gj] = span(gen, '<main class="wrap">', '</main>');
+  let out = live.slice(0, li) + gen.slice(gi, gj) + live.slice(lj);
+  [li, lj] = span(out, '<section class="seo"', '  <!--MK:leagueSimMatchup-->');
+  [gi, gj] = span(gen, '<section class="seo"', '  <hr class="divider" />');
+  out = out.slice(0, li) + gen.slice(gi, gj) + out.slice(lj);
+  for (const re of [/<meta name="description" content="[^"]*"/, /<meta property="og:description" content="[^"]*"/, /<meta name="twitter:description" content="[^"]*"/]) {
+    const m = gen.match(re);
+    if (m) out = out.replace(re, () => m[0]);
+  }
+  const ld = /("@type":"WebPage".*?"description":")[^"]*"/;
+  const g = gen.match(/"@type":"WebPage".*?"description":"([^"]*)"/);
+  if (g) out = out.replace(ld, (x, p1) => p1 + g[1] + '"');
+  const id = (t) => [(t.match(/<title>[\s\S]*?<\/title>/) || [''])[0], (t.match(/<link rel="canonical"[^>]*>/) || [''])[0]].join('|');
+  if (id(out) !== id(live)) throw new Error('title or canonical would change');
+  if (!out.includes('<!--NBA_MATCHUP_BAKE-->')) out = out.replace('<main class="wrap">', '<main class="wrap"><!--NBA_MATCHUP_BAKE-->');
+  return out;
+}
+
+function buildNbaLive(cssHash) {
+  const stubs = NBA_MATCHUPS.map((m) => nbaPage(m[0], m[1], cssHash, ''));
+  const counts = { updated: 0, unchanged: 0 };
+  const done = [];
+  for (let i = 0; i < stubs.length; i += 1) {
+    const p = nbaPage(NBA_MATCHUPS[i][0], NBA_MATCHUPS[i][1], cssHash, siblingGrid(stubs, stubs[i].slug, '/nba-simulator/'));
+    const file = path.join(p.dir, 'index.html');
+    if (!fs.existsSync(file)) throw new Error('no page on disk for ' + p.slug + ': the bake never creates a URL');
+    const raw = fs.readFileSync(file, 'utf8');
+    const crlf = raw.includes('\r\n');
+    let html = spliceNbaMatchup(raw.replace(/\r\n/g, '\n'), p.html);
+    if (crlf) html = html.replace(/\n/g, '\r\n');
+    if (html === raw) { counts.unchanged += 1; } else { counts.updated += 1; if (!CHECK) fs.writeFileSync(file, html); }
+    done.push(p);
+  }
+  process.stdout.write('NBA matchup pages baked: ' + JSON.stringify(counts) + '\n');
+  return done;
+}
+
 function build() {
   const cssHash = cssHashOf();
   const written = [];
@@ -706,8 +801,8 @@ function build() {
     return pages;
   };
 
-  const nba = make(NBA_MATCHUPS, nbaPage, '/nba-simulator/', path.join(ROOT, 'nba-simulator', 'index.html'));
-  const nhl = make(NHL_MATCHUPS, nhlPage, '/nhl-simulator/', path.join(ROOT, 'nhl-simulator', 'index.html'));
+  const nba = SPORTS.includes('nba') && NBA ? buildNbaLive(cssHash) : [];
+  const nhl = SPORTS.includes('nhl') ? make(NHL_MATCHUPS, nhlPage, '/nhl-simulator/', path.join(ROOT, 'nhl-simulator', 'index.html')) : [];
 
   const counts = written.reduce((a, w) => { a[w.status] = (a[w.status] || 0) + 1; return a; }, {});
   process.stdout.write(
@@ -715,11 +810,19 @@ function build() {
     + JSON.stringify(counts) + '\n',
   );
 
-  // The URL list, for the sitemap step.
+  // The URL list, for the sitemap step. Only a build of both sports knows the whole set.
   const urls = [...nba, ...nhl].map((p) => p.url);
-  fs.writeFileSync(path.join(ROOT, 'scripts', 'sim-matchup-urls.txt'), urls.join('\n') + '\n');
-  process.stdout.write('URL list written to scripts/sim-matchup-urls.txt\n');
+  if (nba.length && nhl.length) {
+    fs.writeFileSync(path.join(ROOT, 'scripts', 'sim-matchup-urls.txt'), urls.join('\n') + '\n');
+    process.stdout.write('URL list written to scripts/sim-matchup-urls.txt\n');
+  }
   return urls;
 }
 
-build();
+(async function main() {
+  if (SPORTS.includes('nba')) {
+    NBA = await loadNba();
+    if (!NBA) process.stdout.write('matchup cards route not live: NBA matchup pages kept as committed\n');
+  }
+  build();
+}()).catch((e) => { process.stderr.write(String(e && e.stack || e) + '\n'); process.exit(1); });

@@ -135,12 +135,15 @@ async function loadLiveNba() {
   if (!Array.isArray(list) || list.length < 30) throw new Error('live NBA teams incomplete');
   if (!inputs.season || !inputs.season_label || !Array.isArray(inputs.schedule)) throw new Error('live NBA season inputs incomplete');
   const rec = {};
-  for (const t of inputs.teams) rec[t.espn_abbr] = { wins: 0, losses: 0 };
+  for (const t of inputs.teams) rec[t.espn_abbr] = { wins: 0, losses: 0, pf: 0, pa: 0 };
   for (const g of inputs.schedule) {
     if (!g.final || g.home_score == null || g.away_score == null || g.home_score === g.away_score) continue;
     const w = g.home_score > g.away_score ? g.home : g.away, l = w === g.home ? g.away : g.home;
     if (rec[w]) rec[w].wins += 1;
     if (rec[l]) rec[l].losses += 1;
+    // TEAM_HEADER_ACTUALS_20261105: the same finals give the real scoring line.
+    if (rec[g.home]) { rec[g.home].pf += g.home_score; rec[g.home].pa += g.away_score; }
+    if (rec[g.away]) { rec[g.away].pf += g.away_score; rec[g.away].pa += g.home_score; }
   }
   const byName = new Map(inputs.teams.map((t) => [String(t.name).toLowerCase(), t.espn_abbr]));
   const out = list.map((t) => {
@@ -148,6 +151,7 @@ async function loadLiveNba() {
     const r = ea ? rec[ea] : null;
     return Object.assign({}, t, {
       record: r ? { wins: r.wins, losses: r.losses, season: inputs.season, label: inputs.season_label } : null,
+      actual: r && r.wins + r.losses > 0 ? { games: r.wins + r.losses, ppg: r.pf / (r.wins + r.losses), oppPpg: r.pa / (r.wins + r.losses) } : null,
     });
   });
   return { teams: out, season: inputs.season, seasonLabel: inputs.season_label };
@@ -304,11 +308,20 @@ function nbaPages(matchupsBySlug) {
   const fit = null;   // the committed model's fit is not the live one; the sentence is dropped
   const netRank = rankOf(teams, (t) => t.season.netRating, true);
   const paceRank = rankOf(teams, (t) => t.season.pace, true);
+  /* TEAM_HEADER_ACTUALS_20261105: a header reads as this season's facts, so it prints them:
+     points counted from the same finals as the record, and the rank on real point
+     difference. The blended numbers the model runs on stay in the labelled table. On
+     11/05 Boston read "114.9 points a game, 107.8 allowed" with 114.3 and 108.3 real. */
+  const realRank = rankOf(teams, (t) => (t.actual ? t.actual.ppg - t.actual.oppPpg : t.season.netRating), true);
   const out = [];
 
   for (const t of teams) {
     const s = t.season;
     const rec = t.record;
+    const act = t.actual;
+    const headline = act
+      ? `${n1(act.ppg)} points a game, ${n1(act.oppPpg)} allowed, ${ord(realRank.get(t.abbr))} of ${teams.length} on point difference`
+      : `${n1(s.ppg)} points a game, ${n1(s.oppPpg)} allowed in the model's profile`;
     const rot = (t.rotation || []).slice(0, 10);
     if (!rot.length) continue;   // no rotation, no page
 
@@ -325,9 +338,9 @@ function nbaPages(matchupsBySlug) {
     <p>The simulator does not rate a team on its record. It solves every club's
     offence and defence together from results, so the ${esc(t.nickname)} are measured
     against the opponents they actually faced rather than the ones they were lucky
-    or unlucky to draw. On that basis they rank ${esc(ord(nr))} of ${teams.length}
+    or unlucky to draw. On the model's blended profile they rank ${esc(ord(nr))} of ${teams.length}
     by net rating${fitNet !== null ? `, and the opponent-adjusted fit puts them ${fitNet >= 0 ? '+' : ''}${n1(fitNet)} points a game against an average side` : ''}.</p>
-${table(['Season profile', 'Team', 'Rank of ' + teams.length], [
+${table(['Model profile', 'Team', 'Rank of ' + teams.length], [
     ['Points per game', n1(s.ppg), ord(rankOf(teams, (x) => x.season.ppg, true).get(t.abbr))],
     ['Points allowed', n1(s.oppPpg), ord(rankOf(teams, (x) => x.season.oppPpg, false).get(t.abbr))],
     ['Offensive rating', n1(s.offensiveRating), ord(rankOf(teams, (x) => x.season.offensiveRating, true).get(t.abbr))],
@@ -350,6 +363,7 @@ ${table(['Player', 'Pos', 'MIN', 'PPG', 'RPG', 'APG'],
 ${(t.unavailable && t.unavailable.length)
     ? `    <p class="pill warn">Currently listed out: ${esc(t.unavailable.map((x) => x.name).join(', '))}.</p>`
     : '    <p class="dim">Nobody in this rotation is currently listed out.</p>'}
+${rot.some((x) => x.dayToDay) ? `    <p class="dim">Day to day, and playing full minutes in this projection: ${esc(rot.filter((x) => x.dayToDay).map((x) => x.name).join(', '))}.</p>` : ''}
   </section>
 
 ${(() => {
@@ -390,7 +404,7 @@ ${links.map((l) => `      <li><a href="${l.href}">${esc(l.label)}</a></li>`).joi
         title: `${t.name} Simulator: Simulate ${t.nickname} Games & Box Scores | TrustMyRecord`,
         ogTitle: `${t.name} game simulator`,
         description: `Simulate any ${t.name} matchup. ${rec ? `${rec.wins}-${rec.losses} in ${rec.label}, ` : ''}`
-          + `${n1(s.ppg)} points a game at a ${n1(s.pace)} pace, ${ord(nr)} of ${teams.length} by net rating. `
+          + `${headline}. `
           + `Full box score, quarter scores and win probability.`,
         url: `${SITE}/nba-simulator/teams/${t.slug}/`,
         hubName: 'NBA Simulator',
@@ -402,7 +416,7 @@ ${links.map((l) => `      <li><a href="${l.href}">${esc(l.label)}</a></li>`).joi
         nickname: t.nickname,
         simLink: `/nba-simulator/?home=${t.slug}`,
         standfirst: `${rec ? `${rec.wins}-${rec.losses} in ${rec.label}. ` : ''}`
-          + `${n1(s.ppg)} points a game, ${n1(s.oppPpg)} allowed, ${ord(nr)} of ${teams.length} by net rating. `
+          + `${headline}. `
           + `Simulate any ${t.nickname} matchup with the current rotation and get a full box score.`,
         body,
         faq: [
@@ -446,7 +460,16 @@ function nhlPages(matchupsBySlug) {
     nickname: t.nickname || t.common || t.name,
   }));
   const out = [];
-  const diffRank = rankOf(teams, (t) => t.season.goalsFor - t.season.goalsAgainst, true);
+  /* TEAM_HEADER_ACTUALS_20261105: goals, shots and the goal difference rank in anything that
+     reads as this season's facts are this season's facts (the league figures in
+     currentSeason). The blended rates the model runs on stay in the labelled table. On
+     11/05 Florida read 3.10 and 3.18, 17th, against a real 3.25 and 2.94, 12th. */
+  const realOf = (t) => {
+    const c = t.currentSeason;
+    return c && c.gamesPlayed > 0 && Number.isFinite(c.goalsFor) && Number.isFinite(c.goalsAgainst) ? c : null;
+  };
+  // Rank on the total, the way the league's table reads goal difference.
+  const diffRank = rankOf(teams, (t) => { const c = realOf(t) || t.season; return (c.goalsFor - c.goalsAgainst) * (c.gamesPlayed || 1); }, true);
   const ppRank = rankOf(teams, (t) => t.season.powerPlayPct, true);
   const pkRank = rankOf(teams, (t) => t.season.penaltyKillPct, true);
 
@@ -459,6 +482,7 @@ function nhlPages(matchupsBySlug) {
     if (!fwd.length || !def.length) continue;
 
     const dr = diffRank.get(t.abbr);
+    const real = realOf(t) || s;
     const starter = goalies[0];
     // NHL_STARTER_REPORTS_20261030: confirmed (reported by Daily Faceoff) or projected, as the model says.
     const starterRole = starter && starter.starterStatus === 'confirmed' ? 'confirmed starter for the next game (Daily Faceoff)' : 'projected starter';
@@ -468,10 +492,10 @@ function nhlPages(matchupsBySlug) {
     <h2>How the model sees the ${esc(t.nickname)}</h2>
     <p>Hockey is a small number of rare events, so the simulator is built on shot
     volume and the rate at which shots become goals rather than on possessions.
-    The ${esc(t.nickname)} generate ${n1(s.shotsFor)} shots a game and concede
-    ${n1(s.shotsAgainst)}, and they sit ${esc(ord(dr))} of ${teams.length} on goal
+    The ${esc(t.nickname)} generate ${n1(real.shotsFor)} shots a game and concede
+    ${n1(real.shotsAgainst)}, and they sit ${esc(ord(dr))} of ${teams.length} on goal
     difference.</p>
-${table(['Season profile', 'Team', 'Rank of ' + teams.length], [
+${table(['Model inputs', 'Team', 'Rank of ' + teams.length], [
     ['Goals for', n2(s.goalsFor), ord(rankOf(teams, (x) => x.season.goalsFor, true).get(t.abbr))],
     ['Goals against', n2(s.goalsAgainst), ord(rankOf(teams, (x) => x.season.goalsAgainst, false).get(t.abbr))],
     ['Shots for', n1(s.shotsFor), ord(rankOf(teams, (x) => x.season.shotsFor, true).get(t.abbr))],
@@ -480,11 +504,13 @@ ${table(['Season profile', 'Team', 'Rank of ' + teams.length], [
     ['Penalty kill', n1(s.penaltyKillPct) + '%', ord(pkRank.get(t.abbr))],
     ['Faceoffs', n1(s.faceoffPct) + '%', ord(rankOf(teams, (x) => x.season.faceoffPct, true).get(t.abbr))],
   ])}
+    <p class="disc">${esc(profileBasis(t))} Ranks are among the ${teams.length} clubs.</p>
   </section>
 
   <section class="panel">
     <h2>The lineup the simulator dresses</h2>
-    <p>Twelve forwards and six defencemen, at the ice time their roles carry, each
+${(t.unavailable && t.unavailable.length) ? `    <p class="pill warn">Currently listed out: ${esc(t.unavailable.map((x) => x.name).join(', '))}.</p>
+` : ''}    <p>Twelve forwards and six defencemen, at the ice time their roles carry, each
     scoring, shooting, hitting and taking penalties at his own per-sixty rate.
     ${starter ? `${esc(starter.name)} is the ${starterRole} on a ${starter.savePct.toFixed(3).replace(/^0/, '')} save percentage` : 'The starting goaltender is chosen on the simulator itself'}.</p>
 ${table(['Forward', 'Line', 'TOI', 'G', 'A', 'P'],
@@ -549,7 +575,7 @@ ${links.map((l) => `      <li><a href="${l.href}">${esc(l.label)}</a></li>`).joi
         ogTitle: `${t.name} game simulator`,
         description: `Simulate any ${t.name} matchup. `
           + `${rec ? `${rec.wins}-${rec.losses}-${rec.otLosses}, ` : ''}`
-          + `${n2(s.goalsFor)} goals for and ${n2(s.goalsAgainst)} against, ${ord(dr)} of ${teams.length} on goal difference. `
+          + `${n2(real.goalsFor)} goals for and ${n2(real.goalsAgainst)} against, ${ord(dr)} of ${teams.length} on goal difference. `
           + `Scoring summary, skater and goaltender lines, win probability.`,
         url: `${SITE}/nhl-simulator/teams/${t.slug}/`,
         hubName: 'NHL Simulator',
@@ -561,7 +587,7 @@ ${links.map((l) => `      <li><a href="${l.href}">${esc(l.label)}</a></li>`).joi
         nickname: t.nickname,
         simLink: `/nhl-simulator/?home=${t.slug}`,
         standfirst: `${rec ? `${rec.wins}-${rec.losses}-${rec.otLosses}. ` : ''}`
-          + `${n2(s.goalsFor)} goals a game, ${n2(s.goalsAgainst)} allowed, ${ord(dr)} of ${teams.length} on goal difference. `
+          + `${n2(real.goalsFor)} goals a game, ${n2(real.goalsAgainst)} allowed, ${ord(dr)} of ${teams.length} on goal difference. `
           + `Simulate any ${t.nickname} matchup with the current lineup and starting goaltender.`,
         body,
         faq: [
@@ -578,7 +604,7 @@ ${links.map((l) => `      <li><a href="${l.href}">${esc(l.label)}</a></li>`).joi
               + `${starter ? `${starter.name} is the ${starterRole} on a ${starter.savePct.toFixed(3).replace(/^0/, '')} save percentage. ` : ''}`
               + `Choosing a different goaltender changes the expected goals against and moves the projection, `
               + `because his save percentage is an input to the model rather than a note on the page. `
-              + `Starters are labelled projected, not confirmed.`,
+              + `A starter reads confirmed once the club has announced him and projected until then.`,
           },
           {
             q: `Can I scratch a ${t.nickname} skater?`,

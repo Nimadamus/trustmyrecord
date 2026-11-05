@@ -827,6 +827,17 @@ function weekBlock(sport, inputs, result) {
   </section>` : ''}`;
 }
 
+/* ONE_NUMBER_20261105: says what the slate number is, by what the API actually served. "Same
+   calibrated model" was false for both sports: a run could name the other favourite. */
+function slateNote(sport, inputs, games) {
+  const at = new Date(inputs.generated_at).toLocaleString('en-US', { timeZone: 'America/Los_Angeles', hour: 'numeric', minute: '2-digit' }) + ' PT';
+  const served = games.length && games.every((g) => typeof g.p_forecast === 'number' || typeof g.p_home === 'number' && sport === 'nhl');
+  if (served && sport === 'nba') return `The percentage is each team's win probability for this game, with its real rest and the players listed out at ${esc(at)}. It is the number a run of the game returns.`;
+  if (served) return `The percentage is each team's win probability for this game, with its rest and the goaltender in line to start at ${esc(at)}. It is the number a run of the game returns.`;
+  if (sport === 'nba') return "The percentage is each team's win probability from the season forecast, with rest but before injuries. A run of the game also counts who is out, so it can differ.";
+  return "The percentage is each team's win probability from the season ratings with its usual starting goaltender. A run of the game uses the goaltender in line to start, so it can differ.";
+}
+
 function hubBlock(sport, inputs, rivalries, result) {
   const L = LEAGUE[sport];
   const now = Date.now();
@@ -861,7 +872,7 @@ function hubBlock(sport, inputs, rivalries, result) {
   </style>
   ${cards ? `<section class="panel" id="todaysGames">
     <h2>Next ${L.label} games: ${esc(day)}</h2>
-    <p>The percentage is each team's win probability from the same calibrated model this simulator runs. Choose the game in the simulator above to play it out with a full box score.</p>
+    <p>${slateNote(sport, inputs, games)} Choose the game in the simulator above to play it out with a full box score.</p>
     <div class="lsimh-games">${cards}</div>
   </section>` : ''}
   ${result ? weekBlock(sport, inputs, result) : ''}
