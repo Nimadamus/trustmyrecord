@@ -1,38 +1,53 @@
 {
  "replayedOn": "November 5, 2026",
  "source": {
-  "engineSha256": "13072807123e06ba8a3d3994488b6c4aff9b8af996762175fef03f0a0d749217",
+  "engineSha256": "36b72acddab22e97c2a359c1903bf53947be3d62e25bbc0856afc23a9b766d13",
   "harness": "tmr_sim_remediation/program_1105/evidence/mlb/replay.js",
   "reports": [
-   "report_base26.json"
+   "report_r08.json",
+   "report_r08c.json"
   ],
   "method": "point in time replay through the real engine, 1,000 win probability samples a game, posted lineups and probable starters, stats through the day before"
  },
- "holdout": null,
+ "holdout": {
+  "season": 2025,
+  "n": 2430,
+  "accuracyPct": 57.37,
+  "homeRatePct": 54.28,
+  "brier": 0.24172,
+  "baselineBrier": 0.24862,
+  "vsBaseline": {
+   "mean": -0.0069,
+   "lo": -0.01007,
+   "hi": -0.00373
+  },
+  "slope": 1.001,
+  "slopeSE": 0.124
+ },
  "tuned": {
   "season": 2026,
   "n": 2429,
-  "accuracyPct": 56.11,
+  "accuracyPct": 54.88,
   "homeRatePct": 52.86,
-  "brier": 0.24619,
+  "brier": 0.24479,
   "baselineBrier": 0.24938,
   "vsBaseline": {
-   "mean": -0.00319,
-   "lo": -0.00637,
-   "hi": -0.00001
+   "mean": -0.0046,
+   "lo": -0.00774,
+   "hi": -0.00146
   },
-  "slope": 0.732,
-  "slopeSE": 0.128
+  "slope": 0.853,
+  "slopeSE": 0.129
  },
  "market": {
   "season": 2026,
   "n": 1716,
-  "model": 0.24449,
+  "model": 0.24309,
   "market": 0.24235,
   "gap": {
-   "mean": 0.00215,
-   "lo": -0.00032,
-   "hi": 0.00461
+   "mean": 0.00074,
+   "lo": -0.00139,
+   "hi": 0.00287
   }
  }
 }
