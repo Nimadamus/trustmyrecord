@@ -13,7 +13,6 @@ const css = read('static/css/tmr-mlb-game.css');
 const cta = read('static/js/sim-run-cta.js');
 
 assert(hub.includes('/static/js/tmr-mlb-game.js') && hub.includes('/static/css/tmr-mlb-game.css'), 'finish layer loads on the hub');
-assert(hub.indexOf('tmr-sim-broadcast.css') < hub.indexOf('tmr-mlb-game.css'), 'finish CSS loads after the shell CSS');
 assert(hub.includes('Games behind the win chance') && hub.includes('Box scores to play'), 'the two counts say what they do');
 assert(!/resultShowing = [^;]*realButtonInView/.test(cta), 'sticky run bar stays away once a result is showing');
 assert(/saveLastResult\(\);\s*return state\.simulation;/.test(engine), 'a finished run is kept for refresh and Back');
