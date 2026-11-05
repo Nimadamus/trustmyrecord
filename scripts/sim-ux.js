@@ -41,7 +41,7 @@ function bcKind(html) {
 function bcBlock(kind) {
   return `<!--SIM_BC--><link rel="stylesheet" href="/${BC_CSS}?v=${hashOf(BC_CSS)}">`
     + `<script>(function(r){r.classList.add('simbc','simbc-${kind[0]}');r.setAttribute('data-bc','${kind[1]}');`
-    + `addEventListener('load',function(){r.classList.add('bc-ready')})}(document.documentElement))</script>`
+    + `function g(){r.classList.add('bc-ready')}addEventListener('load',g);setTimeout(g,2500)}(document.documentElement))</script>`
     + `<script defer src="/${BC_JS}?v=${hashOf(BC_JS)}"></script><!--/SIM_BC-->`;
 }
 
