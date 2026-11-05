@@ -338,3 +338,35 @@ html.simbc-shell:not(.bc-ready) main{visibility:hidden}
 
 /* Quiet result footer: the replay seed stays in the share link, not on the page. */
 html.simbc #result > .disc:not(:has(b)){display:none}
+
+/* The fold is the end of the tool: no reserved gap above it. */
+html.simbc-game main.wrap{padding-bottom:0}
+html.simbc-game .bc-about{margin-top:14px}
+
+/* Pro after the folds, one line. The offer's full copy stays in the node. */
+.bc-proline{box-sizing:border-box;width:min(1180px,calc(100% - 32px));margin:-14px auto 28px}
+.bc-proline .tpf-offer{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0;padding:8px 12px 8px 16px;
+  border:1px solid var(--bc-line);border-radius:12px;background:rgba(9,18,38,.55)}
+.bc-proline .tpf-offer-k{margin:0;min-width:0;font:700 .95rem/1.15 var(--bc-display);letter-spacing:.05em;text-transform:none;color:var(--bc-mut)}
+.bc-proline :is(.tpf-offer-h,.tpf-offer ul,.tpf-spot,.tpf-offer-fine){display:none}
+.bc-proline .tpf-offer-btn{flex:0 0 auto;display:inline-flex;align-items:center;width:auto;min-height:40px;margin:0;padding:0 14px;font-size:.84rem}
+
+/* Season and playoff: stamp and notes */
+html.simbc-shell .bc-stamp{margin:0 0 8px;font-size:.84rem;color:var(--bc-mut)}
+.bc-notes p{margin:0 0 10px;line-height:1.5;color:var(--bc-mut)}
+
+/* One archived run, same shell */
+html.simbc-run body.tmr-ds--dark:has(> main.sa-root){background:
+  radial-gradient(900px 460px at 12% -80px,rgba(31,143,255,.26),transparent 70%),var(--bc-bg) no-repeat}
+html.simbc-run .sa-head{background:none;border:0;box-shadow:none;padding:6px 0 0}
+html.simbc-run .sa-head .sa-kick{font:700 .86rem/1 var(--bc-display);letter-spacing:.2em;color:var(--bc-cyan)}
+html.simbc-run .sa-head h1{font-weight:800;font-size:clamp(1.5rem,3vw,2.1rem);line-height:1.05;color:var(--bc-ink)}
+html.simbc-run .sa-panel{background:var(--bc-panel);border-color:var(--bc-line);border-radius:14px}
+html.simbc-run .sa-panel-head h2{font:800 1.1rem/1 var(--bc-display);letter-spacing:.08em;text-transform:uppercase;color:var(--bc-ink)}
+html.simbc-run .sa-team-row{background:none}
+html.simbc-run .sa-team-row img{width:56px;height:56px}
+html.simbc-run .sa-team-row .sa-team-name{font:800 clamp(1.2rem,2.4vw,1.8rem)/1 var(--bc-display);text-transform:uppercase}
+html.simbc-run .sa-team-row .sa-team-score{font:800 clamp(2.6rem,6vw,4rem)/1 var(--bc-display)}
+html.simbc-run .bc-fold{width:100%}
+html.simbc-run .bc-rundetail{margin:12px 0}
+html.simbc-run .bc-runabout{margin:12px 0 18px}

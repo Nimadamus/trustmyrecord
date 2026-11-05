@@ -103,6 +103,67 @@
     if (hit) t.scrollIntoView();
   }
 
+  /* The post run Pro offer lands right under the result. It belongs after the
+     folds, as one line; its full copy stays in the node. */
+  function proBelowFolds() {
+    var main = $('main');
+    if (!main) return;
+    function move() {
+      var line = $('#tpfSimLine', main);
+      var last = $$('body > .bc-fold').pop();
+      if (!line || !last) return;
+      line.classList.add('bc-proline');
+      last.parentNode.insertBefore(line, last.nextSibling);
+    }
+    new global.MutationObserver(move).observe(main, { childList: true });
+  }
+
+  /* Season and playoff pages: a table needs its heading, not its essay. Any long
+     paragraph moves into About, in page order, ids intact so live notes still update.
+     A stamp keeps its first sentence on the page. */
+  function words(n) { return (n.textContent.trim().match(/\S+/g) || []).length; }
+  function quietPanels() {
+    var main = $('main');
+    var body = $('.bc-about .bc-fold-body');
+    if (!main || !body) return;
+    var notes = el('div', 'bc-notes');
+    $$('p', main).forEach(function (p) {
+      if (words(p) < 20 || p.id === 'lsimStamp' || p.closest('table,form,dialog')) return;
+      if (p.classList.contains('pb-status')) return;
+      if (/^Standings after /.test(p.textContent.trim())) {
+        var lead = /^.*?\.(?=\s|$)/.exec(p.textContent.trim());
+        if (lead) p.parentNode.insertBefore(el('p', 'bc-stamp', lead[0]), p);
+      }
+      notes.appendChild(p);
+    });
+    if (notes.children.length) body.insertBefore(notes, body.firstChild);
+  }
+
+  /* One archived run: the board and team stats show, the rest folds. */
+  function bootRun() {
+    var host = $('[data-sa="run"]');
+    if (!host) return;
+    function dress() {
+      var head = $('.sa-head', host);
+      if (!head || head.getAttribute('data-bc')) return;
+      head.setAttribute('data-bc', '1');
+      var named = function (re) {
+        return $$('.sa-panel', host).filter(function (s) { return re.test(($('h2', s) || {}).textContent || ''); });
+      };
+      var detail = fold('bc-rundetail', 'Box score and scoring');
+      named(/^(Box score|Starting lineups|Scoring summary)$/).forEach(function (s) { detail.body.appendChild(s); });
+      var about = fold('bc-about bc-runabout', 'About this simulation');
+      $$('.sa-sub', head).forEach(function (n) { about.body.appendChild(n); });
+      named(/^How this simulation was produced$/).forEach(function (s) { about.body.appendChild(s); });
+      var left = $$(':scope > .sa-panel', host);
+      var at = left.length ? left[left.length - 1].nextSibling : null;
+      if (detail.body.children.length) host.insertBefore(detail.d, at);
+      if (about.body.children.length) host.appendChild(about.d);
+    }
+    new global.MutationObserver(dress).observe(host, { childList: true });
+    dress();
+  }
+
   /* ---------- matchup stage ---------------------------------------------- */
 
   function makeStage(o) {
@@ -130,7 +191,7 @@
     stage.appendChild(runRow);
     var other = el('button', 'bc-other', 'Try another matchup');
     other.type = 'button';
-    other.addEventListener('click', function () { picker.open('away'); });
+    other.addEventListener('click', function () { picker.flow(); });
     stage.appendChild(other);
 
     var picker = makePicker(o);
@@ -182,9 +243,14 @@
     dlg.addEventListener('click', function (e) { if (e.target === dlg) dlg.close(); });
     document.body.appendChild(dlg);
     var side = 'away';
-    function fill() {
+    /* Try another matchup is one flow: away, then straight on to home. */
+    var thenHome = false;
+    dlg.addEventListener('cancel', function () { thenHome = false; });
+    close.addEventListener('click', function () { thenHome = false; });
+    function fill(skip) {
       grid.innerHTML = '';
       o.teams().forEach(function (t) {
+        if (skip && t.key === skip) return;
         var b = el('button', 'bc-pick-team');
         b.type = 'button';
         var c = el('span', 'bc-pick-crest');
@@ -192,17 +258,26 @@
         b.appendChild(c);
         b.appendChild(el('span', 'bc-pick-name', t.short || nick(t.name)));
         b.setAttribute('aria-label', t.name);
-        b.addEventListener('click', function () { dlg.close(); o.choose(side, t.key); });
+        b.addEventListener('click', function () {
+          dlg.close();
+          o.choose(side, t.key);
+          if (thenHome && side === 'away') {
+            thenHome = false;
+            show('home', t.key);
+          }
+        });
         grid.appendChild(b);
       });
     }
+    function show(s, skip) {
+      side = s;
+      title.textContent = 'Choose ' + s + ' team';
+      fill(skip);
+      if (dlg.showModal) dlg.showModal();
+    }
     return {
-      open: function (s) {
-        side = s;
-        title.textContent = 'Choose ' + s + ' team';
-        fill();
-        if (dlg.showModal) dlg.showModal();
-      },
+      open: function (s) { thenHome = false; show(s); },
+      flow: function () { thenHome = true; show('away'); },
     };
   }
 
@@ -319,7 +394,7 @@
     a.addEventListener('click', again);
     var t = el('button', 'bc-try', 'Try another matchup');
     t.type = 'button';
-    t.addEventListener('click', function () { goTo(stage.node); stage.picker.open('away'); });
+    t.addEventListener('click', function () { goTo(stage.node); stage.picker.flow(); });
     bar.appendChild(a); bar.appendChild(t);
     return bar;
   }
@@ -733,7 +808,7 @@
       }
       var try2 = el('button', 'btn ghost bc-try', 'Try another matchup');
       try2.type = 'button';
-      try2.addEventListener('click', function () { goTo(stage.node); stage.picker.open('away'); });
+      try2.addEventListener('click', function () { goTo(stage.node); stage.picker.flow(); });
       var again = $('button', mh.lastElementChild);
       if (again && again.parentNode) again.parentNode.insertBefore(try2, again.nextSibling);
 
@@ -751,6 +826,26 @@
       }
       var boxTab = $('#simTab_box', out);
       if (boxTab) boxTab.click();
+      /* Phone: the score, the odds and the line, then folds. */
+      if (global.matchMedia && global.matchMedia('(max-width:640px)').matches) {
+        var stats = fold('bc-charts bc-nflstats', 'Team stats and scoring');
+        ['.bc-compare', '.bc-high'].forEach(function (s) {
+          var n = $(s, out);
+          if (n) stats.body.appendChild(n);
+        });
+        var tabsPanel = boxTab ? boxTab.closest('.panel') : null;
+        var boxFold = fold('bc-charts bc-nflbox', 'Full box score');
+        if (tabsPanel) {
+          tabsPanel.parentNode.insertBefore(boxFold.d, tabsPanel);
+          boxFold.body.appendChild(tabsPanel);
+        }
+        var chartFold = $('.bc-charts:not(.bc-nflstats):not(.bc-nflbox)', out);
+        if (kpis[0] && chartFold) {
+          var cb = $('.bc-fold-body', chartFold);
+          cb.insertBefore(kpis[0], cb.firstChild);
+        }
+        if (stats.body.children.length) out.insertBefore(stats.d, chartFold || boxFold.d);
+      }
       goTo(box);
     }
 
@@ -945,6 +1040,7 @@
             moreLabel: 'Schedule and simulation history',
           });
           if (SPORT === 'nfl') bootNfl(); else bootLeagueApp();
+          proBelowFolds();
         }
       } else if (root.classList.contains('simbc-hub')) {
         shelve({
@@ -966,6 +1062,9 @@
           loose: '.hero > p,.lsim-hero > p,.ss-hero p,.cl-hero p',
           aboutLabel: 'About this simulator',
         });
+        quietPanels();
+      } else if (root.classList.contains('simbc-run')) {
+        bootRun();
       }
     } finally {
       ready();
