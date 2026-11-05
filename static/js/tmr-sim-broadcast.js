@@ -221,7 +221,19 @@
     global.requestAnimationFrame(step);
   }
 
-  function pctText(v) { return Math.round(v * 100) + '%'; }
+  /* Two chances side by side round as a pair (largest remainder), so they add up
+     to the rounded total: 80.5 and 19.5 must not print as 81% and 20%. */
+  function pctPair(a, h) {
+    var total = Math.round((a + h) * 100);
+    var fa = a * 100, fh = h * 100;
+    var ra = Math.floor(fa), rh = Math.floor(fh);
+    var left = total - ra - rh;
+    while (left > 0) {
+      if (fa - ra >= fh - rh) { ra += 1; fa = ra; } else { rh += 1; fh = rh; }
+      left -= 1;
+    }
+    return [ra + '%', rh + '%'];
+  }
   function r1(v) { return Math.round(v * 10) / 10; }
 
   /* rows: [label, awayValue, homeValue, unit] */
@@ -253,15 +265,16 @@
   function oddsBand(aName, hName, aw, hw, n, score) {
     var box = el('div', 'bc-odds');
     var row = el('div', 'bc-odds-row');
-    row.appendChild(el('div', 'pc', pctText(aw)));
+    var pair = pctPair(aw, hw);
+    row.appendChild(el('div', 'pc', pair[0]));
     var bar = el('div', 'bar');
     bar.setAttribute('role', 'img');
-    bar.setAttribute('aria-label', aName + ' ' + pctText(aw) + ', ' + hName + ' ' + pctText(hw));
+    bar.setAttribute('aria-label', aName + ' ' + pair[0] + ', ' + hName + ' ' + pair[1]);
     var ab = el('span', 'a'); ab.style.width = (aw * 100).toFixed(1) + '%';
     var hb = el('span', 'h'); hb.style.width = (hw * 100).toFixed(1) + '%';
     bar.appendChild(ab); bar.appendChild(hb);
     row.appendChild(bar);
-    row.appendChild(el('div', 'pc', pctText(hw)));
+    row.appendChild(el('div', 'pc', pair[1]));
     box.appendChild(row);
     var cap = 'Win chance, ' + Number(n).toLocaleString() + ' games';
     if (score) cap += ' · projected ' + score;
@@ -488,7 +501,19 @@
       });
       var hi = highlights(cards, lines);
       if (hi) box.insertBefore(hi, after);
-      box.insertBefore(afterBar(function () { app.run(); }, stage), after);
+      /* The real Run again, so the gate and the meter see the same press. */
+      box.insertBefore(afterBar(function () {
+        var again = $('.actionbar button.primary', box);
+        if (again) again.click();
+      }, stage), after);
+
+      /* The highlights above replace the summary tab: open on the box score. */
+      var tabs = $$('.tabs button', box);
+      var boxTab = tabs.filter(function (b) { return /^Box score$/.test(b.textContent.trim()); })[0];
+      if (boxTab && tabs[0] && /summary/i.test(tabs[0].textContent)) {
+        tabs[0].hidden = true;
+        boxTab.click();
+      }
 
       box.classList.add('bc-show');
       box.style.minHeight = '';
@@ -720,7 +745,12 @@
         out.insertBefore(fc.d, charts);
         if (kpis[1]) fc.body.appendChild(kpis[1]);
         fc.body.appendChild(charts);
+        var sharePanel = $('#nflSharePanel', out);
+        if (sharePanel) fc.body.appendChild(sharePanel);
+        fc.d.firstChild.textContent = 'Charts and share card';
       }
+      var boxTab = $('#simTab_box', out);
+      if (boxTab) boxTab.click();
       goTo(box);
     }
 

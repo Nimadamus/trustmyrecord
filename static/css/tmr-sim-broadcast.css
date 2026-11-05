@@ -211,8 +211,21 @@ html.simbc #result .kpis{gap:10px}
 html.simbc #result .kpi{background:var(--bc-panel);border-color:var(--bc-line);border-radius:14px;text-align:center}
 html.simbc #result .kpi .v{font-family:var(--bc-display);font-weight:800;font-size:2rem}
 html.simbc #result .kpi .k{font:700 .82rem/1 var(--bc-display);letter-spacing:.1em;text-transform:uppercase}
-html.simbc #result > p.muted,html.simbc #simNextGames,html.simbc #simConvertPanel p.muted{display:none}
+html.simbc #result > p.muted,html.simbc #simNextGames,html.simbc #simConvertPanel :is(p.muted,p.dim){display:none}
+html.simbc #result .tabs button[hidden]{display:none}
+/* the two big actions live in .bc-after; the rest stay as a quiet row */
+html.simbc #result .actionbar{justify-content:center;gap:4px;margin-top:6px;background:none;border:0}
+html.simbc #result .actionbar > button:nth-of-type(-n+2){display:none}
+html.simbc #result .actionbar > button{background:none;border:0;padding:6px 10px;font:600 .9rem/1 var(--bc-display);letter-spacing:.05em;color:var(--bc-mut)}
+html.simbc #result .actionbar > button:hover{color:var(--bc-ink)}
+/* NFL marks arrive as a tile with inline sizes */
+.bc-crest .tlogo,.bc-pick-crest .tlogo{width:100% !important;height:100% !important;background:none;border-radius:0}
+.bc-crest .badge,.bc-pick-crest .badge{width:100% !important;height:100% !important}
+.bc-pick-crest > span{width:100% !important;height:100% !important}
 .bc-charts{width:100%;margin:12px 0 0}
+html.simbc #result .mh-team > span:first-child{width:96px !important;height:96px !important}
+html.simbc #result .mh-team > span:first-child > *{width:100% !important;height:100% !important;background:none}
+html.simbc #result > .disc + .disc:not(:has(b)){display:none}
 
 /* MLB */
 html.bc-idle .sim-score-panel{display:none}
