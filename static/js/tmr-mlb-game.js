@@ -23,7 +23,7 @@
   function settle() {
     var t = tail();
     if (!t) return;
-    ['#simv2PickPanel', '.tmr-take-inline', '#tpfSimLine'].forEach(function (s) {
+    ['#simv2PickPanel', '#tmr-fp-reminder', '.tmr-take-inline', '#tpfSimLine'].forEach(function (s) {
       var n = $(s);
       if (n && n.parentNode !== t) t.appendChild(n);
     });
@@ -59,6 +59,7 @@
       $$('tr', tb).forEach(function (row) {
         Array.prototype.forEach.call(row.cells, function (c, i) {
           if (!keep[i] && c.colSpan === 1) c.classList.add('bc-adv');
+          if (/^SEA /.test(heads[i]) && c.colSpan === 1) c.classList.add('bc-far');
         });
       });
       var wrap = tb.closest('.player-table-wrap') || tb;
@@ -76,7 +77,24 @@
     });
   }
 
-  function after() { settle(); tally(); coreTables(); }
+  function after() {
+    settle(); tally(); coreTables();
+    var t = $('.bc-try');
+    if (t) t.textContent = 'New matchup';
+  }
+
+  /* The page above the result changes height as a run lands, which leaves the score
+     under the header on phones. Settle it once, unless the visitor has moved. */
+  var moved = false;
+  ['touchstart', 'wheel', 'keydown'].forEach(function (t) {
+    global.addEventListener(t, function () { moved = true; }, { passive: true });
+  });
+  function land() {
+    var api = global.TMRMlbSimulator;
+    var card = $('#resultCard');
+    if (moved || !card || !api || !api.state || !api.state.simulation || api.state.restored) return;
+    card.scrollIntoView({ behavior: 'auto', block: 'start' });
+  }
 
   function boot() {
     var top = $('#topScoreboard');
@@ -87,8 +105,12 @@
     function soon() {
       timers.forEach(global.clearTimeout);
       timers = [60, 500, 1500, 4000].map(function (ms) { return global.setTimeout(after, ms); });
+      moved = false;
+      timers.push(global.setTimeout(land, 700));
     }
     new global.MutationObserver(soon).observe(top, { childList: true });
+    var panel = $('.sim-score-panel');
+    if (panel) new global.MutationObserver(settle).observe(panel, { childList: true });
     soon();
   }
   if (doc.readyState === 'loading') doc.addEventListener('DOMContentLoaded', boot); else boot();
