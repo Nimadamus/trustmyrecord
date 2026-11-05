@@ -76,7 +76,7 @@ function createSimulator() {
   const elements = {};
   elementIds.forEach((id) => { elements[id] = makeElement(id); });
   const context = {
-    window: { URL: { createObjectURL() { return 'blob:test'; }, revokeObjectURL() {} } },
+    window: { TMR_MLB_STARTER_RESIDUAL: Number(process.env.TMR_MLB_STARTER_RESIDUAL || 0.08), URL: { createObjectURL() { return 'blob:test'; }, revokeObjectURL() {} } },
     document: {
       readyState: 'complete',
       getElementById(id) { return elements[id] || null; },
