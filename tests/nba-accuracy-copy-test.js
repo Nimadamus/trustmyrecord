@@ -24,6 +24,11 @@ assert.ok(/Brier/.test(det) && /backtests/.test(det), 'the FAQ answer gives the 
 const app = fs.readFileSync(path.join(ROOT, 'static', 'js', 'nba-simulator-app.js'), 'utf8');
 assert.ok(/\/nba\/ledger\/report/.test(app), 'the live record is read from the ledger');
 assert.ok(!/items\[0\]/.test(app), 'figures are set by name, not list position');
+// SIM1105: the market gap is the paired one; limits and sample wording match the model.
+assert.ok(/model_minus_market_brier/.test(app) && !/The betting market scored/.test(app), 'the live record prints the paired market gap');
+assert.ok(!/two full seasons/.test(hub), 'the rating sample is three seasons');
+assert.ok(!/Rest, travel, back-to-backs, in-game injuries/.test(hub), 'limits name only what is not modelled');
+assert.ok(!/raw rather than schedule-adjusted/.test(hub), 'ratings are solved against the schedule');
 for (const f of ['nba-simulator/index.html', 'nba-season-simulator/index.html', 'nba-playoff-simulator/index.html']) {
   const h = fs.readFileSync(path.join(ROOT, f), 'utf8');
   assert.ok(!/src="https:\/\/a\.espncdn\.com\/i\/teamlogos\/[^"]+\/500\/[^"]+\.png"/.test(h), f + ' ships a 500 px crest');

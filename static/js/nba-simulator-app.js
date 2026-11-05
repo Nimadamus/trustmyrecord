@@ -710,10 +710,19 @@
       if (!r || !(r.graded_games > 0)) return;
       var f = r.forecast || {}, sm = r.sim || {};
       var n = r.graded_games;
+      /* NBA_PAIRED_MARKET_20261105: model and market on the SAME games. Printing the model
+         over every game beside the market over the priced ones read as a 0.004 gap when the
+         paired gap was 0.015. */
+      function pairedGap(fc, sim) {
+        if (typeof fc.model_minus_market_brier !== 'number' || !fc.market_games) return '';
+        var word = function (x) { return (x > 0 ? 'trails the market by ' : 'leads the market by ') + Math.abs(x).toFixed(3); };
+        return ' On the ' + fc.market_games + ' games with a market price the season model ' + word(fc.model_minus_market_brier) + ' Brier'
+          + (typeof sim.model_minus_market_brier === 'number' && sim.market_games === fc.market_games ? ' and the game simulator ' + word(sim.model_minus_market_brier) : '') + '.';
+      }
       var txt = 'Graded so far: ' + n.toLocaleString('en-US') + (n === 1 ? ' game' : ' games') + ' (' + r.from + ' to ' + r.to + ').'
         + (typeof f.brier === 'number' ? ' Season model Brier ' + f.brier.toFixed(3) + ', favourite won ' + p1(f.favourite_won) + '.' : '')
         + (typeof sm.brier === 'number' && sm.games ? ' Game simulator Brier ' + sm.brier.toFixed(3) + ' over ' + sm.games + '.' : '')
-        + (typeof f.market_brier === 'number' && f.market_games ? ' The betting market scored ' + f.market_brier.toFixed(3) + ' on the ' + f.market_games + ' games with a price.' : '')
+        + pairedGap(f, sm)
         + (n < 100 ? ' Too few games to judge yet.' : '');
       live.textContent = txt;
     }).catch(function () { /* the sentence stays */ });

@@ -156,7 +156,7 @@ def nhl_pages():
     steps = [('nhl: backend fetch', [GIT, '-C', be, 'fetch', '-q', '--no-tags', 'origin', 'master']),
              ('nhl: backend reset', [GIT, '-C', be, 'reset', '-q', '--hard', 'origin/master']),
              ('nhl: snapshot', [NODE, os.path.join(be, 'scripts', 'build_nhl_snapshot.js')]),
-             ('nhl: matchup pages', [NODE, r'scripts\build_sim_matchup_pages.js', '--backend', be]),
+             ('nhl: matchup pages', [NODE, r'scripts\build_sim_matchup_pages.js', '--backend', be, '--sports', 'nhl']),
              ('nhl: team pages', [NODE, r'scripts\build_sim_team_pages.js', '--backend', be, '--sports', 'nhl'])]
     for name, cmd in steps:
         if run(name, cmd, fatal=False) != 0:
