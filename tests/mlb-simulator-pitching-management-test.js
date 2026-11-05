@@ -459,7 +459,8 @@ console.log('MARATHON (extra-inning games, both modes)');
       if (new Set(seq).size !== seq.length) reentry++;
       rows.forEach((p) => {
         if (p.role === 'CL') { clApps++; if (p.outs >= 7) cl7++; }
-        if (p.role !== 'SP' && p.role !== 'POS' && p.role !== 'BULK') maxReliefOuts = Math.max(maxReliefOuts, p.outs);
+        // A position player pitching means the pen was empty: the last arm has nobody to hand to.
+        if (p.role !== 'SP' && p.role !== 'POS' && p.role !== 'BULK' && !rows.some((q) => q.role === 'POS')) maxReliefOuts = Math.max(maxReliefOuts, p.outs);
         if (p.er > p.r || p.outs < 0) illegalLine++;
         if (p.role !== 'SP' && p.outs <= 3 && p.h > shortMaxHits) { shortMaxHits = p.h; shortWorst = p.name + ' ' + p.role; }
         if (p.role !== 'SP' && p.outs <= 6 && p.r === 0 && p.h > 4) { noDamage++; noDamageEx = p.name + ' ' + p.role + ' ' + p.outs + 'o ' + p.h + 'h ' + (p.exitReason || ''); }
