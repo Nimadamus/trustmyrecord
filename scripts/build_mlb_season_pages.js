@@ -24,6 +24,32 @@ const PAGES = ['mlb-simulator', 'mlb-game-simulator', 'mlb-season-simulator', 'm
   'mlb-predictions-simulator', 'mlb-simulation-predictions'];
 const RE = /<!--MK:mlbSeasonState-->[\s\S]*?<!--\/MK:mlbSeasonState-->/;
 
+/* MLB_PHASE_COPY_20261105: prose that is only true for part of the year sits between
+   <!--MK:mlbPhase:key--> markers and follows the season state, in both directions, so
+   it goes back to the in-season wording by itself when the next season opens. */
+const PHASE_COPY = {
+  'season-builder': { live: 'The builder above is live: pick your teams, submit while logged in, and your entry is saved to your account and timestamped so it counts.',
+    done: (s) => `${s.season} entries are locked and graded against the real results, and the builder above stays closed until entries open for ${s.next_season}.` },
+  'season-bracket': { live: 'as a live MLB playoff simulator that grades in October.', done: () => 'as an MLB playoff bracket that is graded against the real October results.' },
+  'season-tonight': { live: 'For tonight, the', done: () => 'Once games return, the' },
+  'po-set': { live: 'and the twelve team bracket is set.', done: () => 'and twelve teams made the bracket.' },
+  'po-path': { live: 'so the path for every team is fixed today.', done: () => 'so the path for every team was fixed on the first day of the postseason.' },
+  'po-rerun': { live: 'The <a href="/mlb-playoff-odds/">live odds page</a> reruns as results come in.', done: (s) => `The <a href="/mlb-playoff-odds/">odds page</a> now carries the final ${s.season} results.` },
+};
+const PHASE_RE = /(<!--MK:mlbPhase:([a-z-]+)-->)[\s\S]*?(<!--\/MK:mlbPhase-->)/g;
+function applyPhaseCopy(html, state) {
+  return html.replace(PHASE_RE, (all, open, key, close) => {
+    const c = PHASE_COPY[key];
+    if (!c) throw new Error('unknown mlbPhase key ' + key);
+    return open + (SS.isComplete(state) ? c.done(state) : c.live) + close;
+  });
+}
+/* The closed season page cannot say yes in its FAQ (visible and JSON-LD). */
+const SEASON_FAQ_Q = 'Can I submit MLB season predictions on this page?';
+function seasonFaq(state) {
+  return `Not right now. ${state.season} entries are locked and graded. Locked entries stay on the public record, and this page reopens for ${state.next_season} predictions.`;
+}
+
 function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
 
 function block(state) {
@@ -46,7 +72,7 @@ function apply(html, state, file) {
   return html.slice(0, at + 5) + (html.includes('\r\n') ? '\r\n' : '\n') + b + html.slice(at + 5);
 }
 
-module.exports = { PAGES, block, apply };
+module.exports = { PAGES, block, apply, applyPhaseCopy, PHASE_COPY, seasonFaq, SEASON_FAQ_Q };
 
 if (require.main === module) {
   const state = SS.readState(ROOT);
@@ -54,7 +80,12 @@ if (require.main === module) {
   for (const d of PAGES) {
     const f = path.join(ROOT, d, 'index.html');
     const html = fs.readFileSync(f, 'utf8');
-    const next = apply(html, state, f);
+    let next = applyPhaseCopy(apply(html, state, f), state);
+    if (d === 'mlb-season-simulator' && SS.isComplete(state)) {
+      const r = require('./stamp-sim-run-policy.js').stampPage(next, SEASON_FAQ_Q, seasonFaq(state));
+      if (r.problems.length) throw new Error('season FAQ: ' + r.problems.join('; '));
+      next = r.text;
+    }
     if (next !== html) fs.writeFileSync(f, next);
   }
   console.log(`mlb season pages: ${PAGES.length} pages, phase ${state.phase}`);

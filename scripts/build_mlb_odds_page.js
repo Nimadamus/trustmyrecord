@@ -267,6 +267,23 @@ const SETTLED_KEYS = ['playoffs', 'round2', 'conf_final', 'final', 'champion', '
 function settledHtml(html) {
   return html.replace(/&gt;99%/g, '100%').replace(/&lt;1%/g, '0%');
 }
+/* FINAL_TABLE_LABELS_20261105: "World Series" meant reached it in the odds table and won it
+   in the standings, so one page gave the Rays 100% and 0% under the same word. A range around
+   a finished record ("85 to 85") says nothing, so that column goes too. */
+function settledOddsHtml(html) {
+  return settledHtml(html).replace(/(<th[^>]*>)World Series(<\/th>)/g, '$1Reached World Series$2');
+}
+function settledStandingsHtml(html) {
+  return settledHtml(html).replace(/<tr[^>]*>[\s\S]*?<\/tr>/g, (row) => {
+    let i = 0;
+    return row.replace(/<t[hd][^>]*>[\s\S]*?<\/t[hd]>/g, (cell) => {
+      i += 1;
+      if (i === 3) return '';
+      if (i === 2) return cell.replace(/(\d+)\.0(?=<)/, '$1');
+      return cell.replace(/>World Series</, '>Won World Series<');
+    });
+  });
+}
 function assertSettled(result, state) {
   for (const t of result.teams) {
     for (const k of SETTLED_KEYS) {
@@ -377,10 +394,10 @@ ${H.NAV_RESERVE}
   </section>
 
   <section class="panel"><h2>${inp.season} World Series and playoff odds${done ? ', final' : ''}</h2>
-  <div id="lsimOdds">${done ? settledHtml(UI.oddsTable(result)) : UI.oddsTable(result)}</div></section>
+  <div id="lsimOdds">${done ? settledOddsHtml(UI.oddsTable(result)) : UI.oddsTable(result)}</div></section>
 
   <section class="panel"><h2>${done ? `Final ${inp.season} standings` : 'Projected final standings'}</h2>
-  <div id="lsimTables" class="lsim-grid">${done ? settledHtml(UI.seasonTables(result)) : UI.seasonTables(result)}</div></section>
+  <div id="lsimTables" class="lsim-grid">${done ? settledStandingsHtml(UI.seasonTables(result)) : UI.seasonTables(result)}</div></section>
 
   ${done ? '' : picks}
 
@@ -405,7 +422,7 @@ ${H.NAV_RESERVE}
   <section class="panel">
     <h2>More MLB simulators</h2>
     <div class="linkgrid">
-    <a href="/mlb-simulator/">MLB Simulator<small>Simulate any game pitch by pitch</small></a>
+    <a href="/mlb-simulator/">MLB Simulator<small>Simulate any game, plate appearance by plate appearance</small></a>
     <a href="/mlb-playoff-simulator/">MLB Playoff Simulator<small>Build and lock your bracket</small></a>
     <a href="/mlb-season-simulator/">MLB Season Simulator<small>Predict the season, track your record</small></a>
     <a href="/handicapping/mlb/">MLB Matchups Today<small>Today's board, game by game</small></a>
@@ -556,8 +573,8 @@ ${H.NAV_RESERVE}
     </div>
   </section>
   <section class="panel">
-    <h2>${esc(t.short)} last ${last10.length} and every game left</h2>
-    <p class="small">Final scores for the last ten games, then each remaining game with the model's probability that the ${esc(t.short)} win it.</p>
+    <h2>${esc(t.short)} last ${last10.length}${done ? '' : ' and every game left'}</h2>
+    <p class="small">${done ? 'Final scores for the last ten games.' : `Final scores for the last ten games, then each remaining game with the model's probability that the ${esc(t.short)} win it.`}</p>
     <div class="tscroll"><table class="sched"><thead><tr><th>Date</th><th>Opponent</th><th class="r">Result or odds</th></tr></thead><tbody>${sched}</tbody></table></div>
   </section>
   <section class="panel">
@@ -569,8 +586,8 @@ ${H.NAV_RESERVE}
   <section class="panel">
     <h2>Simulate the ${esc(t.short)}</h2>
     <div class="linkgrid">
-      <a href="/mlb-simulator/">MLB Simulator<small>Any ${esc(t.short)} game, pitch by pitch</small></a>
-      <a href="${URL}">MLB Playoff Odds<small>All 30 teams, live</small></a>
+      <a href="/mlb-simulator/">MLB Simulator<small>Any ${esc(t.short)} game, one plate appearance at a time</small></a>
+      <a href="${URL}">MLB Playoff Odds<small>${done ? `All 30 teams, final ${inp.season}` : 'All 30 teams, live'}</small></a>
       <a href="/mlb-playoff-simulator/">MLB Playoff Simulator<small>${done ? `The ${inp.season} postseason bracket` : 'Build and lock your bracket'}</small></a>
       <a href="/handicapping/mlb/">MLB Matchups Today<small>Today's board</small></a>
     </div>
@@ -590,14 +607,14 @@ ${shell.tail}
   return out;
 }
 
-function patchMlbHub(pages) {
+function patchMlbHub(pages, hubDone) {
   const file = path.join(ROOT, 'mlb-simulator', 'index.html');
   let html = fs.readFileSync(file, 'utf8');
   const divs = [...new Set(pages.map((p) => p.division))].sort();
   const block = `<!--MK:mlbTeamSims-->
 <section aria-label="MLB team simulators" style="max-width:1140px;margin:46px auto 0;padding:26px 22px;background:#12121a;border:1px solid #2a2a4a;border-radius:18px;font-family:'Inter',system-ui,sans-serif;">
   <h2 style="font-family:'Barlow','Inter',sans-serif;font-weight:800;font-size:1.15rem;color:#e8e8f0;margin:0 0 6px;">Simulate a single MLB team</h2>
-  <p style="color:#9aa4b5;margin:0 0 14px;font-size:.92rem;">Every club's live playoff odds, projected wins and every game left. <a href="/mlb-playoff-odds/" style="color:#00aeff;">All 30 teams on one page</a>.</p>
+  <p style="color:#9aa4b5;margin:0 0 14px;font-size:.92rem;">${hubDone ? 'Every club\'s final record, postseason result and last ten games.' : 'Every club\'s live playoff odds, projected wins and every game left.'} <a href="/mlb-playoff-odds/" style="color:#00aeff;">All 30 teams on one page</a>.</p>
   ${divs.map((d) => `<div style="margin:0 0 12px;"><div style="color:#ffd700;font-weight:700;font-size:.82rem;letter-spacing:.06em;text-transform:uppercase;margin:0 0 6px;">${esc(d)}</div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:6px 18px;">${pages.filter((p) => p.division === d).map((p) => `<a href="${p.url}" style="color:#00aeff;text-decoration:none;font-weight:600;font-size:0.95rem;padding:3px 0;">${esc(p.name)}</a>`).join('')}</div></div>`).join('\n  ')}
 </section>
 <!--/MK:mlbTeamSims-->`;
@@ -645,7 +662,7 @@ if (require.main === module) (async () => {
     fs.mkdirSync(path.dirname(f), { recursive: true });
     fs.writeFileSync(f, DM.finalize(f, SIMUX.inject(pg.html), inp.generated_at));
   }
-  patchMlbHub(pages);
+  patchMlbHub(pages, SS.isComplete(state));
   console.log(`mlb: ${pages.length} team pages, ${patchSitemap(pages.map((p) => p.url))} new sitemap entries`);
   const sum = (k) => result.teams.reduce((s, t) => s + t[k], 0);
   console.log(`mlb odds: ${inp.games_final} final, ${inp.schedule.length - inp.games_final} left, playoffs sum ${sum('playoffs').toFixed(2)}, champion sum ${sum('champion').toFixed(3)}`);
