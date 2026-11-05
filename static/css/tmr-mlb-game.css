@@ -1,0 +1,60 @@
+/* MLB game simulator finish. Builds on tmr-sim-broadcast tokens; adds none of its own. */
+html.simbc-game[data-bc="mlb"] #resultCard,
+html.simbc-game[data-bc="mlb"] #boxScorePanel{scroll-margin-top:calc(var(--nav-h,76px) + 14px)}
+
+/* scoreboard */
+html.simbc-game[data-bc="mlb"] .sb-team strong,
+html.simbc-game[data-bc="mlb"] .sb-winner .sb-team strong{color:var(--bc-ink) !important}
+html.simbc-game[data-bc="mlb"] .sb-winner .sb-team strong::after{content:"";display:inline-block;width:0;height:0;margin-left:6px;vertical-align:middle;border-style:solid;border-width:4px 0 4px 6px;border-color:transparent transparent transparent var(--bc-cyan)}
+html.simbc-game[data-bc="mlb"] :is(.sb-logo,.bc-mono img){filter:drop-shadow(0 0 1px rgba(255,255,255,.75)) drop-shadow(0 0 7px rgba(255,255,255,.22))}
+html.simbc-game[data-bc="mlb"] .sb-scroll{scrollbar-width:thin}
+
+/* result actions */
+html.simbc-game[data-bc="mlb"] .bc-after .bc-again{font-weight:800;box-shadow:0 8px 24px rgba(31,143,255,.28)}
+html.simbc-game[data-bc="mlb"] .bc-after button{white-space:nowrap}
+html.simbc-game[data-bc="mlb"] .result-jump-actions a[href="#boxScorePanel"]{display:none !important}
+html.simbc-game[data-bc="mlb"] .result-jump-actions{display:flex;flex-wrap:wrap;gap:4px 18px;justify-content:center;margin:10px 0 0;padding:0;background:none;border:0}
+html.simbc-game[data-bc="mlb"] .result-jump-actions :is(a,button){min-height:44px;padding:8px 2px;background:none !important;border:0 !important;box-shadow:none !important;color:var(--bc-mut) !important;font:600 .86rem/1.2 Inter,system-ui,sans-serif;text-decoration:none;cursor:pointer}
+html.simbc-game[data-bc="mlb"] .result-jump-actions :is(a,button):hover{color:var(--bc-ink) !important}
+html.simbc-game[data-bc="mlb"] .bc-tally{margin:10px auto 0;max-width:900px;text-align:center;color:var(--bc-mut);font:600 .9rem/1.4 Inter,system-ui,sans-serif;font-variant-numeric:tabular-nums}
+html.simbc-game[data-bc="mlb"] .bc-tally b{color:var(--bc-ink)}
+
+/* box score */
+html.simbc-game[data-bc="mlb"] #copyBoxScoreButton,
+html.simbc-game[data-bc="mlb"] #saveBoxScoreButton{min-height:40px;width:auto;padding:8px 14px;background:transparent !important;border:1px solid var(--bc-line) !important;border-radius:10px;color:var(--bc-ink) !important;font:600 .84rem/1.1 Inter,system-ui,sans-serif;box-shadow:none !important}
+html.simbc-game[data-bc="mlb"] #boxScorePanel p.lineup-banner{display:none}
+html.simbc-game[data-bc="mlb"] .bc-statsbtn{display:none}
+@media (max-width:640px){
+  html.simbc-game[data-bc="mlb"] .bc-statsbtn{display:inline-flex;align-items:center;min-height:40px;margin:0 0 8px;padding:6px 14px;background:transparent;border:1px solid var(--bc-line);border-radius:10px;color:var(--bc-cyan);font:700 .82rem/1 Inter,system-ui,sans-serif;cursor:pointer}
+  html.simbc-game[data-bc="mlb"] .player-box-table:not(.bc-all) .bc-adv{display:none}
+}
+
+/* play by play joins the dark system */
+html.simbc-game[data-bc="mlb"] .pbp-controls{background:none !important;border:0 !important;padding:0 0 10px}
+html.simbc-game[data-bc="mlb"] .pbp-btn,html.simbc-game[data-bc="mlb"] .pbp-speed{min-height:40px;background:rgba(255,255,255,.04) !important;border:1px solid var(--bc-line) !important;border-radius:10px;color:var(--bc-ink) !important;box-shadow:none !important}
+html.simbc-game[data-bc="mlb"] .pbp-speed option{background:#0d1a33;color:var(--bc-ink)}
+html.simbc-game[data-bc="mlb"] .pbp-btn:hover{background:rgba(47,224,255,.1) !important}
+html.simbc-game[data-bc="mlb"] :is(.pbp-speed-label,.pbp-playback-status){color:var(--bc-mut) !important}
+html.simbc-game[data-bc="mlb"] .pbp-half{background:rgba(255,255,255,.03) !important;border:1px solid var(--bc-line) !important;border-radius:10px}
+html.simbc-game[data-bc="mlb"] .pbp-half > summary{min-height:44px;align-items:center}
+html.simbc-game[data-bc="mlb"] .pbp-half > summary::before{color:var(--bc-cyan)}
+html.simbc-game[data-bc="mlb"] .pbp-half-label{color:var(--bc-ink) !important}
+html.simbc-game[data-bc="mlb"] .pbp-half-summary{color:var(--bc-mut) !important}
+html.simbc-game[data-bc="mlb"] .pbp-list{border-top-color:var(--bc-line) !important}
+html.simbc-game[data-bc="mlb"] .pbp-list li{color:var(--bc-ink) !important;border-color:var(--bc-line) !important;background:none !important}
+html.simbc-game[data-bc="mlb"] .pbp-list li *{color:inherit}
+
+/* after the box score */
+html.simbc-game[data-bc="mlb"] .bc-afterbox{display:grid;gap:12px;margin-top:12px}
+html.simbc-game[data-bc="mlb"] .bc-note{margin:10px 0 0;text-align:center;color:var(--bc-cyan);font:600 .9rem/1.4 Inter,system-ui,sans-serif}
+
+@media (max-width:480px){
+  html.simbc-game[data-bc="mlb"] .sb-table{table-layout:fixed;width:100%;min-width:0 !important;font-size:.78rem}
+  html.simbc-game[data-bc="mlb"] .sb-team-head{width:62px;font-size:0;padding:0 !important}
+  html.simbc-game[data-bc="mlb"] .sb-team{width:62px;min-width:0 !important;padding:6px 2px 6px 6px !important;position:static !important}
+  html.simbc-game[data-bc="mlb"] .sb-team-text span,html.simbc-game[data-bc="mlb"] .sb-team-text small{display:none !important}
+  html.simbc-game[data-bc="mlb"] .sb-team .sb-logo{display:none}
+  html.simbc-game[data-bc="mlb"] :is(.sb-table th,.sb-table td):not(.sb-team):not(.sb-team-head){min-width:0 !important;width:auto;padding:8px 0 !important;text-align:center}
+  html.simbc-game[data-bc="mlb"] .bc-after{display:grid;grid-template-columns:1fr 1.5fr;gap:8px}
+  html.simbc-game[data-bc="mlb"] .bc-after button{padding:10px 8px;font-size:1rem;letter-spacing:.04em}
+}

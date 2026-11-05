@@ -47,6 +47,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap">
 <link rel="stylesheet" href="/static/css/tmr-navbar.css?v=68ec3081d29a">
 <!--SIM_UX--><link rel="stylesheet" href="/static/css/tmr-sim-ux.css?v=f70e7f2b899b"><script defer src="/static/js/tmr-sim-ux.js?v=21a024cf4de7"></script><!--/SIM_UX-->
+<link rel="stylesheet" href="/static/css/tmr-mlb-game.css">
 <!--SIM_BC--><link rel="stylesheet" href="/static/css/tmr-sim-broadcast.css?v=352c8242673e"><script>(function(r){r.classList.add('simbc','simbc-game');r.setAttribute('data-bc','mlb');addEventListener('load',function(){r.classList.add('bc-ready')})}(document.documentElement))</script><script defer src="/static/js/tmr-sim-broadcast.js?v=94a41cb2c721"></script><!--/SIM_BC-->
 </head>
 <body class="tmr-ds tmr-polished-page mlb-simulator-page" data-mlb-simulator-build="mlb-simulator-pitching-mgmt-20261023">
@@ -220,7 +221,7 @@
                         </select>
                     </label>
                     <label class="sim-count-field" for="simDepthSelect">
-                        <span>Simulation depth</span>
+                        <span>Games behind the win chance</span>
                         <select id="simDepthSelect" class="sim-select" aria-describedby="simDepthNote">
                             <option value="500">Quick - 500 games</option>
                             <option value="2000" selected>Standard - 2,000 games</option>
@@ -228,7 +229,7 @@
                         </select>
                     </label>
                     <label class="sim-count-field" for="simulationCountSelect">
-                        <span>Number of simulations</span>
+                        <span>Box scores to play</span>
                         <select id="simulationCountSelect" class="sim-select">
                             <option value="1" selected>1</option>
                             <option value="10">10</option>
@@ -780,6 +781,7 @@ window.TMR_MLB_WORKLOAD_V2 = true;
          pads the body so it never covers content.
          Kill: window.SIM_RUN_CTA_FLAGS = { enabled: false } -> everyone control. -->
     <script>window.SIM_RUN_CTA_FLAGS = { enabled: true };</script>
+    <script defer src="/static/js/tmr-mlb-game.js"></script>
     <script defer src="/static/js/sim-run-cta.js?v=6944f77771d0"></script>
     <!-- SIMV2_LANDING_20260730: landing/conversion layer. Kill switch:
          set landing:false + redeploy; core simulator is independent. -->
