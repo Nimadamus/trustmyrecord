@@ -321,3 +321,9 @@ html.simbc-game[data-bc="mlb"] #boxScorePanel :is(h3,h4){font-family:var(--bc-di
 html.simbc-game[data-bc="mlb"] #boxScorePanel :is(td,th):first-child{background-color:#0c1830 !important}
 html.simbc-game[data-bc="mlb"] #boxScorePanel .lineup-banner{font-size:.76rem;color:var(--bc-mut) !important;padding:4px 0}
 html.simbc-game[data-bc="mlb"] :is(#boxScoreSummary,.box-score-heading > div:first-child small,#playerBoxScoreContent > p:not(.lineup-banner),#playerBoxScoreContent .player-team-box > p:not(.lineup-banner)){display:none !important}
+/* no CLS: everything that moves at boot waits for it, and late data has a seat */
+html.simbc-game:not(.bc-ready) .setup > *{visibility:hidden}
+html.simbc-game[data-bc="mlb"]:not(.bc-ready) main{min-height:640px}
+html.simbc-shell:not(.bc-ready) :is(.hero > p,.lsim-hero > p,.ss-hero p,.cl-hero p,main > p[class^="tmr-"],main > section.panel:not(:has(table,button,select,input,svg))){display:none}
+html.simbc-game #games:empty,html.simbc-game #games{min-height:104px}
+.bc-name{min-height:1em}
