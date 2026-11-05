@@ -10777,7 +10777,33 @@
             + 'model accuracy.';
     }
 
+    // HUB_PRESETS_20261105: one tap fills the builder, so a visitor with no games on the
+    // board still has something to run. The run itself stays behind the Run button and
+    // its gate; a preset only chooses the teams.
+    var SIM_PRESETS = {
+        'ws-rematch': { away: ['current', 'current-tb'], home: ['current', 'current-mil'], mode: 'current' },
+        classic: { away: ['current', 'current-mil'], home: ['historical', 'classic-1927-nyy'], mode: 'mixed' },
+        dream: { away: ['historical', 'classic-1975-cin'], home: ['historical', 'classic-1927-nyy'], mode: 'historical' }
+    };
+    function applyPreset(name) {
+        var p = SIM_PRESETS[name];
+        if (!p || !findTeamInPool(p.away[1], p.away[0]) || !findTeamInPool(p.home[1], p.home[0])) return false;
+        state.preset = p.mode;
+        state.awayPool = p.away[0]; state.homePool = p.home[0];
+        state.awayTeamId = p.away[1]; state.homeTeamId = p.home[1];
+        state.awayPitcherId = ''; state.homePitcherId = '';
+        state.awayPitcherTouched = false; state.homePitcherTouched = false;
+        state.simulation = null; state.aggregate = null;
+        renderSelectors();
+        renderResult(null);
+        return true;
+    }
     function wireEvents() {
+        if (document.querySelectorAll) {
+            Array.prototype.forEach.call(document.querySelectorAll('[data-sim-preset]') || [], function (a) {
+                a.addEventListener('click', function () { applyPreset(a.getAttribute('data-sim-preset')); });
+            });
+        }
         // HEADSHOTS_20261001: hide a headshot that fails to load so the initials
         // underneath show. One capture listener covers every render.
         if (typeof document !== 'undefined' && typeof document.addEventListener === 'function') {
@@ -10920,6 +10946,8 @@
     window.TMRMlbSimulator = {
         uiBuild: UI_BUILD,
         state: state,
+        applyPreset: applyPreset,
+        simPresets: SIM_PRESETS,
         fetchTeamRoster: fetchTeamRoster,
         fetchLineupUsage: fetchLineupUsage,
         usualLineupFromUsage: usualLineupFromUsage,
@@ -10939,6 +10967,8 @@
         saveBoxScore: saveBoxScore,
         viewBoxScore: viewBoxScore,
         rosterSourceForTeam: rosterSourceForTeam,
+        applyPreset: applyPreset,
+        simPresets: SIM_PRESETS,
         fetchTeamRoster: fetchTeamRoster,
         validatedRosterForTeam: validatedRosterForTeam,
         collectMlbTeamRoster: collectMlbTeamRoster,

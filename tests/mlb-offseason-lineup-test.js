@@ -116,5 +116,15 @@ const NINE = ['1B', '2B', '3B', 'C', 'CF', 'DH', 'LF', 'RF', 'SS'];
   // 6. a context rebuild keeps what it does not list (old code dropped these).
   assert.ok(/state\.liveContext = Object\.assign\(\{\}, state\.liveContext, \{\s*status: schedule\.length/.test(src), 'context rebuild spreads the old object');
 
+  // 7. HUB_PRESETS_20261105: every preset points at real teams and fills the builder.
+  const sim4 = load();
+  for (const name of Object.keys(sim4.simPresets)) {
+    const pr = sim4.simPresets[name];
+    assert.ok(sim4.localTeams[pr.away[0]].some((x) => x.id === pr.away[1]) , name + ' away team exists');
+    assert.ok(sim4.localTeams[pr.home[0]].some((x) => x.id === pr.home[1]), name + ' home team exists');
+  }
+  const hubHtml = fs.readFileSync(path.join(root, 'mlb-simulator', 'index.html'), 'utf8');
+  for (const m of hubHtml.matchAll(/data-sim-preset="([a-z-]+)"/g)) assert.ok(sim4.simPresets[m[1]], 'hub preset ' + m[1]);
+
   console.log('mlb-offseason-lineup-test ok');
 })().catch((e) => { console.error(e); process.exit(1); });

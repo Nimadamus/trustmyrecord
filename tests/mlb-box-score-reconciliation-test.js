@@ -210,7 +210,7 @@ function reconcile(r, seed) {
   }
 
   // 8. Decisions. Exactly one winner and one loser, and they must have pitched.
-  const allNames = ['away', 'home'].reduce((acc, s) => acc.concat(((box.players[s] || {}).pitchers || []).map((p) => p.name)), []);
+  const allNames = ['away', 'home'].reduce((acc, s) => acc.concat(((box.players[s] || {}).pitchers || []).map((p) => String(p.name).replace(/ \([RL]HP\)$/, ''))), []);
   const wp = box.derivedWinPitcherName;
   const lp = box.derivedLosePitcherName;
   const tied = n(box.away.runs) === n(box.home.runs);
