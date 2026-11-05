@@ -468,7 +468,8 @@ function nhlPages(matchupsBySlug) {
     const c = t.currentSeason;
     return c && c.gamesPlayed > 0 && Number.isFinite(c.goalsFor) && Number.isFinite(c.goalsAgainst) ? c : null;
   };
-  const diffRank = rankOf(teams, (t) => { const c = realOf(t) || t.season; return c.goalsFor - c.goalsAgainst; }, true);
+  // Rank on the total, the way the league's table reads goal difference.
+  const diffRank = rankOf(teams, (t) => { const c = realOf(t) || t.season; return (c.goalsFor - c.goalsAgainst) * (c.gamesPlayed || 1); }, true);
   const ppRank = rankOf(teams, (t) => t.season.powerPlayPct, true);
   const pkRank = rankOf(teams, (t) => t.season.penaltyKillPct, true);
 
@@ -508,7 +509,8 @@ ${table(['Model inputs', 'Team', 'Rank of ' + teams.length], [
 
   <section class="panel">
     <h2>The lineup the simulator dresses</h2>
-    <p>Twelve forwards and six defencemen, at the ice time their roles carry, each
+${(t.unavailable && t.unavailable.length) ? `    <p class="pill warn">Currently listed out: ${esc(t.unavailable.map((x) => x.name).join(', '))}.</p>
+` : ''}    <p>Twelve forwards and six defencemen, at the ice time their roles carry, each
     scoring, shooting, hitting and taking penalties at his own per-sixty rate.
     ${starter ? `${esc(starter.name)} is the ${starterRole} on a ${starter.savePct.toFixed(3).replace(/^0/, '')} save percentage` : 'The starting goaltender is chosen on the simulator itself'}.</p>
 ${table(['Forward', 'Line', 'TOI', 'G', 'A', 'P'],

@@ -16,4 +16,5 @@ assert.ok(!/labelled projected, not confirmed/.test(src), 'starter copy names co
 // ONE_NUMBER_20261105: the slate sentence says what the number is, by what the API served.
 const lg = fs.readFileSync(path.join(__dirname, '..', 'scripts', 'build_league_sim_pages.js'), 'utf8');
 assert.ok(!/same calibrated model/.test(lg) && /function slateNote/.test(lg), 'slate copy is not the old claim');
+assert.strictEqual((src.match(/Currently listed out/g) || []).length, 2, 'both sports name who is out');
 console.log('TEAM_HEADER_ACTUALS PASSED');
