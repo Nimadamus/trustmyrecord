@@ -395,7 +395,7 @@
     var pub = el('ss-public-toggle');
     if (pub) pub.addEventListener('change', function () { state.is_public = pub.checked; });
     el('ss-lock-btn').addEventListener('click', function () {
-      if (confirm('Lock your 2026 MLB season predictions? Once locked they are timestamped and cannot be changed.')) submit(true);
+      if (confirm('Lock your ' + SEASON + ' MLB season predictions? Once locked they are timestamped and cannot be changed.')) submit(true);
     });
     el('ss-draft-btn').addEventListener('click', function () { submit(false); });
     var clr = el('ss-clear-btn');
@@ -435,6 +435,15 @@
         TEAMS = d.teams; DIVISIONS = d.divisions || [];
         TEAM_BY_ABBR = {}; TEAMS.forEach(function (t) { TEAM_BY_ABBR[t.abbr] = t; });
         var pw = d.prediction_window;
+        /* SEASON_2027_ENTRIES_20261105: the server names the season open for entries. The
+           page only moves forward, and only for an open window, so it stays on the final
+           2026 board until the backend announces 2027. */
+        if (pw && pw.open && pw.season_year > SEASON) {
+          SEASON = pw.season_year;
+          document.querySelectorAll('[data-season-label]').forEach(function (n) { n.textContent = String(SEASON); });
+          var kick0 = document.querySelector('.ss-kicker');
+          if (kick0) kick0.innerHTML = '<i class="fas fa-unlock"></i> ' + SEASON + ' Season &middot; Entries open';
+        }
         if (pw && pw.season_year === SEASON) {
           if (pw.closes_at) CLOSES_AT = pw.closes_at;
           closed = pw.open === false;

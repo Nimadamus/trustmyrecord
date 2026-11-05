@@ -41,7 +41,7 @@ ok('1. every policy FAQ answer and the runtime gate block are in sync', !drift.l
 
 // 2. No contradicting copy on any simulator page or builder.
 const SIM_FILES = P.PAGES.map((p) => p[0]).concat([
-    'mlb-simulator/index.html', 'mlb-playoff-odds/index.html',
+    'mlb-simulator/index.html', 'mlb-playoff-odds/index.html', 'mlb-game-simulator/index.html', 'mlb-predictions-simulator/index.html', 'mlb-simulation-predictions/index.html',
     'scripts/build_league_sim_pages.js', 'scripts/build_nfl_season_page.js', 'scripts/build_mlb_odds_page.js',
     'static/js/sim-auth-gate.js', 'static/js/sim-run-gate.js'
 ]).filter((f) => fs.existsSync(path.join(ROOT, f)));

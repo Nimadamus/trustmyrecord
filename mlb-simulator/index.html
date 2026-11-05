@@ -75,12 +75,17 @@
             <div>
                 <p class="simv2-kicker">TrustMyRecord Data Lab</p>
                 <h1>MLB Simulator</h1>
-<!--MK:mlbSeasonState--><style>[data-mlb-season-only]{display:none!important}</style><p class="mlb-season-banner" data-mlb-phase="complete" role="status" style="margin:14px 0;padding:12px 14px;border-left:4px solid #e0a800;border-radius:10px;background:rgba(224,168,0,.12);font-size:.95rem;line-height:1.5;color:inherit;"><strong>2026 season complete: the Milwaukee Brewers won the World Series.</strong> They beat the Tampa Bay Rays 4 games to 1. The 2027 season opens on March 25, 2027. <a href="/mlb-playoff-odds/" style="color:inherit;font-weight:700;">Final 2026 results</a></p><!--/MK:mlbSeasonState-->
+<!--MK:mlbSeasonState--><style>[data-mlb-season-only]{display:none!important}[data-mlb-offseason-only]{display:flex!important}</style><p class="mlb-season-banner" data-mlb-phase="complete" role="status" style="margin:14px 0;padding:12px 14px;border-left:4px solid #e0a800;border-radius:10px;background:rgba(224,168,0,.12);font-size:.95rem;line-height:1.5;color:inherit;"><strong>2026 season complete: the Milwaukee Brewers won the World Series.</strong> They beat the Tampa Bay Rays 4 games to 1. The 2027 season opens on March 25, 2027. <a href="/mlb-playoff-odds/" style="color:inherit;font-weight:700;">Final 2026 results</a></p><!--/MK:mlbSeasonState-->
                 <p class="simv2-headline">Simulate Any MLB Matchup.<br>Then Put Your Prediction <em>on the Record.</em></p>
                 <p class="simv2-sub">Run data-driven MLB simulations using current teams, projected starters, verified inputs, and thousands of simulated outcomes. Create a free account to lock in your prediction and build a record nobody can fake.</p>
                 <div class="simv2-hero-ctas">
                     <a id="simv2HeroPrimary" data-mlb-season-only class="simv2-btn simv2-btn-primary" href="#todaysMatchups">Run Today's Matchups</a>
                     <a id="simv2HeroSecondary" class="simv2-btn simv2-btn-ghost" href="/register/">Create Free Account</a>
+                </div>
+                <div class="simv2-hero-ctas" data-mlb-offseason-only style="display:none">
+                    <a class="simv2-btn simv2-btn-primary" href="#awayTeamSelect" data-sim-preset="ws-rematch">Run the World Series Rematch</a>
+                    <a class="simv2-btn simv2-btn-ghost" href="#awayTeamSelect" data-sim-preset="classic">Brewers vs 1927 Yankees</a>
+                    <a class="simv2-btn simv2-btn-ghost" href="#awayTeamSelect" data-sim-preset="dream">1975 Reds vs 1927 Yankees</a>
                 </div>
                 <div class="simv2-trust">
                     <span>Free to use</span>
@@ -278,6 +283,7 @@
                     </div>
                     <!-- DATA_MODE_CHIP_20260622 -->
                     <div id="dataModeChip" class="data-mode-chip" aria-live="polite"></div>
+                    <p id="oneGameNote" style="margin:6px 0 8px;font-size:.82rem;color:inherit;opacity:.75;">The score below is one simulated game. The projected winner comes from every run.</p>
                     <div class="scoreboard-readout">
                         <article>
                             <div id="awayScoreLogo" class="score-team-logo"></div>
@@ -637,7 +643,7 @@
         <section class="sim-seo-content" aria-label="About the MLB Simulator" style="max-width:1140px;margin:40px auto 0;color:#cfd6e4;font-family:'Inter',system-ui,sans-serif;line-height:1.7;">
             <div style="background:#12121a;border:1px solid #2a2a4a;border-radius:18px;padding:30px 32px;">
                 <h2 style="font-family:'Barlow','Inter',sans-serif;color:#fff;font-size:1.5rem;margin:0 0 14px;">What the MLB Simulator Does</h2>
-                <p style="margin:0 0 14px;">The TrustMyRecord <strong>MLB Simulator</strong> is a free tool that lets you simulate MLB games, seasons, and predictions in plain language. Pick two teams, choose the starting pitchers, and run the matchup. The simulator plays the game out one plate appearance at a time using real rate stats, then returns a projected winner, a score range, a win probability, and a full box score. You are not reading a static prediction, you are running an actual simulation you can change and re-run as many times as you want.</p>
+                <p style="margin:0 0 14px;">The TrustMyRecord <strong>MLB Simulator</strong> is a free tool that lets you simulate MLB games, seasons, and predictions in plain language. Pick two teams, choose the starting pitchers, and run the matchup. The simulator plays the game out one plate appearance at a time using real rate stats, then returns a projected winner, a score range, a win probability, and a full box score. You are not reading a static prediction, you are running an actual simulation you can change and run again. <!--SIM_RUN_POLICY:run-->Your first simulation needs no account. A free account gives you one free run a day on every simulator, each extra run costs 5 TMR, and TMR Pro members run without limits.<!--/SIM_RUN_POLICY--></p>
                 <p style="margin:0;">Use it to pressure-test a hunch before you bet, compare how different starters swing a matchup, or settle a debate between two classic teams. Simulations are estimates, not locks, so treat the output as research. When you are ready to put a real position on the board, lock it as a verified pick and let your record speak for itself.</p>
             </div>
 
@@ -722,39 +728,7 @@
   <!--/MK:nflSimCrossLink-->
 </main>
 
-    <!--
-    MLB_ENGINE_RELEASE_20260827 -- the validated configuration, set here rather
-    than defaulted inside the engine.
-
-    The engine ships every one of these OFF. Turning them on is a deployment
-    decision and it belongs where a deployment can see it, so this block is the
-    whole switch: delete a line and that layer is gone on the next publish,
-    without touching the engine or rerunning its gates.
-
-    What each one earned, on the 2,434 games of a season the model never saw:
-
-      starter residual 0.010   Brier skill +1.38% [0.26%, 2.69%], calibration
-                               error 2.20%, against +0.83% and 3.59% for the
-                               shipped absolute starter. The starter's earned run
-                               average used to reach the forecast four separate
-                               times on top of a team rating that already
-                               contained him; this prices him once, as a
-                               difference from the rotation his own club's rating
-                               assumes.
-
-      workload v2              the realism bundle: real bullpen depth, bench
-                               substitutions, mid-inning relief, a starter pitch
-                               count, and the runner who moves up on an out.
-                               Batter metrics inside tolerance 105/135 -> 124/135,
-                               pitcher roles 10/32 -> 22/32, team shape 1/4 -> 5/6.
-                               Costs 0.08 points of Brier skill, which is inside
-                               the confidence interval and therefore not a cost
-                               that can be told apart from zero.
-
-    NOT deployed, and deliberately: measured park factors and the regressed K-BB
-    pitcher quality. Both are built and both are honest; neither improved the
-    holdout, so neither ships.
--->
+    
     <script>
 window.TMR_MLB_STARTER_RESIDUAL = 0.010;
 window.TMR_MLB_WORKLOAD_V2 = true;
@@ -823,7 +797,7 @@ window.TMR_MLB_WORKLOAD_V2 = true;
 <!--MK:mlbTeamSims-->
 <section aria-label="MLB team simulators" style="max-width:1140px;margin:46px auto 0;padding:26px 22px;background:#12121a;border:1px solid #2a2a4a;border-radius:18px;font-family:'Inter',system-ui,sans-serif;">
   <h2 style="font-family:'Barlow','Inter',sans-serif;font-weight:800;font-size:1.15rem;color:#e8e8f0;margin:0 0 6px;">Simulate a single MLB team</h2>
-  <p style="color:#9aa4b5;margin:0 0 14px;font-size:.92rem;">Every club's live playoff odds, projected wins and every game left. <a href="/mlb-playoff-odds/" style="color:#00aeff;">All 30 teams on one page</a>.</p>
+  <p style="color:#9aa4b5;margin:0 0 14px;font-size:.92rem;">Every club's final record, postseason result and last ten games. <a href="/mlb-playoff-odds/" style="color:#00aeff;">All 30 teams on one page</a>.</p>
   <div style="margin:0 0 12px;"><div style="color:#ffd700;font-weight:700;font-size:.82rem;letter-spacing:.06em;text-transform:uppercase;margin:0 0 6px;">AL Central</div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:6px 18px;"><a href="/mlb-simulator/teams/cleveland-guardians/" style="color:#00aeff;text-decoration:none;font-weight:600;font-size:0.95rem;padding:3px 0;">Cleveland Guardians</a><a href="/mlb-simulator/teams/chicago-white-sox/" style="color:#00aeff;text-decoration:none;font-weight:600;font-size:0.95rem;padding:3px 0;">Chicago White Sox</a><a href="/mlb-simulator/teams/minnesota-twins/" style="color:#00aeff;text-decoration:none;font-weight:600;font-size:0.95rem;padding:3px 0;">Minnesota Twins</a><a href="/mlb-simulator/teams/detroit-tigers/" style="color:#00aeff;text-decoration:none;font-weight:600;font-size:0.95rem;padding:3px 0;">Detroit Tigers</a><a href="/mlb-simulator/teams/kansas-city-royals/" style="color:#00aeff;text-decoration:none;font-weight:600;font-size:0.95rem;padding:3px 0;">Kansas City Royals</a></div></div>
   <div style="margin:0 0 12px;"><div style="color:#ffd700;font-weight:700;font-size:.82rem;letter-spacing:.06em;text-transform:uppercase;margin:0 0 6px;">AL East</div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:6px 18px;"><a href="/mlb-simulator/teams/tampa-bay-rays/" style="color:#00aeff;text-decoration:none;font-weight:600;font-size:0.95rem;padding:3px 0;">Tampa Bay Rays</a><a href="/mlb-simulator/teams/new-york-yankees/" style="color:#00aeff;text-decoration:none;font-weight:600;font-size:0.95rem;padding:3px 0;">New York Yankees</a><a href="/mlb-simulator/teams/boston-red-sox/" style="color:#00aeff;text-decoration:none;font-weight:600;font-size:0.95rem;padding:3px 0;">Boston Red Sox</a><a href="/mlb-simulator/teams/baltimore-orioles/" style="color:#00aeff;text-decoration:none;font-weight:600;font-size:0.95rem;padding:3px 0;">Baltimore Orioles</a><a href="/mlb-simulator/teams/toronto-blue-jays/" style="color:#00aeff;text-decoration:none;font-weight:600;font-size:0.95rem;padding:3px 0;">Toronto Blue Jays</a></div></div>
   <div style="margin:0 0 12px;"><div style="color:#ffd700;font-weight:700;font-size:.82rem;letter-spacing:.06em;text-transform:uppercase;margin:0 0 6px;">AL West</div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:6px 18px;"><a href="/mlb-simulator/teams/houston-astros/" style="color:#00aeff;text-decoration:none;font-weight:600;font-size:0.95rem;padding:3px 0;">Houston Astros</a><a href="/mlb-simulator/teams/texas-rangers/" style="color:#00aeff;text-decoration:none;font-weight:600;font-size:0.95rem;padding:3px 0;">Texas Rangers</a><a href="/mlb-simulator/teams/seattle-mariners/" style="color:#00aeff;text-decoration:none;font-weight:600;font-size:0.95rem;padding:3px 0;">Seattle Mariners</a><a href="/mlb-simulator/teams/athletics/" style="color:#00aeff;text-decoration:none;font-weight:600;font-size:0.95rem;padding:3px 0;">Athletics</a><a href="/mlb-simulator/teams/los-angeles-angels/" style="color:#00aeff;text-decoration:none;font-weight:600;font-size:0.95rem;padding:3px 0;">Los Angeles Angels</a></div></div>

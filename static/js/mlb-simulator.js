@@ -839,6 +839,59 @@
             return null;
         });
     }
+    // ROSTER_STATS_BATCH_20261105: the first run of a matchup made about 51 statsapi calls
+    // per club, one per stat line. This reads the same lines in one people call: statsapi
+    // returns them identically to the per player endpoints (splits[0] is the combined line
+    // for a traded player; evidence/mlb/batch_probe.js), and it stores them under the same
+    // keys with the same rules (null when a player has no line), so outputs do not change.
+    function rosterStatsBatchUrl(ids) {
+        return 'https://statsapi.mlb.com/api/v1/people?personIds=' + ids.map(encodeURIComponent).join(',')
+            + '&hydrate=stats(group=[hitting,pitching],type=[season,statSplits],sitCodes=[vl,vr],season=' + seasonYear() + ')'
+            + '&_=' + encodeURIComponent(UI_BUILD);
+    }
+    function statBlock(person, type, group) {
+        return (person.stats || []).filter(function (s) {
+            return s.type && s.type.displayName === type && s.group && s.group.displayName === group;
+        })[0] || null;
+    }
+    function fetchRosterStatsBatch(hitterIds, pitcherIds) {
+        var lc = state.liveContext;
+        lc.playerStats = lc.playerStats || {}; lc.playerSplits = lc.playerSplits || {}; lc.playerProfiles = lc.playerProfiles || {};
+        function has(o, k) { return Object.prototype.hasOwnProperty.call(o, k); }
+        var wantHit = hitterIds.filter(function (id) { return !has(lc.playerStats, id + ':hitting') || !has(lc.playerSplits, id + ':hitting'); });
+        var wantArm = pitcherIds.filter(function (id) { return !has(lc.playerStats, id + ':pitching') || !has(lc.playerProfiles, id); });
+        var ids = wantHit.concat(wantArm).map(String).filter(function (id, i, a) { return a.indexOf(id) === i; });
+        if (!ids.length) return Promise.resolve(null);
+        return fetchJson(rosterStatsBatchUrl(ids), { cache: 'default' }).then(function (data) {
+            if (!data || !Array.isArray(data.people)) return null;
+            var live = state.liveContext;
+            live.playerStats = live.playerStats || {}; live.playerSplits = live.playerSplits || {}; live.playerProfiles = live.playerProfiles || {};
+            var byId = {};
+            data.people.forEach(function (p) { byId[String(p.id)] = p; });
+            function seasonLine(person, group) {
+                var b = statBlock(person, 'season', group);
+                var split = b && b.splits && b.splits[0];
+                return split && split.stat || null;
+            }
+            wantHit.forEach(function (id) {
+                var person = byId[String(id)]; if (!person) return;
+                live.playerStats[id + ':hitting'] = seasonLine(person, 'hitting');
+                var b = statBlock(person, 'statSplits', 'hitting');
+                var byCode = {};
+                (b && b.splits || []).forEach(function (s) {
+                    var code = s && s.split && s.split.code;
+                    if (code) byCode[code] = s.stat || null;
+                });
+                live.playerSplits[id + ':hitting'] = byCode;
+            });
+            wantArm.forEach(function (id) {
+                var person = byId[String(id)]; if (!person) return;
+                live.playerStats[id + ':pitching'] = seasonLine(person, 'pitching');
+                live.playerProfiles[id] = { id: person.id, fullName: person.fullName, pitchHand: person.pitchHand || null, batSide: person.batSide || null };
+            });
+            return null;
+        }).catch(function () { return null; });
+    }
     function cachedPlayerSplitVs(playerId, group, vsHand) {
         var key = playerId + ':' + group;
         var byCode = state.liveContext.playerSplits && state.liveContext.playerSplits[key] || null;
@@ -1093,6 +1146,108 @@
             source: 'ESPN roster endpoint'
         });
     }
+    // LINEUP_USAGE_20261105: with no posted lineup and no game in the last 21 days
+    // (the offseason) hitters used to sort by position label, so a club fielded four
+    // shortstops and no catcher, and Judge hit eighth. A baked table of what every
+    // hitter really did last season (starts, average slot, starts by position; built
+    // by scripts/build_mlb_lineup_usage.js) now sets the nine, their positions and the
+    // order, from whoever is on the active roster today. It is fetched only when a
+    // club has no lineup, and the module scope keeps it across context rebuilds.
+    var LINEUP_USAGE_SEASON = 2026;
+    var LINEUP_USAGE_URL = '/static/data/mlb-lineup-usage-' + LINEUP_USAGE_SEASON + '.json';
+    var lineupUsageTable = null;
+    var lineupUsagePromise = null;
+    function fetchLineupUsage() {
+        if (lineupUsageTable) return Promise.resolve(lineupUsageTable);
+        if (!lineupUsagePromise) {
+            lineupUsagePromise = fetchJson(LINEUP_USAGE_URL + '?_=' + encodeURIComponent(UI_BUILD), { cache: 'default' }).then(function (t) {
+                lineupUsageTable = t && t.players ? t : null;
+                return lineupUsageTable;
+            }).catch(function () { lineupUsagePromise = null; return null; });
+        }
+        return lineupUsagePromise;
+    }
+    var FIELD_POSITIONS = ['C', 'SS', 'CF', '2B', '3B', 'RF', 'LF', '1B'];
+    var OUTFIELD_POSITIONS = ['LF', 'CF', 'RF'];
+    // Eight fielders and a DH from `pool`, each man at the spot he actually played most
+    // (largest start count first, so a regular is never pushed off his position by a
+    // part timer). Spots nobody played go to a roster-listed man at that position, then
+    // any outfielder for an outfield spot, then whoever is left. Returns null if nine
+    // cannot be fielded or there is no catcher.
+    function assignFieldableNine(pool, usageOf) {
+        var taken = {};
+        var byPos = {};
+        function keyOf(p) { return String(p.mlbId || normalizeName(p.name)); }
+        function place(p, pos) { taken[keyOf(p)] = true; byPos[pos] = p; }
+        var claims = [];
+        pool.forEach(function (p, index) {
+            var u = usageOf(p);
+            if (!u || !u.p) return;
+            FIELD_POSITIONS.forEach(function (pos) {
+                if (u.p[pos]) claims.push({ p: p, pos: pos, n: u.p[pos], index: index });
+            });
+        });
+        claims.sort(function (a, b) { return (b.n - a.n) || (a.index - b.index); });
+        claims.forEach(function (c) {
+            if (!byPos[c.pos] && !taken[keyOf(c.p)]) place(c.p, c.pos);
+        });
+        function starts(p) { var u = usageOf(p); return u ? (u.s || 0) : 0; }
+        function free() {
+            return pool.filter(function (p) { return !taken[keyOf(p)]; }).sort(function (a, b) { return starts(b) - starts(a); });
+        }
+        FIELD_POSITIONS.forEach(function (pos) {
+            if (byPos[pos]) return;
+            var rest = free();
+            var pick = rest.filter(function (p) { return playerPositionLabel(p) === pos; })[0];
+            if (!pick && OUTFIELD_POSITIONS.indexOf(pos) !== -1) {
+                pick = rest.filter(function (p) { var l = playerPositionLabel(p); return l === 'OF' || OUTFIELD_POSITIONS.indexOf(l) !== -1; })[0];
+            }
+            if (!pick && pos !== 'C') pick = rest[0];
+            if (pick) place(pick, pos);
+        });
+        if (!byPos.C) return null;
+        var dh = free().filter(function (p) { return playerPositionLabel(p) !== 'C' || free().length === 1; })[0] || free()[0];
+        if (dh) place(dh, 'DH');
+        var nine = FIELD_POSITIONS.concat(['DH']).map(function (pos) {
+            return byPos[pos] ? Object.assign({}, byPos[pos], { position: pos }) : null;
+        });
+        return nine.every(Boolean) ? nine : null;
+    }
+    function usualLineupFromUsage(activeRoster, team) {
+        var table = lineupUsageTable;
+        if (!table || !table.players) return null;
+        function usageOf(p) { return p && p.mlbId ? table.players[String(p.mlbId)] || null : null; }
+        // A pitcher only joins this pool if he really started as a hitter (a two way man).
+        var pool = activeRoster.filter(function (p) {
+            var isArm = /Pitcher|P$|SP|RP|CP/i.test(p.position);
+            return !isArm || !!usageOf(p);
+        });
+        var nine = assignFieldableNine(pool, usageOf);
+        if (!nine) return null;
+        function slot(p) { var u = usageOf(p); return u ? u.o : 8; }
+        nine.sort(function (a, b) {
+            return (slot(a) - slot(b)) || (((usageOf(b) || {}).s || 0) - ((usageOf(a) || {}).s || 0));
+        });
+        return {
+            players: nine.map(function (p) { return { name: p.name, mlbId: p.mlbId, position: p.position }; }),
+            source: 'Usual ' + table.season + ' batting order, current active roster',
+            confirmed: false,
+            lineupStatus: 'usual',
+            sourceSeason: table.season,
+            fetchedAt: Date.now(),
+            substitutesRejected: []
+        };
+    }
+    // Last resort when the usage table did not load: still one man per position with a
+    // catcher, in the old position order. It stays labelled as no set batting order.
+    function fieldableRosterOrder(hitters) {
+        var nine = assignFieldableNine(hitters, function () { return null; });
+        if (!nine) return hitters;
+        nine.sort(function (a, b) { return rosterSortValue(a) - rosterSortValue(b); });
+        var used = {};
+        nine.forEach(function (p) { used[normalizeName(p.name)] = true; });
+        return nine.concat(hitters.filter(function (p) { return !used[normalizeName(p.name)]; }));
+    }
     function collectMlbTeamRoster(data, team, recentLineup) {
         var expectedId = MLB_TEAM_IDS[team && team.abbreviation];
         var players = [];
@@ -1130,6 +1285,7 @@
         var orderedHitters = [];
         var lineupRemovals = [];
         var lineupBackfills = [];
+        if (!recentLineup) recentLineup = usualLineupFromUsage(activePlayers, team);
         if (recentLineup && Array.isArray(recentLineup.players) && recentLineup.players.length >= 9) {
             var activeByName = {};
             var activeById = {};
@@ -1226,6 +1382,8 @@
             var used = {};
             orderedHitters.forEach(function (player) { used[normalizeName(player.name)] = true; });
             hitters = orderedHitters.concat(hitters.filter(function (player) { return !used[normalizeName(player.name)]; }));
+        } else {
+            hitters = fieldableRosterOrder(hitters);
         }
         var lineupStatus = appliedLineup ? (recentLineup.lineupStatus || (recentLineup.confirmed ? 'confirmed' : 'recent')) : 'roster';
         var lineupConfirmed = lineupStatus === 'confirmed';
@@ -1244,6 +1402,11 @@
                 source: 'Projected from most recent game starting lineup plus verified MLB active roster endpoint',
                 lineupSource: 'Projected from most recent game starting lineup',
                 badge: 'Projected from last game'
+            },
+            usual: {
+                source: 'Usual ' + LINEUP_USAGE_SEASON + ' batting order and positions (most used, from every ' + LINEUP_USAGE_SEASON + ' box score) applied to the verified MLB active roster',
+                lineupSource: 'Usual ' + LINEUP_USAGE_SEASON + ' batting order, current roster',
+                badge: 'Usual ' + LINEUP_USAGE_SEASON + ' order, current roster'
             },
             roster: {
                 source: 'Active roster fallback (no set batting order) from verified MLB active roster endpoint',
@@ -1278,7 +1441,8 @@
             rosterFetchedAt: Date.now(),
             lineupFeed: lineupStatus === 'confirmed' || lineupStatus === 'posted'
                 ? 'MLB Stats API /schedule?hydrate=lineups (today)'
-                : (lineupStatus === 'recent' ? 'MLB Stats API game feed/live boxscore starters (battingOrder N00)' : 'none - active roster order'),
+                : (lineupStatus === 'recent' ? 'MLB Stats API game feed/live boxscore starters (battingOrder N00)'
+                    : (lineupStatus === 'usual' ? 'Every ' + LINEUP_USAGE_SEASON + ' MLB box score (most used order and positions)' : 'none - active roster order')),
             lineupFetchedAt: (recentLineup && recentLineup.fetchedAt) || Date.now(),
             lineupSourceGamePk: (recentLineup && recentLineup.sourceGamePk) || (recentLineup && recentLineup.gamePk) || null,
             lineupSourceGameDate: (recentLineup && recentLineup.sourceGameDate) || null,
@@ -1349,7 +1513,9 @@
         var gamePlayer = feed && feed.gameData && feed.gameData.players && feed.gameData.players[key] || null;
         var person = row && row.person || gamePlayer || {};
         var primary = person.primaryPosition || (gamePlayer && gamePlayer.primaryPosition) || {};
-        var position = row && row.position || primary || {};
+        // allPositions[0] is where he started; row.position is where he ended the game,
+        // which put two center fielders in one lineup (Cleveland, 11/05).
+        var position = row && row.allPositions && row.allPositions[0] || row && row.position || primary || {};
         var abbr = position.abbreviation || position.name || '';
         if (!abbr || NON_DEFENSIVE_ROLE.test(abbr)) abbr = primary.abbreviation || primary.name || abbr;
         return {
@@ -1473,20 +1639,28 @@
         // baseline profile values on screen (REAL_ERA_LABELS_20260606).
         if (!roster) return Promise.resolve(null);
         var jobs = [];
+        var players = Array.isArray(roster.players) ? roster.players : [];
+        // STARTER_POOL_ALL_ARMS_20261105: this used to stop at the first 14 pitchers of a
+        // first-name sort. An offseason roster carries 19 to 24, so Yamamoto, Gilbert and
+        // Wheeler had no line, never counted as starters and fell out of the dropdown.
+        var pitchers = players.filter(function (p) {
+            return p && p.mlbId && /^(P|SP|RP|CP)$|Relief|Pitcher/i.test(String(p.position || ''));
+        });
+        var hittersToLoad = players.slice(0, 9).filter(function (p) { return p && p.mlbId; });
+        var probableId = roster.todayProbableStarter && roster.todayProbableStarter.id;
+        // ROSTER_STATS_BATCH_20261105: one request for every line below. Anything it did
+        // not fill (a failed call) falls through to the per player fetchers, which return
+        // from cache for whatever it did fill.
+        return fetchRosterStatsBatch(hittersToLoad.map(function (p) { return p.mlbId; }),
+            pitchers.map(function (p) { return p.mlbId; }).concat(probableId ? [probableId] : [])).then(function () {
         if (roster.todayProbableStarter && roster.todayProbableStarter.id) {
             jobs.push(fetchPlayerSeasonStats(roster.todayProbableStarter.id, 'pitching'));
             jobs.push(fetchPlayerProfile(roster.todayProbableStarter.id));
         }
-        var players = Array.isArray(roster.players) ? roster.players : [];
-        players.slice(0, 9).forEach(function (p) {
-            if (p && p.mlbId) {
-                jobs.push(fetchPlayerSeasonStats(p.mlbId, 'hitting'));
-                jobs.push(fetchPlayerSplits(p.mlbId, 'hitting'));
-            }
+        hittersToLoad.forEach(function (p) {
+            jobs.push(fetchPlayerSeasonStats(p.mlbId, 'hitting'));
+            jobs.push(fetchPlayerSplits(p.mlbId, 'hitting'));
         });
-        var pitchers = players.filter(function (p) {
-            return p && p.mlbId && /^(P|SP|RP|CP)$|Relief|Pitcher/i.test(String(p.position || ''));
-        }).slice(0, 14);
         // MARCEL_PRIOR_20261101: last season's lines for the same players, one request.
         var priorIds = players.slice(0, 9).concat(pitchers).map(function (p) { return p && p.mlbId; }).filter(Boolean);
         if (roster.todayProbableStarter && roster.todayProbableStarter.id) priorIds.push(roster.todayProbableStarter.id);
@@ -1499,6 +1673,7 @@
             jobs.push(fetchPlayerProfile(p.mlbId));
         });
         return Promise.all(jobs);
+        });
     }
     function refreshPitcherSelectsFromState() {
         try {
@@ -1589,7 +1764,10 @@
         // so the first build of every lineup ran with an empty IL).
         return Promise.all([
             fetchJson(url, { cache: 'no-store' }),
-            fetchInjuredRoster(team).then(function () { return fetchRecentStartingLineup(team); }),
+            fetchInjuredRoster(team).then(function () { return fetchRecentStartingLineup(team); }).then(function (lineup) {
+                // LINEUP_USAGE_20261105: the table is only needed when no real lineup came back.
+                return lineup || fetchLineupUsage().then(function () { return null; });
+            }),
             fetchTodaysSchedule(),
             fetchTodaysTransactions(team),
             fetchUpcomingSchedule()
@@ -9431,6 +9609,7 @@
         var tone, text;
         if (info.status === 'confirmed') { tone = 'confirmed'; text = 'Confirmed lineup from MLB.'; }
         else if (info.status === 'posted') { tone = 'posted'; text = 'Lineup posted by MLB for today\'s game.'; }
+        else if (info.status === 'usual') { tone = 'projected'; text = 'No game scheduled, so this is the club\'s usual ' + LINEUP_USAGE_SEASON + ' order with today\'s roster.'; }
         else { tone = 'projected'; text = 'Lineup not posted yet, using projected lineup.'; }
         if (info.injuryListFailed) text += ' Injury list did not load, so players on the injured list may still appear.';
         var ts = info.lineupFetchedAt || info.rosterFetchedAt;
@@ -10521,7 +10700,10 @@
                 summaryResults.forEach(function (result) {
                     if (result.status === 'fulfilled' && result.value && result.value.id) summaries[result.value.id] = result.value.summary;
                 });
-                state.liveContext = {
+                // LIVE_CONTEXT_KEEP_ALL_20261105: start from the old object. The list below
+                // left out teamTransactions, priorStats, teamPrior and teamSeason, so a load
+                // landing during a roster fetch threw and that club got a synthetic lineup.
+                state.liveContext = Object.assign({}, state.liveContext, {
                     status: schedule.length || board.length || espnEvents.length ? 'available' : 'unavailable',
                     loadedAt: new Date().toISOString(),
                     scheduleGames: schedule,
@@ -10543,7 +10725,7 @@
                     teamOaa: state.liveContext.teamOaa || null,
                     recentEvents: recentEvents,
                     error: null
-                };
+                });
                 renderSelectors();
                 // NOTE: this used to re-simulate and re-render an already-displayed game
                 // once live context finished loading late, silently replacing the score
@@ -10595,7 +10777,33 @@
             + 'model accuracy.';
     }
 
+    // HUB_PRESETS_20261105: one tap fills the builder, so a visitor with no games on the
+    // board still has something to run. The run itself stays behind the Run button and
+    // its gate; a preset only chooses the teams.
+    var SIM_PRESETS = {
+        'ws-rematch': { away: ['current', 'current-tb'], home: ['current', 'current-mil'], mode: 'current' },
+        classic: { away: ['current', 'current-mil'], home: ['historical', 'classic-1927-nyy'], mode: 'mixed' },
+        dream: { away: ['historical', 'classic-1975-cin'], home: ['historical', 'classic-1927-nyy'], mode: 'historical' }
+    };
+    function applyPreset(name) {
+        var p = SIM_PRESETS[name];
+        if (!p || !findTeamInPool(p.away[1], p.away[0]) || !findTeamInPool(p.home[1], p.home[0])) return false;
+        state.preset = p.mode;
+        state.awayPool = p.away[0]; state.homePool = p.home[0];
+        state.awayTeamId = p.away[1]; state.homeTeamId = p.home[1];
+        state.awayPitcherId = ''; state.homePitcherId = '';
+        state.awayPitcherTouched = false; state.homePitcherTouched = false;
+        state.simulation = null; state.aggregate = null;
+        renderSelectors();
+        renderResult(null);
+        return true;
+    }
     function wireEvents() {
+        if (document.querySelectorAll) {
+            Array.prototype.forEach.call(document.querySelectorAll('[data-sim-preset]') || [], function (a) {
+                a.addEventListener('click', function () { applyPreset(a.getAttribute('data-sim-preset')); });
+            });
+        }
         // HEADSHOTS_20261001: hide a headshot that fails to load so the initials
         // underneath show. One capture listener covers every render.
         if (typeof document !== 'undefined' && typeof document.addEventListener === 'function') {
@@ -10738,6 +10946,13 @@
     window.TMRMlbSimulator = {
         uiBuild: UI_BUILD,
         state: state,
+        applyPreset: applyPreset,
+        simPresets: SIM_PRESETS,
+        fetchTeamRoster: fetchTeamRoster,
+        fetchLineupUsage: fetchLineupUsage,
+        usualLineupFromUsage: usualLineupFromUsage,
+        fieldableRosterOrder: fieldableRosterOrder,
+        prefetchPlayerStatsForRoster: prefetchPlayerStatsForRoster,
         localTeams: LOCAL_TEAMS,
         liveInputs: LIVE_INPUT_SOURCES,
         loadLiveContext: loadLiveContext,
@@ -10752,6 +10967,8 @@
         saveBoxScore: saveBoxScore,
         viewBoxScore: viewBoxScore,
         rosterSourceForTeam: rosterSourceForTeam,
+        applyPreset: applyPreset,
+        simPresets: SIM_PRESETS,
         fetchTeamRoster: fetchTeamRoster,
         validatedRosterForTeam: validatedRosterForTeam,
         collectMlbTeamRoster: collectMlbTeamRoster,

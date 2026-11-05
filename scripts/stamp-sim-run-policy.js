@@ -55,6 +55,13 @@ function stampInline(html) {
   return { text: html.replace(INLINE_RE, (_, a, b) => a + escHtml(P.INLINE) + b), problems: [] };
 }
 
+const RUN_RE = /(<!--SIM_RUN_POLICY:run-->)[\s\S]*?(<!--\/SIM_RUN_POLICY-->)/g;
+function stampRun(html) {
+  const hits = (html.match(RUN_RE) || []).length;
+  if (!hits) return { text: html, problems: ['run policy markers missing'] };
+  return { text: html.replace(RUN_RE, (_, a, b) => a + escHtml(P.RUN_INLINE) + b), problems: [] };
+}
+
 const GATE = 'static/js/sim-auth-gate.js';
 const BLOCK_RE = /(\/\* SIM_RUN_POLICY:BEGIN[^*]*\*\/\r?\n\s*)[^\r\n]*(\r?\n\s*\/\* SIM_RUN_POLICY:END \*\/)/;
 
@@ -68,6 +75,7 @@ function run() {
   const broken = [];
   const jobs = P.PAGES.map(([file, q, a]) => [file, (t) => stampPage(t, q, a)])
     .concat(P.INLINE_PAGES.map((file) => [file, stampInline]))
+    .concat(P.RUN_INLINE_PAGES.map((file) => [file, stampRun]))
     .concat([[GATE, stampGate]]);
   const byFile = new Map();
   for (const [file, fn] of jobs) {

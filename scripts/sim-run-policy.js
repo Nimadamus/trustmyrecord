@@ -70,13 +70,22 @@ const INLINE = 'Picking games is always free. Your first simulation needs no acc
   'one free run a day on every simulator, and each extra run costs ' + POLICY.extraRunCostTmr + ' TMR.';
 const INLINE_PAGES = ['nfl-playoff-simulator/index.html'];
 
+/* MLB_RUN_COPY_20261105: the same rule for prose about running a game, between
+   <!--SIM_RUN_POLICY:run--> and <!--/SIM_RUN_POLICY--> markers. */
+const RUN_INLINE = 'Your first simulation needs no account. A free account gives you one free run a day on every simulator, ' +
+  'each extra run costs ' + POLICY.extraRunCostTmr + ' TMR, and TMR Pro members run without limits.';
+const RUN_INLINE_PAGES = ['mlb-simulator/index.html', 'mlb-game-simulator/index.html', 'mlb-predictions-simulator/index.html'];
+
 /* Phrases that contradict the rule. Any simulator page carrying one fails the
    policy test. */
 const BANNED = [
   /free to use with no account required/i,
   /your first simulation need no account/i,
   /free with a TrustMyRecord account\. Creating one/i,
-  /uses the daily free simulator run/i
+  /uses the daily free simulator run/i,
+  /free and unlimited/i,
+  /as many times as you want/i,
+  /simulate freely/i
 ];
 
 /* The block stamped into static/js/sim-auth-gate.js, so the runtime gate reads
@@ -91,4 +100,4 @@ function runtimeBlock() {
   }) + ';';
 }
 
-module.exports = { POLICY, BODY, SHORT, INLINE, INLINE_PAGES, faqAnswer, READ_FREE_SEASON, READ_FREE_ODDS, PAGES, BANNED, runtimeBlock };
+module.exports = { POLICY, BODY, SHORT, INLINE, INLINE_PAGES, RUN_INLINE, RUN_INLINE_PAGES, faqAnswer, READ_FREE_SEASON, READ_FREE_ODDS, PAGES, BANNED, runtimeBlock };
