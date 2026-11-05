@@ -101,7 +101,8 @@
     var api = global.TMRMlbSimulator;
     var card = $('#resultCard');
     if (moved || !card || !api || !api.state || !api.state.simulation || api.state.restored) return;
-    card.scrollIntoView({ behavior: 'auto', block: 'start' });
+    var y = $('#topScoreboard').getBoundingClientRect().top;
+    if (y < 72 || y > 320) card.scrollIntoView({ behavior: 'auto', block: 'start' });
   }
 
   function boot() {
@@ -114,7 +115,7 @@
       timers.forEach(global.clearTimeout);
       timers = [60, 500, 1500, 4000].map(function (ms) { return global.setTimeout(after, ms); });
       moved = false;
-      timers.push(global.setTimeout(land, 700));
+      [700, 1300, 2200, 3200].forEach(function (ms) { timers.push(global.setTimeout(land, ms)); });
     }
     new global.MutationObserver(soon).observe(top, { childList: true });
     ['#currentModeButton', '#historicalModeButton', '#mixedModeButton'].forEach(function (id) {
