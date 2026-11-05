@@ -50,7 +50,7 @@ function load(extraWindow) {
   };
   context.window.document = context.document;
   context.window.TMR_MLB_WORKLOAD_V2 = true;
-  context.window.TMR_MLB_STARTER_RESIDUAL = 0.010;
+  context.window.TMR_MLB_STARTER_RESIDUAL = 0.08;
   const bbPath = path.join(root, 'static', 'data', 'mlb-battedball-2024.40b9b03b1878.json');
   if (fs.existsSync(bbPath)) context.window.TMR_MLB_BB_TABLE = JSON.parse(fs.readFileSync(bbPath, 'utf8'));
   vm.runInNewContext(script, context);

@@ -64,7 +64,7 @@ function loadEngine() {
   ctx.self = ctx.window;
   // The release candidate, not the shipped defaults.
   ctx.window.TMR_MLB_WORKLOAD_V2 = true;
-  ctx.window.TMR_MLB_STARTER_RESIDUAL = 0.010;
+  ctx.window.TMR_MLB_STARTER_RESIDUAL = 0.08;
   if (BB_TABLE && fs.existsSync(BB_TABLE)) {
     ctx.window.TMR_MLB_BB_TABLE = JSON.parse(fs.readFileSync(BB_TABLE, 'utf8'));
   }

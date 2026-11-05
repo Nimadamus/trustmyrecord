@@ -624,13 +624,13 @@
                 <h2>How Accurate Is This Simulator?</h2>
             </div>
             <p style="margin:0 0 14px;color:#cfd6e4;line-height:1.7;">
-                <!--MLB_ACCURACY:hub-lead-->We hold this to the same standard as the picks we track: real, measured results, not marketing. This is a realistic plate appearance simulation, not a crystal ball. We replayed the live engine through all 2,429 games of the 2026 regular season, each game using only what was known before first pitch, the season its latest settings were chosen on, so read it as an upper bound. It called the winner <strong>56.1% of the time</strong> against 52.9% for always picking the home team, with a Brier score of 0.246 against 0.249 for a flat home team forecast. That is better than a coin flip and useful as research, but it is <strong>not a guaranteed betting edge</strong>: on the 1,716 games of 2026 with a stored pregame price, the market scored 0.242 and the simulator 0.244, and a lower score is better.<!--/MLB_ACCURACY-->
+                <!--MLB_ACCURACY:hub-lead-->We hold this to the same standard as the picks we track: real, measured results, not marketing. This is a realistic plate appearance simulation, not a crystal ball. We replayed the live engine through all 2,430 games of the 2025 regular season, each game using only what was known before first pitch, on a season its latest settings were not chosen on. It called the winner <strong>57.4% of the time</strong> against 54.3% for always picking the home team, with a Brier score of 0.242 against 0.249 for a flat home team forecast. On 2026, the season those settings were chosen on, it scored 54.9% and 0.245 on 2,429 games. That is better than a coin flip and useful as research, but it is <strong>not a guaranteed betting edge</strong>: on the 1,716 games of 2026 with a stored pregame price, the market scored 0.242 and the simulator 0.243, and a lower score is better.<!--/MLB_ACCURACY-->
             </p>
             <div class="input-summary" style="margin:0 0 14px;">
-                <div><strong>Winner accuracy (out-of-sample backtest)</strong><span><!--MLB_ACCURACY:hub-winner-->56.1% on the 2,429 games of the 2026 regular season (home team alone: 52.9%)<!--/MLB_ACCURACY--></span></div>
-                <div><strong>Probability calibration</strong><span><!--MLB_ACCURACY:hub-brier-->Brier 0.246 vs 0.249 for the home team baseline; calibration slope 0.73 (1.00 is perfect)<!--/MLB_ACCURACY--></span></div>
+                <div><strong>Winner accuracy (out-of-sample backtest)</strong><span><!--MLB_ACCURACY:hub-winner-->57.4% on the 2,430 games of the 2025 regular season (home team alone: 54.3%)<!--/MLB_ACCURACY--></span></div>
+                <div><strong>Probability calibration</strong><span><!--MLB_ACCURACY:hub-brier-->Brier 0.242 vs 0.249 for the home team baseline; calibration slope 1.00 (1.00 is perfect)<!--/MLB_ACCURACY--></span></div>
                 <div><strong>Model version and method</strong><span><!--MLB_ACCURACY:hub-version-->Replayed November 5, 2026 on the live engine with real lineups and announced starters. A backtest, not a record of live picks.<!--/MLB_ACCURACY--></span></div>
-                <div><strong>Honest benchmark</strong><span><!--MLB_ACCURACY:hub-market-->Behind the market on 1,716 priced games of 2026: 0.244 vs 0.242<!--/MLB_ACCURACY--></span></div>
+                <div><strong>Honest benchmark</strong><span><!--MLB_ACCURACY:hub-market-->Behind the market on 1,716 priced games of 2026: 0.243 vs 0.242<!--/MLB_ACCURACY--></span></div>
                 <div><strong>Best use</strong><span>A research input, not a standalone bet signal</span></div>
             </div>
             <p style="margin:0;color:#9fb0c7;font-size:0.92rem;line-height:1.6;">
@@ -671,7 +671,7 @@
 
             <div style="background:#12121a;border:1px solid #2a2a4a;border-radius:18px;padding:30px 32px;margin-top:18px;">
                 <h2 style="font-family:'Barlow','Inter',sans-serif;color:#fff;font-size:1.5rem;margin:0 0 14px;">How MLB Simulation Picks Work</h2>
-                <p style="margin:0 0 14px;">A simulation pick starts with the numbers and ends with a decision. The simulator gives you a projected winner and a win probability built from team and pitcher rate stats, park, bullpen quality, and era context. A 57 percent win probability does not mean a sure thing, it means the model leans one way in a matchup that can still go either way. <!--MLB_ACCURACY:hub-seo-->Replayed through all 2,429 games of 2026 the model called winners 56.1% of the time against 52.9% for the home team<!--/MLB_ACCURACY-->, so treat any single projection as one modest input, not a green light. Line it up against the real betting market, lineups, weather, and injuries before you decide, and remember the market has been the more accurate of the two.</p>
+                <p style="margin:0 0 14px;">A simulation pick starts with the numbers and ends with a decision. The simulator gives you a projected winner and a win probability built from team and pitcher rate stats, park, bullpen quality, and era context. A 57 percent win probability does not mean a sure thing, it means the model leans one way in a matchup that can still go either way. <!--MLB_ACCURACY:hub-seo-->Replayed through all 2,430 games of 2025 the model called winners 57.4% of the time against 54.3% for the home team<!--/MLB_ACCURACY-->, so treat any single projection as one modest input, not a green light. Line it up against the real betting market, lineups, weather, and injuries before you decide, and remember the market has been the more accurate of the two.</p>
                 <p style="margin:0;">From there a pick is a human decision, not a guarantee from a machine. You factor in confirmed lineups, weather, injury news, and your own judgment, then commit. That is exactly why TrustMyRecord keeps simulation and picks separate: the simulator is the lab, and your <a href="/sportsbook/" style="color:#00aeff;font-weight:600;">locked, auto-graded picks</a> are the proof.</p>
             </div>
 
@@ -729,7 +729,9 @@
 
     
     <script>
-window.TMR_MLB_STARTER_RESIDUAL = 0.010;
+/* STARTER_RESIDUAL_008_20261105: 0.010 left the named starter almost unpriced (win probability moved
+   0.004 logit per 10 quality points; results moved 0.176). Chosen on 2026, confirmed once on 2025. */
+window.TMR_MLB_STARTER_RESIDUAL = 0.08;
 window.TMR_MLB_WORKLOAD_V2 = true;
 /* The batted-ball table gates sacrifice flies, double plays and errors on
    whether the ball was on the ground or in the air, per player. It loads

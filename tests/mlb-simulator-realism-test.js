@@ -106,7 +106,7 @@ function createSimulator() {
    */
   if (process.env.TMR_MLB_RC) {
     context.window.TMR_MLB_WORKLOAD_V2 = true;
-    context.window.TMR_MLB_STARTER_RESIDUAL = 0.010;
+    context.window.TMR_MLB_STARTER_RESIDUAL = 0.08;
     // 2026-11-02: with no explicit path, use the exact batted-ball table the live
     // page fetches (mlb-simulator/index.html), so TMR_MLB_RC=1 alone measures
     // what visitors run.
