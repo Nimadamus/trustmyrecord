@@ -1,0 +1,340 @@
+/* BROADCAST_PRESENTATION_20261105. The product shell for every simulator page.
+   Scoped to html.simbc (set in the head by the SIM_BC block). Restraint: navy,
+   one electric blue to cyan gradient, team colour as an accent, numbers large.
+   Glow is spent on two things only, the Simulate button and the score. */
+html.simbc{
+  --bc-bg:#040a18;--bc-panel:rgba(16,30,58,.72);--bc-panel2:#0d1a33;--bc-line:rgba(130,175,240,.18);
+  --bc-blue:#1f8fff;--bc-cyan:#2fe0ff;--bc-ink:#f4f8ff;--bc-mut:#a9bbd6;
+  --bc-grad:linear-gradient(100deg,#19c8ff 0%,#1f8fff 55%,#4d6bff 100%);
+  --bc-display:"Barlow Condensed","Anton",Inter,system-ui,sans-serif;
+  --away:#1f8fff;--home:#2fe0ff;
+  background:var(--bc-bg);scroll-padding-top:84px;
+}
+html.simbc body{background:
+  radial-gradient(900px 460px at 12% -80px,rgba(31,143,255,.26),transparent 70%),
+  radial-gradient(800px 420px at 92% 0,rgba(47,224,255,.14),transparent 70%),
+  var(--bc-bg) no-repeat}
+
+/* ---- before the shelves are built: only the tool, so nothing jumps ---- */
+html.simbc-game:not(.bc-ready) main > :not(nav):not(.simcrumb):not(.hero):not(.setup):not(#result):not(script):not(style),
+html.simbc-game:not(.bc-ready) main > .hero p,
+html.simbc-game:not(.bc-ready) body > section,
+html.simbc-game:not(.bc-ready) body > .sa-root,
+html.simbc-game:not(.bc-ready) body > .methodwrap,
+html.simbc-hub:not(.bc-ready) main > :not(nav):not(.simcrumb):not(.simhero),
+html.simbc-hub:not(.bc-ready) .simlead,html.simbc-hub:not(.bc-ready) .simsteps,
+html.simbc-shell:not(.bc-ready) :is(.lsim-copy,.seo,.ss-section,.cl-faq,.cl-cluster,.cl-angle,.tmr-internal-cluster){display:none}
+html.simbc-game:not(.bc-ready) .setup{min-height:520px}
+
+/* breadcrumbs stay visible: tmr-linkhub.js remounts them every 400 ms if it finds none */
+html.simbc .simcrumb,html.simbc main > nav[aria-label="Breadcrumb"]{font-size:.74rem !important;margin:0 0 8px !important;opacity:.7}
+
+/* ---- About and More ---- */
+.bc-fold{box-sizing:border-box;width:min(1180px,calc(100% - 32px));margin:14px auto 0;border:1px solid var(--bc-line);border-radius:14px;background:rgba(9,18,38,.55)}
+.bc-fold > summary{cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:14px 18px;
+  font:700 1.02rem/1 var(--bc-display);letter-spacing:.08em;text-transform:uppercase;color:var(--bc-mut)}
+.bc-fold > summary::-webkit-details-marker{display:none}
+.bc-fold > summary::before{content:none !important;display:none !important}
+.bc-fold > summary::after{content:"+";font-size:1.3rem;line-height:.8;color:var(--bc-cyan)}
+.bc-fold[open] > summary::after{content:"\2212"}
+.bc-fold > summary:hover{color:var(--bc-ink)}
+.bc-fold > summary:focus-visible{outline:2px solid var(--bc-cyan);outline-offset:-2px;border-radius:14px}
+.bc-fold-body{padding:0 18px 18px;min-width:0}
+.bc-about{margin-top:28px;margin-bottom:28px;background:transparent}
+.bc-about > summary{font-size:.92rem}
+.bc-fold-body .seo,.bc-fold-body .sim-seo-content{margin:0;max-width:none}
+
+/* ---- title ---- */
+html.simbc-game main.wrap,html.simbc-game main.sim-shell{display:flex;flex-direction:column;max-width:1180px;margin-inline:auto}
+html.simbc-game main > .hero{display:contents}
+html.simbc-game h1,html.simbc-shell main h1{font-family:var(--bc-display);font-weight:800;font-size:clamp(1.5rem,3vw,2.1rem);
+  letter-spacing:.04em;text-transform:uppercase;line-height:1;margin:4px 0 12px;color:var(--bc-ink)}
+.bc-title{margin:0}
+
+/* ---- setup ---- */
+html.simbc-game .setup{background:none;border:0;box-shadow:none;padding:0;margin:0}
+html.simbc-game .prerun{margin:0;padding:0;border:0;background:none}
+html.simbc-game .prerun #prerun .chip{display:none}
+html.simbc-game .prerun #prerun:empty,html.simbc .runrow:empty{display:none}
+html.simbc-game[data-bc="nfl"] #prerun,html.simbc-game[data-bc="nfl"] #featured,
+html.simbc-game[data-bc="nfl"] #pickHint,html.simbc-game[data-bc="nfl"] #boardAimNote,
+html.simbc-game[data-bc="nfl"] #nflLeftover{display:none !important}
+html.simbc-game #schedulePane[hidden]{display:block}
+html.simbc-game #games{display:flex;gap:10px;overflow-x:auto;padding:4px 2px 10px;margin:12px 0 0;min-height:0;
+  scroll-snap-type:x proximity;scrollbar-width:thin;scrollbar-color:#27406d transparent;grid-template-columns:none}
+html.simbc-game #games .game{flex:0 0 200px;scroll-snap-align:start;background:var(--bc-panel);border:1px solid var(--bc-line);
+  border-radius:12px;padding:9px 11px;transform:none;cursor:pointer}
+html.simbc-game #games .game .nm{font-family:var(--bc-display);font-weight:700;font-size:1.04rem;letter-spacing:.01em}
+html.simbc-game #games .game.sel{border-color:var(--bc-cyan);box-shadow:0 0 0 1px var(--bc-cyan) inset}
+html.simbc-game #games .game .st,html.simbc-game #games .g-sim{display:none}
+.bc-set{width:100%;margin:6px 0 0}
+.bc-set .bc-fold-body > *{margin-top:10px}
+.bc-set .slatelabel{display:none}
+
+/* ---- the matchup stage ---- */
+.bc-stage{position:relative;overflow:hidden;box-sizing:border-box;padding:18px 18px 16px;border-radius:18px;border:1px solid var(--bc-line);
+  text-align:center;background:
+  radial-gradient(60% 120% at 0% 50%,color-mix(in srgb,var(--away) 38%,transparent) 0,transparent 68%),
+  radial-gradient(60% 120% at 100% 50%,color-mix(in srgb,var(--home) 38%,transparent) 0,transparent 68%),
+  linear-gradient(180deg,#0c1a36,#071022)}
+.bc-kick{min-height:1em;font:700 .86rem/1 var(--bc-display);letter-spacing:.2em;text-transform:uppercase;color:var(--bc-cyan)}
+.bc-face{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:10px;margin-top:10px}
+.bc-side{all:unset;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;min-width:0;cursor:pointer;border-radius:14px;padding:6px}
+.bc-side:hover .bc-crest{transform:translateY(-2px)}
+.bc-side:focus-visible{outline:2px solid var(--bc-cyan);outline-offset:2px}
+.bc-crest{width:168px;height:168px;display:flex;align-items:center;justify-content:center;transition:transform .18s;
+  filter:drop-shadow(0 0 1px rgba(255,255,255,.7)) drop-shadow(0 12px 20px rgba(0,0,0,.5))}
+.bc-crest:empty{border-radius:50%;border:2px dashed var(--bc-line)}
+.bc-crest img,.bc-crest .crest,.bc-crest .crest-fallback{width:100%;height:100%;object-fit:contain}
+.bc-crest > span{width:100% !important;height:100% !important}
+.bc-mono{display:flex;align-items:center;justify-content:center;width:100%;height:100%;font:800 2rem/1 var(--bc-display);color:var(--bc-ink)}
+.bc-mono img{width:100%;height:100%;object-fit:contain}
+.bc-name{margin-top:8px;font:800 clamp(1.5rem,3.6vw,2.6rem)/1 var(--bc-display);text-transform:uppercase;letter-spacing:.01em;color:var(--bc-ink);overflow-wrap:anywhere}
+.bc-rec{min-height:1.2em;margin-top:4px;font:600 1rem/1.2 var(--bc-display);letter-spacing:.05em;color:var(--bc-mut);font-variant-numeric:tabular-nums}
+.bc-at{font:800 1.2rem/1 var(--bc-display);text-transform:uppercase;letter-spacing:.1em;color:var(--bc-mut)}
+.bc-run{display:flex;justify-content:center;margin-top:14px}
+html.simbc .bc-run button,html.simbc .bc-run .sim-button.primary{display:inline-block !important;width:min(100%,360px);min-height:58px;padding:12px 30px;border:0;border-radius:14px;color:#04121f !important;cursor:pointer;
+  font:800 1.5rem/1 var(--bc-display) !important;letter-spacing:.1em;text-transform:uppercase;background:var(--bc-grad) !important;
+  box-shadow:0 12px 34px -10px rgba(47,190,255,.85),inset 0 1px 0 rgba(255,255,255,.45)}
+html.simbc .bc-run button:hover{filter:brightness(1.08)}
+.bc-run button:focus-visible{outline:3px solid #fff;outline-offset:3px}
+.bc-other{all:unset;cursor:pointer;display:inline-block;margin-top:10px;padding:6px 10px;font:600 .95rem/1 var(--bc-display);letter-spacing:.06em;color:var(--bc-mut)}
+.bc-other:hover{color:var(--bc-ink)}
+.bc-other:focus-visible{outline:2px solid var(--bc-cyan);border-radius:6px}
+.bc-in{animation:bc-in .36s cubic-bezier(.2,.8,.2,1) both}
+@keyframes bc-in{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+/* while the run is out: one sweep, no added wait */
+.bc-stage.bc-running::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:var(--bc-grad);
+  transform-origin:left;animation:bc-sweep 1.1s ease-in-out infinite}
+@keyframes bc-sweep{0%{transform:scaleX(0)}60%{transform:scaleX(1);opacity:1}100%{transform:scaleX(1);opacity:0}}
+
+/* ---- team picker ---- */
+.bc-pick{box-sizing:border-box;width:min(760px,calc(100vw - 24px));max-height:min(720px,calc(100dvh - 24px));padding:0;overflow:hidden;
+  border:1px solid var(--bc-line);border-radius:18px;background:#0a1630;color:var(--bc-ink)}
+.bc-pick[open]{display:flex;flex-direction:column}
+.bc-pick::backdrop{background:rgba(2,6,16,.72)}
+.bc-pick-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--bc-line)}
+.bc-pick-head h2{margin:0;font:800 1.3rem/1 var(--bc-display);letter-spacing:.06em;text-transform:uppercase;color:var(--bc-ink)}
+.bc-pick-x{all:unset;cursor:pointer;width:40px;height:40px;text-align:center;font-size:1.7rem;line-height:40px;color:var(--bc-mut)}
+.bc-pick-x:focus-visible{outline:2px solid var(--bc-cyan);border-radius:8px}
+.bc-pick-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:6px;padding:12px;overflow-y:auto}
+.bc-pick-team{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 4px;border-radius:12px;border:1px solid transparent}
+.bc-pick-team:hover,.bc-pick-team:focus-visible{background:rgba(31,143,255,.14);border-color:var(--bc-line)}
+.bc-pick-crest{width:56px;height:56px;display:flex;align-items:center;justify-content:center}
+.bc-pick-crest img,.bc-pick-crest .crest{width:100%;height:100%;object-fit:contain}
+.bc-pick-name{font:700 .98rem/1.05 var(--bc-display);text-align:center;color:var(--bc-ink)}
+
+/* ---- result: scoreboard ---- */
+html.simbc #result{--away:#1f8fff;--home:#2fe0ff;scroll-margin-top:84px}
+html.simbc #result .state{padding:44px 16px;font:700 1.2rem/1.2 var(--bc-display);letter-spacing:.12em;text-transform:uppercase;color:var(--bc-cyan)}
+html.simbc #result .sb[data-bc]{position:relative;overflow:hidden;display:grid;grid-template-columns:1fr auto 1fr;gap:0;padding:0;
+  border:1px solid rgba(47,224,255,.3);border-radius:18px;margin:16px 0 0;background:
+  linear-gradient(100deg,color-mix(in srgb,var(--away) 34%,#081227) 0,#081227 42%,#081227 58%,color-mix(in srgb,var(--home) 34%,#081227) 100%)}
+html.simbc .sb[data-bc] .sb-team{grid-row:1;padding:20px;gap:14px}
+html.simbc .sb[data-bc] .sb-team:nth-of-type(3){flex-direction:row-reverse}
+html.simbc .sb[data-bc] .sb-team:nth-of-type(3) .sb-id{flex-direction:row-reverse;text-align:right}
+html.simbc .sb[data-bc] .crest{width:96px;height:96px;object-fit:contain;filter:drop-shadow(0 0 1px rgba(255,255,255,.7)) drop-shadow(0 10px 18px rgba(0,0,0,.5))}
+html.simbc .sb[data-bc] .sb-abbr{display:none}
+html.simbc .sb[data-bc] .sb-name{font:800 clamp(1.3rem,2.6vw,2.2rem)/1 var(--bc-display);text-transform:uppercase;color:var(--bc-ink);white-space:normal}
+html.simbc .sb[data-bc] .sb-rec{margin-top:5px;font:600 .96rem/1 var(--bc-display);letter-spacing:.06em;color:var(--bc-mut)}
+html.simbc .sb[data-bc] .sb-score{font:800 clamp(4.2rem,9vw,6.8rem)/.9 var(--bc-display);color:rgba(214,226,244,.6);font-variant-numeric:tabular-nums;min-width:1.1em;text-align:center}
+html.simbc .sb[data-bc] .sb-team.won .sb-score{color:#fff;text-shadow:0 0 26px rgba(47,224,255,.55)}
+html.simbc .sb[data-bc] .sb-mid{grid-row:1;align-self:center;padding:0 10px;text-align:center}
+html.simbc .sb[data-bc] .sb-status{display:inline-block;padding:6px 13px;border-radius:7px;background:var(--bc-blue);color:#fff;font:800 1.15rem/1 var(--bc-display);letter-spacing:.1em;text-transform:uppercase}
+html.simbc .sb[data-bc] .sb-sub{margin:7px auto 0;font:600 .84rem/1.15 var(--bc-display);letter-spacing:.04em;color:var(--bc-mut);white-space:normal;max-width:124px}
+html.simbc .sb[data-bc] .sb-line{grid-row:2;grid-column:1/-1;margin:0;padding:0;background:rgba(3,8,18,.55);border-top:1px solid rgba(47,224,255,.2)}
+html.simbc .sb[data-bc] .sb-line table,.bc-line table{width:100%;font-family:var(--bc-display);font-size:1.25rem;border-collapse:collapse}
+html.simbc .sb[data-bc] .sb-line th,.bc-line th{padding:8px 12px;font-size:.9rem;font-weight:800;letter-spacing:.12em;color:var(--bc-cyan);text-align:center}
+html.simbc .sb[data-bc] .sb-line td,.bc-line td{padding:7px 12px;text-align:center;font-weight:700;color:var(--bc-mut);font-variant-numeric:tabular-nums}
+html.simbc .sb[data-bc] .sb-line td.name,html.simbc .sb[data-bc] .sb-line th:first-child,.bc-line td.name{text-align:left;padding-left:18px;letter-spacing:.08em;color:var(--bc-ink)}
+html.simbc .sb[data-bc] .sb-line tr.won td{color:#fff}
+html.simbc .sb[data-bc] .sb-line .tot,.bc-line .tot{background:rgba(31,143,255,.2);color:#fff;font-weight:800;width:70px}
+html.simbc .sb[data-bc] .sb-foot{grid-row:3;grid-column:1/-1;margin:0;padding:7px 18px;border-top:1px solid rgba(120,160,220,.14);font-size:.72rem;color:#93a5c0}
+
+/* ---- result: bands and cards ---- */
+.bc-odds,.bc-compare,.bc-line,.bc-high{margin:12px 0 0}
+.bc-odds,.bc-compare,.bc-line{padding:14px 16px;border:1px solid var(--bc-line);border-radius:14px;background:var(--bc-panel);overflow:hidden}
+.bc-line{padding:10px 0 6px}
+.bc-line .bc-cap{padding:0 16px 4px;margin:0;text-align:left}
+.bc-cap{margin-top:8px;text-align:center;font:600 .9rem/1.15 var(--bc-display);letter-spacing:.05em;color:var(--bc-mut)}
+.bc-odds-row{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center}
+.bc-odds-row .pc{font:800 2.3rem/1 var(--bc-display);color:#fff;font-variant-numeric:tabular-nums}
+.bc-odds .bar,.bc-compare .bar{display:flex;gap:2px;border-radius:99px;overflow:hidden;background:#071226}
+.bc-odds .bar{height:12px}
+.bc-odds .bar .a,.bc-compare .bar .a{background:var(--away)}
+.bc-odds .bar .h,.bc-compare .bar .h{background:var(--home)}
+.bc-cmp{display:grid;grid-template-columns:64px 1fr 64px;gap:10px;align-items:center;padding:5px 0}
+.bc-cmp .v{font:800 1.4rem/1 var(--bc-display);color:#fff;font-variant-numeric:tabular-nums}
+.bc-cmp .v:last-child{text-align:right}
+.bc-cmp .lb{text-align:center;font:700 .84rem/1 var(--bc-display);letter-spacing:.12em;text-transform:uppercase;color:var(--bc-mut);margin-bottom:5px}
+.bc-compare .bar{height:6px}
+.bc-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px}
+.bc-card{padding:14px;border:1px solid var(--bc-line);border-radius:14px;background:var(--bc-panel);text-align:center}
+.bc-card .n{font:800 2.4rem/1 var(--bc-display);color:#fff;font-variant-numeric:tabular-nums}
+.bc-card .l{margin-top:5px;font:700 .82rem/1 var(--bc-display);letter-spacing:.12em;text-transform:uppercase;color:var(--bc-mut)}
+.bc-moments{list-style:none;margin:10px 0 0;padding:0}
+.bc-moments li{display:grid;grid-template-columns:82px 48px minmax(0,1fr);gap:8px;align-items:baseline;padding:8px 2px;border-bottom:1px solid rgba(130,175,240,.12);font:600 1.02rem/1.2 var(--bc-display);color:var(--bc-ink)}
+.bc-moments li:last-child{border-bottom:0}
+.bc-moments .w{color:var(--bc-cyan);font-size:.9rem;letter-spacing:.05em;font-variant-numeric:tabular-nums}
+.bc-moments b{letter-spacing:.06em}
+.bc-after{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:14px 0 2px}
+.bc-after button{min-height:48px;padding:10px 24px;border-radius:12px;cursor:pointer;font:800 1.1rem/1 var(--bc-display);letter-spacing:.08em;text-transform:uppercase}
+.bc-again{border:0;color:#04121f;background:var(--bc-grad)}
+.bc-after .bc-try{border:1px solid var(--bc-line);color:var(--bc-ink);background:transparent}
+.bc-after button:focus-visible{outline:2px solid #fff;outline-offset:2px}
+
+/* tabs and sheets */
+html.simbc #result .panel{background:var(--bc-panel);border-color:var(--bc-line);border-radius:14px;margin-top:12px}
+html.simbc #result .tabs{gap:2px;border-bottom:1px solid var(--bc-line);overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none}
+html.simbc #result .tabs button{flex:0 0 auto;border-radius:8px 8px 0 0;padding:10px 13px;background:transparent;border:0;font:800 1rem/1 var(--bc-display);letter-spacing:.06em;text-transform:uppercase;color:var(--bc-mut)}
+html.simbc #result .tabs button.on{color:#fff;box-shadow:inset 0 -2px 0 var(--bc-cyan)}
+html.simbc #result .tablewrap table thead th{background:#071226;color:var(--bc-cyan);font:800 .9rem/1 var(--bc-display);letter-spacing:.09em;text-transform:uppercase}
+html.simbc #result .tablewrap tbody tr:nth-child(even) td{background:rgba(120,160,220,.05)}
+html.simbc #result .tablewrap tbody td{font-variant-numeric:tabular-nums}
+html.simbc #result .tablewrap.sticky td.name{background:#0c1830}
+html.simbc #result .teamhead .nm{font:800 1.3rem/1 var(--bc-display);text-transform:uppercase;letter-spacing:.03em}
+
+/* no prose under a result: recap becomes the highlights above; notes shrink to a footnote */
+html.simbc #result .recap{display:none}
+html.simbc #result .disc{margin-top:8px;padding:0;border:0;background:none;font-size:.74rem;line-height:1.35;color:#93a5c0}
+
+/* NFL result */
+html.simbc #result .mh{margin-top:16px;border:1px solid rgba(47,224,255,.3);border-radius:18px;padding:18px;background:
+  linear-gradient(100deg,color-mix(in srgb,var(--away) 30%,#081227) 0,#081227 42%,#081227 58%,color-mix(in srgb,var(--home) 30%,#081227) 100%)}
+html.simbc #result .mh .hl-h{font:800 1.3rem/1 var(--bc-display);letter-spacing:.08em;text-transform:uppercase;color:var(--bc-cyan);text-align:center;margin:0 0 10px}
+html.simbc #result .mh .pts{font:800 clamp(4.2rem,9vw,6.8rem)/.95 var(--bc-display);border:0;color:#fff}
+html.simbc #result .mh .pts.l{color:rgba(214,226,244,.6)}
+html.simbc #result .mh .nm{font:800 clamp(1.2rem,2.4vw,1.9rem)/1 var(--bc-display);text-transform:uppercase}
+html.simbc #result .mh .wp,html.simbc #result .mh .role{font-family:var(--bc-display);letter-spacing:.05em;color:var(--bc-mut)}
+html.simbc #result .mh .hl-meta,html.simbc #result .mh .envstrip,html.simbc #result .mh .dim{display:none}
+html.simbc #result .kpis{gap:10px}
+html.simbc #result .kpi{background:var(--bc-panel);border-color:var(--bc-line);border-radius:14px;text-align:center}
+html.simbc #result .kpi .v{font-family:var(--bc-display);font-weight:800;font-size:2rem}
+html.simbc #result .kpi .k{font:700 .82rem/1 var(--bc-display);letter-spacing:.1em;text-transform:uppercase}
+html.simbc #result > p.muted,html.simbc #simNextGames,html.simbc #simConvertPanel :is(p.muted,p.dim){display:none}
+html.simbc #result .tabs button[hidden]{display:none}
+/* the two big actions live in .bc-after; the rest stay as a quiet row */
+html.simbc #result .actionbar{justify-content:center;gap:4px;margin-top:6px;background:none;border:0}
+html.simbc #result .actionbar > button:nth-of-type(-n+2){display:none}
+html.simbc #result .actionbar > button{background:none;border:0;padding:6px 10px;font:600 .9rem/1 var(--bc-display);letter-spacing:.05em;color:var(--bc-mut)}
+html.simbc #result .actionbar > button:hover{color:var(--bc-ink)}
+/* NFL marks arrive as a tile with inline sizes */
+.bc-crest .tlogo,.bc-pick-crest .tlogo{width:100% !important;height:100% !important;background:none;border-radius:0}
+.bc-crest .badge,.bc-pick-crest .badge{width:100% !important;height:100% !important}
+.bc-pick-crest > span{width:100% !important;height:100% !important}
+.bc-charts{width:100%;margin:12px 0 0}
+html.simbc #result .mh-team > span:first-child{width:96px !important;height:96px !important}
+html.simbc #result .mh-team > span:first-child > *{width:100% !important;height:100% !important;background:none}
+html.simbc #result > .disc + .disc:not(:has(b)){display:none}
+
+/* MLB */
+html.bc-idle :is(.sim-score-panel,#boxScorePanel,.bc-detail){display:none}
+html.simbc-game[data-bc="mlb"] main > :is(nav,.simds-switch){order:-3}
+html.simbc-game[data-bc="mlb"] .bc-title{order:-2}
+html.simbc-game[data-bc="mlb"] .bc-mlb-tool{order:-1}
+html.simbc-game[data-bc="mlb"] :is(.simv2-steps,.simv2-sechead,.sim-honesty-badge,.scoreboard-readout,#projectionEmptyState,.data-mode-chip){display:none}
+html.simbc-game[data-bc="mlb"] .sim-workspace{display:block;margin-top:12px}
+html.simbc-game[data-bc="mlb"] .sim-score-panel,html.simbc-game[data-bc="mlb"] .result-card{background:none;border:0;padding:0;box-shadow:none}
+html.simbc-game[data-bc="mlb"] .sim-score-panel > .sim-panel-heading,html.simbc-game[data-bc="mlb"] .matchup-header{display:none}
+html.simbc-game[data-bc="mlb"] .bc-set .sim-control-panel{background:none;border:0;padding:0;box-shadow:none}
+html.simbc-game[data-bc="mlb"] #topScoreboard{border:1px solid rgba(47,224,255,.3);border-radius:18px;background:#081227;font-family:var(--bc-display)}
+html.simbc-game[data-bc="mlb"] .sim-panel{background:var(--bc-panel);border-color:var(--bc-line);border-radius:14px}
+
+/* ---- hub ---- */
+html.simbc-hub main.simhub{max-width:1180px;margin-inline:auto}
+html.simbc-hub .simhero{display:block;background:none;border:0;box-shadow:none;padding:0}
+html.simbc-hub .simhero-copy{background:none;border:0;padding:0;box-shadow:none}
+html.simbc-hub #simhub-title{font:800 clamp(1.9rem,4.4vw,3rem)/1 var(--bc-display);letter-spacing:.03em;text-transform:uppercase;margin:6px 0 12px}
+html.simbc-hub .simactions{margin:0 0 12px}
+html.simbc-hub .simactions a{font:700 1rem/1 var(--bc-display);letter-spacing:.06em;color:var(--bc-mut)}
+html.simbc-hub .simlaunch{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+html.simbc-hub .simtile{background:var(--bc-panel);border:1px solid var(--bc-line);border-top:3px solid var(--accent);border-radius:18px;min-height:0;box-shadow:none}
+html.simbc-hub .simtile:hover{border-color:var(--bc-cyan)}
+html.simbc-hub .simtile-main{display:flex;flex-direction:column;align-items:center;gap:10px;padding:26px 14px 18px;text-align:center}
+html.simbc-hub .simtile-mark{width:84px;height:84px}
+html.simbc-hub .simtile-mark svg{width:100%;height:100%}
+html.simbc-hub .simtile-lg{font:800 2.6rem/1 var(--bc-display);letter-spacing:.04em;color:var(--bc-ink)}
+html.simbc-hub .simtile-name{font:700 .95rem/1 var(--bc-display);letter-spacing:.14em;text-transform:uppercase;color:var(--bc-mut)}
+html.simbc-hub .simtile-sub,html.simbc-hub .simtile-go{display:none}
+html.simbc-hub .simtile-links a{font:700 .95rem/1 var(--bc-display);letter-spacing:.06em}
+
+/* ---- season, playoff, odds: same shell ---- */
+html.simbc-shell .panel,html.simbc-shell .ss-sim,html.simbc-shell .cl-sec{background:var(--bc-panel);border-color:var(--bc-line);border-radius:14px}
+html.simbc-shell main :is(.btn,.ss-btn-primary):not(.ghost){background:var(--bc-grad);color:#04121f;border:0;font-family:var(--bc-display);font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+html.simbc-shell main h2{font-family:var(--bc-display);letter-spacing:.03em}
+html.simbc-shell .hero,html.simbc-shell .ss-hero,html.simbc-shell .cl-hero{padding-bottom:0;background:none;border:0;min-height:0}
+html.simbc-run .sa-head h1{font-family:var(--bc-display);text-transform:uppercase;letter-spacing:.02em}
+
+/* motion: the board arrives. Off when the visitor asks. */
+#result.bc-show .sb[data-bc],#result.bc-show .mh{animation:bc-board .4s cubic-bezier(.2,.8,.2,1) both}
+@keyframes bc-board{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){
+  .bc-in,.bc-stage.bc-running::after,#result.bc-show .sb[data-bc],#result.bc-show .mh{animation:none}
+  .bc-crest{transition:none}
+}
+
+/* ---- phone ---- */
+@media (max-width:760px){
+  html.simbc-hub .simlaunch{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  html.simbc-hub .simtile-main{padding:18px 8px 12px}
+  html.simbc-hub .simtile-mark{width:60px;height:60px}
+  html.simbc-hub .simtile-lg{font-size:2rem}
+}
+@media (max-width:640px){
+  .bc-stage{padding:14px 10px 12px}
+  .bc-crest{width:104px;height:104px}
+  .bc-face{gap:2px;margin-top:6px}
+  .bc-name{font-size:1.5rem}
+  .bc-at{font-size:.95rem}
+  html.simbc-game #games .game{flex-basis:170px}
+  html.simbc #result .sb[data-bc]{grid-template-columns:1fr 1fr}
+  html.simbc .sb[data-bc] .sb-mid{grid-row:1;grid-column:1/-1;display:flex;align-items:center;justify-content:center;gap:10px;padding:10px 8px 0}
+  html.simbc .sb[data-bc] .sb-sub{margin:0;max-width:none}
+  html.simbc .sb[data-bc] .sb-team,html.simbc .sb[data-bc] .sb-team:nth-of-type(3){grid-row:2;flex-direction:column;padding:10px 8px 14px;gap:6px;justify-content:flex-start}
+  html.simbc .sb[data-bc] .sb-id,html.simbc .sb[data-bc] .sb-team:nth-of-type(3) .sb-id{flex-direction:column;text-align:center;gap:6px}
+  html.simbc .sb[data-bc] .crest{width:72px;height:72px}
+  html.simbc .sb[data-bc] .sb-score{font-size:4.4rem}
+  html.simbc .sb[data-bc] .sb-line{grid-row:3}
+  html.simbc .sb[data-bc] .sb-foot{grid-row:4}
+  html.simbc .sb[data-bc] .sb-line table,.bc-line table{font-size:1.12rem}
+  html.simbc .sb[data-bc] .sb-line th,html.simbc .sb[data-bc] .sb-line td,.bc-line th,.bc-line td{padding:6px 5px}
+  .bc-cmp{grid-template-columns:52px 1fr 52px}
+  .bc-odds-row .pc{font-size:1.9rem}
+  .bc-moments li{grid-template-columns:64px 40px minmax(0,1fr);font-size:.96rem}
+  .bc-after button{flex:1 1 140px}
+}
+@media print{
+  html.simbc,html.simbc body{background:#fff}
+  html.simbc .sb[data-bc],html.simbc #result .mh{background:#fff}
+  .bc-stage,.bc-fold,.bc-after{display:none}
+}
+html.simbc-game[data-bc="mlb"] :is(#keyExplanationValue,#projectionNotice,.data-mode-chip,.player-source-note,#boxScoreMatchupCard,.box-score-scroll,.batting-fielding-details,.pitching-game-notes,.winner-strip){display:none !important}
+html.simbc-game[data-bc="mlb"] .bc-mlb-tool{margin-bottom:0}
+html.simbc-game[data-bc="mlb"] .result-jump-actions{justify-content:center}
+html.simbc .bc-stage .bc-run :is(#runBtn,#featBtn,#runSimulationButton){background:var(--bc-grad) !important;color:#04121f !important;border:0 !important}
+/* MLB box score: same sheet as the other three sports */
+html.simbc-game[data-bc="mlb"] #boxScorePanel{--simux-bg:#0c1830;background:var(--bc-panel) !important;border:1px solid var(--bc-line) !important;color:var(--bc-ink) !important;margin-top:12px}
+html.simbc-game[data-bc="mlb"] #boxScorePanel :is(div,section,article,table,thead,tbody,tr,td,th,ul,li,h3,h4,h5,p,strong,small,span:not(.team-logo-mark):not(.team-logo-fallback)){background-color:transparent !important;background-image:none !important;border-color:var(--bc-line) !important;color:inherit !important;box-shadow:none !important}
+html.simbc-game[data-bc="mlb"] #boxScorePanel th{color:var(--bc-cyan) !important;font-family:var(--bc-display);letter-spacing:.08em}
+html.simbc-game[data-bc="mlb"] #boxScorePanel td{font-variant-numeric:tabular-nums}
+html.simbc-game[data-bc="mlb"] #boxScorePanel :is(h3,h4){font-family:var(--bc-display);text-transform:uppercase;letter-spacing:.06em}
+html.simbc-game[data-bc="mlb"] #boxScorePanel :is(td,th):first-child{background-color:#0c1830 !important}
+html.simbc-game[data-bc="mlb"] #boxScorePanel .lineup-banner{font-size:.76rem;color:var(--bc-mut) !important;padding:4px 0}
+html.simbc-game[data-bc="mlb"] :is(#boxScoreSummary,.box-score-heading > div:first-child small,#playerBoxScoreContent > p:not(.lineup-banner),#playerBoxScoreContent .player-team-box > p:not(.lineup-banner)){display:none !important}
+/* no CLS: everything that moves at boot waits for it, and late data has a seat */
+html.simbc-game:not(.bc-ready) .setup > *{visibility:hidden}
+html.simbc-game[data-bc="mlb"]:not(.bc-ready) main{min-height:640px}
+html.simbc-shell:not(.bc-ready) :is(.hero > p,.lsim-hero > p,.ss-hero p,.cl-hero p,main > p[class^="tmr-"],main > section.panel:not(:has(table,button,select,input,svg))){display:none}
+html.simbc-game #games:empty,html.simbc-game #games{min-height:104px}
+.bc-name{min-height:1em}
+/* shell pages: every move happens before anything is shown */
+html.simbc-shell:not(.bc-ready) main{visibility:hidden}
+@media (max-width:640px){
+  html.simbc .simds-switch{display:flex !important;flex-wrap:nowrap;gap:4px;overflow-x:auto;scrollbar-width:none;margin-bottom:10px;padding:4px}
+  html.simbc .simds-switch > *{flex:0 0 auto;display:flex;flex-wrap:nowrap}
+  html.simbc .simds-switch a{white-space:nowrap;padding:6px 8px}
+  html.simbc .simds-extra{display:none}
+}
+
+/* Quiet result footer: the replay seed stays in the share link, not on the page. */
+html.simbc #result > .disc:not(:has(b)){display:none}

@@ -17,7 +17,10 @@ function run(check) {
     const html = fs.readFileSync(file, 'latin1');
     if (!/<\/head>/i.test(html)) continue;          // fragments, not pages
     const blocks = html.match(SIMUX.BLOCK_RE) || [];
-    if (blocks.length === 1 && blocks[0].trim() === block) continue;
+    const kind = SIMUX.bcKind(html);
+    const bc = html.match(SIMUX.BC_RE) || [];
+    const bcOk = kind ? (bc.length === 1 && bc[0].trim() === SIMUX.bcBlock(kind)) : bc.length === 0;
+    if (blocks.length === 1 && blocks[0].trim() === block && bcOk) continue;
     stale.push(path.relative(path.resolve(__dirname, '..'), file).replace(/\\/g, '/'));
     if (!check) { fs.writeFileSync(file, SIMUX.inject(html), 'latin1'); wrote++; }
   }
