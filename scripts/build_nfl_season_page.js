@@ -89,6 +89,7 @@ function picksPanels(d, result) {
     teams: d.teams.map((t) => ({ id: t.id, name: t.name, nickname: t.nickname, conference: t.conference, division: t.division })),
     games: d.games.map((g) => {
       const o = { id: g.id, week: g.week, home: g.home, away: g.away, completed: !!g.completed };
+      if (g.neutral) o.neutral = true;   // L2: a neutral site game has no "at"
       if (g.completed) { o.home_score = g.home_score; o.away_score = g.away_score; } else if (typeof g.home_win_prob === 'number') o.home_win_prob = Math.round(g.home_win_prob * 10000) / 10000;
       return o;
     }) };
@@ -178,7 +179,7 @@ function page(d, result, shell) {
       { '@type': 'ListItem', position: 3, name: 'NFL Simulator', item: SITE + '/nfl-simulator/' },
       { '@type': 'ListItem', position: 4, name: 'NFL Season Simulator', item: SITE + URL }] },
   ];
-  const slateHtml = slate.map((g) => `<div>${esc(team(g.away).name)} at ${esc(team(g.home).name)}${typeof g.home_win_prob === 'number' ? ` <small>${esc(team(g.home).nickname || '')} ${Math.round(g.home_win_prob * 100)}%</small>` : ''}</div>`).join('');
+  const slateHtml = slate.map((g) => `<div>${esc(team(g.away).name)} ${g.neutral ? 'vs' : 'at'} ${esc(team(g.home).name)}${g.neutral ? ' (neutral site)' : ''}${typeof g.home_win_prob === 'number' ? ` <small>${esc(team(g.home).nickname || '')} ${Math.round(g.home_win_prob * 100)}%</small>` : ''}</div>`).join('');
 
   return `<!doctype html>
 <html lang="en">
@@ -211,6 +212,7 @@ ${shell.head}
 </head>
 <body class="tmr-ds-shell tmr-ds--dark">
 ${H.NAV_RESERVE}
+<!-- NFL_PROJ:${N.fingerprint(result, d)} -->
 <main class="wrap lsim-wrap" id="nflSeason">
   <nav class="simcrumb" aria-label="Breadcrumb" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:.8rem;margin:0 0 14px;opacity:.85;">
     <a href="/" style="color:inherit;text-decoration:none;">Home</a><span aria-hidden="true" style="opacity:.45;">&rsaquo;</span>
@@ -237,14 +239,14 @@ ${H.NAV_RESERVE}
 
   <section class="lsim-copy">
     <h2>How the NFL season simulator works</h2>
-    <p>The ${season} regular season is ${weeks.length} weeks and ${d.games.length} games, 17 per team. Every game that has been played keeps its real score. Every game that has not is played out ${H.count(result.runs)} times, each time decided by that game's own home win probability from the TrustMyRecord NFL model, the drive level model behind the <a href="/nfl-simulator/">NFL Simulator</a>, trained on the ${esc(String(d.model && d.model.train_season_min))} to ${esc(String(d.model && d.model.train_season_max))} seasons and held out on ${esc(String(d.model && d.model.holdout_season))}.</p>
-    <p>Each simulated season also includes team strength uncertainty. Nobody knows exactly how good a team is, so every simulated season draws one strength shift per team and plays all of that team's remaining games with it: in some seasons a club is better than rated all year, in others worse. The size of that shift was fitted on the 2019 to 2025 seasons, replaying each one from midseason with only the information available at the time. Without it, the 80% win ranges held the real win total only 71% of the time; with it, 77%.</p>
+    <p>The ${season} regular season is ${weeks.length} weeks and ${d.games.length} games, 17 per team. Every game that has been played keeps its real score. Every game that has not is played out ${H.count(result.runs)} times, each time decided by that game's own home win probability: the same number the <a href="/nfl-simulator/">NFL Simulator</a> gives the game at its default settings when these inputs were read, with the injury report and the game environment included. Those served win probabilities are graded game by game on the <a href="/nfl-simulator/#live-accuracy">NFL Simulator</a>.</p>
+    <p>Each simulated season also includes team strength uncertainty. Nobody knows exactly how good a team is, so every simulated season draws one strength shift per team and plays all of that team's remaining games with it: in some seasons a club is better than rated all year, in others worse. The size of that shift was fitted by replaying the 2019 to 2025 seasons from midseason, using game results and the model's own earlier probabilities, with no betting market data. Without it, the 80% win ranges held the real win total 68% to 69% of the time; with it, 78% to 81%.</p>
     <p>Each simulated season is then seeded the way the league does it: the four division winners in each conference take seeds 1 through 4, the three best remaining records take the wild cards, and ties go through the NFL's tiebreaker steps in order.</p>
     <p>Division title and playoff percentages on this page come from simulating the standings. Pick any remaining games yourself in the Pick the games panel above: the seeds and bracket redraw from your picks, and Run plays every season with them locked in. The <a href="/nfl-playoff-simulator/">NFL Playoff Simulator</a> adds conference and Super Bowl odds and a club by club clinching check.</p>
     <h2>Tiebreakers</h2>
     <p>Head to head, division record, common games with a four game minimum, conference record, strength of victory, strength of schedule and the points based steps are all applied, in the league's order, and a tie among three or more clubs reduces to two and starts over. Best net touchdowns and the coin toss cannot be computed from the data held; a tie that reaches them stays tied rather than being settled by an invented number.</p>
     <h2>What the projection does not know</h2>
-    <p>A game's probability is set by the model before kickoff. It does not know about an injury or a quarterback change announced after the inputs were read, and the projection is only as current as its last rebuild, stamped above in Pacific time.</p>
+    <p>A game's probability is set by the model before kickoff. A player ruled out this week counts against his team's next game only; injured reserve and other long term absences count in every game until they end. The model does not know about an injury or a quarterback change announced after the inputs were read, and the projection is only as current as its last rebuild, stamped above in Pacific time.</p>
     ${slateHtml ? `<h2>Week ${esc(String(nextWeek))} games</h2>\n    <div class="slate">${slateHtml}</div>\n    <p>The percentage is the home team's win probability. Simulate any of these games with a full box score in the <a href="/nfl-simulator/">NFL Simulator</a>, or pick them yourself in the <a href="/nfl-playoff-simulator/">NFL Playoff Simulator</a>.</p>` : ''}
     <h2 id="faq">NFL Season Simulator FAQ</h2>
     ${faq.html}
@@ -279,8 +281,7 @@ ${shell.tail}
 (async () => {
   const d = await inputs();
   if (!require('./nfl-bake-freshness').gate(d, 'nfl-season-simulator')) return;
-  const seed = Number(String(d.generated_at || '').slice(0, 10).replace(/-/g, '')) || 1;
-  const result = N.project(d, RUNS, seed);
+  const result = N.project(d, RUNS, N.bakeSeed(d));
   const out = path.join(ROOT, 'nfl-season-simulator', 'index.html');
   fs.mkdirSync(path.dirname(out), { recursive: true });
   fs.writeFileSync(out, SIMUX.inject(page(d, result, H.shellAssets())));

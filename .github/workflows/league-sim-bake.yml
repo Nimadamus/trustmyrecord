@@ -125,14 +125,16 @@ jobs:
               # season/playoff pages; stamping after it left those pages one refresh behind and the gate failed the bake.
               node scripts/stamp-nhl-evaluation.js --fetch > b7.log 2>&1 || { tail -10 b7.log; git checkout -q -- data/nhl-evaluation.json nhl-simulator/index.html; }
               node scripts/build_league_sim_pages.js > b1.log 2>&1 || { tail -30 b1.log; return 1; }
-              node scripts/build_nfl_season_page.js > b2.log 2>&1 || { tail -30 b2.log; return 1; }
-              node scripts/build_nfl_team_pages.js > b3.log 2>&1 || { tail -30 b3.log; return 1; }
+              # NFL_BAKE_FRESH_READ_20261105: one settled read, one file, every NFL builder.
+              node scripts/nfl-bake-inputs.js .nfl-inputs.json > b2i.log 2>&1 || { tail -5 b2i.log; return 1; }
+              node scripts/build_nfl_season_page.js --inputs .nfl-inputs.json > b2.log 2>&1 || { tail -30 b2.log; return 1; }
+              node scripts/build_nfl_team_pages.js --inputs .nfl-inputs.json > b3.log 2>&1 || { tail -30 b3.log; return 1; }
               # MLB_SEASON_STATE_20261030: one season state (phase + champion) that every MLB builder reads.
               node scripts/mlb_season_state.js > b4s.log 2>&1 || { tail -30 b4s.log; return 1; }
               node scripts/build_mlb_odds_page.js > b4.log 2>&1 || { tail -30 b4.log; return 1; }
               node scripts/build_mlb_season_pages.js >> b4s.log 2>&1 || { tail -30 b4s.log; return 1; }
               # Never fails the bake; on bad inputs it leaves the last bake live.
-              node scripts/build_nfl_playoff_page.js > b5.log 2>&1 || tail -10 b5.log
+              node scripts/build_nfl_playoff_page.js --inputs .nfl-inputs.json > b5.log 2>&1 || tail -10 b5.log
               # NFL_ACCURACY_ONE_SOURCE_20261030: every accuracy figure from the API, incl. graded served predictions.
               node scripts/build_nfl_accuracy_copy.js > b6.log 2>&1 || tail -10 b6.log
               # THE GATES run before the commit: a failing gate publishes nothing.
@@ -143,6 +145,9 @@ jobs:
               node tests/nfl-pages-consistency-test.js > g6.log 2>&1 || { tail -30 g6.log; return 1; }
               node tests/nfl-tbd-kickoff-test.js > g7.log 2>&1 || { tail -30 g7.log; return 1; }
               node tests/nfl-season-picks-test.js > g12.log 2>&1 || { tail -30 g12.log; return 1; }
+              # NFL_ONE_PROJECTION_20261105: the season and playoff pages must print one projection.
+              node scripts/nfl-pages-agree.js > g13.log 2>&1 || { tail -14 g13.log; return 1; }
+              node tests/nfl-one-projection-test.js > g14.log 2>&1 || { tail -14 g14.log; return 1; }
               node tests/mlb-postseason-odds-test.js > g4.log 2>&1 || { tail -30 g4.log; return 1; }
               node tests/mlb-season-state-gate-test.js > g6.log 2>&1 || { tail -30 g6.log; return 1; }
               node tests/seo-indexability-regression-test.js > g3.log 2>&1 || { tail -40 g3.log; return 1; }

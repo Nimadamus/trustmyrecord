@@ -5,8 +5,8 @@
  * Built on static/js/nfl-playoff-engine.js, so every simulated season is seeded
  * with the same real NFL tiebreakers the NFL Playoff Simulator applies. Played
  * games keep their result; every other game is drawn from its own home win
- * probability in /api/nfl/public/playoff-inputs (the TrustMyRecord NFL drive
- * model). UMD: the page builder and the browser share it.
+ * probability in /api/nfl/public/playoff-inputs (the same calibrated probability
+ * the game simulator serves). UMD: the page builder and the browser share it.
  */
 (function (root, factory) {
   var api = factory(root.TMRPlayoffEngine || (typeof require === 'function' ? require('./nfl-playoff-engine.js') : null));
@@ -20,33 +20,15 @@
     return sorted[Math.min(sorted.length - 1, Math.max(0, Math.round(q * (sorted.length - 1))))];
   }
 
-  /* NFL_SEASON_STRENGTH_NOISE_20261030 (CAND_NFL_SEASON_STRENGTH_NOISE_V1, lab
-     CHANGELOG 2026-10-30): every simulated season draws one strength shock per club,
-     z ~ N(0, SIGMA^2) on the logit scale, and every open game of that season is
-     played at logit(p) + z_home - z_away. A club's strength is not known exactly, so
-     its whole season can run hot or cold together. SIGMA 0.5 was fitted walk-forward on
-     2019-2025 (lab scripts/nfl_season_noise_backtest.js): 80% win range coverage 70.6% ->
-     76.6% (+6.0 pts, CI 4.2 to 7.8), playoff Brier -0.0014 (CI includes 0, not worse).
-     Deployed 2026-10-30 on the remediation coordinator's decision. The shocks use their
-     own random stream, so SIGMA 0 reproduces the pre-change numbers exactly. */
-  var SIGMA = 0.5;
-  function shifted(p, d) {
-    if (!d) return p;
-    var q = Math.min(0.999, Math.max(0.001, p));
-    return 1 / (1 + Math.exp(-(Math.log(q / (1 - q)) + d)));
-  }
+  /* NFL_SEASON_STRENGTH_NOISE_20261030 + NFL_ONE_PROJECTION_20261105: the strength shock
+     and the draw live in nfl-playoff-engine.js (seasonDrawer), shared with simulateSeason. */
+  var SIGMA = E.STRENGTH_SIGMA;
 
   /* opts.picks: { gameId: winnerId } results the visitor locked in (NFL_SEASON_PICKS_20261030).
      opts.sigma: overrides SIGMA (tests and the lab). */
   function project(data, n, seed, opts) {
     opts = opts || {};
-    var rnd = E.mulberry32(seed || 1);
     var sigma = typeof opts.sigma === 'number' ? opts.sigma : SIGMA;
-    var noiseRnd = E.mulberry32(((seed || 1) ^ 0x9e3779b9) >>> 0);
-    var gauss = function () {
-      var u = 0; while (u === 0) u = noiseRnd();
-      return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * noiseRnd());
-    };
     var picks = {};
     var open = data.games.filter(function (g) {
       if (g.completed) return false;
@@ -54,20 +36,15 @@
       if (w === g.home || w === g.away) { picks[g.id] = w; return false; }
       return true;
     });
+    var draw = E.seasonDrawer(data.teams, open, seed || 1, sigma);
     var acc = {};
     data.teams.forEach(function (t) {
       acc[t.id] = { wins: [], division: 0, playoffs: 0, top: 0 };
     });
     for (var i = 0; i < n; i++) {
-      var sims = {}, z = null;
-      if (sigma > 0) { z = {}; data.teams.forEach(function (t) { z[t.id] = sigma * gauss(); }); }
+      var sims = {};
       for (var pk in picks) sims[pk] = picks[pk];
-      for (var k = 0; k < open.length; k++) {
-        var g = open[k];
-        var p = typeof g.home_win_prob === 'number' ? g.home_win_prob : 0.5;
-        if (z) p = shifted(p, (z[g.home] || 0) - (z[g.away] || 0));
-        sims[g.id] = rnd() < p ? g.home : g.away;
-      }
+      draw(sims);
       var s = E.seedAll(data.teams, data.games, {}, sims);
       data.teams.forEach(function (t) {
         var r = s.standings[t.id].overall;
@@ -138,5 +115,16 @@
       + (result.picked ? ', with your ' + result.picked + (result.picked === 1 ? ' pick' : ' picks') + ' locked in.' : '.');
   }
 
-  return { project: project, tables: tables, stamp: stamp, SIGMA: SIGMA };
+  /* NFL_ONE_PROJECTION_20261105: what the pages compare. Same inputs, runs and seed give the same
+     string; scripts/nfl-pages-agree.js fails the bake when the season and playoff pages differ. */
+  function fingerprint(result, data) {
+    return [data.season, data.projections_generated_at || '', result.runs, result.seed, result.sigma].join('|') + '|'
+      + result.teams.map(function (t) {
+        return t.id + ':' + wins(t.wins_mean) + ':' + Math.round(t.playoffs * 1000) + ':' + Math.round(t.division_title * 1000) + ':' + Math.round(t.top_seed * 1000);
+      }).sort().join(',');
+  }
+  /* The bake seed: one per UTC day of the shared inputs. */
+  function bakeSeed(data) { return Number(String(data.generated_at || '').slice(0, 10).replace(/-/g, '')) || 1; }
+
+  return { project: project, tables: tables, stamp: stamp, fingerprint: fingerprint, bakeSeed: bakeSeed, SIGMA: SIGMA };
 }));
