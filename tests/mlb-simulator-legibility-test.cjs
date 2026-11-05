@@ -130,6 +130,7 @@ const PAGE_JS = () => {
 
   const opts = await page.$eval('#awayTeamSelect', (e) => e.options.length);
   assert.ok(opts > 2, 'team selectors populated (' + opts + ' options)');
+  await page.evaluate(() => document.querySelectorAll('details.bc-set').forEach((d) => { d.open = true; }));
   await page.selectOption('#awayTeamSelect', { index: 1 });
   await page.selectOption('#homeTeamSelect', { index: 2 });
   await page.waitForTimeout(2500);
