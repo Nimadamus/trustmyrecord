@@ -872,7 +872,7 @@
                     <h3>Membership and billing</h3>
                     <div class="pm-acc">
                         <details><summary>How much does it cost?</summary><p>TMR Pro is $49.99 a month or $500 a year. TMR Ultimate is $99.99 a month. Prices are in US dollars, before any applicable tax.</p></details>
-                        <details><summary>Is there a free trial?</summary><p>TMR Pro monthly starts with 3 days free. A card is required, there is one trial per person and card, and if you cancel before it ends you pay nothing. Annual Pro and TMR Ultimate have no trial.</p></details>
+                        <details><summary>Is there a free trial?</summary><p>No. TMR Pro is $49.99 a month or $500 a year, and you can cancel any time from this page.</p></details>
                         <details><summary>How is billing handled?</summary><p>Payments run through Stripe. You enter your card on Stripe's secure checkout, never on TrustMyRecord. Manage membership opens Stripe's billing page for your card and invoices.</p></details>
                         <details><summary>Can I cancel? What happens next?</summary><p>Yes, any time, with Cancel subscription on this page. No contract and no fee. You keep access until the end of the period you already paid for, then your account returns to the free version of each tool. Your record and picks stay exactly as they are.</p></details>
                         <details><summary>When can I subscribe?</summary><p id="proWhenAnswer">Now. Pick a plan above. Checkout is handled by Stripe.</p></details>
@@ -1073,7 +1073,7 @@
             });
             if (monthlyNote) monthlyNote.textContent = (trialDays > 0 && (mode === 'buy' || mode === 'signin'))
                 ? trialDays + ' days free, then $49.99/month. Cancel before it ends and pay nothing.'
-                : (mode === 'buy' ? 'This account has already used its free trial.' : ' ');
+                : (mode === 'buy' ? ' ' : ' ');
             /* PRO_HERO_TRIAL_20261101: the header leads with the offer that is actually live. */
             if (heroCta && (mode === 'buy' || mode === 'signin')) {
                 heroCta.textContent = trialDays > 0 ? 'Start ' + trialDays + ' days free' : 'Get TMR Pro';
@@ -1477,7 +1477,7 @@
             if (!S || !S.hasTokens || !S.hasTokens()) {
                 visitor();
                 fetch(API + '/premium/checkout-status', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (b) {
-                    if (b && b.open_to_public) { mode = 'signin'; trialDays = 3; paintButtons(); }
+                    if (b && b.open_to_public) { mode = 'signin'; paintButtons(); }
                     else paintStatus('Not signed in', 'Create a free account to track your record. Subscriptions are not open right now.', false, false);
                     paintUltimate(!!(b && b.ultimate_open_to_public), null);
                 }).catch(function () { });

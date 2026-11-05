@@ -501,14 +501,14 @@
     }
     function simOfferHtml(comp, sport, s) {
         return '<div class="tpf-offer">'
-            + '<div class="tpf-offer-k">TMR Pro &middot; 3 days free, then $49.99/month</div>'
+            + '<div class="tpf-offer-k">TMR Pro &middot; $49.99/month</div>'
             + '<b class="tpf-offer-h">Run this ' + esc(sport.toUpperCase()) + ' simulator as often as you want</b>'
             + '<ul><li>Unlimited runs on every simulator, every day</li>'
             + '<li>The Handicapper Watchdog board: pending picks of graded handicappers outside TMR, before kickoff</li>'
             + '<li>BetLegend Pro research included</li></ul>'
             + spotlightHtml(s)
-            + '<a class="tpf-offer-btn" data-tpf-cta="' + comp + '" href="' + proHref(comp, '#pricing') + '">Start 3 days free</a>'
-            + '<small class="tpf-offer-fine">Card required, one trial per person and card. Cancel before it ends and you pay nothing.</small>'
+            + '<a class="tpf-offer-btn" data-tpf-cta="' + comp + '" href="' + proHref(comp, '#pricing') + '">Get TMR Pro</a>'
+            + '<small class="tpf-offer-fine">Cancel any time.</small>'
             + '</div>';
     }
 
