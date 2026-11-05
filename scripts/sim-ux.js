@@ -19,32 +19,6 @@ const CSS = 'static/css/tmr-sim-ux.css';
 const JS = 'static/js/tmr-sim-ux.js';
 const BLOCK_RE = /<!--SIM_UX-->[\s\S]*?<!--\/SIM_UX-->\r?\n?/g;
 
-/* BROADCAST_PRESENTATION_20261105: the product shell. Chosen from the page's own
-   canonical, so a rebake of any page keeps it without a per builder edit. The
-   class goes on <html> from the head, before first paint, so nothing jumps. */
-const BC_CSS = 'static/css/tmr-sim-broadcast.css';
-const BC_JS = 'static/js/tmr-sim-broadcast.js';
-const BC_RE = /<!--SIM_BC-->[\s\S]*?<!--\/SIM_BC-->\r?\n?/g;
-const BC_CANON = /<link[^>]*rel=["']canonical["'][^>]*href=["']https:\/\/trustmyrecord\.com\/([a-z0-9/-]+?)\/?["']/i;
-function bcKind(html) {
-  const m = BC_CANON.exec(String(html));
-  const p = m ? m[1] : '';
-  if (p === 'sports-simulators') return ['hub', 'all'];
-  let x = /^(mlb|nfl|nba|nhl)-simulator$/.exec(p);
-  if (x) return ['game', x[1]];
-  x = /^(mlb|nfl|nba|nhl)-simulator\/results\/run$/.exec(p);
-  if (x) return ['run', x[1]];
-  x = /^(mlb|nfl|nba|nhl)-(?:season-simulator|playoff-simulator|playoff-odds)$/.exec(p);
-  if (x) return ['shell', x[1]];
-  return null;
-}
-function bcBlock(kind) {
-  return `<!--SIM_BC--><link rel="stylesheet" href="/${BC_CSS}?v=${hashOf(BC_CSS)}">`
-    + `<script>(function(r){r.classList.add('simbc','simbc-${kind[0]}');r.setAttribute('data-bc','${kind[1]}');`
-    + `addEventListener('load',function(){r.classList.add('bc-ready')})}(document.documentElement))</script>`
-    + `<script defer src="/${BC_JS}?v=${hashOf(BC_JS)}"></script><!--/SIM_BC-->`;
-}
-
 /* Directories whose pages are simulator pages (every .html below them). */
 const SIM_DIRS = [
   'sports-simulators',
@@ -68,11 +42,10 @@ function block() {
 function inject(html) {
   const b = block();
   const eol = /\r\n/.test(html) ? '\r\n' : '\n';
-  let out = String(html).replace(BLOCK_RE, '').replace(BC_RE, '');
+  let out = String(html).replace(BLOCK_RE, '');
   const i = out.search(/<\/head>/i);
   if (i < 0) return html;
-  const kind = bcKind(html);
-  return out.slice(0, i) + b + eol + (kind ? bcBlock(kind) + eol : '') + out.slice(i);
+  return out.slice(0, i) + b + eol + out.slice(i);
 }
 
 function simPages() {
@@ -90,4 +63,4 @@ function simPages() {
   return out;
 }
 
-module.exports = { inject, block, simPages, SIM_DIRS, BLOCK_RE, CSS, JS, hashOf, BC_RE, bcKind, bcBlock };
+module.exports = { inject, block, simPages, SIM_DIRS, BLOCK_RE, CSS, JS, hashOf };
