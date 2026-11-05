@@ -93,10 +93,10 @@ html.simbc-game #games .game .st,html.simbc-game #games .g-sim{display:none}
 .bc-rec{min-height:1.2em;margin-top:4px;font:600 1rem/1.2 var(--bc-display);letter-spacing:.05em;color:var(--bc-mut);font-variant-numeric:tabular-nums}
 .bc-at{font:800 1.2rem/1 var(--bc-display);text-transform:uppercase;letter-spacing:.1em;color:var(--bc-mut)}
 .bc-run{display:flex;justify-content:center;margin-top:14px}
-.bc-run button{display:inline-block !important;width:min(100%,360px);min-height:58px;padding:12px 30px;border:0;border-radius:14px;color:#04121f !important;cursor:pointer;
+html.simbc .bc-run button,html.simbc .bc-run .sim-button.primary{display:inline-block !important;width:min(100%,360px);min-height:58px;padding:12px 30px;border:0;border-radius:14px;color:#04121f !important;cursor:pointer;
   font:800 1.5rem/1 var(--bc-display) !important;letter-spacing:.1em;text-transform:uppercase;background:var(--bc-grad) !important;
   box-shadow:0 12px 34px -10px rgba(47,190,255,.85),inset 0 1px 0 rgba(255,255,255,.45)}
-.bc-run button:hover{filter:brightness(1.08)}
+html.simbc .bc-run button:hover{filter:brightness(1.08)}
 .bc-run button:focus-visible{outline:3px solid #fff;outline-offset:3px}
 .bc-other{all:unset;cursor:pointer;display:inline-block;margin-top:10px;padding:6px 10px;font:600 .95rem/1 var(--bc-display);letter-spacing:.06em;color:var(--bc-mut)}
 .bc-other:hover{color:var(--bc-ink)}
@@ -228,7 +228,10 @@ html.simbc #result .mh-team > span:first-child > *{width:100% !important;height:
 html.simbc #result > .disc + .disc:not(:has(b)){display:none}
 
 /* MLB */
-html.bc-idle .sim-score-panel{display:none}
+html.bc-idle :is(.sim-score-panel,#boxScorePanel,.bc-detail){display:none}
+html.simbc-game[data-bc="mlb"] main > :is(nav,.simds-switch){order:-3}
+html.simbc-game[data-bc="mlb"] .bc-title{order:-2}
+html.simbc-game[data-bc="mlb"] .bc-mlb-tool{order:-1}
 html.simbc-game[data-bc="mlb"] :is(.simv2-steps,.simv2-sechead,.sim-honesty-badge,.scoreboard-readout,#projectionEmptyState,.data-mode-chip){display:none}
 html.simbc-game[data-bc="mlb"] .sim-workspace{display:block;margin-top:12px}
 html.simbc-game[data-bc="mlb"] .sim-score-panel,html.simbc-game[data-bc="mlb"] .result-card{background:none;border:0;padding:0;box-shadow:none}
@@ -305,3 +308,16 @@ html.simbc-run .sa-head h1{font-family:var(--bc-display);text-transform:uppercas
   html.simbc .sb[data-bc],html.simbc #result .mh{background:#fff}
   .bc-stage,.bc-fold,.bc-after{display:none}
 }
+html.simbc-game[data-bc="mlb"] :is(#keyExplanationValue,#projectionNotice,.data-mode-chip,.player-source-note,#boxScoreMatchupCard,.box-score-scroll,.batting-fielding-details,.pitching-game-notes,.winner-strip){display:none !important}
+html.simbc-game[data-bc="mlb"] .bc-mlb-tool{margin-bottom:0}
+html.simbc-game[data-bc="mlb"] .result-jump-actions{justify-content:center}
+html.simbc .bc-stage .bc-run :is(#runBtn,#featBtn,#runSimulationButton){background:var(--bc-grad) !important;color:#04121f !important;border:0 !important}
+/* MLB box score: same sheet as the other three sports */
+html.simbc-game[data-bc="mlb"] #boxScorePanel{--simux-bg:#0c1830;background:var(--bc-panel) !important;border:1px solid var(--bc-line) !important;color:var(--bc-ink) !important;margin-top:12px}
+html.simbc-game[data-bc="mlb"] #boxScorePanel :is(div,section,article,table,thead,tbody,tr,td,th,ul,li,h3,h4,h5,p,strong,small,span:not(.team-logo-mark):not(.team-logo-fallback)){background-color:transparent !important;background-image:none !important;border-color:var(--bc-line) !important;color:inherit !important;box-shadow:none !important}
+html.simbc-game[data-bc="mlb"] #boxScorePanel th{color:var(--bc-cyan) !important;font-family:var(--bc-display);letter-spacing:.08em}
+html.simbc-game[data-bc="mlb"] #boxScorePanel td{font-variant-numeric:tabular-nums}
+html.simbc-game[data-bc="mlb"] #boxScorePanel :is(h3,h4){font-family:var(--bc-display);text-transform:uppercase;letter-spacing:.06em}
+html.simbc-game[data-bc="mlb"] #boxScorePanel :is(td,th):first-child{background-color:#0c1830 !important}
+html.simbc-game[data-bc="mlb"] #boxScorePanel .lineup-banner{font-size:.76rem;color:var(--bc-mut) !important;padding:4px 0}
+html.simbc-game[data-bc="mlb"] :is(#boxScoreSummary,.box-score-heading > div:first-child small,#playerBoxScoreContent > p:not(.lineup-banner),#playerBoxScoreContent .player-team-box > p:not(.lineup-banner)){display:none !important}

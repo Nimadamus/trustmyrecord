@@ -838,8 +838,9 @@
     main.insertBefore(tool, title.nextSibling);
 
     /* Everything past the box score sits behind one control. */
-    var detail = fold('bc-detail', 'Bullpens and matchup notes');
-    ['#bullpenPanel', '.sim-compare-panel', '.sim-notes-panel'].forEach(function (s) {
+    var detail = fold('bc-detail', 'Projection, bullpens and notes');
+    ['#projectionShell', '#aggregatePanel', '#probabilityLab', '#modelVsMarket', '#bullpenPanel',
+      '.sim-compare-panel', '.sim-notes-panel', '#simcConversionPanel'].forEach(function (s) {
       var n = $(s, work);
       if (n) detail.body.appendChild(n);
     });
@@ -860,21 +861,25 @@
     var phase = banner ? banner.getAttribute('data-mlb-phase') : '';
     stage.kicker(phase === 'complete' ? 'Offseason' : 'Next game');
     function preset() {
-      if (sel.away.value && sel.home.value) { paint(); return; }
+      /* The page always fills two teams. A link that names a matchup wins. */
+      if (global.location.search) { paint(); return; }
       var txt = banner ? banner.textContent : '';
-      var m = /The (.+?) won the World Series\. They beat the (.+?) \d/.exec(txt);
+      var m = /the ([A-Z].+?) won the World Series\. They beat the (.+?) \d/.exec(txt);
       if (!m) return;
       var find = function (name) {
         return Array.prototype.slice.call(sel.away.options).filter(function (o) { return o.text.indexOf(name) >= 0; })[0];
       };
       var w = find(m[1]), l = find(m[2]);
       if (!w || !l) return;
-      var hold = function (e) { e.stopImmediatePropagation(); };
-      void hold;
+      /* One at a time: each change rebuilds both selects from state. */
+      var gate = global.TMRSimGate;
+      var mark = gate && gate.markConfigured;
+      if (mark) gate.markConfigured = function () {};
       sel.away.value = l.value;
-      sel.home.value = w.value;
       sel.away.dispatchEvent(new global.Event('change'));
+      sel.home.value = w.value;
       sel.home.dispatchEvent(new global.Event('change'));
+      if (mark) gate.markConfigured = mark;
       stage.kicker('World Series rematch');
     }
     var tries = 0;
@@ -895,10 +900,16 @@
       root.classList.remove('bc-idle');
       var old = $('.bc-mlb-odds', score);
       if (old) old.remove();
-      var n = (sim.simulationCount || sim.simCount || sim.depth || 0);
+      var late = ['#simcConversionPanel', '#postseasonPanel', '#tpfSimLine'];
+      late.forEach(function (s) {
+        var p = $(s);
+        if (p && !detail.d.contains(p)) detail.body.appendChild(p);
+      });
+      var n = parseInt(($('#simDepthSelect') || {}).value, 10) || 0;
       if (typeof sim.awayWin === 'number' && typeof sim.homeWin === 'number' && n) {
         var scale = sim.awayWin > 1 ? 100 : 1;
-        var band = oddsBand(sim.away && sim.away.name || 'Away', sim.home && sim.home.name || 'Home', sim.awayWin / scale, sim.homeWin / scale, n, '');
+        var nameOf = function (s) { var o = sel[s].options[sel[s].selectedIndex]; return o ? o.text : s; };
+        var band = oddsBand(nameOf('away'), nameOf('home'), sim.awayWin / scale, sim.homeWin / scale, n, '');
         band.classList.add('bc-mlb-odds');
         top.parentNode.insertBefore(band, top.nextSibling);
       }
