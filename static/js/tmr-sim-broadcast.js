@@ -862,7 +862,7 @@
     stage.kicker(phase === 'complete' ? 'Offseason' : 'Next game');
     function preset() {
       /* The page always fills two teams. A link that names a matchup wins. */
-      if (global.location.search) { paint(); return; }
+      if (global.location.search || (api.state && api.state.restored)) { paint(); return; }
       var txt = banner ? banner.textContent : '';
       var m = /the ([A-Z].+?) won the World Series\. They beat the (.+?) \d/.exec(txt);
       if (!m) return;
@@ -916,9 +916,10 @@
       if (!$('.bc-after', score)) {
         top.parentNode.insertBefore(afterBar(function () { run.click(); }, stage), top.nextSibling);
       }
-      goTo($('#resultCard'));
+      if (!(api.state && api.state.restored)) goTo($('#resultCard'));
     }
     if (top) new global.MutationObserver(dress).observe(top, { attributes: true, childList: true, subtree: true });
+    dress();
     run.addEventListener('click', function () { stage.busy(true); global.setTimeout(function () { stage.busy(false); }, 20000); });
     ready();
   }

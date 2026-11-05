@@ -79,15 +79,17 @@
   function after() { settle(); tally(); coreTables(); }
 
   function boot() {
-    var work = $('.sim-workspace');
-    if (!work) return;
-    var pending = false;
-    new global.MutationObserver(function () {
-      if (pending) return;
-      pending = true;
-      global.requestAnimationFrame(function () { pending = false; after(); });
-    }).observe(work, { childList: true, subtree: true });
-    after();
+    var top = $('#topScoreboard');
+    if (!top) return;
+    /* Keyed to the scoreboard only: the blocks it moves are added late by other
+       scripts, so it looks again shortly after each result. */
+    var timers = [];
+    function soon() {
+      timers.forEach(global.clearTimeout);
+      timers = [60, 500, 1500, 4000].map(function (ms) { return global.setTimeout(after, ms); });
+    }
+    new global.MutationObserver(soon).observe(top, { childList: true });
+    soon();
   }
   if (doc.readyState === 'loading') doc.addEventListener('DOMContentLoaded', boot); else boot();
 }(window));

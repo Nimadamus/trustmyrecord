@@ -223,7 +223,7 @@
         var resultShowing = false;
         try {
             var panel = document.getElementById('boxScorePanel');
-            resultShowing = !!(panel && panel.getAttribute('data-box-score-state') === 'projected' && realButtonInView());
+            resultShowing = !!(panel && panel.getAttribute('data-box-score-state') === 'projected');
         } catch (e) { }
 
         if (state.engaged && configurationValid() && !realButtonInView() && !resultShowing) show();

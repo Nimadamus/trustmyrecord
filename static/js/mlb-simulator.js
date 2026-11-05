@@ -10608,9 +10608,41 @@
             results.forEach(function (r) { if (r) r.postseasonSeries = psSeries || null; });
             state.aggregate = count > 1 ? buildAggregate(results, away, home) : null;
             state.simulation = results[results.length - 1];
+            state.restored = false;
             renderResult(state.simulation);
+            saveLastResult();
             return state.simulation;
         });
+    }
+    // MLB_RESULT_RESTORE_20261105: a refresh or Back keeps the result the visitor already
+    // ran. Same tab only, read back as data; it never starts a run.
+    var LAST_KEY = 'tmr_mlb_last_v1';
+    var LAST_KEPT = ['awayPool', 'homePool', 'awayTeamId', 'homeTeamId', 'awayPitcherId', 'homePitcherId', 'awayPitcherTouched', 'homePitcherTouched'];
+    function saveLastResult() {
+        try {
+            if (!state.simulation || typeof sessionStorage === 'undefined') return;
+            var keep = { at: Date.now(), sim: state.simulation, aggregate: state.aggregate || null, count: state.simulationCount || 1, sel: {} };
+            LAST_KEPT.forEach(function (k) { keep.sel[k] = state[k]; });
+            sessionStorage.setItem(LAST_KEY, JSON.stringify(keep));
+        } catch (e) { /* storage full or blocked: the page simply starts fresh */ }
+    }
+    function restoreLastResult() {
+        try {
+            if (state.pendingShare || typeof sessionStorage === 'undefined') return false;
+            if (typeof window !== 'undefined' && /[?&](away|home|simAway|simHome|preset|tmrAutoRun)=/.test(window.location.search || '')) return false;
+            var raw = sessionStorage.getItem(LAST_KEY);
+            if (!raw) return false;
+            var kept = JSON.parse(raw);
+            if (!kept || !kept.sim || !kept.sim.boxScore || Date.now() - kept.at > 6 * 3600 * 1000) return false;
+            LAST_KEPT.forEach(function (k) { state[k] = kept.sel[k]; });
+            state.aggregate = kept.aggregate;
+            state.simulationCount = kept.count;
+            state.simulation = kept.sim;
+            state.restored = true;
+            renderSelectors();
+            renderResult(state.simulation);
+            return true;
+        } catch (e) { return false; }
     }
     function copyBoxScore() {
         if (!state.simulation) return;
@@ -10928,6 +10960,7 @@
         wireEvents();
         renderSelectors();
         renderResult(null);
+        restoreLastResult();
         state.liveContextPromise = loadLiveContext();
         if (typeof window !== 'undefined' && window.location && /[?&]tmrAutoRun=ari-atl\b/.test(window.location.search || '')) {
             setTimeout(function () {
