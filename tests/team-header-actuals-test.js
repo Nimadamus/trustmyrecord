@@ -13,4 +13,7 @@ assert.ok(/headline/.test(stand[0]) && !/s\.ppg/.test(stand[0]), 'NBA header rea
 assert.ok(/real\.goalsFor/.test(stand[1]) && !/\bs\.goalsFor/.test(stand[1]), 'NHL header reads the real line');
 assert.ok(/'Model profile'/.test(src) && /'Model inputs'/.test(src), 'blended tables are labelled');
 assert.ok(!/labelled projected, not confirmed/.test(src), 'starter copy names confirmed starters');
+// ONE_NUMBER_20261105: the slate sentence says what the number is, by what the API served.
+const lg = fs.readFileSync(path.join(__dirname, '..', 'scripts', 'build_league_sim_pages.js'), 'utf8');
+assert.ok(!/same calibrated model/.test(lg) && /function slateNote/.test(lg), 'slate copy is not the old claim');
 console.log('TEAM_HEADER_ACTUALS PASSED');
