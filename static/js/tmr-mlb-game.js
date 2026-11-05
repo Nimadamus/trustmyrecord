@@ -85,8 +85,26 @@
     doc.documentElement.classList.toggle('bc-era', !cur);
   }
 
+  /* A visitor can change teams while a run lands. The board must say whose game it shows. */
+  function matchNote() {
+    var api = global.TMRMlbSimulator;
+    var st = api && api.state;
+    var sim = st && st.simulation;
+    var old = $('.bc-note');
+    var card = $('#topScoreboard');
+    var off = sim && card && sim.away && sim.home && (sim.away.id !== st.awayTeamId || sim.home.id !== st.homeTeamId);
+    if (!off) { if (old) old.remove(); return; }
+    if (!old) {
+      old = doc.createElement('p');
+      old.className = 'bc-note';
+      old.setAttribute('role', 'status');
+      card.parentNode.insertBefore(old, card);
+    }
+    old.textContent = 'This result is ' + sim.away.name + ' at ' + sim.home.name + '. Run the simulation for your new matchup.';
+  }
+
   function after() {
-    era(); settle(); tally(); coreTables();
+    era(); settle(); tally(); coreTables(); matchNote();
     var t = $('.bc-try');
     if (t) t.textContent = 'New matchup';
   }
@@ -118,6 +136,10 @@
       [700, 1300, 2200, 3200].forEach(function (ms) { timers.push(global.setTimeout(land, ms)); });
     }
     new global.MutationObserver(soon).observe(top, { childList: true });
+    ['#awayTeamSelect', '#homeTeamSelect'].forEach(function (id) {
+      var e = $(id);
+      if (e) e.addEventListener('change', function () { global.setTimeout(matchNote, 0); });
+    });
     ['#currentModeButton', '#historicalModeButton', '#mixedModeButton'].forEach(function (id) {
       var b = $(id);
       if (b) b.addEventListener('click', function () { global.setTimeout(era, 0); });
