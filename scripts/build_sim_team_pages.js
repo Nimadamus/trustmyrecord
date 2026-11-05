@@ -363,6 +363,7 @@ ${table(['Player', 'Pos', 'MIN', 'PPG', 'RPG', 'APG'],
 ${(t.unavailable && t.unavailable.length)
     ? `    <p class="pill warn">Currently listed out: ${esc(t.unavailable.map((x) => x.name).join(', '))}.</p>`
     : '    <p class="dim">Nobody in this rotation is currently listed out.</p>'}
+${rot.some((x) => x.dayToDay) ? `    <p class="dim">Day to day, and playing full minutes in this projection: ${esc(rot.filter((x) => x.dayToDay).map((x) => x.name).join(', '))}.</p>` : ''}
   </section>
 
 ${(() => {
