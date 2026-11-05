@@ -701,8 +701,14 @@
      scale, and each open game of that season plays at logit(p) + z_home - z_away. A club's
      strength is not known exactly, so its whole season can run hot or cold together.
      The shocks use their own random stream, so sigma 0 reproduces the no shock numbers
-     exactly. */
-  var STRENGTH_SIGMA = 0.5;
+     exactly.
+     NFL_SIGMA_NO_MARKET_20261105: 0.5 was fitted on future games priced from market no-vig
+     probabilities, which breaks the rule that market prices never enter a model constant.
+     Refit with no market data, at the spread of the calibrated served probabilities (logit
+     sd 0.70), program_1105/evidence/nfl/sigma_refit.js: model's own as-of probabilities
+     2021-25, log loss best at 0.8, 80% range holds 78.4% at 0.7; team margins only 2019-25,
+     best at 0.5, holds 80.8% at 0.7. Without the shock 67.8% and 69.3%. */
+  var STRENGTH_SIGMA = 0.7;
   function shiftedProb(p, d) {
     if (!d) return p;
     var q = Math.min(0.999, Math.max(0.001, p));
