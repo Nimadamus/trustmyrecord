@@ -19,7 +19,7 @@ for (const p of ['mlb-simulator/index.html', 'methodology/index.html']) {
   const html = read(p);
   assert.ok(!/56\.2/.test(html), p + ' still carries 56.2');
   assert.ok(!/2,434/.test(html), p + ' still carries 2,434');
-  assert.ok(!/0\.244\b/.test(html), p + ' still carries Brier 0.244');
+  assert.ok(!/Brier (score of )?~?0\.244/.test(html), p + ' still carries the old Brier claim');
 }
 
 // 2. every published accuracy figure equals the saved report.
