@@ -1244,6 +1244,9 @@
       { id: 'events', label: 'Important events', build: function (node) {
         node.appendChild(importantEvents(d));
       } },
+      { id: 'scores', label: 'Likely scores', build: function (node) { node.appendChild(commonScores(d)); } },
+      { id: 'wp', label: 'Win probability', build: function (node) { node.appendChild(winProbChart(d)); } },
+      { id: 'props', label: 'Player ranges', build: function (node) { node.appendChild(propsPanel(d)); } },
       { id: 'analysis', label: 'Simulation analysis', build: function (node) {
         node.appendChild(S.panel('What it rests on', sensitivityPanel(d)));
         node.appendChild(S.panel('Why the model moved', S.driverCards(d.drivers)));
