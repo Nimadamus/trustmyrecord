@@ -167,10 +167,16 @@ async function verifyMlbSimulatorGate(page) {
     document.querySelector('#projectionShell')?.getAttribute('data-projection-state'));
   if (projected === 'projected') throw new Error('A logged-out visitor received a projection despite the gate.');
   const gateText = await page.locator('.tsg-overlay').innerText();
-  if (!/free TrustMyRecord account/i.test(gateText)) {
+  // GATE_COPY_BOTH_HEADLINES_20261105: this branch marks the free run used, so the gate
+  // shows "You used your free simulation. Run this one with a free account." Requiring
+  // the other headline failed every run from 11/02 and stopped the proof before the
+  // simulator itself was checked. tests/mlb-live-proof-gate-copy-test.js holds both.
+  if (!GATE_FREE_ACCOUNT_COPY.test(gateText)) {
     throw new Error(`Signup gate copy is missing the free-account message: ${gateText.slice(0, 120)}`);
   }
 }
+
+const GATE_FREE_ACCOUNT_COPY = /free (TrustMyRecord )?account/i;
 
 async function verifyMlbSimulator(page) {
   // Turn the gate off through its own kill switch, before any page script runs,
