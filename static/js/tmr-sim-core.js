@@ -635,6 +635,48 @@
       // their own result URL. A seed in the link is kept and used by the first
       // Run press on that same matchup, so a shared result still reproduces.
       this.pendingSeed = isFinite(seed) && seed > 0 ? { seed: seed, away: a, home: h } : null;
+      // SIM_RESULT_KEEP_20261106: the link carries everything that shapes the run,
+      // so a shared seed replays the same game instead of a different count.
+      var sims = parseInt(q.get('sims'), 10);
+      if (isFinite(sims) && sims > 0 && this.nodes.simSeg) {
+        var pick = $('button[data-sims="' + sims + '"]', this.nodes.simSeg);
+        if (pick) {
+          $$('button', this.nodes.simSeg).forEach(function (x) { x.classList.remove('on'); });
+          pick.classList.add('on');
+          this.state.sims = sims;
+        }
+      }
+      var list = function (k) { return String(q.get(k) || '').split(',').filter(Boolean); };
+      this.scenario = { home: list('homeOut'), away: list('awayOut') };
+      this.restoreResult();
+    }
+  };
+
+  /** The last result of this tab, so a refresh or Back never costs another run. */
+  SimApp.prototype.resultKey = function () { return 'tmr_sim_last_' + this.sport; };
+
+  SimApp.prototype.saveResult = function (t, d) {
+    try {
+      global.sessionStorage.setItem(this.resultKey(), JSON.stringify({
+        away: t.away.ref, home: t.home.ref, seed: d && d.meta && d.meta.seed, d: d,
+      }));
+    } catch (e) { /* too large or blocked: the page still works, it just cannot restore */ }
+  };
+
+  SimApp.prototype.restoreResult = function () {
+    var saved = null;
+    try { saved = JSON.parse(global.sessionStorage.getItem(this.resultKey()) || 'null'); } catch (e) { return false; }
+    var seed = parseInt(new URLSearchParams(global.location.search).get('seed'), 10);
+    if (!saved || !saved.d || saved.seed !== seed
+      || saved.away !== this.state.away || saved.home !== this.state.home) return false;
+    try {
+      this.lastResult = saved.d;
+      this.pendingSeed = null;
+      this.render(saved.d);
+      return true;
+    } catch (e) {
+      this.lastResult = null;
+      return false;
     }
   };
 
@@ -805,6 +847,7 @@
       self.lastResult = d;
       self.render(d);
       self.pushUrl(t, d);
+      self.saveResult(t, d);
       if (global.TMRAnalytics && global.TMRAnalytics.track) {
         global.TMRAnalytics.track('simulator_result_viewed', {
           simulation_type: self.sport + '_game',
@@ -826,6 +869,9 @@
     q.set('home', t.home.abbr);
     if (this.state.venue === 'neutral') q.set('venue', 'neutral');
     if (d && d.meta && d.meta.seed) q.set('seed', String(d.meta.seed));
+    q.set('sims', String(this.state.sims));
+    if (this.scenario.home.length) q.set('homeOut', this.scenario.home.join(','));
+    if (this.scenario.away.length) q.set('awayOut', this.scenario.away.join(','));
     global.history.replaceState(null, '', global.location.pathname + '?' + q.toString());
   };
 
