@@ -142,6 +142,15 @@
             var cost = parseInt(btn.getAttribute('data-cost'), 10);
             var statusEl = document.getElementById('redeemStatus-' + key);
             if (statusEl) { statusEl.className = 'redeem-status'; statusEl.textContent = ''; }
+            /* WALLET_REDEEM_BALANCE_20261106: at too low a balance, say so instead of doing nothing. */
+            try {
+                var bal = await window.api.request('/coins/balance');
+                var have = Number(bal && bal.balance);
+                if (Number.isFinite(have) && have < cost) {
+                    if (statusEl) { statusEl.className = 'redeem-status is-error'; statusEl.textContent = 'You need ' + cost.toLocaleString('en-US') + ' TMR Coin for this. Your balance is ' + have.toLocaleString('en-US') + '.'; }
+                    return;
+                }
+            } catch (e) { /* the server still checks the balance on redeem */ }
             if (!window.confirm('Redeem this for ' + cost.toLocaleString('en-US') + ' TMR Coin?')) return;
             btn.disabled = true;
             var idemKey = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : ('redeem-' + Date.now() + '-' + Math.random().toString(36).slice(2));
