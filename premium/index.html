@@ -496,6 +496,132 @@
      plus the homepage's own navbar rules, so every page renders the same bar. -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap">
 <link rel="stylesheet" href="/static/css/tmr-navbar.css?v=68ec3081d29a">
+    <style id="premium-polish-20261105">
+    /* PRO_POLISH_20261105. Loads after the site themes on purpose: tmr-ds and tmr-light were forcing every
+       heading on this page to Inter at about 60 percent of its designed size. Layout and hooks stay as in
+       PREMIUM_REDESIGN_20261102; this restores the type scale and turns the visitor header into an offer. */
+    .pm{position:relative}
+    body.is-pro-member .pm-lead,html.pro-member-hint .pm-lead,
+    body.is-pro-member .pm-offer,html.pro-member-hint .pm-offer,
+    body.is-pro-member .pm-proof,html.pro-member-hint .pm-proof,
+    body.is-pro-member .pm-close,html.pro-member-hint .pm-close{display:none !important}
+
+    /* type scale */
+    body.tmr-light .pm .pm-title{margin:14px 0 6px !important;font:800 clamp(52px,6.6vw,84px)/.92 var(--display) !important;letter-spacing:.005em !important;text-transform:uppercase}
+    body.tmr-light .pm .pm-h2{font:800 clamp(34px,3.9vw,46px)/1 var(--display) !important;letter-spacing:.005em !important;text-transform:uppercase}
+    body.tmr-light .pm .pm-tool h3{font:800 25px/1.05 var(--display) !important;letter-spacing:.01em !important;text-transform:uppercase}
+    body.tmr-light .pm .pm-tool--lead h3{font-size:34px !important}
+    body.tmr-light .pm .pm-plan h3{font:800 29px/1 var(--display) !important;letter-spacing:.015em !important;text-transform:uppercase}
+    body.tmr-light .pm .pm-perf > h3{font:800 26px/1.05 var(--display) !important;text-transform:uppercase}
+    .pm-price{font-size:52px}
+    .pm-sec-k{letter-spacing:.16em}
+
+    /* header */
+    .pm-head{padding:60px 0 56px}
+    .pm-head::after{height:2px}
+    .pm-head-grid{grid-template-columns:minmax(0,1.3fr) minmax(340px,.85fr);gap:56px}
+    body.tmr-light .pm .pm-lead{margin:0 0 14px;font:700 clamp(21px,2.1vw,26px)/1.2 Inter,sans-serif;letter-spacing:-.01em;color:#fff !important}
+    .pm-live{margin-top:28px;padding-top:18px}
+    .pm-live strong{font-size:32px}
+
+    /* the home crumb landed as a grey bar on the header edge; the logo and footer already go home */
+    body.pro-page .tmrlh-crumbs{display:none !important}
+    body.pro-page .pm main{max-width:none !important;width:100% !important;padding-left:0 !important;padding-right:0 !important}
+
+    /* offer card */
+    .pm-card{padding:26px;background:linear-gradient(180deg,rgba(255,255,255,.1),rgba(255,255,255,.045))}
+    body[data-tier="visitor"] #proStatusChip{display:none}
+    body.tmr-light .pm .pm-card-price{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 8px;margin:0 0 12px;color:#9FB3CC !important}
+    .pm-card-big{font:800 58px/1 var(--display);letter-spacing:.005em;color:#fff;font-variant-numeric:tabular-nums}
+    .pm-card-per{font:600 15px/1 Inter,sans-serif;color:#C9D7EA}
+    .pm-card-or{flex-basis:100%;font:500 13.5px/1.4 Inter,sans-serif;color:#9FB3CC}
+    body.tmr-light .pm .pm-card-text{margin:0 0 14px}
+    .pm-offer{list-style:none;margin:0 0 18px;padding:14px 0 0;display:grid;gap:9px;border-top:1px solid rgba(255,255,255,.12)}
+    body.tmr-light .pm .pm-offer li{position:relative;padding-left:24px;font:600 14px/1.4 Inter,sans-serif;color:#E6EEF8 !important}
+    .pm-offer li::before{content:"";position:absolute;left:2px;top:4px;width:12px;height:7px;border-left:2px solid #F2C24E;border-bottom:2px solid #F2C24E;transform:rotate(-45deg)}
+    .pm-card-actions .pm-btn{min-height:48px}
+
+    /* proof strip */
+    .pm-proof{background:#fff;border-bottom:1px solid var(--line)}
+    .pm-proof ul{list-style:none;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:24px;margin:0 auto;padding-top:20px;padding-bottom:20px}
+    .pm-proof li{display:flex;align-items:flex-start;gap:11px;min-width:0}
+    .pm-proof svg{flex:0 0 auto;width:22px;height:22px;margin-top:1px;fill:none;stroke:var(--blue);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+    .pm-proof span{font:500 12.5px/1.4 Inter,sans-serif;color:var(--ink-3)}
+    body.tmr-light .pm .pm-proof span{color:var(--ink-3) !important}
+    .pm-proof b{display:block;margin-bottom:1px;font:700 14px/1.3 Inter,sans-serif;color:var(--ink)}
+
+    /* sections */
+    .pm-sec{padding:80px 0}
+    .pm-sec + .pm-sec{padding-top:80px}
+    .pm-sec-head{margin-bottom:30px}
+    .pm-why{background:#fff;border-top:1px solid var(--line-2);border-bottom:1px solid var(--line-2)}
+    body.is-pro-member .pm-sec + .pm-sec{padding-top:24px}
+
+    /* tools */
+    .pm-tool--lead{padding:26px}
+    .pm-tool--lead .pm-badge{background:rgba(255,255,255,.1);color:#DCE7F5;border-color:rgba(255,255,255,.18)}
+    .pm-simout{list-style:none;display:flex;flex-wrap:wrap;gap:8px;margin:-4px 0 18px;padding:0}
+    body.tmr-light .pm .pm-simout li{padding:8px 11px;border-radius:9px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);font:600 13px/1.2 Inter,sans-serif;color:#E6EEF8 !important}
+    @media (min-width:641px){
+        .pm-tool--ult{grid-column:1 / -1;display:grid;grid-template-columns:auto minmax(0,1fr) auto;column-gap:18px;row-gap:4px;align-items:center;padding:20px 24px}
+        .pm-tool--ult .pm-tool-top{display:contents}
+        .pm-tool--ult .pm-ic{grid-column:1;grid-row:1 / span 2}
+        .pm-tool--ult .pm-badge{grid-column:3;grid-row:1;justify-self:end}
+        .pm-tool--ult h3{grid-column:2;grid-row:1}
+        body.tmr-light .pm .pm-tool--ult p{grid-column:2;grid-row:2;margin:0}
+        .pm-tool--ult .pm-btn{grid-column:3;grid-row:2;margin:0;align-self:center}
+    }
+
+    /* plans */
+    .pm-plans{align-items:stretch;gap:18px}
+    .pm-plan{padding:28px}
+    .pm-plan--pro{box-shadow:0 1px 2px rgba(10,26,51,.06),0 30px 60px -28px rgba(30,99,240,.55)}
+    @media (min-width:1081px){.pm-plan--pro{margin:-10px 0}}
+    .pm-plan-cta .pm-btn{min-height:48px}
+
+    /* closing band */
+    .pm-close{background:var(--navy);color:#fff;position:relative;overflow:hidden;isolation:isolate}
+    .pm-close::before{content:"";position:absolute;inset:0;z-index:-1;background:radial-gradient(620px 280px at 90% 120%,rgba(30,99,240,.5),transparent 70%)}
+    .pm-close .pm-wrap{display:flex;align-items:center;justify-content:space-between;gap:32px;padding-top:52px;padding-bottom:52px}
+    body.tmr-light .pm .pm-close h2{margin:0 0 6px;font:800 clamp(32px,3.6vw,44px)/1 var(--display) !important;text-transform:uppercase;color:#fff !important}
+    body.tmr-light .pm .pm-close p{margin:0;max-width:560px;font:500 15.5px/1.5 Inter,sans-serif;color:#C9D7EA !important}
+    .pm-close-cta{display:flex;flex:0 0 auto;gap:10px}
+    .pm-close-cta .pm-btn{min-height:48px}
+
+    @media (max-width:1080px){.pm-proof ul{grid-template-columns:1fr 1fr;gap:16px 24px}}
+    @media (max-width:900px){
+        .pm-head{padding:44px 0 40px}
+        .pm-head-grid{grid-template-columns:1fr;gap:28px}
+        .pm-close .pm-wrap{display:block}
+        .pm-close-cta{margin-top:20px}
+    }
+    @media (max-width:640px){
+        .pm-head{padding:28px 0 26px}
+        body.tmr-light .pm .pm-title{font-size:46px !important;margin:8px 0 4px !important}
+        body.tmr-light .pm .pm-lead{font-size:19px;margin-bottom:8px}
+        body.tmr-light .pm .pm-h2{font-size:31px !important}
+        body.tmr-light .pm .pm-tool h3{font-size:22px !important}
+        body.tmr-light .pm .pm-tool--lead h3{font-size:28px !important}
+        .pm-live strong{font-size:22px}
+        .pm-card{padding:18px}
+        .pm-card-big{font-size:46px}
+        body[data-tier="visitor"] .pm-offer,body[data-tier="visitor"] #proStatusText{display:none}
+        .pm-card-price{margin-bottom:14px}
+        .pm-proof ul{gap:12px 14px;padding-top:14px;padding-bottom:14px}
+        .pm-proof li{gap:8px}
+        .pm-proof svg{width:18px;height:18px}
+        .pm-proof span{font-size:11.5px}
+        .pm-proof b{font-size:12.5px}
+        .pm-sec,.pm-sec + .pm-sec{padding:36px 0}
+        .pm-tool--lead{padding:18px}
+        .pm-simout{margin:0 0 12px;gap:6px}
+        body.tmr-light .pm .pm-simout li{padding:6px 9px;font-size:12px}
+        .pm-price{font-size:42px}
+        .pm-close .pm-wrap{padding-top:34px;padding-bottom:34px}
+        .pm-close-cta{flex-direction:column}
+        .pm-close-cta .pm-btn{width:100%}
+    }
+    </style>
 </head>
 <body class="tmr-site-shell tmr-ds-shell tmr-light pro-page" data-tier="visitor">
     <!-- Sitewide global nav is injected by tmr-sitewide.js -->
@@ -510,6 +636,7 @@
             <div class="pm-id">
                 <span class="pm-eyebrow"><i aria-hidden="true"></i><span id="pmEyebrow">TrustMyRecord membership</span></span>
                 <h1 class="pm-title" id="pmTitle">TMR Pro <em>&amp;</em> Ultimate</h1>
+                <p class="pm-lead" id="pmLead">Simulate every game. Check every record.</p>
                 <p class="pm-tag" id="pmTag">Unlimited simulations on every NFL, NBA, NHL and MLB game, plus every graded pick behind thousands of handicapper records. Research tools that show their evidence, not promises of profit.</p>
                 <div class="pm-live" id="pxhPanel" aria-label="Handicapper Watchdog live numbers">
                     <span class="pm-live-k"><i aria-hidden="true"></i>Handicapper Watchdog, live</span>
@@ -527,18 +654,33 @@
                     <span class="pm-chip" id="proStatusChip">Checking</span>
                 </div>
                 <dl class="pm-facts" id="pdxFacts" aria-label="Membership details" hidden></dl>
+                <p class="pm-card-price" id="proHeroPrice"><span class="pm-card-big">$49.99</span><span class="pm-card-per">a month</span><span class="pm-card-or">or <b>$500 a year</b> <span class="pm-save">Save $99.88</span></span></p>
                 <p class="pm-card-text" id="proStatusText">Checking your account.</p>
+                <ul class="pm-offer" id="pmOffer">
+                    <li>Unlimited simulations in all four leagues</li>
+                    <li>Every graded pick behind every record</li>
+                    <li>Bet Legend Pro included ($49 a month alone)</li>
+                </ul>
                 <div class="pm-card-actions">
                     <a class="pm-btn pm-btn--gold" id="proHeroCta" href="#pricing">Get TMR Pro</a>
                     <a class="pm-btn pm-btn--onDark" id="pmCompare" href="#pricing">Compare plans</a>
                     <button type="button" class="pm-btn pm-btn--gold" id="proManage" hidden>Manage membership</button>
                     <button type="button" class="pm-btn pm-btn--onDark" id="proResume" hidden>Resume membership</button>
                 </div>
-                <p class="pm-card-price" id="proHeroPrice"><b>$49.99 a month</b> or <b>$500 a year</b> <span class="pm-save">Save $99.88</span></p>
                 <div class="pm-card-cancel"><button type="button" class="pm-textbtn" id="proCancel" hidden>Cancel subscription</button></div>
             </aside>
         </div>
         <div class="pm-wrap"><div class="pm-banner" id="proBanner" role="status" hidden></div></div>
+    </div>
+
+    <!-- PRO_POLISH_20261105: what a buyer checks before paying. Every line matches the terms on this page. -->
+    <div class="pm-proof" id="pmProof">
+        <ul class="pm-wrap">
+            <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4 6v6c0 4.4 3.4 8.3 8 9 4.6-.7 8-4.6 8-9V6l-8-3Z"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg><span><b>Graded by TMR</b>From the original post, never self reported</span></li>
+            <li><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10.5h18"/></svg><span><b>Secure checkout</b>Payments handled by Stripe</span></li>
+            <li><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m15 9-6 6M9 9l6 6"/></svg><span><b>Cancel any time</b>Keep access to the end of your paid period</span></li>
+            <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 0 1 13.7-5.6L20 9"/><path d="M20 4v5h-5"/><path d="M20 12a8 8 0 0 1-13.7 5.6L4 15"/><path d="M4 20v-5h5"/></svg><span><b>Same price at renewal</b>Plans renew at the price you chose</span></li>
+        </ul>
     </div>
 
     <!-- PRO_CANCEL_REASON_REQUIRED_20261023: a reason and a written answer before the cancel goes through. -->
@@ -580,6 +722,21 @@
             </div>
 
             <div class="pm-tools">
+                <article class="pm-tool pm-tool--lead" data-tool="sims">
+                    <div class="pm-tool-top">
+                        <span class="pm-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></span>
+                        <span class="pm-badge" data-badge data-free-badge="1 free run a day" data-pro-badge="Unlimited">1 free run a day</span>
+                    </div>
+                    <h3>Sports Simulators</h3>
+                    <p>MLB, NFL, NBA and NHL game, season and playoff simulations. Pro removes the daily limit.</p>
+                    <ul class="pm-simout" aria-label="Each run returns">
+                        <li>Projected final score</li>
+                        <li>Win probability</li>
+                        <li>Full box score</li>
+                    </ul>
+                    <a class="pm-btn pm-btn--gold" data-go href="/sports-simulators/" data-free-label="Run a free simulation" data-pro-label="Run a simulation">Run a free simulation</a>
+                </article>
+
                 <article class="pm-tool pm-tool--lead" id="watchdog" data-tool="watchdog">
                     <span id="board" class="pm-anchor"></span>
                     <div class="pm-tool-top">
@@ -600,16 +757,6 @@
                     <h3>Handicapper Records</h3>
                     <p>Independently graded records, units and ROI for every tracked handicapper. Pro opens every pick behind them.</p>
                     <a class="pm-btn pm-btn--ghost" data-go href="/around-the-web/">Browse records</a>
-                </article>
-
-                <article class="pm-tool" data-tool="sims">
-                    <div class="pm-tool-top">
-                        <span class="pm-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></span>
-                        <span class="pm-badge" data-badge data-free-badge="1 free run a day" data-pro-badge="Unlimited">1 free run a day</span>
-                    </div>
-                    <h3>Sports Simulators</h3>
-                    <p>MLB, NFL, NBA and NHL game, season and playoff simulations. Pro removes the daily limit.</p>
-                    <a class="pm-btn pm-btn--ghost" data-go href="/sports-simulators/" data-free-label="Run a free simulation" data-pro-label="Run a simulation">Run a free simulation</a>
                 </article>
 
                 <article class="pm-tool" data-tool="blp">
@@ -896,6 +1043,20 @@
                         <details><summary>Does a membership change my record or ranking?</summary><p>No. A subscription buys research tools only. It does not change your verification, badges, grading or leaderboard rank.</p></details>
                     </div>
                 </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- PRO_POLISH_20261105: last call for visitors and free members. No performance claim. -->
+    <section class="pm-close" aria-labelledby="pmCloseH">
+        <div class="pm-wrap">
+            <div>
+                <h2 id="pmCloseH">Do the research before you pick a side</h2>
+                <p>Unlimited simulations, every graded pick and Bet Legend Pro for $49.99 a month. Your public record stays free either way.</p>
+            </div>
+            <div class="pm-close-cta">
+                <a class="pm-btn pm-btn--gold" href="#pricing">Get TMR Pro</a>
+                <a class="pm-btn pm-btn--onDark" href="/sports-simulators/">Run a free simulation</a>
             </div>
         </div>
     </section>
@@ -1467,7 +1628,8 @@
         function visitor() {
             setTier('visitor');
             document.documentElement.classList.remove('pro-member-hint');
-            paintStatus('Not signed in', 'Start with 3 free days of TMR Pro, or create a free account. Your public record stays free either way.', false, false);
+            var cardK = document.querySelector('.pm-card-k'); if (cardK) cardK.textContent = 'TMR Pro';
+            paintStatus('Not signed in', 'The full research desk for every game. Your public record stays free either way.', false, false);
             paintButtons();
         }
 
