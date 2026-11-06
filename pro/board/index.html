@@ -473,14 +473,6 @@
         @media (max-width: 600px) { body .wd-net { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); } body .wd-net span { display: block; font-size: 12px; } }
         .wd-count { flex-basis: 100%; font-size: .85rem; color: var(--pro-muted); }
         .wd-count b { color: var(--pro-ink); }
-        .wd-cons { margin-bottom: 16px; }
-        .wd-cons h3 { margin: 0 0 8px; font-size: 1rem; color: var(--pro-ink); }
-        .wd-cons-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)); gap: 10px; }
-        .wd-cons-card { display: flex; gap: 12px; align-items: center; background: var(--pro-surface); border: 1px solid var(--pro-line); border-radius: 12px; padding: 10px 12px; min-width: 0; }
-        .wd-cons-n { flex: none; text-align: center; font-size: .78rem; color: var(--pro-muted); line-height: 1.2; min-width: 58px; }
-        .wd-cons-n b { display: block; font-size: 1.35rem; color: var(--pro-brand); }
-        .wd-cons-n span { display: block; }
-        .wd-cons-sel { font-weight: 700; color: var(--pro-ink); }
         .wd-table-wrap { overflow-x: auto; background: var(--pro-surface); border: 1px solid var(--pro-line); border-radius: 14px; }
         .wd-table { width: 100%; border-collapse: collapse; min-width: 0 !important; font-size: .92rem; }
         .wd-table th { position: sticky; top: 0; background: var(--pro-surface); text-align: left; padding: 0; border-bottom: 1px solid var(--pro-line); }
@@ -1000,11 +992,6 @@ html body.pro-board-page main section#board.pro-section{background:transparent!i
 #board .wd-bar input[type=search],#board .wd-bar select{min-height:40px;border-radius:10px;border:1px solid var(--wdb-line);background:#f7f9fc;color:var(--wdb-ink);font:600 13.5px Inter,system-ui,sans-serif;padding:0 12px}
 #board .wd-bar input[type=search]:focus,#board .wd-bar select:focus{outline:2px solid rgba(22,103,196,.35);border-color:var(--wdb-blue);background:#fff}
 #board .wd-bar .wd-count{flex-basis:100%;font:500 12.5px/1.2 Inter,system-ui,sans-serif;color:var(--wdb-mut);padding:2px 2px 0}
-#board .wd-cons h3{margin:4px 0 10px;font:800 13px/1 Inter,system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--wdb-mut)}
-#board .wd-cons-card{border:1px solid var(--wdb-line);border-radius:14px;padding:14px;background:#fff;box-shadow:0 4px 14px rgba(11,20,36,.04);gap:14px}
-#board .wd-cons-n{min-width:60px;padding:8px 6px;border-radius:10px;background:#0a1220;color:#94a7bf;font-size:11px}
-#board .wd-cons-n b{color:var(--wdb-gold);font:800 24px/1 "Barlow Condensed",Inter,sans-serif}
-#board .wd-cons-sel{font-size:15px;color:var(--wdb-ink)}
 #board .wdg-list{gap:14px}
 #board .wdg-game{--lg:#1667c4;border:1px solid var(--wdb-line);border-left:4px solid var(--lg);border-radius:14px;background:#fff;box-shadow:0 4px 14px rgba(11,20,36,.04)}
 #board .wdg-game[data-lg=NFL]{--lg:#6d6ef0}#board .wdg-game[data-lg=NCAAF]{--lg:#8b5cf6}#board .wdg-game[data-lg=NBA]{--lg:#f28c28}#board .wdg-game[data-lg=NCAAB]{--lg:#ea580c}
@@ -1034,8 +1021,6 @@ html body.pro-board-page main section#board.pro-section{background:transparent!i
   #board .wdb-hero{border-radius:16px;padding:22px 18px}
   #board .wdb-hero h2{font-size:34px!important}
   #board .wdb-kick{font-size:10.5px;letter-spacing:.1em}
-  #board .wd-cons-grid{display:grid;grid-auto-flow:column;grid-auto-columns:84%;grid-template-columns:none;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:6px;-webkit-overflow-scrolling:touch}
-  #board .wd-cons-card{scroll-snap-align:start}
   #board .wdb-hero .wd-net{display:grid!important;gap:8px}
   #board .wdb-hero .wd-net .wdb-tile{padding:12px 14px}
   #board .wdb-tile b{font-size:24px}
@@ -1048,6 +1033,124 @@ html body.pro-board-page main section#board.pro-section{background:transparent!i
   #board .wd-bar input[type=search]{flex:1 1 100%}
   #board .wd-bar select{flex:1 1 calc(50% - 4px);min-width:0}
 }
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800&display=swap">
+<style id="wdb-v3-20261106">
+/* WDB_V3_20261106 (Nima): dark futuristic board. Cyan and violet on near black, glass panels, less writing. */
+html:has(body.pro-board-page),html body.pro-board-page.tmr-site-shell.tmr-ds-shell{background:#050813!important}
+.pro-board-page main{--pro-surface:#0c1324;--pro-page:#080d1b;--pro-ink:#ecf3ff;--pro-body:#b4c2d8;--pro-muted:#8c9db8;--pro-line:rgba(125,170,235,.16);--pro-brand:#22d3ee;--pro-brand-dark:#22d3ee;
+  --wdb-line:rgba(125,170,235,.16);--wdb-ink:#ecf3ff;--wdb-body:#b4c2d8;--wdb-mut:#8c9db8;--wdb-blue:#22d3ee;--wdb-glass:rgba(14,22,42,.72);
+  background:radial-gradient(900px 500px at 12% -5%,rgba(34,211,238,.13),transparent 65%),radial-gradient(900px 560px at 92% 8%,rgba(139,92,246,.17),transparent 65%),linear-gradient(rgba(120,170,240,.045) 1px,transparent 1px) 0 0/100% 44px,linear-gradient(90deg,rgba(120,170,240,.045) 1px,transparent 1px) 0 0/44px 100%,#050813!important;color:var(--pro-body)}
+/* hero */
+#board .wdb-hero{padding:30px 34px;background:linear-gradient(135deg,rgba(34,211,238,.12),rgba(139,92,246,.14) 60%,rgba(8,13,27,.4)),rgba(9,14,29,.86);border:1px solid rgba(34,211,238,.32);box-shadow:0 0 0 1px rgba(139,92,246,.12),0 22px 60px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.06)}
+#board .wdb-hero::before{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:linear-gradient(90deg,transparent,#22d3ee 25%,#8b5cf6 75%,transparent)}
+#board .wdb-kick{color:#22d3ee;font-family:Orbitron,Inter,sans-serif;font-size:11px;letter-spacing:.2em}
+#board .wdb-kick i{background:#4ade80;box-shadow:0 0 10px #4ade80;animation:wdbPulse 2s ease-in-out infinite}
+@keyframes wdbPulse{50%{opacity:.45}}
+#board .wdb-hero h2{font-family:Orbitron,Inter,sans-serif!important;font-weight:800!important;font-size:clamp(30px,3.8vw,46px)!important;line-height:1.06!important;letter-spacing:.015em;color:#fff!important;-webkit-text-fill-color:#fff;text-shadow:0 0 28px rgba(34,211,238,.45)}
+#board .wdb-hero .wdb-lede{font-size:17px!important;color:#c7d5ea!important}
+#board .wdb-hero .wd-net .wdb-tile{background:rgba(7,12,25,.66);border-color:rgba(125,170,235,.2)}
+#board .wdb-tile b{font-family:Orbitron,Inter,sans-serif;font-weight:700;font-size:25px;color:#7fe9f7;text-shadow:0 0 16px rgba(34,211,238,.35)}
+#board .wdb-tile em{color:#a6b6cd}
+#board .wdb-hero .wd-net .wdb-fresh,#board .wdb-fresh{color:#a6b6cd}
+#board .wdb-fresh b{color:#ecf3ff;font-family:inherit;text-shadow:none}
+#board .wdb-fresh i{background:#4ade80;box-shadow:0 0 8px #4ade80}
+/* buttons */
+.pro-board-page .wdb-btn{background:linear-gradient(100deg,#22d3ee,#8b5cf6);color:#04101c!important;box-shadow:0 0 26px rgba(34,211,238,.32);font-weight:800}
+.pro-board-page .wdb-btn:hover{box-shadow:0 0 36px rgba(139,92,246,.5)}
+/* locked card */
+.pro-board-page .wdb-lock{background:var(--wdb-glass);border:1px solid rgba(139,92,246,.34);box-shadow:0 22px 60px rgba(0,0,0,.45);backdrop-filter:blur(8px)}
+.pro-board-page .wdb-lock-preview{background:linear-gradient(160deg,rgba(34,211,238,.07),rgba(139,92,246,.1));border-color:var(--wdb-line)}
+.pro-board-page .wdb-sk{background:rgba(8,13,27,.8);border-color:var(--wdb-line);filter:none;opacity:1}
+.pro-board-page .wdb-sk i{background:rgba(125,170,235,.16)}
+.pro-board-page .wdb-sk .sk-lg{background:rgba(139,92,246,.45)}.pro-board-page .wdb-sk .sk-b{background:rgba(34,211,238,.3)}.pro-board-page .wdb-sk .sk-c{background:rgba(74,222,128,.28)}
+.pro-board-page .wdb-lock-ico{background:#070c19;color:#22d3ee;border:1px solid rgba(34,211,238,.5);box-shadow:0 0 32px rgba(34,211,238,.4)}
+.pro-board-page .wdb-lock-k{background:rgba(34,211,238,.1);border:1px solid rgba(34,211,238,.4);color:#7fe9f7;font-family:Orbitron,Inter,sans-serif;font-size:10.5px}
+.pro-board-page .wdb-lock-body h3{font-family:Orbitron,Inter,sans-serif;font-weight:700;color:#fff;letter-spacing:0}
+.pro-board-page .wdb-lock-sub{color:#b4c2d8}
+.pro-board-page .wdb-lock-list li{color:#ecf3ff}
+.pro-board-page .wdb-lock-list li::before{background:rgba(34,211,238,.14);box-shadow:inset 0 0 0 1px rgba(34,211,238,.5)}
+.pro-board-page .wdb-lock-list li::after{content:"";position:absolute;left:6px;top:7px;width:6px;height:6px;border-radius:50%;background:#22d3ee}
+.pro-board-page .wdb-lock-login a{color:#7fe9f7}
+/* member board */
+#board .wd-since,#board .wd-bar,#board .wd-hello,#board .wd-empty,#board .pro-teaser{background:var(--wdb-glass);border:1px solid var(--wdb-line);box-shadow:none;color:var(--wdb-body)}
+#board .wd-since{border-left:2px solid #22d3ee}
+#board .wd-since h3{font:700 12px/1.2 Orbitron,Inter,sans-serif;letter-spacing:.08em;color:#7fe9f7}
+#board .wdg-switch [data-view]{background:rgba(14,22,42,.8);border-color:var(--wdb-line);color:#b4c2d8}
+#board .wdg-switch [data-view].on{background:linear-gradient(100deg,#22d3ee,#8b5cf6);border-color:transparent;color:#04101c}
+#board .wdg-upd,#board .wd-check{color:#a6b6cd}
+#board .wdg-upd button{background:transparent;border-color:rgba(34,211,238,.4);color:#7fe9f7}
+#board .wd-bar input[type=search],#board .wd-bar select{background:#080d1b;border-color:var(--wdb-line);color:#ecf3ff}
+#board .wd-bar select option{background:#0c1324;color:#ecf3ff}
+#board .wd-bar input[type=search]::placeholder{color:#8c9db8}
+#board .wd-bar input[type=search]:focus,#board .wd-bar select:focus{outline:2px solid rgba(34,211,238,.45);border-color:#22d3ee;background:#0c1324}
+#board .wd-bar input[type=checkbox]{accent-color:#22d3ee}
+#board .wdg-game{--lg:#22d3ee;background:var(--wdb-glass);border:1px solid var(--wdb-line);border-left:2px solid var(--lg);box-shadow:none;transition:border-color .15s,box-shadow .15s}
+#board .wdg-game:hover{border-color:rgba(34,211,238,.42);border-left-color:var(--lg);box-shadow:0 0 26px rgba(34,211,238,.1)}
+#board .wdg-game[data-lg=NFL]{--lg:#22d3ee}#board .wdg-game[data-lg=NCAAF]{--lg:#a78bfa}#board .wdg-game[data-lg=NBA]{--lg:#fb923c}#board .wdg-game[data-lg=NCAAB]{--lg:#f472b6}#board .wdg-game[data-lg=NHL]{--lg:#38bdf8}#board .wdg-game[data-lg=MLB]{--lg:#fb7185}
+#board .wdg-head{background:rgba(255,255,255,.025);border-bottom:1px solid var(--wdb-line);color:#ecf3ff}
+#board .wdg-lg{background:transparent;border:1px solid var(--lg);color:var(--lg);font-family:Orbitron,Inter,sans-serif;font-size:9.5px;letter-spacing:.08em}
+#board .wdg-head .wdg-mu{color:#fff}
+#board .wdg-when{color:#a6b6cd}
+#board .wdg-n{background:transparent;border-color:var(--wdb-line);color:#a6b6cd}
+#board .wdg-pick{border-top-color:var(--wdb-line)}
+#board .wdg-pick:hover{background:rgba(34,211,238,.045)}
+#board .wdg-sel b{color:#fff}
+#board .wdg-sel .wd-odds{background:rgba(34,211,238,.1);color:#7fe9f7}
+#board .wdg-cap:hover,#board .wdg-cap:focus-visible{border-color:rgba(34,211,238,.45);background:rgba(34,211,238,.06)}
+#board .wdg-cap:focus-visible{outline-color:#22d3ee}
+#board .wdg-name{color:#7fe9f7}
+#board .wdg-stats{color:#b4c2d8}
+#board .wdg-prof{border-color:rgba(34,211,238,.35);color:#7fe9f7}
+#board .wdg-prof:hover{border-color:#22d3ee;background:rgba(34,211,238,.1)}
+#board .wd-badge{background:rgba(139,92,246,.2);color:#cdbcff;border:1px solid rgba(139,92,246,.5)}
+#board .up,#board .wdg-stats .up{color:#4ade80!important}
+#board .down,#board .wdg-stats .down{color:#fb7185!important}
+#board .wd-streak.up{background:rgba(74,222,128,.13)}#board .wd-streak.down{background:rgba(251,113,133,.13)}
+#board .wd-dots i{background:rgba(125,170,235,.25)}#board .wd-dots i.w{background:#4ade80}#board .wd-dots i.l{background:#fb7185}
+#board .wd-res.won{background:rgba(74,222,128,.13);color:#4ade80}#board .wd-res.lost{background:rgba(251,113,133,.13);color:#fb7185}
+#board .wd-table tbody tr:hover td{background:rgba(34,211,238,.045)}
+#board .wd-chip{background:#080d1b;border:1px solid var(--wdb-line);color:#ecf3ff}
+#board .wd-follow{background:transparent;border-color:rgba(34,211,238,.4);color:#7fe9f7}
+#board .wd-follow.on{background:#22d3ee;color:#04101c}
+#board .wd-panel{background:rgba(2,5,12,.72);backdrop-filter:blur(4px)}
+#board .wd-sheet{border-left:1px solid rgba(34,211,238,.3);background:#0a1020}
+#board .wd-close{background:#0c1324;border-color:var(--wdb-line);color:#ecf3ff}
+/* the sitewide light theme forces text and field colors with !important */
+html body.pro-board-page main #board .wdb-lock-body h3{color:#fff!important}
+html body.pro-board-page main #board .wdb-lock-sub,html body.pro-board-page main #board .wdb-lock-login,html body.pro-board-page main #board .wdb-cta-note{color:#b4c2d8!important}
+html body.pro-board-page main #board .wdb-lock-list li{color:#ecf3ff!important}
+html body.pro-board-page main #board .wd-bar input[type=search],html body.pro-board-page main #board .wd-bar select{background:#080d1b!important;color:#ecf3ff!important;border-color:rgba(125,170,235,.22)!important}
+html body.pro-board-page main #board .wd-bar input[type=checkbox]{background:#080d1b!important}
+html body.pro-board-page main #board .wd-check{color:#b4c2d8!important}
+html body.pro-board-page main #board .wd-count,html body.pro-board-page main #board .wd-muted,html body.pro-board-page main #board .wd-sub{color:#a6b6cd!important}
+html body.pro-board-page main #board .wd-count b{color:#ecf3ff!important}
+html body.pro-board-page main #board .wd-table-wrap,html body.pro-board-page main #board .wd-table th{background:#0c1324!important}
+html body.pro-board-page main #board .wd-table td{color:#b4c2d8}
+html body.pro-board-page main #board .wd-name,html body.pro-board-page main #board .wd-rec{color:#ecf3ff!important}
+html body.pro-board-page main{color-scheme:dark}
+html body.pro-board-page main #board .wd-bar input[type=search]::placeholder{color:#8c9db8!important;-webkit-text-fill-color:#8c9db8;opacity:1}
+html body.pro-board-page main #board .wd-table,html body.pro-board-page main #board .wd-table tbody,html body.pro-board-page main #board .wd-table tr,html body.pro-board-page main #board .wd-table td{background:transparent!important}
+html body.pro-board-page main #board .wd-row:hover td,html body.pro-board-page main #board .wd-row:focus td{background:rgba(34,211,238,.05)!important}
+html body.pro-board-page main #board .wd-table td{border-top-color:rgba(125,170,235,.16)!important}
+html body.pro-board-page main #board .wd-sort{color:#a6b6cd}
+html body.pro-board-page main #board .wd-sort.on{color:#7fe9f7}
+html body.pro-board-page main #board .wd-pend{background:rgba(34,211,238,.14)!important;color:#7fe9f7!important}
+html body.pro-board-page main #board .wd-sheet h3,html body.pro-board-page main #board .wd-sheet b,html body.pro-board-page main #board .wd-pick-sel{color:#ecf3ff!important}
+html body.pro-board-page main #board .wd-sheet h4,html body.pro-board-page main #board .wd-stat span,html body.pro-board-page main #board .wd-pick-game{color:#8c9db8!important}
+html body.pro-board-page main #board .wd-stat,html body.pro-board-page main #board .wd-pick{background:#0c1324!important;border-color:rgba(125,170,235,.16)!important}
+html body.pro-board-page main #board .wd-sheet .up{color:#4ade80!important}html body.pro-board-page main #board .wd-sheet .down{color:#fb7185!important}
+html body.pro-board-page main #board .wd-table tr,html body.pro-board-page main #board .wd-table td,html body.pro-board-page main #board .wd-table th{border-color:rgba(125,170,235,.16)!important;box-shadow:none!important}
+html body.pro-board-page main #board .wd-sheet a{color:#7fe9f7!important}
+#board .wd-panel{top:76px}
+@media (max-width:600px){
+  #board .wdb-hero{padding:22px 18px}
+  #board .wdb-hero h2{font-size:27px!important}
+  #board .wd-panel{top:70px}
+  #board .wdb-tile b{font-size:20px}
+  .pro-board-page .wdb-lock-body h3{font-size:21px}
+}
+@media (prefers-reduced-motion:reduce){#board .wdb-kick i{animation:none}}
 </style>
 </head>
 <body class="tmr-site-shell tmr-ds-shell tmr-light pro-page pro-board-page">
@@ -1325,7 +1428,7 @@ html body.pro-board-page main section#board.pro-section{background:transparent!i
                                     <li>Each pick beside that handicapper's record, units, ROI, streak and last 10</li>
                                     <li>Updated as new picks are collected, only for games that have not started</li>
                                     <li>Handicappers shown by tracking number, never by name</li>
-                                    <li>Sort and filter by record, streak, ROI, league and source, and see where the proven handicappers agree</li>
+                                    <li>Sort and filter by record, streak, ROI, league and source</li>
                                 </ul>
                                 <div class="px-actions">
                                     <a class="pro-cta" href="#pricing">Get TMR Pro</a>
@@ -1445,9 +1548,9 @@ html body.pro-board-page main section#board.pro-section{background:transparent!i
                 <!-- WDB_V2_20261102 (Nima): dark Pro header, live network tiles, no free records plug -->
                 <div class="pro-section-head wdb-hero">
                     <div class="wdb-hero-copy">
-                        <span class="wdb-kick"><i aria-hidden="true"></i>Handicapper Watchdog &middot; TMR Pro</span>
+                        <span class="wdb-kick"><i aria-hidden="true"></i>Live &middot; TMR Pro</span>
                         <h2>The Watchdog Board</h2>
-                        <p class="wdb-lede">Pregame picks from tracked outside handicappers, each beside the record TMR graded for them. Games drop off the board the moment they start. TMR members are never included.</p>
+                        <p class="wdb-lede">Live pregame picks. Verified records.</p>
                     </div>
                     <div class="wd-net" id="wdNet" hidden></div>
                 </div>
@@ -1933,10 +2036,10 @@ html body.pro-board-page main section#board.pro-section{background:transparent!i
                decorative bars, not data. The CTA goes to /premium/ checkout (#pricing is hidden on this page). */
             var n = summary && summary.picks;
             var fmt = function (v) { return Number(v).toLocaleString('en-US'); };
-            var head = n ? fmt(n) + ' pending pick' + (n === 1 ? ' is' : 's are') + ' on the board right now' : 'The board fills up as tracked handicappers post';
-            var sub = n ? 'From ' + fmt(summary.handicappers) + ' tracked handicapper' + (summary.handicappers === 1 ? '' : 's')
-                + (summary.proven_handicappers > 0 ? ', ' + fmt(summary.proven_handicappers) + ' with 25 or more graded picks' : '') + '.'
-                : 'Pregame picks appear here as they are collected, each beside the record TMR graded for that handicapper.';
+            var head = n ? fmt(n) + ' live pick' + (n === 1 ? '' : 's') + '. Locked.' : 'Picks land here as they post.';
+            var sub = n ? fmt(summary.handicappers) + ' handicapper' + (summary.handicappers === 1 ? '' : 's')
+                + (summary.proven_handicappers > 0 ? ', ' + fmt(summary.proven_handicappers) + ' proven' : '') + '.'
+                : 'Every pick sits beside a verified record.';
             var signedOut = true;
             try { signedOut = !localStorage.getItem('trustmyrecord_token'); } catch (e) { }
             var bars = '';
@@ -1947,8 +2050,8 @@ html body.pro-board-page main section#board.pro-section{background:transparent!i
                 + '<div class="wdb-lock-preview" aria-hidden="true">' + bars + '<span class="wdb-lock-ico"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span></div>'
                 + '<div class="wdb-lock-body"><span class="wdb-lock-k">TMR Pro members only</span>'
                 + '<h3>' + head + '</h3><p class="wdb-lock-sub">' + sub + '</p>'
-                + '<ul class="wdb-lock-list"><li>Every pregame pick with the posted price</li><li>Record, units, ROI and streak beside each handicapper</li><li>Where the proven handicappers agree</li><li>The full graded pick history behind every record</li></ul>'
-                + '<div class="wdb-lock-cta"><a class="wdb-btn" href="/premium/?src=watchdog_board#pricing" onclick="try{window.proPulse(\'click\',\'watchdog_board\',\'pro\');sessionStorage.setItem(\'tmr_pro_entry\',\'watchdog_board\')}catch(e){}">Start 3 days free</a><span class="wdb-cta-note">then $49.99 a month, cancel any time</span></div>'
+                + '<ul class="wdb-lock-list"><li>Every pregame pick and price</li><li>Verified record on every handicapper</li><li>Full graded history</li></ul>'
+                + '<div class="wdb-lock-cta"><a class="wdb-btn" href="/premium/?src=watchdog_board#pricing" onclick="try{window.proPulse(\'click\',\'watchdog_board\',\'pro\');sessionStorage.setItem(\'tmr_pro_entry\',\'watchdog_board\')}catch(e){}">Start 3 days free</a><span class="wdb-cta-note">then $49.99/mo. Cancel any time.</span></div>'
                 + (signedOut ? '<p class="wdb-lock-login">Already a member? <a href="/login/?next=' + encodeURIComponent('/pro/board/') + '">Log in</a></p>' : '')
                 + '</div></div>';
         }
@@ -1978,9 +2081,9 @@ html body.pro-board-page main section#board.pro-section{background:transparent!i
             var followedPending = (since.following || []).filter(function (c) { return c.pending && c.pending.length; });
             var followLine = followedPending.length
                 ? '<p>' + followedPending.length + ' followed handicapper' + (followedPending.length === 1 ? ' has' : 's have') + ' a pick still pending.</p>'
-                : ((since.following && since.following.length) ? '<p>The handicappers you follow have no pending picks on the board right now.</p>' : '<p>Follow a handicapper. The next time you open the board, their new picks and grades show here.</p>');
+                : ((since.following && since.following.length) ? '<p>The handicappers you follow have no pending picks on the board right now.</p>' : '<p>Follow a handicapper to track their picks here.</p>');
             return '<div class="wd-since"><h3>' + esc(when) + '</h3>' + followLine
-                + (list ? '<ul>' + list + '</ul>' : '<p class="wd-muted">No newly posted picks in this window.</p>')
+                + (list ? '<ul>' + list + '</ul>' : '<p class="wd-muted">No new picks.</p>')
                 + (more > 0 ? '<p class="wd-muted">' + more + ' more new picks are in the table below.</p>' : '')
                 + settledHtml + '</div>';
         }
@@ -2020,7 +2123,7 @@ html body.pro-board-page main section#board.pro-section{background:transparent!i
                 if (f.sortG === 'count') return b.rows.length - a.rows.length || Date.parse(a.start) - Date.parse(b.start);
                 return Date.parse(a.start) - Date.parse(b.start) || b.rows.length - a.rows.length;
             });
-            if (!list.length) return { n: 0, html: '<div class="pro-teaser">No upcoming picks match these filters right now. The board fills up as the handicappers post for the next games.</div>' };
+            if (!list.length) return { n: 0, html: '<div class="pro-teaser">No picks match these filters.</div>' };
             return { n: total, games: list.length, html: '<div class="wdg-list">' + list.map(function (g) {
                 return '<div class="wdg-game" data-lg="' + esc(String(g.league || '').toUpperCase()) + '"><div class="wdg-head"><span class="wdg-lg">' + esc(g.league) + '</span><b class="wdg-mu">' + esc(g.matchup) + '</b>'
                     + '<span class="wdg-when">' + esc(localKick(g.start)) + '</span><span class="wdg-n">' + g.rows.length + ' pick' + (g.rows.length === 1 ? '' : 's') + '</span></div>'
@@ -2072,19 +2175,13 @@ html body.pro-board-page main section#board.pro-section{background:transparent!i
                 (f.view === 'games' ? '<select id="wdWin" aria-label="Starts within">' + [['all', 'Any start time'], ['3', 'Starts within 3 hours'], ['12', 'Starts within 12 hours'], ['24', 'Starts within 24 hours']].map(function (o) { return '<option value="' + o[0] + '"' + (f.win === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select>'
                     + '<select id="wdSortG" aria-label="Sort games">' + [['time', 'Soonest first'], ['record', 'Best record first'], ['count', 'Most picks first']].map(function (o) { return '<option value="' + o[0] + '"' + (f.sortG === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select>' : '') +
                 '<span class="wd-count"><b>' + picks + '</b> pending picks &middot; <b>' + rows.length + '</b> handicappers &middot; updated ' + esc(new Date(d.generated_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' })) + ' PT</span></div>';
-            var cons = (d.consensus || []).filter(function (g) { return g.proven >= 2 && (f.league === 'all' || g.league === f.league); }).slice(0, 6);
-            if (cons.length) {
-                html += '<div class="wd-cons"><h3>Where the proven handicappers agree</h3><div class="wd-cons-grid">' + cons.map(function (g) {
-                    return '<div class="wd-cons-card"><div class="wd-cons-n"><b>' + g.proven + '</b> proven<span>' + g.cappers + ' total</span></div><div><div class="wd-cons-sel">' + esc(g.selection) + ' <span class="wd-muted">' + esc(g.bet_type || '') + '</span></div><div class="wd-muted">' + esc(g.matchup || '') + ' &middot; ' + esc(kick(g.start)) + '</div></div></div>';
-                }).join('') + '</div></div>';
-            }
             if (!(d.handicappers || []).length) {
                 html = sinceStrip(d) + emptyBoard();
             } else if (games) {
                 html = html.replace(/<span class="wd-count">[\s\S]*?<\/span>(?=<\/div>)/, '<span class="wd-count"><b>' + games.n + '</b> upcoming picks &middot; <b>' + (games.games || 0) + '</b> games</span>');
                 html += games.html;
             } else if (!rows.length) {
-                html += '<div class="pro-teaser">No pending picks match these filters right now. The board fills up as the handicappers post for the next games.</div>';
+                html += '<div class="pro-teaser">No picks match these filters.</div>';
             } else {
                 html += '<div class="wd-table-wrap"><table class="wd-table"><thead><tr>' + th('name', 'Handicapper') + th('record', 'Record') + th('units', 'Units', 'n') + th('roi', 'ROI', 'n hide-s') + th('streak', 'Streak', 'n') + th('last10', 'Last 10', 'hide-s') + th('pending', 'Pending', 'n') + '</tr></thead><tbody>' +
                     rows.map(function (c) {
@@ -2262,10 +2359,10 @@ html body.pro-board-page main section#board.pro-section{background:transparent!i
             /* WDB_V2_20261102: four tiles plus one freshness line (was seven loose chips). */
             var out = [], d = n.directory || {}, src = n.sources || [];
             var fmt = function (v) { return Number(v).toLocaleString('en-US'); };
-            if (d.accounts) out.push('<span class="wdb-tile"><b>' + fmt(d.accounts) + '</b><em>accounts monitored</em></span>');
-            if (d.with_record) out.push('<span class="wdb-tile"><b>' + fmt(d.with_record) + '</b><em>handicappers with graded records</em></span>');
+            if (d.accounts) out.push('<span class="wdb-tile"><b>' + fmt(d.accounts) + '</b><em>accounts tracked</em></span>');
+            if (d.with_record) out.push('<span class="wdb-tile"><b>' + fmt(d.with_record) + '</b><em>graded handicappers</em></span>');
             if (d.graded) out.push('<span class="wdb-tile"><b>' + fmt(d.graded) + '</b><em>picks graded</em></span>');
-            if (n.picks_harvested_24h != null) out.push('<span class="wdb-tile"><b>' + fmt(n.picks_harvested_24h) + '</b><em>picks collected in 24 hours</em></span>');
+            if (n.picks_harvested_24h != null) out.push('<span class="wdb-tile"><b>' + fmt(n.picks_harvested_24h) + '</b><em>new picks, 24h</em></span>');
             var last = src.map(function (x) { return x.last_check; }).filter(Boolean).sort().pop();
             var fresh = [];
             if (last) fresh.push('Sources checked <b>' + agoText(last) + '</b>');
@@ -2284,8 +2381,8 @@ html body.pro-board-page main section#board.pro-section{background:transparent!i
         }
         function emptyBoard() {
             var items = document.getElementById('wdNet') && !document.getElementById('wdNet').hidden ? [] : netStats(netData);
-            return '<div class="wd-empty"><h3>No pending picks right now</h3>'
-                + '<p>No pending picks are currently available. The Watchdog is continuing to monitor tracked sources, and this board updates as new pregame picks are collected.</p>'
+            return '<div class="wd-empty"><h3>No live picks right now</h3>'
+                + '<p>New picks land here as they post.</p>'
                 + (items.length ? '<div class="wd-net wdb-net-inline" style="margin:0 0 14px">' + items.join('') + '</div>' : '')
                 + '<a class="px-link" href="/around-the-web/">Browse Handicappers Around the Web</a></div>';
         }
