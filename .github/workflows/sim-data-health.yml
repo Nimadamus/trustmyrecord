@@ -5,8 +5,8 @@ name: Simulator Data Health
 # NBA and NHL rosters itself every 6 hours and keeps the previous snapshot when
 # a refresh fails validation, so a failure is silent on the site by design.
 # This makes it loud: if any sport is not "current", its refresh is failing, or
-# the endpoint does not answer, one issue labelled sim-data-alert is opened (or
-# commented on), which emails the repo owner. The next healthy check closes it.
+# the endpoint does not answer, one issue per sport (label sim-data-alert-<sport>) is opened
+# (or commented on), which emails the repo owner. The next healthy check closes it.
 # Read only: it never changes anything on the site or the API.
 
 on:
@@ -57,18 +57,30 @@ jobs:
                   out.append("%s data is %s (%sh old)" % (k.upper(), s.get("freshness"), s.get("data_age_hours")))
               if (s.get("consecutive_failures") or 0) > 0:
                   out.append("%s refresh failed %sx: %s" % (k.upper(), s.get("consecutive_failures"), s.get("last_error")))
-          print("; ".join(out))
+          print("\n".join(out))
           PY
-          PROBLEMS=$(python3 check.py)
-          if [ -n "$PROBLEMS" ]; then
-            echo "UNHEALTHY: $PROBLEMS"
-            gh label create sim-data-alert --color B60205 --description "Simulator data freshness problem" >/dev/null 2>&1 || true
-            N=$(gh issue list --label sim-data-alert --state open --json number --jq '.[0].number' 2>/dev/null)
-            if [ -n "$N" ]; then gh issue comment "$N" --body "$WHEN: $PROBLEMS. Run: $RUN_URL" || true
-            else gh issue create --label sim-data-alert --title "Simulator data is stale or failing to refresh" --body "$WHEN: $PROBLEMS. Run: $RUN_URL. This issue closes itself after the next healthy check." || true; fi
-            exit 1
-          fi
-          echo "healthy"
-          for N in $(gh issue list --label sim-data-alert --state open --json number --jq '.[].number' 2>/dev/null); do
-            gh issue close "$N" --comment "Healthy again at $WHEN: $RUN_URL" || true
+          python3 check.py > problems.txt
+          # SIM_HEALTH_PER_SPORT_20261105: one issue per sport, so a red sport cannot hide
+          # a new fault in another. A line with no sport prefix belongs to all of them.
+          STATUS=0
+          for S in NBA NHL MLB NFL; do
+            P=$(grep -E "^($S |roster status)" problems.txt | tr '\n' ';' || true)
+            L="sim-data-alert-$(echo "$S" | tr 'A-Z' 'a-z')"
+            if [ -n "$P" ]; then
+              echo "UNHEALTHY $S: $P"; STATUS=1
+              gh label create "$L" --color B60205 --description "$S simulator data freshness problem" >/dev/null 2>&1 || true
+              N=$(gh issue list --label "$L" --state open --json number --jq '.[0].number' 2>/dev/null)
+              if [ -n "$N" ]; then gh issue comment "$N" --body "$WHEN: $P Run: $RUN_URL" || true
+              else gh issue create --label "$L" --title "$S simulator data is stale or failing to refresh" --body "$WHEN: $P Run: $RUN_URL" || true; fi
+            else
+              echo "healthy $S"
+              for N in $(gh issue list --label "$L" --state open --json number --jq '.[].number' 2>/dev/null); do
+                gh issue close "$N" --comment "Healthy again at $WHEN: $RUN_URL" || true
+              done
+            fi
           done
+          # The old shared issue closes on the first run of this version.
+          for N in $(gh issue list --label sim-data-alert --state open --json number --jq '.[].number' 2>/dev/null); do
+            gh issue close "$N" --comment "Replaced by one issue per sport at $WHEN: $RUN_URL" || true
+          done
+          exit $STATUS

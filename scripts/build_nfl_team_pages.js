@@ -203,7 +203,7 @@ function teamPage(d, t, proj, all, shellAssets) {
   const faqs = [
     [`How many games will the ${t.name} win in ${d.season}?`, `Across ${H.count(proj.runs)} simulated seasons the ${t.name} average ${H.UI_one(p.wins_mean)} wins, with eight of every ten seasons between ${p.wins_p10} and ${p.wins_p90}. Games already played count at their real result.`],
     [`What are the ${t.name}' playoff odds?`.replace("s' playoff", "s' playoff"), `They make the playoffs in ${pct(p.playoffs)} of simulated seasons, win the ${t.conference} ${t.division} in ${pct(p.division_title)} and earn the 1 seed in ${pct(p.top_seed)}, with every season seeded by the NFL's tiebreakers.`],
-    [`How is the ${t.nickname} simulation built?`, `Each remaining game is decided by that game's own win probability from the TrustMyRecord NFL model, the drive level model behind the NFL Simulator, and the season is replayed ${H.count(proj.runs)} times. The page is rebuilt twice a day from the latest schedule and results.`],
+    [`How is the ${t.nickname} simulation built?`, `Each remaining game is decided by the win probability the NFL Simulator gives it at its default settings, and the season is replayed ${H.count(proj.runs)} times with a team strength shift drawn once per simulated season. The page is rebuilt several times a day and after games go final.`],
   ];
   return { url, html: shell(title, desc, url, [['/', 'Home'], ['/sports-simulators/', 'Sports Simulators'], ['/nfl-simulator/', 'NFL Simulator'], [url, `${t.name} Simulator`]], `${t.name} Simulator`, body, faqs, shellAssets, d.generated_at) };
 }

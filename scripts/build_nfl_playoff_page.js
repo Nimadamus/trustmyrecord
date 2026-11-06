@@ -21,6 +21,7 @@ const path = require('path');
 const crypto = require('crypto');
 const { execFileSync } = require('child_process');
 const E = require('../static/js/nfl-playoff-engine.js');
+const N = require('../static/js/nfl-season-project.js');
 const PB = require('../static/js/playoff-bracket.js');
 
 const ROOT = path.resolve(__dirname, '..');
@@ -31,7 +32,7 @@ const RUNS = Number(argVal('--runs')) || 10000;
 const API = 'https://trustmyrecord-api.onrender.com/api/nfl/public/playoff-inputs?season=';
 
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const pctText = (v) => (v >= 0.995 ? '>99%' : v < 0.005 ? '<1%' : Math.round(v * 100) + '%');
+const pctText = (v) => (v >= 0.995 ? '&gt;99%' : v < 0.005 ? '&lt;1%' : Math.round(v * 100) + '%');
 const cap = (x) => x.charAt(0).toUpperCase() + x.slice(1);
 const count = (n) => Number(n).toLocaleString('en-US');
 const logo = (id) => `https://a.espncdn.com/i/teamlogos/nfl/500/${id.toLowerCase()}.png`;
@@ -67,30 +68,13 @@ async function inputs(season) {
 /* NFL_PLAYOFF_FIT_ONE_METHOD_20261030: the fit lives in the engine, shared with the in-browser odds. */
 const fitRatings = (teams, games) => E.fitRatings(teams, games);
 
+/* NFL_ONE_PROJECTION_20261105: the same project() call, inputs and seed as the season and team
+   pages. This builder used to run its own loop with no strength shock. */
 function simulate(d, n) {
-  const rnd = E.mulberry32(Number(String(d.generated_at).slice(0, 10).replace(/-/g, '')) || 1);
-  const open = d.games.filter((g) => !g.completed);
-  const acc = {};
-  d.teams.forEach((t) => { acc[t.id] = { playoff: 0, division: 0, top: 0, wins: 0, seedSum: 0 }; });
-  for (let i = 0; i < n; i++) {
-    const sims = {};
-    for (const g of open) sims[g.id] = rnd() < (typeof g.home_win_prob === 'number' ? g.home_win_prob : 0.5) ? g.home : g.away;
-    const s = E.seedAll(d.teams, d.games, null, sims);
-    for (const c of ['AFC', 'NFC']) {
-      s[c].seeds.forEach((id, k) => {
-        acc[id].playoff++;
-        if (k < 4) acc[id].division++;
-        if (k === 0) acc[id].top++;
-      });
-    }
-    d.teams.forEach((t) => { const o = s.standings[t.id].overall; acc[t.id].wins += o.w + o.t / 2; });
-  }
+  const r = N.project(d, n, N.bakeSeed(d));
   const out = {};
-  d.teams.forEach((t) => {
-    const a = acc[t.id];
-    out[t.id] = { playoff: a.playoff / n, division: a.division / n, top: a.top / n, wins: a.wins / n };
-  });
-  return out;
+  r.teams.forEach((t) => { out[t.id] = { playoff: t.playoffs, division: t.division_title, top: t.top_seed, wins: t.wins_mean }; });
+  return { P: out, result: r };
 }
 
 function projectedSeeds(d, P) {
@@ -113,7 +97,7 @@ function build(d) {
   const done = d.games.filter((g) => g.completed);
   const week = done.reduce((m, g) => Math.max(m, g.week || 0), 0);
   const now = E.seedAll(d.teams, d.games, null, null);
-  const P = simulate(d, RUNS);
+  const { P, result } = simulate(d, RUNS);
   const fit = fitRatings(d.teams, d.games);
   const seeds = projectedSeeds(d, P);
 
@@ -154,12 +138,13 @@ function build(d) {
   say.push(`<li><strong>The race for the bye.</strong> Only the 1 seed in each conference skips the wild card round. The ${esc(T[topOf('AFC')].name)} finish first in the AFC in ${pctText(P[topOf('AFC')].top)} of simulated seasons and the ${esc(T[topOf('NFC')].name)} finish first in the NFC in ${pctText(P[topOf('NFC')].top)}${Math.max(P[topOf('AFC')].top, P[topOf('NFC')].top) < 0.5 ? ', so even the favorites miss the bye more often than not' : ''}.</li>`);
   if (lock.length) say.push(`<li><strong>Closest to safe.</strong> ${cap(lock.slice(0, 5).map((id) => `the ${esc(T[id].name)} (${pctText(P[id].playoff)})`).join(', '))} make the field in at least eight of every ten simulated seasons.</li>`);
   if (bubble.length) say.push(`<li><strong>Too close to call.</strong> ${cap(bubble.slice(0, 6).map((id) => `the ${esc(T[id].name)} (${pctText(P[id].playoff)})`).join(', '))} are in between 35% and 65%. Fourteen of 32 clubs get in, so every week moves this group the most.</li>`);
-  if (upside.length) say.push(`<li><strong>A losing record is not the end.</strong> ${upside.slice(0, 3).map((id) => `The ${esc(T[id].name)} are ${rec(id)} and still reach the playoffs ${pctText(P[id].playoff)} of the time`).join('. ')}. The model thinks the schedule ahead is kinder than the one behind.</li>`);
+  if (upside.length) say.push(`<li><strong>A losing record is not the end.</strong> ${upside.slice(0, 3).map((id) => `The ${esc(T[id].name)} are ${rec(id)} and still reach the playoffs ${pctText(P[id].playoff)} of the time`).join('. ')}. A weak division or a soft run of games can each keep a club alive.</li>`);
   say.push(`<li><strong>The model's bracket.</strong> Advance the favorite in every game from the projected field and the ${esc(T[favChamp].name)} win the Super Bowl. The chance of that exact bracket is the product of every game in it, which the bracket above shows as you change picks.</li>`);
 
   const stamp = `Standings after Week ${week}, ${done.length} games final. Odds from ${count(RUNS)} simulated seasons, read ${ptDate(d.generated_at, true)}.`;
 
   const html = `<!-- PB_NFL:start (baked by scripts/build_nfl_playoff_page.js, do not edit by hand) -->
+  <!-- NFL_PROJ:${N.fingerprint(result, d)} -->
   <section class="panel pbn" id="picture">
     <h2>The ${d.season} NFL playoff picture after Week ${week}</h2>
     <p class="muted">If the season ended today, with the league's tiebreakers applied to the ${done.length} games already final. Seeds 1 to 4 are the division leaders, 5 to 7 the wild cards, and only the 1 seed gets a bye.</p>
@@ -172,7 +157,7 @@ function build(d) {
   </section>
   <section class="panel pbn" id="odds">
     <h2>${d.season} NFL playoff odds</h2>
-    <p class="muted">${esc(stamp)} Completed games keep their real result; every other game is drawn from the TrustMyRecord NFL model's win probability for it.</p>
+    <p class="muted">${esc(stamp)} Completed games keep their real result; every other game is drawn from the win probability the NFL Simulator gives it, adjusted by a team strength shift drawn once per simulated season, exactly as on the <a href="/nfl-season-simulator/">NFL Season Simulator</a>.</p>
     <div class="pbn-grid">${odds}</div>
   </section>
   <section class="seo pbn">

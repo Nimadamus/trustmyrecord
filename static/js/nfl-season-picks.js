@@ -80,7 +80,7 @@
           + '<img src="' + logo(id) + '" alt="" width="22" height="22" loading="lazy"><span>' + esc(t.nickname || id) + '</span><small>' + tail + '</small></button>';
       };
       var label = view.team ? '<span class="wkc">W' + g.week + '</span>' : '';
-      return '<div class="pick' + (g.completed ? ' fin' : '') + '" data-key="' + esc(key) + '">' + label + side(g.away, false) + '<span class="at">at</span>' + side(g.home, true) + '</div>';
+      return '<div class="pick' + (g.completed ? ' fin' : '') + '" data-key="' + esc(key) + '">' + label + side(g.away, false) + '<span class="at">' + (g.neutral ? 'vs' : 'at') + '</span>' + side(g.home, true) + '</div>';
     }).join('');
   }
 

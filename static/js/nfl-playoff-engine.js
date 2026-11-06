@@ -693,15 +693,61 @@
     return 1 / (1 + Math.exp(-x));
   }
 
+  /* NFL_ONE_PROJECTION_20261105: ONE draw of the open games, used by simulateSeason (playoff
+     page, browser) and by nfl-season-project.js (season, team, matchup pages and the baked
+     playoff table). The strength shock used to live only in the season module, so the same
+     inputs printed Ravens 20% on one page and 6% on the other.
+     Every simulated season draws one strength shock per club, z ~ N(0, SIGMA^2) on the logit
+     scale, and each open game of that season plays at logit(p) + z_home - z_away. A club's
+     strength is not known exactly, so its whole season can run hot or cold together.
+     The shocks use their own random stream, so sigma 0 reproduces the no shock numbers
+     exactly.
+     NFL_SIGMA_NO_MARKET_20261105: 0.5 was fitted on future games priced from market no-vig
+     probabilities, which breaks the rule that market prices never enter a model constant.
+     Refit with no market data, at the spread of the calibrated served probabilities (logit
+     sd 0.70), program_1105/evidence/nfl/sigma_refit.js: model's own as-of probabilities
+     2021-25, log loss best at 0.8, 80% range holds 78.4% at 0.7; team margins only 2019-25,
+     best at 0.5, holds 80.8% at 0.7. Without the shock 67.8% and 69.3%. */
+  var STRENGTH_SIGMA = 0.7;
+  function shiftedProb(p, d) {
+    if (!d) return p;
+    var q = Math.min(0.999, Math.max(0.001, p));
+    return 1 / (1 + Math.exp(-(Math.log(q / (1 - q)) + d)));
+  }
+  function seasonDrawer(teams, open, seed, sigma) {
+    var rnd = mulberry32(seed);
+    var noiseRnd = mulberry32((seed ^ 0x9e3779b9) >>> 0);
+    function gauss() {
+      var u = 0; while (u === 0) u = noiseRnd();
+      return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * noiseRnd());
+    }
+    return function draw(sims) {
+      var z = null;
+      if (sigma > 0) { z = {}; teams.forEach(function (t) { z[t.id] = sigma * gauss(); }); }
+      for (var k = 0; k < open.length; k++) {
+        var g = open[k];
+        var p = typeof g.home_win_prob === 'number' ? g.home_win_prob : 0.5;
+        if (z) p = shiftedProb(p, (z[g.home] || 0) - (z[g.away] || 0));
+        sims[g.id] = rnd() < p ? g.home : g.away;
+      }
+      return z;
+    };
+  }
+
   /**
    * Monte Carlo the rest of the season. User picks are LOCKED and never
    * redrawn; only unpicked games are simulated, from the model's own home win
    * probability when one is available and a coin flip when it is not.
+   * opts.sigma overrides STRENGTH_SIGMA (tests).
    */
   function simulateSeason(teams, games, picks, iterations, seed, opts) {
     opts = opts || {};
-    var rnd = mulberry32(seed || 20260913);
+    var base = seed || 20260913;
+    var sigma = typeof opts.sigma === 'number' ? opts.sigma : STRENGTH_SIGMA;
     var open = games.filter(function (g) { return !g.completed && !(picks && picks[g.id]); });
+    var draw = seasonDrawer(teams, open, base, sigma);
+    // The bracket has its own stream, so the regular season draws match the season page's.
+    var rnd = mulberry32((base ^ 0x85ebca6b) >>> 0);
     var tally = {}, seedTally = {}, champTally = {}, sbTally = {};
     // Playoff rounds use the fitted strengths (the same numbers the bracket shows),
     // home field to the better seed, none in the Super Bowl.
@@ -710,11 +756,7 @@
 
     for (var it = 0; it < iterations; it++) {
       var sims = {};
-      for (var i = 0; i < open.length; i++) {
-        var g = open[i];
-        var p = typeof g.home_win_prob === 'number' ? g.home_win_prob : 0.5;
-        sims[g.id] = rnd() < p ? g.home : g.away;
-      }
+      var z = draw(sims);
       var s = seedAll(teams, games, picks, sims);
       ['AFC', 'NFC'].forEach(function (c) {
         s[c].seeds.forEach(function (id, idx) {
@@ -725,11 +767,11 @@
       if (opts.withBracket) {
         var champs = {};
         ['AFC', 'NFC'].forEach(function (c) {
-          var b = bracket(s[c].seeds, function (a, bb) { return rnd() < matchupProb(fit, a, bb, false) ? a : bb; });
+          var b = bracket(s[c].seeds, function (a, bb) { return rnd() < shiftedProb(matchupProb(fit, a, bb, false), z ? z[a] - z[bb] : 0) ? a : bb; });
           if (b.champion) { champTally[b.champion] += 1; champs[c] = b.champion; }
         });
         if (champs.AFC && champs.NFC) {
-          var sb = rnd() < matchupProb(fit, champs.AFC, champs.NFC, true) ? champs.AFC : champs.NFC;
+          var sb = rnd() < shiftedProb(matchupProb(fit, champs.AFC, champs.NFC, true), z ? z[champs.AFC] - z[champs.NFC] : 0) ? champs.AFC : champs.NFC;
           sbTally[sb] += 1;
         }
       }
@@ -753,7 +795,7 @@
     seedConference: seedConference, seedAll: seedAll,
     bracket: bracket, clinchStatus: clinchStatus, clinchBound: clinchBound,
     gameKey: gameKey, encodePicks: encodePicks, decodePicks: decodePicks,
-    simulateSeason: simulateSeason, mulberry32: mulberry32, fitRatings: fitRatings, matchupProb: matchupProb,
+    simulateSeason: simulateSeason, seasonDrawer: seasonDrawer, shiftedProb: shiftedProb, STRENGTH_SIGMA: STRENGTH_SIGMA, mulberry32: mulberry32, fitRatings: fitRatings, matchupProb: matchupProb,
     commonOpponents: commonOpponents, strengthOf: strengthOf,
     UNIMPLEMENTABLE: ['best net touchdowns in all games', 'a coin toss'],
   };

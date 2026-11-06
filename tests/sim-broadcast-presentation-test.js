@@ -54,4 +54,13 @@ ok('the shell never removes page content', !/\.seo[^\n]*\.remove\(\)|innerHTML\s
 ok('About starts closed', !/bc-about[^\n]*\.open\s*=\s*true/.test(js));
 ok('a tap on a slate card never runs', js.includes('stopImmediatePropagation'));
 
+/* Integration leftovers, 11/05. */
+ok('Try another matchup is one flow, away then home', (js.match(/picker\.flow\(\)/g) || []).length === 3 && js.includes("show('home', t.key)") && !js.includes("picker.open('away')"));
+ok('the team just chosen cannot be chosen again', js.includes('t.key === skip'));
+ok('run pages fold their prose, never delete it', js.includes('bootRun') && js.includes("$$('.sa-sub', head)") && !/sa-sub[^\n]*\.remove\(\)/.test(js));
+ok('long panel copy moves to About', js.includes('quietPanels') && js.includes("p.id === 'lsimStamp'"));
+ok('the Pro offer sits after the folds', js.includes('proBelowFolds') && js.includes('last.nextSibling'));
+ok('no reserved gap above the folds', css.includes('html.simbc-game main.wrap{padding-bottom:0}'));
+ok('the Pro line keeps its price text and button', css.includes('.bc-proline .tpf-offer-btn') && !/bc-proline[^\n]*tpf-offer-k[^\n]*display:none/.test(css));
+
 console.log(`PASS  ${n} broadcast presentation checks`);

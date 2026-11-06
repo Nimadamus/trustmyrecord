@@ -2,8 +2,8 @@
    SIM RUN GATE ADAPTER (sim-run-gate.js)                 SIM_RUN_METER_20260914
    -----------------------------------------------------------------------------
    Puts the NBA, NHL and NFL Playoff simulators behind the same rules as MLB and
-   NFL: an account to run, one free run per simulator per day, then TMR per run
-   (static/js/sim-auth-gate.js does the deciding). The page stays fully public
+   NFL (the wording lives in scripts/sim-run-policy.js; static/js/sim-auth-gate.js
+   does the deciding). The page stays fully public
    and crawlable; only starting a run is gated.
 
    Load with defer, AFTER sim-auth-gate.js and, for NBA/NHL, after
