@@ -27,6 +27,8 @@ const SIMUX = require('./sim-ux.js');   // SIM_UX_20261030: shared UX layer on e
 const path = require('path'); const RUN_POLICY = require('./sim-run-policy.js');   // SIM_RUN_POLICY_20261030: one source for free run copy
 const E = require('../static/js/league-season-engine.js');
 const UI = require('../static/js/league-season-sim.js');
+const TD = require('./sim-team-detail.js');   // SIM_TEAM_DETAIL_20261105
+let TEAM_DETAIL = '';
 
 const ROOT = path.resolve(__dirname, '..');
 const SITE = 'https://trustmyrecord.com';
@@ -319,7 +321,7 @@ function page(sport, mode, inputs, result, shell) {
 
   const body = mode === 'season'
     ? `<section class="panel"><h2>Projected ${season} ${sportName} standings</h2>
-  <div id="lsimTables" class="lsim-grid">${UI.seasonTables(result)}</div></section>`
+  <div id="lsimTables" class="lsim-grid">${UI.seasonTables(result)}</div>${TEAM_DETAIL}</section>`
     : `<section class="panel"><h2>${season} ${sportName} playoff odds</h2>
   <div id="lsimOdds">${UI.oddsTable(result)}</div></section>
   <section class="panel"><h2>One simulated ${season} postseason</h2>
@@ -637,7 +639,7 @@ ${NAV_RESERVE}
       <span id="lsimStatus" role="status" aria-live="polite"></span>
     </div>
     <p id="lsimStamp">${UI.stamp(result, inputs)}</p>
-    <div id="lsimOdds">${UI.oddsTable(result)}</div>
+    <div id="lsimOdds">${UI.oddsTable(result)}</div>${TEAM_DETAIL}
   </section>
 
   <section class="lsim-copy">
@@ -921,7 +923,7 @@ function patchHub(sport, inputs, rivalries, result) {
   if (re.test(html)) html = html.replace(re, block);
   else html = html.replace(/(<div id="result"><\/div>)/, `$1\n  ${block}`);
   if (!re.test(html)) throw new Error(`${sport} hub: no place for the cluster block`);
-  fs.writeFileSync(file, html);
+  fs.writeFileSync(file, SIMUX.inject(html));
 }
 
 /* Each existing team simulator page gets that club's own season projection,
@@ -1281,6 +1283,10 @@ if (require.main === module) (async () => {
     // LEAGUE_SIM_CONSISTENCY_20261030: printed odds and projections must agree, or nothing ships.
     const problems = require('./league-sim-consistency.js').checkProjection(inputs, result);
     if (problems.length) throw new Error(`${sport}: consistency gate failed (${problems.length}): ${problems.slice(0, 6).join('; ')}`);
+    TEAM_DETAIL = TD.detail({
+      sport, games: inputs.schedule, when: inputs.generated_at, teams: result.teams,
+      rows: result.teams.map((t) => ({ id: t.abbr, name: t.name, playoffs: t.playoffs, title: t.champion, conference: t.conference })),
+    });
     for (const mode of ['season', 'playoff']) {
       const out = path.join(ROOT, `${sport}-${mode}-simulator`, 'index.html');
       fs.mkdirSync(path.dirname(out), { recursive: true });
