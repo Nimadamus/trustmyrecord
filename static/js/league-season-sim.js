@@ -194,7 +194,7 @@
     });
   }
 
-  var renderers = { seasonTables: seasonTables, oddsTable: oddsTable, bracket: bracket, stamp: stamp, esc: esc, smallLogo: smallLogo };
+  var renderers = { seasonTables: seasonTables, oddsTable: oddsTable, bracket: bracket, stamp: stamp, esc: esc, smallLogo: smallLogo, pct: pct };
 
   /* ------------------------------------------------------------ controller */
 

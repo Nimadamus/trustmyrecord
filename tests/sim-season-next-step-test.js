@@ -38,3 +38,11 @@ assert.strictEqual(playoff.split('href="/sportsbook/?sport=NFL"').length - 1, 1)
 assert.strictEqual(playoff.split('href="' + PRO + '"').length - 1, 1);
 
 console.log('sim-season-next-step-test: ok');
+
+// One spelling per table: the playoff odds table prints small odds the way the season table does.
+const UI = require('../static/js/league-season-sim.js');
+assert.strictEqual(UI.pct(0.001), '&lt;1%');
+const oddsRow = league.split('\n').find((l) => l.includes('const row = (slot, a) =>'));
+assert.ok(oddsRow.includes('UI.pct(proj[a].playoffs)') && oddsRow.includes('UI.pct(proj[a].champion)'));
+assert.ok(!oddsRow.includes('pctText('), 'prose wording stays out of the table');
+console.log('sim-season-next-step-test: table wording ok');

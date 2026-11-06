@@ -475,7 +475,7 @@ function pictureTable(sport, cfg, result) {
   const proj = {};
   result.teams.forEach((t) => { proj[t.abbr] = t; });
   const T = cfg.teams;
-  const row = (slot, a) => `<tr><th scope="row">${esc(slot)}</th><td style="text-align:left"><span class="lt">${T[a].l ? `<img src="${esc(T[a].l)}" alt="" width="22" height="22" loading="lazy">` : ''}<span class="ln">${esc(T[a].n)}</span><span class="ls">${esc(T[a].s)}</span></span></td><td class="num">${UI_one(T[a].r)}</td><td class="num">${pctText(proj[a].playoffs)}</td><td class="num">${pctText(proj[a].champion)}</td></tr>`;
+  const row = (slot, a) => `<tr><th scope="row">${esc(slot)}</th><td style="text-align:left"><span class="lt">${T[a].l ? `<img src="${esc(T[a].l)}" alt="" width="22" height="22" loading="lazy">` : ''}<span class="ln">${esc(T[a].n)}</span><span class="ls">${esc(T[a].s)}</span></span></td><td class="num">${UI_one(T[a].r)}</td><td class="num">${UI.pct(proj[a].playoffs)}</td><td class="num">${UI.pct(proj[a].champion)}</td></tr>`;
   return cfg.confs.map((conf) => {
     const s = cfg.seeds[conf];
     const rows = nba
