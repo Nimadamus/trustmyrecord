@@ -557,6 +557,9 @@
     .pm-card-actions{flex-direction:column;gap:8px}
     .pm-facts{background:var(--line)}
     .pm-facts div{background:rgba(4,10,24,.7)}
+    .pm-facts{grid-template-columns:1fr 1fr}
+    .pm-facts div:last-child:nth-child(odd){grid-column:1 / -1}
+    .pm-facts dd{overflow-wrap:normal}
 
     /* proof line */
     .pm-proof{background:none}
@@ -609,6 +612,10 @@
     /* members */
     .pm-step,.pm-recap{background:var(--card);border-color:var(--line);box-shadow:none}
     .pm-step:hover{border-color:rgba(47,224,255,.45)}
+    body.tmr-light .pm .pm-recap li,body.tmr-light .pm .pm-recap li span{color:var(--ink-2) !important}
+    body.tmr-light .pm .pm-recap .pd-recap-hit{color:var(--good) !important}
+    body.tmr-light .pm .pm-recap .pd-recap-miss{color:#FF8C80 !important}
+    body.tmr-light .pm .pm-recap-note a{color:#6cc4ff !important}
 
     /* plans */
     .pm-plans{gap:12px}
