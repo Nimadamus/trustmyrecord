@@ -38,10 +38,22 @@
     var v = parseInt(m[1], 16);
     return 0.2126 * (v >> 16) + 0.7152 * ((v >> 8) & 255) + 0.0722 * (v & 255);
   }
+  /* A vivid dark red still reads on navy; only a truly dim colour is swapped. */
+  function shows(c) {
+    var m = /^#?([0-9a-f]{6})$/i.exec(String(c || ''));
+    if (!m) return false;
+    var v = parseInt(m[1], 16);
+    return lum(c) >= 60 || Math.max(v >> 16, (v >> 8) & 255, v & 255) >= 170;
+  }
   function glow(c, alt) {
-    if (lum(c) >= 60) return hexOf(c);
-    if (lum(alt) >= 60 && lum(alt) < 235) return hexOf(alt);
+    if (shows(c)) return hexOf(c);
+    if (shows(alt) && lum(alt) < 235) return hexOf(alt);
     return '#1f8fff';
+  }
+  /* Two sides must never share a colour, or a split bar reads as one bar. */
+  function sides(node, a, h) {
+    node.style.setProperty('--away', a);
+    node.style.setProperty('--home', a === h ? '#2fe0ff' : h);
   }
   function nick(name) {
     var parts = String(name || '').split(' ');
@@ -531,8 +543,7 @@
       stage.busy(false);
       sb.setAttribute('data-bc', '1');
       var a = d.matchup.away, h = d.matchup.home;
-      box.style.setProperty('--away', glow(a.color, a.altColor));
-      box.style.setProperty('--home', glow(h.color, h.altColor));
+      sides(box, glow(a.color, a.altColor), glow(h.color, h.altColor));
       $$('.sb-team', sb).forEach(function (cell, i) {
         var t = i === 0 ? a : h;
         var old = $('.crest, .crest-fallback', cell);
@@ -759,8 +770,7 @@
       if (!mh || !d || !d.game) return;
       var g = d.game, p = d.projection;
       var aAbbr = g.away_abbr, hAbbr = g.home_abbr;
-      out.style.setProperty('--away', colour(aAbbr));
-      out.style.setProperty('--home', colour(hAbbr));
+      sides(out, colour(aAbbr), colour(hAbbr));
       out.classList.add('bc-show');
 
       var rep = d.box_score && !d.box_score.unavailable && d.box_score.representative;
