@@ -12000,7 +12000,7 @@
         const fmtAmericanOddsRail = (o) => (o == null || isNaN(o)) ? null : ((o > 0 ? '+' : '') + Math.round(o));
         const avgOddsText = avgOddsValue != null
             ? fmtAmericanOddsRail(avgOddsValue)
-            : (statsLoadError ? 'Unavailable' : (gradedProfilePicks > 0 ? 'N/A' : 'Loading...'));
+            : (statsLoadError ? 'Unavailable' : 'N/A');
         const showEmptyLedgerNote = isOwnProfile && totalPicks === 0 && !p.__recoveredFromLocal;
         const trustPills = '<div class="profile-trust-row">' +
             '<span class="profile-trust-pill"><i class="fas fa-check-circle"></i> Status <strong>' + verifiedText + '</strong></span>' +

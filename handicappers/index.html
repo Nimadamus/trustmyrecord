@@ -2931,6 +2931,13 @@
         }
 
         function renderRows() {
+            // A search result must be on screen, not below six featured cards.
+            const featuredWrap = document.querySelector('.hm-featured-wrap');
+            const searching = !!(els.search && els.search.value.trim());
+            if (featuredWrap && featuredWrap.hidden !== searching) {
+                featuredWrap.hidden = searching;
+                if (searching) window.scrollTo({ top: els.search.getBoundingClientRect().top + window.scrollY - 100 });
+            }
             const grouped = (TIER_VIEWS[tierView] || TIER_VIEWS.all).grouped;
             els.rows.classList.toggle('hm-grouped', grouped);
 

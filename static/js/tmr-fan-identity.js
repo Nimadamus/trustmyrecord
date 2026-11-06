@@ -296,9 +296,10 @@
       recordCard('Verified Record', esc(vr.record || '0-0'), netStr + (vr.roi != null ? ' &middot; ' + Number(vr.roi).toFixed(1) + '% ROI' : ''), false,
         ' role="button" tabindex="0" data-drill-category="record" data-drill-bucket="" data-drill-user="' + esc(p.username || '') +
         '" data-drill-label="Verified record" data-drill-context="Fan identity" title="Open every pick behind this record"') +
-      recordCard('Contest Record', (p.contest_record && p.contest_record.record) ? esc(p.contest_record.record) : '&mdash;', 'Coming soon', !(p.contest_record && p.contest_record.record)) +
-      recordCard('Prediction Record', (p.prediction_record && p.prediction_record.record) ? esc(p.prediction_record.record) : '&mdash;', 'Coming soon', !(p.prediction_record && p.prediction_record.record)) +
-      recordCard('KnowBall Score', (p.knowball_score == null ? '&mdash;' : esc(p.knowball_score)), 'Coming soon', p.knowball_score == null) +
+      /* Only records a member actually has: a public profile never shows a placeholder. */
+      ((p.contest_record && p.contest_record.record) ? recordCard('Contest Record', esc(p.contest_record.record), '', false) : '') +
+      ((p.prediction_record && p.prediction_record.record) ? recordCard('Prediction Record', esc(p.prediction_record.record), '', false) : '') +
+      (p.knowball_score != null ? recordCard('KnowBall Score', esc(p.knowball_score), '', false) : '') +
       '</div></section>';
 
     var wrap = document.createElement('div');
