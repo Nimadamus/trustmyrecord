@@ -27,6 +27,8 @@ const SIMUX = require('./sim-ux.js');   // SIM_UX_20261030: shared UX layer on e
 const path = require('path'); const RUN_POLICY = require('./sim-run-policy.js');   // SIM_RUN_POLICY_20261030: one source for free run copy
 const E = require('../static/js/league-season-engine.js');
 const UI = require('../static/js/league-season-sim.js');
+const TD = require('./sim-team-detail.js');   // SIM_TEAM_DETAIL_20261105
+let TEAM_DETAIL = '';
 
 const ROOT = path.resolve(__dirname, '..');
 const SITE = 'https://trustmyrecord.com';
@@ -236,6 +238,17 @@ function leagueDateModified(sport, mode, inputs, result) {
   return DM.resolve(path.join(ROOT, `${sport}-${mode}-simulator`, 'index.html'), { finals, proj: DM.rounded(proj, 1) }, inputs.generated_at);
 }
 
+/* SIM_NEXT_STEP_20261105: the one quiet way on from a season or playoff page: lock a
+   pick on that sport's board, or Pro. Same Pro link and wording as the game page meter. */
+function nextStepPanel(label) {
+  return `<section class="panel" id="simNextStep">
+    <div class="linkgrid">
+    <a href="/sportsbook/?sport=${label}">Lock a pick<small>Put your ${label} read on your record</small></a>
+    <a href="/premium/?from=sim_meter&amp;src=sim_meter#pricing">TMR Pro<small>Unlimited runs on every simulator</small></a>
+    </div>
+  </section>`;
+}
+
 function page(sport, mode, inputs, result, shell) {
   if (mode === 'playoff') return playoffPage(sport, inputs, result, shell);
   const F = facts(sport, inputs, result);
@@ -308,7 +321,7 @@ function page(sport, mode, inputs, result, shell) {
 
   const body = mode === 'season'
     ? `<section class="panel"><h2>Projected ${season} ${sportName} standings</h2>
-  <div id="lsimTables" class="lsim-grid">${UI.seasonTables(result)}</div></section>`
+  <div id="lsimTables" class="lsim-grid">${UI.seasonTables(result)}</div>${TEAM_DETAIL}</section>`
     : `<section class="panel"><h2>${season} ${sportName} playoff odds</h2>
   <div id="lsimOdds">${UI.oddsTable(result)}</div></section>
   <section class="panel"><h2>One simulated ${season} postseason</h2>
@@ -390,6 +403,7 @@ ${NAV_RESERVE}
     ${faq.html}
   </section>
 
+  ${nextStepPanel(sportName)}
   <section class="panel">
     <h2>More ${sportName} simulators</h2>
     <div class="linkgrid">
@@ -463,7 +477,7 @@ function pictureTable(sport, cfg, result) {
   const proj = {};
   result.teams.forEach((t) => { proj[t.abbr] = t; });
   const T = cfg.teams;
-  const row = (slot, a) => `<tr><th scope="row">${esc(slot)}</th><td style="text-align:left"><span class="lt">${T[a].l ? `<img src="${esc(T[a].l)}" alt="" width="22" height="22" loading="lazy">` : ''}<span class="ln">${esc(T[a].n)}</span><span class="ls">${esc(T[a].s)}</span></span></td><td class="num">${UI_one(T[a].r)}</td><td class="num">${pctText(proj[a].playoffs)}</td><td class="num">${pctText(proj[a].champion)}</td></tr>`;
+  const row = (slot, a) => `<tr><th scope="row">${esc(slot)}</th><td style="text-align:left"><span class="lt">${T[a].l ? `<img src="${esc(T[a].l)}" alt="" width="22" height="22" loading="lazy">` : ''}<span class="ln">${esc(T[a].n)}</span><span class="ls">${esc(T[a].s)}</span></span></td><td class="num">${UI_one(T[a].r)}</td><td class="num">${UI.pct(proj[a].playoffs)}</td><td class="num">${UI.pct(proj[a].champion)}</td></tr>`;
   return cfg.confs.map((conf) => {
     const s = cfg.seeds[conf];
     const rows = nba
@@ -625,7 +639,7 @@ ${NAV_RESERVE}
       <span id="lsimStatus" role="status" aria-live="polite"></span>
     </div>
     <p id="lsimStamp">${UI.stamp(result, inputs)}</p>
-    <div id="lsimOdds">${UI.oddsTable(result)}</div>
+    <div id="lsimOdds">${UI.oddsTable(result)}</div>${TEAM_DETAIL}
   </section>
 
   <section class="lsim-copy">
@@ -651,6 +665,7 @@ ${nba ? '' : (() => { const e = nhlEvidence(inputs); return `    <h2>How far to 
     ${faq.html}
   </section>
 
+  ${nextStepPanel(sportName)}
   <section class="panel">
     <h2>More ${sportName} simulators</h2>
     <div class="linkgrid">
@@ -908,7 +923,7 @@ function patchHub(sport, inputs, rivalries, result) {
   if (re.test(html)) html = html.replace(re, block);
   else html = html.replace(/(<div id="result"><\/div>)/, `$1\n  ${block}`);
   if (!re.test(html)) throw new Error(`${sport} hub: no place for the cluster block`);
-  fs.writeFileSync(file, html);
+  fs.writeFileSync(file, SIMUX.inject(html));
 }
 
 /* Each existing team simulator page gets that club's own season projection,
@@ -1241,7 +1256,7 @@ function inputsProblem(inputs, now) {
   return null;
 }
 
-module.exports = { NAV_RESERVE, inputsProblem, MAX_INPUT_AGE_H, shellAssets, CSS, faqBlock, ptDate, pctText, count, slugOf, esc, UI_one, pickPanel, seasonState, seasonStateLine };
+module.exports = { nextStepPanel, NAV_RESERVE, inputsProblem, MAX_INPUT_AGE_H, shellAssets, CSS, faqBlock, ptDate, pctText, count, slugOf, esc, UI_one, pickPanel, seasonState, seasonStateLine };
 
 if (require.main === module) (async () => {
   const shell = shellAssets();
@@ -1268,6 +1283,10 @@ if (require.main === module) (async () => {
     // LEAGUE_SIM_CONSISTENCY_20261030: printed odds and projections must agree, or nothing ships.
     const problems = require('./league-sim-consistency.js').checkProjection(inputs, result);
     if (problems.length) throw new Error(`${sport}: consistency gate failed (${problems.length}): ${problems.slice(0, 6).join('; ')}`);
+    TEAM_DETAIL = TD.detail({
+      sport, games: inputs.schedule, when: inputs.generated_at, teams: result.teams,
+      rows: result.teams.map((t) => ({ id: t.abbr, name: t.name, playoffs: t.playoffs, title: t.champion, conference: t.conference })),
+    });
     for (const mode of ['season', 'playoff']) {
       const out = path.join(ROOT, `${sport}-${mode}-simulator`, 'index.html');
       fs.mkdirSync(path.dirname(out), { recursive: true });

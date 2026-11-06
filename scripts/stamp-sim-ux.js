@@ -20,7 +20,11 @@ function run(check) {
     const kind = SIMUX.bcKind(html);
     const bc = html.match(SIMUX.BC_RE) || [];
     const bcOk = kind ? (bc.length === 1 && bc[0].trim() === SIMUX.bcBlock(kind)) : bc.length === 0;
-    if (blocks.length === 1 && blocks[0].trim() === block && bcOk) continue;
+    const a11y = html.match(SIMUX.A11Y_RE) || [];
+    const a11yOk = SIMUX.a11yPage(html)
+      ? a11y.length === 1 && a11y[0].trim() === SIMUX.a11yBlock() && SIMUX.a11yStatic(html) === html
+      : a11y.length === 0;
+    if (blocks.length === 1 && blocks[0].trim() === block && bcOk && a11yOk) continue;
     stale.push(path.relative(path.resolve(__dirname, '..'), file).replace(/\\/g, '/'));
     if (!check) { fs.writeFileSync(file, SIMUX.inject(html), 'latin1'); wrote++; }
   }

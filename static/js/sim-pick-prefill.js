@@ -8,6 +8,15 @@
    user still enters units and presses the normal submit. Nothing here submits,
    auto-confirms, or touches any other sportsbook behavior; with no ?simpick=1
    this file is a no-op. Moneyline only.
+
+   SIM_HANDOFF_NEXT_20261105: since 2026-09-04 the board visitors see is
+   sportsbook-next.js, mounted over a hidden classic board, with its own slip.
+   window.selectGameBet still works, but it lands in the classic multi slip,
+   whose desktop home is inside the hidden layout. So the banner said
+   "pre-selected" over an empty visible slip, on whichever sport the page
+   opened on. When the new board is mounted this file now opens the intent's
+   sport on THAT board and selects through its own preselect(); the classic
+   path below stays for ?sbnext=0 and for a failed mount.
    ============================================================================= */
 (function () {
     'use strict';
@@ -60,18 +69,38 @@
         if (!ok) el.style.background = 'linear-gradient(135deg,#F5C542,#E8D48B)';
     }
 
-    function findGameIndex(games) {
-        for (var i = 0; i < games.length; i++) {
-            var g = games[i];
-            if (!g) continue;
-            if (intent.board_game_id && String(g.id) === String(intent.board_game_id)) return i;
-            var home = (g.home_team || '').toLowerCase();
-            var away = (g.away_team || '').toLowerCase();
-            if (intent.home_team_name && intent.away_team_name &&
-                home.indexOf(intent.home_team_name.toLowerCase()) !== -1 &&
-                away.indexOf(intent.away_team_name.toLowerCase()) !== -1) return i;
+    /* Sim and board feeds spell a few clubs differently (LA / Los Angeles,
+       St. / St, accents). Compare the plain spelling, either way round. */
+    function plainName(s) {
+        var t = String(s || '');
+        try { t = t.normalize('NFD').replace(/[\u0300-\u036f]/g, ''); } catch (e) { }
+        return t.toLowerCase().replace(/[.']/g, '').replace(/\s+/g, ' ').trim().replace(/^la /, 'los angeles ');
+    }
+    function sameTeam(a, b) {
+        a = plainName(a); b = plainName(b);
+        return !!a && !!b && (a === b || a.indexOf(b) !== -1 || b.indexOf(a) !== -1);
+    }
+    /* Board id first, then the matchup as simulated, then the same two teams
+       the other way round: a custom matchup can name either club as home, and
+       the moneyline on a team is the same pick either way. */
+    function findMatchup(games, homeOf, awayOf) {
+        var i, H = intent.home_team_name, A = intent.away_team_name;
+        if (intent.board_game_id) {
+            for (i = 0; i < games.length; i++) {
+                if (games[i] && String(games[i].id) === String(intent.board_game_id)) return i;
+            }
+        }
+        if (!H || !A) return -1;
+        for (i = 0; i < games.length; i++) {
+            if (games[i] && sameTeam(homeOf(games[i]), H) && sameTeam(awayOf(games[i]), A)) return i;
+        }
+        for (i = 0; i < games.length; i++) {
+            if (games[i] && sameTeam(homeOf(games[i]), A) && sameTeam(awayOf(games[i]), H)) return i;
         }
         return -1;
+    }
+    function findGameIndex(games) {
+        return findMatchup(games, function (g) { return g.home_team; }, function (g) { return g.away_team; });
     }
 
     function mlPriceFor(game, team) {
@@ -129,8 +158,9 @@
     }
 
     /* Watch for a successful pick submission while the intent is active, then
-       emit the funnel event and clear the intent. Observes the same
+       emit the funnel event once and clear the intent. Observes the same
        window.api.request bridge the sportsbook submit path uses; read-only. */
+    var submitCounted = false;
     function armSubmitObserver() {
         if (!window.api || typeof window.api.request !== 'function' || window.api.__simPickPatched) return;
         var orig = window.api.request.bind(window.api);
@@ -142,7 +172,8 @@
                     opts && String(opts.method || '').toUpperCase() === 'POST';
                 if (isPickPost && p && typeof p.then === 'function') {
                     p.then(function (resp) {
-                        if (resp) {
+                        if (resp && !submitCounted) {
+                            submitCounted = true;
                             track('simulator_pick_submitted', { source: intent.source || 'mlb-simulator', sport: intent.sport || 'MLB' });
                             track('simulator_verified_pick_created', { source: intent.source || 'mlb-simulator', sport: intent.sport || 'MLB' });
                             try { localStorage.removeItem(KEY); } catch (e) { }
@@ -168,8 +199,63 @@
         ? 'From your poll vote: '
         : 'From your simulation: ';
     var INTENT_SPORT = (intent.sport && /^[A-Z]{2,5}$/.test(intent.sport)) ? intent.sport : 'MLB';
+    /* SIM_HANDOFF_NEXT_20261105: the path for the board visitors actually see. */
+    var nextSportOpened = false;
+    function attemptNext() {
+        var sb = window.__sbNext;
+        var label = intent.pick_team ? intent.pick_team + ' ML' : (intent.side || '') + ' ' + (intent.line || '');
+        var late = tries >= 100;   // ~40s window for slow API
+        if (!sb || typeof sb.preselect !== 'function') {
+            if (!late) { setTimeout(attempt, 400); return; }
+            showBanner('Your pick (' + label + ') is saved. The game board has not loaded it yet. Find the matchup below to place it.', false);
+            return;
+        }
+        if (!nextSportOpened) {
+            nextSportOpened = true;
+            if (sb.state.sport !== INTENT_SPORT) sb.load(INTENT_SPORT);
+        }
+        /* The visitor moved to another sport while this board loaded: theirs to choose. */
+        if (sb.state.sport !== INTENT_SPORT) return;
+        if (sb.state.loading) {
+            if (!late) { setTimeout(attempt, 400); return; }
+            showBanner('Your pick (' + label + ') is saved. The game board has not loaded it yet. Find the matchup below to place it.', false);
+            return;
+        }
+        var list = sb.state.games || [];
+        var idx = findMatchup(list, function (g) { return g.home; }, function (g) { return g.away; });
+        if (idx === -1) {
+            track('simulator_pick_off_board', { source: intent.source || 'mlb-simulator', sport: INTENT_SPORT });
+            showBanner('Your simulated matchup (' + (intent.away_team_name || '') + ' @ ' + (intent.home_team_name || '') + ') is not on the current board. It may have started or may not be priced yet. Choose any game below; nothing was submitted.', false);
+            return;
+        }
+        var g = list[idx];
+        var res;
+        if (IS_TOTAL) {
+            var side = (intent.market === 'over') ? 'Over' : 'Under';
+            res = sb.preselect({ gameId: g.id, side: side, line: Number(intent.line) });
+            if (res.status === 'moved') {
+                showBanner('The total for this game has moved from ' + intent.line + ' to ' + res.line +
+                    ' since you voted, so nothing was pre-selected. Pick the line you want below.', false);
+                return;
+            }
+            label = side + ' ' + intent.line;
+        } else {
+            var team = sameTeam(intent.pick_team, g.home) ? g.home : (sameTeam(intent.pick_team, g.away) ? g.away : null);
+            res = team ? sb.preselect({ gameId: g.id, team: team }) : { status: 'no_price' };
+            if (team) label = team + ' ML';
+        }
+        if (res.status === 'ok') {
+            track('simulator_pick_preselected', { source: intent.source || 'mlb-simulator', sport: INTENT_SPORT });
+            showBanner(ORIGIN_LABEL + label + ' is pre-selected. Set your units and confirm to lock it. Nothing is submitted until you do.', true);
+        } else {
+            showBanner('Your pick (' + label + ') has no price on the board right now. Choose it below when it opens; nothing is submitted automatically.', false);
+        }
+    }
+
     function attempt() {
         tries++;
+        armSubmitObserver();
+        if (window.__SBN_MOUNT === true) { attemptNext(); return; }
         var games = (window.TMR && (window.TMR.currentGames || window.TMR._cachedGames)) || null;
         if ((!games || !games.length) && !switchedSport && tries >= 4 &&
             typeof window.selectSportAndShowGames === 'function') {
@@ -200,7 +286,6 @@
             setTimeout(attempt, 400);
             return;
         }
-        armSubmitObserver();
         if (idx === -1) {
             showBanner('Your simulated matchup (' + (intent.away_team_name || '') + ' @ ' + (intent.home_team_name || '') + ') is not on the current board — it may have started or moved. Choose any game below; nothing was submitted.', false);
             return;

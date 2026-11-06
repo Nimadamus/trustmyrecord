@@ -1239,9 +1239,26 @@
         } catch (_) {}
         return false;
     }
+    /* SIM_HANDOFF_NEXT_20261105: this used to send /login/?return=<path>, but
+     * /login/ reads ?next= only, so every logged out Lock ended on /home/ with
+     * the pick gone (GA4, 30 days to 11/05: 9 people took that URL). The query
+     * string now survives too: ?simpick=1 is what puts a sim pick back on the
+     * slip, and a sim visitor usually has no account yet, so they start at
+     * sign up, the same place the MLB Simulator pick panel sends them. */
+    function sendToAuth() {
+        announce('Log in to lock these picks to your record.');
+        var back = location.pathname + (location.search || '');
+        var fromSim = /[?&]simpick=1(&|$)/.test(location.search || '');
+        try {
+            if (fromSim && window.TMRAnalytics && typeof window.TMRAnalytics.track === 'function') {
+                window.TMRAnalytics.track('simulator_pick_auth_required', {});
+            }
+        } catch (_) {}
+        window.location.href = (fromSim ? '/register/?return=' : '/login/?next=') + encodeURIComponent(back);
+    }
     function submitAll() {
         if (!state.picks.length || state.submitting) return;
-        if (!loggedIn()) { announce('Log in to lock these picks to your record.'); window.location.href = '/login/?return=' + encodeURIComponent(location.pathname); return; }
+        if (!loggedIn()) { sendToAuth(); return; }
         var btn = el('sbnSubmit'); if (btn) { btn.disabled = true; btn.textContent = 'Locking…'; }
         var client = window.api;
         if (!client || typeof client.createPick !== 'function') {
@@ -1331,6 +1348,34 @@
         return '<button type="button" class="' + cls + '"' + (opts.sel ? ' aria-pressed="true"' : '') +
             ' data-pick="' + esc(JSON.stringify(opts.data)) + '">' + body + '</button>';
     }
+    /* SIM_HANDOFF_NEXT_20261105: the one way another script puts a game line on
+     * this slip (sim-pick-prefill.js after a simulator or poll handoff). It
+     * builds the same pick the board chip carries, at the board's own price,
+     * and it only adds: nothing here submits, and a pick already on the slip
+     * stays on it. want: { gameId, team } or { gameId, side, line }. */
+    function preselect(want) {
+        var g = null;
+        state.games.forEach(function (x) { if (String(x.id) === String(want.gameId)) g = x; });
+        var m = g && catLines(g, 'game_lines');
+        if (!m) return { status: 'no_price' };
+        var cat = null;
+        categories().forEach(function (c) { if (c.key === 'game_lines') cat = c; });
+        var data = null;
+        if (want.team) {
+            var ml = findSel(m.h2h, want.team);
+            if (!ml || !oddsOk(cat, ml.odds)) return { status: 'no_price' };
+            data = pickData(g, ml.marketType || 'h2h', want.team, want.team + ' ML', null, ml.odds, cat && cat.long, m.book);
+        } else {
+            var to = findSide(m.total, want.side === 'Over');
+            if (!to || !oddsOk(cat, to.odds)) return { status: 'no_price' };
+            if (Number(to.line) !== Number(want.line)) return { status: 'moved', line: to.line };
+            data = pickData(g, to.marketType || 'totals', want.side, want.side + ' ' + fmtLine(to.line), to.line, to.odds, cat && cat.long, m.book);
+        }
+        if (findPick(pickKey(data)) < 0) togglePick(data);
+        try { keepInView(g.id); } catch (_) {}
+        return { status: 'ok' };
+    }
+
     function pickData(g, marketType, selection, label, line, odds, groupLabel, book) {
         return {
             gameId: g.id, sportKey: g.sportKey, marketType: marketType, selection: selection,
@@ -2872,7 +2917,8 @@
         window.__sbNext = { state: state, load: load, validOdds: validOdds, singleBook: singleBook,
             monotonic: monotonic, categories: categories, render: render,
             loadLive: loadLive, normaliseLive: normaliseLive, liveHtml: liveHtml, validLiveOdds: validLiveOdds,
-            loadStarters: loadStarters, startersFor: startersFor, starterHtml: starterHtml, mlbKey: mlbKey };
+            loadStarters: loadStarters, startersFor: startersFor, starterHtml: starterHtml, mlbKey: mlbKey,
+            preselect: preselect };
     }
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
     else boot();

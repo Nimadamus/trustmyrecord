@@ -159,6 +159,7 @@ function build(d) {
     <h2>${d.season} NFL playoff odds</h2>
     <p class="muted">${esc(stamp)} Completed games keep their real result; every other game is drawn from the win probability the NFL Simulator gives it, adjusted by a team strength shift drawn once per simulated season, exactly as on the <a href="/nfl-season-simulator/">NFL Season Simulator</a>.</p>
     <div class="pbn-grid">${odds}</div>
+    ${require('./sim-team-detail.js').detail({ sport: 'nfl', games: d.games, when: d.generated_at, rows: d.teams.map((t) => ({ id: t.id, name: t.name, playoffs: P[t.id].playoff })) })}
   </section>
   <section class="seo pbn">
     <h2>What the simulations are saying</h2>
@@ -223,7 +224,7 @@ function patch(html, start, end, block, anchor, before) {
     '<!-- PB_NFL_NAV:start -->' + require('./build_league_sim_pages.js').NAV_RESERVE + '<!-- PB_NFL_NAV:end -->',
     '<body class="tmr-ds-shell tmr-ds--dark">', false);
   html = patch(html, '<!-- PB_NFL_TAIL:start -->', '<!-- PB_NFL_TAIL:end -->', TAIL, '</body>', true);
-  fs.writeFileSync(PAGE, html);
+  fs.writeFileSync(PAGE, require('./sim-ux.js').inject(html));
   // The snapshot the page falls back to when the API does not answer.
   const snap = path.join(ROOT, 'nfl-playoff-simulator', 'data', `playoff-inputs-${season}.json`);
   fs.writeFileSync(snap, JSON.stringify(d));

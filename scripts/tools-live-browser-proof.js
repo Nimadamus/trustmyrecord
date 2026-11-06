@@ -56,6 +56,24 @@ async function selectByText(page, selector, text) {
   await page.selectOption(selector, value);
 }
 
+// SIM_PROOF_FOLDS_20261105: the MLB team and depth selects sit in a closed fold since the
+// broadcast shell (11/05), and the stage writes to them the same way this does. Clicking a
+// hidden select timed out for 30 s, so three workflows stayed red with the page working.
+async function setHiddenSelect(page, selector, text) {
+  const value = await page.locator(selector).evaluate((select, expected) => {
+    const option = Array.from(select.options).find((item) => item.value === expected || item.textContent.includes(expected));
+    if (!option) return '';
+    select.value = option.value;
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+    return option.value;
+  }, text);
+  if (!value) throw new Error(`${selector} missing ${text}`);
+}
+
+async function openAllFolds(page) {
+  await page.evaluate(() => document.querySelectorAll('details').forEach((d) => { d.open = true; }));
+}
+
 async function verifyTrendspotter(page) {
   // Rewritten 2026-08-01 for the Trend Spotter workspace redesign. The guided
   // sport -> matchup -> trend-kind dropdown flow is gone; the page is now
@@ -157,8 +175,8 @@ async function verifyMlbSimulatorGate(page) {
 
   // The page itself must never be gated - that is what Google sees.
   if (await page.$('.tsg-overlay')) throw new Error('MLB Simulator gated the PAGE, not just the run.');
-  await selectByText(page, '#awayTeamSelect', 'Chicago White Sox');
-  await selectByText(page, '#homeTeamSelect', 'Colorado Rockies');
+  await setHiddenSelect(page, '#awayTeamSelect', 'Chicago White Sox');
+  await setHiddenSelect(page, '#homeTeamSelect', 'Colorado Rockies');
 
   await page.click('#runSimulationButton');
   const gated = await page.waitForSelector('.tsg-overlay', { timeout: 15000 }).catch(() => null);
@@ -190,8 +208,10 @@ async function verifyMlbSimulator(page) {
   });
   await page.goto(SIM_URL, { waitUntil: 'domcontentloaded' });
   await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => {});
-  await selectByText(page, '#awayTeamSelect', 'Chicago White Sox');
-  await selectByText(page, '#homeTeamSelect', 'Colorado Rockies');
+  await page.waitForFunction(() => document.querySelector('#awayTeamSelect')?.options.length > 2, null, { timeout: 30000 });
+  await page.waitForTimeout(500);
+  await setHiddenSelect(page, '#awayTeamSelect', 'Chicago White Sox');
+  await setHiddenSelect(page, '#homeTeamSelect', 'Colorado Rockies');
   const pitcherState = await page.evaluate(() => {
     function state(selector) {
       const select = document.querySelector(selector);
@@ -210,10 +230,11 @@ async function verifyMlbSimulator(page) {
   if (pitcherState.home.disabled || pitcherState.home.optionCount < 1 || pitcherState.home.unavailable) {
     throw new Error(`Home pitcher dropdown is not populated: ${JSON.stringify(pitcherState.home)}`);
   }
-  await page.selectOption('#simulationCountSelect', '10');
+  await setHiddenSelect(page, '#simulationCountSelect', '10');
   await page.click('#runSimulationButton');
   await page.waitForFunction(() => document.querySelector('#projectionShell')?.getAttribute('data-projection-state') === 'projected', null, { timeout: 30000 });
 
+  await openAllFolds(page);
   const text = await page.locator('body').innerText();
   if (!/Simulation-based estimate|simulation output/i.test(text)) throw new Error('MLB Simulator output was not labeled as simulation based.');
   if (!/Chicago White Sox|Colorado Rockies/i.test(text)) throw new Error('MLB Simulator proof matchup did not render selected teams.');

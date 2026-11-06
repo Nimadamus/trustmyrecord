@@ -141,6 +141,14 @@ function seasonNow() {
   return d.getUTCMonth() <= 1 ? d.getUTCFullYear() - 1 : d.getUTCFullYear();
 }
 
+/* SIM_TEAM_DETAIL_20261105: playoff odds change and remaining schedule. */
+function teamDetail(d, result) {
+  return require('./sim-team-detail.js').detail({
+    sport: 'nfl', games: d.games, when: d.generated_at,
+    rows: result.teams.map((t) => ({ id: t.id, name: t.name, playoffs: t.playoffs })),
+  });
+}
+
 function page(d, result, shell) {
   const season = d.season;
   const P = picksPanels(d, result);
@@ -232,7 +240,7 @@ ${H.NAV_RESERVE}
   </section>
 
   <section class="panel"><h2>Projected ${season} NFL standings</h2>
-  <div id="lsimTables" class="lsim-grid">${N.tables(result)}</div></section>
+  <div id="lsimTables" class="lsim-grid">${N.tables(result)}</div>${teamDetail(d, result)}</section>
 
   ${P.picks}
   ${P.picture}
@@ -252,6 +260,7 @@ ${H.NAV_RESERVE}
     ${faq.html}
   </section>
 
+  ${H.nextStepPanel('NFL')}
   <section class="panel">
     <h2>More simulators</h2>
     <div class="linkgrid">
