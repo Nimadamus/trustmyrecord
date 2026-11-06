@@ -252,6 +252,7 @@ ${H.NAV_RESERVE}
     ${faq.html}
   </section>
 
+  ${H.nextStepPanel('NFL')}
   <section class="panel">
     <h2>More simulators</h2>
     <div class="linkgrid">

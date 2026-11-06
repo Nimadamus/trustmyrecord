@@ -236,6 +236,17 @@ function leagueDateModified(sport, mode, inputs, result) {
   return DM.resolve(path.join(ROOT, `${sport}-${mode}-simulator`, 'index.html'), { finals, proj: DM.rounded(proj, 1) }, inputs.generated_at);
 }
 
+/* SIM_NEXT_STEP_20261105: the one quiet way on from a season or playoff page: lock a
+   pick on that sport's board, or Pro. Same Pro link and wording as the game page meter. */
+function nextStepPanel(label) {
+  return `<section class="panel" id="simNextStep">
+    <div class="linkgrid">
+    <a href="/sportsbook/?sport=${label}">Lock a pick<small>Put your ${label} read on your record</small></a>
+    <a href="/premium/?from=sim_meter&amp;src=sim_meter#pricing">TMR Pro<small>Unlimited runs on every simulator</small></a>
+    </div>
+  </section>`;
+}
+
 function page(sport, mode, inputs, result, shell) {
   if (mode === 'playoff') return playoffPage(sport, inputs, result, shell);
   const F = facts(sport, inputs, result);
@@ -390,6 +401,7 @@ ${NAV_RESERVE}
     ${faq.html}
   </section>
 
+  ${nextStepPanel(sportName)}
   <section class="panel">
     <h2>More ${sportName} simulators</h2>
     <div class="linkgrid">
@@ -651,6 +663,7 @@ ${nba ? '' : (() => { const e = nhlEvidence(inputs); return `    <h2>How far to 
     ${faq.html}
   </section>
 
+  ${nextStepPanel(sportName)}
   <section class="panel">
     <h2>More ${sportName} simulators</h2>
     <div class="linkgrid">
@@ -1241,7 +1254,7 @@ function inputsProblem(inputs, now) {
   return null;
 }
 
-module.exports = { NAV_RESERVE, inputsProblem, MAX_INPUT_AGE_H, shellAssets, CSS, faqBlock, ptDate, pctText, count, slugOf, esc, UI_one, pickPanel, seasonState, seasonStateLine };
+module.exports = { nextStepPanel, NAV_RESERVE, inputsProblem, MAX_INPUT_AGE_H, shellAssets, CSS, faqBlock, ptDate, pctText, count, slugOf, esc, UI_one, pickPanel, seasonState, seasonStateLine };
 
 if (require.main === module) (async () => {
   const shell = shellAssets();
