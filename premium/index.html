@@ -497,129 +497,214 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap">
 <link rel="stylesheet" href="/static/css/tmr-navbar.css?v=68ec3081d29a">
     <style id="premium-polish-20261105">
-    /* PRO_POLISH_20261105. Loads after the site themes on purpose: tmr-ds and tmr-light were forcing every
-       heading on this page to Inter at about 60 percent of its designed size. Layout and hooks stay as in
-       PREMIUM_REDESIGN_20261102; this restores the type scale and turns the visitor header into an offer. */
-    .pm{position:relative}
-    body.is-pro-member .pm-lead,html.pro-member-hint .pm-lead,
-    body.is-pro-member .pm-offer,html.pro-member-hint .pm-offer,
-    body.is-pro-member .pm-proof,html.pro-member-hint .pm-proof,
-    body.is-pro-member .pm-close,html.pro-member-hint .pm-close{display:none !important}
-
-    /* type scale */
-    body.tmr-light .pm .pm-title{margin:14px 0 6px !important;font:800 clamp(52px,6.6vw,84px)/.92 var(--display) !important;letter-spacing:.005em !important;text-transform:uppercase}
-    body.tmr-light .pm .pm-h2{font:800 clamp(34px,3.9vw,46px)/1 var(--display) !important;letter-spacing:.005em !important;text-transform:uppercase}
-    body.tmr-light .pm .pm-tool h3{font:800 25px/1.05 var(--display) !important;letter-spacing:.01em !important;text-transform:uppercase}
-    body.tmr-light .pm .pm-tool--lead h3{font-size:34px !important}
-    body.tmr-light .pm .pm-plan h3{font:800 29px/1 var(--display) !important;letter-spacing:.015em !important;text-transform:uppercase}
-    body.tmr-light .pm .pm-perf > h3{font:800 26px/1.05 var(--display) !important;text-transform:uppercase}
-    .pm-price{font-size:52px}
-    .pm-sec-k{letter-spacing:.16em}
-
-    /* header */
-    .pm-head{padding:60px 0 56px}
-    .pm-head::after{height:2px}
-    .pm-head-grid{grid-template-columns:minmax(0,1.3fr) minmax(340px,.85fr);gap:56px}
-    body.tmr-light .pm .pm-lead{margin:0 0 14px;font:700 clamp(21px,2.1vw,26px)/1.2 Inter,sans-serif;letter-spacing:-.01em;color:#fff !important}
-    .pm-live{margin-top:28px;padding-top:18px}
-    .pm-live strong{font-size:32px}
-
-    /* the home crumb landed as a grey bar on the header edge; the logo and footer already go home */
+    /* PRO_DARK_20261105. Same look as the simulators (tmr-sim-broadcast.css): night background, one stage panel,
+       cyan to indigo action, long copy folded away. Loads last so it outranks the site themes, which were
+       forcing every heading here to Inter at about 60 percent of its designed size. The tokens below flip the
+       PREMIUM_REDESIGN_20261102 rules to dark; what follows only covers colours that rules hard coded. */
+    html body.pro-page.tmr-light{background:#040a18 !important;background-color:#040a18 !important}
+    body.tmr-light .pm{--navy:#0d1a33;--navy-2:#10264A;--ink:#f4f8ff;--ink-2:#a9bbd6;--ink-3:#8aa0bf;--line:rgba(130,175,240,.18);--line-2:rgba(130,175,240,.12);
+        --bg:#040a18;--card:rgba(16,30,58,.72);--blue:#2fb4ff;--blue-ink:#6cc4ff;--blue-soft:rgba(31,143,255,.14);--gold-soft:rgba(242,194,78,.14);
+        --good:#5EE0A6;--good-soft:rgba(52,211,153,.14);--shadow:none;--grad:linear-gradient(100deg,#19c8ff 0%,#1f8fff 55%,#4d6bff 100%);
+        --stage:radial-gradient(60% 120% at 0% 50%,rgba(31,143,255,.34),transparent 68%),radial-gradient(60% 120% at 100% 50%,rgba(47,224,255,.16),transparent 68%),#0a1730;
+        --display:"Barlow Condensed","Anton",Inter,system-ui,sans-serif;background:#040a18;color:var(--ink)}
     body.pro-page .tmrlh-crumbs{display:none !important}
-    body.pro-page .pm main{max-width:none !important;width:100% !important;padding-left:0 !important;padding-right:0 !important}
+    body.pro-page .pm main{max-width:none !important;width:100% !important;padding-left:0 !important;padding-right:0 !important;background:transparent !important}
+    body.pro-page .tmrlh-related,body.pro-page .tmrlh-footer{--tmrlh-fg:#e8ecf5;--tmrlh-muted:#93a0b8;--tmrlh-link:#6cc4ff;--tmrlh-link-hover:#a5dcff;--tmrlh-surface:rgba(148,163,184,.09);--tmrlh-surface-2:rgba(148,163,184,.05);--tmrlh-line:rgba(148,163,184,.24)}
+    .pm-wrap{max-width:1040px}
+    body.is-pro-member .pm-lead,html.pro-member-hint .pm-lead,
+    body.is-pro-member .pm-proof,html.pro-member-hint .pm-proof{display:none !important}
 
-    /* offer card */
-    .pm-card{padding:26px;background:linear-gradient(180deg,rgba(255,255,255,.1),rgba(255,255,255,.045))}
-    body[data-tier="visitor"] #proStatusChip{display:none}
-    body.tmr-light .pm .pm-card-price{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 8px;margin:0 0 12px;color:#9FB3CC !important}
-    .pm-card-big{font:800 58px/1 var(--display);letter-spacing:.005em;color:#fff;font-variant-numeric:tabular-nums}
-    .pm-card-per{font:600 15px/1 Inter,sans-serif;color:#C9D7EA}
-    .pm-card-or{flex-basis:100%;font:500 13.5px/1.4 Inter,sans-serif;color:#9FB3CC}
-    body.tmr-light .pm .pm-card-text{margin:0 0 14px}
-    .pm-offer{list-style:none;margin:0 0 18px;padding:14px 0 0;display:grid;gap:9px;border-top:1px solid rgba(255,255,255,.12)}
-    body.tmr-light .pm .pm-offer li{position:relative;padding-left:24px;font:600 14px/1.4 Inter,sans-serif;color:#E6EEF8 !important}
-    .pm-offer li::before{content:"";position:absolute;left:2px;top:4px;width:12px;height:7px;border-left:2px solid #F2C24E;border-bottom:2px solid #F2C24E;transform:rotate(-45deg)}
-    .pm-card-actions .pm-btn{min-height:48px}
+    /* type */
+    body.tmr-light .pm .pm-title{margin:10px 0 4px !important;font:800 clamp(44px,5.2vw,62px)/.95 var(--display) !important;letter-spacing:.005em !important;text-transform:uppercase;color:var(--ink) !important}
+    body.tmr-light .pm .pm-title em,.pm-title em{color:#2fe0ff !important}
+    body.tmr-light .pm .pm-h2{font:800 clamp(26px,3vw,32px)/1 var(--display) !important;letter-spacing:.02em !important;text-transform:uppercase}
+    body.tmr-light .pm .pm-tool h3{font:800 21px/1.05 var(--display) !important;letter-spacing:.02em !important;text-transform:uppercase}
+    body.tmr-light .pm .pm-tool--lead h3{font-size:30px !important}
+    body.tmr-light .pm .pm-plan h3{font:800 25px/1 var(--display) !important;letter-spacing:.02em !important;text-transform:uppercase}
+    .pm-price{font-size:50px}
+    body.tmr-light .pm .pm-eyebrow,body.tmr-light .pm .pm-sec-k{font:800 10.5px/1 Inter,sans-serif;letter-spacing:.12em;color:#38bdf8 !important}
+    .pm-eyebrow i{background:#2fe0ff}
 
-    /* proof strip */
-    .pm-proof{background:#fff;border-bottom:1px solid var(--line)}
-    .pm-proof ul{list-style:none;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:24px;margin:0 auto;padding-top:20px;padding-bottom:20px}
-    .pm-proof li{display:flex;align-items:flex-start;gap:11px;min-width:0}
-    .pm-proof svg{flex:0 0 auto;width:22px;height:22px;margin-top:1px;fill:none;stroke:var(--blue);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-    .pm-proof span{font:500 12.5px/1.4 Inter,sans-serif;color:var(--ink-3)}
-    body.tmr-light .pm .pm-proof span{color:var(--ink-3) !important}
-    .pm-proof b{display:block;margin-bottom:1px;font:700 14px/1.3 Inter,sans-serif;color:var(--ink)}
+    /* buttons */
+    .pm-btn{border-radius:12px;font:800 15.5px/1 var(--display);letter-spacing:.08em;text-transform:uppercase;min-height:46px}
+    body.tmr-light .pm .pm-btn--primary,body.tmr-light .pm .pm-btn--primary:hover,
+    body.tmr-light .pm .pm-btn--gold,body.tmr-light .pm .pm-btn--gold:hover{background:var(--grad);color:#04121f !important;border:0;box-shadow:0 8px 24px -10px rgba(31,143,255,.75)}
+    body.tmr-light .pm .pm-btn--ghost,body.tmr-light .pm .pm-btn--onDark{background:rgba(255,255,255,.04);border-color:var(--line);color:var(--ink) !important}
+    body.tmr-light .pm .pm-btn--ghost:hover,body.tmr-light .pm .pm-btn--onDark:hover{background:rgba(255,255,255,.08);border-color:rgba(47,224,255,.5);color:var(--ink) !important}
+    body.tmr-light .pm .pm-plan--ult .pm-btn--gold,body.tmr-light .pm .pm-plan--ult .pm-btn--gold:hover{background:linear-gradient(100deg,#F7D47A,#E9B93A);color:#1A1300 !important;box-shadow:none}
+
+    /* stage */
+    .pm-head{padding:22px 0 0;background:none;overflow:visible}
+    .pm-head::before,.pm-head::after{display:none}
+    .pm-wrap.pm-head-grid{grid-template-columns:minmax(0,1.25fr) minmax(300px,.8fr);gap:36px;max-width:992px;width:calc(100% - 48px);padding:34px 36px;border:1px solid var(--line);border-radius:18px;background:var(--stage)}
+    body.tmr-light .pm .pm-lead{margin:0 0 6px;font:700 clamp(18px,1.9vw,22px)/1.25 Inter,sans-serif;letter-spacing:-.01em;color:var(--ink) !important}
+    body.tmr-light .pm .pm-tag{font:500 14.5px/1.5 Inter,sans-serif;color:var(--ink-2) !important}
+    .pm-live{margin-top:20px;padding-top:14px;border-top-color:var(--line);gap:8px 26px}
+    .pm-live strong{font-size:27px}
+    .pm-live-ago{display:none}
+    body.tmr-light .pm .pm-live-k{color:#38bdf8 !important}
+    .pm-card{padding:22px;background:rgba(4,10,24,.5);border:1px solid var(--line);box-shadow:none;backdrop-filter:none}
+    .pm-card::before{display:none}
+    .pm-card-k{color:var(--ink-3)}
+    body[data-tier="visitor"] #proStatusChip,body[data-tier="visitor"] #proStatusText{display:none}
+    body.tmr-light .pm .pm-card-price{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 8px;margin:0 0 16px;color:var(--ink-2) !important}
+    .pm-card-big{font:800 56px/1 var(--display);letter-spacing:.005em;color:var(--ink);font-variant-numeric:tabular-nums}
+    .pm-card-per{font:600 15px/1 Inter,sans-serif;color:var(--ink-2)}
+    .pm-card-or{flex-basis:100%;font:500 13.5px/1.4 Inter,sans-serif;color:var(--ink-2)}
+    body.tmr-light .pm .pm-card-or b{color:var(--ink)}
+    .pm-save{background:rgba(47,224,255,.14);color:#7fe9ff}
+    body.tmr-light .pm .pm-card-text{margin:0 0 14px;color:var(--ink-2) !important}
+    .pm-card-actions{flex-direction:column;gap:8px}
+    .pm-facts{background:var(--line)}
+    .pm-facts div{background:rgba(4,10,24,.7)}
+
+    /* proof line */
+    .pm-proof{background:none}
+    .pm-proof ul{list-style:none;display:flex;flex-wrap:wrap;justify-content:center;gap:8px 28px;margin:0 auto;padding-top:16px;padding-bottom:0}
+    body.tmr-light .pm .pm-proof li{display:flex;align-items:center;gap:7px;font:600 13px/1.2 Inter,sans-serif;color:#C9D7EA !important}
+    .pm-proof svg{flex:0 0 auto;width:16px;height:16px;fill:none;stroke:#2fe0ff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
     /* sections */
-    .pm-sec{padding:80px 0}
-    .pm-sec + .pm-sec{padding-top:80px}
-    .pm-sec-head{margin-bottom:30px}
-    .pm-why{background:#fff;border-top:1px solid var(--line-2);border-bottom:1px solid var(--line-2)}
-    body.is-pro-member .pm-sec + .pm-sec{padding-top:24px}
+    .pm-sec,.pm-sec + .pm-sec{padding:36px 0 0}
+    .pm-sec-head{margin-bottom:14px}
+    .pm-sec-lede:empty{display:none}
+    body.tmr-light .pm .pm-sec-lede{font-size:14.5px;color:var(--ink-2) !important}
 
     /* tools */
-    .pm-tool--lead{padding:26px}
-    .pm-tool--lead .pm-badge{background:rgba(255,255,255,.1);color:#DCE7F5;border-color:rgba(255,255,255,.18)}
-    .pm-simout{list-style:none;display:flex;flex-wrap:wrap;gap:8px;margin:-4px 0 18px;padding:0}
-    body.tmr-light .pm .pm-simout li{padding:8px 11px;border-radius:9px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);font:600 13px/1.2 Inter,sans-serif;color:#E6EEF8 !important}
+    .pm-tools{gap:12px}
+    .pm-tool{padding:16px;border-radius:14px;background:var(--card);border-color:var(--line);box-shadow:none}
+    .pm-tool:hover{border-color:rgba(47,224,255,.45);box-shadow:none}
+    .pm-tool-top{margin-bottom:12px}
+    .pm-ic{width:38px;height:38px;border-radius:10px;background:var(--blue-soft);color:#2fe0ff}
+    .pm-badge{background:rgba(255,255,255,.05);color:var(--ink-2);border-color:var(--line)}
+    .pm-badge.is-pro{background:var(--blue-soft);color:#7fd0ff;border-color:rgba(47,180,255,.35)}
+    .pm-badge.is-ult{background:var(--gold-soft);color:#F7D47A;border-color:rgba(242,194,78,.4)}
+    .pm-badge.is-on{background:var(--good-soft);color:var(--good);border-color:rgba(52,211,153,.35)}
+    body.tmr-light .pm .pm-tool p{margin:0 0 10px;font:500 13.5px/1.45 Inter,sans-serif;color:var(--ink-2) !important}
+    .pm-tool--lead{padding:22px;background:var(--stage);border-color:var(--line)}
+    .pm-tool--lead:hover{border-color:rgba(47,224,255,.45)}
+    .pm-tool--lead .pm-ic{background:rgba(47,224,255,.12);color:#2fe0ff}
+    body.tmr-light .pm .pm-tool--lead p{margin-bottom:14px;color:var(--ink-2) !important}
+    .pm-tool--lead .pm-badge,.pm-tool--lead .pm-badge.is-pro{background:rgba(255,255,255,.07);color:#DCE7F5;border-color:var(--line)}
+    .pm-tool--lead .pm-btn{min-width:0;align-self:flex-start;padding:0 22px}
+    .pm-wdlive{margin:0 0 14px;background:rgba(4,10,24,.45);border-color:var(--line)}
+    .pm-simout{list-style:none;display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px;padding:0}
+    body.tmr-light .pm .pm-simout li{padding:7px 10px;border-radius:8px;background:rgba(4,10,24,.45);border:1px solid var(--line);font:600 12.5px/1.2 Inter,sans-serif;color:#DCE7F5 !important}
+    .pm-tool:not(.pm-tool--lead):not(.pm-tool--ult) .pm-btn{min-height:30px;margin-top:auto;padding:0;justify-content:flex-start;border:0;background:none !important;box-shadow:none;font-size:14.5px;letter-spacing:.06em}
+    body.tmr-light .pm .pm-tool:not(.pm-tool--lead):not(.pm-tool--ult) .pm-btn{color:#6cc4ff !important}
+    .pm-tool:not(.pm-tool--lead):not(.pm-tool--ult) .pm-btn::after{content:"\2192";margin-left:2px}
+    .pm-tool--ult{background:linear-gradient(100deg,rgba(242,194,78,.1),rgba(16,30,58,.72) 55%);border-color:rgba(242,194,78,.35)}
+    .pm-tool--ult:hover{border-color:rgba(242,194,78,.6)}
+    .pm-tool--ult .pm-ic{background:var(--gold-soft);color:#F2C24E}
     @media (min-width:641px){
-        .pm-tool--ult{grid-column:1 / -1;display:grid;grid-template-columns:auto minmax(0,1fr) auto;column-gap:18px;row-gap:4px;align-items:center;padding:20px 24px}
+        .pm-tool--ult{grid-column:1 / -1;display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;column-gap:16px;row-gap:2px;align-items:center;padding:14px 18px}
         .pm-tool--ult .pm-tool-top{display:contents}
         .pm-tool--ult .pm-ic{grid-column:1;grid-row:1 / span 2}
-        .pm-tool--ult .pm-badge{grid-column:3;grid-row:1;justify-self:end}
         .pm-tool--ult h3{grid-column:2;grid-row:1}
         body.tmr-light .pm .pm-tool--ult p{grid-column:2;grid-row:2;margin:0}
-        .pm-tool--ult .pm-btn{grid-column:3;grid-row:2;margin:0;align-self:center}
+        .pm-tool--ult .pm-badge{grid-column:3;grid-row:1 / span 2}
+        .pm-tool--ult .pm-btn{grid-column:4;grid-row:1 / span 2;margin:0;min-height:42px}
     }
+
+    /* members */
+    .pm-step,.pm-recap{background:var(--card);border-color:var(--line);box-shadow:none}
+    .pm-step:hover{border-color:rgba(47,224,255,.45)}
 
     /* plans */
-    .pm-plans{align-items:stretch;gap:18px}
-    .pm-plan{padding:28px}
-    .pm-plan--pro{box-shadow:0 1px 2px rgba(10,26,51,.06),0 30px 60px -28px rgba(30,99,240,.55)}
-    @media (min-width:1081px){.pm-plan--pro{margin:-10px 0}}
+    .pm-plans{gap:12px}
+    .pm-plan{padding:24px;border-radius:16px;background:var(--card);border-color:var(--line);box-shadow:none}
+    .pm-plan--pro{border:1px solid rgba(47,224,255,.6);background:var(--stage);box-shadow:0 0 0 1px rgba(47,224,255,.18),0 24px 60px -30px rgba(31,143,255,.75)}
+    .pm-plan--ult{background:linear-gradient(180deg,rgba(242,194,78,.08),rgba(16,30,58,.72) 45%);border-color:rgba(242,194,78,.35)}
+    body.tmr-light .pm .pm-plan--ult .pm-plan-for,body.tmr-light .pm .pm-plan--ult .pm-price-alt,body.tmr-light .pm .pm-plan--ult .pm-plan-note{color:var(--ink-3) !important}
+    body.tmr-light .pm .pm-plan--ult li{color:var(--ink-2) !important}
+    .pm-plan ul,.pm-plan--ult ul{border-top-color:var(--line)}
+    .pm-plan li::before{border-color:#2fe0ff}
+    .pm-plan--ult li::before{border-color:#F2C24E}
+    .pm-flag{background:var(--grad);color:#04121f}
+    .pm-flag.is-mine{background:#34D399;color:#04121f}
     .pm-plan-cta .pm-btn{min-height:48px}
+    body.tmr-light .pm .pm-plans-foot{margin:12px 0 0;color:var(--ink-3) !important}
+    body.tmr-light .pm .pm-plans-foot a,body.tmr-light .pm .pm-link{color:#6cc4ff !important}
 
-    /* closing band */
-    .pm-close{background:var(--navy);color:#fff;position:relative;overflow:hidden;isolation:isolate}
-    .pm-close::before{content:"";position:absolute;inset:0;z-index:-1;background:radial-gradient(620px 280px at 90% 120%,rgba(30,99,240,.5),transparent 70%)}
-    .pm-close .pm-wrap{display:flex;align-items:center;justify-content:space-between;gap:32px;padding-top:52px;padding-bottom:52px}
-    body.tmr-light .pm .pm-close h2{margin:0 0 6px;font:800 clamp(32px,3.6vw,44px)/1 var(--display) !important;text-transform:uppercase;color:#fff !important}
-    body.tmr-light .pm .pm-close p{margin:0;max-width:560px;font:500 15.5px/1.5 Inter,sans-serif;color:#C9D7EA !important}
-    .pm-close-cta{display:flex;flex:0 0 auto;gap:10px}
-    .pm-close-cta .pm-btn{min-height:48px}
+    /* folds, same as the simulator page */
+    .pm .pm-folds{margin:0 !important;padding:0 !important;border:0;background:none}
+    body.pro-page .tmrlh-related :is(h2,h3,strong){color:#e8ecf5 !important}
+    .pm-fold,.pm-compare,.pm-perf{margin:8px 0 0;padding:0;border-radius:14px;background:rgba(9,18,38,.55);border:1px solid var(--line);box-shadow:none;overflow:hidden}
+    .pm-fold > summary,.pm-compare > summary,.pm-perf > summary{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:46px;padding:12px 16px;cursor:pointer;list-style:none;font:700 15.5px/1.2 var(--display);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
+    .pm-fold > summary::-webkit-details-marker,.pm-compare > summary::-webkit-details-marker,.pm-perf > summary::-webkit-details-marker{display:none}
+    .pm-fold > summary::after,.pm-compare > summary::after,.pm-perf > summary::after{content:"+";flex:0 0 auto;width:auto;height:auto;margin:0;border:0;transform:none;font:700 17px/1 Inter,sans-serif;color:#2fe0ff}
+    .pm-fold[open] > summary::after,.pm-compare[open] > summary::after,.pm-perf[open] > summary::after{content:"\2212";transform:none}
+    body.tmr-light .pm .pm-fold > summary h2{margin:0;font:700 15.5px/1.2 var(--display) !important;letter-spacing:.08em !important;text-transform:uppercase;color:var(--ink-2) !important}
+    .pm-fold-body{padding:2px 16px 16px}
+    body.tmr-light .pm .pm-perf > p{margin:0;padding:0 16px 12px;font-size:13.5px;color:var(--ink-2) !important}
+    .pperf-grid{padding:0 16px}
+    .pperf-card{background:rgba(4,10,24,.5);border-color:var(--line)}
+    .pm-perf-more{margin:10px 0 0;padding:0 16px 14px}
+    .pm-perf-more summary{color:#6cc4ff}
+    .pm-why-grid{gap:12px}
+    .pm-flow{background:none;border:0;padding:0}
+    .pm-flow li + li{border-top-color:var(--line-2)}
+    .pm-flow li::before{background:var(--blue-soft);color:#2fe0ff}
+    .pm-principle{background:var(--card);border-color:var(--line)}
+    body.tmr-light .pm .pm-principle h3{color:var(--ink) !important}
+    body.tmr-light .pm .pm-principle p{color:var(--ink-2) !important}
+    .pm-table-wrap{border-top-color:var(--line)}
+    body.tmr-light .pm .pm-table,body.tmr-light .pm .pm-table tr,body.tmr-light .pm .pm-table td,body.tmr-light .pm .pm-table tbody th{background:transparent !important;color:var(--ink-2) !important}
+    body.tmr-light .pm .pm-table tbody th{font:600 14px/1.35 Inter,sans-serif !important;letter-spacing:0 !important;text-transform:none !important;color:var(--ink) !important}
+    body.tmr-light .pm .pm-table thead th{background:rgba(255,255,255,.03) !important;color:var(--ink-3) !important}
+    body.tmr-light .pm .pm-table thead th.is-pro{color:#7fd0ff !important}
+    body.tmr-light .pm .pm-table thead th.is-ult{color:#F7D47A !important}
+    body.tmr-light .pm .pm-table td.is-pro{background:rgba(31,143,255,.09) !important;color:var(--ink) !important}
+    body.tmr-light .pm .pm-table td.is-ult{background:rgba(242,194,78,.07) !important;color:var(--ink) !important}
+    body.tmr-light .pm .pm-table .pm-y{color:var(--good) !important}
+    .pm-table th,.pm-table td{border-bottom-color:var(--line-2)}
+    .pm-faq{display:block}
+    .pm-faq-group + .pm-faq-group{margin-top:14px}
+    body.tmr-light .pm .pm-faq-group h3{font:800 10.5px/1 Inter,sans-serif;letter-spacing:.12em;color:#38bdf8 !important}
+    .pm-acc{background:rgba(4,10,24,.35);border-color:var(--line)}
+    .pm-acc details + details{border-top-color:var(--line-2)}
+    .pm-acc summary:hover{background:rgba(255,255,255,.03)}
+    .pm-acc summary::after{background:none}
+    body.tmr-light .pm .pm-fold-note{margin:14px 0 0;font:500 13.5px/1.5 Inter,sans-serif;color:var(--ink-2) !important}
+    body.tmr-light .pm .pm-fine{padding:22px 0 44px;color:#6f84a3 !important}
 
-    @media (max-width:1080px){.pm-proof ul{grid-template-columns:1fr 1fr;gap:16px 24px}}
+    /* the cancel dialog stays a light sheet */
+    .pro-cancel-dialog{background:#fff;color:#0B1B30}
+    body.tmr-light .pm .pro-cancel-dialog p{color:#3A4E66 !important}
+    body.tmr-light .pm .pro-cancel-dialog .pcd-err{color:#B42318 !important}
+    .pro-cancel-dialog h2{color:#0B1B30 !important}
+
     @media (max-width:900px){
-        .pm-head{padding:44px 0 40px}
-        .pm-head-grid{grid-template-columns:1fr;gap:28px}
-        .pm-close .pm-wrap{display:block}
-        .pm-close-cta{margin-top:20px}
+        .pm-wrap.pm-head-grid{grid-template-columns:1fr;gap:20px;padding:26px}
     }
     @media (max-width:640px){
-        .pm-head{padding:28px 0 26px}
-        body.tmr-light .pm .pm-title{font-size:46px !important;margin:8px 0 4px !important}
-        body.tmr-light .pm .pm-lead{font-size:19px;margin-bottom:8px}
-        body.tmr-light .pm .pm-h2{font-size:31px !important}
-        body.tmr-light .pm .pm-tool h3{font-size:22px !important}
-        body.tmr-light .pm .pm-tool--lead h3{font-size:28px !important}
-        .pm-live strong{font-size:22px}
-        .pm-card{padding:18px}
+        .pm-head{padding:12px 0 0}
+        .pm-wrap.pm-head-grid{width:calc(100% - 24px);padding:20px 16px;gap:14px}
+        body.tmr-light .pm .pm-title{font-size:42px !important;margin:6px 0 2px !important}
+        body.tmr-light .pm .pm-lead{font-size:17px}
+        body.tmr-light .pm .pm-tag{display:none}
+        body.is-pro-member .pm .pm-tag{display:block}
+        .pm-live{margin-top:12px;padding-top:10px}
+        .pm-live strong{font-size:21px}
+        .pm-card{padding:16px}
         .pm-card-big{font-size:46px}
-        body[data-tier="visitor"] .pm-offer,body[data-tier="visitor"] #proStatusText{display:none}
-        .pm-card-price{margin-bottom:14px}
-        .pm-proof ul{gap:12px 14px;padding-top:14px;padding-bottom:14px}
-        .pm-proof li{gap:8px}
-        .pm-proof svg{width:18px;height:18px}
-        .pm-proof span{font-size:11.5px}
-        .pm-proof b{font-size:12.5px}
-        .pm-sec,.pm-sec + .pm-sec{padding:36px 0}
-        .pm-tool--lead{padding:18px}
-        .pm-simout{margin:0 0 12px;gap:6px}
-        body.tmr-light .pm .pm-simout li{padding:6px 9px;font-size:12px}
+        .pm-card-actions{flex-direction:row}
+        .pm-proof ul{justify-content:flex-start;gap:6px 16px;padding-top:12px}
+        body.tmr-light .pm .pm-proof li{font-size:12px}
+        .pm-sec,.pm-sec + .pm-sec{padding:26px 0 0}
+        body.tmr-light .pm .pm-h2{font-size:26px !important}
+        .pm-tool--lead{padding:16px}
+        body.tmr-light .pm .pm-tool--lead h3{font-size:26px !important}
+        .pm-tool--lead .pm-btn{align-self:stretch}
+        .pm-tool:not(.pm-tool--lead){padding:12px 14px}
+        .pm-tool--ult .pm-btn{background:none !important;border:0}
+        body.tmr-light .pm .pm-tool--ult .pm-btn{color:#F7D47A !important}
         .pm-price{font-size:42px}
-        .pm-close .pm-wrap{padding-top:34px;padding-bottom:34px}
-        .pm-close-cta{flex-direction:column}
-        .pm-close-cta .pm-btn{width:100%}
+        .pm-plan{padding:18px}
+        .pm-why-grid{display:block}
+        .pm-principles{display:grid;margin:12px 0 0;padding:0;overflow:visible}
+        .pm-principle{flex:none}
+        body.tmr-light .pm .pm-fine{padding:18px 0 96px}
     }
     </style>
 </head>
@@ -637,7 +722,7 @@
                 <span class="pm-eyebrow"><i aria-hidden="true"></i><span id="pmEyebrow">TrustMyRecord membership</span></span>
                 <h1 class="pm-title" id="pmTitle">TMR Pro <em>&amp;</em> Ultimate</h1>
                 <p class="pm-lead" id="pmLead">Simulate every game. Check every record.</p>
-                <p class="pm-tag" id="pmTag">Unlimited simulations on every NFL, NBA, NHL and MLB game, plus every graded pick behind thousands of handicapper records. Research tools that show their evidence, not promises of profit.</p>
+                <p class="pm-tag" id="pmTag">Research tools that show their evidence, not promises of profit.</p>
                 <div class="pm-live" id="pxhPanel" aria-label="Handicapper Watchdog live numbers">
                     <span class="pm-live-k"><i aria-hidden="true"></i>Handicapper Watchdog, live</span>
                     <div><strong data-pxh="accounts">&nbsp;</strong><span>accounts tracked</span></div>
@@ -656,11 +741,6 @@
                 <dl class="pm-facts" id="pdxFacts" aria-label="Membership details" hidden></dl>
                 <p class="pm-card-price" id="proHeroPrice"><span class="pm-card-big">$49.99</span><span class="pm-card-per">a month</span><span class="pm-card-or">or <b>$500 a year</b> <span class="pm-save">Save $99.88</span></span></p>
                 <p class="pm-card-text" id="proStatusText">Checking your account.</p>
-                <ul class="pm-offer" id="pmOffer">
-                    <li>Unlimited simulations in all four leagues</li>
-                    <li>Every graded pick behind every record</li>
-                    <li>Bet Legend Pro included ($49 a month alone)</li>
-                </ul>
                 <div class="pm-card-actions">
                     <a class="pm-btn pm-btn--gold" id="proHeroCta" href="#pricing">Get TMR Pro</a>
                     <a class="pm-btn pm-btn--onDark" id="pmCompare" href="#pricing">Compare plans</a>
@@ -673,13 +753,12 @@
         <div class="pm-wrap"><div class="pm-banner" id="proBanner" role="status" hidden></div></div>
     </div>
 
-    <!-- PRO_POLISH_20261105: what a buyer checks before paying. Every line matches the terms on this page. -->
     <div class="pm-proof" id="pmProof">
         <ul class="pm-wrap">
-            <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4 6v6c0 4.4 3.4 8.3 8 9 4.6-.7 8-4.6 8-9V6l-8-3Z"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg><span><b>Graded by TMR</b>From the original post, never self reported</span></li>
-            <li><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10.5h18"/></svg><span><b>Secure checkout</b>Payments handled by Stripe</span></li>
-            <li><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m15 9-6 6M9 9l6 6"/></svg><span><b>Cancel any time</b>Keep access to the end of your paid period</span></li>
-            <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 0 1 13.7-5.6L20 9"/><path d="M20 4v5h-5"/><path d="M20 12a8 8 0 0 1-13.7 5.6L4 15"/><path d="M4 20v-5h5"/></svg><span><b>Same price at renewal</b>Plans renew at the price you chose</span></li>
+            <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>Graded by TMR</li>
+            <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>Secure Stripe checkout</li>
+            <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>Cancel any time</li>
+            <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>Same price at renewal</li>
         </ul>
     </div>
 
@@ -717,7 +796,7 @@
                 <div>
                     <span class="pm-sec-k" id="pmToolsK">What is included</span>
                     <h2 class="pm-h2" id="pmToolsH">Seven tools. One membership.</h2>
-                    <p class="pm-sec-lede" id="pmToolsLede">Every tool opens the evidence behind its numbers: the graded picks, the qualifying games, the tracked wagers.</p>
+                    <p class="pm-sec-lede" id="pmToolsLede"></p>
                 </div>
             </div>
 
@@ -728,7 +807,7 @@
                         <span class="pm-badge" data-badge data-free-badge="1 free run a day" data-pro-badge="Unlimited">1 free run a day</span>
                     </div>
                     <h3>Sports Simulators</h3>
-                    <p>MLB, NFL, NBA and NHL game, season and playoff simulations. Pro removes the daily limit.</p>
+                    <p>Game, season and playoff sims for MLB, NFL, NBA and NHL.</p>
                     <ul class="pm-simout" aria-label="Each run returns">
                         <li>Projected final score</li>
                         <li>Win probability</li>
@@ -744,7 +823,7 @@
                         <span class="pm-badge is-pro" data-badge>TMR Pro</span>
                     </div>
                     <h3>Handicapper Watchdog</h3>
-                    <p>See the pending picks of tracked handicappers from Covers, X, Reddit and more before the game, beside records graded from the original post.</p>
+                    <p>Pending picks from tracked handicappers, beside their graded records.</p>
                     <div class="pm-wdlive" id="pdxWdLive" hidden><i aria-hidden="true"></i><span id="pmWdLiveText"></span></div>
                     <a class="pm-btn pm-btn--gold" data-go href="#pricing" data-free-href="#pricing" data-free-label="Unlock the board with Pro" data-pro-href="/pro/board/" data-pro-label="Open today's board">Unlock the board with Pro</a>
                 </article>
@@ -755,7 +834,7 @@
                         <span class="pm-badge" data-badge data-free-badge="Free records" data-pro-badge="Full history">Free records</span>
                     </div>
                     <h3>Handicapper Records</h3>
-                    <p>Independently graded records, units and ROI for every tracked handicapper. Pro opens every pick behind them.</p>
+                    <p>Graded records, units and ROI. Pro opens every pick.</p>
                     <a class="pm-btn pm-btn--ghost" data-go href="/around-the-web/">Browse records</a>
                 </article>
 
@@ -765,7 +844,7 @@
                         <span class="pm-badge is-pro" data-badge>TMR Pro</span>
                     </div>
                     <h3>Bet Legend Pro</h3>
-                    <p>Research historical matchups with advanced filters. Sold alone for $49 a month.</p>
+                    <p>Historical matchup research. $49 a month alone.</p>
                     <a class="pm-btn pm-btn--ghost" data-go href="/betlegend-pro/" data-free-href="/betlegend-pro/" data-free-label="See Bet Legend Pro" data-pro-href="/betlegend-pro/app/" data-pro-label="Open Bet Legend Pro">See Bet Legend Pro</a>
                 </article>
 
@@ -775,7 +854,7 @@
                         <span class="pm-badge" data-badge data-free-badge="Free records" data-pro-badge="Units and ROI">Free records</span>
                     </div>
                     <h3>TrendSpotter</h3>
-                    <p>Any trend's record, free. Pro adds units, ROI and the average price paid.</p>
+                    <p>Any trend's record. Pro adds units and ROI.</p>
                     <a class="pm-btn pm-btn--ghost" data-go href="/trendspotter/" data-free-label="Try TrendSpotter" data-pro-label="Open TrendSpotter">Try TrendSpotter</a>
                 </article>
 
@@ -785,7 +864,7 @@
                         <span class="pm-badge" data-badge data-free-badge="2 models free" data-pro-badge="15 models">2 models free</span>
                     </div>
                     <h3>Model Builder</h3>
-                    <p>Build betting models and track every future match. 15 models with Pro.</p>
+                    <p>Build and track betting models. 15 with Pro.</p>
                     <a class="pm-btn pm-btn--ghost" data-go href="/model-builder/" data-free-label="Try Model Builder" data-pro-label="Open Model Builder">Try Model Builder</a>
                 </article>
 
@@ -795,75 +874,13 @@
                         <span class="pm-badge is-ult" id="pmPiBadge">TMR Ultimate</span>
                     </div>
                     <h3>Performance Intelligence</h3>
-                    <p id="pdUltText">Your own graded picks tested against the prices you paid, with a plan to improve.</p>
+                    <p id="pdUltText">Your own picks tested against the prices you paid.</p>
                     <a class="pm-btn pm-btn--ghost" id="pdUltGo" href="/ultimate/">See the sample report</a>
                 </article>
             </div>
         </div>
     </section>
 
-
-    <!-- ===================================================== why verified records (non-members)
-         PRO_WHY_20261102, integrated from f044ba21 into the redesign. Every statement matches the live
-         product: public posts graded on the final score, tracking numbers instead of names, records free,
-         pick history and pending picks behind Pro. No performance claim. The pick history preview is
-         drawn bars only: no pick, side, handicapper or result is shown (PAYWALL_20261024). -->
-    <section class="pm-sec pm-why" id="why" aria-labelledby="pmWhyH">
-        <div class="pm-wrap">
-            <div class="pm-sec-head">
-                <div>
-                    <span class="pm-sec-k">Handicapper Watchdog</span>
-                    <h2 class="pm-h2" id="pmWhyH">Records you can check, not records someone tells you</h2>
-                    <p class="pm-sec-lede">Anyone can post a winning record. TMR builds its own from public posts, and the records are free for everyone. TMR Pro opens the picks behind them.</p>
-                </div>
-            </div>
-            <div class="pm-why-grid">
-                <ol class="pm-flow" aria-label="How the Watchdog grades">
-                    <li><b>Read</b><span>Public picks on Covers, X, Reddit, TheRX and other forums, collected around the clock.</span></li>
-                    <li><b>Stamp</b><span>Each pick is saved with the time it was posted. A pick posted after the game starts never counts.</span></li>
-                    <li><b>Grade</b><span>Graded on the final score at the posted price, 1 unit risked per pick.</span></li>
-                    <li><b>Publish</b><span>Record, units, ROI, win rate, recent form and league splits on a free public profile.</span></li>
-                </ol>
-                <details class="pm-why-more" id="pmWhyMore" open>
-                <summary>Why the records are independent and anonymous</summary>
-                <div class="pm-principles">
-                    <article class="pm-principle"><h3>Independent, not self reported</h3><p>No handicapper submits or edits their own record. Deleted posts, forgotten losses and picks made after kickoff cannot change it.</p></article>
-                    <article class="pm-principle"><h3>Anonymous on purpose</h3><p>Every handicapper appears as a tracking number, never a name or a link. TMR grades records; it does not promote anyone or send you to buy their picks.</p></article>
-                    <article class="pm-principle"><h3>The picks behind the number</h3><p>A record tells you how someone did. The pick history tells you how: which leagues, which prices, which stretch of the season.</p></article>
-                </div>
-                </details>
-            </div>
-            <div class="pm-split">
-                <div class="pm-col">
-                    <span class="pm-badge">Free for everyone</span>
-                    <ul>
-                        <li>Every tracked handicapper&#39;s record, units, ROI and win rate</li>
-                        <li>Form over the last 7, 30 and 90 days</li>
-                        <li>Record by league and rank among qualified handicappers</li>
-                        <li>How many pending picks each one has right now</li>
-                    </ul>
-                    <a class="pm-link" href="/around-the-web/">Browse the free records <span aria-hidden="true">&rarr;</span></a>
-                </div>
-                <div class="pm-col is-pro">
-                    <span class="pm-badge is-pro">TMR Pro</span>
-                    <ul>
-                        <li>The full graded pick history on every profile: date, pick, price, result and units, filterable by league</li>
-                        <li>Every pending pick before the game starts, beside the record TMR graded</li>
-                        <li>Where the proven handicappers agree on tonight&#39;s games</li>
-                    </ul>
-                    <div class="pm-hist" aria-hidden="true">
-                        <div class="pm-hist-row is-h"><span>Date</span><span>Pick</span><span>Price</span><span>Result</span></div>
-                        <div class="pm-hist-row"><i></i><i></i><i></i><i class="w"></i></div>
-                        <div class="pm-hist-row"><i></i><i></i><i></i><i class="l"></i></div>
-                        <div class="pm-hist-row"><i></i><i></i><i></i><i class="w"></i></div>
-                        <div class="pm-hist-lock"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5Zm-3 8V7a3 3 0 1 1 6 0v3H9Z"/></svg>Pick history opens with TMR Pro</div>
-                    </div>
-                    <a class="pm-btn pm-btn--primary" href="#pricing">See the plans</a>
-                    <p class="pm-col-fine">Research tools, not betting advice and not a promise of profit.</p>
-                </div>
-            </div>
-        </div>
-    </section>
 
     <!-- ===================================================== C: starting points (members) -->
     <section class="pm-sec pm-start" id="start" aria-labelledby="pmStartH">
@@ -903,7 +920,6 @@
                 <div>
                     <span class="pm-sec-k">Membership</span>
                     <h2 class="pm-h2" id="pmPlansH">Choose your level</h2>
-                    <p class="pm-sec-lede">Your public record, pick tracking and leaderboards stay free for everyone. Membership adds the research tools.</p>
                 </div>
             </div>
 
@@ -931,7 +947,7 @@
                     <h3>TMR Pro</h3>
                     <p class="pm-plan-for">The full research desk for every game.</p>
                     <div class="pm-price">$49.99<small>/month</small></div>
-                    <p class="pm-price-alt">or $500 a year <span class="pm-save" style="background:#EAF1FF;color:#0B4FA8">Save $99.88</span></p>
+                    <p class="pm-price-alt">or $500 a year <span class="pm-save">Save $99.88</span></p>
                     <ul>
                         <li class="is-head">Everything in Free, plus</li>
                         <li>Unlimited MLB, NFL, NBA and NHL simulations</li>
@@ -997,24 +1013,45 @@
 
             <!-- PRO_PERFORMANCE_20261016: graded record of the proven handicappers. Hidden unless
                  /api/pro/watchdog/performance answers with verified figures. Nothing is typed here. -->
-            <div class="pm-perf" id="performance" hidden>
-                <h3>The Watchdog record, as graded</h3>
+            <details class="pm-perf" id="performance" hidden>
+                <summary>The Watchdog record, as graded</summary>
                 <p>Every graded pick by a tracked handicapper outside TMR who already had 25 or more graded picks before that game. Winners and losers count the same, 1 unit per pick. A record of what already happened, not a forecast.</p>
                 <div class="pperf-grid" id="pperfGrid"></div>
                 <details class="pm-perf-more"><summary>How these figures are counted</summary><p class="pperf-note" id="pperfNote"></p></details>
-            </div>
+            </details>
+        </div>
+    </section>
+
+    <!-- PRO_WHY_20261102 content, folded by PRO_DARK_20261105. Matches the live product; no performance claim. -->
+    <section class="pm-why pm-folds" id="why" aria-labelledby="pmWhyH">
+        <div class="pm-wrap">
+            <details class="pm-fold" id="pmWhyMore">
+                <summary><h2 id="pmWhyH">How records are graded</h2></summary>
+                <div class="pm-fold-body">
+                <div class="pm-why-grid">
+                <ol class="pm-flow" aria-label="How the Watchdog grades">
+                    <li><b>Read</b><span>Public picks on Covers, X, Reddit, TheRX and other forums, collected around the clock.</span></li>
+                    <li><b>Stamp</b><span>Each pick is saved with the time it was posted. A pick posted after the game starts never counts.</span></li>
+                    <li><b>Grade</b><span>Graded on the final score at the posted price, 1 unit risked per pick.</span></li>
+                    <li><b>Publish</b><span>Record, units, ROI, win rate, recent form and league splits on a free public profile.</span></li>
+                </ol>
+                <div class="pm-principles">
+                    <article class="pm-principle"><h3>Independent, not self reported</h3><p>No handicapper submits or edits their own record. Deleted posts, forgotten losses and picks made after kickoff cannot change it.</p></article>
+                    <article class="pm-principle"><h3>Anonymous on purpose</h3><p>Every handicapper appears as a tracking number, never a name or a link. TMR grades records; it does not promote anyone or send you to buy their picks.</p></article>
+                    <article class="pm-principle"><h3>The picks behind the number</h3><p>A record tells you how someone did. The pick history tells you how: which leagues, which prices, which stretch of the season.</p></article>
+                </div>
+                </div>
+                </div>
+            </details>
         </div>
     </section>
 
     <!-- ===================================================== E: help and FAQ -->
-    <section class="pm-sec" id="faq" aria-labelledby="pmFaqH">
+    <section class="pm-folds" id="faq" aria-labelledby="pmFaqH">
         <div class="pm-wrap pm-faq">
-            <div class="pm-faq-side">
-                <span class="pm-sec-k">Help</span>
-                <h2 class="pm-h2" id="pmFaqH">Questions, answered</h2>
-                <p>Anything else? Email <a class="pm-link" href="mailto:support@trustmyrecord.com">support@trustmyrecord.com</a>.</p>
-            </div>
-            <div>
+            <details class="pm-fold">
+            <summary><h2 id="pmFaqH">Questions</h2></summary>
+            <div class="pm-fold-body">
                 <div class="pm-faq-group">
                     <h3>Membership and billing</h3>
                     <div class="pm-acc">
@@ -1043,21 +1080,9 @@
                         <details><summary>Does a membership change my record or ranking?</summary><p>No. A subscription buys research tools only. It does not change your verification, badges, grading or leaderboard rank.</p></details>
                     </div>
                 </div>
+            <p class="pm-fold-note">Anything else? Email <a class="pm-link" href="mailto:support@trustmyrecord.com">support@trustmyrecord.com</a>.</p>
             </div>
-        </div>
-    </section>
-
-    <!-- PRO_POLISH_20261105: last call for visitors and free members. No performance claim. -->
-    <section class="pm-close" aria-labelledby="pmCloseH">
-        <div class="pm-wrap">
-            <div>
-                <h2 id="pmCloseH">Do the research before you pick a side</h2>
-                <p>Unlimited simulations, every graded pick and Bet Legend Pro for $49.99 a month. Your public record stays free either way.</p>
-            </div>
-            <div class="pm-close-cta">
-                <a class="pm-btn pm-btn--gold" href="#pricing">Get TMR Pro</a>
-                <a class="pm-btn pm-btn--onDark" href="/sports-simulators/">Run a free simulation</a>
-            </div>
+            </details>
         </div>
     </section>
 
