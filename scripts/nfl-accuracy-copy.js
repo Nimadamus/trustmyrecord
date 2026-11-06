@@ -104,7 +104,7 @@ function servedSection(snap) {
     </table>
   </div>
   <p class="acc-note">${esc(meth.market)}${esc(back)} ${esc(meth.not_included)} ${s.graded_games} games is a small sample, so a gap between the model and the market in either direction is normal variation, not evidence of an edge.</p>
-  <details class="acc"><summary style="cursor:pointer;color:var(--ink)">Every graded game</summary><table><tr><th scope="col">Week</th><th scope="col">Game</th><th scope="col">Final</th><th scope="col">Served pick</th><th scope="col">Market favourite</th><th scope="col" class="n">Recorded before kickoff</th></tr>${games}</table></details>`;
+  <details class="acc"><summary style="cursor:pointer;color:var(--ink)">Every graded game</summary><table><caption class="simux-sr">Every graded game</caption><tr><th scope="col">Week</th><th scope="col">Game</th><th scope="col">Final</th><th scope="col">Served pick</th><th scope="col">Market favourite</th><th scope="col" class="n">Recorded before kickoff</th></tr>${games}</table></details>`;
 }
 
 const MARK = {
