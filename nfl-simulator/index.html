@@ -379,8 +379,9 @@
      plus the homepage's own navbar rules, so every page renders the same bar. -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap">
 <link rel="stylesheet" href="/static/css/tmr-navbar.css?v=68ec3081d29a">
+<link rel="stylesheet" href="/static/css/tmr-nfl-game.css?v=97228d87d89b">
 <!--SIM_UX--><link rel="stylesheet" href="/static/css/tmr-sim-ux.css?v=f70e7f2b899b"><script defer src="/static/js/tmr-sim-ux.js?v=21a024cf4de7"></script><!--/SIM_UX-->
-<!--SIM_BC--><link rel="stylesheet" href="/static/css/tmr-sim-broadcast.css?v=70130bcd3542"><script>(function(r){r.classList.add('simbc','simbc-game');r.setAttribute('data-bc','nfl');function g(){r.classList.add('bc-ready')}addEventListener('load',g);setTimeout(g,2500)}(document.documentElement))</script><script defer src="/static/js/tmr-sim-broadcast.js?v=509317f62739"></script><!--/SIM_BC-->
+<!--SIM_BC--><link rel="stylesheet" href="/static/css/tmr-sim-broadcast.css?v=d82d3038b1d9"><script>(function(r){r.classList.add('simbc','simbc-game');r.setAttribute('data-bc','nfl');function g(){r.classList.add('bc-ready')}addEventListener('load',g);setTimeout(g,2500)}(document.documentElement))</script><script defer src="/static/js/tmr-sim-broadcast.js?v=509317f62739"></script><!--/SIM_BC-->
 <!--SIM_A11Y--><style>.simux-sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}html.simbc :is(a,button,select,input,textarea,summary,[tabindex]):focus-visible{outline:2px solid #2fe0ff;outline-offset:2px}html.simbc main :is(p,li) a:not([class]){text-decoration:underline;text-underline-offset:2px}html.simbc .simcrumb,html.simbc main>nav[aria-label="Breadcrumb"]{opacity:.9}</style><script defer src="/static/js/tmr-sim-a11y.js?v=0e86cff426c8"></script><!--/SIM_A11Y-->
 </head>
 <body class="tmr-ds-shell tmr-ds--dark"><a class="simux-skip" href="#simux-main">Skip to main content</a>
@@ -980,7 +981,7 @@ async function runFromUrl(){
     const g=STATE.games.find(x=>x.ref===ref)||null;
     if(g){showGameWeek(g);STATE.selRef=ref;for(const c of $('#games').children)markCard(c,c.dataset.ref===ref)}
     if(vq==='home'||vq==='away'||vq==='neutral'){STATE.venue=vq;STATE.venueTouched=true}
-    STATE.window=winOk||(g?defaultWindowFor(g):STATE.window);
+    STATE.window=winOk||(g?defaultWindowFor(g):STATE.window);if(winOk)STATE.windowTouched=true;
     segSelect('#windowSeg','window',STATE.window);
     relabelVenue();segSelect('#venueSeg','venue',STATE.venue);updateChips();
     if(g)renderFeatured({kind:'game',g,kicker:seedN!=null?'Shared simulation':'Selected game',src:'url'});
@@ -1051,7 +1052,7 @@ async function boot(){
   // venue
   $$('#venueSeg button').forEach(b=>b.onclick=()=>{STATE.venue=b.dataset.venue;STATE.venueTouched=true;segSet('#venueSeg',b);updateChips();rerunIfShown()});
   // window
-  $$('#windowSeg button').forEach(b=>b.onclick=()=>{STATE.window=b.dataset.window;segSet('#windowSeg',b);updateChips();rerunIfShown()});
+  $$('#windowSeg button').forEach(b=>b.onclick=()=>{STATE.window=b.dataset.window;STATE.windowTouched=true;segSet('#windowSeg',b);updateChips();rerunIfShown()});
   // custom
   $('#swapBtn').onclick=swapCustom;
   $('#runBtn').onclick=()=>runCustom(null);
@@ -1263,8 +1264,8 @@ function highlightBoardGame(g,board){
         meta.insertBefore(Object.assign(el('span','on-board-tag'),{textContent:'On the board'}),meta.querySelector('.g-sim'));
     }
   }
-  if(!STATE.lastRun){STATE.window=defaultWindowFor(g);segSelect('#windowSeg','window',STATE.window)}
-  STATE.venue='home';STATE.venueTouched=false;
+  if(!STATE.lastRun&&!STATE.windowTouched){STATE.window=defaultWindowFor(g);segSelect('#windowSeg','window',STATE.window)}
+  if(!STATE.venueTouched)STATE.venue='home';
   relabelVenue();updateChips();
   const note=$('#boardAimNote');
   if(note){
@@ -1297,6 +1298,8 @@ async function aimAtLiveBoard(){
   highlightBoardGame(g,hit.board);
 }
 function pickGame(g){
+  /* NFL_SETTINGS_KEEP_1105: settings chosen before the first run, or carried by a shared link, reach the run. */
+  const keep=(STATE.venueTouched||STATE.windowTouched)&&(!STATE.selRef||STATE.selRef===g.ref);
   STATE.selRef=g.ref;
   const board=window.__simBoardGame;
   if(!(board&&simGameOnBoard(g,board))) window.__simBoardGame=null;
@@ -1305,8 +1308,8 @@ function pickGame(g){
      it here rather than only on the next full render. */
   for(const c of $('#games').children)markCard(c,c.dataset.ref===g.ref);
   // sensible default kickoff window from the real game (unless user already chose)
-  if(!STATE.lastRun){STATE.window=defaultWindowFor(g);segSelect('#windowSeg','window',STATE.window)}
-  STATE.venue='home';STATE.venueTouched=false;
+  if(!STATE.lastRun&&!keep){STATE.window=defaultWindowFor(g);segSelect('#windowSeg','window',STATE.window)}
+  if(!keep){STATE.venue='home';STATE.venueTouched=false;STATE.windowTouched=false}
   relabelVenue();updateChips();
   runScheduled(g.ref,null);
 }
@@ -1728,7 +1731,7 @@ function renderResult(out,d){
     env?`<div class="kpi"><div class="k">Venue</div><div class="v" style="font-size:1.05rem">${esc(env.neutral?'Neutral':(hAbbr+' home'))}</div><div class="s">${esc(env.kickoff_window_label)} · ${env.indoor?'indoor':'outdoor'}</div></div>`:'',
     d.market&&d.market.spread?(()=>{const hl=d.market.spread.home_line!=null?d.market.spread.home_line:-d.market.spread.line;return `<div class="kpi"><div class="k">${esc(hAbbr)} covers ${hl>0?'+':''}${hl}</div><div class="v">${pct(d.market.spread.home_cover_prob)}</div><div class="s">vs ${d.market.source==='current'?'current line'+(d.market.book?' ('+esc(d.market.book)+')':''):'closing line'}</div></div>`})():'',
     d.market&&d.market.total?`<div class="kpi"><div class="k">Over ${d.market.total.line}</div><div class="v">${pct(d.market.total.over_prob)}</div><div class="s">model total ${d.market.total.model_total!=null?nz(Math.round(d.market.total.model_total*10)/10):''} vs ${d.market.source==='current'?'current':'closing'} ${d.market.total.line}</div></div>`:'',
-    d.market&&d.market.moneyline&&d.market.moneyline.market_home_win_prob!=null?`<div class="kpi"><div class="k">Model vs market</div><div class="v" style="font-size:1.05rem">${pct(d.market.moneyline.model_home_win_prob)} vs ${pct(d.market.moneyline.market_home_win_prob)}</div><div class="s">${esc(hAbbr)} win chance, model vs no vig moneyline${d.market.as_of?' · odds '+esc(new Date(d.market.as_of).toLocaleString('en-US',{timeZone:'America/Los_Angeles',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}))+' PT':''}</div></div>`:'',
+    d.market&&d.market.moneyline&&d.market.moneyline.market_home_win_prob!=null?`<div class="kpi"><div class="k">Model vs market</div><div class="v" style="font-size:1.05rem">${pct(d.market.moneyline.model_home_win_prob)} vs ${pct(d.market.moneyline.market_home_win_prob)}</div><div class="s">${esc(hAbbr)} win chance, model vs no vig moneyline${d.market.as_of?' · odds '+esc(new Date(d.market.as_of).toLocaleString('en-US',{timeZone:'America/Los_Angeles',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}))+' PT':''}${Math.abs(d.market.moneyline.model_home_win_prob-d.market.moneyline.market_home_win_prob)>=.1?'<span class="mkt-gap">Gaps this wide: the market side has won about 2 of 3 graded games.</span>':''}</div></div>`:'',
   ].filter(Boolean);
   k.innerHTML=cards.join('');
   out.appendChild(k);
@@ -1993,19 +1996,31 @@ function renderTab(body,id,d,g,hAbbr,aAbbr){
     body.appendChild(cta);
     const block=(title,tbl)=>{const b=el('div','statblock');b.appendChild(Object.assign(el('h3',null,title)));b.appendChild(tbl);return b};
     const grp=(a,bl)=>{const w=el('div','grp');w.appendChild(a);if(bl)w.appendChild(bl);return w};
-    const teamTotals=(s)=>mkTable(['Team totals',''],[
-      ['Total yards',s.total_yards],['Passing (net)',s.net_pass_yards],['Rushing',s.rush_yards],
-      ['Yards / play',s.yards_per_play],['First downs',s.first_downs],['Third down',s.third],
-      ['Fourth down',s.fourth],['Red zone (TD/trip)',s.red_zone],['Turnovers',s.turnovers],
-      ['Sacks allowed',s.sacks_allowed],['Penalties',`${s.penalties}-${s.penalty_yards}`],['Time of possession',s.top],
-      ['Drives',s.drives],['Plays',s.plays],
-    ]);
+    /* NFL_BOX_1105: the story first (scoring), then one table for both teams, then the players. */
+    const scoreRows=list=>{const o=[];for(const x of list){const l=o[o.length-1];if((x.type==='XP'||x.type==='2PT')&&l&&l.type==='TD'&&l.team===x.team){l.pts+=x.pts||0;l.away_score=x.away_score;l.home_score=x.home_score}else o.push(Object.assign({},x))}return o};
+    if(rep.scoring&&rep.scoring.length){
+      const s=el('div','bxscore');s.appendChild(Object.assign(el('div','sechead'),{textContent:'Scoring summary'}));
+      s.appendChild(mkTable(['Qtr','Clock','Team','Play','Pts',aAbbr+'-'+hAbbr],scoreRows(rep.scoring).map(x=>[typeof x.quarter==='number'?('Q'+x.quarter):x.quarter,x.clock||'',x.team,x.detail||x.type,x.pts,`${x.away_score}-${x.home_score}`])));
+      body.appendChild(s);
+    }
+    {
+      const A=rep.away.summary,H=rep.home.summary,row=(l,f)=>[l,f(A),f(H)];
+      const t=el('div','bxteam');t.appendChild(Object.assign(el('div','sechead'),{textContent:'Team stats'}));
+      t.appendChild(mkTable(['',aAbbr,hAbbr],[
+        row('Total yards',x=>x.total_yards),row('Passing (net)',x=>x.net_pass_yards),row('Rushing',x=>x.rush_yards),
+        row('Yards / play',x=>x.yards_per_play),row('First downs',x=>x.first_downs),row('Third down',x=>x.third),
+        row('Fourth down',x=>x.fourth),row('Red zone (TD/trip)',x=>x.red_zone),row('Turnovers',x=>x.turnovers),
+        row('Sacks allowed',x=>x.sacks_allowed),row('Penalties',x=>`${x.penalties}-${x.penalty_yards}`),row('Time of possession',x=>x.top),
+        row('Drives',x=>x.drives),row('Plays',x=>x.plays),
+      ]));
+      body.appendChild(t);
+    }
     for(const [side,abbr,name,score,sd] of [[rep.away,aAbbr,g.away,rep.away_score,'away'],[rep.home,hAbbr,g.home,rep.home_score,'home']]){
       const wrap=el('div');wrap.style.marginTop='22px';
       const th=el('div','teamhead');th.appendChild(teamMark(abbr,30));th.appendChild(Object.assign(el('span','nm'),{textContent:name}));th.appendChild(Object.assign(el('span','rec'),{textContent:'simulated '+score+' pts'}));
       wrap.appendChild(th);
       const passT=mkTable(['Passing','C/ATT','Yds','Y/A','TD','INT','Rtg'],side.passing.map(pp=>[pp.name,`${pp.comp}/${pp.att}`,pp.yards,pp.ypa,pp.td,pp.int,pp.rating]));
-      wrap.appendChild(grp(block('',passT), block('',teamTotals(side.summary))));
+      wrap.appendChild(block('',passT));
       /* NFL_LATE_GAME_20261030: a quarterback who left this simulated game (hurt, or rested in a blowout); both lines are above. */
       for(const c of (rep.qb_changes||[]).filter(x=>x.side===sd)){
         const n=el('p','dim qbchange');n.style.margin='6px 0 0';
@@ -2033,16 +2048,12 @@ function renderTab(body,id,d,g,hAbbr,aAbbr){
       }
       const defT=side.defense?mkTable(['Defense (team)','Value'],[['Sacks',side.defense.sacks],['Interceptions',side.defense.interceptions],['Fumble recoveries',side.defense.fumble_recoveries],['Takeaways',side.defense.takeaways],['Defensive TD',side.defense.defensive_tds],['Safeties',side.defense.safeties]]):null;
       const st=side.special_teams;
-      const kick=el('div');
-      kick.appendChild(block('',mkTable(['Kicking',''],[['Field goals',st.fg],['FG distances',(st.fg_distances&&st.fg_distances.length)?st.fg_distances.join(', '):'None'],['Extra points',st.xp],['Two-point',st.two_pt||'0/0']])));
-      kick.appendChild(block('',mkTable(['Punting',''],[['Punts',st.punts],['Average',st.punt_avg],['Inside 20',st.punts_i20]])));
-      wrap.appendChild(grp(defT?block('',defT):el('div'),kick));
+      const g3=el('div','grp3');
+      if(defT)g3.appendChild(block('',defT));
+      g3.appendChild(block('',mkTable(['Kicking',''],[['Field goals',st.fg],['FG distances',(st.fg_distances&&st.fg_distances.length)?st.fg_distances.join(', '):'None'],['Extra points',st.xp],['Two-point',st.two_pt||'0/0']])));
+      g3.appendChild(block('',mkTable(['Punting',''],[['Punts',st.punts],['Average',st.punt_avg],['Inside 20',st.punts_i20]])));
+      wrap.appendChild(g3);
       body.appendChild(wrap);
-    }
-    if(rep.scoring&&rep.scoring.length){
-      const s=el('div');s.style.marginTop='22px';s.appendChild(Object.assign(el('div','sechead'),{textContent:'Scoring summary'}));
-      s.appendChild(mkTable(['Qtr','Clock','Team','Play','Pts','Score'],rep.scoring.map(x=>[typeof x.quarter==='number'?('Q'+x.quarter):x.quarter,x.clock||'',x.team,x.type,x.pts,`${x.away_score}-${x.home_score}`])));
-      body.appendChild(s);
     }
     return;
   }
@@ -2978,6 +2989,7 @@ function nflUpgradeRender(out,d,ctx){
 boot().then(installSimGate,installSimGate);
 </script>
 <script src="/static/js/tmr-session.b423be9e9588.js"></script><script src="/static/js/tmr-take.js?v=31562b071846"></script><script src="/static/js/tmr-ds-nav.b9be8ff55077.js"></script>
+  <script defer src="/static/js/tmr-nfl-game.js?v=18faa0a69b42"></script>
   <script defer src="/static/js/pick-progress-nudge.js?v=d83b51180b6b"></script>
   <script defer src="/static/js/first-pick-onboarding.js?v=eb65434956ed"></script>
     <script src="/static/js/tmr-live-chat.js?v=816ec6f0a118"></script>

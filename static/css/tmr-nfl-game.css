@@ -1,0 +1,75 @@
+/* NFL game simulator finish. Page scoped, uses the shared tokens in tmr-sim-broadcast.css. */
+html.simbc #result{scroll-margin-top:0}
+
+/* Scoreboard: the two numbers meet in the middle, win chance lives in the band below. */
+html.simbc #result .mh{padding:14px 22px 14px}
+html.simbc #result .mh .hl-h{font-size:1.15rem;margin:0 0 10px}
+html.simbc #result .mh .wp{display:none}
+html.simbc #result .mh .mh-grid{grid-template-columns:minmax(0,1fr) 92px minmax(0,1fr);gap:10px}
+html.simbc #result .mh .mh-team{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:2px 14px;align-items:center;text-align:left}
+html.simbc #result .mh .mh-team > span:first-child{grid-column:1;grid-row:1 / 3;width:84px !important;height:84px !important}
+html.simbc #result .mh .mh-team .nm{grid-column:2;grid-row:1;align-self:end;max-width:none}
+html.simbc #result .mh .mh-team .role{grid-column:2;grid-row:2;align-self:start;font-size:.75rem}
+html.simbc #result .mh .mh-team .pts{grid-column:3;grid-row:1 / 3;padding:0}
+html.simbc #result .mh .mh-grid > .mh-team:last-child > span:first-child{grid-column:3}
+html.simbc #result .mh .mh-grid > .mh-team:last-child .nm,
+html.simbc #result .mh .mh-grid > .mh-team:last-child .role{text-align:right}
+html.simbc #result .mh .mh-grid > .mh-team:last-child .pts{grid-column:1}
+html.simbc #result .mh .mh-scorelabel{font-size:11px;letter-spacing:.08em;color:var(--bc-mut)}
+html.simbc #result .mh .mh-mid .at{font-size:.8rem;margin-top:4px}
+html.simbc #result .mh .hl-final{text-align:center;font:700 .95rem/1.2 var(--bc-display);letter-spacing:.05em;color:var(--bc-ink);margin:10px 0 0}
+html.simbc #result .mh > :last-child{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:12px}
+html.simbc #result .mh > :last-child .btn{min-height:40px;padding:8px 16px;font-size:.9rem}
+html.simbc #result .bc-odds{margin-top:10px;padding:10px 16px}
+
+/* The pick: one row, not a page section. */
+html.simbc #simConvertPanel{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;padding:14px 18px}
+html.simbc #simConvertPanel h3{margin:0;flex:0 0 auto}
+html.simbc #simConvertPanel > p.muted{display:none}
+html.simbc #simConvertPanel .cv-row{margin:0 !important}
+html.simbc #simConvertPanel .cv-row + .cv-row{margin-left:auto !important}
+html.simbc #simConvertPanel .cv-sign{margin:0;flex:1 1 100%}
+
+/* Box score */
+.bxscore,.bxteam{margin-top:20px}
+#simTabPanel .board-mid{font-size:11px}
+#simTabPanel .board-mid *{font-size:max(11px,1em)}
+.grp3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:14px}
+.grp3 .statblock{min-width:0}
+.bxteam td:nth-child(n+2),.bxteam th:nth-child(n+2){text-align:right}
+
+/* No text under 11px */
+html.simbc #result .kpi .k,html.simbc #result .kpi .s,html.simbc #result .tab,html.simbc #result .win,html.simbc #result .tn + div{font-size:max(.72rem,11px)}
+html.simbc #result .kpi .s{line-height:1.35}
+
+#simTabPanel th,#simTabPanel td{padding-top:8px;padding-bottom:8px}
+.kpi .mkt-gap{display:block;margin-top:4px;color:var(--bc-ink)}
+
+/* The shell adds the crumb and sport switch after first paint; hold their space. */
+html.simbc #simux-main:not(:has(.simds-switch))::before{content:"";display:block;height:72px}
+
+/* Settings and fold alignment */
+html.simbc .setup .bc-fold{width:100%}
+
+@media (max-width:640px){
+  html.simbc #result{scroll-margin-top:0}
+  html.simbc #result .mh{padding:12px 12px 12px}
+  html.simbc #result .mh .mh-grid{grid-template-columns:minmax(0,1fr) 54px minmax(0,1fr);gap:4px}
+  html.simbc #result .mh .mh-team,
+  html.simbc #result .mh .mh-grid > .mh-team:last-child{display:flex;flex-direction:column;gap:4px;text-align:center}
+  html.simbc #result .mh .mh-team > span:first-child{width:60px !important;height:60px !important}
+  html.simbc #result .mh .mh-team .nm{font-size:1rem}
+  html.simbc #result .mh .mh-grid > .mh-team:last-child .nm,
+  html.simbc #result .mh .mh-grid > .mh-team:last-child .role{text-align:center}
+  html.simbc #result .mh .mh-team .pts{font-size:3.2rem}
+  html.simbc #result .mh .mh-scorelabel{line-height:1.15}
+  html.simbc #result .mh .mh-team .role{display:none}
+  html.simbc #result .mh .mh-team{align-items:center}
+  html.simbc #result .mh .mh-team .nm,html.simbc #result .mh .mh-team .pts{align-self:center}
+  html.simbc #result .mh > :last-child .btn{flex:1 1 auto;min-height:44px;padding:8px 10px}
+  html.simbc #simConvertPanel{display:block}
+  html.simbc #simConvertPanel .cv-row{margin-top:10px !important}
+  html.simbc #simConvertPanel .cv-row + .cv-row{margin-left:0 !important}
+  .grp3{grid-template-columns:minmax(0,1fr)}
+  html.simbc #simux-main:not(:has(.simds-switch))::before{height:112px}
+}
