@@ -35249,6 +35249,8 @@ document.addEventListener('DOMContentLoaded', function() {
         document.addEventListener('DOMContentLoaded', stamp);
         window.addEventListener('storage', stamp);
         window.addEventListener('tmr-auth-changed', stamp);
+        /* SPORTSBOOK_AUTH_RESTAMP_20261106: the session restores after DOMContentLoaded, so a member kept the logged-out bar. */
+        window.addEventListener('load', stamp); setTimeout(stamp, 1500); setTimeout(stamp, 4000);
     })();
     (function(){
         function removeStaleSportsbookLabels() {
