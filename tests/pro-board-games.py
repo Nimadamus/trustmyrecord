@@ -20,7 +20,7 @@ SITE = 'https://trustmyrecord.com'
 LIVE = '--live' in sys.argv
 MOCK = json.load(open(sys.argv[sys.argv.index('--mock') + 1], encoding='utf-8'))
 SHOTS = sys.argv[sys.argv.index('--shots') + 1] if '--shots' in sys.argv else None
-LOCAL = open(os.path.join(HERE, 'pro', 'board', 'index.html'), encoding='utf-8').read()
+LOCAL = open(os.path.join(HERE, 'pro', 'picks', 'index.html'), encoding='utf-8').read()
 H = {'access-control-allow-origin': SITE, 'access-control-allow-credentials': 'true'}
 ME = {'subscription': {'tier': 'pro', 'source': 'stripe', 'status': 'active', 'billing_period': 'monthly', 'current_period_end': '2026-12-01T00:00:00Z'}, 'can_manage_billing': True}
 res = []
@@ -35,7 +35,7 @@ def ctx_for(br, vp, pro=True):
     ctx = br.new_context(viewport=vp, is_mobile=vp['width'] < 500, has_touch=vp['width'] < 500)
     ctx.route('**/googletagmanager.com/**', lambda r: r.abort())
     if not LIVE:
-        ctx.route(SITE + '/pro/board/*', lambda r: r.fulfill(status=200, content_type='text/html; charset=utf-8', body=LOCAL) if r.request.url.split('?')[0].split('#')[0] == SITE + '/pro/board/' else r.continue_())
+        ctx.route(SITE + '/pro/picks/*', lambda r: r.fulfill(status=200, content_type='text/html; charset=utf-8', body=LOCAL) if r.request.url.split('?')[0].split('#')[0] == SITE + '/pro/picks/' else r.continue_())
     if pro:
         ctx.add_init_script("try{localStorage.setItem('trustmyrecord_token','test.token')}catch(e){}")
         ctx.route('**/api/premium/me', lambda r: r.fulfill(status=200, content_type='application/json', body=json.dumps(ME), headers=H))
@@ -56,7 +56,7 @@ def main():
             pg = ctx.new_page()
             errs = []
             pg.on('pageerror', lambda e: errs.append(str(e)))
-            pg.goto(SITE + '/pro/board/')
+            pg.goto(SITE + '/pro/picks/')
             pg.wait_for_selector('.wdg-game', timeout=20000)
             pg.wait_for_timeout(600)
             check(vpn + ' opens at the top', pg.evaluate('scrollY') == 0, pg.evaluate('scrollY'))
@@ -116,7 +116,7 @@ def main():
         pg = ctx.new_page()
         calls = []
         pg.on('request', lambda r: calls.append(r.url) if '/pro/pending-board' in r.url and not r.url.endswith('/summary') else None)
-        pg.goto(SITE + '/pro/board/')
+        pg.goto(SITE + '/pro/picks/')
         pg.wait_for_timeout(4000)
         check('signed out: no pending picks shown', pg.locator('.wdg-pick').count() == 0 and pg.locator('.wd-chip').count() == 0)
         check('signed out: board API not called', not calls, calls)
