@@ -1183,6 +1183,12 @@
     var built = sportOptions(cat.sports || [], 'completed games');
     sel.innerHTML = built.html;
     if (built.first) sel.value = built.first;
+    // Open on a major league, not whichever key sorts first (that was Argentine soccer).
+    ['baseball_mlb', 'basketball_nba', 'americanfootball_nfl', 'icehockey_nhl'].some(function (k) {
+      if (!sel.querySelector('option[value="' + k + '"]')) return false;
+      sel.value = k;
+      return true;
+    });
   }
 
   function renderGameBadges(cat) {
