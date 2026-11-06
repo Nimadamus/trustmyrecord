@@ -490,7 +490,19 @@
                 };
             </script>
 
-            <div class="switch">Already have an account? <a href="/login/">Log in here</a></div>
+            <div class="switch">Already have an account? <a href="/login/" id="registerToLogin">Log in here</a></div>
+            <script>
+            /* SIM_HANDOFF_NEXT_20261105: the mirror of the login page's link. A visitor
+               sent here with ?return= who already has an account still comes back to
+               that page. Same guard as the ?return= redirect below. */
+            (function () {
+                try {
+                    var r = new URLSearchParams(location.search).get('return');
+                    if (!r || !/^\/(?!\/)/.test(r) || r.indexOf('://') !== -1) return;
+                    document.getElementById('registerToLogin').setAttribute('href', '/login/?next=' + encodeURIComponent(r.split('#')[0]));
+                } catch (e) { }
+            })();
+            </script>
         </div>
     </div>
 
