@@ -106,73 +106,11 @@ function resolveInvocation(command, args) {
   return { file: resolveCommand(command), argv: args };
 }
 
-// A test calling process.exit() inside this runner is not an error, it is the
-// test finishing. The stub in runInlineNodeCheck throws this so execution
-// actually stops there, and only this class is swallowed - a real throw from a
-// test still fails the check.
-class ExitSignal extends Error {
-  constructor(code) {
-    super(`process.exit(${code})`);
-    this.name = 'ExitSignal';
-    this.code = code;
-  }
-}
-
-async function runInlineNodeCheck(name, args) {
-  const started = Date.now();
-  const scriptPath = path.join(root, args[0]);
-  const originalExit = process.exit;
-  const originalArgv = process.argv;
-  let exitCode = 0;
-  let failure = null;
-
-  process.argv = [process.execPath, scriptPath, ...args.slice(1)];
-  // Tests call process.exit() as their final statement -- some do it from
-  // inside an async .catch() handler (e.g. trendspotter-accuracy-test.js),
-  // which runs outside this function's synchronous try/catch. Recording the
-  // code and RETURNING was wrong in one specific and expensive way: a test
-  // that exits EARLY carried on running. Every tests/sportsbook-v2 suite does
-  // exactly that -- no member JWT, print SKIP, exit(0) -- and then fell
-  // straight through to `fs.readFileSync('')`, so six suites that were meant
-  // to skip reported `ENOENT: no such file or directory, open ''` and held the
-  // Regression Lock red (2026-09-04).
-  //
-  // So the stub throws a sentinel, which really does stop the module, and both
-  // the synchronous catch below and the unhandledRejection handler recognise
-  // it and let the recorded exit code stand. Throwing a plain Error here is
-  // what crashed the runner before; the sentinel is what makes it safe.
-  process.exit = (code = 0) => {
-    exitCode = Number(code) || 0;
-    throw new ExitSignal(exitCode);
-  };
-  const unhandled = [];
-  const onUnhandledRejection = (error) => {
-    if (!(error instanceof ExitSignal)) unhandled.push(error);
-  };
-  process.on('unhandledRejection', onUnhandledRejection);
-
-  try {
-    delete require.cache[require.resolve(scriptPath)];
-    require(scriptPath);
-    await new Promise((resolve) => setTimeout(resolve, 2500));
-    if (unhandled.length) throw unhandled[0];
-  } catch (error) {
-    if (!(error instanceof ExitSignal)) failure = error;
-  } finally {
-    process.exit = originalExit;
-    process.argv = originalArgv;
-    process.removeListener('unhandledRejection', onUnhandledRejection);
-  }
-
-  return {
-    name,
-    command: `node ${args.join(' ')}`,
-    status: !failure && exitCode === 0 ? 'passed' : 'failed',
-    code: failure ? 1 : exitCode,
-    durationMs: Date.now() - started,
-    ...(failure ? { error: failure.stack || String(failure) } : {}),
-  };
-}
+// REGRESSION_OUT_OF_PROCESS_20261105: node checks used to be required into this process
+// and called passed after a 2.5 s wait. A browser test takes minutes, so the report said
+// "Deployment allowed: YES" and the same test then failed the job from the background.
+// Every check now runs to its real exit code in its own process.
+const CHECK_TIMEOUT_MS = 10 * 60 * 1000;
 
 function runCheck(name, command, args) {
   const started = Date.now();
@@ -182,6 +120,7 @@ function runCheck(name, command, args) {
     shell: false,
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'pipe'],
+    timeout: CHECK_TIMEOUT_MS,
     env: {
       ...process.env,
       TMR_REGRESSION_BASE_URL: process.env.TMR_REGRESSION_BASE_URL || 'https://trustmyrecord.com',
@@ -213,9 +152,7 @@ async function main() {
   const results = [];
   for (const [name, command, args] of checks) {
     console.log(`\n[regression] ${name}`);
-    const result = command === 'node'
-      ? await runInlineNodeCheck(name, args)
-      : runCheck(name, command, args);
+    const result = runCheck(name, command, args);
     if (result.error) console.error(result.error.split(/\r?\n/).slice(-12).join('\n'));
     console.log(`[regression] ${name}: ${result.status}`);
     results.push(result);
@@ -269,7 +206,11 @@ async function main() {
   if (!report.deployment_allowed) process.exit(1);
 }
 
-main().catch((error) => {
-  console.error(error.stack || String(error));
-  process.exit(1);
-});
+if (require.main === module) {
+  main().catch((error) => {
+    console.error(error.stack || String(error));
+    process.exit(1);
+  });
+}
+
+module.exports = { runCheck };

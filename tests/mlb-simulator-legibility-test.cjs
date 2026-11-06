@@ -130,8 +130,12 @@ const PAGE_JS = () => {
 
   const opts = await page.$eval('#awayTeamSelect', (e) => e.options.length);
   assert.ok(opts > 2, 'team selectors populated (' + opts + ' options)');
-  await page.selectOption('#awayTeamSelect', { index: 1 });
-  await page.selectOption('#homeTeamSelect', { index: 2 });
+  await page.evaluate(() => document.querySelectorAll('details.bc-set').forEach((d) => { d.open = true; }));
+  await page.evaluate(() => {
+    ['#awayTeamSelect', '#homeTeamSelect'].forEach((id, i) => {
+      const s = document.querySelector(id); s.selectedIndex = i + 1; s.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+  });
   await page.waitForTimeout(2500);
   await page.click('#runSimulationButton');
 
