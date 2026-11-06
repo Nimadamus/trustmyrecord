@@ -258,7 +258,7 @@
             ['/sportsbook/', 'Sportsbook'],
             ['/tools/', 'Tools & simulators'],
             ['/mlb-simulator/', 'MLB simulator'],
-            ['/trendspotter/', 'TrendSpotter'],
+            ['/trendspotter/', 'Trend Spotter'],
             ['/forum/mlb/', 'MLB forum board'],
             ['/leaderboards/', 'Leaderboards'],
             ['/handicappers/', 'Verified handicappers']
@@ -266,7 +266,7 @@
         'tools': [
             ['/mlb-simulator/', 'MLB simulator'],
             ['/nfl-simulator/', 'NFL simulator'],
-            ['/trendspotter/', 'TrendSpotter'],
+            ['/trendspotter/', 'Trend Spotter'],
             ['/model-builder/', 'Model builder'],
             ['/handicapping/', 'Handicapping Hub'],
             ['/sportsbook/', 'Sportsbook'],
@@ -611,7 +611,7 @@
             ['/tools/', 'Tools & Simulators'],
             ['/mlb-simulator/', 'MLB Simulator'],
             ['/nfl-simulator/', 'NFL Simulator'],
-            ['/trendspotter/', 'TrendSpotter'],
+            ['/trendspotter/', 'Trend Spotter'],
             ['/predictions/', 'Predictions']
         ]],
         ['Community', [

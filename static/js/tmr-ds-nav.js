@@ -321,7 +321,7 @@
     ['/tmr-coin/', 'TMR Coin']
   ];
   /* TMR Coin was in this list from 2026-08-10 until 2026-08-27, when it was
-     removed: Tools is for the analytical products (simulators, TrendSpotter,
+     removed: Tools is for the analytical products (simulators, Trend Spotter,
      BetLegend Pro, Matchups, Handicapping Hub) and the coin belongs to the
      economy, not to them. The coin pill in the signed-in cluster on the right
      (see userHTML()) stays the single coin control, and /tmr-coin/ keeps its
@@ -335,7 +335,7 @@
        the menu stays one line while every simulator keeps its own indexed page at
        its own unchanged URL. Nothing left the site - only the dropdown. */
     ['/sports-simulators/', 'Sports Simulators'],
-    ['/trendspotter/', 'TrendSpotter'],
+    ['/trendspotter/', 'Trend Spotter'],
     ['/betlegend-pro/', 'BetLegend Pro'],
     /* TMR Pro joined this menu on 2026-09-29 (Nima: Pro must be discoverable
        from the menus). It bundles BetLegend Pro, so it sits right after it. */

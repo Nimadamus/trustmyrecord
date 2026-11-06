@@ -21,6 +21,8 @@
  * Usage:  node scripts/build_league_sim_pages.js [--inputs-dir DIR] [--runs N]
  */
 'use strict';
+// TOOLS_HUB_1106: the one free run sentence shown on every metered simulator.
+const FREE_RUN_LINE = '<p class="tmr-freerun" style="margin:8px 0 0;font-size:.92rem;font-weight:600">A free account gets one run a day on each simulator, then each run is 5 TMR Coin, or unlimited with TMR Pro.</p>';
 
 const fs = require('fs');
 const SIMUX = require('./sim-ux.js');   // SIM_UX_20261030: shared UX layer on every sim page
@@ -1290,7 +1292,7 @@ if (require.main === module) (async () => {
     for (const mode of ['season', 'playoff']) {
       const out = path.join(ROOT, `${sport}-${mode}-simulator`, 'index.html');
       fs.mkdirSync(path.dirname(out), { recursive: true });
-      fs.writeFileSync(out, SIMUX.inject(page(sport, mode, inputs, result, shell)));
+      fs.writeFileSync(out, SIMUX.inject(page(sport, mode, inputs, result, shell)).replace('<div class="lsim-run">', FREE_RUN_LINE + '\n    <div class="lsim-run">'));
       console.log(`wrote ${path.relative(ROOT, out)}`);
     }
     const rivalries = writeRivalries();
