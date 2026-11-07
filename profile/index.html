@@ -14,8 +14,22 @@
         if(!u){var m=(location.pathname||'').match(/^\/u\/([^\/?#]+)/i);if(m)u=decodeURIComponent(m[1]);}
         if(!u) return;
         var url='https://trustmyrecord.com/u/'+encodeURIComponent(u)+'/';
-        var c=document.querySelector('link[rel="canonical"]'); if(c) c.href=url;
-        var og=document.querySelector('meta[property="og:url"]'); if(og) og.setAttribute('content',url);
+        /* GSC_404_20261107: only point the canonical at /u/<name>/ once that page
+           is confirmed to exist. Before this, every ?user= view for a name with no
+           baked /u/ page (tracked outside handicappers, renamed or removed members)
+           declared a canonical that 404s; Google followed it and logged 153 /u/
+           URLs as "Not found (404)", referrer /profile/?user=<name>. A missing
+           page now leaves the static /profile/ canonical in place. */
+        var setCanon=function(){
+          var c=document.querySelector('link[rel="canonical"]'); if(c) c.href=url;
+          var og=document.querySelector('meta[property="og:url"]'); if(og) og.setAttribute('content',url);
+        };
+        if(/^\/u\//i.test(location.pathname||'')){ setCanon(); }
+        else if(window.fetch){
+          fetch('/u/'+encodeURIComponent(u)+'/',{method:'HEAD',credentials:'omit'})
+            .then(function(r){ if(r && r.ok && !r.redirected) setCanon(); })
+            .catch(function(){});
+        }
         /* SOFT404_20260818: without this every ?user= view rendered the same
            "Profile | TrustMyRecord" title and the same generic description, and
            6 of the 10 ?user= URLs Search Console had crawled came back "Soft
