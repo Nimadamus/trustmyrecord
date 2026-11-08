@@ -1461,7 +1461,7 @@
     // and messages icons get unread-count badges without each page importing it.
     if (!document.querySelector('script[data-tmr-nav-badges]')) {
         const navBadgesScript = document.createElement("script");
-        navBadgesScript.src = "/static/js/nav-badges.js?v=dca92f04da03";
+        navBadgesScript.src = "/static/js/nav-badges.js?v=0cc11c393072";
         navBadgesScript.async = true;
         navBadgesScript.setAttribute("data-tmr-nav-badges", "1");
         document.head.appendChild(navBadgesScript);
@@ -1477,9 +1477,9 @@
     // they fetch in parallel; any already present on the page already ran
     // before this deferred script, so they're skipped.
     [
-        ["/static/js/config.js?v=430b4bba7b37", "config.js"],
-        ["/static/js/backend-api.js?v=e4eaeea31d19", "backend-api.js"],
-        ["/static/js/auth-persistent.js?v=d479be477169", "auth-persistent.js"],
+        ["/static/js/config.js?v=60a0696a58ba", "config.js"],
+        ["/static/js/backend-api.js?v=3f148a2a6bc4", "backend-api.js"],
+        ["/static/js/auth-persistent.js?v=b0b217feaa25", "auth-persistent.js"],
         ["/static/js/notifications.js?v=6df3eacc7353", "notifications.js"]
     ].forEach(([src, name]) => {
         // REALM-LEVEL GUARD (2026-08-06). A DOM-only check is defeated by

@@ -74,7 +74,7 @@ if (typeof module !== 'undefined' && module.exports) {
     if (typeof document === 'undefined') return;
     if (document.querySelector('script[data-official-badge]')) return;
     var s = document.createElement('script');
-    s.src = '/static/js/official-badge.js?v=3b74b4b9bd77';
+    s.src = '/static/js/official-badge.js?v=1a1564770c69';
     s.defer = true;
     s.setAttribute('data-official-badge', '1');
     (document.head || document.documentElement).appendChild(s);

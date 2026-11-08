@@ -732,9 +732,9 @@
      would silently degrade to a plain link to /notifications/. Load the same
      chain the homepage loads, in order, and only what is actually missing. */
   var NOTIF_CHAIN = [
-    '/static/js/config.js?v=430b4bba7b37',
-    '/static/js/backend-api.js?v=e4eaeea31d19',
-    '/static/js/auth-persistent.js?v=d479be477169',
+    '/static/js/config.js?v=60a0696a58ba',
+    '/static/js/backend-api.js?v=3f148a2a6bc4',
+    '/static/js/auth-persistent.js?v=b0b217feaa25',
     '/static/js/notifications.js?v=6df3eacc7353'
   ];
 
@@ -941,7 +941,7 @@
      anywhere on the site. This nav is the only file 684 pages already load, so
      it is the carrier; the module itself is independent of the nav and guards
      against being loaded twice. */
-  loadChain(['/static/js/tmr-ds-avatar.a6e8c49d08e7.js']);
+  loadChain(['/static/js/tmr-ds-avatar.bb8006945b70.js']);
 
   /* FEATURED MATCHUPS DIRECT (2026-09-15). Every Featured Matchups menu entry
      (MLB, NCAAF, NFL, tennis, soccer, desktop and mobile) opens today's article

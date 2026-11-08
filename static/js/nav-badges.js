@@ -179,7 +179,7 @@
     if (!/\/handicappers\/?$/i.test(window.location.pathname)) return;
     if (document.querySelector('script[data-hm-leaderboard-polish]')) return;
     const script = document.createElement('script');
-    script.src = '/static/js/handicappers-leaderboard-polish.js?v=1a82aca40bac';
+    script.src = '/static/js/handicappers-leaderboard-polish.js?v=facb85f225c2';
     script.defer = true;
     script.setAttribute('data-hm-leaderboard-polish', '1');
     document.head.appendChild(script);

@@ -9,9 +9,9 @@
   <meta name="description" content="Market-specific public settled pick ledger and analytics on TrustMyRecord.">
   <link rel="canonical" href="https://trustmyrecord.com/profile-market.html">
   <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=859cacfb660e">
-  <script src="/static/js/config.js?v=430b4bba7b37"></script>
-  <script src="/static/js/backend-api.js?v=e4eaeea31d19"></script>
-  <script src="/static/js/tmr-sitewide.js?v=c702ec8f64bb" defer></script>
+  <script src="/static/js/config.js?v=60a0696a58ba"></script>
+  <script src="/static/js/backend-api.js?v=3f148a2a6bc4"></script>
+  <script src="/static/js/tmr-sitewide.js?v=424d3e4c6984" defer></script>
   <style>
     :root{--bg:#02050A;--panel:#0E1620;--panel2:#121C28;--line:#D2DEEA;--ink:#07182A;--muted:#B7CBE1;--green:#0B6B3E;--red:#BC372E}
     body{margin:0;background:radial-gradient(900px 520px at 85% -10%,rgba(11, 79, 168,0.09),transparent 58%),var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
@@ -41,7 +41,7 @@
     <section class="hero" id="hero"><div class="empty">Loading market breakdown...</div></section>
     <section class="grid" id="content"></section>
   </main>
-  <script src="/static/js/tmr-drill.js?v=c68f34eb6d14"></script>
+  <script src="/static/js/tmr-drill.js?v=d333aaa3104f"></script>
   <script>
     const params=new URLSearchParams(location.search),username=params.get('user')||'',market=params.get('market')||'';
     const apiClient=window.api&&typeof window.api.request==='function'?window.api:new TrustMyRecordAPI();
@@ -72,6 +72,6 @@
     async function init(){if(!username||!market){document.getElementById('hero').innerHTML='<div class="error">Missing user or market.</div>';return}try{if(apiClient.ready)await apiClient.ready.catch(()=>null);render(await apiClient.request('/users/'+encodeURIComponent(username)+'/stats/markets/'+encodeURIComponent(market)))}catch(e){document.getElementById('hero').innerHTML='<div class="error">Unable to load this market breakdown.</div>'}}init();
   </script>
 <script src="/static/js/tmr-session.b423be9e9588.js"></script><script src="/static/js/tmr-ds-nav.27ffb3a96e47.js"></script>
-    <script src="/static/js/tmr-live-chat.js?v=816ec6f0a118"></script>
+    <script src="/static/js/tmr-live-chat.js?v=3d9491f06dde"></script>
 </body>
 </html>
