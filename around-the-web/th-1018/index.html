@@ -979,13 +979,13 @@ background:linear-gradient(135deg,#f5c542,#e0a91d);color:#1a1200!important;font:
   var card = document.querySelector('.wdp-pro');
   if (tok) { var li = document.querySelector('.wdp-login'); if (li) li.style.display = 'none'; }
   /* PRO_FUNNEL_20261103: anonymous counters of this Pro prompt (view when it stays on screen, click on the offer) */
-  function proPulse(step) { try { fetch('https://api.trustmyrecord.com/api/activation/pulse', { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' },
+  function proPulse(step) { try { fetch('https://trustmyrecord-api.onrender.com/api/activation/pulse', { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ milestone: 'pro_prompt_' + step, simulator: 'unknown', detail: 'handicapper_profile', arm: 'pro' }) }).catch(function () {}); } catch (e) {} }
   var cta = card && card.querySelector('.wdp-btn');
   if (cta) cta.addEventListener('click', function () { proPulse('click'); try { sessionStorage.setItem('tmr_pro_entry', 'handicapper_profile'); } catch (e) {} });
   if (card && (!tok || !m || !window.fetch)) proPulse('view');
   if (!tok || !m || !card || !window.fetch) return;
-  var base = (window.TMRSession && window.TMRSession.api) || 'https://api.trustmyrecord.com/api';
+  var base = (window.TMRSession && window.TMRSession.api) || 'https://trustmyrecord-api.onrender.com/api';
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return '&#' + c.charCodeAt(0) + ';'; }); }
   function odds(o) { if (o == null || o === '') return ''; var n = Number(o); return isFinite(n) ? (n > 0 ? '+' + n : String(n)) : esc(o); }
   function day(d) { var t = new Date(d); return isNaN(t) ? '' : t.toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles', month: 'short', day: 'numeric' }); }
