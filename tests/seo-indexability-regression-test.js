@@ -34,6 +34,10 @@ const assert = require('assert');
 
 const ROOT = path.resolve(__dirname, '..');
 const SITE = 'https://trustmyrecord.com';
+/* Owner-approved noindex redirect stubs, each with its approval on record. /trustmyrecord-tools/: Nima approved the tools
+   hub batch 2026-11-05 11:32 PM PST (old hub -> meta refresh + canonical to /tools/, noindex follow, out of the sitemap;
+   commit 06bbf37c, tmr_app_seo/SEO_DEPLOY_LOG.md). Without this the gate failed every simulator bake from 11/06. */
+const OWNER_APPROVED_NOINDEX_STUBS = new Set([SITE + '/trustmyrecord-tools/']);
 // Kept in lockstep with EDGE_PLACEHOLDER in scripts/build_profile_pages.py and
 // U_PLACEHOLDER in workers/home-ssr/worker.mjs.
 const U_FALLBACK_PLACEHOLDER = '__TMR_USERNAME__';
@@ -220,7 +224,7 @@ console.log('\nalias redirect stubs');
     else if (norm(canon) !== norm(target))
       fail('stub canonical disagrees with its refresh target: ' + url +
            ' canonical=' + canon + ' refresh=' + target);
-    if (metaRobots(html).includes('noindex'))
+    if (metaRobots(html).includes('noindex') && !OWNER_APPROVED_NOINDEX_STUBS.has(url))
       fail('redirect stub is noindex (owner rule: never noindex): ' + url);
   }
   ok(stubs + ' stubs: none in sitemap, each self-consistent, none noindex');
@@ -293,7 +297,7 @@ console.log('\nnoindex allowlist');
     const html = read(file);
     if (!metaRobots(html).includes('noindex')) continue;
     const url = urlFor(file);
-    if (!ALLOW_NOINDEX.has(url))
+    if (!ALLOW_NOINDEX.has(url) && !OWNER_APPROVED_NOINDEX_STUBS.has(url))
       fail('unexpected noindex: ' + url + ' (owner rule: never noindex anything)');
   }
   ok('no noindex outside the ' + ALLOW_NOINDEX.size + ' allowlisted private pages');

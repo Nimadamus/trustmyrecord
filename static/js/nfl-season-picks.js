@@ -112,7 +112,7 @@
       var hunt = data.teams.filter(function (t) { return t.conference === c && seeds.indexOf(t.id) < 0; })
         .sort(function (a, b) { return E.pct(s.standings[b.id].overall) - E.pct(s.standings[a.id].overall); })
         .slice(0, 3).map(function (t) { return row(t.id, '', 'In the hunt'); }).join('');
-      return '<div class="lsim-card"><h3>' + c + '</h3><div class="tscroll"><table class="lsim nsp"><thead><tr><th scope="col">Seed</th><th scope="col">Team</th><th scope="col">Record</th><th scope="col" class="sp">Spot</th><th scope="col">Status</th></tr></thead><tbody>'
+      return '<div class="lsim-card"><h3>' + c + '</h3><div class="tscroll"><table class="lsim nsp">' + '<caption class="simux-sr">' + c + '</caption>' + '<thead><tr><th scope="col">Seed</th><th scope="col">Team</th><th scope="col">Record</th><th scope="col" class="sp">Spot</th><th scope="col">Status</th></tr></thead><tbody>'
         + rows + hunt + '</tbody></table></div></div>';
     }).join('');
   }
