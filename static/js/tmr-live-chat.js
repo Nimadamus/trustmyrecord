@@ -27,7 +27,7 @@
         return window.CONFIG.api.baseUrl.replace(/\/+$/, '');
       }
     } catch (err) { /* config.js may not be on this page */ }
-    return 'https://trustmyrecord-api.onrender.com/api';
+    return 'https://api.trustmyrecord.com/api';
   }
 
   function authToken() {

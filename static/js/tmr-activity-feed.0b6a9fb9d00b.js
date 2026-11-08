@@ -33,7 +33,7 @@
   if (window.__tmrActivityFeedBooted) return;
   window.__tmrActivityFeedBooted = true;
 
-  var API = window.TMR_API_BASE || 'https://trustmyrecord-api.onrender.com/api';
+  var API = window.TMR_API_BASE || 'https://api.trustmyrecord.com/api';
   var ROTATE_MS = 5000;        // dwell time on each item
   var ANIM_MS = 240;           // must match the CSS transition
   var BACKLOG = 28;            // recent events fetched on load — enough to cycle

@@ -12,7 +12,7 @@
   if (!username) return;
 
   var api = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) ||
-    'https://trustmyrecord-api.onrender.com/api';
+    'https://api.trustmyrecord.com/api';
 
   function esc(value) {
     return String(value == null ? '' : value).replace(/[&<>"']/g, function (c) {

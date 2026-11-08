@@ -70,7 +70,7 @@
 <script>
 (function () {
     function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-    function apiBase(){ try{ if(window.api&&window.api.baseUrl) return String(window.api.baseUrl).replace(/\/$/,''); }catch(e){} return (window.TMR_API_BASE||window.API_BASE_URL||'https://trustmyrecord-api.onrender.com').replace(/\/$/,''); }
+    function apiBase(){ try{ if(window.api&&window.api.baseUrl) return String(window.api.baseUrl).replace(/\/$/,''); }catch(e){} return (window.TMR_API_BASE||window.API_BASE_URL||'https://api.trustmyrecord.com').replace(/\/$/,''); }
     function qid(){ const p=new URLSearchParams(location.search); return p.get('id')||''; }
     function pLink(u,d){ u=u||''; d=d||u; return u?'<a href="/profile/?user='+encodeURIComponent(u)+'">'+esc(d)+'</a>':esc(d); }
     function innings(arr){ if(Array.isArray(arr))return arr.map(function(x){return parseInt(x)||0;}); if(typeof arr==='string'){try{const p=JSON.parse(arr);return Array.isArray(p)?p.map(function(x){return parseInt(x)||0;}):[];}catch(e){return[];}} return []; }

@@ -17,7 +17,7 @@ async function fetch(url, init) {
   }
 }
 
-const API = 'https://trustmyrecord-api.onrender.com/api';
+const API = 'https://api.trustmyrecord.com/api';
 const SITE = 'https://www.trustmyrecord.com';
 
 const TEST_USERNAME_RE = /^(qa_|test|audit|tmrverify|tmrtest|tmrcheck|tmrflow|tmrhangout|tmrlogin|tmrfast|tmrnhl|tmrlive|tmrpick|tmrprobe|tmrtokens|tmrtennis|tennislive_|runline_|runline2_|feedcheck|tmr_ui_|tmr_probe_|nhlverify|flowverify|cleanprobe|freshcool|freshafter|sportsbook_|probe|signup_test|smoke_|playwright|cypress|demo)/i;

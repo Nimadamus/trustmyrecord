@@ -110,8 +110,8 @@ PREVIEW_DAYS = int(os.environ.get("NFL_PREVIEW_DAYS", "9"))
 DEEP_PREVIEW = os.environ.get("NFL_DEEP_PREVIEW", "0") not in ("0", "", "false", "no")
 
 SITE = mlb.SITE
-API = os.environ.get("TMR_API", "https://trustmyrecord-api.onrender.com/api")
-ENGINE = os.environ.get("BETLEGEND_PRO_API_BASE", "https://betlegend-pro-api.onrender.com")
+API = os.environ.get("TMR_API", "https://api.trustmyrecord.com/api")
+ENGINE = os.environ.get("BETLEGEND_PRO_API_BASE", "https://blp-api.trustmyrecord.com")
 SERVICE_KEY = os.environ.get("BETLEGEND_PRO_SERVICE_KEY", "")
 NFL_TOKEN = os.environ.get("NFL_ADMIN_TOKEN", "")
 

@@ -17,7 +17,7 @@
     if (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) {
       return String(window.CONFIG.api.baseUrl).replace(/\/+$/, '');
     }
-    return 'https://trustmyrecord-api.onrender.com/api';
+    return 'https://api.trustmyrecord.com/api';
   }
 
   var MARKET_ORDER = ['moneyline', 'spread', 'total', 'team_total', 'first_half', 'first_five', 'props'];

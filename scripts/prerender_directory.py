@@ -21,7 +21,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from prerender_report import record
 import api_etag_cache
 
-API  = "https://trustmyrecord-api.onrender.com/api"
+API  = "https://api.trustmyrecord.com/api"
 SITE = "https://trustmyrecord.com"
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 HANDI = os.path.join(ROOT, "handicappers", "index.html")

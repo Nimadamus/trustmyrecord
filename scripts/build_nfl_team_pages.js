@@ -44,7 +44,7 @@ async function inputs() {
   let last;
   for (let i = 0; i < 3; i++) {
     try {
-      const r = await fetch('https://trustmyrecord-api.onrender.com/api/nfl/public/playoff-inputs?season=' + seasonNow(),
+      const r = await fetch('https://api.trustmyrecord.com/api/nfl/public/playoff-inputs?season=' + seasonNow(),
         { signal: AbortSignal.timeout(180000) });
       if (!r.ok) throw new Error('HTTP ' + r.status);
       const d = await r.json();

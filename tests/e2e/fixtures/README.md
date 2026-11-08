@@ -22,12 +22,12 @@ Any BetLegend Pro account works; a subscriber avoids spending a free report.
 node -e "
 const fs = require('fs');
 (async () => {
-  const login = await fetch('https://trustmyrecord-api.onrender.com/api/auth/login', {
+  const login = await fetch('https://api.trustmyrecord.com/api/auth/login', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ login: process.env.TMR_USER, password: process.env.TMR_PASS }),
   }).then(r => r.json());
 
-  const res = await fetch('https://trustmyrecord-api.onrender.com/api/betlegend-pro/matchup-historical', {
+  const res = await fetch('https://api.trustmyrecord.com/api/betlegend-pro/matchup-historical', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + login.accessToken },
     body: JSON.stringify({

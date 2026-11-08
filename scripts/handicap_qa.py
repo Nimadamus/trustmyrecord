@@ -33,7 +33,7 @@ import urllib.request
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(HERE)
-API = os.environ.get("TMR_API", "https://trustmyrecord-api.onrender.com/api")
+API = os.environ.get("TMR_API", "https://api.trustmyrecord.com/api")
 
 SPORTS = {
     # MLB's hub is built from the MLB Stats API schedule for ONE day, not from

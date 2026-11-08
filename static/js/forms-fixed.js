@@ -5,7 +5,7 @@
 async function directBackendLoginFallback(usernameOrEmail, password, rememberMe) {
     const baseUrl = (typeof CONFIG !== 'undefined' && CONFIG.api && CONFIG.api.baseUrl)
         ? String(CONFIG.api.baseUrl).replace(/\/+$/, '')
-        : 'https://trustmyrecord-api.onrender.com/api';
+        : 'https://api.trustmyrecord.com/api';
 
     const response = await fetch(baseUrl + '/auth/login', {
         method: 'POST',

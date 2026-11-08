@@ -19,7 +19,7 @@ Status: PERMANENT. Required before any contest dashboard is announced as live.
 Every contest dashboard page (e.g. `/contests/<id>/dashboard/`) must be verified end-to-end before the contest is announced. Run all checks against the live URL on Cloudflare + Render and record evidence in this tracker.
 
 1. Live URL returns 200 and renders the dashboard HTML (`curl -sI <url>` + visible board/slip markup).
-2. Backend endpoints all return 200 against `https://trustmyrecord-api.onrender.com/api/contests/<id>`:
+2. Backend endpoints all return 200 against `https://api.trustmyrecord.com/api/contests/<id>`:
    - `GET /api/contests/<id>` (status; `is_active`, `starts_at`, `ends_at`).
    - `GET /api/contests/<id>/picks` (public picks, sealed-stripped before first pitch).
    - `GET /api/contests/<id>/leaderboard`.
@@ -79,7 +79,7 @@ Deploy status:
 Live URLs checked:
 - `https://trustmyrecord.com/profile/?user=BetLegend`
 - `https://trustmyrecord.com/handicappers/`
-- `https://trustmyrecord-api.onrender.com/api/users/handicappers/summary?limit=50&offset=0`
+- `https://api.trustmyrecord.com/api/users/handicappers/summary?limit=50&offset=0`
 
 Verification result:
 - `/handicappers/` live source no longer includes old duplicate list calls or per-user pick/metrics hydration code.
@@ -118,9 +118,9 @@ Live URLs checked:
 - `https://trustmyrecord.com/profile/?user=BetLegend`
 - `https://trustmyrecord.com/handicappers/`
 - `https://trustmyrecord.com/make-picks`
-- `https://trustmyrecord-api.onrender.com/api/users/handicappers/summary?limit=50&offset=0`
-- `https://trustmyrecord-api.onrender.com/api/picks`
-- `https://trustmyrecord-api.onrender.com/api/admin/grade-picks`
+- `https://api.trustmyrecord.com/api/users/handicappers/summary?limit=50&offset=0`
+- `https://api.trustmyrecord.com/api/picks`
+- `https://api.trustmyrecord.com/api/admin/grade-picks`
 
 Verification result:
 - Authenticated production session found for `BetLegend`.
@@ -163,10 +163,10 @@ Deploy status:
 - Live `/handicappers/` page still points at `/users/handicappers/summary`.
 
 Live URLs checked:
-- `https://trustmyrecord-api.onrender.com/api/users/handicappers/summary?limit=50&offset=0`
-- `https://trustmyrecord-api.onrender.com/api/users/handicappers/summary?limit=1&offset=0`
-- `https://trustmyrecord-api.onrender.com/api/users/handicappers/summary?limit=1&offset=1`
-- `https://trustmyrecord-api.onrender.com/api/users/handicappers/summary?limit=1&offset=2`
+- `https://api.trustmyrecord.com/api/users/handicappers/summary?limit=50&offset=0`
+- `https://api.trustmyrecord.com/api/users/handicappers/summary?limit=1&offset=0`
+- `https://api.trustmyrecord.com/api/users/handicappers/summary?limit=1&offset=1`
+- `https://api.trustmyrecord.com/api/users/handicappers/summary?limit=1&offset=2`
 - `https://trustmyrecord.com/handicappers/`
 - `https://trustmyrecord.com/profile/?user=BetLegend`
 
@@ -248,14 +248,14 @@ Deploy status:
 - Safe fallback path remains deployed and cached only as an emergency path.
 
 Live endpoint checked:
-- `https://trustmyrecord-api.onrender.com/api/users/handicappers/summary?limit=10&sort=units`
-- `https://trustmyrecord-api.onrender.com/api/users/handicappers/summary?limit=10&sort=active&search=BetLegend`
-- `https://trustmyrecord-api.onrender.com/api/users/handicappers/summary?limit=10&sort=streak&search=BetLegend`
-- `https://trustmyrecord-api.onrender.com/api/users/handicappers/summary?limit=10&sort=totalPicks&search=BetLegend`
-- `https://trustmyrecord-api.onrender.com/api/users/handicappers/summary?limit=10&sort=username&search=BetLegend`
-- `https://trustmyrecord-api.onrender.com/api/users/handicappers/summary?limit=10&sort=units&sport=NHL&search=BetLegend`
-- `https://trustmyrecord-api.onrender.com/api/users/BetLegend/metrics`
-- `https://trustmyrecord-api.onrender.com/api/users/BetLegend`
+- `https://api.trustmyrecord.com/api/users/handicappers/summary?limit=10&sort=units`
+- `https://api.trustmyrecord.com/api/users/handicappers/summary?limit=10&sort=active&search=BetLegend`
+- `https://api.trustmyrecord.com/api/users/handicappers/summary?limit=10&sort=streak&search=BetLegend`
+- `https://api.trustmyrecord.com/api/users/handicappers/summary?limit=10&sort=totalPicks&search=BetLegend`
+- `https://api.trustmyrecord.com/api/users/handicappers/summary?limit=10&sort=username&search=BetLegend`
+- `https://api.trustmyrecord.com/api/users/handicappers/summary?limit=10&sort=units&sport=NHL&search=BetLegend`
+- `https://api.trustmyrecord.com/api/users/BetLegend/metrics`
+- `https://api.trustmyrecord.com/api/users/BetLegend`
 
 Live JSON shape:
 - Top-level keys: `members`, `pagination`, `summary`, `cache`.

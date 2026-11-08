@@ -39,7 +39,7 @@ import urllib.request
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(HERE)
 PAGE = os.path.join(REPO, "handicapping", "tennis", "index.html")
-API = os.environ.get("TMR_API", "https://trustmyrecord-api.onrender.com/api")
+API = os.environ.get("TMR_API", "https://api.trustmyrecord.com/api")
 
 BOARD_MARK = "tennisBoard"
 FEATURED_MARK = "tennisFeatured"

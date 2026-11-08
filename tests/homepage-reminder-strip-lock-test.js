@@ -162,7 +162,7 @@ ok('a failed status call no longer removes a cached strip',
 
 // ------------------------------------------------------------ 5. supporting
 ok('API preconnect is present so the answer can beat first paint',
-  html.includes('<link rel="preconnect" href="https://trustmyrecord-api.onrender.com" crossorigin>'));
+  html.includes('<link rel="preconnect" href="https://api.trustmyrecord.com" crossorigin>'));
 ok('early block runs before the ticker and hero markup',
   html.indexOf('TMRFirstPickEarly') < html.indexOf('<div class="ticker">'),
   'the early block must be above the content it would otherwise push down');

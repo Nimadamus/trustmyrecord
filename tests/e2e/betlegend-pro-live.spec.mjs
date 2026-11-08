@@ -42,7 +42,7 @@ import { assertMarkedAsAutomation } from './helpers/automationAccount.mjs';
  * gating and the messaging rather than spending it.
  */
 const SITE = process.env.BLP_LIVE_SITE || 'https://trustmyrecord.com';
-const API = process.env.BLP_LIVE_API || 'https://trustmyrecord-api.onrender.com';
+const API = process.env.BLP_LIVE_API || 'https://api.trustmyrecord.com';
 
 const SUB = { user: process.env.BLP_LIVE_SUB_USER, pass: process.env.BLP_LIVE_SUB_PASS };
 // Resolved by globalSetup: either BLP_LIVE_FREE_USER, or an account the run

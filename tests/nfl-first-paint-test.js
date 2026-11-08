@@ -13,7 +13,7 @@ const blocking = (head.match(/<script\b[^>]*\bsrc="[^"]+"[^>]*>/gi) || [])
   .map((t) => /src="\/static\/js\/([^"?]+)/.exec(t)[1]);
 assert.deepStrictEqual(blocking, ['tmr-analytics.js'], 'blocking head scripts: ' + blocking.join(', '));
 
-const app = html.indexOf("const API='https://trustmyrecord-api.onrender.com/api/nfl/public';");
+const app = html.indexOf("const API='https://api.trustmyrecord.com/api/nfl/public';");
 assert.ok(app > 0, 'app script not found');
 const order = ['window.SIM_GATE_FLAGS = {', '/static/js/config.js', '/static/js/backend-api.js',
   '/static/js/roster-clock.js', '/static/js/analytics.js', '/static/js/sim-auth-gate.js'].map((s) => html.indexOf(s));

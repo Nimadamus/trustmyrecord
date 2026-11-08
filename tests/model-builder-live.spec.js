@@ -26,7 +26,7 @@ const path = require('path');
 const crypto = require('crypto');
 
 const SITE = process.env.TMR_SITE || 'https://trustmyrecord.com';
-const API = process.env.TMR_API || 'https://trustmyrecord-api.onrender.com/api';
+const API = process.env.TMR_API || 'https://api.trustmyrecord.com/api';
 const USER_ID = Number(process.env.TMR_LV_USER_ID || 721);
 const MODEL_NAME = 'PLAYWRIGHT VERIFY, safe to delete';
 

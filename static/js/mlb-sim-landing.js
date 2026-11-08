@@ -18,7 +18,7 @@
     if (FLAGS.landing === false) return;
 
     var API_BASE = (window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) ||
-        'https://trustmyrecord-api.onrender.com/api';
+        'https://api.trustmyrecord.com/api';
     var PICK_INTENT_KEY = 'tmr_sim_pick_intent';
     var PICK_INTENT_TTL_MS = 6 * 60 * 60 * 1000;
 

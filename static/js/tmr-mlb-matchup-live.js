@@ -27,7 +27,7 @@
   if (!awayTeam || !homeTeam) return;
 
   var API = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl)
-    || 'https://trustmyrecord-api.onrender.com/api';
+    || 'https://api.trustmyrecord.com/api';
 
   function fmtOdds(v) {
     var n = Number(v);

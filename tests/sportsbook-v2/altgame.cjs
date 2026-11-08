@@ -16,7 +16,7 @@ const { chromium } = require('playwright');
 const { installOverlay } = require('./overlay.cjs');
 const BASE = args.url || 'https://trustmyrecord.com/sportsbook/';
 const SPORT = args.sport || 'MLB';
-const API = 'https://trustmyrecord-api.onrender.com/api';
+const API = 'https://api.trustmyrecord.com/api';
 let failures = 0; const log = [];
 function check(n, ok, d) { if (!ok) failures++; log.push({ n, ok, d }); let dd = ''; try { dd = JSON.stringify(d).slice(0, 320); } catch (_) {} console.log(`${ok ? 'PASS' : 'FAIL'}  ${n}${ok ? '' : ' -> ' + dd}`); }
 

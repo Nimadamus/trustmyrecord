@@ -113,7 +113,7 @@ function requireBackend(rel) {
    all 30 pages as "this season" two weeks into 2026-27. The record printed is
    counted from the season inputs' final games and always carries its season
    label. `--nba-live-dir DIR` (teams.json + season-inputs.json) is for tests. */
-const API = 'https://trustmyrecord-api.onrender.com/api/';
+const API = 'https://api.trustmyrecord.com/api/';
 let LIVE_NBA = null;
 async function loadLiveNba() {
   const dir = arg('--nba-live-dir', null);

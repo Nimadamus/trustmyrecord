@@ -34,7 +34,7 @@ function getAvatarHtml(item, className) {
     /* NO_LETTER_FLASH_20260907: no picture is the resolver route, not an initial.
        It answers the upload, else the favourite-team club mark, else the neutral
        silhouette - the same face the member wears everywhere else. */
-    return '<div class="' + className + '"><img src="' + esc((((window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api') + '/users/' + encodeURIComponent((item.username || display) || '') + '/avatar?s=96')) + '" alt="' + esc(display) + ' avatar" loading="lazy"></div>';
+    return '<div class="' + className + '"><img src="' + esc((((window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://api.trustmyrecord.com/api') + '/users/' + encodeURIComponent((item.username || display) || '') + '/avatar?s=96')) + '" alt="' + esc(display) + ' avatar" loading="lazy"></div>';
 }
 
 /* LIFETIME record only. Every field read here is attached by the backend from
@@ -443,7 +443,7 @@ async function toggleComments(id, type) {
             html += comments.map(c => {
                 const username = c.username || '';
                 return '<div class="cmt-item">' +
-                    '<div class="cmt-avatar"><img src="' + esc(c.avatar_url || (((window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api') + '/users/' + encodeURIComponent(username || '') + '/avatar?s=96')) + '" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"></div>' +
+                    '<div class="cmt-avatar"><img src="' + esc(c.avatar_url || (((window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://api.trustmyrecord.com/api') + '/users/' + encodeURIComponent(username || '') + '/avatar?s=96')) + '" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"></div>' +
                     '<div class="cmt-body">' +
                         '<div class="cmt-author"><a href="/profile/?user=' + encodeURIComponent(username) + '">' + esc(c.display_name || c.username || 'User') + '</a>' +
                             (c.is_official_bot ? ' <span class="cmt-official" title="Official TrustMyRecord account"><i class="fas fa-circle-check"></i> Official</span>' : '') +
@@ -551,7 +551,7 @@ async function initAuth() {
         if (composerCard) composerCard.style.display = 'block';
         if (compAvatar) {
             const avatar = user.avatar_url || user.avatar || user.profile_image_url;
-            compAvatar.innerHTML = '<img src="' + esc(avatar || (((window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api') + '/users/' + encodeURIComponent(user.username || '') + '/avatar?s=96')) + '" alt="' + esc(user.username || 'User') + ' avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+            compAvatar.innerHTML = '<img src="' + esc(avatar || (((window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://api.trustmyrecord.com/api') + '/users/' + encodeURIComponent(user.username || '') + '/avatar?s=96')) + '" alt="' + esc(user.username || 'User') + ' avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
         }
         loadSidebarStats(user);
         // Follow state only feeds the Suggested rail, which loads after the feed,
@@ -1082,7 +1082,7 @@ async function loadTopCappers() {
                 const sign = units >= 0 ? '+' : '';
                 const display = u.display_name || u.username || 'User';
                 /* NO_LETTER_FLASH: no upload is the resolver route, not an initial. */
-                const avaSrc = u.avatar_url || (((window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api') + '/users/' + encodeURIComponent(u.username || '') + '/avatar?s=96');
+                const avaSrc = u.avatar_url || (((window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://api.trustmyrecord.com/api') + '/users/' + encodeURIComponent(u.username || '') + '/avatar?s=96');
                 const avatar = '<img src="' + esc(avaSrc) + '" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
                 /* STATS_DRILLDOWN_SITEWIDE_20260927: an overall leaderboard row is the
                    /metrics rule, drilldown category "all". */

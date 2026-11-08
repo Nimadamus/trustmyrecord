@@ -14,7 +14,7 @@ console.log(`CREDENTIAL: ${CRED.source}`);
 const TOKEN = CRED.token;
 const { chromium } = require('playwright');
 const PAGE = args.url || 'https://trustmyrecord.com/sportsbook/';
-const API = 'https://trustmyrecord-api.onrender.com/api';
+const API = 'https://api.trustmyrecord.com/api';
 let failures = 0; let count = 0;
 function check(n, ok, d) {
     count++; if (!ok) failures++;

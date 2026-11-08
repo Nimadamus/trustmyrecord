@@ -42,7 +42,7 @@ async function settledRead(read, { tries = 6, wait = (ms) => new Promise((r) => 
 async function main() {
   const out = process.argv[2];
   if (!out) throw new Error('usage: nfl-bake-inputs.js <out.json>');
-  const url = 'https://trustmyrecord-api.onrender.com/api/nfl/public/playoff-inputs?season=' + seasonNow();
+  const url = 'https://api.trustmyrecord.com/api/nfl/public/playoff-inputs?season=' + seasonNow();
   const d = await settledRead(async () => {
     const r = await fetch(url, { signal: AbortSignal.timeout(180000), cache: 'no-store' });
     if (!r.ok) throw new Error('HTTP ' + r.status);

@@ -144,7 +144,7 @@ function tmrAvaSrc(user) {
     if (direct && typeof direct === 'string') return direct;
     var key = u.id != null ? u.id : (u.username || '');
     if (key === '' || key == null) return '';
-    var base = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+    var base = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://api.trustmyrecord.com/api';
     return String(base).replace(/\/+$/, '') + '/users/' + encodeURIComponent(key) + '/avatar';
 }
 
@@ -1516,7 +1516,7 @@ function showError(el, message) {
 function loadNewestMember() {
     var el = document.getElementById('newestMemberWelcome');
     if (!el) return;
-    var base = (window.api && window.api.baseUrl) || (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+    var base = (window.api && window.api.baseUrl) || (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://api.trustmyrecord.com/api';
     fetch(base + '/users/newest-member', { cache: 'no-store' })
         .then(function(r){ return r.ok ? r.json() : null; })
         .then(function(data){
@@ -1551,7 +1551,7 @@ function formatStatNumber(value) {
 function loadForumStatistics() {
     var block = document.getElementById('forumStatBlock');
     if (!block) return;
-    var base = (window.api && window.api.baseUrl) || (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+    var base = (window.api && window.api.baseUrl) || (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://api.trustmyrecord.com/api';
     fetch(base + '/forum/stats', { cache: 'no-store' })
         .then(function(r){ return r.ok ? r.json() : null; })
         .then(function(data){

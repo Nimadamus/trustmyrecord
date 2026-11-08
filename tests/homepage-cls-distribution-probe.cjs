@@ -25,7 +25,7 @@ const argv = process.argv.slice(2);
 const arg = (f, d) => { const i = argv.indexOf(f); return i === -1 ? d : argv[i + 1]; };
 
 const SITE = arg('--local', arg('--site', 'https://trustmyrecord.com'));
-const API = 'https://trustmyrecord-api.onrender.com/api';
+const API = 'https://api.trustmyrecord.com/api';
 const RUNS = Number(arg('--runs', '30'));
 const WIDTH = Number(arg('--width', '1440'));
 const HEIGHT = Number(arg('--height', '900'));

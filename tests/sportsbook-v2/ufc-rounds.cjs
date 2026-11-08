@@ -24,7 +24,7 @@ if (!TOKEN_PATH || !fs.existsSync(TOKEN_PATH)) {
 const TOKEN = fs.readFileSync(TOKEN_PATH, 'utf8').trim();
 const { chromium } = require('playwright');
 const { installOverlay } = require('./overlay.cjs');
-const API = 'https://trustmyrecord-api.onrender.com/api';
+const API = 'https://api.trustmyrecord.com/api';
 let failures = 0; const log = [];
 function check(name, ok, d) { if (!ok) failures++; log.push({ name, ok, d }); let dd = ''; try { dd = JSON.stringify(d).slice(0, 400); } catch (_) { dd = String(d); } console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${ok ? '' : ' -> ' + dd}`); }
 const norm = (s) => String(s || '').replace(/\s+/g, ' ').trim();

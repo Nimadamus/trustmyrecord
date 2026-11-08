@@ -11,7 +11,7 @@
  *
  * What runs: the backend's real routes/auth.js on 127.0.0.1, this repo served
  * as static files on 127.0.0.1, and headless Chromium loading the real pages.
- * Calls the pages make to trustmyrecord-api.onrender.com are answered by the
+ * Calls the pages make to api.trustmyrecord.com are answered by the
  * LOCAL backend (Playwright routing); every other outside request is blocked.
  */
 const path = require('path');
@@ -38,7 +38,7 @@ const pool = breq('config/database');
 const totp = breq('services/adminTotp');
 // A fresh worktree has no node_modules; PLAYWRIGHT_DIR can point at a checkout that does.
 const { chromium } = require(path.join(process.env.PLAYWRIGHT_DIR || FRONTEND, 'node_modules', 'playwright'));
-const PROD_API = 'https://trustmyrecord-api.onrender.com';
+const PROD_API = 'https://api.trustmyrecord.com';
 
 let pass = 0, fail = 0;
 const ok = (n, c, x) => { if (c) { pass++; console.log('  ok  ' + n); } else { fail++; console.log('  FAIL ' + n + (x ? ' :: ' + x : '')); } };

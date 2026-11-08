@@ -20,7 +20,7 @@
 const { test, expect } = require('@playwright/test');
 
 const HUB_URL = process.env.HUB_URL || 'https://trustmyrecord.com/handicapping/mlb/';
-const API = process.env.TMR_API || 'https://trustmyrecord-api.onrender.com/api';
+const API = process.env.TMR_API || 'https://api.trustmyrecord.com/api';
 const STATS = 'https://statsapi.mlb.com/api/v1';
 const CARDS = Number(process.env.HUB_CARDS) || 2;
 let seed = Number(process.env.HUB_SEED) || Math.floor(Math.random() * 1e9);

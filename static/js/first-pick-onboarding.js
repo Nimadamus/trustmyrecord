@@ -181,7 +181,7 @@
        same token keys, same 6s timeout. It is used ONLY when window.api is
        absent, so every page that has the real client keeps using it. */
     var PLAIN_API_BASE = (window.TMR_API_BASE || window.API_BASE_URL ||
-        'https://trustmyrecord-api.onrender.com').replace(/\/$/, '');
+        'https://api.trustmyrecord.com').replace(/\/$/, '');
     var PLAIN_TIMEOUT_MS = 6000;
 
     function plainToken() {

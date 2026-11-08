@@ -19,9 +19,9 @@ import urllib.request
 from datetime import datetime, timezone
 
 DATA = sys.argv[1]
-BASE = os.environ.get("BETLEGEND_PRO_API_BASE", "https://betlegend-pro-api.onrender.com")
+BASE = os.environ.get("BETLEGEND_PRO_API_BASE", "https://blp-api.trustmyrecord.com")
 KEY = os.environ["BETLEGEND_PRO_SERVICE_KEY"]
-STATS = "https://trustmyrecord-api.onrender.com/api/betlegend-pro/dataset-stats"
+STATS = "https://api.trustmyrecord.com/api/betlegend-pro/dataset-stats"
 
 
 def post(path, body):

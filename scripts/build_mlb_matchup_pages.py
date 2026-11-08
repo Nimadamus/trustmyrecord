@@ -78,7 +78,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SITE = "https://trustmyrecord.com"
-API = os.environ.get("TMR_API", "https://trustmyrecord-api.onrender.com/api")
+API = os.environ.get("TMR_API", "https://api.trustmyrecord.com/api")
 STATS_API = "https://statsapi.mlb.com/api/v1"
 
 # The SEO hook generator, imported by path because these scripts are run

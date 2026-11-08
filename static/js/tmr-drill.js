@@ -30,7 +30,7 @@
   if (window.TMRDrill) return;
 
   var API = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) ||
-            'https://trustmyrecord-api.onrender.com/api';
+            'https://api.trustmyrecord.com/api';
   var PAGE = 50;
 
   /* ---------------------------------------------------------------- utils */

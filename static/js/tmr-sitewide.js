@@ -1037,7 +1037,7 @@
 
         function getApiBase() {
             try { if (window.api && window.api.baseUrl) return String(window.api.baseUrl).replace(/\/$/, ""); } catch (e) {}
-            return (window.TMR_API_BASE || window.API_BASE_URL || "https://trustmyrecord-api.onrender.com").replace(/\/$/, "");
+            return (window.TMR_API_BASE || window.API_BASE_URL || "https://api.trustmyrecord.com").replace(/\/$/, "");
         }
         function getToken() {
             try { if (window.api && window.api.token) return window.api.token; } catch (e) {}
@@ -1313,7 +1313,7 @@
         if (!results) return;
         results.hidden = false;
         results.innerHTML = `<div class="tmr-search-label">Searching for "${escapeHtml(q)}"...</div>`;
-        const baseUrl = (window.api && window.api.baseUrl) || "https://trustmyrecord-api.onrender.com/api";
+        const baseUrl = (window.api && window.api.baseUrl) || "https://api.trustmyrecord.com/api";
 
         const userPromise = fetch(`${baseUrl}/users?query=${encodeURIComponent(q)}&limit=8`)
             .then(r => r.ok ? r.json() : { users: [] })
@@ -1618,7 +1618,7 @@
 
     function apiBase() {
         try { if (window.api && window.api.baseUrl) return window.api.baseUrl; } catch (e) {}
-        return 'https://trustmyrecord-api.onrender.com/api';
+        return 'https://api.trustmyrecord.com/api';
     }
 
     function fetchOne(username) {

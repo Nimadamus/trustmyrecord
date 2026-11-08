@@ -1895,7 +1895,7 @@ html body.pro-board-page main #board .wd-since b{color:#f4f8ff!important;-webkit
 
         /* tmr-session.js loads after this block, so both are resolved in start(). */
         var S = null;
-        var API = 'https://trustmyrecord-api.onrender.com/api';
+        var API = 'https://api.trustmyrecord.com/api';
         var LOGIN = '/login/?next=' + encodeURIComponent('/premium/#pricing');
         /* PRO_FUNNEL_FIX_20261002: a signed out visitor who picks a plan creates an account first. Send them to
            /register/ with ?return= so they come straight back here, where the saved plan opens checkout. Before
@@ -2117,7 +2117,7 @@ html body.pro-board-page main #board .wd-since b{color:#f4f8ff!important;-webkit
             return esc(sel) + (hasLine ? ' ' + esc(p.line) : '') + (p.odds != null ? ' <span class="wd-odds">' + odds(p.odds) + '</span>' : '');
         }
         /* PRO_FUNNEL_20261103 */
-        window.proPulse = window.proPulse || function(step, entry, plan) { try { var b = JSON.stringify({ milestone: 'pro_prompt_' + step, simulator: 'unknown', detail: entry, arm: plan || 'pro' }); fetch('https://trustmyrecord-api.onrender.com/api/activation/pulse', { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' }, body: b }).catch(function () { }); } catch (e) { } };
+        window.proPulse = window.proPulse || function(step, entry, plan) { try { var b = JSON.stringify({ milestone: 'pro_prompt_' + step, simulator: 'unknown', detail: entry, arm: plan || 'pro' }); fetch('https://api.trustmyrecord.com/api/activation/pulse', { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' }, body: b }).catch(function () { }); } catch (e) { } };
         function teaser(summary) {
             if (!boardEl) return;
             ga('watchdog_paywall_view', { component: 'pro_page_board' });
@@ -2899,7 +2899,7 @@ body.tmr-light .px-watch .pro-cta { background: #F5C542 !important; border-color
 <script>
 (function () {
   'use strict';
-  var API = 'https://trustmyrecord-api.onrender.com/api';
+  var API = 'https://api.trustmyrecord.com/api';
   try { if (window.TMR_SESSION && window.TMR_SESSION.api) API = window.TMR_SESSION.api; } catch (e) {}
   function ev(name, p) { try { if (typeof window.gtag === 'function') window.gtag('event', name, p || {}); } catch (e) {} }
   /* Compact mobile layout: same content stays in the DOM (nothing removed for crawlers);

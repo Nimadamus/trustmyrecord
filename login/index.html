@@ -390,7 +390,7 @@
             (function(){
                 function getApiBase(){
                     try { if (window.api && window.api.baseUrl) return String(window.api.baseUrl).replace(/\/$/,''); } catch(e){}
-                    return (window.TMR_API_BASE || window.API_BASE_URL || 'https://trustmyrecord-api.onrender.com').replace(/\/$/,'');
+                    return (window.TMR_API_BASE || window.API_BASE_URL || 'https://api.trustmyrecord.com').replace(/\/$/,'');
                 }
                 var btn = document.getElementById('tempPwBtn');
                 var msg = document.getElementById('tempPwMsg');
@@ -500,7 +500,7 @@
             async function loginWithBackend(login, password, rememberMe) {
                 const baseUrl = (window.CONFIG && CONFIG.api && CONFIG.api.baseUrl)
                     ? String(CONFIG.api.baseUrl).replace(/\/+$/, '')
-                    : 'https://trustmyrecord-api.onrender.com/api';
+                    : 'https://api.trustmyrecord.com/api';
 
                 const response = await fetch(baseUrl + '/auth/login', {
                     method: 'POST',

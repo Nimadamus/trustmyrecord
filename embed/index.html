@@ -343,7 +343,7 @@
         document.body.classList.add('tmr-size-' + size);
         if (theme === 'light') document.body.classList.add('theme-light');
 
-        var apiBase  = 'https://trustmyrecord-api.onrender.com/api';
+        var apiBase  = 'https://api.trustmyrecord.com/api';
         var siteBase = 'https://trustmyrecord.com';
         var card = document.getElementById('tmrCard');
 
@@ -357,7 +357,7 @@
             if (direct && typeof direct === 'string') return direct;
             var key = u.id != null ? u.id : (u.username || '');
             if (key === '' || key == null) return '';
-            var base = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+            var base = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://api.trustmyrecord.com/api';
             return String(base).replace(/\/+$/, '') + '/users/' + encodeURIComponent(key) + '/avatar';
         }
 

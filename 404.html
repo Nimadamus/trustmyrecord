@@ -163,7 +163,7 @@
             // -> route into the forum app, which canonicalizes the address bar
             // back to the clean URL; nonexistent id -> stays a genuine 404.
             (function (tid) {
-                fetch('https://trustmyrecord-api.onrender.com/api/forum/threads/' + tid)
+                fetch('https://api.trustmyrecord.com/api/forum/threads/' + tid)
                     .then(function (r) {
                         if (r.ok) window.location.replace(window.location.origin + '/forum/?thread=' + tid + hash);
                     })
@@ -183,7 +183,7 @@
             // canonical case already matches (case 2, page just not baked yet) or
             // no such member -> stays a genuine 404, same as any other real gap.
             (function (typedName) {
-                fetch('https://trustmyrecord-api.onrender.com/api/users/' + encodeURIComponent(decodeURIComponent(typedName)))
+                fetch('https://api.trustmyrecord.com/api/users/' + encodeURIComponent(decodeURIComponent(typedName)))
                     .then(function (r) { return r.ok ? r.json() : null; })
                     .then(function (d) {
                         var canonical = d && d.user && d.user.username;

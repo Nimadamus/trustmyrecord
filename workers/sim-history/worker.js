@@ -25,7 +25,7 @@
  *   - Everything injected is escaped before it reaches an attribute.
  */
 
-const API_BASE = 'https://trustmyrecord-api.onrender.com/api';
+const API_BASE = 'https://api.trustmyrecord.com/api';
 const SHELL_PATH = '/mlb-simulator/simulations/matchup/index.html';
 const META_TIMEOUT_MS = 1800;
 

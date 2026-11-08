@@ -20,7 +20,7 @@ function simulator() {
     document: { readyState: 'loading', addEventListener() {}, getElementById() { return null; } },
     console, Math, Number, Date, Promise,
     fetch: () => Promise.reject(new Error('no network in unit test')),
-    CONFIG: { api: { baseUrl: 'https://trustmyrecord-api.onrender.com/api' } },
+    CONFIG: { api: { baseUrl: 'https://api.trustmyrecord.com/api' } },
   };
   context.window.document = context.document;
   vm.runInNewContext(scriptText, context);

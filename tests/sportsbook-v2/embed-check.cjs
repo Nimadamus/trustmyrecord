@@ -17,7 +17,7 @@ const TOKEN = CRED.token;
 const { chromium } = require('playwright');
 const { installOverlay } = require('./overlay.cjs');
 const PAGE = args.url || 'https://trustmyrecord.com/sportsbook/';
-const API = 'https://trustmyrecord-api.onrender.com/api';
+const API = 'https://api.trustmyrecord.com/api';
 let failures = 0; const log = []; let CHROME = null;
 function check(n, ok, d) {
     if (!ok) failures++;

@@ -37,7 +37,7 @@
 
 class TrustMyRecordAPI {
     constructor() {
-        this.baseUrl = CONFIG?.api?.baseUrl || 'https://trustmyrecord-api.onrender.com/api';
+        this.baseUrl = CONFIG?.api?.baseUrl || 'https://api.trustmyrecord.com/api';
         this.token = null;
         this.refreshToken = null;
         this.backendAvailable = null; // null = not checked, true/false
@@ -498,7 +498,7 @@ class TrustMyRecordAPI {
     // return the normal login answer so every login path keeps working unchanged.
     async completeTwoFactorLogin(first) {
         if (!first || !first.mfaRequired || !first.mfaToken) return first;
-        const base = String(this.baseUrl || 'https://trustmyrecord-api.onrender.com/api').replace(/\/+$/, '');
+        const base = String(this.baseUrl || 'https://api.trustmyrecord.com/api').replace(/\/+$/, '');
         let note = '';
         for (;;) {
             const code = await TrustMyRecordAPI.askTwoFactorCode(note);

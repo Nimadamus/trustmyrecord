@@ -136,7 +136,7 @@ function diffGeometry(a, b) {
   // Slow (or kill) every backend call, so the pre-data state is observable for
   // long enough to measure. This is the "10 second load" the complaint describes,
   // reproduced on purpose.
-  await page.route('**/trustmyrecord-api.onrender.com/**', async (route) => {
+  await page.route('**/api.trustmyrecord.com/**', async (route) => {
     if (OFFLINE) return route.abort();
     await new Promise((r) => setTimeout(r, DELAY_MS));
     return route.continue();

@@ -109,7 +109,7 @@
         if (direct && typeof direct === 'string') return direct;
         var key = u.id != null ? u.id : (u.user_id != null ? u.user_id : (u.username || ''));
         if (key === '' || key == null) return '';
-        var base = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+        var base = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://api.trustmyrecord.com/api';
         return String(base).replace(/\/+$/, '') + '/users/' + encodeURIComponent(key) + '/avatar';
     }
     function esc(v) { return String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }

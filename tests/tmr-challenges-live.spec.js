@@ -17,7 +17,7 @@
 
 const { test, expect } = require('@playwright/test');
 
-const API = 'https://trustmyrecord-api.onrender.com/api';
+const API = 'https://api.trustmyrecord.com/api';
 
 test.describe('TMR Challenge, live', () => {
   test('the Challenge Hub loads and asks an anonymous visitor to sign in', async ({ page }) => {

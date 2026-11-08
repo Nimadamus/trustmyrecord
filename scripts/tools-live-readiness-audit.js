@@ -3,7 +3,7 @@
 const assert = require('assert');
 
 const PUBLIC_SITE = process.env.TMR_PUBLIC_SITE || 'https://trustmyrecord.com';
-const PUBLIC_API = process.env.TMR_PUBLIC_API || 'https://trustmyrecord-api.onrender.com/api';
+const PUBLIC_API = process.env.TMR_PUBLIC_API || 'https://api.trustmyrecord.com/api';
 
 async function getText(url) {
   const response = await fetch(url, { cache: 'no-store' });

@@ -52,8 +52,8 @@
     function log() { /* intentionally silent in production */ }
 
     function apiBase() {
-        try { return (window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api'; }
-        catch (e) { return 'https://trustmyrecord-api.onrender.com/api'; }
+        try { return (window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) || 'https://api.trustmyrecord.com/api'; }
+        catch (e) { return 'https://api.trustmyrecord.com/api'; }
     }
 
     function remembered() {

@@ -2,7 +2,7 @@
 (function () {
   'use strict';
 
-  var API = (window.TMR_API_BASE || window.API_BASE_URL || 'https://trustmyrecord-api.onrender.com').replace(/\/$/, '');
+  var API = (window.TMR_API_BASE || window.API_BASE_URL || 'https://api.trustmyrecord.com').replace(/\/$/, '');
   var SEASON = 2026;
   /* SEASON_LOCK_CUTOFF_20261005: entries close at first pitch of the final day
      of the regular season (2026-09-27, 10:05 AM PT). The server enforces it; the

@@ -22,7 +22,7 @@
 (function () {
   'use strict';
 
-  var API = 'https://trustmyrecord-api.onrender.com/api';
+  var API = 'https://api.trustmyrecord.com/api';
 
   /* THE HEADER'S PLACE IN THE CASCADE (2026-08-31).
 

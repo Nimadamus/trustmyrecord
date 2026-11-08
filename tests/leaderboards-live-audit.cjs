@@ -26,7 +26,7 @@
 const { chromium } = require('playwright');
 
 const PAGE = 'https://trustmyrecord.com/leaderboards/';
-const API = 'https://trustmyrecord-api.onrender.com/api';
+const API = 'https://api.trustmyrecord.com/api';
 
 let pass = 0, fail = 0;
 const failures = [];

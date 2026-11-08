@@ -95,7 +95,7 @@ const METRICS = `() => {
   const server = await serve(html);
   const browser = await chromium.launch();
   const ctx = await browser.newContext({ viewport: { width, height: 1000 } });
-  /* The API is on trustmyrecord-api.onrender.com, a different origin than this
+  /* The API is on api.trustmyrecord.com, a different origin than this
      harness's 127.0.0.1 server, so even an intercepted response is still
      subject to CORS: without Access-Control-Allow-Origin the browser discards
      it and the page's fetch rejects exactly as if the network call failed. */

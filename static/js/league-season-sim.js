@@ -18,7 +18,7 @@
 }(typeof self !== 'undefined' ? self : this, function (root) {
   'use strict';
 
-  var API = 'https://trustmyrecord-api.onrender.com/api/';
+  var API = 'https://api.trustmyrecord.com/api/';
 
   function esc(s) {
     return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;')

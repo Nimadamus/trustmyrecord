@@ -4,7 +4,7 @@
  */
 (function () {
   'use strict';
-  var API = (window.TMR_API_BASE || window.API_BASE_URL || 'https://trustmyrecord-api.onrender.com').replace(/\/$/, '').replace(/\/api$/, '');
+  var API = (window.TMR_API_BASE || window.API_BASE_URL || 'https://api.trustmyrecord.com').replace(/\/$/, '').replace(/\/api$/, '');
   var root = document.getElementById('msRoot');
   if (!root) return;
 

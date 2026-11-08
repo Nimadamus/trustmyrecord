@@ -93,7 +93,7 @@
     }
     var nodes = document.querySelectorAll('[data-roster-clock]');
     if (!nodes.length) return;
-    var base = (root.CONFIG && root.CONFIG.api && root.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+    var base = (root.CONFIG && root.CONFIG.api && root.CONFIG.api.baseUrl) || 'https://api.trustmyrecord.com/api';
     fetch(base + '/roster/status', { headers: { Accept: 'application/json' }, credentials: 'omit' })
       .then(function (r) { return r.ok ? r.json() : null; })
       .catch(function () { return null; })

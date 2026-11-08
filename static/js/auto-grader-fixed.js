@@ -62,7 +62,7 @@
             // does run it should be able to actually read scores.
             const graderApiBase = (window.api && window.api.baseUrl) ||
                                   (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) ||
-                                  'https://trustmyrecord-api.onrender.com/api';
+                                  'https://api.trustmyrecord.com/api';
             const url = `${String(graderApiBase).replace(/\/$/, '')}/games/espn/scoreboard?path=${encodeURIComponent(sportPath)}&dates=${encodeURIComponent(dateStr)}`;
 
             try {

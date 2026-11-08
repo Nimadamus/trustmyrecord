@@ -652,7 +652,7 @@
       if (window.api && typeof window.api.request === 'function') {
         return window.api.request(path);
       }
-      const res = await fetch('https://trustmyrecord-api.onrender.com/api' + path, { cache: 'no-store' });
+      const res = await fetch('https://api.trustmyrecord.com/api' + path, { cache: 'no-store' });
       if (!res.ok) throw new Error('API ' + res.status);
       return res.json();
     }

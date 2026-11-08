@@ -108,7 +108,7 @@ async function readCard(page) {
   const api = await page.evaluate(async () => {
     const local = ['127.0.0.1', 'localhost'].includes(location.hostname);
     const url = local ? '/api/users/competition'
-      : 'https://trustmyrecord-api.onrender.com/api/users/competition';
+      : 'https://api.trustmyrecord.com/api/users/competition';
     const r = await fetch(url).catch(() => null);
     return r && r.ok ? r.json() : null;
   }).catch(() => null);
@@ -232,7 +232,7 @@ async function readCard(page) {
     const foot = (document.querySelector('.comp-foot') || {}).textContent || '';
     const local = ['127.0.0.1', 'localhost'].includes(location.hostname);
     const url = local ? '/api/users/competition'
-      : 'https://trustmyrecord-api.onrender.com/api/users/competition';
+      : 'https://api.trustmyrecord.com/api/users/competition';
     const r = await fetch(url).catch(() => null);
     const live = r && r.ok ? await r.json() : null;
     return { foot: foot.trim(), live: live && live.footer };

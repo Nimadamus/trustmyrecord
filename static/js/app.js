@@ -8,7 +8,7 @@ function tmrAvaSrc(user) {
     if (direct && typeof direct === 'string') return direct;
     const key = u.id != null ? u.id : (u.user_id != null ? u.user_id : (u.username || ''));
     if (key === '' || key == null) return '';
-    const base = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+    const base = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://api.trustmyrecord.com/api';
     return String(base).replace(/\/+$/, '') + '/users/' + encodeURIComponent(key) + '/avatar';
 }
 

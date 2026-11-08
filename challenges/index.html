@@ -437,7 +437,7 @@
                 if (direct && typeof direct === 'string') return direct;
                 const key = u.id != null ? u.id : (u.username || '');
                 if (key === '' || key == null) return '';
-                const base = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+                const base = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://api.trustmyrecord.com/api';
                 return String(base).replace(/\/+$/, '') + '/users/' + encodeURIComponent(key) + '/avatar';
             }
 
@@ -450,7 +450,7 @@
 
             async function request(endpoint, options) {
                 if (apiReady()) return window.api.request(endpoint, options || {});
-                const base = "https://trustmyrecord-api.onrender.com/api";
+                const base = "https://api.trustmyrecord.com/api";
                 const headers = { "Content-Type": "application/json" };
                 const token = localStorage.getItem("trustmyrecord_token") || localStorage.getItem("accessToken") || localStorage.getItem("token");
                 if (token) headers.Authorization = "Bearer " + token;

@@ -6,7 +6,7 @@
    ============================================================================= */
 (function () {
   'use strict';
-  var API = 'https://trustmyrecord-api.onrender.com/api';
+  var API = 'https://api.trustmyrecord.com/api';
 
   function j(path, timeoutMs) {
     var opts = { headers: { Accept: 'application/json' } };

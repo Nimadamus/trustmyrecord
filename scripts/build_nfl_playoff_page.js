@@ -29,7 +29,7 @@ const PAGE = path.join(ROOT, 'nfl-playoff-simulator', 'index.html');
 const args = process.argv.slice(2);
 const argVal = (k) => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] : null; };
 const RUNS = Number(argVal('--runs')) || 10000;
-const API = 'https://trustmyrecord-api.onrender.com/api/nfl/public/playoff-inputs?season=';
+const API = 'https://api.trustmyrecord.com/api/nfl/public/playoff-inputs?season=';
 
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const pctText = (v) => (v >= 0.995 ? '&gt;99%' : v < 0.005 ? '&lt;1%' : Math.round(v * 100) + '%');

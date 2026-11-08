@@ -46,7 +46,7 @@ const https = require('https');
 
 const ROOT = path.resolve(__dirname, '..');
 const SITE = 'https://trustmyrecord.com';
-const DEFAULT_API = 'https://trustmyrecord-api.onrender.com/api';
+const DEFAULT_API = 'https://api.trustmyrecord.com/api';
 
 const CSS_DS = '/static/css/tmr-ds.f85a4f83fb7b.css';
 const JS_SESSION = '/static/js/tmr-session.b423be9e9588.js';

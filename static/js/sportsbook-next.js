@@ -26,7 +26,7 @@
     'use strict';
 
     var API = (window.TMR_CONFIG && window.TMR_CONFIG.baseUrl) ||
-        (window.api && window.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+        (window.api && window.api.baseUrl) || 'https://api.trustmyrecord.com/api';
     var BOARD_LIMIT = 60;
     // A props request that has not answered in this long is treated as a
     // recoverable failure rather than an indefinite spinner.

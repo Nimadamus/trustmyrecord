@@ -16,7 +16,7 @@
  *  7. no uncaught console errors (excluding rate-limit) on the submit path
  */
 const { chromium } = require('playwright');
-const API = 'https://trustmyrecord-api.onrender.com';
+const API = 'https://api.trustmyrecord.com';
 const SITE = 'https://trustmyrecord.com/sportsbook/';
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const results = [];

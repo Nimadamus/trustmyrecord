@@ -33,7 +33,7 @@ import time
 import urllib.request
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-API = "https://trustmyrecord-api.onrender.com/api/users"
+API = "https://api.trustmyrecord.com/api/users"
 SITE = "https://trustmyrecord.com"
 UA = "Mozilla/5.0 (TMR-cached-rank-verifier)"
 

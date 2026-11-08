@@ -39,7 +39,7 @@ SITE_API = "https://site.api.espn.com/apis/site/v2/sports/football/nfl"
 WEB_API = "https://site.web.api.espn.com/apis/v2/sports/football/nfl"
 CORE_API = "https://sports.core.api.espn.com/v2/sports/football/leagues/nfl"
 LOGO = "https://a.espncdn.com/i/teamlogos/nfl/500/%s.png"
-TMR_API = os.environ.get("TMR_API", "https://trustmyrecord-api.onrender.com/api")
+TMR_API = os.environ.get("TMR_API", "https://api.trustmyrecord.com/api")
 
 # A simulation is 10,000 drives; give it room, but never hang a build on it.
 SIM_TIMEOUT = int(os.environ.get("NFL_PREVIEW_SIM_TIMEOUT", "150"))

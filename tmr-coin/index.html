@@ -528,7 +528,7 @@
     // Same base the other 100-odd frontend callers use; window.CONFIG wins if the page
     // ever starts loading config.js.
     var API = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl)
-        || 'https://trustmyrecord-api.onrender.com/api';
+        || 'https://api.trustmyrecord.com/api';
 
     fetch(API + '/tmr-coin/market', { headers: { Accept: 'application/json' } })
         .then(function (r) { return r.json(); })

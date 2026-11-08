@@ -13,7 +13,7 @@ const CONFIG = {
     // API Configuration
     // Only expose localhost fallbacks when the site is actually running locally.
     api: {
-        baseUrl: "https://trustmyrecord-api.onrender.com/api",
+        baseUrl: "https://api.trustmyrecord.com/api",
         fallbackUrls: TMR_IS_LOCAL_HOST ? [
             "http://localhost:3000/api",
         ] : [],

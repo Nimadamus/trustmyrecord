@@ -144,7 +144,7 @@ function simulatorContext() {
     // actually gets exercised.
     fetch: buildRosterFetchMock(),
     ...sandboxTimers(),
-    CONFIG: { api: { baseUrl: 'https://trustmyrecord-api.onrender.com/api' } },
+    CONFIG: { api: { baseUrl: 'https://api.trustmyrecord.com/api' } },
   };
   context.window.document = context.document;
   vm.runInNewContext(script, context);

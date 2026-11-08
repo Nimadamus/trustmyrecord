@@ -18,7 +18,7 @@
   if (window.TMRQuizOfDay) return;
 
   var API_BASE = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) ||
-    'https://trustmyrecord-api.onrender.com/api';
+    'https://api.trustmyrecord.com/api';
 
   function esc(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {

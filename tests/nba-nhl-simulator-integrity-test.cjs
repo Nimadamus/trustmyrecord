@@ -29,7 +29,7 @@ const arg = (f, d) => {
   return i !== -1 ? process.argv[i + 1] : d;
 };
 const SITE = arg('--site', 'https://trustmyrecord.com');
-const API = arg('--host', 'https://trustmyrecord-api.onrender.com');
+const API = arg('--host', 'https://api.trustmyrecord.com');
 // LIVE_RUN_GUARD_20261030: every run this test makes is recorded in the production
 // sim archive as if a visitor ran it (10 such rows had to be deleted on 10/30).
 // It only runs against production when asked to explicitly.

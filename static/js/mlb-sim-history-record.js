@@ -81,7 +81,7 @@
     }
     // config.js declares a page-scope `CONFIG` const (not a window property).
     var cfg = (typeof CONFIG !== 'undefined' && CONFIG) ? CONFIG : null;
-    var base = (cfg && cfg.api && cfg.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+    var base = (cfg && cfg.api && cfg.api.baseUrl) || 'https://api.trustmyrecord.com/api';
     var o = opts || {};
     return fetch(base + ENDPOINT + path, {
       method: o.method || 'GET',

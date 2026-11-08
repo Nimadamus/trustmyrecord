@@ -60,7 +60,7 @@
 
   function refreshOfficialList() {
     try {
-      var base = (window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+      var base = (window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) || 'https://api.trustmyrecord.com/api';
       fetch(base + '/community-bots/public').then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
         if (d && Array.isArray(d.bots)) {
           d.bots.forEach(function (b) { if (b.username) OFFICIAL[String(b.username).toLowerCase()] = b.display_name || b.username; });

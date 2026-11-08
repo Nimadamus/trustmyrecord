@@ -352,7 +352,7 @@
                 });
             }
         }
-        bases.push('https://trustmyrecord-api.onrender.com/api');
+        bases.push('https://api.trustmyrecord.com/api');
         return bases.filter(function(base, index, arr) {
             return base && arr.indexOf(base) === index;
         }).sort(function(a, b) {
@@ -363,7 +363,7 @@
     function rankApiBase(base) {
         const value = String(base || '').toLowerCase();
         if (!value) return 99;
-        if (value.indexOf('trustmyrecord-api.onrender.com') !== -1) return 0;
+        if (value.indexOf('api.trustmyrecord.com') !== -1) return 0;
         if (value.indexOf('localhost') !== -1 || value.indexOf('127.0.0.1') !== -1) return 3;
         if (value.indexOf('loca.lt') !== -1) return 2;
         if (value.indexOf('https://') === 0) return 1;

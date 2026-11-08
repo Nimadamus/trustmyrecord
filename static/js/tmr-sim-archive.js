@@ -42,7 +42,7 @@
   function apiBase() {
     // config.js declares a page-scope `CONFIG` const, not a window property.
     var cfg = (typeof CONFIG !== 'undefined' && CONFIG) ? CONFIG : null;
-    return (cfg && cfg.api && cfg.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+    return (cfg && cfg.api && cfg.api.baseUrl) || 'https://api.trustmyrecord.com/api';
   }
 
   function qs(params) {

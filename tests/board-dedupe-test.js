@@ -35,7 +35,7 @@ const SCRIPT = fs.readFileSync(
 );
 
 const ORIGIN = 'https://trustmyrecord.com';
-const API = 'https://trustmyrecord-api.onrender.com/api';
+const API = 'https://api.trustmyrecord.com/api';
 
 // A minimal stand-in for the browser Response. Only what the dedupe touches:
 // ok, and clone(). Each clone carries the same identity marker so a test can

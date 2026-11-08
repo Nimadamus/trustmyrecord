@@ -29,7 +29,7 @@ const argv = process.argv.slice(2);
 const arg = (f, d) => { const i = argv.indexOf(f); return i === -1 ? d : argv[i + 1]; };
 
 const SITE = arg('--local', arg('--site', 'https://trustmyrecord.com'));
-const API = 'https://trustmyrecord-api.onrender.com/api';
+const API = 'https://api.trustmyrecord.com/api';
 /* Credentials come from the ENVIRONMENT. Passing them as --user/--pass put
    them in the process command line, where they show up in process listings,
    shell history and CI logs; the flags are kept only so an existing invocation

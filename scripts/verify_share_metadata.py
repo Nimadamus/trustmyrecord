@@ -36,7 +36,7 @@ for _s in (sys.stdout, sys.stderr):
     except Exception:
         pass
 
-API = "https://trustmyrecord-api.onrender.com/api"
+API = "https://api.trustmyrecord.com/api"
 DEFAULT_BASE = "https://trustmyrecord.com"
 
 # Real crawler user agents. Facebook and X are the two that matter most and the

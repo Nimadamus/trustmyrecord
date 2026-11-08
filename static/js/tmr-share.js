@@ -42,7 +42,7 @@
     try {
       if (typeof CONFIG !== 'undefined' && CONFIG.api && CONFIG.api.baseUrl) return CONFIG.api.baseUrl;
     } catch (e) {}
-    return 'https://trustmyrecord-api.onrender.com/api';
+    return 'https://api.trustmyrecord.com/api';
   }());
 
   var SITE = 'https://trustmyrecord.com';

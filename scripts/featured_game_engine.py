@@ -106,7 +106,7 @@ class Sources:
         # seeded TMR simulation every 30 minutes. With the bake key the API answers
         # identically but does not file it in the public run archive as a visitor run.
         bake_key = os.environ.get("TMR_BAKE_KEY", "")
-        if bake_key and url.startswith("https://trustmyrecord-api.onrender.com/"):
+        if bake_key and url.startswith("https://api.trustmyrecord.com/"):
             hdrs.setdefault("x-tmr-bake-key", bake_key)
         if browser:
             hdrs.setdefault("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "

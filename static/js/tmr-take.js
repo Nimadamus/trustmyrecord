@@ -33,7 +33,7 @@
   function apiBase() {
     if (window.TMRSession && window.TMRSession.api) return window.TMRSession.api;
     var cfg = (typeof CONFIG !== 'undefined' && CONFIG) ? CONFIG : window.CONFIG;
-    return ((cfg && cfg.api && cfg.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api').replace(/\/+$/, '');
+    return ((cfg && cfg.api && cfg.api.baseUrl) || 'https://api.trustmyrecord.com/api').replace(/\/+$/, '');
   }
   function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
   function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) { } }

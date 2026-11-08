@@ -14,7 +14,7 @@
    and nothing renders a blank that could be misread as a zero. */
 (function () {
     "use strict";
-    var API = (window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) || "https://trustmyrecord-api.onrender.com/api";
+    var API = (window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) || "https://api.trustmyrecord.com/api";
 
     var MLB_ABBR = {
         "arizona diamondbacks":"ari","atlanta braves":"atl","baltimore orioles":"bal","boston red sox":"bos",

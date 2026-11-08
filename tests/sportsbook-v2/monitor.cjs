@@ -14,7 +14,7 @@ for (let i = 2; i < process.argv.length; i++) { const a = process.argv[i]; if (a
 const CYCLES = parseInt(args.cycles || '1', 10);
 const INTERVAL = parseInt(args.interval || '60', 10);
 const TOKEN = args.token ? fs.readFileSync(args.token, 'utf8').trim() : null;
-const API = 'https://trustmyrecord-api.onrender.com/api';
+const API = 'https://api.trustmyrecord.com/api';
 const IGNORE = /google-analytics|googletagmanager|doubleclick|favicon|fonts\.gstatic|clarity\.ms|propBets|\/avatar/;
 const abnormal = [];
 const START = Date.now();

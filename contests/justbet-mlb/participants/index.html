@@ -132,7 +132,7 @@
     <script>
     (function () {
         var CONTEST_ID = 'justbet-mlb';
-        var API_BASE = (window.TMR_API_BASE || window.API_BASE_URL || 'https://trustmyrecord-api.onrender.com').replace(/\/$/, '');
+        var API_BASE = (window.TMR_API_BASE || window.API_BASE_URL || 'https://api.trustmyrecord.com').replace(/\/$/, '');
         function $(s) { return document.querySelector(s); }
         function escapeHtml(s) {
             return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
@@ -174,7 +174,7 @@
             if (direct && typeof direct === 'string') return direct;
             var key = u.id != null ? u.id : (u.username || '');
             if (key === '' || key == null) return '';
-            var base = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+            var base = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://api.trustmyrecord.com/api';
             return String(base).replace(/\/+$/, '') + '/users/' + encodeURIComponent(key) + '/avatar';
         }
 

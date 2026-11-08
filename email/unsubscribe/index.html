@@ -48,7 +48,7 @@
   }
   b.addEventListener('click', function () {
     b.disabled = true; b.textContent = 'Working';
-    fetch('https://trustmyrecord-api.onrender.com/api/email/unsubscribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: token }) })
+    fetch('https://api.trustmyrecord.com/api/email/unsubscribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: token }) })
       .then(function (r) { return r.json().catch(function () { return {}; }); })
       .then(function (d) {
         b.hidden = true;

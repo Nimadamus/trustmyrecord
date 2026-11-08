@@ -12,7 +12,7 @@ const path = require('path');
  */
 
 const LIVE_URL = process.env.TMR_TRENDSPOTTER_URL || 'https://trustmyrecord.com/trendspotter/';
-const API_BASE = process.env.TMR_TRENDSPOTTER_API_BASE || 'https://trustmyrecord-api.onrender.com/api/trendspotter';
+const API_BASE = process.env.TMR_TRENDSPOTTER_API_BASE || 'https://api.trustmyrecord.com/api/trendspotter';
 const ARTIFACT_DIR = path.join(process.cwd(), 'artifacts');
 const SCREENSHOT_PATH = path.join(ARTIFACT_DIR, 'trendspotter-live-verification.png');
 const REPORT_PATH = path.join(ARTIFACT_DIR, 'trendspotter-live-verification.json');

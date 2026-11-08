@@ -351,7 +351,7 @@
     }
     function apiBaseUrl() {
         if (typeof CONFIG !== 'undefined' && CONFIG && CONFIG.api && CONFIG.api.baseUrl) return CONFIG.api.baseUrl;
-        return 'https://trustmyrecord-api.onrender.com/api';
+        return 'https://api.trustmyrecord.com/api';
     }
     function fetchJson(url, options) {
         if (typeof fetch !== 'function') return Promise.reject(new Error('fetch unavailable'));

@@ -25,7 +25,7 @@
     });
   }
 
-  var API = 'https://trustmyrecord-api.onrender.com/api/nfl/public/playoff-inputs?season=';
+  var API = 'https://api.trustmyrecord.com/api/nfl/public/playoff-inputs?season=';
   function start() {
     var btn = document.getElementById('runSim');
     var status = document.getElementById('lsimStatus');

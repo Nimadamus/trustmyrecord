@@ -51,7 +51,7 @@ from prerender_report import record
 import api_etag_cache
 import profile_research
 
-API   = "https://trustmyrecord-api.onrender.com/api"
+API   = "https://api.trustmyrecord.com/api"
 SITE  = "https://trustmyrecord.com"
 ROOT  = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # repo root
 
@@ -119,7 +119,7 @@ DS_FOOT = (f'<script type="text/tmr-fallback" data-src="{_DS_NAV}"></script>'
 # the endpoint serves the existing static site card, so a preview degrades
 # rather than breaking.
 # ---------------------------------------------------------------------------
-OG_CARD_BASE = "https://trustmyrecord-api.onrender.com/api/share/og"
+OG_CARD_BASE = "https://api.trustmyrecord.com/api/share/og"
 SHARE_HEAD = (
     '<link rel="stylesheet" href="/static/css/tmr-share.css?v=20260721share1">\n'
     # Inert until the fallback path needs it -- see the DS_FOOT note above.
@@ -323,7 +323,7 @@ def boot_script(un):
         '||localStorage.getItem("accessToken")||null;}catch(e){}'
         'var h={Accept:"application/json","Cache-Control":"no-cache"};if(t)h.Authorization="Bearer "+t;'
         'var b=(window.CONFIG&&window.CONFIG.api&&window.CONFIG.api.baseUrl)'
-        '||"https://trustmyrecord-api.onrender.com/api";'
+        '||"https://api.trustmyrecord.com/api";'
         'window.__TMR_PROFILE_PRELOAD={username:' + u + ',authed:!!t,'
         'metrics:fetch(b+"/users/"+encodeURIComponent(' + u + ')+"/metrics",{headers:h,cache:"no-store"})'
         '.then(function(r){return r.ok?r.json():null;}).catch(function(){return null;})};'

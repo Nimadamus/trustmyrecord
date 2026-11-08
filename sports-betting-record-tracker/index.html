@@ -298,7 +298,7 @@
 /* Tracker pilot: refresh the baked ledger figures from the same public endpoints
    the homepage, /handicappers/ and /pending-picks/ use. Baked values stay if a call fails. */
 (function () {
-  var API = 'https://trustmyrecord-api.onrender.com/api';
+  var API = 'https://api.trustmyrecord.com/api';
   function j(p) { return fetch(API + p, { cache: 'no-store' }).then(function (r) { if (!r.ok) throw 0; return r.json(); }); }
   function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   function n(v) { return Number(v || 0).toLocaleString('en-US'); }

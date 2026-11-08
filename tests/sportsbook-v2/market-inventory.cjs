@@ -21,7 +21,7 @@ const TOKEN = CRED.token;
 const { chromium } = require('playwright');
 const { installOverlay } = require('./overlay.cjs');
 const PAGE = args.url || 'https://trustmyrecord.com/sportsbook/';
-const API = 'https://trustmyrecord-api.onrender.com/api';
+const API = 'https://api.trustmyrecord.com/api';
 const SPORTS = [
     ['MLB', 'baseball_mlb'], ['NFL', 'americanfootball_nfl'], ['NCAAF', 'americanfootball_ncaaf'],
     ['NBA', 'basketball_nba'], ['NCAAB', 'basketball_ncaab'], ['WNBA', 'basketball_wnba'],

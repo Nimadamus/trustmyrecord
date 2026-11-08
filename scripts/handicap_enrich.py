@@ -64,7 +64,7 @@ CACHE_TTL = int(os.environ.get("TMR_HX_CACHE_TTL", "10800"))  # 3h
 # enrichment failures are caught. Leave this empty.
 UA = {}
 
-TMR_API = os.environ.get("TMR_API", "https://trustmyrecord-api.onrender.com/api")
+TMR_API = os.environ.get("TMR_API", "https://api.trustmyrecord.com/api")
 # SIM_BAKE_NO_ARCHIVE_20261031. The page bake is not a visitor: with this key the
 # NFL simulator answers exactly as it does for anyone, but does not write the run
 # into the public run archive (sim_runs). Sent to the TrustMyRecord API only,

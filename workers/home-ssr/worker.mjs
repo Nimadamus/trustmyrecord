@@ -20,8 +20,8 @@
  * worker existed (client fetch + 4s failsafe).
  */
 
-const API_BOOTSTRAP = 'https://trustmyrecord-api.onrender.com/api/users/home-bootstrap';
-const API_SLATE = 'https://trustmyrecord-api.onrender.com/api/nav/mlb-slate';
+const API_BOOTSTRAP = 'https://api.trustmyrecord.com/api/users/home-bootstrap';
+const API_SLATE = 'https://api.trustmyrecord.com/api/nav/mlb-slate';
 const BOOTSTRAP_CACHE_KEY = 'https://trustmyrecord.com/__edge-cache/home-bootstrap-v1';
 const SLATE_CACHE_KEY = 'https://trustmyrecord.com/__edge-cache/mlb-slate-v1';
 const EDGE_TTL_SECONDS = 25;
@@ -65,7 +65,7 @@ const U_PATH_RE = /^\/u\/([^/]+)(\/?)$/;
    Anything outside it is passed through to the origin 404 rather than guessed
    at. Matches the registration validator in the backend's routes/auth.js. */
 const U_SAFE_NAME_RE = /^[A-Za-z0-9_-]{1,64}$/;
-const API_USER = 'https://trustmyrecord-api.onrender.com/api/users/';
+const API_USER = 'https://api.trustmyrecord.com/api/users/';
 /* The SAME set scripts/build_profile_pages.py discovers members from
    (list_users), which is the backend's canonical publicDirectoryUserWhere
    filter: active, not deleted, is_public, not an official bot, not a
@@ -74,7 +74,7 @@ const API_USER = 'https://trustmyrecord-api.onrender.com/api/users/';
    the edge will only ever serve a page the baker would also have created, so
    a private, retired or QA account stays an honest 404 here exactly as it does
    on disk. ~6KB, edge-cached. */
-const API_DIRECTORY = 'https://trustmyrecord-api.onrender.com/api/users/directory-usernames';
+const API_DIRECTORY = 'https://api.trustmyrecord.com/api/users/directory-usernames';
 const DIRECTORY_CACHE_KEY = 'https://trustmyrecord.com/__edge-cache/directory-usernames-v1';
 const DIRECTORY_TTL_SECONDS = 60;
 const U_TEMPLATE_PATH = '/static/prerender/u-fallback.html';
@@ -371,7 +371,7 @@ const NEUTRAL_URI = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(
    this file having to carry the generator. */
 function compNeutral(username, id) {
   var key = (id != null && id !== '') ? id : username;
-  return '<img class="comp-av" src="' + esc('https://trustmyrecord-api.onrender.com/api' + '/users/' + encodeURIComponent(key || '') + '/avatar') +
+  return '<img class="comp-av" src="' + esc('https://api.trustmyrecord.com/api' + '/users/' + encodeURIComponent(key || '') + '/avatar') +
     '" alt="" loading="lazy" style="width:100%;height:100%;border-radius:50%;object-fit:cover;display:block">';
 }
 

@@ -35,7 +35,7 @@ jobs:
           WHEN=$(TZ=America/Los_Angeles date '+%b %d %I:%M %p PT')
           BODY=""
           for i in 1 2 3; do
-            BODY=$(curl -fsS -m 90 https://trustmyrecord-api.onrender.com/api/roster/status) && break
+            BODY=$(curl -fsS -m 90 https://api.trustmyrecord.com/api/roster/status) && break
             sleep 30
           done
           printf '%s' "$BODY" > status.json

@@ -36,7 +36,7 @@ import urllib.request
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT_DIR = os.path.join(ROOT, "tennis", "rundown")
 SITE = "https://trustmyrecord.com"
-DEFAULT_API = "https://trustmyrecord-api.onrender.com/api"
+DEFAULT_API = "https://api.trustmyrecord.com/api"
 
 
 def esc(value):

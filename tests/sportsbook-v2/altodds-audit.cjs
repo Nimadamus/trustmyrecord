@@ -15,7 +15,7 @@ const args = {}; for (let i = 2; i < process.argv.length; i++) { const a = proce
 const SPORT = args.sport || 'MLB';
 const KEY = { MLB: 'baseball_mlb', NPB: 'baseball_npb', NHL: 'icehockey_nhl', NFL: 'americanfootball_nfl' }[SPORT] || 'baseball_mlb';
 const MAX = parseInt(args.games || '8', 10);
-const API = 'https://trustmyrecord-api.onrender.com/api';
+const API = 'https://api.trustmyrecord.com/api';
 
 const impl = (o) => { const n = Number(o); return n > 0 ? 100 / (n + 100) : Math.abs(n) / (Math.abs(n) + 100); };
 const fmt = (o) => (Number(o) > 0 ? '+' + o : String(o));

@@ -6,7 +6,7 @@
    ============================================================================= */
 (function () {
   'use strict';
-  var API = 'https://trustmyrecord-api.onrender.com/api';
+  var API = 'https://api.trustmyrecord.com/api';
 
   /* Build-pairing guard. scripts/build_home_critical.py stamps this constant
      AND <html data-tmr-build> with the same id at build time. A mismatch means

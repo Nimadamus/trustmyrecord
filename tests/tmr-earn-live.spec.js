@@ -14,7 +14,7 @@
 const { test, expect } = require('@playwright/test');
 
 const SITE = process.env.TMR_EARN_BASE_URL || 'https://trustmyrecord.com';
-const API = 'https://trustmyrecord-api.onrender.com/api';
+const API = 'https://api.trustmyrecord.com/api';
 const LOGIN = process.env.TMR_LOGIN;
 const PASSWORD = process.env.TMR_PASSWORD;
 

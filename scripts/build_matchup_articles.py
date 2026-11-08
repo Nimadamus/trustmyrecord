@@ -71,7 +71,7 @@ from team_logos import team_logo  # noqa: E402
 # reverted to a game already played. See scripts/featured_matchups.py.
 import featured_matchups  # noqa: E402
 
-API = os.environ.get("TMR_API", "https://trustmyrecord-api.onrender.com/api")
+API = os.environ.get("TMR_API", "https://api.trustmyrecord.com/api")
 SITE = "https://trustmyrecord.com"
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -159,20 +159,20 @@ SPORT_ORGANIZER = {
 
 # Only these hosts may appear in an article image. A Game File must not hotlink
 # a photograph from wherever the research happened to find it.
-ALLOWED_IMAGE_PREFIXES = ("/static/", SITE + "/static/", "https://trustmyrecord-api.onrender.com/api/share/og")
+ALLOWED_IMAGE_PREFIXES = ("/static/", SITE + "/static/", "https://api.trustmyrecord.com/api/share/og")
 
 # Hosts a build may DOWNLOAD from. Not hosts a page may link to — a page links to
 # /static/ and nothing else. An article's images are fetched once, at bake time,
 # and committed, so a published piece has no third-party dependency at render
 # time and cannot have an image change or disappear underneath it later.
 ALLOWED_FETCH_HOSTS = ("https://midfield.mlbstatic.com/", "https://www.mlbstatic.com/",
-                       "https://a.espncdn.com/", "https://trustmyrecord-api.onrender.com/api/share/og/")
+                       "https://a.espncdn.com/", "https://api.trustmyrecord.com/api/share/og/")
 
 # MOTD_OG_CARD_20261008. Facebook's crawler will not take an og:image from the
 # API host (the Sharing Debugger fell back to a logo on the page), so the API's
 # share card is baked into the site like every other article image and the page
 # points at the trustmyrecord.com copy.
-API_OG = "https://trustmyrecord-api.onrender.com/api/share/og/"
+API_OG = "https://api.trustmyrecord.com/api/share/og/"
 
 
 def og_local(article):

@@ -22,7 +22,7 @@
  *   - Everything injected is escaped before it reaches an attribute.
  */
 
-const API_BASE = 'https://trustmyrecord-api.onrender.com/api';
+const API_BASE = 'https://api.trustmyrecord.com/api';
 const META_TIMEOUT_MS = 1500;
 
 function esc(value) {

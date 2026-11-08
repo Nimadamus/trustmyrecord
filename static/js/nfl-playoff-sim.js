@@ -19,7 +19,7 @@
   // the page is never blank because an API is down.
   var API = (location.port === '8100'
     ? 'http://127.0.0.1:8199/api/nfl/public/playoff-inputs?season='
-    : 'https://trustmyrecord-api.onrender.com/api/nfl/public/playoff-inputs?season=') + SEASON;
+    : 'https://api.trustmyrecord.com/api/nfl/public/playoff-inputs?season=') + SEASON;
   var FALLBACK = 'data/playoff-inputs-' + SEASON + '.json';
 
   var S = {

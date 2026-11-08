@@ -70,7 +70,7 @@ async function rankSportsBySlate(page) {
     const counts = await page.evaluate(async ({ sportKey, windowHours, graceHours }) => {
       try {
         const base = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl)
-          || 'https://trustmyrecord-api.onrender.com/api';
+          || 'https://api.trustmyrecord.com/api';
         const res = await fetch(base + '/games/odds/' + sportKey);
         if (!res.ok) return { imminent: 0, priced: 0 };
         const body = await res.json();

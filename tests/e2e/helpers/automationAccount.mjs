@@ -50,7 +50,7 @@
  * out of the numbers, and it is permanent.
  */
 
-const API = process.env.BLP_LIVE_API || 'https://trustmyrecord-api.onrender.com';
+const API = process.env.BLP_LIVE_API || 'https://api.trustmyrecord.com';
 
 /**
  * @param {import('@playwright/test').APIRequestContext} request

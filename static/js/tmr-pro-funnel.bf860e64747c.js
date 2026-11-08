@@ -16,7 +16,7 @@
 (function () {
     'use strict';
     if (window.TMRFunnel) return;
-    var API = 'https://trustmyrecord-api.onrender.com/api';
+    var API = 'https://api.trustmyrecord.com/api';
     var path = (location.pathname || '/').toLowerCase();
     var SRC_KEY = 'tmr_funnel_src';
 
@@ -48,7 +48,7 @@
         try { proCount(name, p); } catch (e) { }
     }
     /* PRO_FUNNEL_20261103: anonymous counters of Pro prompts by entry point (no id, no IP). */
-    function proPulse(step, entry, plan) { try { var b = JSON.stringify({ milestone: 'pro_prompt_' + step, simulator: 'unknown', detail: entry, arm: plan || 'pro' }); fetch('https://trustmyrecord-api.onrender.com/api/activation/pulse', { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' }, body: b }).catch(function () { }); } catch (e) { } }
+    function proPulse(step, entry, plan) { try { var b = JSON.stringify({ milestone: 'pro_prompt_' + step, simulator: 'unknown', detail: entry, arm: plan || 'pro' }); fetch('https://api.trustmyrecord.com/api/activation/pulse', { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' }, body: b }).catch(function () { }); } catch (e) { } }
     function proEntry(c) {
         c = String(c || '');
         if (/^atw/.test(c)) return /\/around-the-web\/th-\d+/.test(location.pathname) ? 'handicapper_profile' : 'atw_directory';

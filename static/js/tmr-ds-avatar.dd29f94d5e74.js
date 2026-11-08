@@ -42,7 +42,7 @@
   function apiBase() {
     var base;
     try { base = (window.api && window.api.baseUrl) ? String(window.api.baseUrl) : null; } catch (e) { base = null; }
-    if (!base) base = window.TMR_API_BASE || window.API_BASE_URL || 'https://trustmyrecord-api.onrender.com';
+    if (!base) base = window.TMR_API_BASE || window.API_BASE_URL || 'https://api.trustmyrecord.com';
     return String(base).replace(/\/+$/, '').replace(/\/api$/, '');
   }
 

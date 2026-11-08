@@ -58,7 +58,7 @@
     window.TMR.espnScoreboardUrl = function (espnPath, dates, limit) {
         var apiBase = (window.api && window.api.baseUrl) ||
                       (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) ||
-                      'https://trustmyrecord-api.onrender.com/api';
+                      'https://api.trustmyrecord.com/api';
         var u = String(apiBase).replace(/\/$/, '') + '/games/espn/scoreboard?path=' + encodeURIComponent(espnPath);
         if (dates) u += '&dates=' + encodeURIComponent(dates);
         if (limit) u += '&limit=' + encodeURIComponent(limit);
@@ -116,7 +116,7 @@
             var last = localStorage.getItem('tmr_sb_last_sport');
             var key = last && window.TMR.sportKeyMap[last];
             if (!key) return;
-            fetch('https://trustmyrecord-api.onrender.com/api/games/board/' + encodeURIComponent(key),
+            fetch('https://api.trustmyrecord.com/api/games/board/' + encodeURIComponent(key),
                   { headers: { Accept: 'application/json' } })
                 .then(function (r) { return r && r.ok ? r.json() : null; })
                 .catch(function () {});
@@ -685,7 +685,7 @@
             // the 403. Games with no book odds simply stayed priceless.
             var _sumApiBase = (window.api && window.api.baseUrl) ||
                               (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) ||
-                              'https://trustmyrecord-api.onrender.com/api';
+                              'https://api.trustmyrecord.com/api';
             var summaryUrl = String(_sumApiBase).replace(/\/$/, '') + '/games/espn/summary?path=' +
                              encodeURIComponent(espnPath) + '&event=' + encodeURIComponent(eventId);
             fetch(summaryUrl)
@@ -1690,7 +1690,7 @@
         var anyMissing = games.some(function(g) { return !Array.isArray(g.market_groups) || !g.market_groups.length; });
         if (!anyMissing) return onDone && onDone(games);
 
-        var apiBase = (window.api && window.api.baseUrl) ? window.api.baseUrl : 'https://trustmyrecord-api.onrender.com/api';
+        var apiBase = (window.api && window.api.baseUrl) ? window.api.baseUrl : 'https://api.trustmyrecord.com/api';
         var url = apiBase + '/games/board/' + encodeURIComponent(sportKey) + '?limit=80';
         var done = false;
         var finish = function() { if (!done) { done = true; onDone && onDone(games); } };
@@ -3302,7 +3302,7 @@
 
     <!-- PRECONNECT_20260912: the board fetch and every crest pay a fresh
          DNS + TLS handshake without these; both are requested within ~600ms. -->
-    <link rel="preconnect" href="https://trustmyrecord-api.onrender.com" crossorigin>
+    <link rel="preconnect" href="https://api.trustmyrecord.com" crossorigin>
     <link rel="preconnect" href="https://a.espncdn.com">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11675,7 +11675,7 @@ window.toggleSportFamily = function (family) {
             // this parser already reads.
             var _probApiBase = (window.api && window.api.baseUrl) ||
                                (window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) ||
-                               'https://trustmyrecord-api.onrender.com/api';
+                               'https://api.trustmyrecord.com/api';
             fetch(String(_probApiBase).replace(/\/$/, '') + '/games/mlb-probables?dates=' +
                   encodeURIComponent(range), { cache: 'no-store' })
                 .then(function (r) { return r.ok ? r.json() : null; })
@@ -12100,7 +12100,7 @@ window.toggleSportFamily = function (family) {
         function getApiBase() {
             try { if (window.api && window.api.baseUrl) return window.api.baseUrl; } catch (e) {}
             try { if (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) return window.CONFIG.api.baseUrl; } catch (e) {}
-            return 'https://trustmyrecord-api.onrender.com/api';
+            return 'https://api.trustmyrecord.com/api';
         }
         function getToken() {
             try {
@@ -12385,7 +12385,7 @@ window.toggleSportFamily = function (family) {
     function _ttApiBase() {
         if (window.api && window.api.baseUrl) return window.api.baseUrl;
         if (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) return window.CONFIG.api.baseUrl;
-        return 'https://trustmyrecord-api.onrender.com/api';
+        return 'https://api.trustmyrecord.com/api';
     }
 
     function _ttFmtOdds(o) {
@@ -14041,7 +14041,7 @@ window.toggleSportFamily = function (family) {
         var key = (window.TMR && window.TMR.sportKeyMap && window.TMR.sportKeyMap[sport]) || '';
         rowsEl.innerHTML = '<div class="sportsbook-board-empty"><div class="sportsbook-board-empty-icon" aria-hidden="true">●</div><strong>Loading ' + sport + ' alternate lines…</strong><span>Pulling alternate spreads &amp; totals.</span></div>';
         if (!key) { rowsEl.innerHTML = emptyState(sport, 'Alternate lines are not available for ' + sport + ' yet.', 'closed'); return; }
-        var base = (typeof _ttApiBase === 'function') ? _ttApiBase() : ((window.api && window.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api');
+        var base = (typeof _ttApiBase === 'function') ? _ttApiBase() : ((window.api && window.api.baseUrl) || 'https://api.trustmyrecord.com/api');
         var esc = function (s) { return ('' + (s == null ? '' : s)).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); };
         var fmtOdds = function (o) { var n = Number(o); if (!isFinite(n)) return '—'; return n > 0 ? '+' + n : String(n); };
         var fmtWhen = function (iso) { if (!iso) return ''; try { var d = new Date(iso); return d.toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }); } catch (e) { return ''; } };
@@ -14332,7 +14332,7 @@ window.toggleSportFamily = function (family) {
         var key = (window.TMR && window.TMR.sportKeyMap && window.TMR.sportKeyMap[sport]) || '';
         rowsEl.innerHTML = '<div class="sportsbook-board-empty"><div class="sportsbook-board-empty-icon" aria-hidden="true">●</div><strong>Loading ' + sport + ' player props…</strong><span>Pulling player &amp; pitcher props.</span></div>';
         if (!key) { rowsEl.innerHTML = emptyState(sport, 'Player props are not available for ' + sport + ' yet.', 'closed'); return; }
-        var base = (typeof _ttApiBase === 'function') ? _ttApiBase() : ((window.api && window.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api');
+        var base = (typeof _ttApiBase === 'function') ? _ttApiBase() : ((window.api && window.api.baseUrl) || 'https://api.trustmyrecord.com/api');
         var esc = function (s) { return ('' + (s == null ? '' : s)).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); };
         var fmtOdds = function (o) { var n = Number(o); if (!isFinite(n)) return '—'; return n > 0 ? '+' + n : String(n); };
         var fmtWhen = function (iso) { if (!iso) return ''; try { var d = new Date(iso); return d.toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }); } catch (e) { return ''; } };
@@ -22454,7 +22454,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // utils/forumStats.js. Posts can never be lower than threads.
             (function loadForumStatsFromApi() {
                 if (!username) return;
-                var apiBase = (window.api && window.api.baseUrl) || (window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+                var apiBase = (window.api && window.api.baseUrl) || (window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) || 'https://api.trustmyrecord.com/api';
                 fetch(String(apiBase).replace(/\/$/, '') + '/users/' + encodeURIComponent(username) + '/community-activity')
                     .then(function(r) { return r.ok ? r.json() : null; })
                     .then(function(j) {
@@ -25143,7 +25143,7 @@ document.addEventListener('DOMContentLoaded', function() {
             gamesSpan.textContent = 'Checking...';
             var sportKey = sportMap[sport];
             if (!sportKey) { gamesSpan.textContent = 'No data'; return; }
-            var apiBase = (window.api && window.api.baseUrl) || (window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+            var apiBase = (window.api && window.api.baseUrl) || (window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) || 'https://api.trustmyrecord.com/api';
             fetch(String(apiBase).replace(/\/$/, '') + '/games/board/' + encodeURIComponent(sportKey)).then(function(r) {
                 if (!r.ok) throw new Error('HTTP ' + r.status);
                 return r.json();
@@ -25166,7 +25166,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // game counts from the same /games/board/<sportKey> endpoint and flip
         // the row Status to Closed when the league has nothing scheduled.
         var lobbyTargets = document.querySelectorAll('[data-sport-count]');
-        var apiBase2 = (window.api && window.api.baseUrl) || (window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+        var apiBase2 = (window.api && window.api.baseUrl) || (window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) || 'https://api.trustmyrecord.com/api';
         lobbyTargets.forEach(function(cell) {
             var sport = cell.getAttribute('data-sport-count');
             var sportKey = sportMap[sport];
@@ -25226,7 +25226,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 { railId: 'atp',        key: 'tennis_atp' },
                 { railId: 'wta',        key: 'tennis_wta' }
             ];
-            var apiBase3 = (window.api && window.api.baseUrl) || (window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+            var apiBase3 = (window.api && window.api.baseUrl) || (window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) || 'https://api.trustmyrecord.com/api';
             leagueRows.forEach(function(l) {
                 var railCell = document.getElementById(l.railId + '-game-count');
                 if (!railCell) return;

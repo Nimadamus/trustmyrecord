@@ -148,7 +148,7 @@
           <li>Their pending picks on the Watchdog board before the game starts</li>
           <li>BetLegend Pro</li>
         </ul>
-        <a class="wc-btn" id="wcPro" href="/premium/?from=welcome&amp;src=welcome#pricing" onclick="try{fetch('https://trustmyrecord-api.onrender.com/api/activation/pulse',{method:'POST',keepalive:true,headers:{'Content-Type':'application/json'},body:JSON.stringify({milestone:'pro_prompt_click',simulator:'unknown',detail:'welcome',arm:'pro'})});sessionStorage.setItem('tmr_pro_entry','welcome')}catch(e){}">See what Pro includes</a>
+        <a class="wc-btn" id="wcPro" href="/premium/?from=welcome&amp;src=welcome#pricing" onclick="try{fetch('https://api.trustmyrecord.com/api/activation/pulse',{method:'POST',keepalive:true,headers:{'Content-Type':'application/json'},body:JSON.stringify({milestone:'pro_prompt_click',simulator:'unknown',detail:'welcome',arm:'pro'})});sessionStorage.setItem('tmr_pro_entry','welcome')}catch(e){}">See what Pro includes</a>
         <p class="wc-fine">$49.99/month. The free daily run never needs Pro.</p>
       </div>
     </div>
@@ -170,13 +170,13 @@
     </section>
     <script>
       (function () {
-        fetch('https://trustmyrecord-api.onrender.com/api/pro/watchdog/stats', { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
+        fetch('https://api.trustmyrecord.com/api/pro/watchdog/stats', { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
           if (!d || !d.accounts || !d.graded_picks) return;
           var box = document.getElementById('wcVerStats'); if (!box) return;
           box.querySelectorAll('[data-wv]').forEach(function (el) { el.textContent = Number(d[el.getAttribute('data-wv')]).toLocaleString('en-US'); });
           box.hidden = false;
         }).catch(function () { });
-        try { fetch('https://trustmyrecord-api.onrender.com/api/activation/pulse', { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ milestone: 'pro_prompt_view', simulator: 'unknown', detail: 'welcome', arm: 'pro' }) }).catch(function () { }); } catch (e) { }
+        try { fetch('https://api.trustmyrecord.com/api/activation/pulse', { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ milestone: 'pro_prompt_view', simulator: 'unknown', detail: 'welcome', arm: 'pro' }) }).catch(function () { }); } catch (e) { }
       })();
     </script>
 

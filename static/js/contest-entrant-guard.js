@@ -11,7 +11,7 @@
     'use strict';
     var CONTEST_ID = 'justbet-mlb';
     try { if (new URLSearchParams(window.location.search).get('contest')) return; } catch (e) { return; }
-    var apiBase = (window.TMR_API_BASE || window.API_BASE_URL || 'https://trustmyrecord-api.onrender.com').replace(/\/$/, '');
+    var apiBase = (window.TMR_API_BASE || window.API_BASE_URL || 'https://api.trustmyrecord.com').replace(/\/$/, '');
     var CONTEST_URL = '/sportsbook/?contest=' + CONTEST_ID;
 
     function token() {

@@ -106,7 +106,7 @@ async function selectSportWithPostedLines(page) {
     const count = await page.evaluate(async (sportKey) => {
       try {
         const base = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl)
-          || 'https://trustmyrecord-api.onrender.com/api';
+          || 'https://api.trustmyrecord.com/api';
         const res = await fetch(base + '/games/odds/' + sportKey);
         if (!res.ok) return 0;
         const body = await res.json();
@@ -832,7 +832,7 @@ test.describe('handicappers directory canonical profile links', () => {
   // assertions below are written to fail on the intermittency rather than wait
   // it out.
   test('newest member link matches the canonical /u/<username>/ route used by directory cards, and resolves', async ({ page, request }) => {
-    const api = await request.get('https://trustmyrecord-api.onrender.com/api/users/newest-member');
+    const api = await request.get('https://api.trustmyrecord.com/api/users/newest-member');
     expect(api.ok(), 'newest-member API should respond').toBeTruthy();
     const { member } = await api.json();
     test.skip(!member, 'no eligible newest member returned right now');

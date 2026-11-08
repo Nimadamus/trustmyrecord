@@ -14,7 +14,7 @@ const ROOT = path.resolve(__dirname, '..');
 const SIM = path.join(ROOT, 'nfl-simulator', 'index.html');
 const PLAYOFF = path.join(ROOT, 'nfl-playoff-simulator', 'index.html');
 const SNAP = path.join(ROOT, 'nfl-simulator', 'accuracy-public.json');
-const API = 'https://trustmyrecord-api.onrender.com/api/nfl/public/accuracy';
+const API = 'https://api.trustmyrecord.com/api/nfl/public/accuracy';
 
 async function load() {
   const i = process.argv.indexOf('--input');

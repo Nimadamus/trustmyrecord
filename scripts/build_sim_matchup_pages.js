@@ -69,7 +69,7 @@ const SPORTS = String(arg('--sports', 'nba,nhl')).split(',').map((x) => x.trim()
    archive write (a bake must never call /simulate, which records publicly); season inputs give
    the real record and scoring. `--nba-live-dir DIR` (cards.json + season-inputs.json) is for
    tests. A 404 means the API has not shipped the route: the committed pages stay, quietly. */
-const API = 'https://trustmyrecord-api.onrender.com/api/';
+const API = 'https://api.trustmyrecord.com/api/';
 let NBA = null;
 async function loadNba() {
   const dir = arg('--nba-live-dir', null);

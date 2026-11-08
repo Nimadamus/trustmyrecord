@@ -3,7 +3,7 @@
    <div class="tmr-sport-lb" data-sport="mlb" data-label="MLB"></div>.
    data-sport accepts friendly aliases (mlb, nba, nfl, nhl, soccer). */
 (function () {
-  var API = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+  var API = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://api.trustmyrecord.com/api';
   function esc(s) {
     return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];

@@ -34,7 +34,7 @@
   'use strict';
 
   var API_BASE = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl)
-    || 'https://trustmyrecord-api.onrender.com/api';
+    || 'https://api.trustmyrecord.com/api';
 
   // Defaults match the shipped settings, so the strip is correct the instant it
   // paints and merely re-confirmed when /status answers.

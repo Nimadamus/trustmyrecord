@@ -129,7 +129,7 @@
   var SWAP_DEADLINE_MS = 1500;
   var revealFailSafe = setTimeout(function () { runLegacyHydrateOnce(); }, SWAP_DEADLINE_MS);
 
-  var API = 'https://trustmyrecord-api.onrender.com/api';
+  var API = 'https://api.trustmyrecord.com/api';
   if (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) API = window.CONFIG.api.baseUrl;
 
   // ---------- small helpers ----------

@@ -5,7 +5,7 @@
    ============================================================================= */
 (function () {
   'use strict';
-  var API = 'https://trustmyrecord-api.onrender.com/api';
+  var API = 'https://api.trustmyrecord.com/api';
 
   // tmr-session.js owns token reading + the refresh-then-retry flow. The inline
   // fallbacks keep this file working if that script ever fails to load.

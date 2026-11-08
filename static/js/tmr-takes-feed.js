@@ -43,7 +43,7 @@
   function apiBase() {
     if (window.TMRSession && window.TMRSession.api) return window.TMRSession.api;
     var cfg = (typeof CONFIG !== 'undefined' && CONFIG) ? CONFIG : window.CONFIG;
-    return ((cfg && cfg.api && cfg.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api').replace(/\/+$/, '');
+    return ((cfg && cfg.api && cfg.api.baseUrl) || 'https://api.trustmyrecord.com/api').replace(/\/+$/, '');
   }
   function signedIn() {
     var S = window.TMRSession;

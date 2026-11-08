@@ -27,7 +27,7 @@ const path = require('path');
 const BACKEND = path.join(__dirname, '../../trustmyrecord-backend');
 const jwt = require(path.join(BACKEND, 'node_modules/jsonwebtoken'));
 
-const API = 'https://trustmyrecord-api.onrender.com/api';
+const API = 'https://api.trustmyrecord.com/api';
 const JWT_SECRET = process.env.TMR_JWT_SECRET || '';
 const ADMIN_TOKEN = process.env.TMR_ADMIN_TOKEN || '';
 if (!JWT_SECRET || !ADMIN_TOKEN) {

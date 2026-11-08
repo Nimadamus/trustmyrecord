@@ -54,7 +54,7 @@
   // don't leave visitors staring at a blank page forever.
   var revealFailSafe = setTimeout(function () { runLegacyHydrateOnce(); }, 6000);
 
-  var API = 'https://trustmyrecord-api.onrender.com/api';
+  var API = 'https://api.trustmyrecord.com/api';
   if (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) API = window.CONFIG.api.baseUrl;
 
   // ---------- small helpers ----------

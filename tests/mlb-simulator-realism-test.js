@@ -92,7 +92,7 @@ function createSimulator() {
     Blob: class Blob {},
     navigator: { clipboard: { writeText() { return Promise.resolve(); } } },
     fetch: () => Promise.reject(new Error('network unavailable')),
-    CONFIG: { api: { baseUrl: 'https://trustmyrecord-api.onrender.com/api' } },
+    CONFIG: { api: { baseUrl: 'https://api.trustmyrecord.com/api' } },
   };
   context.window.document = context.document;
   /**

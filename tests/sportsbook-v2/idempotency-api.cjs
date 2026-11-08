@@ -17,7 +17,7 @@ if (!TOKEN_PATH || !fs.existsSync(TOKEN_PATH)) {
   process.exit(0);
 }
 const TOKEN = fs.readFileSync(TOKEN_PATH, 'utf8').trim();
-const API = 'https://trustmyrecord-api.onrender.com/api';
+const API = 'https://api.trustmyrecord.com/api';
 const DELAY_MIN = parseFloat(args.delayMinutes || '2.5');
 let failures = 0; const created = [];
 function check(name, ok, d) { if (!ok) failures++; console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${ok ? '' : ' -> ' + JSON.stringify(d).slice(0, 300)}`); }

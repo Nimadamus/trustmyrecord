@@ -22,7 +22,7 @@ function snapshotOf(api) {
     ats_accuracy: o.ats_accuracy, ats_n: o.ats_n, totals_accuracy: o.totals_accuracy, totals_n: o.totals_n, games: o.games } : null);
   const s = api.served || null;
   return {
-    source: 'https://trustmyrecord-api.onrender.com/api/nfl/public/accuracy',
+    source: 'https://api.trustmyrecord.com/api/nfl/public/accuracy',
     report_generated_at: api.generated_at || null,
     model_version: api.model_version || null,
     holdout: { season: h.season, model: pick(h.model), coin_flip: pick(h.coin_flip), home_team: pick(h.home_team), market_favourite: pick(h.market_favourite) },

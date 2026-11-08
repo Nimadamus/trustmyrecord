@@ -23,7 +23,7 @@ const BACKEND = path.join(__dirname, '../../trustmyrecord-backend');
 const jwt = require(path.join(BACKEND, 'node_modules/jsonwebtoken'));
 const { Pool } = require(path.join(BACKEND, 'node_modules/pg'));
 
-const PROD_API = 'https://trustmyrecord-api.onrender.com/api';
+const PROD_API = 'https://api.trustmyrecord.com/api';
 const LOCAL_API = process.env.TMR_LOCAL_API || 'http://localhost:3000/api';
 const DB_URL = process.env.DATABASE_URL || '';
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN || '';

@@ -39,7 +39,7 @@ for _s in (sys.stdout, sys.stderr):
     except Exception:
         pass
 
-API  = "https://trustmyrecord-api.onrender.com/api"
+API  = "https://api.trustmyrecord.com/api"
 SITE = "https://trustmyrecord.com"
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TDIR = os.path.join(ROOT, "forum", "thread")
@@ -51,7 +51,7 @@ SITEMAP = os.path.join(ROOT, "sitemap.xml")
 # thread page. The interactive forum app adds its own Share Thread / Share post
 # buttons; this is the version a logged-out visitor and a crawler see.
 # ---------------------------------------------------------------------------
-OG_CARD_BASE = "https://trustmyrecord-api.onrender.com/api/share/og"
+OG_CARD_BASE = "https://api.trustmyrecord.com/api/share/og"
 
 _SHARE_ICON = (
     '<svg viewBox="0 0 24 24" aria-hidden="true" width="15" height="15" fill="currentColor">'

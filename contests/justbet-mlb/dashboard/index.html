@@ -727,7 +727,7 @@
         // stays true until then, so a failed/slow meta fetch can never flash the
         // live board.
         let PRELAUNCH = true;
-        const API_BASE = (window.TMR_API_BASE || window.API_BASE_URL || 'https://trustmyrecord-api.onrender.com').replace(/\/$/, '');
+        const API_BASE = (window.TMR_API_BASE || window.API_BASE_URL || 'https://api.trustmyrecord.com').replace(/\/$/, '');
         const API = (path) => `${API_BASE}/api/contests/${CONTEST_ID}${path}`;
 
         const $ = (sel) => document.querySelector(sel);
@@ -847,7 +847,7 @@
                     if (direct && typeof direct === 'string') return direct;
                     const key = u.id != null ? u.id : (u.username || '');
                     if (key === '' || key == null) return '';
-                    const base = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+                    const base = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://api.trustmyrecord.com/api';
                     return String(base).replace(/\/+$/, '') + '/users/' + encodeURIComponent(key) + '/avatar';
                 }
 

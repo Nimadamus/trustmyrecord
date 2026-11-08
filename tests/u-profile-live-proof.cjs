@@ -18,7 +18,7 @@
  *     node tests/u-profile-live-proof.cjs
  */
 const SITE = process.env.TMR_SITE || 'https://trustmyrecord.com';
-const API = process.env.TMR_API || 'https://trustmyrecord-api.onrender.com/api';
+const API = process.env.TMR_API || 'https://api.trustmyrecord.com/api';
 
 let failures = 0;
 const ok = (m) => console.log('  ok    ' + m);

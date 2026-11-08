@@ -27,7 +27,7 @@
     if (!SUPPORTED_CONTESTS[contestId]) return;
 
     var meta = SUPPORTED_CONTESTS[contestId];
-    var apiBase = (window.TMR_API_BASE || window.API_BASE_URL || 'https://trustmyrecord-api.onrender.com').replace(/\/$/, '');
+    var apiBase = (window.TMR_API_BASE || window.API_BASE_URL || 'https://api.trustmyrecord.com').replace(/\/$/, '');
 
     function getAuthToken() {
         var keys = ['tmr_auth_token', 'trustmyrecord_token', 'accessToken', 'access_token', 'token', 'tmr_token'];

@@ -153,7 +153,7 @@
 (function () {
     // The static site and the API are different origins, so a relative /api path
     // 404s here. Absolute, always.
-    var API = 'https://trustmyrecord-api.onrender.com/api';
+    var API = 'https://api.trustmyrecord.com/api';
 
     var tabsEl  = document.getElementById('tlbTabs');
     var blurbEl = document.getElementById('tlbBlurb');
@@ -187,7 +187,7 @@
         if (direct && typeof direct === 'string') return direct;
         var key = u.id != null ? u.id : (u.user_id != null ? u.user_id : (u.username || ''));
         if (key === '' || key == null) return '';
-        var base = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+        var base = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://api.trustmyrecord.com/api';
         return String(base).replace(/\/+$/, '') + '/users/' + encodeURIComponent(key) + '/avatar';
     }
     function esc(v) {

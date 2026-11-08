@@ -20,7 +20,7 @@
   if (window.__tmrWelcomeRep) return;
   window.__tmrWelcomeRep = true;
 
-  var API = (window.TMR_API_BASE || window.API_BASE_URL || 'https://trustmyrecord-api.onrender.com').replace(/\/$/, '');
+  var API = (window.TMR_API_BASE || window.API_BASE_URL || 'https://api.trustmyrecord.com').replace(/\/$/, '');
 
   function token() {
     try {

@@ -20,7 +20,7 @@
   // The production API host. `window.TMR_SIM_API_HOST` overrides it so the
   // end-to-end test can drive the real page against a local backend; nothing in
   // the shipped pages sets it.
-  var API_HOST = global.TMR_SIM_API_HOST || 'https://trustmyrecord-api.onrender.com';
+  var API_HOST = global.TMR_SIM_API_HOST || 'https://api.trustmyrecord.com';
 
   function $(sel, root) { return (root || document).querySelector(sel); }
   function $$(sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }

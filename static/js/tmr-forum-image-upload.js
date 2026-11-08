@@ -202,7 +202,7 @@
     try {
       if (window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) return String(CONFIG.api.baseUrl).replace(/\/+$/, '');
     } catch (e) {}
-    return 'https://trustmyrecord-api.onrender.com/api';
+    return 'https://api.trustmyrecord.com/api';
   }
 
   // XHR, not fetch: fetch still has no upload-progress event, and a visible

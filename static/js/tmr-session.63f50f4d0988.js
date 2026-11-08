@@ -28,7 +28,7 @@
 
   var API = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl)
     ? String(window.CONFIG.api.baseUrl).replace(/\/+$/, '')
-    : 'https://trustmyrecord-api.onrender.com/api';
+    : 'https://api.trustmyrecord.com/api';
 
   var ACCESS_KEYS = ['trustmyrecord_token', 'accessToken', 'access_token', 'token', 'tmr_token'];
   var REFRESH_KEYS = ['trustmyrecord_refresh_token', 'refreshToken', 'refresh_token', 'tmr_refresh_token'];

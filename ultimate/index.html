@@ -225,12 +225,12 @@
    fictional picks: no account, no network call, no model cost per view. */
 (function () {
   'use strict';
-  var API = 'https://trustmyrecord-api.onrender.com/api';
+  var API = 'https://api.trustmyrecord.com/api';
   var PLAN_START = '2026-08-01';
   var S = null, status = null, busy = false;
   function ev(name, params) { try { if (window.gtag) gtag('event', name, params || {}); } catch (e) { } }
   /* PRO_FUNNEL_20261103 */
-  function proPulse(step, entry, plan) { try { var b = JSON.stringify({ milestone: 'pro_prompt_' + step, simulator: 'unknown', detail: entry, arm: plan || 'pro' }); fetch('https://trustmyrecord-api.onrender.com/api/activation/pulse', { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' }, body: b }).catch(function () { }); } catch (e) { } }
+  function proPulse(step, entry, plan) { try { var b = JSON.stringify({ milestone: 'pro_prompt_' + step, simulator: 'unknown', detail: entry, arm: plan || 'pro' }); fetch('https://api.trustmyrecord.com/api/activation/pulse', { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' }, body: b }).catch(function () { }); } catch (e) { } }
   setTimeout(function () { proPulse('view', 'ultimate_page', 'ultimate'); }, 3000);
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
 

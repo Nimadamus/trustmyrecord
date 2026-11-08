@@ -64,7 +64,7 @@
 <script>
 (function () {
     function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-    function apiBase(){ try{ if(window.api&&window.api.baseUrl) return String(window.api.baseUrl).replace(/\/$/,''); }catch(e){} return (window.TMR_API_BASE||window.API_BASE_URL||'https://trustmyrecord-api.onrender.com').replace(/\/$/,''); }
+    function apiBase(){ try{ if(window.api&&window.api.baseUrl) return String(window.api.baseUrl).replace(/\/$/,''); }catch(e){} return (window.TMR_API_BASE||window.API_BASE_URL||'https://api.trustmyrecord.com').replace(/\/$/,''); }
     function pLink(u,d){ u=u||''; d=d||u; return u?'<a href="/profile/?user='+encodeURIComponent(u)+'">'+esc(d)+'</a>':esc(d); }
     function badge(r){ return '<span class="og-badge '+r+'">'+r.toUpperCase()+'</span>'; }
 

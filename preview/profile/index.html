@@ -1710,7 +1710,7 @@
             (function(){
                 function getApiBase(){
                     try { if (window.api && window.api.baseUrl) return String(window.api.baseUrl).replace(/\/$/,''); } catch(e){}
-                    return (window.TMR_API_BASE || window.API_BASE_URL || 'https://trustmyrecord-api.onrender.com').replace(/\/$/,'');
+                    return (window.TMR_API_BASE || window.API_BASE_URL || 'https://api.trustmyrecord.com').replace(/\/$/,'');
                 }
                 function getToken(){
                     try { if (window.api && window.api.token) return window.api.token; } catch(e){}
@@ -7101,7 +7101,7 @@
     async function loadCommunityActivity(username) {
         var section = document.getElementById('communityActivity');
         if (!section || !username) return;
-        var apiBase = (window.TMR_API_BASE || window.API_BASE_URL || 'https://trustmyrecord-api.onrender.com').replace(/\/$/, '');
+        var apiBase = (window.TMR_API_BASE || window.API_BASE_URL || 'https://api.trustmyrecord.com').replace(/\/$/, '');
         var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]; }); };
         var fmtDate = function (v) {
             if (!v) return '—';
@@ -7182,7 +7182,7 @@
         var host = document.getElementById('profilePollPoints');
         var empty = document.getElementById('profilePollEmpty');
         if (!host || !username) return;
-        var apiBase = (window.TMR_API_BASE || window.API_BASE_URL || 'https://trustmyrecord-api.onrender.com').replace(/\/$/, '');
+        var apiBase = (window.TMR_API_BASE || window.API_BASE_URL || 'https://api.trustmyrecord.com').replace(/\/$/, '');
         try {
             var resp = await fetch(apiBase + '/api/polls/users/' + encodeURIComponent(username) + '/stats');
             if (!resp.ok) return;
@@ -7553,7 +7553,7 @@
         }
         if (!data) {
             try {
-                const resp = await fetch('https://trustmyrecord-api.onrender.com/api/users/' + encodeURIComponent(username) + '/metrics', {
+                const resp = await fetch('https://api.trustmyrecord.com/api/users/' + encodeURIComponent(username) + '/metrics', {
                     cache: 'no-store',
                     signal: AbortSignal.timeout(10000)
                 });
@@ -10490,7 +10490,7 @@
 
     // ---- Awards Received tab: isolated loader, read-only, never touches record ----
     (function initProfileAwards() {
-        const API_BASE = (window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+        const API_BASE = (window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) || 'https://api.trustmyrecord.com/api';
         // Palette identity by award type: Best ROI = emerald, Most Units =
         // gold, Most Active = cyan, Admin Discretion = violet/platinum-holo.
         const STYLE_BY_TYPE = {
@@ -10943,7 +10943,7 @@
             if (direct && typeof direct === 'string') return direct;
             const key = u.id != null ? u.id : (u.username || '');
             if (key === '' || key == null) return '';
-            const base = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+            const base = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://api.trustmyrecord.com/api';
             return String(base).replace(/\/+$/, '') + '/users/' + encodeURIComponent(key) + '/avatar';
         }
 

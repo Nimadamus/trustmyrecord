@@ -3,7 +3,7 @@
 (function () {
   var panel = document.getElementById('pxhPanel');
   if (!panel) return;
-  var api = 'https://trustmyrecord-api.onrender.com/api';
+  var api = 'https://api.trustmyrecord.com/api';
   try { if (window.TMR_SESSION && window.TMR_SESSION.api) api = window.TMR_SESSION.api; } catch (e) {}
   function fmt(n) { return Number(n || 0).toLocaleString('en-US'); }
   function ago(iso) {

@@ -36,7 +36,7 @@ const { chromium } = require('playwright');
 const { installOverlay } = require('./overlay.cjs');
 const PICKS = args.picks ? JSON.parse(args.picks) : [];
 const REPORT = args.report || path.join(process.cwd(), `sportsbook-regression-${LABEL}.json`);
-const API = 'https://trustmyrecord-api.onrender.com/api';
+const API = 'https://api.trustmyrecord.com/api';
 const USER_ID = 721;
 // --dry 1: POST /api/picks is answered locally (201 echo) so the UI wiring can be
 // verified on a deployed route without recording another pick. Note the backend's

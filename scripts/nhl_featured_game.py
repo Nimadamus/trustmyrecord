@@ -57,7 +57,7 @@ ODDS_MAX_AGE_H = 6
 
 NHL = "https://api-web.nhle.com/v1"
 NHL_STATS = "https://api.nhle.com/stats/rest/en"
-TMR_API = "https://trustmyrecord-api.onrender.com/api"
+TMR_API = "https://api.trustmyrecord.com/api"
 ESPN_INJ = "https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/injuries"
 DFO = "https://www.dailyfaceoff.com/starting-goalies/%s"
 

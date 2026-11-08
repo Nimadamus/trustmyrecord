@@ -161,7 +161,7 @@
             const avatar = member.avatar_url || member.avatarUrl
                 || ((window.TMRAvatar && window.TMRAvatar.src)
                     ? window.TMRAvatar.src({ username: username, id: member.id })
-                    : (((window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api')
+                    : (((window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://api.trustmyrecord.com/api')
                         + '/users/' + encodeURIComponent(username) + '/avatar'));
             const profileHref = '/u/' + encodeURIComponent(username) + '/';
             const record = wins + '-' + losses + (pushes ? '-' + pushes : '');
@@ -199,7 +199,7 @@
         if (!looksEmpty || window.__hmEmergencyRestoreStarted) return;
         window.__hmEmergencyRestoreStarted = true;
         try {
-            const base = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+            const base = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://api.trustmyrecord.com/api';
             const responses = await Promise.all([
                 fetch(base + '/users?limit=250&offset=0').then(response => response.ok ? response.json() : []),
                 fetch(base + '/users/leaderboard?sortBy=net_units&limit=250').then(response => response.ok ? response.json() : [])

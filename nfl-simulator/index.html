@@ -596,7 +596,7 @@
     // committed accuracy-ytd.json (frozen at week 4, Oct 6): if the API does not answer, the
     // season-to-date table stays hidden rather than showing old numbers as current.
     var get=function(u){return fetch(u,{cache:'no-cache'}).then(function(r){return r.ok?r.json():null})};
-    get('https://trustmyrecord-api.onrender.com/api/nfl/public/accuracy').catch(function(){return null}).then(function(d){
+    get('https://api.trustmyrecord.com/api/nfl/public/accuracy').catch(function(){return null}).then(function(d){
       if(!d||!d.ytd||!d.ytd.model||!d.games||!d.games.length)return;
       if(d.holdout&&d.holdout.model){var ht=document.getElementById('nflAccHold');if(ht){[].forEach.call(ht.querySelectorAll('[data-k]'),function(td){var k=td.getAttribute('data-k').split('.'),v=d.holdout[k[0]]&&d.holdout[k[0]][k[1]];if(v==null)return;td.textContent=/accuracy/.test(k[1])?(v*100).toFixed(2)+'%':(k[1]==='margin_mae'?v.toFixed(1)+' points':v.toFixed(4))});}}
       var M=d.ytd.model,K=d.ytd.market_favourite||{};
@@ -797,7 +797,7 @@
 <script src="/static/js/analytics.js?v=471dc3fea1e5"></script>
 <script src="/static/js/sim-auth-gate.js?v=dc60ab78ac2e"></script>
 <script>
-const API='https://trustmyrecord-api.onrender.com/api/nfl/public';
+const API='https://api.trustmyrecord.com/api/nfl/public';
 const $=(s,r=document)=>r.querySelector(s);
 const $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const el=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e};
@@ -833,7 +833,7 @@ const SIM_TIMEOUT_MS=(typeof window.__NFL_SIM_TIMEOUT_MS==='number'&&window.__NF
 let rosterStatusPromise=null;
 function paintRosterClock(node){
   if(!rosterStatusPromise){
-    const base=(window.CONFIG&&window.CONFIG.api&&window.CONFIG.api.baseUrl)||'https://trustmyrecord-api.onrender.com/api';
+    const base=(window.CONFIG&&window.CONFIG.api&&window.CONFIG.api.baseUrl)||'https://api.trustmyrecord.com/api';
     rosterStatusPromise=fetch(base+'/roster/status',{headers:{Accept:'application/json'},credentials:'omit'}).then(r=>r.ok?r.json():null).catch(()=>null);
   }
   rosterStatusPromise.then(s=>{
@@ -1276,7 +1276,7 @@ function highlightBoardGame(g,board){
 }
 async function aimAtLiveBoard(){
   if(STATE.mode!=='weekly')return;
-  const TMR_API=(window.CONFIG&&window.CONFIG.api&&window.CONFIG.api.baseUrl)||'https://trustmyrecord-api.onrender.com/api';
+  const TMR_API=(window.CONFIG&&window.CONFIG.api&&window.CONFIG.api.baseUrl)||'https://api.trustmyrecord.com/api';
   const boardP=fetch(TMR_API+'/games/board/americanfootball_nfl',{headers:{Accept:'application/json'},credentials:'omit'}).then(r=>r.ok?r.json():null).catch(()=>null);
   const featP=fetch('/data/featured-matchups.json?b='+Math.floor(Date.now()/60000),{credentials:'omit',cache:'no-store'}).then(r=>r.ok?r.json():null).catch(()=>null);
   const boardJson=await boardP;

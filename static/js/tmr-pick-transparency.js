@@ -6,7 +6,7 @@
    #pregame-record (profile/index.html); does nothing on a page without it. */
 (function () {
   'use strict';
-  var API = 'https://trustmyrecord-api.onrender.com/api';
+  var API = 'https://api.trustmyrecord.com/api';
   var mount = document.getElementById('pregame-record');
   if (!mount) return;
 

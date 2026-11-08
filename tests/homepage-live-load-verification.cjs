@@ -27,7 +27,7 @@ const argv = process.argv.slice(2);
 const arg = (f, d) => { const i = argv.indexOf(f); return i === -1 ? d : argv[i + 1]; };
 const OUT = arg('--out', path.join(__dirname, '..', '..', 'tmr_homeload_live'));
 const SITE = arg('--site', 'https://trustmyrecord.com');
-const API = 'https://trustmyrecord-api.onrender.com/api';
+const API = 'https://api.trustmyrecord.com/api';
 const LOGIN = argv.includes('--login');
 /* Credentials come from the ENVIRONMENT. Passing them as --user/--pass put
    them in the process command line, where they show up in process listings,

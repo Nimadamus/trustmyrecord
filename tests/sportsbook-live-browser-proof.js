@@ -74,7 +74,7 @@ async function main() {
      not be pointed at another sport instead: that would put new proof picks on
      the QA account for markets this proof was never written for. */
   try {
-    const res = await fetch('https://trustmyrecord-api.onrender.com/api/games/board/baseball_mlb?limit=5', { cache: 'no-store' });
+    const res = await fetch('https://api.trustmyrecord.com/api/games/board/baseball_mlb?limit=5', { cache: 'no-store' });
     const board = res.ok ? await res.json() : null;
     if (board && Array.isArray(board.games) && board.games.length === 0) {
       console.log('SKIP: no MLB games on the live board (offseason); the MLB F5 submit proof has nothing to submit against.');
@@ -96,7 +96,7 @@ async function main() {
   if (!unique || !qaPassword) {
     throw new Error('TMR_QA_USERNAME / TMR_QA_PASSWORD are not set. This proof logs into the one permanent QA account; it never creates accounts.');
   }
-  const signupResponse = await page.request.post('https://trustmyrecord-api.onrender.com/api/auth/login', {
+  const signupResponse = await page.request.post('https://api.trustmyrecord.com/api/auth/login', {
     headers: { 'Accept': 'application/json', 'X-TMR-Automation': 'tests/sportsbook-live-browser-proof.js' },
     data: { login: unique, password: qaPassword }
   });
@@ -156,7 +156,7 @@ async function main() {
   // go on a game the account has no pending pick on (duplicate pick guard).
   const pendingBefore = await page.evaluate(async () => {
     const token = localStorage.getItem('trustmyrecord_token') || localStorage.getItem('accessToken');
-    const response = await fetch('https://trustmyrecord-api.onrender.com/api/picks/pending?limit=100', {
+    const response = await fetch('https://api.trustmyrecord.com/api/picks/pending?limit=100', {
       headers: { 'Accept': 'application/json', 'Authorization': 'Bearer ' + token }
     });
     if (!response.ok) throw new Error('pending picks lookup failed: ' + response.status);
@@ -215,7 +215,7 @@ async function main() {
   const submitProof = await pollLiveProof(page, () => page.evaluate(async ({ selectedMarketType, beforeIds }) => {
     const token = localStorage.getItem('trustmyrecord_token') || localStorage.getItem('accessToken');
     if (!token || !/^f5/i.test(String(selectedMarketType || ''))) return null;
-    const response = await fetch('https://trustmyrecord-api.onrender.com/api/picks/pending?limit=100', {
+    const response = await fetch('https://api.trustmyrecord.com/api/picks/pending?limit=100', {
       headers: { 'Accept': 'application/json', 'Authorization': 'Bearer ' + token }
     });
     if (!response.ok) return { ok: false, status: response.status };
@@ -258,7 +258,7 @@ async function main() {
   const postRefreshProof = await pollLiveProof(page, () => page.evaluate(async (pickId) => {
     const token = localStorage.getItem('trustmyrecord_token') || localStorage.getItem('accessToken');
     if (!token) return null;
-    const response = await fetch('https://trustmyrecord-api.onrender.com/api/picks/pending?limit=100', {
+    const response = await fetch('https://api.trustmyrecord.com/api/picks/pending?limit=100', {
       headers: { 'Accept': 'application/json', 'Authorization': 'Bearer ' + token }
     });
     if (!response.ok) return { ok: false, status: response.status };

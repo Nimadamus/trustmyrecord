@@ -16,7 +16,7 @@
 (function () {
     'use strict';
     if (window.TMRFunnel) return;
-    var API = 'https://trustmyrecord-api.onrender.com/api';
+    var API = 'https://api.trustmyrecord.com/api';
     var path = (location.pathname || '/').toLowerCase();
     var SRC_KEY = 'tmr_funnel_src';
 

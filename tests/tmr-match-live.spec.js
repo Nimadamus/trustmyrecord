@@ -16,7 +16,7 @@
 
 const { test, expect } = require('@playwright/test');
 
-const API = 'https://trustmyrecord-api.onrender.com/api';
+const API = 'https://api.trustmyrecord.com/api';
 
 test.describe('TMR Match, live', () => {
   test('the market page loads and is indexable', async ({ page }) => {

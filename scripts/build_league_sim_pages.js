@@ -34,7 +34,7 @@ let TEAM_DETAIL = '';
 
 const ROOT = path.resolve(__dirname, '..');
 const SITE = 'https://trustmyrecord.com';
-const API = 'https://trustmyrecord-api.onrender.com/api/';
+const API = 'https://api.trustmyrecord.com/api/';
 const args = process.argv.slice(2);
 const argVal = (k) => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] : null; };
 const RUNS = Number(argVal('--runs')) || 10000;

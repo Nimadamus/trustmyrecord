@@ -1531,7 +1531,7 @@
     async function loadChallengeRecord(username) {
         var section = document.getElementById('tmrxChallengeSection');
         if (!section || !username) return;
-        var apiBase = (window.TMR_API_BASE || window.API_BASE_URL || 'https://trustmyrecord-api.onrender.com').replace(/\/$/, '');
+        var apiBase = (window.TMR_API_BASE || window.API_BASE_URL || 'https://api.trustmyrecord.com').replace(/\/$/, '');
         var setText = function (id, val) { var el = document.getElementById(id); if (el) el.textContent = val; };
         var num = function (v) { return (Number(v) || 0).toLocaleString('en-US'); };
         try {
@@ -1566,7 +1566,7 @@
     async function loadCommunityActivity(username) {
         var section = document.getElementById('communityActivity');
         if (!section || !username) return;
-        var apiBase = (window.TMR_API_BASE || window.API_BASE_URL || 'https://trustmyrecord-api.onrender.com').replace(/\/$/, '');
+        var apiBase = (window.TMR_API_BASE || window.API_BASE_URL || 'https://api.trustmyrecord.com').replace(/\/$/, '');
         var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]; }); };
         var fmtDate = function (v) {
             if (!v) return '—';
@@ -1649,7 +1649,7 @@
         var host = document.getElementById('profilePollPoints');
         var empty = document.getElementById('profilePollEmpty');
         if (!host || !username) return;
-        var apiBase = (window.TMR_API_BASE || window.API_BASE_URL || 'https://trustmyrecord-api.onrender.com').replace(/\/$/, '');
+        var apiBase = (window.TMR_API_BASE || window.API_BASE_URL || 'https://api.trustmyrecord.com').replace(/\/$/, '');
         try {
             var resp = await fetch(apiBase + '/api/polls/users/' + encodeURIComponent(username) + '/stats');
             if (!resp.ok) return;
@@ -2071,7 +2071,7 @@
         }
         if (!data) {
             try {
-                const resp = await fetch('https://trustmyrecord-api.onrender.com/api/users/' + encodeURIComponent(username) + '/metrics', {
+                const resp = await fetch('https://api.trustmyrecord.com/api/users/' + encodeURIComponent(username) + '/metrics', {
                     cache: 'no-store',
                     signal: AbortSignal.timeout(10000),
                     headers: (window.api && window.api.getAuthHeaders) ? window.api.getAuthHeaders() : {}
@@ -4907,7 +4907,7 @@
                favourite-team club mark, else the neutral silhouette. */
             '<div class="profile-avatar">' + (p.avatar_url
               ? '<img src="' + escapeHtml(p.avatar_url) + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" alt="' + escapeHtml(name) + '" loading="eager" decoding="async">'
-              : '<img src="' + escapeHtml(((window.TMRAvatar && window.TMRAvatar.src) ? window.TMRAvatar.src({ username: p.username, id: p.id }) : (((window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api') + '/users/' + encodeURIComponent(p.username || '') + '/avatar'))) + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" alt="' + escapeHtml(name) + '" loading="eager" decoding="async">') + '</div>' +
+              : '<img src="' + escapeHtml(((window.TMRAvatar && window.TMRAvatar.src) ? window.TMRAvatar.src({ username: p.username, id: p.id }) : (((window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) || 'https://api.trustmyrecord.com/api') + '/users/' + encodeURIComponent(p.username || '') + '/avatar'))) + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" alt="' + escapeHtml(name) + '" loading="eager" decoding="async">') + '</div>' +
             '<div class="profile-identity-copy">' +
             '<div class="profile-eyebrow">Trust My Record profile</div>' +
             // SOFT404_20260818: this is the profile document's only page-level
@@ -5151,7 +5151,7 @@
 
     // ---- Awards Received tab: isolated loader, read-only, never touches record ----
     (function initProfileAwards() {
-        const API_BASE = (window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+        const API_BASE = (window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) || 'https://api.trustmyrecord.com/api';
         // Palette identity by award type: Best ROI = emerald, Most Units =
         // gold, Most Active = cyan, Admin Discretion = violet/platinum-holo.
         const STYLE_BY_TYPE = {

@@ -47,7 +47,7 @@
   function show(title, msg) { t.textContent = title; m.textContent = msg; links.hidden = false; }
   var token = new URLSearchParams(location.search).get('t');
   if (!token) { show('Link missing', 'This confirm link is incomplete. Open the link from your email again, or sign up again on BetLegend Picks.'); return; }
-  fetch('https://trustmyrecord-api.onrender.com/api/email/confirm', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: token }) })
+  fetch('https://api.trustmyrecord.com/api/email/confirm', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: token }) })
     .then(function (r) { return r.json().catch(function () { return {}; }); })
     .then(function (d) {
       if (d && d.ok) {

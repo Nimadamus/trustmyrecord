@@ -46,7 +46,7 @@ async function resolveProfileUser(rawUserParam, sessionUser) {
   ].map(normalizeProfileLookup).filter(Boolean)));
 
   for (const candidate of candidates) {
-    const response = await fetch(`https://trustmyrecord-api.onrender.com/api/users?query=${encodeURIComponent(candidate)}&limit=8`);
+    const response = await fetch(`https://api.trustmyrecord.com/api/users?query=${encodeURIComponent(candidate)}&limit=8`);
     assert.strictEqual(response.status, 200, `search lookup should not fail for ${candidate}`);
     const data = await response.json();
     const match = (data.users || []).find((user) => profileLookupMatchesUser(candidate, user));
@@ -106,7 +106,7 @@ async function main() {
     const ledgerPicks = [];
   let ledgerOffset = 0;
   while (true) {
-    const pageResponse = await fetch(`https://trustmyrecord-api.onrender.com/api/picks?username=BetLegend&limit=100&offset=${ledgerOffset}`);
+    const pageResponse = await fetch(`https://api.trustmyrecord.com/api/picks?username=BetLegend&limit=100&offset=${ledgerOffset}`);
     assert.strictEqual(pageResponse.status, 200, 'BetLegend pick ledger should load');
     const pageData = await pageResponse.json();
     const batch = pageData.picks || [];
@@ -120,7 +120,7 @@ async function main() {
   assert.notStrictEqual(stats.record, '0-0-0', 'BetLegend record must not be zero when graded picks exist');
   assert(stats.winRate != null, 'BetLegend win rate must be calculable when wins/losses exist');
 
-  const profileResponse = await fetch('https://trustmyrecord-api.onrender.com/api/users/BetLegend');
+  const profileResponse = await fetch('https://api.trustmyrecord.com/api/users/BetLegend');
   assert.strictEqual(profileResponse.status, 200, 'BetLegend profile API should load');
   const profileData = await profileResponse.json();
   const profileUser = profileData.user || {};
@@ -131,7 +131,7 @@ async function main() {
   // not fail the deploy (540 vs 539 on 2026-09-02 was exactly that).
   assert(Math.abs(Number(profileUser.win_rate) - stats.winRate) <= 0.1, 'profile win rate should match ledger');
 
-  const leaderboardResponse = await fetch('https://trustmyrecord-api.onrender.com/api/users/leaderboard?sortBy=rank&minPicks=1&limit=100');
+  const leaderboardResponse = await fetch('https://api.trustmyrecord.com/api/users/leaderboard?sortBy=rank&minPicks=1&limit=100');
   assert.strictEqual(leaderboardResponse.status, 200, 'leaderboard should load');
   const leaderboardData = await leaderboardResponse.json();
   const leaderboardUser = (leaderboardData.leaderboard || []).find((user) => profileLookupKey(user.username) === 'betlegend');

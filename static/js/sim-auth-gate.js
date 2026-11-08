@@ -214,7 +214,7 @@
     /* ---------------------------------------------------------------- utils */
 
     function qs(id) { return document.getElementById(id); }
-    function proPulse(step, entry, plan) { try { var b = JSON.stringify({ milestone: 'pro_prompt_' + step, simulator: 'unknown', detail: entry, arm: plan || 'pro' }); fetch('https://trustmyrecord-api.onrender.com/api/activation/pulse', { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' }, body: b }).catch(function () { }); } catch (e) { } }
+    function proPulse(step, entry, plan) { try { var b = JSON.stringify({ milestone: 'pro_prompt_' + step, simulator: 'unknown', detail: entry, arm: plan || 'pro' }); fetch('https://api.trustmyrecord.com/api/activation/pulse', { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' }, body: b }).catch(function () { }); } catch (e) { } }
 
     function esc(s) {
         return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
@@ -273,8 +273,8 @@
     }
 
     function apiBase() {
-        try { return (window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api'; }
-        catch (e) { return 'https://trustmyrecord-api.onrender.com/api'; }
+        try { return (window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) || 'https://api.trustmyrecord.com/api'; }
+        catch (e) { return 'https://api.trustmyrecord.com/api'; }
     }
 
     function mirrorToServer(name, simulator, detail) {

@@ -705,7 +705,7 @@
     }).catch(function () { /* the static figures stay */ });
     var live = document.getElementById('nbaLiveRecord');
     if (!live || typeof fetch !== 'function') return;
-    var base = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+    var base = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://api.trustmyrecord.com/api';
     fetch(base + '/nba/ledger/report', { credentials: 'omit' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (r) {
       if (!r || !(r.graded_games > 0)) return;
       var f = r.forecast || {}, sm = r.sim || {};

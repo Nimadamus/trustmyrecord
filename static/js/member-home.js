@@ -11,7 +11,7 @@
   var root = document.getElementById('mhRoot');
   if (!root) return;
   var S = window.TMRSession;
-  var BASE = (S && S.api ? String(S.api) : (window.TMR_API_BASE || 'https://trustmyrecord-api.onrender.com/api')).replace(/\/$/, '');
+  var BASE = (S && S.api ? String(S.api) : (window.TMR_API_BASE || 'https://api.trustmyrecord.com/api')).replace(/\/$/, '');
   if (!/\/api$/.test(BASE)) BASE += '/api';
 
   var SPORTS = {

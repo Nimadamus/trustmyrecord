@@ -440,7 +440,7 @@ class PersistentAuthSystem {
            resolver; it is never reached on a design-system page. */
         if (window.TMRAvatar && window.TMRAvatar.src) return window.TMRAvatar.src({ username: seed });
         if (seed) {
-            const base = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+            const base = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://api.trustmyrecord.com/api';
             return String(base).replace(/\/+$/, '') + '/users/' + encodeURIComponent(seed) + '/avatar';
         }
         const colors = ['0ea5e9', '22c55e', 'ef4444', 'f59e0b', '8b5cf6'];

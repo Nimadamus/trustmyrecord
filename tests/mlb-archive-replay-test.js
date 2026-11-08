@@ -40,7 +40,7 @@ const say = (m) => process.stdout.write(m + NL);
 const arg = (f, d) => { const i = process.argv.indexOf(f); return i !== -1 ? process.argv[i + 1] : d; };
 
 const ENGINE = path.join(__dirname, '..', 'static', 'js', 'mlb-simulator.js');
-const BASE = arg('--base', process.env.TMR_API_BASE || 'https://trustmyrecord-api.onrender.com');
+const BASE = arg('--base', process.env.TMR_API_BASE || 'https://api.trustmyrecord.com');
 const RUNS = Math.max(1, Number(arg('--runs', '3')));
 
 function get(url) {

@@ -12,7 +12,7 @@
    ============================================================================= */
 (function () {
   'use strict';
-  var API = 'https://trustmyrecord-api.onrender.com/api';
+  var API = 'https://api.trustmyrecord.com/api';
 
   /* Build-pairing guard. scripts/build_home_critical.py stamps this constant
      AND <html data-tmr-build> with the same id at build time. A mismatch means
@@ -2195,7 +2195,7 @@
      this file having to carry the generator. */
   function compNeutral(username, id) {
     var key = (id != null && id !== '') ? id : username;
-    return '<img class="comp-av" src="' + esc(((window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api') + '/users/' + encodeURIComponent(key || '') + '/avatar') +
+    return '<img class="comp-av" src="' + esc(((window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://api.trustmyrecord.com/api') + '/users/' + encodeURIComponent(key || '') + '/avatar') +
       '" alt="" loading="lazy" style="width:100%;height:100%;border-radius:50%;object-fit:cover;display:block">';
   }
 

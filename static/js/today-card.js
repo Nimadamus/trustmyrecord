@@ -299,7 +299,7 @@
     if (typeof window === 'undefined' || window.__tmrTodayCard) return;
     window.__tmrTodayCard = true;
 
-    var API = (window.TMR_API_BASE || window.API_BASE_URL || 'https://trustmyrecord-api.onrender.com').replace(/\/$/, '');
+    var API = (window.TMR_API_BASE || window.API_BASE_URL || 'https://api.trustmyrecord.com').replace(/\/$/, '');
     var TIMEOUT_MS = 9000;
     var serverNow = null;   // ms, from a server response body. Never Date.now().
     var serverNowAt = null; // monotonic reading taken at the same instant.

@@ -42,7 +42,7 @@
     if (!sport) return;
 
     var API = (window.CONFIG && CONFIG.api && CONFIG.api.baseUrl)
-        || "https://trustmyrecord-api.onrender.com/api";
+        || "https://api.trustmyrecord.com/api";
     var POLL_MS = 90000;
 
     function esc(v) {

@@ -27,7 +27,7 @@
       return window.api.request(ENDPOINT + path, { method: 'GET' });
     }
     var cfg = (typeof CONFIG !== 'undefined' && CONFIG) ? CONFIG : null;
-    var base = (cfg && cfg.api && cfg.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+    var base = (cfg && cfg.api && cfg.api.baseUrl) || 'https://api.trustmyrecord.com/api';
     return fetch(base + ENDPOINT + path, { headers: { Accept: 'application/json' } })
       .then(function (r) { return r.json(); });
   }

@@ -26,7 +26,7 @@ if (!TOKEN_PATH || !fs.existsSync(TOKEN_PATH)) {
 const TOKEN = fs.readFileSync(TOKEN_PATH, 'utf8').trim();
 const { chromium } = require('playwright');
 const { installOverlay } = require('./overlay.cjs');
-const API = 'https://trustmyrecord-api.onrender.com/api';
+const API = 'https://api.trustmyrecord.com/api';
 const SPORT_KEY = { NFL: 'americanfootball_nfl', MLB: 'baseball_mlb', UFC: 'mma_ufc', Soccer: 'soccer', NBA: 'basketball_nba', NHL: 'icehockey_nhl', NCAAF: 'americanfootball_ncaaf', WNBA: 'basketball_wnba', Tennis: 'tennis' };
 
 const SEQUENCES = [
