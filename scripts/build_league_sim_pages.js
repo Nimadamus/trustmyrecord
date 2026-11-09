@@ -836,6 +836,7 @@ function weekBlock(sport, inputs, result) {
   ${leaders.length ? `<section class="panel" id="projectedLeaders">
     <h2>Projected ${esc(inputs.season_label)} ${L.label} leaders</h2>
     <p>From ${count(result.runs)} simulated ${esc(inputs.season_label)} seasons, with every game already played counted at its real final score.</p>
+    <p id="seasonHandoff">The simulator at the top of this page plays one game at a time. For the whole season, the <a href="/${sport}-season-simulator/">${L.label} season simulator</a> projects ${L.unit} with an 80% range and the full standings for all ${inputs.teams.length} teams, and the <a href="/${sport}-playoff-simulator/">${L.label} playoff simulator</a> plays the bracket round by round.</p>
     <div class="lsimw-cols">
       <div><h3>Most projected ${L.unit}</h3><ul>${leaders.map((t) => `<li>${link(t)}: ${UI_one(t[key])} ${L.unit} on average, playoffs ${pctText(t.playoffs)} of the time.</li>`).join('')}</ul></div>
       <div><h3>${esc(L.trophy)} favorites</h3><ul>${favs.map((t) => `<li>${link(t)}: win the ${esc(L.trophy)} in ${pctText(t.champion)} of simulated seasons.</li>`).join('')}</ul></div>
