@@ -1,0 +1,174 @@
+/* MEMBER_HOME_REDESIGN_20261110: dark dashboard for /home/. Scoped to body.mh2-page and .mh2
+   so nothing else on the site changes. Markup is built by static/js/member-home.js. */
+body.mh2-page{background:#030914 !important}
+body.mh2-page main.tmr-shell{max-width:none !important;width:100% !important;margin:0 !important;padding:0 !important;background:radial-gradient(900px 300px at 12% 0,rgba(12,44,94,.55),transparent 70%),radial-gradient(1100px 420px at 78% 0,rgba(14,58,122,.6),transparent 70%),#030914 !important;color:#f2f7ff}
+.mh2{max-width:1672px;margin:0 auto;padding:0 50px 40px;position:relative;font:500 15px/1.4 Inter,system-ui,sans-serif;color:#f2f7ff;overflow:hidden}
+.mh2 *{box-sizing:border-box}
+.mh2 svg{flex:none;display:block}
+.mh2 a{text-decoration:none}
+.mh2 a:focus-visible,.mh2 button:focus-visible{outline:3px solid #7fd4ff;outline-offset:2px}
+
+/* hero */
+body.mh2-page .mh2 .mh2-hero{position:relative;display:block;width:auto !important;max-width:none !important;min-height:148px;padding:22px 0 14px 52px;margin:0 !important;background:none !important;border:0 !important;border-radius:0 !important;box-shadow:none !important}
+body.mh2-page .mh2 .mh2-art{position:absolute;left:-50px;right:-50px;top:0;height:400px;pointer-events:none;width:auto !important;max-width:none !important;margin:0 !important;background:url(/static/img/home/hero-stadium.jpg) center top/cover no-repeat;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 10%,#000 90%,transparent),linear-gradient(180deg,#000 31%,transparent 50%);-webkit-mask-composite:source-in;mask-image:linear-gradient(90deg,transparent 0,#000 10%,#000 90%,transparent),linear-gradient(180deg,#000 31%,transparent 50%);mask-composite:intersect}
+.mh2 .mh2-eb{position:relative;display:block;color:#27c4ff;font:700 16px/1 'Barlow Condensed',Inter,sans-serif;letter-spacing:.07em;text-transform:uppercase}
+body.mh2-page .mh2 .mh2-hero h1{position:relative;margin:6px 0 4px;font:italic 800 46px/1.05 Montserrat,Inter,sans-serif !important;letter-spacing:-.01em;color:#fff !important;text-transform:none;text-shadow:0 2px 14px #030914,0 0 30px #030914}
+body.mh2-page .mh2 .mh2-hero h1 em{color:#2f9bff !important;font-style:italic}
+body.mh2-page .mh2 .mh2-hero p{position:relative;margin:0;font-size:17.5px;line-height:1.4;color:#e6eefc !important;max-width:62ch;text-shadow:0 1px 10px #030914,0 0 18px #030914}
+
+/* layout */
+.mh2 .mh2-grid{display:grid;grid-template-columns:minmax(0,832fr) minmax(0,712fr);gap:22px 26px;position:relative;align-items:start}
+.mh2 .mh2-col{display:grid;gap:22px;align-content:start;min-width:0}
+body.mh2-page .mh2 .mh2-card{margin:0 !important;background:linear-gradient(180deg,#0a1f40 0,#06142a 60%) !important;border:1.5px solid #1c5cb0 !important;border-radius:14px;padding:14px 20px 16px;box-shadow:0 0 0 1px #0a2a5a inset,0 0 26px rgba(24,119,242,.19);color:#f2f7ff}
+body.mh2-page .mh2 .mh2-card.mh2-perf{border-color:#2aa8ff !important;box-shadow:0 0 0 1px #0a2a5a inset,0 0 30px rgba(39,196,255,.25)}
+.mh2 .mh2-ch{display:flex;align-items:center;gap:16px;margin-bottom:12px}
+.mh2 .mh2-ch>div{min-width:0}
+body.mh2-page .mh2 .mh2-ch h2{margin:0;font:700 25px/1.15 Montserrat,Inter,sans-serif !important;letter-spacing:-.01em;color:#fff !important;text-transform:none}
+body.mh2-page .mh2 .mh2-ch p{margin:1px 0 0;font-size:15px;line-height:1.35;color:#dbe6f8 !important}
+.mh2 .mh2-ch .mh2-r{margin-left:auto;align-self:flex-start}
+body.mh2-page .mh2 button.mh2-ib{display:inline-flex;align-items:center;gap:6px;min-height:32px;padding:4px;border:0;background:none !important;color:#c9d8ee !important;font:700 14px/1 Inter,sans-serif;cursor:pointer;border-radius:8px}
+body.mh2-page .mh2 button.mh2-ib.mh2-hide{color:#27c4ff !important;padding:4px 6px}
+body.mh2-page .mh2 .mh2-empty{margin:0;font-size:15px;line-height:1.55;color:#dbe6f8 !important}
+
+/* stat tiles */
+.mh2 .mh2-stats{display:grid;grid-template-columns:1.08fr 1fr .92fr .92fr;gap:16px;margin-bottom:18px}
+.mh2 .mh2-stat{display:flex;align-items:center;gap:14px;border:1.5px solid #2466b8;border-radius:10px;padding:9px 18px;background:linear-gradient(180deg,#0b2244,#081a36);min-height:74px;min-width:0}
+.mh2 .mh2-stat.g{background:linear-gradient(180deg,#0d5a30,#0a3f24);border-color:#2bd673;box-shadow:0 0 16px rgba(34,197,94,.27)}
+body.mh2-page .mh2 .mh2-stat b{display:block;font:700 28px/1.05 Montserrat,Inter,sans-serif;color:#fff !important}
+body.mh2-page .mh2 .mh2-stat span{display:block;font:600 14px/1.2 Inter,sans-serif;letter-spacing:.03em;text-transform:uppercase;color:#e3ecfa !important;margin-top:3px}
+
+/* results */
+.mh2 .mh2-tbl{border:1px solid #17386a;border-radius:10px;background:#061327;overflow:hidden}
+.mh2 .mh2-tr{display:grid;grid-template-columns:minmax(0,1fr) 92px 148px 86px;align-items:center;padding:0 16px}
+.mh2 .mh2-tr.h{font:600 13.5px/1 Inter,sans-serif;letter-spacing:.04em;text-transform:uppercase;color:#dfe9f8;min-height:32px;border-bottom:1px solid #1b4a8a}
+.mh2 .mh2-tr.h>:not(:first-child),.mh2 .mh2-tr>.c{text-align:center}
+.mh2 .mh2-tr.h>:last-child,.mh2 .mh2-tr>.mh2-det{text-align:right}
+.mh2 .mh2-tr.d{min-height:46px;padding-top:4px;padding-bottom:4px;border-top:1px solid #10294d}
+.mh2 .mh2-gm{display:flex;align-items:center;gap:22px;min-width:0}
+.mh2 .mh2-gm img{width:30px;height:30px;object-fit:contain;flex:none}
+.mh2 .mh2-gm>div{min-width:0}
+body.mh2-page .mh2 .mh2-gm b{display:block;font:600 17px/1.15 Inter,sans-serif;color:#fff !important}
+body.mh2-page .mh2 .mh2-gm small{display:block;font-size:13px;line-height:1.3;color:#cfdcf0 !important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mh2 .mh2-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 13px;border-radius:999px;font:700 13.5px/1.2 Inter,sans-serif;border:1px solid #33496b;background:#18283f !important;color:#eef4ff !important;white-space:nowrap}
+.mh2 .mh2-pill.hit{background:#0c4426 !important;border-color:#1f8a4c;color:#d9ffe8 !important;font-weight:800;letter-spacing:.03em;text-transform:uppercase}
+.mh2 .mh2-pill.miss{background:#4a1220 !important;border-color:#a3324a;color:#ffd9df !important;font-weight:800;letter-spacing:.03em;text-transform:uppercase}
+.mh2 .mh2-pill.pending,.mh2 .mh2-pill.none{font-size:12.5px;font-weight:800;letter-spacing:.03em;text-transform:uppercase}
+.mh2 .mh2-det{font:600 15px/1 Inter,sans-serif;color:#eaf1fd}
+body.mh2-page .mh2 a.mh2-more{display:inline-flex;gap:8px;align-items:center;min-height:32px;margin:8px 0 -6px 6px;color:#45b6ff !important;font:600 16px/1 Inter,sans-serif}
+body.mh2-page .mh2 a.mh2-more:hover{color:#8fd3ff !important}
+
+/* games */
+.mh2 .mh2-tabs{display:flex;gap:12px;flex-wrap:wrap;margin:6px 0 14px}
+body.mh2-page .mh2 .mh2-tabs button{display:flex;align-items:center;gap:10px;justify-content:center;min-width:138px;min-height:44px;padding:8px 20px;border-radius:999px;border:1.5px solid #2a5fa8 !important;background:#071a35 !important;font:700 16px/1 Inter,sans-serif;color:#fff !important;cursor:pointer}
+.mh2 .mh2-tabs button img{width:26px;height:26px;object-fit:contain}
+body.mh2-page .mh2 .mh2-tabs button[aria-selected="true"]{background:linear-gradient(180deg,#2a8bff,#0d5fe0) !important;border-color:#4aa3ff !important;box-shadow:0 0 16px rgba(24,119,242,.47)}
+.mh2 .mh2-games{display:grid;gap:10px}
+.mh2 .mh2-game{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr) auto;align-items:center;gap:18px;padding:10px 14px 10px 28px;border:1.5px solid #1f4f92;border-radius:12px;background:linear-gradient(180deg,#0c2447,#0a1c38)}
+.mh2 .mh2-game.fav{border-color:#4aa3ff}
+.mh2 .mh2-team{display:flex;align-items:center;gap:16px;font:600 17px/1.2 Inter,sans-serif;color:#fff;min-width:0}
+.mh2 .mh2-team img{width:54px;height:54px;object-fit:contain;flex:none}
+.mh2 .mh2-at{color:#b9c8e0;font-size:20px}
+.mh2 .mh2-go{text-align:center;font:600 15px/1.3 Inter,sans-serif;color:#fff}
+.mh2 .mh2-go span{display:block}
+body.mh2-page .mh2 a.mh2-sim{display:inline-flex;gap:8px;align-items:center;justify-content:center;min-height:40px;margin-top:6px;background:linear-gradient(180deg,#2a8bff,#0d5fe0) !important;padding:8px 28px;border-radius:999px;font:700 16px/1 Inter,sans-serif;color:#fff !important;box-shadow:0 0 14px rgba(24,119,242,.4);white-space:nowrap}
+body.mh2-page .mh2 a.mh2-sim:hover{filter:brightness(1.12)}
+.mh2 .mh2-game[hidden]{display:none}
+body.mh2-page .mh2 button.mh2-ib.mh2-allgames{justify-self:start;min-height:40px;padding:6px 10px;color:#45b6ff !important;font-size:15px}
+.mh2 .mh2-note{margin-top:2px}
+.mh2 .mh2-chip{display:inline-block;font:800 11.5px/1 Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;padding:6px 10px;border-radius:999px}
+.mh2 .mh2-chip.free{background:#0c4426;color:#b9ffd4}
+.mh2 .mh2-chip.used{background:#18283f;color:#d5e1f3}
+.mh2 .mh2-chip.pro{background:#3a2c05;color:#ffd978}
+.mh2 .mh2-simlinks{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-top:12px}
+
+/* pro */
+body.mh2-page .mh2 .mh2-card.mh2-pro{position:relative;overflow:hidden;border:2px solid #f6b91f !important;background:linear-gradient(180deg,#1b1706 0,#0a1220 70%) !important;box-shadow:0 0 26px rgba(246,185,31,.2);padding:12px 20px 14px}
+body.mh2-page .mh2 .mh2-pro .mh2-ch{margin-bottom:10px;align-items:flex-start;position:relative}
+body.mh2-page .mh2 .mh2-pro .mh2-ch h2{font-size:32px !important}
+body.mh2-page .mh2 .mh2-pro .mh2-ch p{font-size:16px}
+body.mh2-page .mh2 a.mh2-pbtn{margin-left:auto;display:inline-flex;gap:8px;align-items:center;justify-content:center;min-height:46px;background:linear-gradient(180deg,#ffd45c,#f2ae12) !important;color:#1c1400 !important;padding:12px 24px;border-radius:9px;font:800 16.5px/1 Inter,sans-serif;white-space:nowrap;box-shadow:0 0 16px rgba(246,185,31,.33)}
+body.mh2-page .mh2 a.mh2-pbtn:hover{filter:brightness(1.08)}
+.mh2 .mh2-pro ul{margin:0;padding:0 0 0 18px;list-style:none;display:grid;gap:5px;position:relative}
+body.mh2-page .mh2 .mh2-pro li{display:flex;gap:16px;align-items:center;font-size:15.5px;line-height:1.35;color:#f2f7ff !important;margin:0}
+.mh2 .mh2-pro li:before{content:"";width:13px;height:7px;border:solid #f6b91f;border-width:0 0 3px 3px;transform:rotate(-45deg) translateY(-3px);flex:none}
+body.mh2-page .mh2 .mh2-pro li a{color:#fff !important;text-decoration:underline;text-decoration-color:rgba(246,185,31,.6);text-underline-offset:3px;min-height:36px;display:inline-flex;align-items:center}
+body.mh2-page .mh2 .mh2-pro .mh2-used{margin:0 0 10px;font-size:15px;line-height:1.5;color:#f2e6bd !important;position:relative;max-width:58ch}
+body.mh2-page .mh2 .mh2-pro .mh2-fine{margin:10px 0 0;font-size:13px;color:#cdbf94 !important;position:relative}
+.mh2 .mh2-spark{position:absolute;right:16px;bottom:6px;width:40%;height:46%;pointer-events:none}
+
+/* shortcuts */
+.mh2 .mh2-links{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px}
+body.mh2-page .mh2 a.mh2-link{display:flex;align-items:center;gap:18px;padding:0 16px 0 22px;min-height:44px;border:1.5px solid #235aa5 !important;border-radius:9px;background:linear-gradient(180deg,#0c2447,#0a1c38) !important;font:600 16px/1.2 Inter,sans-serif;color:#fff !important}
+body.mh2-page .mh2 a.mh2-link:hover{border-color:#4aa3ff !important}
+.mh2 a.mh2-link:after{content:"";margin-left:auto;width:9px;height:9px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(-45deg);flex:none}
+.mh2 a.mh2-link.cnt:after{display:none}
+body.mh2-page .mh2 a.mh2-link small{margin-left:auto;font:600 13.5px/1 Inter,sans-serif;background:#1a3154;border-radius:999px;padding:5px 10px;color:#fff !important;white-space:nowrap}
+
+/* glossary */
+.mh2 #mhMeans:focus{outline:none}
+.mh2 .mh2-mean{display:grid;gap:4px}
+.mh2 .mh2-mean[hidden]{display:none}
+.mh2 .mh2-mean>div{display:grid;grid-template-columns:28px 160px minmax(0,1fr);gap:14px;align-items:center;padding:5px 16px;min-height:34px;border:1px solid #14335f;border-radius:7px;background:#06152b;font-size:14.5px}
+body.mh2-page .mh2 .mh2-mean b{font:700 15.5px/1.25 Inter,sans-serif;color:#fff !important}
+body.mh2-page .mh2 .mh2-mean span{color:#e6eefb !important;line-height:1.4}
+body.mh2-page .mh2 .mh2-mean p{margin:6px 4px 0;font-size:13.5px;line-height:1.5;color:#a9bcd8 !important}
+
+/* loading + gate */
+.mh2 .mh2-skel{height:74px;border-radius:10px;background:linear-gradient(90deg,#0a1d3a,#11305c,#0a1d3a);background-size:200% 100%;animation:mh2s 1.2s linear infinite}
+@keyframes mh2s{to{background-position:-200% 0}}
+@media(prefers-reduced-motion:reduce){.mh2 .mh2-skel{animation:none}}
+body.mh2-page .mh2 .mh2-gate{text-align:center;padding:28px 20px !important;max-width:640px;margin:10px auto 0 !important}
+body.mh2-page .mh2 .mh2-gate h2{margin:0 0 6px;font:700 22px/1.3 Montserrat,Inter,sans-serif !important;color:#fff !important}
+body.mh2-page .mh2 .mh2-gate p{margin:0 auto 14px;max-width:52ch;font-size:15px;line-height:1.55;color:#dbe6f8 !important}
+body.mh2-page .mh2 .mh2-gate a.mh2-sim{margin-top:0}
+
+@media(max-width:1500px){.mh2{padding:0 24px 32px}body.mh2-page .mh2 .mh2-hero{padding-left:20px}body.mh2-page .mh2 .mh2-art{left:-24px;right:-24px}.mh2 .mh2-game{padding-left:16px}.mh2 .mh2-stats{gap:10px}.mh2 .mh2-stat{padding:9px 12px;gap:10px}}
+@media(max-width:1180px){.mh2 .mh2-grid{grid-template-columns:1fr}}
+@media(max-width:640px){
+ .mh2{padding:0 12px 28px}
+ body.mh2-page .mh2 .mh2-hero{min-height:0;padding:64px 4px 16px}
+ body.mh2-page .mh2 .mh2-art{right:-12px;left:-12px;height:300px;background-position:81% top}
+ body.mh2-page .mh2 .mh2-hero h1{font-size:31px !important}
+ body.mh2-page .mh2 .mh2-hero p{font-size:15px}
+ .mh2 .mh2-eb{font-size:14px}
+ .mh2 .mh2-grid,.mh2 .mh2-col{gap:14px}
+ body.mh2-page .mh2 .mh2-card{padding:14px 12px}
+ .mh2 .mh2-ch{gap:10px}
+ body.mh2-page .mh2 .mh2-ch h2{font-size:21px !important}
+ body.mh2-page .mh2 .mh2-ch p{font-size:13.5px}
+ .mh2 .mh2-ch>svg{width:34px;height:34px}
+ .mh2 .mh2-stats{grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+ .mh2 .mh2-stat{min-height:62px;padding:8px 10px}
+ body.mh2-page .mh2 .mh2-stat b{font-size:23px}
+ body.mh2-page .mh2 .mh2-stat span{font-size:11.5px}
+ .mh2 .mh2-stat svg{width:28px;height:28px}
+ .mh2 .mh2-tr{grid-template-columns:minmax(0,1fr) auto;gap:8px;padding-left:10px;padding-right:10px}
+ .mh2 .mh2-tr>.mh2-ty,.mh2 .mh2-tr>.mh2-det,.mh2 .mh2-tr.h>:nth-child(2),.mh2 .mh2-tr.h>:nth-child(4){display:none}
+ .mh2 .mh2-tr.h>:nth-child(3){text-align:right;padding-right:10px}
+ .mh2 .mh2-tr.d{min-height:54px}
+ .mh2 .mh2-gm{gap:10px}
+ body.mh2-page .mh2 .mh2-gm b{font-size:15.5px}
+ body.mh2-page .mh2 .mh2-gm small{white-space:normal;font-size:12px}
+ .mh2 .mh2-gm img{width:26px;height:26px}
+ .mh2 .mh2-pill{padding:5px 9px;font-size:12px}
+ .mh2 .mh2-pill.pending,.mh2 .mh2-pill.none{font-size:11px}
+ .mh2 .mh2-tabs{gap:8px}
+ body.mh2-page .mh2 .mh2-tabs button{min-width:0;flex:1 1 40%;padding:8px 10px;font-size:15px}
+ .mh2 .mh2-game{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);padding:12px;gap:8px}
+ .mh2 .mh2-team{flex-direction:column;gap:4px;text-align:center;font-size:14.5px}
+ .mh2 .mh2-team img{width:44px;height:44px}
+ .mh2 .mh2-go{grid-column:1/-1}
+ body.mh2-page .mh2 a.mh2-sim{display:flex;min-height:44px}
+ .mh2 .mh2-pro .mh2-ch{flex-wrap:wrap}
+ .mh2 .mh2-pro .mh2-ch>div{flex:1}
+ .mh2 .mh2-pro .mh2-ch>svg{width:36px;height:30px}
+ body.mh2-page .mh2 .mh2-pro .mh2-ch h2{font-size:26px !important}
+ body.mh2-page .mh2 a.mh2-pbtn{margin:6px 0 0;width:100%}
+ .mh2 .mh2-pro ul{padding-left:6px}
+ body.mh2-page .mh2 .mh2-pro li{font-size:14.5px;gap:12px}
+ .mh2 .mh2-spark{opacity:.25;width:70%}
+ .mh2 .mh2-links{grid-template-columns:1fr}
+ body.mh2-page .mh2 a.mh2-link{min-height:46px;padding-left:14px;gap:14px}
+ .mh2 .mh2-mean>div{grid-template-columns:24px minmax(0,1fr);gap:2px 10px;padding:8px 10px}
+ .mh2 .mh2-mean span{grid-column:2}
+}
