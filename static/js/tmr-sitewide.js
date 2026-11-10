@@ -33,7 +33,7 @@
             /*FMENU ncaaf*/ ["/matchup-of-the-day/miami-notre-dame-two-ranked-teams-meet/", "NCAAF", "/matchup-of-the-day/ncaaf/"],
             /*FMENU mlb*/ ["/matchup-of-the-day/rays-brewers-bats-feast-on-righties/", "MLB", "/matchup-of-the-day/mlb/"],
             /*FMENU nhl*/ ["/nhl/rangers-oilers-fox-vs-mcdavid/", "NHL", "/matchup-of-the-day/nhl/"],
-            /*FMENU tennis*/ ["/matchup-of-the-day/alcaraz-ruud-the-games-say-something-else/", "Tennis", "/matchup-of-the-day/tennis/"],
+            /*FMENU tennis*/ ["/matchup-of-the-day/jakupovic-pigossi-the-games-say-something-else/", "Tennis", "/matchup-of-the-day/tennis/"],
             /*FMENU soccer*/ ["/matchup-of-the-day/barcelona-atletico-madrid-one-attack-is-carrying-it/", "Soccer", "/matchup-of-the-day/soccer/"]
         ]],
         // Each row lands on that league's research page, and each of those
