@@ -1,0 +1,142 @@
+/* SPORTSBOOK_HOLO_20261110: blue and gold skin for the Make Picks board. Loaded last.
+   Colour, borders, glow and type only; the board's own layout, markup and scripts are untouched.
+   Two additions come from /static/js/sportsbook-holo.js: the banner above the board and the TMR Tools panel. */
+@import url("https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@1,700;1,800&family=Barlow+Semi+Condensed:wght@600;700&display=swap");
+
+html body.tmr-ds-shell #picks .picks-container-modern {
+    background:
+        radial-gradient(60% 420px at 50% 0, rgba(29, 127, 232, .20), transparent 70%),
+        linear-gradient(180deg, #030a1e 0%, #020713 60%, #02050c 100%);
+}
+
+/* ---------------------------------------------------------------- banner */
+html body.tmr-ds-shell .sbh-hero {
+    position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; overflow: hidden;
+    min-height: clamp(84px, 6.2vw, 124px); padding: 10px 16px; margin: 0 0 10px; border-bottom: 1px solid rgba(77, 163, 255, .45);
+    background:
+        linear-gradient(90deg, rgba(3, 10, 30, .55) 0%, rgba(3, 10, 30, .86) 30%, rgba(3, 10, 30, .90) 50%, rgba(3, 10, 30, .86) 70%, rgba(3, 10, 30, .55) 100%),
+        url("/static/img/blp/stadium-hero.jpg") center 38% / cover no-repeat;
+    box-shadow: 0 0 34px rgba(29, 127, 232, .35) inset;
+}
+html body.tmr-ds-shell .sbh-hero b {
+    display: block; color: #fff; font-family: 'Barlow Condensed', 'Barlow Semi Condensed', Inter, sans-serif; font-style: italic; font-weight: 800; text-transform: uppercase;
+    font-size: clamp(24px, 2.7vw, 52px); line-height: 1; letter-spacing: .01em; text-shadow: 0 4px 22px rgba(2, 6, 16, .9);
+}
+html body.tmr-ds-shell .sbh-hero b i { font-style: italic; color: #35b6ff; text-shadow: 0 0 22px rgba(53, 182, 255, .55); }
+html body.tmr-ds-shell .sbh-hero span {
+    display: block; margin-top: clamp(4px, .5vw, 10px); color: #e6eefa; font-family: 'Barlow Semi Condensed', Inter, sans-serif; font-weight: 600; text-transform: uppercase;
+    font-size: clamp(11px, .98vw, 19px); letter-spacing: .16em;
+}
+html body.tmr-ds-shell .sbh-hero span em { font-style: normal; color: #ffc61f; padding: 0 .5em; }
+
+/* ---------------------------------------------------------------- top bars */
+html body.tmr-ds-shell #makePicksLoggedOutPrompt.make-picks-loggedout {
+    border: 1px solid rgba(77, 163, 255, .6); border-radius: 12px; background: linear-gradient(180deg, rgba(8, 26, 60, .92), rgba(4, 12, 30, .94));
+    box-shadow: 0 0 18px rgba(29, 127, 232, .35), 0 0 12px rgba(29, 127, 232, .16) inset; color: #f1f6fd;
+}
+html body.tmr-ds-shell #makePicksLoggedOutPrompt .make-picks-loggedout-btn { border: 1px solid #7cc0ff; border-radius: 9px; background: rgba(6, 16, 38, .9); color: #fff; box-shadow: 0 0 12px rgba(29, 127, 232, .5); }
+html body.tmr-ds-shell #sbFeatureStrip.sb-gotw {
+    border: 2px solid #f6b91f; border-radius: 14px; box-shadow: 0 0 24px rgba(246, 185, 31, .4), 0 0 14px rgba(246, 185, 31, .14) inset;
+    background: linear-gradient(90deg, rgba(24, 20, 10, .95), rgba(6, 14, 34, .95) 45%, rgba(8, 26, 60, .95));
+}
+html body.tmr-ds-shell .sbn-util .pending-picks-compact-link {
+    border: 2px solid #2f8dff; border-radius: 14px; background: linear-gradient(180deg, rgba(8, 26, 60, .93), rgba(4, 12, 30, .95)); color: #5fd0ff; font-weight: 700;
+    box-shadow: 0 0 20px rgba(29, 127, 232, .5), 0 0 12px rgba(29, 127, 232, .2) inset;
+}
+html body.tmr-ds-shell .sbn-util .pending-picks-compact-link:hover { color: #fff; filter: brightness(1.15); }
+
+/* ---------------------------------------------------------------- panels */
+html body.tmr-ds-shell #sbnShell .sbn-railwrap,
+html body.tmr-ds-shell #sbnShell #tpfCapSb,
+html body.tmr-ds-shell #sbnShell #sbnBoard,
+html body.tmr-ds-shell #sbnShell #sbnSlip,
+html body.tmr-ds-shell .sbh-tools {
+    border: 1.5px solid rgba(77, 163, 255, .7); border-radius: 16px;
+    background: linear-gradient(180deg, rgba(8, 24, 56, .92), rgba(4, 11, 28, .95));
+    box-shadow: 0 0 0 1px rgba(140, 200, 255, .12) inset, 0 0 22px rgba(29, 127, 232, .32), 0 0 16px rgba(29, 127, 232, .12) inset;
+}
+
+/* sports rail */
+html body.tmr-ds-shell #sbnShell .sbn-railhead { color: #fff; font-family: 'Barlow Semi Condensed', Inter, sans-serif; font-size: 17px; font-weight: 700; letter-spacing: .08em; }
+html body.tmr-ds-shell #sbnShell .sbn-railbtn { border-radius: 12px; border: 1px solid transparent; transition: background .15s ease, box-shadow .15s ease, border-color .15s ease; }
+html body.tmr-ds-shell #sbnShell .sbn-railbtn b { color: #fff; }
+html body.tmr-ds-shell #sbnShell .sbn-railbtn small { color: #b9cde6; }
+html body.tmr-ds-shell #sbnShell .sbn-railbtn:hover { background: rgba(29, 127, 232, .16); border-color: rgba(77, 163, 255, .45); }
+html body.tmr-ds-shell #sbnShell .sbn-railbtn.is-on {
+    border-color: #55b0ff; background: linear-gradient(180deg, rgba(47, 151, 255, .42), rgba(20, 102, 224, .30));
+    box-shadow: 0 0 18px rgba(29, 127, 232, .7), 0 0 0 1px rgba(160, 215, 255, .35) inset;
+}
+html body.tmr-ds-shell #sbnShell .sbn-railbtn.is-on small { color: #7fd8ff; }
+/* league marks sit left of the names on the desktop rail only; the phone rail keeps its own compact scroller */
+html body.tmr-ds-shell #sbnShell #sbnRail .sbn-railbtn .sbh-ic { display: none; }
+@media (min-width: 1041px) {
+    html body.tmr-ds-shell #sbnShell #sbnRail .sbn-railbtn.sbh-has-ic { position: relative; align-items: flex-start !important; text-align: left !important; }
+    html body.tmr-ds-shell #sbnShell #sbnRail .sbn-railbtn.sbh-has-ic .sbh-ic { position: absolute; left: 9px; top: 50%; width: 32px; height: 32px; margin: 0; transform: translateY(-50%); object-fit: contain; display: block; filter: drop-shadow(0 0 5px rgba(120, 190, 255, .35)); }
+    html body.tmr-ds-shell #sbnShell #sbnRail .sbn-railbtn.sbh-has-ic b, html body.tmr-ds-shell #sbnShell #sbnRail .sbn-railbtn.sbh-has-ic small { display: block; box-sizing: border-box; width: 100%; padding-left: 44px !important; text-align: left !important; align-self: flex-start; }
+}
+
+/* email capture */
+html body.tmr-ds-shell #sbnShell #tpfCapSb > b { color: #fff; }
+html body.tmr-ds-shell #sbnShell #tpfCapSb .tpf-cap-row input { border: 1px solid rgba(110, 160, 230, .5); border-radius: 10px; background: rgba(5, 13, 32, .9); color: #fff; }
+html body.tmr-ds-shell #sbnShell #tpfCapSb .tpf-cap-row button { border: 1px solid #7cc0ff; border-radius: 10px; background: linear-gradient(180deg, #3aa0ff, #1466e0); color: #fff; font-weight: 700; box-shadow: 0 0 16px rgba(29, 127, 232, .6); }
+
+/* board */
+html body.tmr-ds-shell #sbnShell .sbn-toolbar { background: linear-gradient(180deg, rgba(10, 30, 68, .9), rgba(6, 18, 44, .9)); border-bottom: 1px solid rgba(77, 163, 255, .4); }
+html body.tmr-ds-shell #sbnShell .sbn-boardname { color: #fff; font-family: 'Barlow Semi Condensed', Inter, sans-serif; font-size: 24px; font-weight: 700; display: inline-flex; align-items: center; gap: 10px; }
+html body.tmr-ds-shell #sbnShell .sbn-boardname .sbh-ic { width: 30px; height: 30px; object-fit: contain; }
+html body.tmr-ds-shell #sbnShell .sbn-cat.is-on { color: #5fd0ff; text-shadow: 0 0 14px rgba(95, 208, 255, .5); }
+html body.tmr-ds-shell #sbnShell .sbn-colhead { background: rgba(6, 16, 38, .85); color: #fff; }
+html body.tmr-ds-shell #sbnShell .sbn-colhead .sbn-headtally { color: #b9cde6; }
+html body.tmr-ds-shell #sbnShell .sbn-daybar {
+    border: 0; border-top: 1px solid rgba(246, 185, 31, .55); border-radius: 0; color: #fff; font-weight: 800; letter-spacing: .05em;
+    background: linear-gradient(90deg, rgba(246, 185, 31, .42) 0%, rgba(246, 185, 31, .12) 22%, rgba(8, 24, 56, .5) 46%, rgba(8, 24, 56, 0) 100%);
+}
+html body.tmr-ds-shell #sbnShell .sbn-row { border-color: rgba(77, 140, 230, .22); }
+html body.tmr-ds-shell #sbnShell .sbn-rowmatch b, html body.tmr-ds-shell #sbnShell .sbn-tname b { color: #fff; }
+html body.tmr-ds-shell #sbnShell .sbn-rowtime { color: #b9cde6; }
+html body.tmr-ds-shell #sbnShell .sbn-deep { border: 1px solid rgba(110, 160, 230, .5); border-radius: 8px; background: rgba(6, 16, 38, .9); color: #e6eefa; }
+html body.tmr-ds-shell #sbnShell .sbn-deep:hover { border-color: #4da3ff; color: #fff; }
+html body.tmr-ds-shell #sbnShell .sbn-chip {
+    border: 1px solid rgba(90, 150, 240, .42); border-radius: 9px; background: linear-gradient(180deg, rgba(10, 26, 58, .95), rgba(5, 13, 32, .95));
+    transition: border-color .12s ease, box-shadow .12s ease, background .12s ease;
+}
+html body.tmr-ds-shell #sbnShell .sbn-chip:hover { border-color: #55b0ff; box-shadow: 0 0 14px rgba(29, 127, 232, .6); }
+html body.tmr-ds-shell #sbnShell .sbn-chip .sbn-chip-top { color: #fff; font-weight: 700; }
+html body.tmr-ds-shell #sbnShell .sbn-chip .sbn-chip-bot { color: #3dff86; font-weight: 700; }
+html body.tmr-ds-shell #sbnShell .sbn-chip.is-on, html body.tmr-ds-shell #sbnShell .sbn-chip.is-picked, html body.tmr-ds-shell #sbnShell .sbn-chip[aria-pressed="true"] {
+    border-color: #ffc61f; background: linear-gradient(180deg, rgba(246, 185, 31, .30), rgba(246, 185, 31, .12)); box-shadow: 0 0 16px rgba(246, 185, 31, .55);
+}
+
+/* pick slip */
+html body.tmr-ds-shell #sbnShell #sbnSlip { color: #fff; }
+
+/* ---------------------------------------------------------------- TMR Tools panel (added by the script) */
+html body.tmr-ds-shell .sbh-tools { box-sizing: border-box; padding: 14px 14px 16px; margin-top: 16px; font-family: 'Barlow Semi Condensed', Inter, sans-serif; }
+html body.tmr-ds-shell .sbh-tools h2 { display: flex; align-items: center; gap: 10px; margin: 0 0 12px; color: #fff !important; font-family: 'Barlow Semi Condensed', Inter, sans-serif !important; font-style: normal !important; font-size: 19px !important; line-height: 1.1 !important; font-weight: 700 !important; letter-spacing: .06em !important; text-transform: uppercase; }
+html body.tmr-ds-shell .sbh-tools h2 svg { width: 24px; height: 24px; fill: none; stroke: #35a8ff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+html body.tmr-ds-shell .sbh-tools-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+html body.tmr-ds-shell .sbh-tool {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; min-height: 78px; padding: 8px 4px; box-sizing: border-box; text-align: center; text-decoration: none;
+    border: 1.5px solid rgba(77, 163, 255, .7); border-radius: 12px; background: linear-gradient(180deg, rgba(10, 30, 68, .9), rgba(5, 14, 34, .95)); color: #fff !important; font-size: 14.5px; font-weight: 700; line-height: 1.1;
+    box-shadow: 0 0 14px rgba(29, 127, 232, .35); transition: transform .15s ease, filter .15s ease;
+}
+html body.tmr-ds-shell .sbh-tool:hover { transform: translateY(-2px); filter: brightness(1.16); }
+html body.tmr-ds-shell .sbh-tool:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+html body.tmr-ds-shell .sbh-tool svg { width: 28px; height: 28px; fill: #35a8ff; }
+html body.tmr-ds-shell .sbh-tool.gold svg { fill: #ffc61f; }
+html body.tmr-ds-shell .sbh-tool.ln svg { fill: none; stroke: #35a8ff; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+@media (prefers-reduced-motion: reduce) { html body.tmr-ds-shell .sbh-tool { transition: none; } }
+
+/* selected price, slip controls */
+html body.tmr-ds-shell #sbnShell .sbn-chip.is-sel { border-color: #ffc61f; background: linear-gradient(180deg, rgba(246, 185, 31, .30), rgba(246, 185, 31, .12)); box-shadow: 0 0 16px rgba(246, 185, 31, .55); }
+html body.tmr-ds-shell #sbnShell #sbnSlip .sbn-sliphead { font-family: 'Barlow Semi Condensed', Inter, sans-serif; letter-spacing: .06em; }
+html body.tmr-ds-shell #sbnShell #sbnSlip .sbn-modebtn.is-on { border-color: #55b0ff; background: linear-gradient(180deg, #379dff, #1466e0); color: #fff; box-shadow: 0 0 14px rgba(29, 127, 232, .7); }
+html body.tmr-ds-shell #sbnShell #sbnSlip .sbn-sliprow { border: 1px solid rgba(90, 150, 240, .4); border-radius: 12px; background: rgba(6, 16, 38, .7); }
+html body.tmr-ds-shell #sbnShell #sbnSlip .sbn-submit { border: 2px solid #ffe680; border-radius: 12px; background: linear-gradient(180deg, #ffd84a, #f5ae0c); color: #17140a; font-weight: 800; box-shadow: 0 0 22px rgba(246, 185, 31, .5); }
+html body.tmr-ds-shell #sbnShell #sbnSlip .sbn-submit:hover { filter: brightness(1.06); }
+html body.tmr-ds-shell #sbnShell #sbnSlip .sbn-submit:disabled { filter: grayscale(.5) brightness(.8); box-shadow: none; }
+
+/* wide screens: a roomier sports rail so the sport names sit on one line */
+@media (min-width: 1500px) {
+    html body.tmr-ds-shell #picks #sbnShell.sbn-shell { grid-template-columns: 214px minmax(0, 1fr) 332px !important; }
+}
