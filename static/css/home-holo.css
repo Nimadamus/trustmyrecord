@@ -433,48 +433,42 @@ body.tmr-ds .hero.hx .spot.comp { width: auto; max-width: none; min-height: 0; a
     .hero.hx #hbLegend { padding-right: 13cqw; }
 }
 
-/* scores strip: slimmer, the Web Watchdog banner on the true centre of the page (equal columns either side of it),
-   and several games visible at once in the left lane instead of one */
+/* scores strip: slimmer. One large game at a time on the left (the site's own carousel, nothing cut off),
+   the Web Watchdog banner on the true centre of the page, Live on TMR filling the right side. */
 @media (min-width: 1180px) {
     body.tmr-ds .ticker .ticker-in { display: grid; grid-template-columns: 96px 37px minmax(0, 1fr) auto minmax(0, 1fr) 37px 96px; column-gap: 15px; align-items: center; zoom: .74; padding-top: 5px; padding-bottom: 5px; }
     body.tmr-ds .ticker .ticker-in > * { margin-left: 0; margin-right: 0; min-width: 0; }
     body.tmr-ds .ticker .ticker-in > .tlbl { white-space: nowrap; }
-    body.tmr-ds .ticker .ticker-games { --tk-cols: 2; --tk-w: 252px; position: relative; justify-self: center; flex: none !important; width: calc(var(--tk-cols) * var(--tk-w)) !important; min-width: 0 !important; max-width: 100% !important; }
-    body.tmr-ds .ticker .ticker-track { width: var(--tk-w); }
-    body.tmr-ds .ticker .ticker-page { flex: 0 0 100%; width: 100%; gap: 0; padding-right: 12px; box-sizing: border-box; }
-    body.tmr-ds .ticker .ticker-page > .gm { flex: 1 1 auto; width: auto; min-width: 0; max-width: 100%; padding-left: 14px; padding-right: 14px; overflow: hidden; box-sizing: border-box; }
-    body.tmr-ds .ticker .ticker-page > .gm.is-skel, body.tmr-ds .ticker .ticker-page > .gm.is-msg { width: auto; }
-    body.tmr-ds .ticker .ticker-page > .gm .gm-top { gap: 9px; min-width: 0; }
+    body.tmr-ds .ticker .ticker-games { justify-self: stretch; flex: none !important; width: 100% !important; min-width: 0 !important; max-width: none !important; }
+    body.tmr-ds .ticker .ticker-page > .gm { flex: 1 1 100%; width: auto; min-width: 0; max-width: 100%; overflow: hidden; box-sizing: border-box; }
+    body.tmr-ds .ticker .ticker-page > .gm .gm-top { min-width: 0; }
     body.tmr-ds .ticker .ticker-page > .gm .gm-top .t { flex: none; }
-    body.tmr-ds .ticker .ticker-page > .gm .gm-top .tn { font-size: 19.5px; }
-    body.tmr-ds .ticker .ticker-page > .gm .gm-top { gap: 7px; }
-
-    body.tmr-ds .ticker .ticker-page > .gm .gm-in-l { font-size: 19.5px; line-height: 1.14; }
-    body.tmr-ds .ticker .ticker-page > .gm .gm-in { height: 45px; min-height: 45px; }
-    body.tmr-ds .ticker .ticker-page > .gm { padding-left: 10px; padding-right: 10px; }
-    body.tmr-ds .ticker .ticker-page > .gm .gm-top .t { gap: 5px; }
-    body.tmr-ds .ticker .ticker-page > .gm .gm-top .t img { width: 19px; height: 19px; }
-    body.tmr-ds .ticker .ticker-page > .gm .gm-top .st { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: clip; text-align: right; font-size: 13px; letter-spacing: -.02em; }
-
-
+    body.tmr-ds .ticker .ticker-page > .gm .gm-top .st { margin-left: auto; }
     body.tmr-ds .ticker .ticker-page > .gm .gm-in, body.tmr-ds .ticker .ticker-page > .gm .gm-in-l { max-width: 100%; min-width: 0; }
-    body.tmr-ds .ticker .ticker-page > .gm .gm-in-l b { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-
-    body.tmr-ds .ticker .hx-tk-ghost { position: absolute; top: 0; width: var(--tk-w); display: flex; pointer-events: none; transition: transform .8s cubic-bezier(.4, 0, .2, 1); }
-    body.tmr-ds .ticker .tkcenter { padding: 0 6px; }
+    body.tmr-ds .ticker .tkcenter { padding: 0 6px; height: auto; }
     body.tmr-ds .ticker .tkcontest { width: auto; gap: 16px; padding: 0 24px 0 12px; height: 108px; zoom: 1.16; }
-    body.tmr-ds .ticker .ticker-games { justify-self: end; }
-    body.tmr-ds .ticker .tkact { justify-self: start; }
-    body.tmr-ds .ticker .tkcenter { height: auto; }
     body.tmr-ds .ticker .tkact { justify-self: center; }
 }
-@media (min-width: 1840px) {
-    body.tmr-ds .ticker .ticker-games { --tk-cols: 3; }
-    body.tmr-ds .ticker .tkcontest { gap: 14px; padding: 0 20px 0 8px; height: 86px; zoom: 1.48; }
-}
-@media (min-width: 1700px) {
-    body.tmr-ds .ticker .tkc-ic, body.tmr-ds .ticker .tkc-ic img { width: 74px; height: 74px; }
+@media (min-width: 1700px) and (max-width: 1839px) {
     body.tmr-ds .ticker .tkc-msg b { font-size: 25px; }
     body.tmr-ds .ticker .tkc-msg span { font-size: 16.5px; }
 }
-@media (prefers-reduced-motion: reduce) { body.tmr-ds .ticker .hx-tk-ghost { transition: none; } }
+@media (min-width: 1840px) {
+    /* room for a bigger card: larger teams, time and note */
+    body.tmr-ds .ticker .ticker-page > .gm { padding: 9px 26px; gap: 6px; }
+    body.tmr-ds .ticker .ticker-page > .gm .gm-top { gap: 16px; }
+    body.tmr-ds .ticker .ticker-page > .gm .gm-top .t { gap: 9px; }
+    body.tmr-ds .ticker .ticker-page > .gm .gm-top .t img { width: 30px; height: 30px; }
+    body.tmr-ds .ticker .ticker-page > .gm .gm-top .tn { font-size: 26px; }
+    body.tmr-ds .ticker .ticker-page > .gm .gm-top .st { font-size: 20px; }
+    body.tmr-ds .ticker .ticker-page > .gm .gm-in { height: 52px; min-height: 52px; }
+    body.tmr-ds .ticker .ticker-page > .gm .gm-in-l { font-size: 21.5px; line-height: 1.18; }
+    body.tmr-ds .ticker .tkcontest { gap: 18px; padding: 0 22px 0 10px; height: 86px; zoom: 1.48; width: 566px; }
+    body.tmr-ds .ticker .tkcontest .tkc-msg b { font-size: 28px; }
+    body.tmr-ds .ticker .tkcontest .tkc-msg span { font-size: 18.5px; }
+    /* Live on TMR fills the right side the way the game card fills the left */
+    body.tmr-ds .ticker .tkact { justify-self: stretch; width: auto; max-width: none; height: 96px; zoom: 1.34; margin-left: 0; }
+}
+@media (min-width: 1700px) {
+    body.tmr-ds .ticker .tkc-ic, body.tmr-ds .ticker .tkc-ic img { width: 74px; height: 74px; }
+}

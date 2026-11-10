@@ -288,37 +288,7 @@
     }
   }
 
-  /* Scores strip, several games at once. The site's carousel still moves one game per step; the lane is simply
-     wide enough to show the next ones beside it (CSS, --tk-cols). So the last steps do not show empty slots, the
-     first games are repeated after the last one in a display-only copy that the carousel never sees. */
-  function tickerGhost() {
-    var lane = document.querySelector('.ticker .ticker-games'), track = lane && lane.querySelector('.ticker-track');
-    if (!track) return;
-    var K = parseInt(getComputedStyle(lane).getPropertyValue('--tk-cols'), 10) || 1, g = lane.querySelector('.hx-tk-ghost');
-    var pages = Array.prototype.filter.call(track.children, function (e) { return e.classList && e.classList.contains('ticker-page'); });
-    if (K < 2 || pages.length < 2 || pages[0].querySelector('.is-skel, .is-msg')) { if (g) g.parentNode.removeChild(g); return; }
-    if (!g) { g = document.createElement('div'); g.className = 'hx-tk-ghost'; g.setAttribute('aria-hidden', 'true'); g.inert = true; lane.appendChild(g); }
-    var html = pages.slice(0, K - 1).map(function (pg) { return '<div class="ticker-page">' + pg.innerHTML.replace(/\sid="[^"]*"/g, '') + '</div>'; }).join('');
-    if (g.__html !== html) { g.innerHTML = html; g.__html = html; }
-    var left = (pages.length * track.offsetWidth) + 'px', tf = track.style.transform || '';
-    if (g.style.left !== left) g.style.left = left;
-    if (g.style.transform !== tf) g.style.transform = tf;
-  }
-  function tickerWatch() {
-    var lane = document.querySelector('.ticker .ticker-games'); if (!lane || !window.MutationObserver) return;
-    var queued = false, run = function () { queued = false; try { tickerGhost(); } catch (e) {} };
-    new MutationObserver(function (list) {
-      for (var i = 0; i < list.length; i++) {
-        var t = list[i].target; if (t && t.closest && t.closest('.hx-tk-ghost')) continue;
-        if (!queued) { queued = true; (window.requestAnimationFrame || setTimeout)(run); }
-        return;
-      }
-    }).observe(lane, { subtree: true, childList: true, attributes: true, attributeFilter: ['style'] });
-    window.addEventListener('resize', run); run();
-  }
-
   function go() {
-    tickerWatch();
     fit(); fold();
     window.addEventListener('resize', fold); window.addEventListener('load', fold);
     setTimeout(fold, 1200); setTimeout(fold, 3500);
