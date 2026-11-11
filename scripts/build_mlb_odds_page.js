@@ -270,8 +270,31 @@ function settledHtml(html) {
 /* FINAL_TABLE_LABELS_20261105: "World Series" meant reached it in the odds table and won it
    in the standings, so one page gave the Rays 100% and 0% under the same word. A range around
    a finished record ("85 to 85") says nothing, so that column goes too. */
+/* FINAL_TABLE_FINISH_20261111: a finished season is not odds. A grid of 100% and 0% made
+   readers decode each club's result from five cells, so the settled table now states the
+   finish in words (one column) and answers each round with Yes or No. The five round cells
+   are still read from the same settled projection, so a cell that is not exactly 100% or 0%
+   fails the bake rather than being relabelled. */
+const FINISH_LABELS = ['Missed the playoffs', 'Lost in the Wild Card Series', 'Lost in the Division Series',
+  'Lost in the League Championship Series', 'Lost the World Series', 'Won the World Series'];
+const SETTLED_HEADS = { Playoffs: 'Made playoffs', 'Division Series': 'Reached Division Series', LCS: 'Reached LCS',
+  'World Series': 'Reached World Series', 'Win it all': 'Won World Series' };
 function settledOddsHtml(html) {
-  return settledHtml(html).replace(/(<th[^>]*>)World Series(<\/th>)/g, '$1Reached World Series$2');
+  let out = settledHtml(html).replace(/(<th[^>]*>)([^<]+)(<\/th>)/g, (m, a, label, z) => (SETTLED_HEADS[label] ? a + SETTLED_HEADS[label] + z : m));
+  out = out.replace(/(<thead><tr><th[^>]*>Team<\/th>)/, '$1<th scope="col">Finish</th>');
+  return out.replace(/<tbody>[\s\S]*?<\/tbody>/, (body) => body.replace(/<tr>([\s\S]*?)<\/tr>/g, (row, inner) => {
+    const flags = [];
+    const cells = inner.replace(/<td class="p"[^>]*>([\s\S]*?)<\/td>/g, (cell, text) => {
+      const v = text.replace(/<[^>]+>/g, '').trim();
+      if (v !== '100%' && v !== '0%') throw new Error('season complete but an odds cell reads ' + v);
+      flags.push(v === '100%');
+      return v === '100%' ? '<td class="p yes" style="--h:1">Yes</td>' : '<td class="p no" style="--h:0"><span class="lz">No</span></td>';
+    });
+    if (flags.length !== 5) throw new Error('settled odds row has ' + flags.length + ' round cells, expected 5');
+    for (let i = 1; i < 5; i += 1) if (flags[i] && !flags[i - 1]) throw new Error('settled odds row skips a round');
+    const finish = FINISH_LABELS[flags.filter(Boolean).length];
+    return '<tr>' + cells.replace(/<\/th>/, '</th><td class="fin' + (flags[4] ? ' champ' : '') + '">' + finish + '</td>') + '</tr>';
+  }));
 }
 function settledStandingsHtml(html) {
   return settledHtml(html).replace(/<tr[^>]*>[\s\S]*?<\/tr>/g, (row) => {
@@ -643,7 +666,7 @@ function patchSitemap(urls) {
   return add.length;
 }
 
-module.exports = { page, assertSettled, settledHtml, buildInputs, postseasonState, postseasonStatus, mlbPct, strength, homeWin };
+module.exports = { page, assertSettled, settledHtml, settledOddsHtml, buildInputs, postseasonState, postseasonStatus, mlbPct, strength, homeWin };
 
 if (require.main === module) (async () => {
   const inp = await buildInputs();
