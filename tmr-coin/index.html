@@ -193,18 +193,56 @@
         .tcoin-announce-sub{font-family:'Barlow',sans-serif;font-size:1rem;font-weight:800;margin:20px 0 2px;color:var(--tmrp-text-primary);}
         @media (max-width: 720px){ .tcoin-two{grid-template-columns:1fr;} }
         @media (max-width: 560px){ .tcoin-info-grid{grid-template-columns:1fr;} }
+
+        /* TCOIN_DARK_20261111: the coin page in the dark family (the light layer is no longer
+           loaded here). Stadium hero, readable live market figures, quiet home strip. Copy,
+           risk wording, links, ids and the live market script are unchanged. */
+        body.tcoin-dark{background:#040a16 !important;color:#e6eef8}
+        body.tcoin-dark header:has(> .tcoin-hero){
+            position:relative;overflow:hidden;margin:10px 0 22px;padding:46px 40px 40px;border:1px solid rgba(148,163,184,.26);border-radius:18px;
+            background:linear-gradient(90deg,rgba(4,10,22,.96) 0%,rgba(4,10,22,.84) 50%,rgba(4,10,22,.38) 100%),#040a16 url(/static/img/model-builder/stadium-hero.jpg) center 30%/cover no-repeat;
+            box-shadow:0 22px 54px rgba(2,8,18,.5);
+        }
+        body.tcoin-dark .tcoin-hero{align-items:flex-start;gap:26px;text-align:left}
+        body.tcoin-dark .tcoin-hero > div{text-align:left;max-width:760px}
+        body.tcoin-dark .tcoin-hero img{width:104px;height:104px;flex:0 0 104px;filter:drop-shadow(0 10px 26px rgba(244,201,93,.28))}
+        body.tcoin-dark .tcoin-live-badge{background:rgba(29,127,232,.13);border-color:rgba(29,127,232,.42);color:#8CC0FF}
+        body.tcoin-dark .tcoin-live-dot{background:#34d399;box-shadow:0 0 0 4px rgba(52,211,153,.18)}
+        body.tcoin-dark .tcoin-hero h1{
+            font-family:Anton,'Barlow',sans-serif !important;font-weight:400 !important;text-transform:uppercase;letter-spacing:.005em !important;
+            font-size:clamp(44px,6.4vw,84px) !important;line-height:.96 !important;margin:14px 0 0 !important;text-align:left !important;
+            background:linear-gradient(100deg,#fff 30%,#f4c95d 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;width:fit-content;padding-right:4px;
+        }
+        body.tcoin-dark .tcoin-positioning{margin:16px 0 0 !important;text-align:left !important;max-width:640px;color:#d6e2ef !important;font-size:clamp(16px,1.4vw,19px) !important;line-height:1.5 !important}
+        body.tcoin-dark .tcoin-announce-kick{color:#8CC0FF}
+        body.tcoin-dark .tcoin-col-tag{color:#8CC0FF !important}
+        body.tcoin-dark a.tmr-cta-primary{background:linear-gradient(180deg,#2b8df3,#1569c9) !important;color:#fff !important;border-color:transparent !important;box-shadow:0 10px 26px rgba(29,127,232,.32)}
+        body.tcoin-dark header:has(> .tcoin-hero){max-width:none;box-sizing:border-box;width:calc(100% + 32px);margin-left:-16px;margin-right:-16px}
+        body.tcoin-dark .tcoin-metrics{background:#0a1322 !important;border:1px solid rgba(148,163,184,.2) !important}
+        body.tcoin-dark .tcoin-metric{background:transparent !important;border-color:rgba(148,163,184,.16) !important}
+        body.tcoin-dark .tcoin-metric .tcoin-info-label{color:#93a3b8 !important}
+        body.tcoin-dark .tcoin-metric-val{color:#f8fafc !important}
+        body.tcoin-dark .tcoin-metric-sub{color:#93a3b8 !important}
+        body.tcoin-dark :is(nav,div,p):has(> .tmrlh-home.tmrlh-a){background:none !important;border:0 !important;box-shadow:none !important;padding:0 !important;min-height:0 !important}
+        body.tcoin-dark .tmrlh-home.tmrlh-a{background:none !important;border:0 !important;box-shadow:none !important;padding:4px 0 !important;font-size:13px}
+        html body.tcoin-dark .tmrlh-home.tmrlh-a.tmrlh-a span:not(.tmrlh-home-mark){color:#9fb0c9 !important;font-weight:600}
+        body.tcoin-dark .tmrlh-home-mark{background:rgba(148,163,184,.16) !important;color:#dbe6f2 !important}
+        @media (max-width:700px){
+            body.tcoin-dark header:has(> .tcoin-hero){padding:26px 18px 24px;width:calc(100% + 20px);margin-left:-10px;margin-right:-10px}
+            body.tcoin-dark .tcoin-hero{flex-direction:column;gap:14px}
+            body.tcoin-dark .tcoin-hero img{width:72px;height:72px;flex-basis:72px}
+        }
     </style>
     <link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=ed4dd44fb8f5">
     <script defer src="/static/js/tmr-linkhub.js?v=5a3edbdfbfa0"></script>
 <link rel="stylesheet" href="/static/css/tmr-ds.d4d41a955166.css">
 <link rel="stylesheet" href="/static/css/tmr-ds-header.cc364e352e74.css">
-<link rel="stylesheet" href="/static/css/tmr-light.css?v=21433b023833">
 <!-- The one approved navbar: the shared header component (tmr-ds-nav.js)
      plus the homepage's own navbar rules, so every page renders the same bar. -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap">
 <link rel="stylesheet" href="/static/css/tmr-navbar.css?v=68ec3081d29a">
 </head>
-<body class="tmr-ds-shell tmr-polished-page tmr-light">
+<body class="tmr-ds-shell tmr-polished-page tcoin-dark">
 
 <main class="tmr-shell">
     <header class="tmr-page-header">
