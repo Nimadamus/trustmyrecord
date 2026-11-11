@@ -9,33 +9,78 @@
 <link rel="canonical" href="https://trustmyrecord.com/extra-markets/">
 <meta name="description" content="Extra betting markets on TrustMyRecord: alternate lines, team totals, and player props across MLB, NBA, NHL, and NFL, with locked picks and verified records.">
 <style>
-  :root, html body.tmr-ds-shell, html body.tmr-ds, html body.tmr-theme-a{ --bg:#0a0a0f; --panel:#13131c; --panel2:#1b1b27; --border:#262636; --text:#e8e8f0; --muted:#9aa; --cyan:#00aeff; --gold:#ffd700; --green:#1ed760; }
+  /* EXTRA_MARKETS_AGRADE_20261111: dark family, stadium hero, one ladder per market instead of a wall of chips. */
+  :root, html body.tmr-ds-shell, html body.tmr-ds, html body.tmr-theme-a{ --bg:#040a16; --panel:#0e1726; --panel2:#0a1322; --border:rgba(148,163,184,.18); --border2:rgba(148,163,184,.3); --text:#f8fafc; --muted:#93a3b8; --cyan:#4DA3FF; --brand:#1D7FE8; --gold:#f4c95d; --green:#34d399; --red:#f87171; }
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,Arial,sans-serif;}
-  header{padding:18px 20px;border-bottom:1px solid var(--border);}
-  header h1{margin:0;font-size:18px;letter-spacing:.5px}
-  header p{margin:4px 0 0;color:var(--muted);font-size:13px}
-  .wrap{max-width:1000px;margin:0 auto;padding:16px 20px 60px}
-  .sporttabs{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
-  .sporttabs button{background:var(--panel);border:1px solid var(--border);color:var(--text);padding:8px 14px;border-radius:999px;cursor:pointer;font-size:13px}
-  .sporttabs button.active{background:var(--cyan);color:#001018;border-color:var(--cyan);font-weight:700}
-  .status{color:var(--muted);font-size:13px;margin:8px 0 16px}
-  .game{background:var(--panel);border:1px solid var(--border);border-radius:12px;margin:0 0 16px;overflow:hidden}
-  .game-head{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
-  .game-head b{font-size:15px}
-  .game-head small{color:var(--muted)}
-  .grp{padding:10px 16px 14px}
-  .grp h3{margin:6px 0 10px;font-size:13px;color:var(--gold);text-transform:uppercase;letter-spacing:.6px}
-  .lines{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
-  .line{background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;display:flex;justify-content:space-between;align-items:center;font-size:13px}
-  .line .sel{color:var(--text)}
+  .em-hero{position:relative;overflow:hidden;border-bottom:1px solid var(--border)}
+  .em-hero::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(4,10,22,.95) 0%,rgba(4,10,22,.8) 48%,rgba(4,10,22,.3) 100%),#040a16 url(/static/img/model-builder/stadium-hero.jpg) center 28%/cover no-repeat}
+  .em-hero::after{content:"";position:absolute;inset:auto 0 0 0;height:90px;background:linear-gradient(180deg,transparent,#040a16)}
+  .em-hero-in{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:44px 20px 38px}
+  .em-kicker{display:inline-flex;align-items:center;gap:8px;margin:0 0 14px;padding:5px 12px;border:1px solid rgba(29,127,232,.42);border-radius:999px;background:rgba(29,127,232,.13);color:#8CC0FF;font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
+  .em-kicker::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 0 4px rgba(52,211,153,.18)}
+  .em-hero h1{margin:0;font-family:Anton,"Barlow Condensed",sans-serif !important;font-weight:400 !important;text-transform:uppercase;font-size:clamp(34px,5.4vw,66px) !important;line-height:.98 !important;letter-spacing:.005em !important;max-width:16em;background:linear-gradient(100deg,#fff 40%,#4DA3FF 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .em-hero p.em-lede{margin:16px 0 0;max-width:640px;color:#d6e2ef;font-size:clamp(16px,1.4vw,19px);line-height:1.5;font-weight:500}
+  .em-hero p.em-lede a{color:#8CC0FF;font-weight:700}
+  .wrap{max-width:1100px;margin:0 auto;padding:22px 20px 60px}
+  /* The sitewide home strip repeats the header logo: keep the link as a quiet crumb. */
+  :is(nav,div,p):has(> .tmrlh-home.tmrlh-a){background:none !important;border:0 !important;box-shadow:none !important;padding:0 !important;margin:14px auto 0 !important;max-width:1100px;min-height:0 !important}
+  .tmrlh-home.tmrlh-a{background:none !important;border:0 !important;box-shadow:none !important;padding:4px 20px !important;font-size:13px}
+  .tmrlh-home.tmrlh-a span:not(.tmrlh-home-mark){color:var(--muted) !important;font-weight:600}
+  .tmrlh-home-mark{background:rgba(148,163,184,.16) !important;color:#dbe6f2 !important}
+  .em-bar{display:flex;flex-wrap:wrap;align-items:center;gap:12px 18px;margin:0 0 18px}
+  .sporttabs{display:inline-flex;gap:4px;flex-wrap:wrap;padding:4px;border:1px solid var(--border);border-radius:999px;background:var(--panel2)}
+  .sporttabs button{background:none;border:0;color:#c4d2e2;padding:9px 18px;border-radius:999px;cursor:pointer;font:700 14px Inter,system-ui,sans-serif}
+  .sporttabs button:hover{color:#fff}
+  .sporttabs button.active{background:var(--brand);color:#fff}
+  .status{color:var(--muted);font-size:13.5px;margin:0}
+  .game{background:linear-gradient(180deg,#101c2c,var(--panel));border:1px solid var(--border);border-radius:14px;margin:0 0 14px;overflow:hidden}
+  .game[open]{box-shadow:0 14px 34px rgba(2,8,18,.34)}
+  .game-head{list-style:none;cursor:pointer;padding:16px 20px;display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:6px 18px;align-items:center}
+  .game-head::-webkit-details-marker{display:none}
+  .game-head b{font-size:17px;font-weight:700}
+  .game-head b i{font-style:normal;color:var(--muted);font-weight:500;margin:0 6px}
+  .game-head small{color:var(--muted);font-size:13px;white-space:nowrap}
+  .game-head .em-count{color:#cfdcea;font-size:12.5px;font-weight:700;padding:5px 11px;border:1px solid var(--border);border-radius:999px;white-space:nowrap}
+  .game-head::after{content:"";width:9px;height:9px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);grid-column:4;margin:0 4px 4px 0;transition:transform .15s}
+  .game[open] .game-head::after{transform:rotate(-135deg);margin:4px 4px 0 0}
+  .game-head{grid-template-columns:minmax(0,1fr) auto auto auto}
+  .em-body{display:grid;grid-template-columns:1fr 1fr;gap:0;border-top:1px solid var(--border)}
+  .grp{padding:16px 20px 20px;min-width:0}
+  .grp + .grp{border-left:1px solid var(--border)}
+  .grp h3{margin:0 0 12px;font-family:"Barlow Condensed",sans-serif;font-size:18px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:.05em}
+  table.em-ladder{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}
+  .em-ladder th{padding:0 8px 8px;font-size:10.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:0}
+  .em-ladder th:first-child{text-align:left;width:74px;max-width:none}
+  .em-ladder td{padding:8px;border-top:1px solid rgba(148,163,184,.12);text-align:right;color:#dbe5f1}
+  .em-ladder td:first-child{text-align:left;font-weight:700;color:#fff}
+  .em-ladder tbody tr:hover td{background:rgba(77,163,255,.06)}
+  .em-ladder .o{font-weight:700}
+  .em-ladder .o.dog{color:var(--green)}
+  .em-ladder .o.none{color:#5b6b82;font-weight:500}
+  .em-ladder .ln{color:var(--muted);font-weight:600;margin-right:8px}
+  .lines{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px}
+  .line{background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;display:flex;justify-content:space-between;align-items:center;font-size:13px;gap:8px}
   .line .odds{color:var(--green);font-weight:700}
-  .empty{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:28px;text-align:center;color:var(--muted)}
-  .about{max-width:1000px;margin:0 auto;padding:0 20px 40px;color:var(--text)}
-  .about h2{font-size:17px;margin:28px 0 8px}
-  .about p{color:#c9cfdb;font-size:14.5px;line-height:1.65;margin:0 0 12px;max-width:78ch}
+  .empty{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:34px 20px;text-align:center;color:var(--muted);font-size:15px}
+  .empty b{display:block;margin-bottom:6px;color:#fff;font-family:"Barlow Condensed",sans-serif;font-size:22px;letter-spacing:.04em;text-transform:uppercase}
+  .em-skel{height:62px;border-radius:14px;margin:0 0 14px;background:linear-gradient(90deg,#0e1726 25%,#14233a 50%,#0e1726 75%);background-size:200% 100%;animation:emsk 1.2s linear infinite}
+  @keyframes emsk{to{background-position:-200% 0}}
+  @media (prefers-reduced-motion: reduce){.em-skel{animation:none}}
+  .about{max-width:1100px;margin:0 auto;padding:0 20px 40px;color:var(--text);display:grid;grid-template-columns:1fr 1fr;gap:6px 40px}
+  .about h2{font-family:"Barlow Condensed",sans-serif !important;font-size:21px !important;font-weight:800;letter-spacing:.04em !important;text-transform:uppercase;margin:26px 0 8px}
+  .about p{color:#b9c6d6;font-size:14.5px;line-height:1.65;margin:0 0 12px}
   .about a{color:var(--cyan)}
-  footer{color:var(--muted);font-size:12px;text-align:center;padding:20px}
+  .about > div{min-width:0}
+  footer.em-foot{color:var(--muted);font-size:12.5px;text-align:center;padding:20px}
+  @media (max-width:860px){
+    .em-hero-in{padding:28px 16px 26px}.wrap{padding:16px 16px 44px}
+    .em-body{grid-template-columns:1fr}.grp + .grp{border-left:0;border-top:1px solid var(--border)}
+    .game-head{grid-template-columns:minmax(0,1fr) auto;padding:14px 16px}.game-head b{grid-column:1}.game-head::after{grid-column:2;grid-row:1}
+    .game-head small,.game-head .em-count{grid-column:1;justify-self:start}
+    .grp{padding:14px 16px 16px}.sporttabs{display:flex;width:100%}.sporttabs button{flex:1;padding:9px 0;font-size:13px}
+    .about{grid-template-columns:1fr;padding:0 16px 30px}
+  }
 </style>
 <link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=ed4dd44fb8f5">
 <script defer src="/static/js/tmr-linkhub.js?v=5a3edbdfbfa0"></script>
@@ -47,27 +92,38 @@
 <link rel="stylesheet" href="/static/css/tmr-ds-header.cc364e352e74.css">
 </head>
 <body class="tmr-theme-a tmr-ds-shell">
-<header>
+<header class="em-hero"><div class="em-hero-in">
+  <p class="em-kicker">Live alternate lines</p>
   <h1>Extra Markets — Alternate Lines &amp; Props</h1>
-  <p>Standalone preview. Sourced separately from Bovada's public feed. Does not affect the main sportsbook game-line boards.</p>
-</header>
+  <p class="em-lede">Every alternate spread and total on today's games, laid out as one ladder per market so you can see what each half point costs. Read only: to lock a pick on an alternate line, use the Alt Lines tab on the <a href="/sportsbook/">Sportsbook</a>.</p>
+</div></header>
 <div class="wrap">
-  <div class="sporttabs" id="sporttabs"></div>
-  <div class="status" id="status">Loading…</div>
+  <div class="em-bar">
+    <div class="sporttabs" id="sporttabs" role="tablist" aria-label="Sport"></div>
+    <p class="status" id="status" role="status" aria-live="polite">Loading…</p>
+  </div>
   <div id="board"></div>
 </div>
 <section class="about" aria-label="About Extra Markets">
+  <div>
   <h2>What Extra Markets shows</h2>
   <p>This page lists alternate lines: the same game offered at different numbers than the main board, each with its own price. Two kinds of full game market appear here when the feed has them. <b>Alternate spreads</b> are the run line in baseball, the puck line in hockey and the point spread in football and basketball, moved up or down. <b>Alternate totals</b> are the game total set higher or lower than the main number.</p>
   <p>The trade off is always the same. Moving a line in your favor costs you price, and taking a harder number pays more. For example, if a team is favored by 3.5 on the main board, an alternate list might offer that team at 1.5 for a shorter price or at 6.5 for a longer one. Nothing here is a better bet by default; it is a different bet on the same game.</p>
+  </div>
+  <div>
   <h2>Where the numbers come from</h2>
   <p>Alternate lines are read from Bovada's public feed, separately from the feed behind the main sportsbook board, so nothing on this page changes the prices you see there. Only full game markets are shown. To lock a pick on an alternate line, use the Alt Lines tab on the <a href="/sportsbook/">Sportsbook</a>; this page is a read only view.</p>
+  </div>
+  <div>
   <h2>Why a sport can be empty</h2>
   <p>A sport only shows games when the book has alternate lines posted for them. Between seasons, on days with no games, early before lines go up, and once a game has started and its markets come down, the list for that sport will be empty, and the page says so instead of showing old numbers. If the feed itself cannot be reached, the page tells you that too.</p>
+  </div>
+  <div>
   <h2>How it updates</h2>
   <p>The page asks the feed for the current list every time you open it or switch sports, so reloading always shows the latest numbers the feed has. Lines move often, so the price when you lock a pick is the one that counts. For the main moneylines, spreads and totals on every game, use the <a href="/sportsbook/">Sportsbook</a>, and for matchup research see the <a href="/handicapping/">Handicapping hub</a>.</p>
+  </div>
 </section>
-<footer>TrustMyRecord · Extra Markets preview · alt lines refresh ~90s</footer>
+<footer class="em-foot">TrustMyRecord · Extra Markets · alternate lines from Bovada's public feed, read fresh each time you open a sport</footer>
 
 <script>
 (function(){
@@ -84,51 +140,113 @@
   var tabsEl = document.getElementById('sporttabs');
   var statusEl = document.getElementById('status');
   var boardEl = document.getElementById('board');
+  var seq = 0;
 
-  function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-  function fmtOdds(o){ var n=Number(o); if(!isFinite(n)) return '—'; return n>0?'+'+n:String(n); }
+  function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function fmtOdds(o){ var n=Number(o); if(!isFinite(n)) return ''; return n>0?'+'+n:String(n); }
+  function fmtLine(n){ n=Number(n); return (n>0?'+':'') + n; }
   function fmtWhen(iso){ if(!iso) return ''; try{ var d=new Date(iso); return d.toLocaleString('en-US',{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}); }catch(e){ return ''; } }
+  function label(key){ for (var i=0;i<SPORTS.length;i++) if (SPORTS[i].key===key) return SPORTS[i].label; return key; }
+  function oddsCell(o, line){
+    if (o == null || !isFinite(Number(o))) return '<td><span class="o none">no price</span></td>';
+    return '<td>' + (line == null ? '' : '<span class="ln">' + esc(line) + '</span>') + '<span class="o' + (Number(o) > 0 ? ' dog' : '') + '">' + fmtOdds(o) + '</span></td>';
+  }
 
   function renderTabs(){
     tabsEl.innerHTML = SPORTS.map(function(s){
-      return '<button data-key="'+s.key+'" class="'+(s.key===current?'active':'')+'">'+s.label+'</button>';
+      return '<button type="button" role="tab" aria-selected="'+(s.key===current?'true':'false')+'" data-key="'+s.key+'" class="'+(s.key===current?'active':'')+'">'+s.label+'</button>';
     }).join('');
-    Array.prototype.forEach.call(tabsEl.querySelectorAll('button'), function(b){
-      b.addEventListener('click', function(){ current=b.getAttribute('data-key'); renderTabs(); load(); });
+  }
+  tabsEl.addEventListener('click', function(e){
+    var b = e.target.closest('button[data-key]'); if (!b) return;
+    firstLoad = false;
+    current = b.getAttribute('data-key'); renderTabs(); load();
+  });
+
+  /* One row per number. Spread: the away team's line on the left, the home team's matching
+     line (the opposite number) on the right. Total: Over and Under at the same number. */
+  function spreadLadder(g, items){
+    var rows = {}, keys = [];
+    items.forEach(function(it){
+      var isHome = it.selection === g.home_team;
+      var k = isHome ? -Number(it.line) : Number(it.line);          // keyed by the away team's line
+      if (!rows[k]) { rows[k] = {}; keys.push(k); }
+      rows[k][isHome ? 'h' : 'a'] = it;
     });
+    keys.sort(function(x, y){ return x - y; });
+    return '<table class="em-ladder"><thead><tr><th>Away line</th><th title="'+esc(g.away_team)+'">'+esc(g.away_team)+'</th><th title="'+esc(g.home_team)+'">'+esc(g.home_team)+'</th></tr></thead><tbody>' +
+      keys.map(function(k){ var r = rows[k];
+        return '<tr><td>' + fmtLine(k) + '</td>' + oddsCell(r.a && r.a.odds) + oddsCell(r.h && r.h.odds, fmtLine(-k)) + '</tr>';
+      }).join('') + '</tbody></table>';
+  }
+  function totalLadder(items){
+    var rows = {}, keys = [];
+    items.forEach(function(it){
+      var k = Number(it.line); if (!rows[k]) { rows[k] = {}; keys.push(k); }
+      rows[k][/^over/i.test(it.selection) ? 'o' : 'u'] = it;
+    });
+    keys.sort(function(x, y){ return x - y; });
+    return '<table class="em-ladder"><thead><tr><th>Total</th><th>Over</th><th>Under</th></tr></thead><tbody>' +
+      keys.map(function(k){ var r = rows[k];
+        return '<tr><td>' + k + '</td>' + oddsCell(r.o && r.o.odds) + oddsCell(r.u && r.u.odds) + '</tr>';
+      }).join('') + '</tbody></table>';
+  }
+  function chipGroup(items){
+    return '<div class="lines">' + items.map(function(it){
+      return '<div class="line"><span class="sel">' + esc(it.selection) + (it.line == null ? '' : ' ' + esc(it.line)) + '</span><span class="odds">' + fmtOdds(it.odds) + '</span></div>';
+    }).join('') + '</div>';
+  }
+  function renderGames(games){
+    return games.map(function(g, idx){
+      var n = 0;
+      var groups = (g.alt_groups||[]).map(function(grp){
+        var items = grp.items || []; n += items.length;
+        var teamsOnly = items.length && items.every(function(it){ return it.selection === g.home_team || it.selection === g.away_team; });
+        var ouOnly = items.length && items.every(function(it){ return /^(over|under)$/i.test(it.selection); });
+        var body = grp.key === 'alt_spreads' && teamsOnly ? spreadLadder(g, items) : grp.key === 'alt_totals' && ouOnly ? totalLadder(items) : chipGroup(items);
+        return '<div class="grp"><h3>'+esc(grp.label||grp.key)+'</h3>'+body+'</div>';
+      }).join('');
+      return '<details class="game"'+(idx===0?' open':'')+'><summary class="game-head"><b>'+esc(g.away_team)+'<i>at</i>'+esc(g.home_team)+'</b><small>'+esc(fmtWhen(g.commence_time))+'</small><span class="em-count">'+n+' prices</span></summary><div class="em-body">'+groups+'</div></details>';
+    }).join('');
   }
 
-  function lineLabel(item){
-    var line = item.line;
-    var lineStr = (line>0?'+':'') + line;
-    return esc(item.selection) + ' ' + lineStr;
+  function fetchSport(key){
+    return fetch(API + encodeURIComponent(key) + '?cb=' + Date.now()).then(function(r){ return r.json(); });
   }
-
+  function show(data){
+    var games = (data && data.games) || [];
+    if(!data || !data.supported){ statusEl.textContent = ''; boardEl.innerHTML = '<div class="empty"><b>Not offered yet</b>Alternate lines are not offered for '+esc(label(current))+' yet.</div>'; return; }
+    if(!games.length){ statusEl.textContent=''; boardEl.innerHTML = '<div class="empty"><b>No alternate lines right now</b>Nothing is posted for '+esc(label(current))+(data.reason?(' ('+esc(data.reason)+')'):'')+'. Check back when games are posted, or pick another sport above.</div>'; return; }
+    statusEl.textContent = games.length + ' game' + (games.length!==1?'s':'') + ' with alternate lines. Tap a game to open its ladder.';
+    boardEl.innerHTML = renderGames(games);
+  }
   function load(){
-    statusEl.textContent = 'Loading ' + current + ' alternate lines…';
-    boardEl.innerHTML = '';
-    fetch(API + encodeURIComponent(current) + '?cb=' + Date.now())
-      .then(function(r){ return r.json(); })
-      .then(function(data){
-        var games = (data && data.games) || [];
-        if(!data || !data.supported){ statusEl.textContent = 'Alternate lines not offered for this sport yet.'; boardEl.innerHTML = '<div class="empty">No alternate-line market for '+esc(current)+'.</div>'; return; }
-        if(!games.length){ statusEl.textContent=''; boardEl.innerHTML = '<div class="empty">No alternate lines available right now'+(data.reason?(' ('+esc(data.reason)+')'):'')+'. Check back when games are posted.</div>'; return; }
-        statusEl.textContent = games.length + ' game' + (games.length!==1?'s':'') + ' with alternate lines (Bovada).';
-        boardEl.innerHTML = games.map(function(g){
-          var groups = (g.alt_groups||[]).map(function(grp){
-            var lines = (grp.items||[]).map(function(it){
-              return '<div class="line"><span class="sel">'+lineLabel(it)+'</span><span class="odds">'+fmtOdds(it.odds)+'</span></div>';
-            }).join('');
-            return '<div class="grp"><h3>'+esc(grp.label||grp.key)+'</h3><div class="lines">'+lines+'</div></div>';
-          }).join('');
-          return '<div class="game"><div class="game-head"><b>'+esc(g.away_team)+' @ '+esc(g.home_team)+'</b><small>'+esc(fmtWhen(g.commence_time))+'</small></div>'+groups+'</div>';
-        }).join('');
-      })
-      .catch(function(){ statusEl.textContent=''; boardEl.innerHTML = '<div class="empty">Alternate-lines feed temporarily unavailable. Try again shortly.</div>'; });
+    var mine = ++seq;
+    statusEl.textContent = 'Loading ' + label(current) + ' alternate lines…';
+    boardEl.innerHTML = '<div class="em-skel"></div><div class="em-skel"></div><div class="em-skel"></div>';
+    return fetchSport(current).then(function(data){ if (mine === seq) show(data); return data; },
+      function(){ if (mine !== seq) return null; statusEl.textContent=''; boardEl.innerHTML = '<div class="empty"><b>Feed unavailable</b>The alternate lines feed cannot be reached right now. Try again shortly.</div>'; return null; });
+  }
+
+  /* EM_DEFAULT_20261111: the first tab (MLB) is empty for five months a year. On the first load
+     only, open on the first sport that has games; a tab the visitor chose is never overridden. */
+  var firstLoad = true;
+  function openOnLiveSport(i){
+    if (!firstLoad || i >= SPORTS.length) return;
+    var key = SPORTS[i].key;
+    if (key === current) { openOnLiveSport(i + 1); return; }
+    fetchSport(key).then(function(data){
+      if (!firstLoad) return;
+      if (data && data.supported && data.games && data.games.length) { firstLoad = false; current = key; ++seq; renderTabs(); show(data); }
+      else openOnLiveSport(i + 1);
+    }, function(){ openOnLiveSport(i + 1); });
   }
 
   renderTabs();
-  load();
+  load().then(function(data){
+    if (firstLoad && !(data && data.supported && data.games && data.games.length)) openOnLiveSport(0);
+    else firstLoad = false;
+  });
 })();
 </script>
 <script src="/static/js/tmr-ds-nav.d3c64a8cbd83.js"></script>
