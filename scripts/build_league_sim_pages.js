@@ -189,7 +189,8 @@ const CSS = `
   table.lsim td.p{background:rgba(56,189,248,calc(var(--h,0)*.32));font-variant-numeric:tabular-nums}
   /* FINAL_TABLE_FINISH_20261111 */
   table.lsim td.fin{text-align:left;font-weight:700;color:#e6eef8;white-space:nowrap}
-  table.lsim td.fin.champ{color:#f4c95d}
+  table.lsim td.fin.champ{color:#f4c95d;font-size:inherit}
+  table.lsim th.fin{text-align:left}
   table.lsim td.p.yes{font-weight:800;color:#fff}
   @media (max-width:640px){table.lsim td.fin{white-space:normal;min-width:150px}}
   table.lsim td.num,table.lsim td.rng{font-variant-numeric:tabular-nums}

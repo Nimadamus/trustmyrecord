@@ -281,7 +281,7 @@ const SETTLED_HEADS = { Playoffs: 'Made playoffs', 'Division Series': 'Reached D
   'World Series': 'Reached World Series', 'Win it all': 'Won World Series' };
 function settledOddsHtml(html) {
   let out = settledHtml(html).replace(/(<th[^>]*>)([^<]+)(<\/th>)/g, (m, a, label, z) => (SETTLED_HEADS[label] ? a + SETTLED_HEADS[label] + z : m));
-  out = out.replace(/(<thead><tr><th[^>]*>Team<\/th>)/, '$1<th scope="col">Finish</th>');
+  out = out.replace(/(<thead><tr><th[^>]*>Team<\/th>)/, '$1<th scope="col" class="fin">Finish</th>');
   return out.replace(/<tbody>[\s\S]*?<\/tbody>/, (body) => body.replace(/<tr>([\s\S]*?)<\/tr>/g, (row, inner) => {
     const flags = [];
     const cells = inner.replace(/<td class="p"[^>]*>([\s\S]*?)<\/td>/g, (cell, text) => {
