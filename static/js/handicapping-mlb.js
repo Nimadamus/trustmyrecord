@@ -1803,5 +1803,42 @@
     if (prevBtn) prevBtn.addEventListener("click", function () { stepDate(-1); });
     if (nextBtn) nextBtn.addEventListener("click", function () { stepDate(1); });
     if (todayBtn) todayBtn.addEventListener("click", function () { selectDate(todayET()); });
+
+    /* MLB_HUB_OFFSEASON_LABEL_20261111. The text slate below the cards is baked
+       by the daily build, and out of season the build leaves the last bake in
+       place on purpose. Its headings still said "Today's MLB matchups,
+       Wednesday October 28, 2026" two weeks after the World Series, under a
+       card area saying no games are scheduled today. When the baked date is
+       not today, the headings say what the block is: the most recent slate. */
+    (function relabelBakedSlate() {
+        try {
+            var sec = document.querySelector("section.mhs");
+            var h2 = document.getElementById("mhs-title");
+            if (!sec || !h2) return;
+            var m = /^Today's MLB matchups,\s*(?:[A-Za-z]+\s+)?([A-Za-z]+ \d{1,2}, \d{4})\s*$/.exec(h2.textContent || "");
+            if (!m) return;
+            var d = new Date(m[1] + " 12:00:00");
+            if (isNaN(d.getTime())) return;
+            var iso = d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2);
+            if (iso >= todayET()) return;
+            h2.textContent = (h2.textContent || "").replace(/^Today's MLB matchups/, "Most recent MLB slate");
+            var swaps = [
+                [/^Today's probable pitcher matchups$/, "Probable pitcher matchups"],
+                [/\bon today's board\b/g, "on that board"],
+                [/\bfor today's board\b/g, "for that board"],
+                [/\bacross today's slate\b/g, "across that slate"],
+                [/\btoday's MLB recent form\b/g, "MLB recent form"]
+            ];
+            var walker = document.createTreeWalker(sec, NodeFilter.SHOW_TEXT, null);
+            var nodes = [], n;
+            while ((n = walker.nextNode())) nodes.push(n);
+            nodes.forEach(function (t) {
+                var v = t.nodeValue, w = v;
+                swaps.forEach(function (s) { w = w.replace(s[0], s[1]); });
+                if (w !== v) t.nodeValue = w;
+            });
+        } catch (e) { /* the baked text stays as it is */ }
+    })();
+
     boot();
 })();

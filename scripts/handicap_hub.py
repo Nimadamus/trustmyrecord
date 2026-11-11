@@ -29,6 +29,7 @@ import datetime
 
 import handicap_enrich as enrich
 import handicap_page as hp
+from et_stamp import et_stamp
 import handicap_ui as ui
 
 esc = ui.esc
@@ -560,11 +561,16 @@ def render(bld, sport, games, built_at, hist_by_pair=None, extras=None):
                            % (esc(v), esc(l)) for v, l in cells)) + "\n"
     lede = None
     if games:
+        # HUB_LEDE_BY_SPORT_20261111: this sentence said "the starting quarterbacks"
+        # on every sport's hub, the NHL and NBA ones included.
+        starters = {"nfl": " and the starting quarterbacks",
+                    "ncaaf": " and the starting quarterbacks"}.get(sport, "")
         lede = ("%d game%s on the board, %d priced. Every card carries the line, both clubs' "
-                "season rates%s, their current form and the starting quarterbacks, with the full "
+                "season rates%s%s their current form%s, with the full "
                 "research page one click away."
                 % (len(games), "" if len(games) == 1 else "s", priced,
-                   (" from the %s" % stat_note) if stat_note else ""))
+                   (" from the %s" % stat_note) if stat_note else "",
+                   "," if starters else " and", starters))
 
     title = "%s Handicapping: Odds, Trends and Matchup Research" % label
     desc = ("Every %s game on the board with the moneyline, the spread and the total, each club's "
@@ -583,6 +589,9 @@ def render(bld, sport, games, built_at, hist_by_pair=None, extras=None):
            "markets": {"any": False}}
 
     stamp = built_at[:16].replace("T", " ") + " UTC"
+    # ET_STAMP_20261111: the visible freshness line reads in Eastern like every
+    # other time on the page. The footer keeps its UTC "Built" stamp unchanged.
+    shown = et_stamp(built_at)
     links = [("The handicapping hub, every sport", "/handicapping/", None)]
     if bld.featured_article(sport):
         links.append(("%s Matchup of the Day" % label, "/matchup-of-the-day/%s/" % sport, None))
@@ -621,7 +630,7 @@ def render(bld, sport, games, built_at, hist_by_pair=None, extras=None):
          # any sitemap URL that has no <h1>, and it caught this hub.
          '        <div class="hx-sec-h" style="margin-top:10px">'
          '<h1 style="font-size:clamp(1.7rem,5vw,2.6rem)">%s Handicapping</h1>'
-         '<span class="hx-eyebrow">Updated %s</span></div>\n' % (esc(label), esc(stamp)),
+         '<span class="hx-eyebrow">Updated %s</span></div>\n' % (esc(label), esc(shown)),
          ('        <p class="hx-lede">%s</p>\n' % esc(lede)) if lede else "",
          bld.gotw_block(sport),
          '        <section class="hx-sec">\n', tiles, body, '        </section>\n',
