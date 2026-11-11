@@ -94,6 +94,7 @@
         var firstOpen = S.data.games.filter(function (g) { return !g.completed; })[0];
         S.week = firstOpen ? firstOpen.week : S.data.weeks[0];
         S.loading = false;
+        restoreSims();
         render();
       })
       .catch(function (e) {
@@ -122,6 +123,42 @@
     S.sims = null; save(); render();
   }
 
+  /* SIM_RESULT_KEEP_20261111. The odds from a finished run used to vanish on
+     reload. They are kept for this tab (sessionStorage, twelve hours) beside
+     the picks and run size they were computed for, and put back only while
+     both still match. Nothing is re-run and no run is counted. */
+  var KEEP_KEY = 'tmr-sim-keep:' + location.pathname;
+  function keepSims() {
+    try {
+      sessionStorage.setItem(KEEP_KEY, JSON.stringify({
+        at: Date.now(), picks: JSON.stringify(S.picks), n: S.simN, sims: S.sims,
+      }));
+    } catch (e) { /* storage full or blocked: the result simply is not kept */ }
+  }
+  function restoreSims() {
+    try {
+      var raw = sessionStorage.getItem(KEEP_KEY);
+      if (!raw) return;
+      var k = JSON.parse(raw);
+      if (!k || !k.sims || !k.sims.probabilities || Date.now() - k.at > 12 * 60 * 60 * 1000
+          || k.picks !== JSON.stringify(S.picks)) { sessionStorage.removeItem(KEEP_KEY); return; }
+      if (k.n) S.simN = k.n;
+      S.sims = k.sims;
+    } catch (e) { /* show the page without it */ }
+  }
+  function revealSims() {
+    try {
+      var n = document.querySelector('#app .odds') || document.getElementById('app');
+      if (!n) return;
+      var r = n.getBoundingClientRect();
+      var vh = window.innerHeight || document.documentElement.clientHeight;
+      if (r.top < 0 || r.top > vh * 0.6) {
+        var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        n.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' });
+      }
+    } catch (e) { /* no scroll */ }
+  }
+
   function runSim() {
     var btn = $('#runSim');
     if (btn) { btn.disabled = true; btn.textContent = 'Simulating…'; }
@@ -132,6 +169,8 @@
         S.sims = E.simulateSeason(S.data.teams, S.data.games, S.picks, S.simN, S.seed, { withBracket: true });
         S.sims.ms = Math.round(performance.now() - t0);
         render();
+        keepSims();
+        revealSims();
       } catch (e) {
         /* SIM_RUN_SETTLE_20261005: a run that throws is never charged. */
         if (G && G.runFailed) G.runFailed('simulation error');

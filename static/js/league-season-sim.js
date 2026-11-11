@@ -345,6 +345,51 @@
           show();
         }
       })();
+
+      /* SIM_RESULT_KEEP_20261111. A finished run used to vanish on reload, and on a
+         phone the result landed below the fold with nothing to say so. The result a
+         visitor just produced is kept for this tab (sessionStorage, twelve hours)
+         and put back when the page loads again, and the page scrolls to a fresh
+         result when it is out of view. Nothing is re-run and no run is counted. */
+      var KEEP_MS = 12 * 60 * 60 * 1000;
+      function keepKey() { return 'tmr-sim-keep:' + location.pathname; }
+      function keepSave(ids, statusText) {
+        try {
+          var parts = {};
+          ids.forEach(function (id) { var n = d.getElementById(id); if (n) parts[id] = n.innerHTML; });
+          sessionStorage.setItem(keepKey(), JSON.stringify({ at: Date.now(), parts: parts, status: statusText || '' }));
+        } catch (e) { /* storage full or blocked: the result simply is not kept */ }
+      }
+      function keepRestore(statusNode) {
+        try {
+          var raw = sessionStorage.getItem(keepKey());
+          if (!raw) return false;
+          var k = JSON.parse(raw);
+          if (!k || !k.parts || Date.now() - k.at > KEEP_MS) { sessionStorage.removeItem(keepKey()); return false; }
+          var any = false;
+          Object.keys(k.parts).forEach(function (id) { var n = d.getElementById(id); if (n) { n.innerHTML = k.parts[id]; any = true; } });
+          if (any && statusNode) {
+            var t = new Date(k.at);
+            var hh = t.getHours() % 12 || 12, mm = ('0' + t.getMinutes()).slice(-2);
+            statusNode.textContent = 'Showing your run from ' + hh + ':' + mm + (t.getHours() < 12 ? ' AM' : ' PM') + '. Press again for a fresh set of seasons.';
+          }
+          return any;
+        } catch (e) { return false; }
+      }
+      function keepReveal(id) {
+        try {
+          var n = d.getElementById(id);
+          if (!n || !n.getBoundingClientRect) return;
+          var r = n.getBoundingClientRect();
+          var vh = root.innerHeight || d.documentElement.clientHeight;
+          if (r.top < 0 || r.top > vh * 0.6) {
+            var reduce = root.matchMedia && root.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            n.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+          }
+        } catch (e) { /* no scroll */ }
+      }
+
+      keepRestore(status);
       /* SIM_RUN_SETTLE_20261005: the TMR meter charges a run only when it finishes. */
       function settle(ok, why) {
         var G = root.TMRSimGate;
@@ -383,6 +428,8 @@
             status.textContent = 'Done' + (k ? ', with your ' + k + (k === 1 ? ' pick' : ' picks') + ' locked in' : '') + '. Press again for a fresh set of seasons.';
             btn.disabled = false;
             settle(true);
+            keepSave(['lsimTables', 'lsimOdds', 'lsimBracket', 'lsimStamp'], status.textContent);
+            keepReveal('lsimTables');
           }).catch(function () {
             status.textContent = 'The simulation did not finish. The projection above is the latest published one.';
             btn.disabled = false;
