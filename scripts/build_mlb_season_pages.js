@@ -30,7 +30,7 @@ const RE = /<!--MK:mlbSeasonState-->[\s\S]*?<!--\/MK:mlbSeasonState-->/;
 /* SEASON_2027_ENTRIES_20261105: set to 2027 in the same release as the backend window
    (routes/seasonSimulator.js). The page script already follows the server; this keeps the
    prose and FAQ in step with it. Null means entries are closed. */
-const ENTRIES_OPEN_SEASON = null;
+const ENTRIES_OPEN_SEASON = 2027;   /* 2027: the backend window (bb759bd4) went out on 11/11/2026 */
 const PHASE_COPY = {
   'season-builder': { live: 'The builder above is live: pick your teams, submit while logged in, and your entry is saved to your account and timestamped so it counts.',
     done: (s) => (ENTRIES_OPEN_SEASON
