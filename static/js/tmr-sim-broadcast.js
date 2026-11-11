@@ -1072,7 +1072,7 @@
         bare.forEach(function (s) { s.classList.add('bc-bare'); });
         shelve({
           keep: ':not(' + copy + '):not(.bc-bare)',
-          loose: '.hero > p,.lsim-hero > p,.ss-hero p,.cl-hero p',
+          loose: '.hero > p,.lsim-hero > p,.ss-hero p:not(.ss-auth-cta p),.cl-hero p',  /* the log in prompt keeps its sentence */
           aboutLabel: 'About this simulator',
         });
         quietPanels();
