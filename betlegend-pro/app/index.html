@@ -3894,8 +3894,16 @@
                         ['$' + fmtInt(Math.round(out.mean_final_bankroll)), 'Mean finish'],
                         [pct(out.profit_probability), 'Finished ahead'],
                         [pct(out.bust_rate), 'Bust rate'],
-                        [(out.expected_roi > 0 ? '+' : '') + Number(out.expected_roi).toFixed(1) + '%', 'Expected ROI'],
                         [pct(out.avg_max_drawdown), 'Avg max drawdown']]
+                        // BLP_LIBRARY_ROI_LABEL_20261111: a reopened run called bankroll
+                        // growth "Expected ROI". Same two names as the live result.
+                        .concat((function () {
+                            var extra = [];
+                            var growth = out.bankroll_growth_pct != null ? out.bankroll_growth_pct : out.expected_roi;
+                            if (growth != null) extra.push([(growth > 0 ? '+' : '') + Number(growth).toFixed(1) + '%', 'Bankroll growth']);
+                            if (out.roi_on_turnover_pct != null) extra.push([(out.roi_on_turnover_pct > 0 ? '+' : '') + Number(out.roi_on_turnover_pct).toFixed(1) + '%', 'ROI per $ staked']);
+                            return extra;
+                        })())
                         .map(function (k) { return '<div class="kpi-lg"><div class="kpi-v">' + esc(k[0]) + '</div><div class="kpi-l">' + esc(k[1]) + '</div></div>'; }).join('')
                     + '</div></section>';
             } else {
