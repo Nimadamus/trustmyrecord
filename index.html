@@ -35,7 +35,8 @@
      ~1.7-2.1s. fetchpriority="low" lets it download alongside everything else
      without taking bandwidth from it, and the class below flips as soon as the
      critical content has painted. -->
-<link rel="preload" as="image" fetchpriority="low" href="/static/media/steph-curry-hero-anim.9db12326f950.webp">
+<link rel="preload" as="image" fetchpriority="low" media="(max-width:1040px)" href="/static/media/steph-curry-hero-anim.9db12326f950.webp">
+<link rel="preload" as="image" fetchpriority="low" media="(min-width:1041px)" href="/static/media/steph-curry-hero-anim.a4bf35a3c7ac.webp">
 <!-- EARLY DATA (2026-08-25). The two requests that fill the first viewport -
      the MLB/NFL slate behind the ticker and the bootstrap behind the stats
      stripe and the competition card - used to be fired from tmr-home-live.js,
@@ -2123,7 +2124,7 @@ a.tkact-welcome:hover .tkact-mem b{color:#fff}
 <!-- TMR Concept A homepage theme. Additive only. -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:ital,wght@0,600;0,700;0,800;0,900;1,600;1,700;1,800;1,900&display=swap">
 <link rel="stylesheet" href="/static/css/tmr-concept-a.css?v=9cf96346a923">
-<link rel="stylesheet" href="/static/css/home-holo.css?v=8c804eb267ce">
+<link rel="stylesheet" href="/static/css/home-holo.css?v=1c9ca33559b5">
 </head>
 <body class="tmr-ds">
 <!-- Nav height reservation. There is no static <nav> in this document —
@@ -2709,7 +2710,7 @@ a.tkact-welcome:hover .tkact-mem b{color:#fff}
 <!-- LIVE ON TMR activity strip. Separate file, separate failure domain: it
      shares the ticker row but nothing it can do reaches the slate rendering
      above, and it removes itself if its endpoint or stream is unavailable. -->
-<script src="/static/js/tmr-activity-feed.74b61b1fbe02.js" defer></script>
+<script src="/static/js/tmr-activity-feed.04039a2ab27a.js" defer></script>
 <!-- Alerts dropdown for the nav bell. Same engine every other page uses, so the
      bell shows the latest alerts in place instead of navigating away. These four
      touch no homepage markup (auth-persistent only binds selectors this page

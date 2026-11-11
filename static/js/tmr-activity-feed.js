@@ -66,6 +66,7 @@
   var seen = Object.create(null);
   var seenOld = Object.create(null);   // previous generation, see enqueue()
   var current = null;          // { data, node }
+  var prev = null;             // the item shown before `current`; a wide strip keeps it as a second row
   var rotateTimer = null, agoTimer = null, graceTimer = null;
   var stream = null, paused = false, dead = false;
   var pollTimer = null, refreshTimer = null, streamOk = false, bootTries = 0;
@@ -285,13 +286,37 @@
     requestAnimationFrame(function () {
       requestAnimationFrame(function () { node.classList.remove('is-in'); });
     });
+    /* The outgoing item is kept one more turn as .is-prev. On a strip with room
+       for two rows (CSS sets --tkact-rows: 2) it slides down to the second
+       row, so two real updates are readable at once; everywhere else .is-prev
+       is styled exactly like .is-out and the strip is the single line it
+       always was. The item before that one leaves for good. */
+    if (prev && prev.node) retire(prev.node);
+    prev = null;
     if (old && old.node) {
-      old.node.classList.add('is-out');
-      setTimeout(function () {
-        if (old.node && old.node.parentNode) old.node.parentNode.removeChild(old.node);
-      }, reduced ? 0 : ANIM_MS);
+      old.node.classList.add('is-prev');
+      prev = old;
     }
     current = { data: ev, node: node };
+    /* First paint of a two-row strip: bring the second update in straight
+       away rather than leaving the lower row empty for a full dwell. */
+    if (!old && rows() > 1 && queue.length) setTimeout(advance, 1200);
+  }
+
+  function retire(node) {
+    node.classList.add('is-out');
+    setTimeout(function () {
+      if (node.parentNode) node.parentNode.removeChild(node);
+    }, reduced ? 0 : ANIM_MS);
+  }
+
+  /* How many rows the stylesheet has laid the strip out with. 1 unless a wide
+     layout says otherwise, and 1 on any error. */
+  function rows() {
+    try {
+      var v = parseInt(window.getComputedStyle(root).getPropertyValue('--tkact-rows'), 10);
+      return v > 1 ? v : 1;
+    } catch (e) { return 1; }
   }
 
   /* A quiet site must not freeze the strip on whatever happened last. When the
@@ -520,6 +545,9 @@
       if (current && current.node && current.node.__ago) {
         setAgo(current.node.__ago, current.node.__at);
       }
+      if (prev && prev.node && prev.node.__ago) {
+        setAgo(prev.node.__ago, prev.node.__at);
+      }
     }, AGO_TICK_MS);
     /* The stream is the fast path, not the only guarantee. A slow backlog
        re-read runs whether or not the stream is up: it is what closes the gap
@@ -628,6 +656,9 @@
       if (document.hidden) return;
       if (current && current.node && current.node.__ago) {
         setAgo(current.node.__ago, current.node.__at);
+      }
+      if (prev && prev.node && prev.node.__ago) {
+        setAgo(prev.node.__ago, prev.node.__at);
       }
       /* Back from another tab. If the stream carried us through, its events
          are already queued; if it did not, this is the catch-up. */
