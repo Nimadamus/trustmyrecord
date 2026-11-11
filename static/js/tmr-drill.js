@@ -191,7 +191,7 @@
        shell's horizontal scroll. Block the table and let cells shrink, so every field is on screen. */
     ' table.tdr-table,.tdr-table tbody{display:block;width:100%!important;min-width:0!important}.tdr-table thead{display:none}.tdr-table tr{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;padding:12px 14px;border-bottom:1px solid rgba(31,51,80,.5)}',
     ' .tdr-table td{min-width:0}.tdr-table td.n{text-align:left}.tdr-table td:nth-child(even):not(.wide){text-align:right}.tdr-table td.wide{overflow-wrap:anywhere}',
-    ' .tdr-table td{border:0;padding:0}.tdr-table td[data-k]:before{content:attr(data-k);display:inline-block;min-width:56px;color:#64748b;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;margin-right:6px}',
+    ' .tdr-table td{border:0!important;padding:0!important;background:none!important}.tdr-table td[data-k]:before{content:attr(data-k);display:inline-block;min-width:56px;color:#64748b;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;margin-right:6px}',
     ' .tdr-table td.wide{grid-column:1/-1}}',
     /* Every drillable figure on the site reads as clickable the same way. */
     '[data-drill-category],[data-drill-local],tr:has(> [data-drill-category]) > td.num{cursor:pointer}',
