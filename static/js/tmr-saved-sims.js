@@ -20,9 +20,12 @@
     var PAGE_SIZE = 24;
     var SPORTS = {
         nfl: { type: 'nfl_game', label: 'NFL', path: '/nfl-simulator/' },
-        mlb: { type: 'game', label: 'MLB', path: '/mlb-simulator/' }
+        mlb: { type: 'game', label: 'MLB', path: '/mlb-simulator/' },
+        // SAVED_SIMS_NBA_NHL_20261111
+        nba: { type: 'nba_game', label: 'NBA', path: '/nba-simulator/', linked: true },
+        nhl: { type: 'nhl_game', label: 'NHL', path: '/nhl-simulator/', linked: true }
     };
-    var TYPE_TO_SPORT = { nfl_game: 'nfl', game: 'mlb' };
+    var TYPE_TO_SPORT = { nfl_game: 'nfl', game: 'mlb', nba_game: 'nba', nhl_game: 'nhl' };
 
     var NFL_TEAMS = {
         'Arizona Cardinals': ['ARI', 'ari'], 'Atlanta Falcons': ['ATL', 'atl'], 'Baltimore Ravens': ['BAL', 'bal'],
@@ -87,8 +90,10 @@
         if (words.length === 1) return words[0].slice(0, 3).toUpperCase();
         return words.map(function (w) { return w[0]; }).join('').slice(0, 3).toUpperCase();
     }
-    function teamInfo(sport, name, selectId, abbrHint) {
+    function teamInfo(sport, name, selectId, abbrHint, logoHint) {
         var t = { name: name || (sport === 'mlb' ? 'Team' : 'Team'), abbr: abbrHint || '', logo: '' };
+        // NBA and NHL rows carry the logo the simulator showed. Only that CDN is accepted.
+        if ((sport === 'nba' || sport === 'nhl') && /^https:\/\/a\.espncdn\.com\/[A-Za-z0-9_\-./]+\.png$/.test(String(logoHint || ''))) t.logo = logoHint;
         if (sport === 'nfl' && NFL_TEAMS[name]) {
             t.abbr = t.abbr || NFL_TEAMS[name][0];
             t.logo = 'https://a.espncdn.com/i/teamlogos/nfl/500/' + NFL_TEAMS[name][1] + '.png';
@@ -161,8 +166,8 @@
         var sport = sportOf(saved);
         var m = {
             id: saved.id, sport: sport, meta: sportMeta(sport), raw: saved,
-            away: teamInfo(sport, r.awayTeam, inp.awayTeamSelect, r.awayAbbr),
-            home: teamInfo(sport, r.homeTeam, inp.homeTeamSelect, r.homeAbbr),
+            away: teamInfo(sport, r.awayTeam, inp.awayTeamSelect, r.awayAbbr, r.awayLogo),
+            home: teamInfo(sport, r.homeTeam, inp.homeTeamSelect, r.homeAbbr, r.homeLogo),
             created: saved.created_at, rerun: saved.last_rerun_at,
             sims: num(r.simulations) || (sport === 'mlb' ? num(inp.simulationCountSelect) : null),
             score: null, stats: [], chips: []
@@ -171,7 +176,7 @@
         m.customName = (saved.name && saved.name.trim() && saved.name.trim() !== m.defaultName) ? saved.name.trim() : '';
         m.winProb = winProbability(m, r);
 
-        if (sport === 'nfl') {
+        if (sport === 'nfl' || sport === 'nba' || sport === 'nhl') {
             if (r.scoreKind === 'simulated' && num(r.simulatedAwayScore) !== null) {
                 m.score = { away: num(r.simulatedAwayScore), home: num(r.simulatedHomeScore), kind: 'simulated', ot: !!r.simulatedOt };
                 if (num(r.projectedAwayScore) !== null && num(r.projectedHomeScore) !== null) {
@@ -241,6 +246,16 @@
         var renaming = state.renamingId === m.id;
         var viewHref = m.meta.path + '?savedId=' + encodeURIComponent(m.id) + '&mode=view';
         var rerunHref = m.meta.path + '?savedId=' + encodeURIComponent(m.id) + '&mode=rerun';
+        if (m.meta.linked) {
+            // The NBA and NHL simulators open a result from its own link: the matchup
+            // and the seed replay the exact run; the matchup alone starts a new one.
+            var inp = (m.raw && m.raw.input_parameters) || {};
+            var res = (m.raw && m.raw.summarized_result) || {};
+            var q = 'away=' + encodeURIComponent(inp.away || m.away.abbr) + '&home=' + encodeURIComponent(inp.home || m.home.abbr);
+            if (inp.venue === 'neutral') q += '&venue=neutral';
+            rerunHref = m.meta.path + '?' + q;
+            viewHref = m.meta.path + '?' + q + (res.seed ? '&seed=' + encodeURIComponent(res.seed) : '') + (inp.sims ? '&sims=' + encodeURIComponent(inp.sims) : '');
+        }
         var menuId = 'ssCardMenu' + m.id;
         var precise = fmtPrecise(m.created);
 
@@ -302,6 +317,8 @@
         set('all', all);
         set('nfl', c.nfl_game || 0);
         set('mlb', c.game || 0);
+        set('nba', c.nba_game || 0);
+        set('nhl', c.nhl_game || 0);
         // Any other simulator that starts saving gets its own chip automatically.
         var wrap = byId('ssFilters');
         Object.keys(c).forEach(function (type) {

@@ -663,6 +663,65 @@
     } catch (e) { /* too large or blocked: the page still works, it just cannot restore */ }
   };
 
+  /**
+   * SAVED_SIMS_NBA_NHL_20261111. A signed in member's run is written to the same
+   * owner scoped history the MLB and NFL simulators use, so it shows on
+   * /sports-simulators/saved/. One save per run: the seed identifies a run, and
+   * a reload or a shared link replaying that seed is not saved again. A single
+   * game run (one simulation) is not a result worth keeping and is skipped.
+   */
+  SimApp.prototype.saveToHistory = function (t, d) {
+    try {
+      var F = global.SIM_GATE_FLAGS || {};
+      if (F.autoSave === false) return;
+      if (!global.TMRSimGate || !global.TMRSimGate.isLoggedIn || !global.TMRSimGate.isLoggedIn()) return;
+      if (!global.api || typeof global.api.request !== 'function') return;
+      if (!d || !d.result || !d.result.final || !d.meta || !d.matchup) return;
+      if (!(d.meta.simulations >= 100)) return;
+      var seed = d.meta.seed;
+      var sig = this.sport + '|' + t.away.abbr + '|' + t.home.abbr + '|' + seed + '|' + d.meta.simulations
+        + '|' + this.scenario.home.join(',') + '|' + this.scenario.away.join(',');
+      var KEY = 'tmr_sim_saved_sig_' + this.sport;
+      try { if (global.sessionStorage.getItem(KEY) === sig) return; } catch (e) { /* no storage: save */ }
+      if (this._lastSavedSig === sig) return;
+      this._lastSavedSig = sig;
+      var p = d.projection || {}, wp = p.win_probability || {}, ps = p.projected_score || null;
+      var mh = d.matchup.home || {}, ma = d.matchup.away || {};
+      var homeFav = wp.home >= wp.away;
+      var top = Math.max(wp.home || 0, wp.away || 0);
+      var ls = d.result.line_score || {};
+      var summarized = {
+        awayTeam: ma.name || t.away.abbr, homeTeam: mh.name || t.home.abbr,
+        awayAbbr: ma.abbr || t.away.abbr, homeAbbr: mh.abbr || t.home.abbr,
+        awayLogo: ma.logo || null, homeLogo: mh.logo || null,
+        scoreKind: 'simulated',
+        awayScore: String(d.result.final.away), homeScore: String(d.result.final.home),
+        simulatedAwayScore: String(d.result.final.away), simulatedHomeScore: String(d.result.final.home),
+        simulatedOt: !!(ls.overtime_periods > 0 || (d.result.decided_in && d.result.decided_in !== 'regulation')),
+        projectedAwayScore: ps ? String(ps.away) : null, projectedHomeScore: ps ? String(ps.home) : null,
+        winner: homeFav ? (mh.name || t.home.abbr) : (ma.name || t.away.abbr),
+        winProbability: top ? (top * 100).toFixed(1) + '%' : null,
+        simulations: d.meta.simulations, seed: seed,
+        dataFreshness: d.meta.data_freshness || null,
+        venue: this.state.venue === 'neutral' ? 'Neutral site' : null,
+        scenario: (this.scenario.home.length || this.scenario.away.length) ? 'Players sat out' : null,
+      };
+      var inputs = {
+        sport: this.sport, away: t.away.abbr, home: t.home.abbr, sims: this.state.sims, seed: seed,
+        venue: this.state.venue || null, homeOut: this.scenario.home.slice(), awayOut: this.scenario.away.slice(),
+        url: global.location.pathname + global.location.search,
+      };
+      var type = this.sport + '_game';
+      global.api.request('/mlb-simulator-save', { method: 'POST', body: {
+        name: summarized.awayTeam + ' @ ' + summarized.homeTeam, simulation_type: type,
+        input_parameters: inputs, summarized_result: summarized,
+      } }).then(function () {
+        try { global.sessionStorage.setItem(KEY, sig); } catch (e) { /* fine */ }
+        try { if (global.TMRSimGate.track) global.TMRSimGate.track('simulator_result_auto_saved', { simulation_type: type }); } catch (e) { /* fine */ }
+      }).catch(function () { /* the result is on screen either way */ });
+    } catch (e) { /* never let a save break a result */ }
+  };
+
   SimApp.prototype.restoreResult = function () {
     var saved = null;
     try { saved = JSON.parse(global.sessionStorage.getItem(this.resultKey()) || 'null'); } catch (e) { return false; }
@@ -848,6 +907,7 @@
       self.render(d);
       self.pushUrl(t, d);
       self.saveResult(t, d);
+      self.saveToHistory(t, d);
       if (global.TMRAnalytics && global.TMRAnalytics.track) {
         global.TMRAnalytics.track('simulator_result_viewed', {
           simulation_type: self.sport + '_game',
