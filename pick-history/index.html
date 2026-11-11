@@ -115,6 +115,15 @@
      can never render a statistic differently. */
   var qs = new URLSearchParams(location.search);
   var user = qs.get('user') || qs.get('u') || '';
+  /* PICK_HISTORY_OWN_20261111: opened with no handicapper named, this page was
+     only an explainer. A signed in member now lands on their own graded picks. */
+  if (!user) {
+    try {
+      var me = JSON.parse(localStorage.getItem('currentUser') || 'null');
+      var own = me && (me.username || (me.user && me.user.username));
+      if (own && /^[A-Za-z0-9_.-]{2,40}$/.test(own)) user = own;
+    } catch (e) { /* signed out or storage blocked: the landing copy shows */ }
+  }
   if (!user || !window.TMRDrill) { document.getElementById('phLanding').hidden = false; return; }
   var category = qs.get('category') || 'all';
   var extra = new URLSearchParams();
