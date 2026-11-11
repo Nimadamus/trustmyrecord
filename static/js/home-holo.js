@@ -288,7 +288,40 @@
     }
   }
 
+  /* The Curry plate, same clip and same place, played as a muted looping video on desktop: at 1280px it is
+     sharper than the animated image at the same weight. The still frame is already painted underneath
+     by the stylesheet, so nothing moves when the video starts. If it cannot play (blocked autoplay, an old
+     browser, a failed fetch) html.hx-novideo switches the stylesheet back to the animated image.
+     Skipped for reduced motion and data saver, where the still frame stays. */
+  var PLATE = '/static/media/steph-curry-hero-plate.7a40bd63bf04.mp4', PLATE_STILL = '/static/media/steph-curry-hero-plate.24e4eecb2e12.webp';
+  function heroVideo() {
+    var bg = document.querySelector('.hero.hx .hero-bg');
+    if (!bg || bg.querySelector('video') || !window.matchMedia) return;
+    if (!window.matchMedia('(min-width:1041px)').matches) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var c = navigator.connection;
+    if (c && (c.saveData || /(^|-)2g$/.test(c.effectiveType || ''))) return;
+    var fail = function () { document.documentElement.classList.add('hx-novideo'); if (v.parentNode) v.parentNode.removeChild(v); };
+    var v = document.createElement('video');
+    if (!v.canPlayType || !v.canPlayType('video/mp4; codecs="avc1.640028"')) { document.documentElement.classList.add('hx-novideo'); return; }
+    v.className = 'hx-plate'; v.muted = true; v.defaultMuted = true; v.loop = true; v.autoplay = true; v.playsInline = true;
+    v.setAttribute('muted', ''); v.setAttribute('playsinline', ''); v.setAttribute('aria-hidden', 'true'); v.setAttribute('disablepictureinpicture', '');
+    v.tabIndex = -1; v.preload = 'auto'; v.poster = PLATE_STILL;
+    v.addEventListener('playing', function () { bg.classList.add('has-video'); }, { once: true });
+    v.addEventListener('error', fail, { once: true });
+    v.src = PLATE;
+    bg.appendChild(v);
+    var p = v.play(); if (p && p.catch) p.catch(function () { if (!bg.classList.contains('has-video')) fail(); });
+    if (window.IntersectionObserver) {
+      new IntersectionObserver(function (es) {
+        if (!v.parentNode) return;
+        if (es[0].isIntersecting) { var q = v.play(); if (q && q.catch) q.catch(function () {}); } else v.pause();
+      }, { threshold: 0.01 }).observe(bg.parentNode || bg);
+    }
+  }
+
   function go() {
+    heroVideo(); window.addEventListener('resize', heroVideo);
     fit(); fold();
     window.addEventListener('resize', fold); window.addEventListener('load', fold);
     setTimeout(fold, 1200); setTimeout(fold, 3500);
