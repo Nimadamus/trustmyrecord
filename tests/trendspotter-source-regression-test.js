@@ -105,7 +105,7 @@ assert(/no closing price recorded for this market/.test(js),
   'a market with no prices at all must say so above the table instead of printing an empty column');
 
 // --- Design system ----------------------------------------------------------
-assert(html.includes('class="tmr-ds ts-page"'), 'page must opt into the TrustMyRecord design system');
+assert(/<body class="tmr-ds (tmr-ds--dark )?ts-page">/.test(html), 'page must opt into the TrustMyRecord design system');
 assert(html.includes('tmr-ds-nav'), 'page must load the shared TrustMyRecord header and footer');
 assert(!/^\s*:root\s*\{/m.test(css), 'design-system contract: page stylesheets must not declare :root');
 assert(!/#05070d|--ts-bg\b/.test(css), 'the old dark navy-on-navy palette must be gone');

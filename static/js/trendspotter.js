@@ -1637,6 +1637,33 @@
       });
   }
 
+  // SLATE_DEFAULT_20261111: the first league in the list (MLB) has no games
+  // for five months a year, so a first visit opened on "No games scheduled".
+  // On the first load only, and only when the link named no league or team,
+  // open on the first league that has a slate. A league the visitor clicked
+  // is never overridden.
+  function openOnLiveSlate() {
+    var start = state.sport;
+    var others = caps.sports.map(function (s) { return s.id; }).filter(function (id) { return id !== start; });
+    (function next() {
+      if (!others.length || state.sport !== start || state.team) return;
+      var id = others.shift();
+      fetchJson(apiBase() + '/trendspotter/matchups?sport=' + encodeURIComponent(id), { timeout: 15000, retries: 0 })
+        .then(function (data) {
+          if (state.sport !== start || state.team) return;
+          if (!(data && data.available && data.matchups && data.matchups.length)) { next(); return; }
+          state.sport = id;
+          var c = sportCaps();
+          if (c && c.markets.indexOf(state.market) === -1) state.market = c.markets[0];
+          matchups = data.matchups;
+          matchupStatus = 'ok';
+          renderLeagueTabs();
+          rerenderControls();
+          renderSlate();
+        }, next);
+    })();
+  }
+
   function setStatus(stateName, text) {
     el.sourceStatus.setAttribute('data-state', stateName);
     el.sourceStatusText.textContent = text;
@@ -1960,12 +1987,15 @@
       caps.sports.forEach(function (s) { capsBySport[s.id] = s; });
       if (!capsBySport[state.sport]) state.sport = caps.sports[0].id;
 
+      var linkNamesSport = /[?&]sport=/i.test(window.location.search || '');
       readUrl();
       renderLeagueTabs();
       rerenderControls();
       setStatus('ok', 'Verified game data connected');
 
-      loadMatchups();
+      loadMatchups().then(function () {
+        if (!linkNamesSport && !state.team && matchupStatus !== 'error' && !matchups.length) openOnLiveSlate();
+      });
 
       // A fully-specified link runs itself, so a shared result reopens as a
       // result rather than as an empty form.

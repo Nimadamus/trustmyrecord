@@ -1,0 +1,114 @@
+/* =============================================================================
+   TS_DARK_20261111: Trend Spotter in the dark family (homepage, Model Builder,
+   simulators). The page opts into the design system's dark tokens with
+   body.tmr-ds--dark; this sheet only adds the stadium hero, the fact panel and
+   the few places the base sheet hardcodes a light-theme colour. No copy, id or
+   script behaviour lives here.
+   ============================================================================= */
+body.ts-page.tmr-ds--dark { position: relative; background: #040a16; }
+body.ts-page.tmr-ds--dark::before {
+  content: ""; position: absolute; inset: 0 0 auto 0; height: 760px; z-index: 0; pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(4,10,22,.95) 0%, rgba(4,10,22,.78) 46%, rgba(4,10,22,.28) 100%),
+    #040a16 url(/static/img/model-builder/stadium-hero.jpg) center top / cover no-repeat;
+  -webkit-mask-image: linear-gradient(180deg, #000 0, #000 58%, transparent);
+  mask-image: linear-gradient(180deg, #000 0, #000 58%, transparent);
+}
+body.ts-page.tmr-ds--dark .ts-app { position: relative; z-index: 1; padding-top: 18px; }
+
+/* --- Hero ----------------------------------------------------------------- */
+.tmr-ds--dark .ts-hero {
+  display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(300px, 1fr);
+  gap: 44px; align-items: end; margin: 26px 0 34px;
+}
+.tmr-ds--dark .ts-eyebrow {
+  display: inline-flex; align-items: center; gap: 8px; margin: 0 0 14px; padding: 5px 12px;
+  border: 1px solid rgba(29,127,232,.42); border-radius: 999px; background: rgba(29,127,232,.13);
+  color: #8CC0FF; font-size: 12px;
+}
+.tmr-ds--dark .ts-eyebrow::before {
+  content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--green);
+  box-shadow: 0 0 0 4px rgba(63,208,138,.18);
+}
+body.ts-page.tmr-ds--dark .ts-hero h1 {
+  font-family: Anton, var(--display); font-weight: 400; letter-spacing: .005em;
+  font-size: clamp(46px, 6.4vw, 84px); line-height: .96;
+  background: linear-gradient(100deg, #fff 38%, #4DA3FF 100%);
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  width: fit-content; padding-right: 4px;
+}
+.tmr-ds--dark .ts-hero-lead {
+  margin-top: 16px; max-width: 600px; color: #dbe6f2; font-weight: 500;
+  font-size: clamp(17px, 1.45vw, 20px); line-height: 1.45;
+}
+.tmr-ds--dark .ts-hero-sub { max-width: 640px; color: var(--muted); font-size: 14px; line-height: 1.6; }
+.tmr-ds--dark .ts-hero-sub a { color: #8CC0FF; font-weight: 700; }
+
+.tmr-ds--dark .ts-hero-side {
+  display: flex; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 14px 18px;
+  padding: 6px 20px 16px; border: 1px solid var(--line-2); border-radius: 16px;
+  background: rgba(8,15,28,.74); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  box-shadow: 0 18px 44px rgba(2,8,18,.42);
+}
+.tmr-ds--dark .ts-hero-side .ts-quickfacts { display: block; width: 100%; margin: 0; padding: 0; list-style: none; }
+.tmr-ds--dark .ts-hero-side .ts-quickfact {
+  display: flex; align-items: baseline; gap: 10px; padding: 12px 0; margin: 0;
+  border: 0; border-bottom: 1px solid var(--line); border-radius: 0; background: none;
+  color: var(--muted); font-size: 14px; font-weight: 500;
+}
+.tmr-ds--dark .ts-hero-side .ts-quickfact b { color: #fff; font-weight: 800; font-size: 15px; }
+.tmr-ds--dark .ts-hero-side .ts-quickfact:nth-child(-n+2) b {
+  min-width: 26px; font-family: var(--display); font-size: 30px; line-height: .9; font-weight: 800;
+}
+.tmr-ds--dark .ts-hero-side .ts-quickfact--free b { color: var(--green); }
+.tmr-ds--dark .ts-status { margin: 0; background: none; border: 0; padding: 0; color: var(--ink-2); box-shadow: none; }
+.tmr-ds--dark .ts-linkbtn { color: #8CC0FF; margin-left: auto; }
+
+/* --- Workspace ------------------------------------------------------------ */
+.tmr-ds--dark .ts-card {
+  background: linear-gradient(180deg, #101c2c, #0e1726); border-color: rgba(148,163,184,.16);
+  box-shadow: 0 14px 34px rgba(2,8,18,.34);
+}
+body.ts-page.tmr-ds--dark .ts-card-head h2 { font-size: 22px; letter-spacing: .03em; }
+.tmr-ds--dark .ts-slate .ts-card-head h2::before,
+.tmr-ds--dark .ts-builder .ts-card-head h2::before {
+  display: inline-grid; place-items: center; width: 28px; height: 28px; margin-right: 10px;
+  border-radius: 50%; background: var(--brand); color: #fff;
+  font: 800 13px/1 Inter, system-ui, sans-serif; vertical-align: 3px;
+}
+.tmr-ds--dark .ts-slate .ts-card-head h2::before { content: "1"; }
+.tmr-ds--dark .ts-builder .ts-card-head h2::before { content: "2"; }
+.tmr-ds--dark .ts-matchup, .tmr-ds--dark .ts-example, .tmr-ds--dark .ts-state { background: #0a1322; }
+.tmr-ds--dark .ts-matchup[aria-checked="true"] {
+  border-color: var(--brand); background: rgba(29,127,232,.14); box-shadow: 0 0 0 1px var(--brand) inset;
+}
+.tmr-ds--dark .ts-btn-primary:not(:disabled) {
+  background: linear-gradient(180deg, #2b8df3, #1569c9); box-shadow: 0 10px 26px rgba(29,127,232,.32);
+}
+.tmr-ds--dark .ts-btn-primary:hover:not(:disabled) { background: linear-gradient(180deg, #3a98f7, #1a72d6); }
+.tmr-ds--dark .ts-quickfact--free b, .tmr-ds--dark .ts-explain-kicker { color: #8CC0FF; }
+
+/* The sitewide "TrustMyRecord Home" strip repeats the header logo: keep the link as a quiet crumb. */
+body.ts-page.tmr-ds--dark :is(nav, div, p):has(> .tmrlh-home.tmrlh-a) { background: none; border: 0; box-shadow: none; padding: 0; margin: 0 0 4px; min-height: 0; }
+body.ts-page.tmr-ds--dark .tmrlh-home.tmrlh-a { background: none; border: 0; box-shadow: none; padding: 4px 0; color: var(--muted) !important; font-size: 13px; }
+body.ts-page.tmr-ds--dark .tmrlh-home.tmrlh-a span:not(.tmrlh-home-mark) { color: var(--muted); font-weight: 600; }
+body.ts-page.tmr-ds--dark .tmrlh-home-mark { background: rgba(148,163,184,.16); color: #dbe6f2; }
+
+.tmr-ds--dark .ts-segment button[aria-selected="true"] { background: var(--brand); color: #fff; box-shadow: none; }
+body.ts-page.tmr-ds--dark .ts-hero-sub { max-width: 640px; color: var(--muted); font-size: 14px; line-height: 1.6; }
+
+@media (max-width: 1080px) {
+  .tmr-ds--dark .ts-hero { grid-template-columns: 1fr; gap: 22px; margin: 14px 0 24px; }
+  body.ts-page.tmr-ds--dark::before { height: 620px; }
+}
+@media (max-width: 560px) {
+  body.ts-page.tmr-ds--dark .ts-hero-sub { font-size: 13.5px; }
+  .tmr-ds--dark .ts-hero-side .ts-quickfact { padding: 9px 0; }
+  .tmr-ds--dark .ts-hero-side { padding: 2px 16px 14px; }
+  .tmr-ds--dark .ts-linkbtn { margin-left: 0; }
+}
+@media (max-width: 560px) {
+  /* Markets with no data yet: small and inline, so four of them are one row of notes, not four rows of buttons. */
+  .tmr-ds--dark .ts-tab[aria-disabled="true"] { font-size: 12.5px; padding: 5px 9px; min-height: 0; }
+  .tmr-ds--dark .ts-tab[aria-disabled="true"] * { font-size: 9px; }
+}
