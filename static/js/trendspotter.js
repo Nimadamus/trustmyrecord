@@ -145,12 +145,36 @@
     return error.status === 502 || error.status === 503 || error.status === 504;
   }
 
+  // Send the member's access token when there is one, so the API can return
+  // the paid fields (units, ROI, average price) for a member with access.
+  function memberToken() {
+    try {
+      if (window.TMRSession && window.TMRSession.getAccessToken) {
+        var t = window.TMRSession.getAccessToken();
+        if (t) return t;
+      }
+      var keys = ['trustmyrecord_token', 'tmr_token', 'accessToken'];
+      for (var i = 0; i < keys.length; i++) {
+        var v = window.localStorage.getItem(keys[i]);
+        if (v) return v;
+      }
+    } catch (e) { /* storage blocked: stay anonymous */ }
+    return '';
+  }
+
+  function authHeaders() {
+    var h = { Accept: 'application/json' };
+    var t = memberToken();
+    if (t) h.Authorization = 'Bearer ' + t;
+    return h;
+  }
+
   function attemptJson(url, options) {
     var controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
     var timer = controller ? setTimeout(function () { controller.abort(); }, options.timeout || 20000) : null;
     if (options.register && controller) options.register(controller);
     return fetch(url, {
-      headers: { Accept: 'application/json' },
+      headers: authHeaders(),
       signal: controller ? controller.signal : undefined
     }).then(function (res) {
       return res.json().catch(function () { return null; }).then(function (body) {
