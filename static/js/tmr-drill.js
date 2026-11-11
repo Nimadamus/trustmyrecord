@@ -186,7 +186,11 @@
     '@media (max-width:900px){.tdr-tiles{grid-template-columns:repeat(4,minmax(0,1fr))}}',
     '@media (max-width:640px){.tdr-top{padding:14px 16px}.tdr-body{padding:10px 16px 24px}.tdr-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}',
     ' .tdr-f{flex:1 1 45%}.tdr-f select,.tdr-f input{min-width:0;width:100%}',
-    ' table.tdr-table{min-width:0}.tdr-table thead{display:none}.tdr-table tr{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:10px 12px;border-bottom:1px solid rgba(31,51,80,.5)}',
+    /* DRILL_PHONE_20261111: the rows became grids but the table stayed a table, so it sized to its
+       longest line and the right-hand column (league, odds, result, net) sat off screen behind the
+       shell's horizontal scroll. Block the table and let cells shrink, so every field is on screen. */
+    ' table.tdr-table,.tdr-table tbody{display:block;width:100%!important;min-width:0!important}.tdr-table thead{display:none}.tdr-table tr{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;padding:12px 14px;border-bottom:1px solid rgba(31,51,80,.5)}',
+    ' .tdr-table td{min-width:0}.tdr-table td.n{text-align:left}.tdr-table td:nth-child(even):not(.wide){text-align:right}.tdr-table td.wide{overflow-wrap:anywhere}',
     ' .tdr-table td{border:0;padding:0}.tdr-table td[data-k]:before{content:attr(data-k);display:inline-block;min-width:56px;color:#64748b;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;margin-right:6px}',
     ' .tdr-table td.wide{grid-column:1/-1}}',
     /* Every drillable figure on the site reads as clickable the same way. */

@@ -87,6 +87,39 @@
   .ph-msg { padding: 30px 16px; text-align: center; color: #9BA7B8; font-weight: 700; font-size: 13.5px; }
   .ph-msg.err { color: #fca5a5; }
 
+
+  /* PICK_HISTORY_AGRADE_20261111: stadium page backdrop, a real starting point on the landing
+     state (handicapper lookup), and larger figures on the record header. */
+  .ph-wrap::before { content: ""; position: absolute; top: 0; left: 50%; width: 100vw; transform: translateX(-50%); height: 560px; z-index: -1; pointer-events: none;
+    background: linear-gradient(90deg, rgba(4,10,22,.94) 0%, rgba(4,10,22,.78) 50%, rgba(4,10,22,.38) 100%), #040a16 url(/static/img/model-builder/stadium-hero.jpg) center top / cover no-repeat;
+    -webkit-mask-image: linear-gradient(180deg, #000 0, #000 50%, transparent); mask-image: linear-gradient(180deg, #000 0, #000 50%, transparent); }
+  .ph-wrap { position: relative; z-index: 1; }
+  .ph-landing { padding: 34px 34px 30px; background: rgba(8,15,28,.78); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); border-color: rgba(148,163,184,.26); border-radius: 18px; }
+  .ph-landing .ph-kicker { display: inline-block; padding: 5px 12px; border: 1px solid rgba(29,127,232,.42); border-radius: 999px; background: rgba(29,127,232,.13); color: #8CC0FF; font-size: 11.5px; }
+  .ph-landing .ph-title { font-family: Anton, 'Barlow', sans-serif !important; font-weight: 400 !important; font-size: clamp(2.1rem, 5.6vw, 4rem) !important; line-height: .98 !important; letter-spacing: .005em !important; margin-top: 16px; max-width: 13em;
+    background: linear-gradient(100deg, #fff 40%, #4DA3FF 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .ph-landing .ph-sub { max-width: 720px; margin-top: 14px; font-size: 15.5px; font-weight: 500; color: #c9d6e6; line-height: 1.6; }
+  .ph-find { margin-top: 26px; max-width: 620px; }
+  .ph-find label { display: block; margin-bottom: 8px; font-size: 11.5px !important; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; color: #9BA7B8; }
+  .ph-find-row { display: flex; gap: 10px; }
+  .ph-find input { flex: 1; min-width: 0; height: 52px; padding: 0 16px; border: 1px solid rgba(148,163,184,.32); border-radius: 10px; background: #08111f; color: #f1f5fb; font: 600 16px Inter, sans-serif; }
+  .ph-find input:focus { outline: none; border-color: #4DA3FF; box-shadow: 0 0 0 3px rgba(77,163,255,.2); }
+  .ph-find button { height: 52px; padding: 0 26px; border: 0; border-radius: 10px; cursor: pointer; color: #fff !important; font: 800 16px Inter, sans-serif; white-space: nowrap;
+    background: linear-gradient(180deg, #2b8df3, #1569c9) !important; box-shadow: 0 10px 26px rgba(29,127,232,.32); }
+  .ph-find button:hover { background: linear-gradient(180deg, #3a98f7, #1a72d6); }
+  .ph-start { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 10px; }
+  .ph-start a { padding: 9px 15px; border: 1px solid rgba(148,163,184,.28); border-radius: 999px; color: #dbe5f4; font-size: 13.5px; font-weight: 700; text-decoration: none; background: rgba(8,17,31,.7); }
+  .ph-start a:hover { border-color: #4DA3FF; color: #fff; }
+  .ph-proof { margin-top: 30px; padding-top: 26px; border-top: 1px solid rgba(148,163,184,.16); display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 26px; }
+  .ph-proof h2 { margin: 0 0 6px; font-family: 'Barlow', sans-serif !important; font-weight: 800; font-size: 17px !important; letter-spacing: .02em !important; text-transform: uppercase; color: #f1f5fb; }
+  .ph-proof p { margin: 0; font-size: 14px; line-height: 1.55; color: #9BA7B8; }
+  /* Record header rendered by tmr-drill.js, on this page only. */
+  .ph-wrap .tdr-inline .tdr-top { background: rgba(8,15,28,.78); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); border-radius: 18px; }
+  .ph-wrap .tdr-tile { padding: 14px 16px; border-radius: 12px; }
+  .ph-wrap .tdr-tile .v { font-size: 22px; margin-top: 6px; }
+  .ph-wrap .tdr-tile .k { font-size: 10.5px; }
+  @media (max-width: 720px) { .ph-landing { padding: 22px 18px; } .ph-proof { grid-template-columns: 1fr; gap: 16px; } .ph-find-row { flex-direction: column; } .ph-find button { width: 100%; }
+    .ph-wrap .tdr-tile .v { font-size: 18px; } }
   @media (max-width: 900px) { .ph-tiles { grid-template-columns: repeat(3, minmax(0,1fr)); } }
   @media (max-width: 520px) { .ph-tiles { grid-template-columns: repeat(2, minmax(0,1fr)); } .ph-field select, .ph-field input { min-width: 0; width: 100%; } .ph-field { flex: 1 1 46%; } }
 </style>
@@ -99,10 +132,27 @@
 <div class="ph-wrap">
   <div class="ph-crumb"><a href="/">TrustMyRecord</a> &rsaquo; <a id="phProfileCrumb" href="/leaderboards/">Handicappers</a> &rsaquo; Pick history</div>
   <div id="phHost"></div>
-  <div class="ph-head" id="phLanding" hidden>
-    <div class="ph-kicker">Pick history</div>
+  <div class="ph-head ph-landing" id="phLanding" hidden>
+    <div class="ph-kicker">Verified record drilldown</div>
     <h1 class="ph-title">Every pick behind every number</h1>
     <div class="ph-sub">On TrustMyRecord every statistic opens the individual graded picks that produced it: the same picks, the same record, the same units and the same ROI. Start from the <a href="/leaderboards/">leaderboards</a> or <a href="/handicappers/">browse handicappers</a>, open a record, then click any figure.</div>
+    <form class="ph-find" id="phFind" action="/pick-history/" method="get" role="search">
+      <label for="phFindUser">Open a handicapper's graded picks</label>
+      <div class="ph-find-row">
+        <input id="phFindUser" name="user" type="search" placeholder="Enter a username" required pattern="[A-Za-z0-9_.\-]{2,40}" maxlength="40" autocomplete="off" autocapitalize="none" spellcheck="false">
+        <button type="submit">Show picks</button>
+      </div>
+    </form>
+    <div class="ph-start">
+      <a href="/leaderboards/">Leaderboards</a>
+      <a href="/handicappers/">Browse handicappers</a>
+      <a href="/login/">Log in to open your own picks</a>
+    </div>
+    <div class="ph-proof">
+      <div><h2>Same picks, same math</h2><p>The list you open is the list the number was computed from: the same picks, the same record, the same units and the same ROI.</p></div>
+      <div><h2>Filter it yourself</h2><p>Narrow any record by league, bet type, home or away, favorite or underdog, result and date, and watch the totals follow.</p></div>
+      <div><h2>Start anywhere</h2><p>Open any record from the leaderboards or a handicapper profile and click any figure to land on the picks behind it.</p></div>
+    </div>
   </div>
 </div>
 <script src="/static/js/config.js?v=60a0696a58ba"></script><script src="/static/js/backend-api.js?v=3f148a2a6bc4"></script><script src="/static/js/auth-persistent.js?v=b0b217feaa25"></script><script src="/static/js/tmr-session.b423be9e9588.js"></script><script src="/static/js/tmr-ds-nav.d3c64a8cbd83.js"></script>
