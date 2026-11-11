@@ -330,6 +330,33 @@
         body.tmr-ds .ts-go i{transition:none}
         body.tmr-ds .ts-card:hover{transform:none}
     }
+    
+    /* TOOLS_DARK_20261111: the hub in the dark family. The page opts into the design system's
+       dark tokens (body.tmr-ds--dark); this block adds the stadium hero and the places the sheet
+       above hardcodes light values. Markup, links and copy are unchanged. */
+    body.tmr-ds--dark{background:#040a16}
+    body.tmr-ds--dark .ts-hero{
+        position:relative;overflow:hidden;border-color:rgba(148,163,184,.26);
+        background:linear-gradient(90deg,rgba(4,10,22,.96) 0%,rgba(4,10,22,.82) 46%,rgba(4,10,22,.34) 100%),#040a16 url(/static/img/model-builder/stadium-hero.jpg) center 30%/cover no-repeat;
+        box-shadow:0 22px 54px rgba(2,8,18,.5);
+    }
+    body.tmr-ds--dark .ts-hero h1{
+        font-family:Anton,var(--ts-cond) !important;font-weight:400 !important;letter-spacing:.005em !important;
+        font-size:clamp(40px,5.6vw,76px) !important;line-height:.97 !important;
+        background:linear-gradient(100deg,#fff 40%,#4DA3FF 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+        width:fit-content;max-width:100%;padding-right:4px;
+    }
+    body.tmr-ds--dark .ts-hero-strip{background:rgba(8,15,28,.74);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-color:rgba(148,163,184,.26)}
+    body.tmr-ds--dark .ts-partner{background:linear-gradient(180deg,#101c2c,#0e1726);border-color:rgba(148,163,184,.2)}
+    body.tmr-ds--dark .ts-partner:hover{background:#13223a;border-color:var(--ts-line-str)}
+    body.tmr-ds--dark .ts-partner-copy b{color:#f8fafc}
+    body.tmr-ds--dark .ts-partner-copy b em{border-color:rgba(148,163,184,.3);background:rgba(148,163,184,.12);color:#c3d6ea}
+    body.tmr-ds--dark .ts-partner-copy span{color:#93a9c0}
+    body.tmr-ds--dark .ts-partner .ts-go{color:#8CC0FF}
+    body.tmr-ds--dark :is(nav,div,p):has(> .tmrlh-home.tmrlh-a){background:none !important;border:0 !important;box-shadow:none !important;padding:0 !important;min-height:0 !important}
+    body.tmr-ds--dark .tmrlh-home.tmrlh-a{background:none !important;border:0 !important;box-shadow:none !important;padding:4px 0 !important;font-size:13px}
+    html body.tmr-ds--dark .tmrlh-home.tmrlh-a.tmrlh-a span:not(.tmrlh-home-mark){color:#9fb0c9 !important;font-weight:600}
+    body.tmr-ds--dark .tmrlh-home-mark{background:rgba(148,163,184,.16) !important;color:#dbe6f2 !important}
     </style>
 <script type="application/ld+json">
 {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Home", "item": "https://trustmyrecord.com/"}, {"@type": "ListItem", "position": 2, "name": "TrustMyRecord tools for public sports records.", "item": "https://trustmyrecord.com/tools/"}]}
@@ -344,7 +371,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap">
 <link rel="stylesheet" href="/static/css/tmr-navbar.css?v=68ec3081d29a">
 </head>
-<body class="tmr-ds tmr-site-shell">
+<body class="tmr-ds tmr-ds--dark tmr-site-shell">
     <main class="tools-shell">
 
         <!-- ================= HERO ================= -->
