@@ -818,3 +818,22 @@ body.tmr-ds .ticker { border-bottom: 1px solid rgba(124, 198, 255, .14); }
 /* the board keeps clear of the player: a little narrower, and the first row then scales up as one piece */
 @media (min-width: 1041px) { .hero.hx .hx-art { width: calc(44.5vw * var(--hxs, 1)); max-width: 880px; } }
 @media (max-width: 640px) { .hero.hx .hb-thr:not(.full), .hero.hx .hb-row:not(.full) { grid-template-columns: 3.4cqw minmax(0, 1.55fr) minmax(0, .9fr) 10.4cqw; } }
+
+/* ---- floating widgets stay off the six cards on the first screen (desktop): the install prompt waits
+   for the first scroll, the chat launcher tucks into the corner. Both behave as before once scrolled. ---- */
+@media (min-width: 1041px) {
+    body.tmr-ds:not(.hx-scrolled) .tmr-install.show { transform: translateX(-50%) translateY(140%); }
+    body.tmr-ds:not(.hx-scrolled) .tmr-lc { right: 6px; bottom: 6px; }
+    body.tmr-ds:not(.hx-scrolled) .tmr-lc .tmr-lc-launcher { transform: scale(.84); transform-origin: bottom right; }
+    body.tmr-ds .tmr-lc, body.tmr-ds .tmr-lc .tmr-lc-launcher { transition: right .25s ease, bottom .25s ease, transform .25s ease; }
+}
+/* cards: a little more room under the description */
+.hero.hx .hx-card { padding-bottom: clamp(10px, .78vw, 15px); }
+/* rotation: the leaving update fades where it stands, tab labels switch colour without a half-way frame */
+@media (min-width: 1180px) {
+    body.tmr-ds .ticker .tkact-item.is-prev { transition: opacity .2s ease, transform .34s cubic-bezier(.2, .7, .2, 1) .06s, background-color .15s ease; }
+    body.tmr-ds .ticker .tkact-item.is-prev.is-out { transform: translateY(35px); transition: opacity .14s ease; }
+    body.tmr-ds .ticker .tkact-item.is-in { transition: none; }
+    body.tmr-ds .ticker .tkact-item { transition: opacity .26s ease .14s, transform .26s ease .14s, background-color .15s ease; }
+}
+.hero.hx .hb-tab { transition: background-color .16s ease; }

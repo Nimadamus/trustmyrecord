@@ -322,6 +322,10 @@
 
   function go() {
     heroVideo(); window.addEventListener('resize', heroVideo);
+    /* The first screen ends on the six cards, exactly where the install prompt and the chat launcher float.
+       body.hx-scrolled lets the stylesheet keep them clear of the cards until the visitor has scrolled. */
+    var scrolled = function () { if (document.body) document.body.classList.toggle('hx-scrolled', (window.pageYOffset || 0) > 80); };
+    scrolled(); window.addEventListener('scroll', scrolled, { passive: true });
     fit(); fold();
     window.addEventListener('resize', fold); window.addEventListener('load', fold);
     setTimeout(fold, 1200); setTimeout(fold, 3500);
