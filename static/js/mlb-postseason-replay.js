@@ -289,7 +289,7 @@
           + '<div class="mpr-grid">' + cols.map(function (c, i) { return '<div class="mpr-col"><h3>' + ROUNDS[i] + '</h3>' + c + '</div>'; }).join('') + '</div>';
         if (S.odds) {
           var rows = field.all.slice().sort(function (a, b) { return S.odds.tally[b.abbr].win - S.odds.tally[a.abbr].win; });
-          var k = Object.keys(S.picks).length;
+          var k = S.odds.locked || 0;
           html += '<div class="mpr-wrap" id="mprOdds"><table class="mpr-odds"><caption class="mpr-note" style="caption-side:bottom;text-align:left">'
             + S.odds.n.toLocaleString('en-US') + ' simulated postseasons' + (k ? ', with your ' + k + (k === 1 ? ' pick' : ' picks') + ' locked in' : '') + '.</caption>'
             + '<thead><tr><th scope="col">Team</th><th scope="col">Reach DS</th><th scope="col">Reach LCS</th><th scope="col">Reach WS</th><th scope="col">Win it all</th></tr></thead><tbody>'
@@ -313,7 +313,10 @@
         } else if (act === 'reset') {
           S.picks = {}; S.detail = {}; S.odds = null; save(); render();
         } else if (act === 'odds') {
-          S.odds = odds(field, list, S.picks, 10000, (Math.random() * 4294967295) >>> 0);
+          // A finished bracket has nothing left to simulate, so the odds are for the open field.
+          var full = list.every(function (s) { return S.picks[s.id]; });
+          S.odds = odds(field, list, full ? {} : S.picks, 10000, (Math.random() * 4294967295) >>> 0);
+          S.odds.locked = full ? 0 : Object.keys(S.picks).length;
           render();
           var o = doc.getElementById('mprOdds');
           if (o && o.scrollIntoView) {
