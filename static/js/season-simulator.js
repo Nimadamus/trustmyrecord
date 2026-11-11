@@ -452,6 +452,12 @@
         else {
           // The server says the window is open: undo the page's date based guess.
           locked = false;
+          /* SEASON_ENTRY_ACTIONS_20261111: the baked "season complete" block hides everything
+             marked data-mlb-season-only with !important, which also hid Save, Lock and the log
+             in prompt after the server opened 2027 entries: every pick could be made and none
+             could be submitted. An open window from the server outranks the baked offseason
+             state for these two controls. */
+          ['ss-actions', 'ss-auth-cta'].forEach(function (id) { var n = el(id); if (n) n.removeAttribute('data-mlb-season-only'); });
           var acts = el('ss-actions'); if (acts) acts.style.display = '';
           showLoggedOut();
         }
