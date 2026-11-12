@@ -128,7 +128,7 @@
 .hh-tabs .hh-tab.is-active{background:#1D7FE8;border-color:#1D7FE8;color:#041014}
 </style>
 </head>
-<body class="tmr-ds tmr-site-shell">
+<body class="tmr-ds tmr-ds--dark tmr-site-shell">
     <main class="hh-shell">
         <nav class="hh-tabs" aria-label="Handicapping Hub sports">
         <a class="hh-tab is-active" href="/handicapping/" aria-current="page">All Sports</a>
@@ -144,12 +144,12 @@
         <section class="hh-hero" aria-labelledby="hh-title">
             <span class="hh-kicker">Handicapping Hub</span>
             <h1 id="hh-title">Research every matchup before you make a pick.</h1>
-            <p>This is your research desk. Compare probable pitchers, starter, bullpen and team offense stats, read verified historical trends you can audit down to every game in the sample, check the full-game and First 5 markets, see how the TrustMyRecord community is leaning, then head to the sportsbook and lock your pick with a public record behind it.</p>
+            <p>This is your research desk. Every game on the board gets the current line, both teams' season rates and recent form, the starters, and verified historical trends you can audit down to every game in the sample. See how the TrustMyRecord community is leaning, then head to the sportsbook and lock your pick with a public record behind it.</p>
             <div class="hh-flow" aria-label="What you get on every matchup">
                 <span><b>1</b> Matchup &amp; lines</span>
-                <span><b>2</b> Team &amp; starter stats</span>
-                <span><b>3</b> Bullpen &amp; offense</span>
-                <span><b>4</b> Ranked trends</span>
+                <span><b>2</b> Team stats &amp; form</span>
+                <span><b>3</b> Starters</span>
+                <span><b>4</b> Verified trends</span>
                 <span><b>5</b> Community consensus</span>
                 <span><b>6</b> Make your pick</span>
             </div>
@@ -162,13 +162,13 @@
         <div class="hh-grid" id="hh-sportGrid"></div>
 
         <div class="hh-note">
-            <b>Rolling out sport by sport.</b> The MLB research hub is live with real sportsbook lines (full game, First 5, and NRFI/YRFI), probable pitchers and handedness, starter, bullpen and team offense stats from the MLB Stats API, and verified trends measured against a real baseline and auditable down to every game in the sample. It does not yet cover weather, park factors, injuries, confirmed lineups, or line movement, and every matchup lists exactly which metrics its providers do not supply rather than guessing them. Community consensus shows real public picks and stays empty until picks are logged. Other leagues show today's real game counts here and get their own research hub next. Once you have your side, <a href="https://oddsjam.com/?ref=mjg3ntg" target="_blank" rel="sponsored noopener">compare the number across sportsbooks on OddsJam</a> so you lock the best available price.
+            <b>Lock the best price.</b> Once you have your side, <a href="https://oddsjam.com/?ref=mjg3ntg" target="_blank" rel="sponsored noopener">compare the number across sportsbooks on OddsJam</a> so you lock the best available price.
         </div>
     <!--MK:mlbHubCrossLink-->
-  <p class="tmr-mlbx" style="margin:26px 0 0;padding:14px 0 0;border-top:1px solid rgba(255,255,255,.09);font-size:14px;line-height:1.6;color:#8FA6BC">The MLB hub is the one that is fully built: <a href="/handicapping/mlb/" style="color:#22D2C0;font-weight:700;text-decoration:none">MLB matchups today, with odds, probable pitchers, team stats and verified trends</a>, plus a permanent research page for every game.</p>
+  <p class="tmr-mlbx" style="margin:26px 0 0;padding:14px 0 0;border-top:1px solid rgba(255,255,255,.09);font-size:14px;line-height:1.6;color:#8FA6BC">Baseball research starts at the MLB hub: <a href="/handicapping/mlb/" style="color:#22D2C0;font-weight:700;text-decoration:none">MLB matchups today, with odds, probable pitchers, team stats and verified trends</a>, plus a permanent research page for every game.</p>
   <!--/MK:mlbHubCrossLink-->
   <!--MK:nflHubCrossLink-->
-  <p class="tmr-nflx" style="margin:26px 0 0;padding:14px 0 0;border-top:1px solid #D2DEEA;font-size:14px;line-height:1.6;color:#55697F">The <a href="/handicapping/nfl/" style="color:#07736D;font-weight:700;text-decoration:none">NFL hub</a> carries every game on the board with the line and a research page per matchup, each one holding the complete head to head record between those two teams.</p>
+  <p class="tmr-nflx" style="margin:26px 0 0;padding:14px 0 0;border-top:1px solid rgba(255,255,255,.09);font-size:14px;line-height:1.6;color:#8FA6BC">The <a href="/handicapping/nfl/" style="color:#22D2C0;font-weight:700;text-decoration:none">NFL hub</a> carries every game on the board with the line and a research page per matchup, each one holding the complete head to head record between those two teams.</p>
   <!--/MK:nflHubCrossLink-->
 
     </main>
@@ -180,35 +180,25 @@
         // Only sports TrustMyRecord actually carries in the sportsbook. `built`
         // flags which have a dedicated research sub-hub live today.
         var SPORTS = [
-            { key: "baseball_mlb", name: "MLB", league: "Major League Baseball", icon: "⚾", built: true, href: "/handicapping/mlb/" },
-            { key: "tennis", name: "Tennis", league: "ATP & WTA tours", icon: "🎾", built: true, href: "/handicapping/tennis/" },
-            { key: "basketball_nba_summer", name: "NBA Summer League", league: "Las Vegas Summer League", icon: "🏀", built: false },
-            { key: "basketball_wnba", name: "WNBA", league: "Women's National Basketball", icon: "🏀", built: false },
-            { key: "soccer", name: "Soccer", league: "Global leagues & cups", icon: "⚽", built: false },
-            { key: "basketball_nba", name: "NBA", league: "National Basketball Association", icon: "🏀", built: false, seasonal: true },
-            { key: "icehockey_nhl", name: "NHL", league: "National Hockey League", icon: "🏒", built: false, seasonal: true },
-            { key: "americanfootball_nfl", name: "NFL", league: "National Football League", icon: "🏈", built: false, seasonal: true },
-            { key: "americanfootball_ncaaf", name: "College Football", league: "NCAA FBS", icon: "🏈", built: false, seasonal: true }
+            { key: "americanfootball_nfl", name: "NFL", league: "National Football League", icon: "🏈", href: "/handicapping/nfl/" },
+            { key: "americanfootball_ncaaf", name: "College Football", league: "NCAA FBS", icon: "🏈", href: "/handicapping/ncaaf/" },
+            { key: "basketball_nba", name: "NBA", league: "National Basketball Association", icon: "🏀", href: "/handicapping/nba/" },
+            { key: "icehockey_nhl", name: "NHL", league: "National Hockey League", icon: "🏒", href: "/handicapping/nhl/" },
+            { key: "soccer", name: "Soccer", league: "Global leagues & cups", icon: "⚽", href: "/handicapping/soccer/" },
+            { key: "tennis", name: "Tennis", league: "ATP & WTA tours", icon: "🎾", href: "/handicapping/tennis/" },
+            { key: "baseball_mlb", name: "MLB", league: "Major League Baseball", icon: "⚾", href: "/handicapping/mlb/" }
         ];
 
         var grid = document.getElementById("hh-sportGrid");
 
         function cardHtml(s) {
-            var live = s.built;
-            var badge = live
-                ? '<span class="hh-card__badge badge-live">Live hub</span>'
-                : (s.seasonal ? '<span class="hh-card__badge badge-off">In season soon</span>' : '<span class="hh-card__badge badge-soon">Hub next</span>');
-            var tag = live ? "a" : "div";
-            var attrs = live ? ' href="' + s.href + '"' : '';
-            var cls = "hh-card " + (live ? "is-live" : "is-soon");
-            var cta = live ? ("Open " + s.name + " hub →") : "Counts only for now";
-            return "<" + tag + ' class="' + cls + '"' + attrs + ' data-key="' + s.key + '">' +
-                '<div class="hh-card__top"><div class="hh-card__icon">' + s.icon + '</div>' + badge + '</div>' +
+            return '<a class="hh-card is-live" href="' + s.href + '" data-key="' + s.key + '">' +
+                '<div class="hh-card__top"><div class="hh-card__icon">' + s.icon + '</div><span class="hh-card__badge badge-off" data-badge>Research hub</span></div>' +
                 '<h3>' + s.name + '</h3>' +
                 '<p class="hh-league">' + s.league + '</p>' +
                 '<div class="hh-card__count" data-count><strong>—</strong><span>checking today’s slate…</span></div>' +
-                '<span class="hh-card__cta">' + cta + '</span>' +
-                '</' + tag + '>';
+                '<span class="hh-card__cta">Open ' + s.name + ' hub →</span>' +
+                '</a>';
         }
 
         grid.innerHTML = SPORTS.map(cardHtml).join("");
@@ -219,6 +209,8 @@
             if (n === null) { box.classList.add("is-empty"); box.innerHTML = "<strong>–</strong><span>count unavailable</span>"; return; }
             if (n === 0) { box.classList.add("is-empty"); box.innerHTML = "<strong>0</strong><span>no games today</span>"; return; }
             box.classList.remove("is-empty");
+            var badge = card.querySelector("[data-badge]");
+            if (badge) { badge.className = "hh-card__badge badge-live"; badge.textContent = "On the board"; }
             box.innerHTML = "<strong>" + n + "</strong><span>game" + (n === 1 ? "" : "s") + " on the board</span>";
         }
 
@@ -229,7 +221,6 @@
                 .then(function (d) {
                     if (!d) return null;
                     var games = (d.games || []);
-                    // Summer League is a filtered slice of the nba slug; approximate by count of games flagged summer, else all.
                     return games.length;
                 })
                 .catch(function () { return null; });
@@ -247,8 +238,8 @@
 <style id="light-text-fix-20260913">
 /* LIGHT_TEXT_ON_LIGHT_20260913: pale text on a pale surface, unreadable on phones.
    Found by the full-site mobile legibility sweep; darkened to readable ink. */
-body p.tmr-mlbx, body p.tmr-gfx { color: #4A6076 !important; }
-body p.tmr-mlbx a, body p.tmr-gfx a { color: #0A6E66 !important; }
+body p.tmr-mlbx, body p.tmr-gfx, body p.tmr-nflx { color: #9aa8bc !important; }
+body p.tmr-mlbx a, body p.tmr-gfx a, body p.tmr-nflx a { color: #5cc8ff !important; }
 </style>
 </body>
 </html>

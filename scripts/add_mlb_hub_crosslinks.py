@@ -102,7 +102,7 @@ TARGETS = [
      'probable pitchers and the current lines.'),
 
     ("handicapping/index.html",
-     'The MLB hub is the one that is fully built: '
+     'Baseball research starts at the MLB hub: '
      '<a href="/handicapping/mlb/" %s>MLB matchups today, with odds, probable pitchers, team stats '
      'and verified trends</a>, plus a permanent research page for every game.'),
 ]
