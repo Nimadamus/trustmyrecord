@@ -170,7 +170,7 @@
       /*FMENU mlb*/ ['/matchup-of-the-day/rays-brewers-bats-feast-on-righties/', 'MLB', '/matchup-of-the-day/mlb/'],
       /* Added 2026-09-29 with the NHL Featured Game of the Day
          (scripts/nhl_featured_game.py, cloud workflow nhl-featured-game.yml). */
-      /*FMENU nhl*/ ['/nhl/lightning-sabres-kucherov-vs-thompson/', 'NHL', '/matchup-of-the-day/nhl/'],
+      /*FMENU nhl*/ ['/matchup-of-the-day/mammoth-golden-knights-the-goaltending-gap/', 'NHL', '/matchup-of-the-day/nhl/'],
       /* Added 2026-09-07 with the tennis section. Same stable-door pattern:
          /matchup-of-the-day/tennis/ bakes with the newest tennis Game File. */
       /*FMENU tennis*/ ['/matchup-of-the-day/ruud-shevchenko-the-ranking-gap-decides-it/', 'Tennis', '/matchup-of-the-day/tennis/'],
