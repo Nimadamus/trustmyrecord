@@ -30,17 +30,18 @@
 const POLICY = Object.freeze({
   anonFreeRuns: 1,                 // per browser, across every simulator
   memberFreeRunsPerSimPerDay: 1,   // resets at midnight Pacific
-  extraRunCostTmr: 5,              // must equal backend SIMULATOR_RUN_COST
+  extraRunCostTmr: 5,              // must equal backend SIMULATOR_RUN_COST (unused while tmrRuns is false)
+  tmrRuns: false,                  // SIM_PRO_ONLY_20261112: TMR no longer buys a run (Nima)
   proUnlimited: true
 });
 
 const BODY = 'Your first simulation on TrustMyRecord is free, with no account needed. ' +
-  'After that, a free account gives you one free run a day on every simulator, and each extra run costs ' +
-  POLICY.extraRunCostTmr + ' TMR. TMR Pro members run every simulator without limits. ' +
+  'After that, a free account gives you one free run a day on every simulator. ' +
+  'For more runs, TMR Pro members run every simulator without limits. ' +
   'A run only counts once its result appears, so a run that fails or never finishes costs nothing.';
 
 /* Short line for modals and small print. */
-const SHORT = 'One free run a day on every simulator, then ' + POLICY.extraRunCostTmr + ' TMR a run';
+const SHORT = 'One free run a day on every simulator, unlimited with TMR Pro';
 
 /* FAQ answers: one shared body, a lead that fits each page's question. */
 function faqAnswer(lead) {
@@ -67,13 +68,13 @@ const PAGES = [
 /* Inline mentions in page prose, between <!--SIM_RUN_POLICY:inline--> and
    <!--/SIM_RUN_POLICY--> markers. */
 const INLINE = 'Picking games is always free. Your first simulation needs no account, then a free account gives you ' +
-  'one free run a day on every simulator, and each extra run costs ' + POLICY.extraRunCostTmr + ' TMR.';
+  'one free run a day on every simulator, and TMR Pro members run without limits.';
 const INLINE_PAGES = ['nfl-playoff-simulator/index.html'];
 
 /* MLB_RUN_COPY_20261105: the same rule for prose about running a game, between
    <!--SIM_RUN_POLICY:run--> and <!--/SIM_RUN_POLICY--> markers. */
 const RUN_INLINE = 'Your first simulation needs no account. A free account gives you one free run a day on every simulator, ' +
-  'each extra run costs ' + POLICY.extraRunCostTmr + ' TMR, and TMR Pro members run without limits.';
+  'and TMR Pro members run without limits.';
 const RUN_INLINE_PAGES = ['mlb-simulator/index.html', 'mlb-game-simulator/index.html', 'mlb-predictions-simulator/index.html'];
 
 /* Phrases that contradict the rule. Any simulator page carrying one fails the
@@ -95,6 +96,7 @@ function runtimeBlock() {
     anonFreeRuns: POLICY.anonFreeRuns,
     memberFreeRunsPerSimPerDay: POLICY.memberFreeRunsPerSimPerDay,
     extraRunCostTmr: POLICY.extraRunCostTmr,
+    tmrRuns: POLICY.tmrRuns,
     short: SHORT,
     body: BODY
   }) + ';';

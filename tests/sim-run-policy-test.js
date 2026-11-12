@@ -51,10 +51,12 @@ for (const f of SIM_FILES) {
     ok('2. no contradicting free run copy in ' + f, !hit, hit && String(hit));
 }
 
-// 3. Every listed page discloses the price, in the FAQ answer itself.
+// 3. Every listed page says how to get more runs, in the FAQ answer itself.
+//    SIM_PRO_ONLY_20261112: TMR Pro, never a TMR price.
 for (const [file, q, a] of P.PAGES) {
-    ok('3. ' + file + ' says extra runs cost ' + P.POLICY.extraRunCostTmr + ' TMR',
-        a.indexOf(P.POLICY.extraRunCostTmr + ' TMR') !== -1 && read(file).indexOf(P.POLICY.extraRunCostTmr + ' TMR') !== -1);
+    ok('3. ' + file + ' says more runs come with TMR Pro',
+        a.indexOf('TMR Pro') !== -1 && read(file).indexOf('TMR Pro') !== -1);
+    ok('3. ' + file + ' FAQ no longer sells runs for TMR', !/TMR a run|extra run costs/.test(a));
 }
 ok('3. published copy uses no dashes', !/[–—]| - /.test(P.BODY + P.SHORT + P.PAGES.map((p) => p[2]).join(' ')));
 
