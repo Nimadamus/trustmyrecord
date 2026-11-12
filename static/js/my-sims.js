@@ -102,6 +102,16 @@
       l2.textContent = 'No scheduled game found for this matchup after your run.';
     }
     mid.appendChild(l2);
+    // SIM_RECORD_AUDIT_20261111: spread and total, graded against the ESPN closing line.
+    if (it.markets && it.game) {
+      var RL = { win: 'won', loss: 'lost', push: 'push', pending: 'pending', line_unavailable: 'no closing line', no_call: 'no side', no_projection: 'no projection', conflict: 'under review' };
+      var sp = it.markets.spread, tt = it.markets.total, A = it.away.abbr || 'Away', H = it.home.abbr || 'Home';
+      var spPick = sp && sp.pick && sp.line ? (sp.pick === 'home' ? H + ' ' + (sp.line.home > 0 ? '+' : '') + sp.line.home : A + ' ' + (sp.line.away > 0 ? '+' : '') + sp.line.away) : null;
+      var ttPick = tt && tt.pick && tt.line ? (tt.pick === 'over' ? 'Over ' : 'Under ') + tt.line.points : null;
+      var l2b = el('div', 'ms-mk');
+      l2b.textContent = 'Spread: ' + (spPick ? spPick + ', ' : '') + (RL[sp && sp.result] || '-') + ' · Total: ' + (ttPick ? ttPick + ', ' : '') + (RL[tt && tt.result] || '-');
+      mid.appendChild(l2b);
+    }
     // NBA/NHL simulators preselect ?away=&home= (never auto-run), so the link opens this matchup.
     var reHref = '/' + it.sport + '-simulator/?src=my_sims';
     if ((it.sport === 'nba' || it.sport === 'nhl') && it.away.abbr && it.home.abbr) reHref = '/' + it.sport + '-simulator/?away=' + encodeURIComponent(it.away.abbr) + '&home=' + encodeURIComponent(it.home.abbr) + '&src=my_sims';
@@ -130,8 +140,14 @@
       var c = el('div', 'ms-stat'); c.appendChild(el('b', null, x[0])); c.appendChild(el('span', null, x[1])); stats.appendChild(c);
     });
     root.appendChild(stats);
+    var mk = data && data.markets && data.markets.all;
+    if (mk) {
+      var rec = function (m) { return m.wins + '-' + m.losses + (m.pushes ? '-' + m.pushes : '') + (m.graded ? ' (' + Math.round(100 * m.wins / m.graded) + '%)' : ''); };
+      root.appendChild(el('p', 'ms-note', 'Against the ESPN closing line: Spread ' + rec(mk.spread) + ' · Totals ' + rec(mk.total) +
+        '. Pushes and games with no closing line are not losses. This is simulation accuracy, not betting results.'));
+    }
     root.appendChild(el('p', 'ms-note', 'A simulation gives probabilities, not guarantees: a 60% favorite should still lose about 4 times in 10. ' +
-      'Only games that started after your run are graded. Matchups with no real game, and even 50/50 runs, are never graded.'));
+      'Each real game counts once: your last run saved before it started. Matchups with no real game, and even 50/50 runs, are never graded.'));
 
     var filters = el('div', 'ms-filters');
     var list = el('div', 'ms-list');
