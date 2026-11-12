@@ -169,9 +169,214 @@
 
     Promise.all([gamesP, statusP]).then(function (gs) {
       render({ user: user, items: items, summary: summary, isPro: isPro, trialDays: trialDays, picks: pk,
+        markets: (sims && sims.markets) || null, units: (sims && sims.units) || null, audit: (sims && sims.audit) || null,
         sports: inSeason, games: gs[0], status: gs[1], favTeams: favTeams });
     });
   });
+
+  /* SIM_RECORD_AUDIT_20261111: performance card. Reads /api/sim-archive/mine v2 (markets,
+     units, per-item markets). Falls back to the old moneyline-only shape if the API is older. */
+  var MKT = [['moneyline', 'Moneyline'], ['spread', 'Spread'], ['total', 'Totals']];
+  var RES = {
+    win: ['hit', '✓ Win'], loss: ['miss', '✕ Loss'], push: ['push', 'Push'], pending: ['pending', 'Pending'],
+    line_unavailable: ['none', 'No line'], no_call: ['none', 'No call'], no_projection: ['none', 'No projection'],
+    conflict: ['none', 'Under review']
+  };
+  function signed(v) { v = Number(v); return (v > 0 ? '+' : '') + (Math.round(v * 10) / 10); }
+  function u2(v) { v = Number(v); return (v > 0 ? '+' : '') + v.toFixed(2); }
+  function odds(v) { return v == null ? '' : (Number(v) > 0 ? '+' + v : String(v)); }
+  function itemMarket(it, mk) {
+    if (it.markets && it.markets[mk]) return it.markets[mk];
+    if (mk !== 'moneyline') return null;
+    var r = it.hit === true ? 'win' : (it.hit === false ? 'loss' : (it.game && it.game.status === 'pending' ? 'pending' : null));
+    return r ? { result: r, pick: it.call, explanation: '' } : null;
+  }
+  function summaryFor(d, mk, sport) {
+    var m = d.markets && d.markets[sport] && d.markets[sport][mk];
+    if (m) return m;
+    // Older API: count from the rows we have (moneyline only).
+    var s = { wins: 0, losses: 0, pushes: 0, graded: 0, pending: 0, no_call: 0, line_unavailable: 0, no_projection: 0, hit_rate: null, partial: true };
+    d.items.forEach(function (it) {
+      if (sport !== 'all' && it.sport !== sport) return;
+      var x = itemMarket(it, mk); if (!x) return;
+      if (x.result === 'win') s.wins++; else if (x.result === 'loss') s.losses++; else if (x.result === 'pending') s.pending++;
+    });
+    s.graded = s.wins + s.losses; s.hit_rate = s.graded ? s.wins / s.graded : null;
+    return s;
+  }
+  function pickText(it, mk, x) {
+    var A = it.away.abbr || it.away.name, H = it.home.abbr || it.home.name;
+    if (!x) return '–';
+    if (mk === 'moneyline') {
+      if (!x.pick) return 'No favorite';
+      var wp = it.win_probability && it.win_probability[x.pick];
+      return (x.pick === 'home' ? H : A) + (wp != null ? ' ' + pct(wp) : '');
+    }
+    if (mk === 'spread') {
+      if (x.pick && x.line) return x.pick === 'home' ? H + ' ' + odds(x.line.home) : A + ' ' + odds(x.line.away);
+      return x.projection != null ? 'Proj ' + H + ' ' + signed(x.projection) : '–';
+    }
+    if (x.pick && x.line) return (x.pick === 'over' ? 'Over ' : 'Under ') + x.line.points;
+    return x.projection != null ? 'Proj ' + x.projection : '–';
+  }
+
+  function buildPerf(d, openGlossary) {
+    var scard = el('section', 'mh2-card mh2-perf');
+    var sh = cardHead('bars', 'Your Performance', 'Your simulations graded against the real results and the closing betting line.');
+    var ib = el('button', 'mh2-ib mh2-r'); ib.type = 'button'; ib.setAttribute('aria-label', 'What these numbers mean'); ib.appendChild(icon('info'));
+    ib.addEventListener('click', openGlossary);
+    sh.appendChild(ib);
+    scard.appendChild(sh);
+    var gameItems = d.items.filter(function (it) { return it.game; });
+    if (!d.items.length) {
+      scard.appendChild(el('p', 'mh2-empty', 'Run a simulation and it shows up here. Once the real game is played, it is graded on the moneyline, the spread and the total.'));
+      return scard;
+    }
+    var state = { mk: 'moneyline', sport: 'all' };
+    try { var saved = JSON.parse(localStorage.getItem('tmr_home_perf') || '{}'); if (saved.mk && /^(moneyline|spread|total)$/.test(saved.mk)) state.mk = saved.mk; if (saved.sport && (saved.sport === 'all' || SPORTS[saved.sport])) state.sport = saved.sport; } catch (e) {}
+
+    var seg = el('div', 'mh2-seg'); seg.setAttribute('role', 'tablist'); seg.setAttribute('aria-label', 'Betting market');
+    var flt = el('div', 'mh2-flt'); flt.setAttribute('role', 'group'); flt.setAttribute('aria-label', 'Sport');
+    var badge = el('p', 'mh2-honest');
+    badge.appendChild(el('span', 'mh2-chip', 'Simulation accuracy'));
+    badge.appendChild(document.createTextNode(' Not betting results. No wager was placed on these games.'));
+    var body = el('div', 'mh2-perfbody'); body.id = 'mhPerfBody'; body.setAttribute('role', 'tabpanel');
+    scard.appendChild(seg); scard.appendChild(flt); scard.appendChild(badge); scard.appendChild(body);
+
+    var segBtns = {}, fltBtns = {};
+    MKT.forEach(function (m, i) {
+      var b = el('button', null, m[1]); b.type = 'button'; b.id = 'mhMk-' + m[0]; b.setAttribute('role', 'tab'); b.setAttribute('aria-controls', 'mhPerfBody');
+      b.addEventListener('click', function () { state.mk = m[0]; draw(); track('member_home_click', { action: 'perf_market', market: m[0] }); });
+      b.addEventListener('keydown', function (e) {
+        if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+        var n = MKT[(i + (e.key === 'ArrowRight' ? 1 : MKT.length - 1)) % MKT.length][0];
+        state.mk = n; draw(); segBtns[n].focus(); e.preventDefault();
+      });
+      segBtns[m[0]] = b; seg.appendChild(b);
+    });
+    ['all', 'nfl', 'nba', 'mlb', 'nhl'].forEach(function (s) {
+      var b = el('button', null, s === 'all' ? 'All sports' : SPORTS[s].label); b.type = 'button';
+      b.addEventListener('click', function () { state.sport = s; draw(); track('member_home_click', { action: 'perf_sport', sport: s }); });
+      fltBtns[s] = b; flt.appendChild(b);
+    });
+
+    function draw() {
+      try { localStorage.setItem('tmr_home_perf', JSON.stringify(state)); } catch (e) {}
+      MKT.forEach(function (m) { var on = m[0] === state.mk; segBtns[m[0]].setAttribute('aria-selected', on ? 'true' : 'false'); segBtns[m[0]].tabIndex = on ? 0 : -1; });
+      body.setAttribute('aria-labelledby', 'mhMk-' + state.mk);
+      Object.keys(fltBtns).forEach(function (s) { fltBtns[s].setAttribute('aria-pressed', s === state.sport ? 'true' : 'false'); });
+      body.textContent = '';
+      var sm = summaryFor(d, state.mk, state.sport);
+      var noApi = !d.markets && state.mk !== 'moneyline';
+      var rec = sm.wins + '–' + sm.losses + (sm.pushes ? '–' + sm.pushes : '');
+      var stats = el('div', 'mh2-stats');
+      [['trophy', noApi ? '–' : rec, 'Record' + (sm.pushes ? ' (W–L–P)' : ''), 'g'],
+       ['target', sm.graded ? Math.round(100 * sm.wins / sm.graded) + '%' : '–', 'Hit rate', ''],
+       ['check', noApi ? '–' : sm.graded, 'Graded', ''],
+       ['clock', noApi ? '–' : sm.pending, 'Pending', '']].forEach(function (x) {
+        var c = el('div', 'mh2-stat' + (x[3] ? ' ' + x[3] : '')); c.appendChild(icon(x[0]));
+        var t = el('div'); t.appendChild(el('b', null, x[1])); t.appendChild(el('span', null, x[2])); c.appendChild(t);
+        stats.appendChild(c);
+      });
+      body.appendChild(stats);
+
+      var meta = [];
+      if (sm.pushes) meta.push(sm.pushes + ' push' + (sm.pushes === 1 ? '' : 'es') + ' (not in the hit rate)');
+      if (sm.line_unavailable) meta.push(sm.line_unavailable + ' with no verified closing line (not graded, not losses)');
+      if (sm.no_call) meta.push(sm.no_call + ' with no side (projection exactly on the line or 50/50)');
+      if (sm.no_projection) meta.push(sm.no_projection + ' older run' + (sm.no_projection === 1 ? '' : 's') + ' without a stored projection');
+      if (noApi) meta.push('Spread and total grading is being updated. Check back shortly.');
+      if (meta.length) body.appendChild(el('p', 'mh2-meta', meta.join(' · ')));
+
+      var u = d.units && d.units[state.mk] && d.units[state.mk][state.sport];
+      var ul = el('p', 'mh2-units');
+      ul.appendChild(el('b', null, 'Units (hypothetical): '));
+      if (u && u.priced) {
+        ul.appendChild(el('span', u.units > 0 ? 'up' : (u.units < 0 ? 'down' : ''), u2(u.units) + 'u'));
+        ul.appendChild(document.createTextNode(' · ROI ' + signed(Math.round(u.roi * 1000) / 10) + '% on ' + u.priced + ' pick' + (u.priced === 1 ? '' : 's') +
+          ' at the closing price, 1 unit each. Shows what the simulator’s picks would have returned; it is not money you won or lost.'));
+      } else {
+        ul.appendChild(document.createTextNode('Unavailable. Units are shown only where a real closing price was recorded; none exists yet for this selection.'));
+      }
+      body.appendChild(ul);
+
+      var rows = gameItems.filter(function (it) {
+        if (state.sport !== 'all' && it.sport !== state.sport) return false;
+        return !!itemMarket(it, state.mk);
+      });
+      if (!rows.length) {
+        body.appendChild(el('p', 'mh2-empty', state.sport === 'all' ? 'No simulated real games yet for this market.' : 'No simulated ' + SPORTS[state.sport].label + ' games yet.'));
+      } else {
+        var list = el('div', 'mh2-xl'); list.setAttribute('aria-label', 'Graded predictions, newest first');
+        var hd = el('div', 'mh2-xh'); ['Game', 'Simulated pick', 'Result'].forEach(function (t) { hd.appendChild(el('span', null, t)); });
+        list.appendChild(hd);
+        var CAP = 6, extra = [];
+        rows.forEach(function (it, i) {
+          var row = xrow(it, state.mk);
+          if (i >= CAP) { row.hidden = true; extra.push(row); }
+          list.appendChild(row);
+        });
+        body.appendChild(list);
+        if (extra.length) {
+          var more = el('button', 'mh2-ib mh2-allgames', 'Show ' + extra.length + ' more ⌄'); more.type = 'button';
+          more.addEventListener('click', function () {
+            extra.forEach(function (r) { r.hidden = false; });
+            var f = extra[0].querySelector('summary'); if (more.parentNode) more.parentNode.removeChild(more); if (f) f.focus();
+            track('member_home_click', { action: 'perf_more', market: state.mk });
+          });
+          body.appendChild(more);
+        }
+      }
+      var loose = (d.audit && d.audit.no_game_matchups) || d.items.filter(function (it) { return !it.game; }).length;
+      if (loose) body.appendChild(el('p', 'mh2-meta', loose + ' simulated matchup' + (loose === 1 ? '' : 's') + ' had no real game with that home and away team within a few days, so ' + (loose === 1 ? 'it is' : 'they are') + ' never graded.'));
+      if (d.audit && d.audit.earlier_runs_not_counted) body.appendChild(el('p', 'mh2-meta', d.audit.earlier_runs_not_counted + ' extra run' + (d.audit.earlier_runs_not_counted === 1 ? '' : 's') + ' of a game you had already simulated ' + (d.audit.earlier_runs_not_counted === 1 ? 'is' : 'are') + ' not counted again: each real game counts once, using your last run before the start.'));
+    }
+
+    function xrow(it, mk) {
+      var x = itemMarket(it, mk);
+      var A = it.away.abbr || it.away.name, H = it.home.abbr || it.home.name;
+      var det = el('details', 'mh2-xr');
+      var su = el('summary');
+      var gm = el('div', 'mh2-gm');
+      if (SPORTS[it.sport]) gm.appendChild(leagueLogo(it.sport));
+      var info = el('div');
+      info.appendChild(el('b', null, A + ' at ' + H));
+      var line = String(it.sport).toUpperCase() + ' · ' + (it.game && it.game.start ? whenPT(it.game.start) : '');
+      if (it.game && it.game.final) line = String(it.sport).toUpperCase() + ' · Final ' + A + ' ' + it.game.final.away + ', ' + H + ' ' + it.game.final.home;
+      info.appendChild(el('small', null, line));
+      gm.appendChild(info); su.appendChild(gm);
+      su.appendChild(el('span', 'mh2-xp', pickText(it, mk, x)));
+      var rk = RES[x.result] || ['none', 'Not graded'];
+      var rc = el('span', 'mh2-xres'); rc.appendChild(el('span', 'mh2-pill ' + rk[0], rk[1])); su.appendChild(rc);
+      det.appendChild(su);
+
+      var dl = el('dl', 'mh2-xd');
+      var add = function (k, v) { if (v === null || v === undefined || v === '') return; dl.appendChild(el('dt', null, k)); dl.appendChild(el('dd', null, v)); };
+      add('Simulation saved', it.recorded_at ? new Date(it.recorded_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' }) + ' PT, before the game started' : '');
+      if (it.win_probability) add('Simulated win chance', A + ' ' + pct(it.win_probability.away) + ', ' + H + ' ' + pct(it.win_probability.home));
+      if (it.projection) {
+        if (mk === 'spread' && it.projection.margin_home != null) add('Projected margin', H + ' ' + signed(it.projection.margin_home) + ' (' + (it.projection.basis || 'simulation') + ')');
+        if (mk === 'total' && it.projection.total != null) add('Projected total', String(it.projection.total) + ' (' + (it.projection.basis || 'simulation') + ')');
+      }
+      if (x.cover_probability) add('Simulated cover chance', H + ' ' + pct(x.cover_probability.home) + ', ' + A + ' ' + pct(x.cover_probability.away));
+      if (mk === 'moneyline' && x.line) add('Closing moneyline', A + ' ' + odds(x.line.away) + ', ' + H + ' ' + odds(x.line.home));
+      if (mk === 'spread' && x.line) add('Closing spread', H + ' ' + odds(x.line.home) + ', ' + A + ' ' + odds(x.line.away));
+      if (mk === 'total' && x.line) add('Closing total', String(x.line.points));
+      if (x.line && it.game && it.game.line_source) add('Line source', it.game.line_source);
+      if (!x.line && mk !== 'moneyline' && (x.result === 'line_unavailable')) add('Closing line', 'Not available for this game');
+      if (it.game) add('Actual result', it.game.final ? A + ' ' + it.game.final.away + ', ' + H + ' ' + it.game.final.home + ' (final)' : (it.game.status === 'pending' ? 'Not final yet, starts ' + whenPT(it.game.start) : 'Under review'));
+      add('How it was graded', x.explanation || '');
+      if (typeof x.units === 'number') add('Hypothetical 1 unit', u2(x.units) + 'u at ' + odds(x.price));
+      if (it.earlier_runs && it.earlier_runs.length) add('Earlier runs of this game', it.earlier_runs.length + ' (not counted; the last run before the start is the one graded)');
+      det.appendChild(dl);
+      det.addEventListener('toggle', function () { if (det.open) track('member_home_click', { action: 'perf_expand', market: mk }); });
+      return det;
+    }
+
+    draw();
+    scard.appendChild(link('mh2-more', '/my-sims/?src=home', 'View Full Record →', 'my_sims'));
+    return scard;
+  }
 
   function render(d) {
     root.textContent = '';
@@ -267,53 +472,10 @@
       show(withGames[0]);
     }
 
-    /* 2. Your performance: simulated favorites vs real results */
-    var scard = el('section', 'mh2-card mh2-perf');
-    var sh = cardHead('bars', 'Your Performance', 'How your simulated favorites did against the real results.');
-    var ib = el('button', 'mh2-ib mh2-r'); ib.type = 'button'; ib.setAttribute('aria-label', 'What these numbers mean'); ib.appendChild(icon('info'));
-    ib.addEventListener('click', function () { openGlossary(); });
-    sh.appendChild(ib);
-    scard.appendChild(sh);
-    if (!d.items.length) {
-      scard.appendChild(el('p', 'mh2-empty', 'Run a simulation and it shows up here. Once the real game is played, you see whether the simulated favorite won.'));
-    } else {
-      var stats = el('div', 'mh2-stats');
-      [['trophy', graded ? hits + '–' + misses : '0–0', 'Sim record', 'g'],
-       ['target', rate, 'Hit rate', ''],
-       ['check', graded, 'Graded', ''],
-       ['clock', pending, 'Pending', '']].forEach(function (x) {
-        var c = el('div', 'mh2-stat' + (x[3] ? ' ' + x[3] : '')); c.appendChild(icon(x[0]));
-        var t = el('div'); t.appendChild(el('b', null, x[1])); t.appendChild(el('span', null, x[2])); c.appendChild(t);
-        stats.appendChild(c);
-      });
-      scard.appendChild(stats);
-      var tbl = el('div', 'mh2-tbl'); tbl.setAttribute('role', 'table'); tbl.setAttribute('aria-label', 'Recent results');
-      var hr = el('div', 'mh2-tr h'); hr.setAttribute('role', 'row');
-      ['Recent results', 'Type', 'Result', 'Sim win %'].forEach(function (t) { var c = el('span', null, t); c.setAttribute('role', 'columnheader'); hr.appendChild(c); });
-      tbl.appendChild(hr);
-      d.items.slice(0, 5).forEach(function (it) {
-        var r = el('div', 'mh2-tr d'); r.setAttribute('role', 'row');
-        var gm = el('div', 'mh2-gm'); gm.setAttribute('role', 'cell');
-        if (SPORTS[it.sport]) gm.appendChild(leagueLogo(it.sport));
-        var info = el('div');
-        info.appendChild(el('b', null, (it.away.abbr || it.away.name) + ' at ' + (it.home.abbr || it.home.name)));
-        var fav = it.call ? (it.call === 'home' ? it.home : it.away) : null;
-        var favPct = (fav && it.win_probability && it.win_probability[it.call] != null) ? pct(it.win_probability[it.call]) : '';
-        var line = String(it.sport).toUpperCase() + ' · Sim favorite: ' + (fav ? (fav.abbr || fav.name) + (favPct ? ' (' + favPct + ')' : '') : 'none');
-        if (it.game && it.game.final) line += ' · Final ' + it.game.final.away + '–' + it.game.final.home;
-        info.appendChild(el('small', null, line));
-        gm.appendChild(info); r.appendChild(gm);
-        var ty = el('div', 'c mh2-ty'); ty.setAttribute('role', 'cell'); ty.appendChild(el('span', 'mh2-pill', 'Sim')); r.appendChild(ty);
-        var cls = 'none', txt = 'Not graded';
-        if (it.hit === true) { cls = 'hit'; txt = '✓ Hit'; } else if (it.hit === false) { cls = 'miss'; txt = '✕ Miss'; }
-        else if (it.game && it.game.status === 'pending') { cls = 'pending'; txt = 'Pending'; }
-        var rc = el('div', 'c'); rc.setAttribute('role', 'cell'); rc.appendChild(el('span', 'mh2-pill ' + cls, txt)); r.appendChild(rc);
-        var det = el('div', 'mh2-det', favPct || '–'); det.setAttribute('role', 'cell'); r.appendChild(det);
-        tbl.appendChild(r);
-      });
-      scard.appendChild(tbl);
-      scard.appendChild(link('mh2-more', '/my-sims/?src=home', 'View Full Record →', 'my_sims'));
-    }
+    /* 2. Your performance: SIM_RECORD_AUDIT_20261111. Moneyline / Spread / Totals graded on
+       their own against the real result and the ESPN closing line, filterable by sport. Every
+       row opens to show the original prediction, the line, the final and how it was graded. */
+    var scard = buildPerf(d, function () { openGlossary(); });
     // Results first once there is something to look at; otherwise lead with games to simulate.
     if (d.items.length) { left.appendChild(scard); left.appendChild(gcard); }
     else { left.appendChild(gcard); left.appendChild(scard); }
@@ -373,16 +535,16 @@
     var tg = el('button', 'mh2-ib mh2-hide mh2-r'); tg.type = 'button'; tg.setAttribute('aria-controls', 'mhMeanBody');
     mh.appendChild(tg); mcard.appendChild(mh);
     var mb = el('div', 'mh2-mean'); mb.id = 'mhMeanBody';
-    [['gTrophy', 'Sim record' + (graded ? ' (' + hits + '–' + misses + ')' : ''),
-      graded ? 'In ' + hits + ' of your ' + graded + ' graded game' + (graded === 1 ? '' : 's') + ', the simulator’s favorite won the real game.'
-             : 'How often the simulator’s favorite won the real game, once your simulated games are played.'],
-     ['gTarget', 'Hit rate' + (graded ? ' (' + rate + ')' : ''),
-      'Hits divided by graded games only' + (graded ? ' (' + hits + ' of ' + graded + ')' : '') + '. Pending and not graded games are left out.'],
-     ['gCheck', 'Graded (' + graded + ')', 'Simulated games that have a final score and a simulated favorite to check.'],
+    [['gTrophy', 'Record' + (graded ? ' (moneyline ' + hits + '–' + misses + ')' : ''),
+      'Wins and losses of the simulator’s pick on each real game you simulated. Each game counts once, using your last run saved before the start.'],
+     ['gTarget', 'Moneyline, Spread, Totals',
+      'Moneyline: did the simulated favorite win. Spread: projected margin against the closing point spread. Totals: projected combined score against the closing over/under. Each has its own record.'],
+     ['gCheck', 'Hit rate' + (graded ? ' (moneyline ' + rate + ')' : ''),
+      'Wins divided by wins plus losses. Pushes (a final exactly on the line, or a tie), pending games and games with no verified closing line are left out, and are never counted as losses.'],
      ['gClock', 'Pending (' + pending + ')', 'Simulated games that have not finished yet.']].forEach(function (x) {
       var r = el('div'); r.appendChild(icon(x[0])); r.appendChild(el('b', null, x[1])); r.appendChild(el('span', null, x[2])); mb.appendChild(r);
     });
-    mb.appendChild(el('p', null, 'A hit means the simulator picked the team that won. It is not betting profit, and it does not promise how future games will go.'));
+    mb.appendChild(el('p', null, 'Lines are the ESPN closing line, recorded after the game ended. This measures how accurate the simulator was. It is not betting profit: units are hypothetical, at the closing price, and no wager was placed. Past accuracy does not promise how future games will go.'));
     mcard.appendChild(mb);
     var setOpen = function (open, save) {
       mb.hidden = !open; tg.textContent = open ? 'Hide ⌃' : 'Show ⌄'; tg.setAttribute('aria-expanded', open ? 'true' : 'false');

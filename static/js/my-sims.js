@@ -125,7 +125,7 @@
     if (!items.length) return empty();
     root.textContent = '';
     var stats = el('div', 'ms-stats');
-    [[items.length, 'Matchups simulated'], [s.graded ? s.hits + '-' + s.misses : '0-0', 'Favorite record'],
+    [[(data && data.items_total) || items.length, 'Matchups simulated'], [s.graded ? s.hits + '-' + s.misses : '0-0', 'Favorite record'],
      [s.graded ? Math.round(100 * s.hits / s.graded) + '%' : '-', 'Favorite won'], [s.pending, 'Games pending']].forEach(function (x) {
       var c = el('div', 'ms-stat'); c.appendChild(el('b', null, x[0])); c.appendChild(el('span', null, x[1])); stats.appendChild(c);
     });
