@@ -122,6 +122,32 @@ def _faces(sport, away, home, extras, sim_starters=None, season=None):
     site already keeps a live depth chart for. The same shape takes MLB's
     probable pitchers, NBA's listed starters and tennis's two players when those
     feeds are wired in. Every other sport renders nothing at all."""
+    if sport in ("nhl", "nba"):
+        # HUB_FACES_LEADERS_20261112: each club's scoring leader this season,
+        # straight from the league leaders feed, with the number beside the name.
+        cells = []
+        for side in (away, home):
+            # The hub's season is the START year (2026 for 2026-27); the leaders feed
+            # files the same season under its END year. No fallback to the year
+            # before: last season's total printed in November would be a wrong fact.
+            lead = enrich.team_leader(sport, side.get("espn_id"), (season or 0) + 1 if season else None)
+            if not lead:
+                return ""
+            aid, val, unit = lead
+            roster = enrich.roster(sport, side.get("espn_id")) or {}
+            person = next((q for q in roster.values() if str(q.get("id")) == str(aid)), {})
+            name = person.get("name")
+            if not name:
+                return ""
+            shot = person.get("headshot")
+            face = (('<img class="hx-face-sm" src="%s" alt="%s" width="72" height="72" '
+                     'loading="lazy" decoding="async">' % (esc(shot), esc(name))) if shot else
+                    ('<span class="hx-face-sm hx-face-sm--mono" aria-hidden="true">%s</span>'
+                     % esc(enrich.initials(name))))
+            cells.append('<span class="hx-face-cell" style="--hx-c:%s">%s'
+                         '<span class="hx-face-name">%s<small>%s %s</small></span></span>'
+                         % (esc(side.get("color") or "#1D7FE8"), face, esc(name), esc(val), unit))
+        return '                    <div class="hx-faces">%s</div>\n' % "".join(cells)
     if sport != "nfl":
         return ""
     teams_by_name, qb1, _inj = extras or ({}, {}, {})

@@ -528,6 +528,34 @@ def depth_starter(sport, espn_id, season, position="qb"):
     return None
 
 
+LEADER_CATEGORY = {"nhl": ("points", "PTS, team high"), "nba": ("pointsPerGame", "PPG, team high")}
+
+
+def team_leader(sport, espn_id, season):
+    """The club's scoring leader THIS season, from the league's own leaders feed.
+
+    HUB_FACES_LEADERS_20261112. NHL and NBA hub cards carried no player at all.
+    The scoring leader is a fact the feed states outright (no depth chart guess,
+    no projected starter), so it is safe to print. Current season only: last
+    season's leader may have changed clubs. Returns (athlete id, value, unit)
+    or None."""
+    league = CORE_LEAGUE.get(sport)
+    want = LEADER_CATEGORY.get(sport)
+    if not league or not want or not espn_id or not season:
+        return None
+    d = get("%s/seasons/%d/types/2/teams/%s/leaders?limit=50" % (CORE_API % league, season, espn_id),
+            ttl=21600)
+    for cat in (d or {}).get("categories") or []:
+        if cat.get("name") != want[0]:
+            continue
+        top = (cat.get("leaders") or [{}])[0]
+        m = re.search(r"/athletes/(\d+)", str((top.get("athlete") or {}).get("$ref") or ""))
+        val = top.get("displayValue")
+        if m and val:
+            return m.group(1), str(val), want[1]
+    return None
+
+
 def injuries(sport, espn_id):
     """Who is out or questionable, from the league's own roster feed.
 
