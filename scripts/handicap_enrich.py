@@ -528,7 +528,7 @@ def depth_starter(sport, espn_id, season, position="qb"):
     return None
 
 
-LEADER_CATEGORY = {"nhl": ("points", "PTS, team high"), "nba": ("pointsPerGame", "PPG, team high")}
+LEADER_CATEGORY = {"nhl": ("points", "PTS"), "nba": ("pointsPerGame", "PPG")}   # short: the phone cell clips a longer label
 
 
 def team_leader(sport, espn_id, season):
