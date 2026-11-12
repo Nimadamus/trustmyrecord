@@ -273,10 +273,14 @@ def game_venue(kickoff_iso, away_abbr, home_abbr):
         day0 = datetime.date.fromisoformat((kickoff_iso or "")[:10])
     except ValueError:
         return {}
-    lo = (day0 - datetime.timedelta(days=1)).strftime("%Y%m%d")
-    hi = (day0 + datetime.timedelta(days=1)).strftime("%Y%m%d")
-    d = _get("%s/scoreboard?dates=%s-%s&limit=100" % (SITE_API, lo, hi))
-    for e in (d or {}).get("events") or []:
+    # ESPN_NO_DATE_RANGE_20261112: the scoreboard now answers HTTP 400 to a date
+    # range and 200 to a single date, so the three days are read one at a time.
+    events = []
+    for off in (0, -1, 1):
+        day = (day0 + datetime.timedelta(days=off)).strftime("%Y%m%d")
+        dd = _get("%s/scoreboard?dates=%s&limit=100" % (SITE_API, day))
+        events += (dd or {}).get("events") or []
+    for e in events:
         comp = (e.get("competitions") or [{}])[0]
         abbrs = {((c.get("team") or {}).get("abbreviation") or "").upper()
                  for c in comp.get("competitors") or []}

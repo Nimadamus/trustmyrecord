@@ -272,9 +272,21 @@ def slate(days=8):
     empty and a hub built on it alone has nothing on it at all. The slate is
     what the page is actually about, and it is read straight from ESPN."""
     today = _eastern_now()[0].date()
-    span = "%s-%s" % (today.strftime("%Y%m%d"),
-                      (today + datetime.timedelta(days=days)).strftime("%Y%m%d"))
-    d = _get("%s/scoreboard?groups=%d&limit=900&dates=%s" % (SITE_API, FBS_GROUP, span), 45)
+    # NCAAF_SLATE_DAY_BY_DAY_20261112. ESPN began answering HTTP 400 to a date
+    # RANGE on this scoreboard (dates=YYYYMMDD-YYYYMMDD) while a single date
+    # still answers 200, so the slate came back empty and the hub fell back to
+    # the bare board. One request per Eastern day, merged in order, no repeats.
+    urls = ["%s/scoreboard?groups=%d&limit=900&dates=%s"
+            % (SITE_API, FBS_GROUP, (today + datetime.timedelta(days=n)).strftime("%Y%m%d"))
+            for n in range(days + 1)]
+    _get_many(urls, workers=4)
+    events, seen_ids = [], set()
+    for u in urls:
+        for e in (_get(u, 45) or {}).get("events") or []:
+            if e.get("id") not in seen_ids:
+                seen_ids.add(e.get("id"))
+                events.append(e)
+    d = {"events": events}
     confs = conferences()
     ranks = rankings()
     games = []
