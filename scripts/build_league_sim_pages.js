@@ -22,7 +22,7 @@
  */
 'use strict';
 // TOOLS_HUB_1106: the one free run sentence shown on every metered simulator.
-const FREE_RUN_LINE = '<p class="tmr-freerun" style="margin:8px 0 0;font-size:.92rem;font-weight:600">A free account gets one run a day on each simulator, then each run is 5 TMR Coin, or unlimited with TMR Pro.</p>';
+const FREE_RUN_LINE = '<p class="tmr-freerun" style="margin:8px 0 0;font-size:.92rem;font-weight:600">A free account gets one run a day on each simulator, or unlimited runs with TMR Pro.</p>';
 
 const fs = require('fs');
 const SIMUX = require('./sim-ux.js');   // SIM_UX_20261030: shared UX layer on every sim page
