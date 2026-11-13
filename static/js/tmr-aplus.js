@@ -6,7 +6,7 @@
         if (!b || !b.classList.contains('tmr-aplus') || document.querySelector('.aplus-hero')) return;
         var h1 = document.querySelector('main h1, .page h1, body > section h1, body > div h1, h1');
         if (!h1) return;
-        var hero = h1.closest('.ss-hero, .as-hero, .tmr-page-header, .hero, .page-hero, .page-header, header.tmr-hero, [class*="-hero"], [class*="hero-"], section, header');
+        var hero = h1.parentElement && h1.parentElement.closest('.ss-hero, .as-hero, .tmr-page-header, .hero, .page-hero, .page-header, header.tmr-hero, [class*="-hero"], [class*="hero-"], section, header');
         if (!hero || hero === b || hero.tagName === 'MAIN' || hero.closest('nav, .tmr-ds-nav, #tmr-global-nav')) hero = h1.parentElement;
         if (!hero || hero === b) return;
         /* a title row is not the hero: grow to the block that also holds the lead text and actions */
@@ -24,20 +24,27 @@
         }
         hero.classList.add('aplus-hero');
         h1.classList.add('aplus-h1');
+        h1.style.setProperty('color', '#fff', 'important'); h1.style.setProperty('-webkit-text-fill-color', '#fff', 'important');
         var st = document.createElement('div');
         st.className = 'aplus-stage';
         st.setAttribute('aria-hidden', 'true');
         st.innerHTML = '<i class="ap-photo"></i><i class="ap-shade"></i><i class="ap-glow"></i><i class="ap-floor"></i><i class="ap-emblem"></i>';
         hero.insertBefore(st, hero.firstChild);
+        /* children of a display:contents wrapper sit directly on the hero: lift them above the stage too */
+        (function lift(el) { Array.prototype.forEach.call(el.children, function (k) {
+            if (k === st) return; var cs = getComputedStyle(k);
+            if (cs.display === 'contents') lift(k); else if (el !== hero && cs.position === 'static') { k.style.position = 'relative'; k.style.zIndex = '1'; }
+        }); })(hero);
     }
     /* Pages that came back from the old light layer can keep a few light panels or inputs from their own
        inline CSS. Turn those into dark glass, and lift dark text inside them, so nothing reads as a white hole. */
     function lum(c) { var m = c && c.match(/[\d.]+/g); if (!m || (m.length > 3 && +m[3] < 0.5)) return -1; return 0.2126 * m[0] + 0.7152 * m[1] + 0.0722 * m[2]; }
+    function ink(k) { if (k.classList.contains('aplus-h1')) return; k.classList.add('aplus-inkfix'); k.style.setProperty('color', '#dbe6f7', 'important'); k.style.setProperty('-webkit-text-fill-color', '#dbe6f7', 'important'); }
     function darkfix() {
         if (!document.body || !document.body.classList.contains('tmr-aplus')) return;
-        var skip = /^(IMG|SVG|CANVAS|VIDEO|PICTURE|IFRAME|BUTTON|A|path|I|svg)$/;
+        var skip = /^(IMG|SVG|CANVAS|VIDEO|PICTURE|IFRAME|path|I|svg)$/;
         document.querySelectorAll('body *').forEach(function (e) {
-            if (skip.test(e.tagName) || e.closest('nav, header.tmr-ds-header, #tmr-global-nav, .tmr-ds-nav, [class*="live-chat"], .aplus-stage')) return;
+            if (skip.test(e.tagName) || e.closest('.ds-nav, header.tmr-ds-header, #tmr-global-nav, .tmr-ds-nav, [class*="live-chat"], .aplus-stage, footer')) return;
             var cs = getComputedStyle(e);
             var bi = cs.backgroundImage, lightImg = false;
             if (bi !== 'none') {
@@ -47,11 +54,12 @@
                 if (!lightImg) return;
             } else if (lum(cs.backgroundColor) < 215) return;
             var r = e.getBoundingClientRect();
+            if (e.tagName === 'BUTTON') { if (r.width > 30 && r.height > 18) { e.classList.add('aplus-btnfix'); e.style.setProperty('background', 'rgba(255,255,255,.06)', 'important'); e.style.setProperty('color', '#e8eefc', 'important'); e.style.setProperty('border', '1px solid rgba(160,200,255,.3)', 'important'); } return; }
             if (/^(INPUT|SELECT|TEXTAREA)$/.test(e.tagName)) { if (e.type !== 'checkbox' && e.type !== 'radio') e.classList.add('aplus-fieldfix'); return; }
-            if (r.width < 120 || r.height < 24) return;
-            e.classList.add('aplus-darkfix');
-            e.querySelectorAll('*').forEach(function (k) { var l = lum(getComputedStyle(k).color); if (l >= 0 && l < 110) k.classList.add('aplus-inkfix'); });
-            var l0 = lum(cs.color); if (l0 >= 0 && l0 < 110) e.classList.add('aplus-inkfix');
+            if (r.width < 120 || r.height < 24) { if (!(r.width > 30 && r.height > 14 && e.closest('.aplus-darkfix'))) return; }
+            e.classList.add('aplus-darkfix'); e.style.setProperty('background-color', 'rgba(12,24,52,.88)', 'important'); e.style.setProperty('background-image', 'none', 'important');
+            e.querySelectorAll('*').forEach(function (k) { var l = lum(getComputedStyle(k).color); if (l >= 0 && l < 110) ink(k); });
+            var l0 = lum(cs.color); if (l0 >= 0 && l0 < 110) ink(e);
         });
     }
     function bgOf(e) {
@@ -68,7 +76,7 @@
             var has = false; for (var n = e.firstChild; n; n = n.nextSibling) if (n.nodeType === 3 && n.nodeValue.trim()) { has = true; break; }
             if (!has) return;
             var l = lum(getComputedStyle(e).color); if (l < 0 || l >= 95) return;
-            if (bgOf(e) < 70) e.classList.add('aplus-inkfix');
+            if (bgOf(e) < 70) ink(e);
         });
     }
     function boot() { run(); darkfix(); inkfix(); setTimeout(function () { darkfix(); inkfix(); }, 1500); setTimeout(function () { darkfix(); inkfix(); }, 4000); }
