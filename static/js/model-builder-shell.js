@@ -1276,15 +1276,26 @@
       el('gameResultsBody').innerHTML = warningsHtml(res.warnings) + '<p class="notice">Data source: ' + esc(res.data_source) + '</p>';
       return;
     }
+    var mb = m.margin_bands || null;
     var tiles = [
       metricTile('Games', String(m.sample_size), 'completed'),
       metricTile('Home win', m.home_win_pct == null ? '-' : m.home_win_pct + '%', m.home_wins + '-' + m.away_wins + (m.ties ? '-' + m.ties : '')),
       metricTile('Avg total', m.avg_total == null ? '-' : String(m.avg_total), 'per game'),
       metricTile('Avg margin', m.avg_margin == null ? '-' : String(m.avg_margin), 'runs/points'),
-      metricTile('1-run/close', m.one_run_pct == null ? '-' : m.one_run_pct + '%', 'margin = 1'),
-      metricTile('Blowouts', m.blowout_pct == null ? '-' : m.blowout_pct + '%', 'margin 5+')
+      // MB_SPORT_MARGINS_20261113: the server sends the margins it used (one score football, one
+      // goal hockey...). Without them (older server) the old baseball wording stays.
+      metricTile(mb ? 'Close games' : '1-run/close', m.one_run_pct == null ? '-' : m.one_run_pct + '%',
+        mb ? (mb.close_max === 1 ? 'decided by 1 ' + mb.unit : 'decided by ' + mb.close_max + ' ' + mb.unit + 's or fewer') : 'margin = 1'),
+      metricTile('Blowouts', m.blowout_pct == null ? '-' : m.blowout_pct + '%',
+        mb ? 'decided by ' + mb.blowout_min + '+ ' + mb.unit + 's' : 'margin 5+')
     ];
-    if (m.side_win_pct != null) tiles.push(metricTile('Side win', m.side_win_pct + '%', el('gameHomeAway').value + ' teams'));
+    // MB_TEAM_SIDE_20261113: with a team named the reader wants that team's record, not the
+    // record of every home or road side.
+    if (m.team_record && m.team_record.win_pct != null) {
+      var tr = m.team_record, venue = el('gameHomeAway').value;
+      tiles.push(metricTile(tr.team_contains + (venue === 'home' ? ' at home' : venue === 'away' ? ' on the road' : ''),
+        tr.win_pct + '%', tr.wins + '-' + tr.losses + (tr.ties ? '-' + tr.ties : '')));
+    } else if (m.side_win_pct != null) tiles.push(metricTile('Side win', m.side_win_pct + '%', el('gameHomeAway').value + ' teams'));
     if (m.extra_innings_pct != null) tiles.push(metricTile('Extra inns', m.extra_innings_pct + '%', 'went to extras'));
     if (m.first_five) tiles.push(metricTile('First 5 avg', String(m.first_five.avg_total), 'runs, n=' + m.first_five.sample));
     if (m.over_under) tiles.push(metricTile('O/U ' + m.over_under.line, m.over_under.record, (m.over_under.over_pct == null ? '-' : m.over_under.over_pct + '% over')));
