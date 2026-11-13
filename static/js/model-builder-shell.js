@@ -1327,6 +1327,7 @@
     if (m.extra_innings_pct != null) tiles.push(metricTile('Extra inns', m.extra_innings_pct + '%', 'went to extras'));
     if (m.first_five) tiles.push(metricTile('First 5 avg', String(m.first_five.avg_total), 'runs, n=' + m.first_five.sample));
     if (m.over_under) tiles.push(metricTile('O/U ' + m.over_under.line, m.over_under.record, (m.over_under.over_pct == null ? '-' : m.over_under.over_pct + '% over')));
+    tiles = tiles.concat(closingMarketTiles(m));
 
     var c = res.comparisons || {};
     var table = '<h3 class="section-title">How it compares</h3>'
@@ -1344,6 +1345,28 @@
       + warningsHtml(res.warnings) + table
       + boxScoreBlocks(res.filters.sport_key, res.box_scores)
       + '<p class="model-meta" style="margin-top:12px">Data source: ' + esc(res.data_source) + ' &middot; ' + res.sport_games_total + ' completed games in this sport.</p>';
+  }
+
+  /* MB_BLP_DATASET_20261113: results against the real closing lines, when the server sends them
+     (the BetLegend Pro dataset). Each tile says how many games had that market. An older server
+     sends no closing_market and nothing is added. */
+  function closingMarketTiles(m) {
+    var c = m && m.closing_market, out = [];
+    if (!c) return out;
+    if (c.totals) {
+      out.push(metricTile('O/U vs closing total', c.totals.record,
+        (c.totals.over_pct == null ? '-' : c.totals.over_pct + '% over') + ', avg line ' + c.totals.avg_closing_total + ', ' + c.totals.games + ' games'));
+    }
+    if (c.ats) {
+      out.push(metricTile('Against the spread', c.ats.record,
+        (c.ats.cover_pct == null ? '-' : c.ats.cover_pct + '% covered') + ', ' + c.ats.games + ' games with a closing spread'));
+    }
+    if (c.moneyline) {
+      var ml = c.moneyline;
+      out.push(metricTile('Moneyline return', (ml.roi > 0 ? '+' : '') + Number(ml.roi).toFixed(2) + '%',
+        fmtUnits(ml.net_units) + ' on ' + ml.games + ' games, 1u each at the closing price (avg ' + fmtOdds(ml.avg_price) + ')', signClass(ml.roi)));
+    }
+    return out;
   }
 
   function switchDataset(ds) {
