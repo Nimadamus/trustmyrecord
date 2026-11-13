@@ -140,7 +140,11 @@ test('live Trend Spotter workspace returns source-backed results', async ({ page
   });
   expect(shown.Record).toBe(apiResult.summary.record);
   expect(shown.Sample).toBe(String(apiResult.summary.sample));
-  expect(shown.ROI).toBe((apiResult.summary.roi > 0 ? '+' : '') + apiResult.summary.roi.toFixed(2) + '%');
+  // ROI_WITHHELD_20261113: the public API stopped serving units and ROI in October (members only).
+  // This line still read summary.roi and threw on every run. Compare it only when it is served,
+  // and when it is withheld the page must not print an ROI figure of its own.
+  if (apiResult.summary.roi != null) expect(shown.ROI).toBe((apiResult.summary.roi > 0 ? '+' : '') + apiResult.summary.roi.toFixed(2) + '%');
+  else expect(/^[+-]?\d/.test(shown.ROI || ''), 'no ROI figure may be shown when the API withholds it').toBe(false);
 
   // Evidence, chart, interpretation, provenance.
   expect(await page.locator('.ts-table tbody tr').count()).toBeGreaterThan(0);
@@ -219,7 +223,10 @@ test('live Trend Spotter workspace returns source-backed results', async ({ page
 /* --- Controls that were found broken by the 2026-09-03 live audit. --- */
 
 async function ready(page) {
-  await page.goto(LIVE_URL, { waitUntil: 'domcontentloaded' });
+  // LEAGUE_PINNED_20261113: since 11/11 a bare visit opens on the first league with games today,
+  // so these MLB control tests landed on another league (no NYY, 'spread' not 'run line') and the
+  // league could change under them. A link that names its sport is never switched.
+  await page.goto(LIVE_URL + '?sport=MLB', { waitUntil: 'domcontentloaded' });
   await expect(page.locator('.ts-tab[data-market="moneyline"]')).toBeVisible({ timeout: 45000 });
   await expect(page.locator('#matchupList')).not.toHaveText(/^\s*$/, { timeout: 45000 });
 }

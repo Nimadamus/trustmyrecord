@@ -68,15 +68,22 @@ const posts = (calls) => calls.filter((c) => c.method === 'POST' && c.path.index
     m.G.runSucceeded(); m.G.runFailed('late'); m.G.markCompleted({}); await tick();
     ok('settling again sends nothing more', posts(m.calls).length === 2, posts(m.calls).join());
 
-    // Paid run that fails.
+    // SIM_PRO_ONLY_20261112: after the free run a member is shown TMR Pro. TMR no longer buys a
+    // run, so there is no pay button and nothing is started. (Until 11/13 this test still clicked
+    // the removed "run it for 5 TMR" button and failed the regression lock on every push.)
     m = member({ metered: true, freeAvailable: false, balance: 20, canAfford: true });
     const asked = m.G.authorizeRun({ trigger: 'test' });
     await tick();
-    const pay = m.w.document.getElementById('tsgMeterPay');
-    ok('a paid run asks the member first', !!pay);
-    pay.click();
+    ok('with the free run used, the member is shown TMR Pro', !!m.w.document.getElementById('tsgMeterPro'));
+    ok('there is no button that spends TMR on a run', !m.w.document.getElementById('tsgMeterPay'));
+    m.w.document.getElementById('tsgMeterLater').click();
     go = await asked;
-    ok('saying yes starts the run', go === true && posts(m.calls).join() === '/simulator-runs/start', posts(m.calls).join());
+    ok('declining runs nothing and starts nothing', go === false && posts(m.calls).length === 0, posts(m.calls).join());
+
+    // A run that fails.
+    m = member({ metered: true, freeAvailable: true, balance: 20, canAfford: true });
+    go = await m.G.authorizeRun({ trigger: 'test' });
+    ok('the free run starts', go === true && posts(m.calls).join() === '/simulator-runs/start', posts(m.calls).join());
     m.G.runFailed('engine error'); await tick();
     ok('a failed run is settled with /fail and never /complete', posts(m.calls).join() === '/simulator-runs/start,/simulator-runs/100/fail', posts(m.calls).join());
     const failCall = m.calls.find((c) => /\/fail$/.test(c.path));
