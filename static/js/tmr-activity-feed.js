@@ -54,6 +54,7 @@
   var STALE_MS = 24 * 3600 * 1000;   // how far back the loop is allowed to cycle
   var BOOT_RETRY_MS = 20000;   // first fetch failed: try again before giving up
   var BOOT_RETRIES = 3;
+  var STRICT_ORDER = true;     // TICKER_ORDER_20261113: newest to oldest, no neighbour swaps
   var MAX_SEEN = 400;          // the id set cannot grow for the life of a tab
 
   var root = null, slot = null;
@@ -356,7 +357,15 @@
        events in that window, so reaching past the cutoff here means the site
        really was that quiet. */
     var loop = fresh.length >= 2 ? fresh : ring;
-    for (var k = loop.length - 1; k >= 0; k--) {
+    /* TICKER_ORDER_20261113 (Nima: "they should appear in chronological order,
+       the latest one should appear on top"). The loop used to go round oldest
+       first, and nextIndex() below swapped neighbours for variety, so the ages
+       on the strip jumped about: 3 hr ago, 12 min ago, 1 hr ago. Every pass now
+       runs strictly newest to oldest by the event's own time. */
+    loop = loop.slice().sort(function (x, y) {
+      return (Date.parse(y.created_at) || 0) - (Date.parse(x.created_at) || 0);
+    });
+    for (var k = 0; k < loop.length; k++) {
       if (loop[k].id !== id) queue.push(loop[k]);
     }
   }
@@ -370,6 +379,10 @@
      for someone else before giving up, and never further: this must not be
      able to bury a genuinely new event that has just jumped the queue. */
   function nextIndex() {
+    /* TICKER_ORDER_20261113: strict time order wins over variety. The server
+       already caps cards per member, which is what keeps one account from
+       filling the strip. */
+    if (STRICT_ORDER) return 0;
     if (!queue.length) return 0;
     var lastUser = current && current.data && current.data.user ? current.data.user.id : null;
     var lastType = current && current.data ? current.data.type : null;
