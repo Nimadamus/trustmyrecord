@@ -37,7 +37,7 @@ concurrency:
 
 jobs:
   regression-lock:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04 # PLAYWRIGHT_RUNNER_PIN_20261113: ubuntu-latest moved to 26.04, where the pinned Playwright cannot install Chromium
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v5

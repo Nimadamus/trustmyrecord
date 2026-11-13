@@ -141,6 +141,11 @@ jobs:
               node scripts/build_nfl_playoff_page.js --inputs .nfl-inputs.json > b5.log 2>&1 || tail -10 b5.log
               # NFL_ACCURACY_ONE_SOURCE_20261030: every accuracy figure from the API, incl. graded served predictions.
               node scripts/build_nfl_accuracy_copy.js > b6.log 2>&1 || tail -10 b6.log
+              # SIM_OVERVIEW_ACCURACY_20261113: /sports-simulators/ quotes the same live NFL and NHL records;
+              # stamped from the two files written above. Never fatal: a miss raises the alert below.
+              rm -f .sim-overview-flag
+              node scripts/stamp-sim-overview.js > b8.log 2>&1 || tail -10 b8.log
+              node scripts/stamp-sim-overview.js --check > g15.log 2>&1 || echo "simulator overview accuracy lines are not current: $(tail -1 g15.log)" > .sim-overview-flag
               # THE GATES run before the commit: a failing gate publishes nothing.
               node tests/playoff-bracket-test.js > g1.log 2>&1 || { tail -30 g1.log; return 1; }
               node tests/league-season-engine-test.js > g2.log 2>&1 || { tail -30 g2.log; return 1; }
@@ -161,7 +166,7 @@ jobs:
               node tests/nba-accuracy-copy-test.js > g10.log 2>&1 || { tail -30 g10.log; return 1; }
               node tests/nba-matchup-pages-test.js > g13.log 2>&1 || { tail -30 g13.log; return 1; }
               node tests/nhl-evaluation-page-test.js > g11.log 2>&1 || { tail -30 g11.log; return 1; }
-              git add mlb-playoff-odds mlb-simulator data/mlb-playoff-odds-inputs.json data/sim-odds-history.json data/mlb-season-state.json mlb-game-simulator mlb-season-simulator mlb-playoff-simulator mlb-predictions-simulator mlb-simulation-predictions nfl-season-simulator nfl-simulator nfl-playoff-simulator sitemap.xml nba-season-simulator nba-playoff-simulator nhl-season-simulator nhl-playoff-simulator nba-simulator nhl-simulator data/nhl-evaluation.json
+              git add mlb-playoff-odds mlb-simulator data/mlb-playoff-odds-inputs.json data/sim-odds-history.json data/mlb-season-state.json mlb-game-simulator mlb-season-simulator mlb-playoff-simulator mlb-predictions-simulator mlb-simulation-predictions nfl-season-simulator nfl-simulator nfl-playoff-simulator sitemap.xml nba-season-simulator nba-playoff-simulator nhl-season-simulator nhl-playoff-simulator nba-simulator nhl-simulator data/nhl-evaluation.json sports-simulators
               if git diff --cached --quiet; then echo "Simulator pages already current."; return 0; fi
               git commit -q -m "chore(sims): bake NBA and NHL season and playoff simulators [skip ci]"
               if git push -q origin HEAD:main; then git show --stat --oneline HEAD | head -20; return 0; fi
@@ -176,4 +181,5 @@ jobs:
           # NFL_BAKE_FRESHNESS_GATE_20261030: a page skipped or degraded by the API's
           # freshness_status raises the same alert instead of passing silently.
           if [ -s .nba-matchup-flag ]; then alert "$(tr "\n" " " < .nba-matchup-flag)"; fi
-          if [ -s .nfl-freshness-flag ]; then alert "NFL freshness gate: $(tr "\n" " " < .nfl-freshness-flag)"; elif [ ! -s .nba-matchup-flag ]; then recovered; fi
+          if [ -s .sim-overview-flag ]; then alert "$(tr "\n" " " < .sim-overview-flag)"; fi
+          if [ -s .nfl-freshness-flag ]; then alert "NFL freshness gate: $(tr "\n" " " < .nfl-freshness-flag)"; elif [ ! -s .nba-matchup-flag ] && [ ! -s .sim-overview-flag ]; then recovered; fi

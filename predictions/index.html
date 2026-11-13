@@ -265,7 +265,7 @@
   <main class="predictions-shell">
     <header class="predictions-header">
       <h1>MLB Run Prediction Model</h1>
-      <p>Team run projections, predicted final scores, and matchup factors from the current model run.</p>
+      <p id="heroLead">Team run projections, predicted final scores, and matchup factors from the most recent published model run.</p>
       <p>Historical backtest only. Not production trusted until timestamped pregame weather, park, umpire, lineup, confirmed starter, and market snapshot feeds are connected. These are not guaranteed outcomes or automatic betting signals.</p>
       <div class="model-meta" id="modelMeta">
         <span>Loading model output</span>
@@ -273,7 +273,7 @@
     </header>
 
     <section class="predictions-content">
-      <div class="status-panel" id="statusPanel">Loading latest run predictions...</div>
+      <div class="status-panel" id="statusPanel">Loading the most recent model run...</div>
       <div class="prediction-grid" id="predictionGrid"></div>
     </section>
 
@@ -325,13 +325,29 @@
 
     function renderMeta(payload) {
       document.getElementById('modelMeta').innerHTML = [
-        `Date: ${escapeHtml(payload.game_date)}`,
+        `Run date: ${escapeHtml(payload.game_date)}`,
         `Generated: ${escapeHtml(payload.generated_at)}`,
         `Model: ${escapeHtml(payload.model)}`,
         `Matchups: ${escapeHtml(payload.prediction_count)}`
       ].map(item => `<span>${item}</span>`).join('');
     }
 
+    // PREDICTIONS_STALE_GUARD_20261113: the data file is a snapshot. When its slate date is
+    // before today (Pacific) the page must say so and must not present finished games as current.
+    function runAge(payload, now) {
+      const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String((payload && payload.game_date) || ''));
+      if (!m) return { stale: true, days: null, label: 'an unknown date' };
+      const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Los_Angeles' }).format(now || new Date());
+      const days = Math.round((Date.parse(today + 'T00:00:00Z') - Date.parse(m[0] + 'T00:00:00Z')) / 86400000);
+      const label = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3])).toLocaleDateString('en-US', { timeZone: 'UTC', month: 'long', day: 'numeric', year: 'numeric' });
+      return { stale: days > 0, days, label };
+    }
+    function staleBanner(age) {
+      if (!age.stale) return '';
+      const ago = age.days == null ? '' : `, ${age.days} ${age.days === 1 ? 'day' : 'days'} ago`;
+      return `<div class="status-panel warning" id="staleBanner"><strong>This is not today's slate.</strong> The last published model run was for ${escapeHtml(age.label)}${ago}. Every game below has already been played. The cards are an archive of what the model projected before those games. They are not current predictions.</div>`;
+    }
+    let ARCHIVED = false;
     function sidePanel(prediction, sideKey) {
       const side = prediction.factors?.[sideKey] || {};
       const offense = side.offense || {};
@@ -362,7 +378,7 @@
 
       return `
         <article class="prediction-card">
-          <div class="game-kicker">${escapeHtml(prediction.start_time || prediction.game_date)} | Market total ${fmt(market.total, 1)} | Park ${fmt(env.park_factor, 2)}</div>
+          <div class="game-kicker">${ARCHIVED ? 'Archived run | ' : ''}${escapeHtml(prediction.start_time || prediction.game_date)} | Market total ${fmt(market.total, 1)} | Park ${fmt(env.park_factor, 2)}</div>
           <h2>${escapeHtml(prediction.away_team)} @ ${escapeHtml(prediction.home_team)}</h2>
           <div class="score-grid">
             <div class="score-box">
@@ -425,11 +441,14 @@
           backtest = null;
         }
         renderMeta(payload);
+        const age = runAge(payload);
+        ARCHIVED = age.stale;
+        if (age.stale) document.getElementById('heroLead').textContent = `Archived model run from ${age.label}. No newer run has been published.`;
         const warnings = Array.isArray(payload.warnings) ? payload.warnings : [];
         status.className = warnings.length ? 'status-panel warning' : 'status-panel';
         status.innerHTML = `<strong>Inputs:</strong> ${escapeHtml((payload.data_sources || []).join('; '))}` +
           (warnings.length ? `<ul>${warnings.map(w => `<li>${escapeHtml(w)}</li>`).join('')}</ul>` : '');
-        grid.innerHTML = renderBacktest(backtest) + (payload.predictions || []).map(renderPrediction).join('');
+        grid.innerHTML = staleBanner(age) + renderBacktest(backtest) + (payload.predictions || []).map(renderPrediction).join('');
         if (!grid.innerHTML) {
           grid.innerHTML = '<div class="status-panel warning">No complete predictions are available for the latest model run.</div>';
         }
