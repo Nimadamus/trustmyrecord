@@ -1290,6 +1290,7 @@
                     <div class="fv-composer-field">
                         <textarea class="composer-textarea" id="compInput" rows="1" placeholder="Share a pick, hot take, milestone, or opinion..." maxlength="500"></textarea>
                         <div class="composer-actions">
+                            <button type="button" class="composer-action" id="fvPhotoBtn" onclick="fvPickPhoto()" title="Photo" aria-label="Add a photo"><i class="far fa-image"></i></button>
                             <button type="button" class="composer-action" id="takeBtn" onclick="toggleType('hot-take')" title="Hot take" aria-label="Hot take"><i class="fas fa-fire"></i></button>
                             <button type="button" class="composer-action" id="pollBtn" onclick="toggleType('poll')" title="Poll" aria-label="Poll"><i class="fas fa-square-poll-vertical"></i></button>
                             <button type="button" class="composer-action" id="recapBtn" onclick="toggleType('pick-recap')" title="Pick recap" aria-label="Pick recap"><i class="fas fa-chart-line"></i></button>
@@ -1298,6 +1299,8 @@
                     </div>
                     <button class="btn-post" id="postBtn" onclick="submitPost()" disabled>Post</button>
                 </div>
+                <input type="file" id="fvPhotoInput" accept="image/png,image/jpeg,image/gif,image/webp" hidden>
+                <div class="fv-photo-tray" id="fvPhotoTray" hidden></div>
                 <div class="fv-emoji" id="fvEmoji" hidden></div>
                 <div class="fv-composer-extra" id="fvComposerExtra">
                     <span class="fv-type-label" id="fvTypeLabel">Post</span>
@@ -1401,6 +1404,7 @@
     <script src="/static/js/pick-display-format.js?v=319fa778d480"></script>
     <script src="/static/js/social-home.js?v=62bbda61d8d2-drill"></script>
     <script src="/static/js/feed-ui-overrides.js?v=1597baecb450-drill"></script>
+    <script src="/static/js/tmr-forum-image-upload.js?v=20261113a"></script>
     <script src="/static/js/feed-v2.js?v=38c6e91c6e2a"></script>
     <script src="/static/js/quiz-of-day.js?v=590126381c8f"></script>
     <script>if(window.TMRQuizOfDay)TMRQuizOfDay.mount('#tmrQuizOfDay');</script>

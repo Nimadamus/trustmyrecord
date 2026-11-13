@@ -470,7 +470,19 @@
     else run();
   }
 
-  window.TMRForumImages = { attach: attach, v: 1 };
+  /* FEED_PHOTO_POSTS_20261113: the feed composer attaches ONE image to a post
+     instead of writing BBCode into a textarea. Same checks, same re-encode,
+     same endpoint; resolves with the server's { id, url, width, height }. */
+  async function upload(file, onProgress, onXhr) {
+    var mime = String((file && file.type) || '').toLowerCase();
+    if (ACCEPT.indexOf(mime) === -1) throw new Error('Unsupported file type. Use ' + ACCEPT_LABEL + '.');
+    if (file.size > MAX_SOURCE_BYTES) throw new Error('That file is too large (max 25MB before compression).');
+    var prepared = await prepare(file);
+    if (prepared.blob.size > MAX_UPLOAD_BYTES) throw new Error('That image is too large. Max size is 6MB.');
+    return putBytes(prepared.blob, prepared.mime, onProgress || function () {}, onXhr || function () {});
+  }
+
+  window.TMRForumImages = { attach: attach, upload: upload, accept: ACCEPT.slice(), v: 2 };
 
   // The composers in /forum/ are built by page script; each calls attach()
   // explicitly. This only covers the new-thread box, which exists in the

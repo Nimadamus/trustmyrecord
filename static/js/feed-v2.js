@@ -183,11 +183,56 @@ function renderTextPost(item) {
         art +
         '<div class="fv-post-main">' +
             renderFeedHeader(item, '') +
-            '<div class="fi-content' + (isHotTake ? ' is-take' : '') + '">' + (isHotTake ? '<i class="fas fa-fire"></i>' : '') + '<span>' + esc(item.content || item.body || item.text || '') + '</span></div>' +
+            (String(item.content || item.body || item.text || '').trim()
+                ? '<div class="fi-content' + (isHotTake ? ' is-take' : '') + '">' + (isHotTake ? '<i class="fas fa-fire"></i>' : '') + '<span>' + esc(item.content || item.body || item.text || '') + '</span></div>'
+                : '') +
             renderTakeContext(item) +
+            fvPhotoHtml(item) +
             renderActionRow(id, 'feed_post', item.liked_by_user || item.user_liked, item.likes_count, item.comments_count) +
         '</div>' +
     '</div>';
+}
+
+/* FEED_PHOTO_POSTS_20261113: a post's photo. Only an image served by this
+   site's own image endpoint is ever rendered; anything else is dropped. */
+function fvPhotoUrl(item) {
+    const url = String(item.image_url || '');
+    return /^https:\/\/[a-z0-9.-]*trustmyrecord\.com\/api\/forum\/images\/[0-9a-f-]{36}\.(png|jpe?g|gif|webp)$/i.test(url) ? url : '';
+}
+
+function fvPhotoHtml(item) {
+    const url = fvPhotoUrl(item);
+    if (!url) return '';
+    const w = Number(item.image_width) || 0;
+    const h = Number(item.image_height) || 0;
+    const dims = w > 0 && h > 0 ? ' width="' + w + '" height="' + h + '"' : '';
+    const who = getDisplayName(item);
+    return '<button type="button" class="fv-photo" onclick="fvOpenPhoto(this)" aria-label="Open photo">' +
+        '<img src="' + esc(url) + '" alt="Photo posted by ' + esc(who) + '" loading="lazy"' + dims +
+        ' onerror="var b=this.closest(\'.fv-photo\');if(b)b.remove();"></button>';
+}
+
+function fvOpenPhoto(btn) {
+    const img = btn && btn.querySelector('img');
+    if (!img) return;
+    fvClosePhoto();
+    const box = document.createElement('div');
+    box.className = 'fv-lightbox';
+    box.setAttribute('role', 'dialog');
+    box.setAttribute('aria-label', 'Photo');
+    box.innerHTML = '<button type="button" class="fv-lightbox-x" aria-label="Close photo"><i class="fas fa-xmark"></i></button>';
+    const big = document.createElement('img');
+    big.src = img.src;
+    big.alt = img.alt;
+    box.appendChild(big);
+    box.addEventListener('click', fvClosePhoto);
+    document.body.appendChild(box);
+    document.body.classList.add('fv-noscroll');
+}
+
+function fvClosePhoto() {
+    document.querySelectorAll('.fv-lightbox').forEach(n => n.remove());
+    document.body.classList.remove('fv-noscroll');
 }
 
 function renderPollCard(item) {
@@ -283,7 +328,8 @@ function fvOpenMore(ev, itemId) {
     menu.innerHTML =
         '<button type="button" role="menuitem" data-act="copy"><i class="fas fa-link"></i> Copy link</button>' +
         '<a role="menuitem" href="' + esc(postUrl) + '"><i class="fas fa-up-right-from-square"></i> Open post</a>' +
-        (profileLink ? '<a role="menuitem" href="' + esc(profileLink.getAttribute('href')) + '"><i class="fas fa-circle-user"></i> View profile</a>' : '');
+        (profileLink ? '<a role="menuitem" href="' + esc(profileLink.getAttribute('href')) + '"><i class="fas fa-circle-user"></i> View profile</a>' : '') +
+        (fvCanDelete(card, itemId) ? '<button type="button" role="menuitem" class="fv-danger" data-act="delete"><i class="fas fa-trash"></i> Delete post</button>' : '');
     menu.addEventListener('click', e => {
         e.stopPropagation();
         const copy = e.target.closest('[data-act="copy"]');
@@ -291,12 +337,14 @@ function fvOpenMore(ev, itemId) {
             fvCopy(postUrl, copy, '<i class="fas fa-check"></i> Link copied');
             setTimeout(fvCloseMenus, 900);
         }
+        const del = e.target.closest('[data-act="delete"]');
+        if (del) fvDeletePost(del, card, itemId);
     });
     row.appendChild(menu);
 }
 
 document.addEventListener('click', () => fvCloseMenus());
-document.addEventListener('keydown', e => { if (e.key === 'Escape') fvCloseMenus(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { fvCloseMenus(); fvClosePhoto(); } });
 
 // ==================== SORT ====================
 let fvSort = 'latest';
@@ -350,8 +398,11 @@ function fvSyncComposer() {
     if (count) count.textContent = input.value.length + '/500';
     if (label) label.textContent = FV_TYPE_LABELS[postType] || 'Post';
     if (postType === 'post') input.placeholder = FV_PLACEHOLDER;
-    if (card) card.classList.toggle('is-open', postType !== 'post' || input.value.length > 0 || document.activeElement === input);
-    if (post && post.textContent === 'Post') post.disabled = input.value.trim().length === 0;
+    const hasPhoto = !!(fvPhoto && fvPhoto.id) && postType !== 'poll';
+    if (card) card.classList.toggle('is-open', postType !== 'post' || input.value.length > 0 || document.activeElement === input || !!fvPhoto);
+    if (post && post.textContent === 'Post') post.disabled = (input.value.trim().length === 0 && !hasPhoto) || !!(fvPhoto && fvPhoto.busy);
+    const photoBtn = document.getElementById('fvPhotoBtn');
+    if (photoBtn) { photoBtn.disabled = postType === 'poll'; photoBtn.classList.toggle('is-on', !!fvPhoto); }
 }
 
 function fvToggleEmoji(ev) {
@@ -391,8 +442,13 @@ function fvInsertEmoji(ev, emoji) {
     };
     const origSubmit = window.submitPost;
     window.submitPost = async function () {
-        try { if (typeof origSubmit === 'function') await origSubmit(); } finally { fvSyncComposer(); }
+        try {
+            if (fvPhoto && postType !== 'poll') await fvSubmitWithPhoto();
+            else if (typeof origSubmit === 'function') await origSubmit();
+        } finally { fvSyncComposer(); }
     };
+    // the base listener disables Post on an empty box; a photo alone is enough.
+    document.addEventListener('input', e => { if (e.target && e.target.id === 'compInput') setTimeout(fvSyncComposer, 0); });
     document.addEventListener('DOMContentLoaded', () => {
         const input = document.getElementById('compInput');
         if (!input) return;
@@ -621,3 +677,169 @@ document.addEventListener('DOMContentLoaded', () => {
     // "Live": refresh Record Activity once a minute while the tab is visible.
     setInterval(() => { if (!document.hidden) loadTrending(true); }, 60000);
 });
+
+// ==================== PHOTO POSTS ====================
+/* FEED_PHOTO_POSTS_20261113: one photo per post. The file is re-encoded and
+   uploaded by the shared forum image uploader the moment it is picked, so Post
+   only has to send the returned image id. */
+let fvPhoto = null; // { id, url, busy, xhr }
+
+function fvPhotoStatus(html, isError) {
+    const tray = document.getElementById('fvPhotoTray');
+    if (!tray) return;
+    const note = tray.querySelector('.fv-photo-note');
+    if (note) { note.innerHTML = html; note.classList.toggle('is-error', !!isError); }
+}
+
+function fvPickPhoto() {
+    const viewer = (typeof auth !== 'undefined' && auth.currentUser) ? auth.currentUser : null;
+    if (!viewer) { openModal('login'); return; }
+    const input = document.getElementById('fvPhotoInput');
+    if (input) { input.value = ''; input.click(); }
+}
+
+function fvRemovePhoto() {
+    if (fvPhoto && fvPhoto.xhr) { try { fvPhoto.xhr.abort(); } catch (e) {} }
+    fvPhoto = null;
+    const tray = document.getElementById('fvPhotoTray');
+    if (tray) { tray.hidden = true; tray.innerHTML = ''; }
+    fvSyncComposer();
+}
+
+async function fvAttachPhoto(file) {
+    if (!file) return;
+    const tray = document.getElementById('fvPhotoTray');
+    if (!tray) return;
+    if (!window.TMRForumImages || typeof window.TMRForumImages.upload !== 'function') {
+        showComposerStatus('error', 'Photo uploads are unavailable right now. Try again in a moment.');
+        return;
+    }
+    fvRemovePhoto();
+    const mine = { id: null, url: null, busy: true, xhr: null };
+    fvPhoto = mine;
+    tray.hidden = false;
+    tray.innerHTML = '<div class="fv-photo-thumb"><img alt="Photo to post"></div>' +
+        '<div class="fv-photo-note">Preparing photo…</div>' +
+        '<button type="button" class="fv-photo-x" onclick="fvRemovePhoto()" aria-label="Remove photo"><i class="fas fa-xmark"></i></button>';
+    try {
+        const local = URL.createObjectURL(file);
+        const thumb = tray.querySelector('img');
+        thumb.onload = () => { try { URL.revokeObjectURL(local); } catch (e) {} };
+        thumb.src = local;
+    } catch (e) {}
+    fvSyncComposer();
+    try {
+        const res = await window.TMRForumImages.upload(file,
+            frac => { if (fvPhoto === mine) fvPhotoStatus('Uploading… ' + Math.round(frac * 100) + '%'); },
+            xhr => { mine.xhr = xhr; });
+        if (fvPhoto !== mine) return; // removed or replaced while uploading
+        mine.id = res.id;
+        mine.url = res.url;
+        mine.busy = false;
+        mine.xhr = null;
+        fvPhotoStatus('<i class="fas fa-circle-check"></i> Photo ready');
+    } catch (e) {
+        if (fvPhoto !== mine) return;
+        mine.busy = false;
+        mine.xhr = null;
+        fvPhotoStatus(esc((e && e.message) || 'Upload failed. Please try again.'), true);
+    }
+    fvSyncComposer();
+}
+
+async function fvSubmitWithPhoto() {
+    const input = document.getElementById('compInput');
+    const btn = document.getElementById('postBtn');
+    if (!input || !btn || !fvPhoto) return;
+    if (fvPhoto.busy) { showComposerStatus('error', 'Your photo is still uploading.'); return; }
+    if (!fvPhoto.id) { showComposerStatus('error', 'That photo did not upload. Remove it or add it again.'); return; }
+    const viewer = (typeof auth !== 'undefined') ? auth.currentUser : null;
+    if (!viewer) { showComposerStatus('error', 'Sign in to post to the feed.'); return; }
+    const content = input.value.trim();
+    const sport = (document.getElementById('sportPick') || {}).value || null;
+    btn.disabled = true;
+    btn.textContent = 'Posting...';
+    try {
+        await api.request('/feed', {
+            method: 'POST',
+            body: { content, post_type: resolveBackendPostType(postType), sport, image_id: fvPhoto.id }
+        });
+    } catch (e) {
+        btn.textContent = 'Post';
+        btn.disabled = false;
+        showComposerStatus('error', (e && e.message) ? String(e.message) : 'Failed to post. Please try again.');
+        return;
+    }
+    input.value = '';
+    btn.textContent = 'Post';
+    const sportSel = document.getElementById('sportPick');
+    if (sportSel) sportSel.value = '';
+    fvRemovePhoto();
+    if (postType !== 'post') toggleType(postType);
+    showComposerStatus('success', 'Posted to feed.');
+    feedOffset = 0;
+    await loadFeed();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const pick = document.getElementById('fvPhotoInput');
+    if (pick) pick.addEventListener('change', () => { if (pick.files && pick.files[0]) fvAttachPhoto(pick.files[0]); });
+    const input = document.getElementById('compInput');
+    const card = document.getElementById('composerCard');
+    if (input) {
+        // paste a screenshot straight into the box
+        input.addEventListener('paste', e => {
+            const items = (e.clipboardData && e.clipboardData.items) || [];
+            for (let i = 0; i < items.length; i++) {
+                if (items[i].kind === 'file' && /^image\//.test(items[i].type)) {
+                    const f = items[i].getAsFile();
+                    if (f) { e.preventDefault(); fvAttachPhoto(f); }
+                    return;
+                }
+            }
+        });
+    }
+    if (card) {
+        // or drop a file on the composer
+        ['dragenter', 'dragover'].forEach(evt => card.addEventListener(evt, e => {
+            if (e.dataTransfer && Array.from(e.dataTransfer.types || []).indexOf('Files') !== -1) { e.preventDefault(); card.classList.add('is-drop'); }
+        }));
+        ['dragleave', 'drop'].forEach(evt => card.addEventListener(evt, () => card.classList.remove('is-drop')));
+        card.addEventListener('drop', e => {
+            const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+            if (f && /^image\//.test(f.type)) { e.preventDefault(); fvAttachPhoto(f); }
+        });
+    }
+});
+
+// ==================== DELETE POST ====================
+function fvCanDelete(card, itemId) {
+    const viewer = (typeof auth !== 'undefined' && auth.currentUser) ? auth.currentUser : null;
+    if (!viewer || !card || card.dataset.type !== 'feed_post' || !/^\d+$/.test(String(itemId))) return false;
+    if (card.querySelector('.tmrp, [data-poll-id]')) return false; // a poll card is not a feed post
+    const link = card.querySelector('.fi-name a');
+    const author = link ? (new URLSearchParams((link.getAttribute('href') || '').split('?')[1] || '').get('user') || '') : '';
+    const isOwner = author && String(author).toLowerCase() === String(viewer.username || '').toLowerCase();
+    const isAdmin = String(viewer.account_type || viewer.accountType || '').toLowerCase() === 'admin' || viewer.is_admin === true || viewer.isAdmin === true;
+    return !!(isOwner || isAdmin);
+}
+
+async function fvDeletePost(btn, card, itemId) {
+    // two taps, no browser dialog: the first arms the button, the second deletes.
+    if (!btn.dataset.armed) {
+        btn.dataset.armed = '1';
+        btn.innerHTML = '<i class="fas fa-trash"></i> Tap again to delete';
+        return;
+    }
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting…';
+    try {
+        await api.request('/feed/' + encodeURIComponent(String(itemId)), { method: 'DELETE' });
+        fvCloseMenus();
+        if (card) card.remove();
+    } catch (e) {
+        btn.disabled = false;
+        delete btn.dataset.armed;
+        btn.innerHTML = '<i class="fas fa-triangle-exclamation"></i> Could not delete, try again';
+    }
+}
