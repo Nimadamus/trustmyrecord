@@ -402,7 +402,7 @@
     if (!el) return;
     var v = currentView();
     if (v !== 'home' && v !== 'list') { el.innerHTML = ''; return; }
-    var title, sub = '', n = null, clear = '';
+    var title, sub = '', n = null, clear = '', more = '';
     if (v === 'home') {
       title = 'All Discussions';
       n = A.all ? A.all.length : null;
@@ -415,13 +415,25 @@
       title = (cat && cat.name) || currentCategoryName || 'Forum';
       sub = (cat && cat.description) || '';
       n = (count != null) ? count : (cat ? num(cat.thread_count) : null);
+      /* Same totals the classic directory printed for each forum: threads,
+         posts (openers + replies, see POST_COUNT_MAPPING_20260812) and the
+         latest thread. */
+      if (cat) {
+        var cPosts = num(cat.thread_count) + num(cat.post_count);
+        more = '<span class="tfa-context-n">' + plural(cPosts, 'post', 'posts') + '</span>';
+        if (cat.latest_thread && cat.latest_thread.id) {
+          var lt = cat.latest_thread;
+          more += '<p class="tfa-context-sub tfa-context-last">Latest: <a href="' + esc(forumThreadUrl(lt.id, forumThreadSlug(lt))) + '" onclick="event.preventDefault();showThreadDetail(' + Number(lt.id) + ');">' + esc(lt.title || '') + '</a> by ' + forumUserLinkHtml(lt.username || '') + ', ' + esc(formatForumStamp(lt.last_post_at || lt.created_at)) + '</p>';
+        }
+      }
     } else {
       title = A.feedTitle || 'Threads';
       n = (count == null) ? null : count;
     }
     el.innerHTML = (n != null ? '<span class="tfa-context-n">' + plural(n, A.mode === 'search' && v === 'list' ? 'result' : 'discussion', A.mode === 'search' && v === 'list' ? 'results' : 'discussions') + '</span>' : '')
       + clear
-      + (sub ? '<p class="tfa-context-sub">' + esc(sub) + '</p>' : '');
+      + (sub ? '<p class="tfa-context-sub">' + esc(sub) + '</p>' : '')
+      + more;
   }
 
   function syncTabs() {
