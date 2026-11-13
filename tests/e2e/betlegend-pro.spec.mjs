@@ -213,7 +213,7 @@ async function open(page, opts = {}) {
       },
       submitBetLegendProInquiry: async (payload) => {
         await window.__record('trend', payload);
-        return { result: { situation: 'Home Favorites', team: payload.team, sport: payload.sport, summary: { count: 356, su_record: '244-108-4' }, games: [], total_games: 356 } };
+        return { result: { situation: 'Home Favorites', team: payload.team, sport: payload.sport, summary: { count: 356, su_record: '244-108-4', ats_record: '163-189-4', ats_win_pct: 0.463, ou_record: '114-175-4', over_pct: 0.394 }, games: [], total_games: 356 } };
       },
       submitBetLegendProSimulation: async (payload) => {
         await window.__record('simulation', payload);
@@ -585,6 +585,19 @@ test.describe('filters', () => {
     await expect.poll(() => calls.matchup.length).toBe(1);
     expect(calls.matchup[0].team_1_filters).toBeUndefined();
     expect(calls.matchup[0].team_2_filters).toBeUndefined();
+  });
+
+  // TREND_COVERAGE_20261113
+  test('Team Trends says how many matched games had a closing total', async ({ page }) => {
+    await open(page);
+    await page.getByRole('tab', { name: 'Team Trends' }).click();
+    await page.locator('#tTeam').selectOption({ index: 1 });
+    await page.locator('#tSubmit').click();
+    const out = page.locator('#tResult');
+    await expect(out).toContainText('356 games matched');
+    await expect(out).toContainText('39.4% went over · 293 of 356 had a closing total');
+    // 163 + 189 + 4 = 356: every game had a spread, so nothing is added there
+    await expect(out).not.toContainText('had a closing spread');
   });
 
   test('Team Trends only offers situations this sport can answer', async ({ page }) => {

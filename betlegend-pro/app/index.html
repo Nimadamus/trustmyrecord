@@ -3892,9 +3892,16 @@
                     'The dataset holds no ' + sport + ' games for ' + team + ' in this situation, so there is nothing to report. You were not charged.') + '</section>';
             } else {
                 var tiles = [];
+                /* TREND_COVERAGE_20261113: live, Chiefs home favorites read "360 games matched" with an
+                   over / under record of 114-175-4, which is 293 games. Not every game has a closing
+                   spread or total; say how many did, as the Matchup Report already does. */
+                var covered = function (rec, what) {
+                    var n = String(rec).split('-').reduce(function (a, x) { return a + (parseInt(x, 10) || 0); }, 0);
+                    return n > 0 && n < games ? ' · ' + fmtInt(n) + ' of ' + fmtInt(games) + ' had a closing ' + what : '';
+                };
                 if (s.su_record) tiles.push({ v: s.su_record, l: 'Straight up', h: typeof s.su_win_pct === 'number' ? pct(s.su_win_pct) + ' win rate' : '' });
-                if (s.ats_record) tiles.push({ v: s.ats_record, l: 'Against the spread', h: typeof s.ats_win_pct === 'number' ? pct(s.ats_win_pct) + ' cover rate' : '' });
-                if (s.ou_record) tiles.push({ v: s.ou_record, l: 'Over / under', h: typeof s.over_pct === 'number' ? pct(s.over_pct) + ' went over' : '' });
+                if (s.ats_record) tiles.push({ v: s.ats_record, l: 'Against the spread', h: (typeof s.ats_win_pct === 'number' ? pct(s.ats_win_pct) + ' cover rate' : '') + covered(s.ats_record, 'spread') });
+                if (s.ou_record) tiles.push({ v: s.ou_record, l: 'Over / under', h: (typeof s.over_pct === 'number' ? pct(s.over_pct) + ' went over' : '') + covered(s.ou_record, 'total') });
                 $('tResult').innerHTML = '<section class="rcard"><div class="rcard-head"><h2>' + esc(team) + ': '
                     + esc(r.situation || situation) + '</h2></div>'
                     + '<p class="note-s" style="margin-top:0">' + esc(r.sport || sport) + ' · ' + fmtInt(games)
