@@ -1243,6 +1243,25 @@ Forum/social engagement MUST notify the recipient. Never remove or bypass this w
 - **UI**: a notification bell in the logged-in nav with a visible unread count, a dropdown/`/notifications/` page, mark-read, and click-through to `/forum/?thread=<id>#post-<id>`. The dropdown lives in `static/js/notifications.js`; the unread badge poller in `nav-badges.js`. As of the forum-first rollout the bell is injected by the **forum-scoped** `static/js/forum-notification-bell.js` (loaded only by `forum/index.html`); when sitewide rollout is approved, move the bell markup into `buildLoggedInActions()` in `tmr-sitewide.js` and delete the injector.
 - Writes are best-effort (`notifySafe`) and must never block forum posting/replies/likes.
 
+## RULE: Forum stadium skin (FORUM_ARENA_REDESIGN_20261113)
+
+Nima changed direction on 2026-11-13: the Community Forum follows his dark navy, stadium
+themed mockup (three columns: discussion nav, thread cards, trending and contributors).
+This supersedes the Two Plus Two visual target below wherever the two disagree.
+
+- The skin is a layer: `static/css/tmr-forum-arena.css` and `static/js/tmr-forum-arena.js`,
+  wired by the four `FORUM_ARENA_REDESIGN_20261113` blocks in `forum/index.html`. Removing
+  those blocks restores the classic skin, so the classic sheet and `class="classic-forum"`
+  stay in place and must not be deleted.
+- The layer replaces render functions only (`renderCategories`, `renderThreads`,
+  `renderForumSidebar`, `performSearch`). Routes, URLs, auth, thread detail, replies, likes,
+  tips, uploads, moderation and every API call stay in `tmr-forum-app.js`.
+- Every number shown is live API data. Trending, Top Contributors and Your Stats are computed
+  from `/forum/threads`. No sample threads, no invented members, no placeholder counts.
+- The thread list row contract in `docs/forum-workflow-protocol.md` still holds: `tr.frow`
+  with `role="link"`, `tabindex`, `aria-label`, Enter/Space, and the starter avatar.
+- The page keeps exactly one H1 (`#forumPageTitle`).
+
 ## RULE: TMR forum visual target = light "Two Plus Two" classic skin (TWO_PLUS_TWO_FORUM_STYLE_TARGET_20260531)
 
 The TrustMyRecord forum (`/forum/index.html`) must visually follow the Two Plus Two

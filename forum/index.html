@@ -394,8 +394,19 @@ body.classic-forum #viewThreads .fgroup-table tr.fgroup-band .fband-txt{height:3
   body.classic-forum #viewThreads .thread-table td.fcell{padding:10px 8px !important}
 }
 </style>
+<!-- FORUM_ARENA_REDESIGN_20261113: stadium skin for the Community Forum.
+     ROLLBACK: delete the four blocks carrying this marker (this one, the one
+     after <body>, the arena script tag and the shared-navbar script tags) and
+     the classic forum renders exactly as before. Nothing else was edited. -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@600;700;800;900&family=Montserrat:ital,wght@1,800;1,900&display=swap">
+<link rel="stylesheet" href="/static/css/tmr-ds.d4d41a955166.css">
+<link rel="stylesheet" href="/static/css/tmr-ds-header.cc364e352e74.css">
+<link rel="stylesheet" href="/static/css/tmr-navbar.css?v=68ec3081d29a">
+<link rel="stylesheet" href="/static/css/tmr-forum-arena.css?v=20261113a">
+<script id="tmr-forum-arena-boot">(function(){var Q='link[href*="tmr-forum-app.css"],link[href*="tmr-redesign-overrides.css"],style[id^="tmr-forum-"],#tmr-redesign-runtime-css,#forum-footer-clears-rail';function mute(){var n=document.querySelectorAll(Q);for(var i=0;i<n.length;i++)if(n[i].media!=='not all')n[i].media='not all';}mute();if(window.MutationObserver){var o=new MutationObserver(mute);o.observe(document.documentElement,{childList:true,subtree:true});window.addEventListener('load',function(){mute();setTimeout(function(){mute();o.disconnect();},4000);});}})();</script>
 </head>
 <body class="classic-forum">
+<!-- FORUM_ARENA_REDESIGN_20261113 --><script>document.body.classList.add('tmr-arena','tmr-ds-shell','tmr-dark');</script>
 
 <!-- ============================================================
      TMR Forum Header — single dark bar (2+2-style), Jul 10 2026.
@@ -759,6 +770,7 @@ body.classic-forum #viewThreads .fgroup-table tr.fgroup-band .fband-txt{height:3
 <script src="/static/js/notifications.js?v=6df3eacc7353"></script>
 <script src="/static/js/forum-notification-bell.js?v=d29330ddb5bf"></script>
 <script src="/static/js/tmr-forum-app.js?v=2beba69b47c7"></script>
+<!-- FORUM_ARENA_REDESIGN_20261113 --><script src="/static/js/tmr-forum-arena.js?v=20261113a"></script>
 <!-- TMR Emoji Picker v2 (Jul 11, 2026): full library moved to
      /static/js/tmr-emoji-picker.js?v=f0f3a7098257 (+ lazy-loaded tmr-emoji-data.js).
      Twemoji renders posted emojis consistently on every device. -->
@@ -829,5 +841,6 @@ body.classic-forum .tmrlh-footwrap{
 }
 </style>
 <script defer src="/static/js/tmr-ds-avatar.bb8006945b70.js"></script>
+<!-- FORUM_ARENA_REDESIGN_20261113: the one approved site navbar --><script src="/static/js/tmr-session.b423be9e9588.js"></script><script src="/static/js/tmr-ds-nav.efba06947a32.js"></script>
 </body>
 </html>
