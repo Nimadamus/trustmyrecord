@@ -1309,7 +1309,7 @@
       metricTile('Games', String(m.sample_size), 'completed'),
       metricTile('Home win', m.home_win_pct == null ? '-' : m.home_win_pct + '%', m.home_wins + '-' + m.away_wins + (m.ties ? '-' + m.ties : '')),
       metricTile('Avg total', m.avg_total == null ? '-' : String(m.avg_total), 'per game'),
-      metricTile('Avg margin', m.avg_margin == null ? '-' : String(m.avg_margin), 'runs/points'),
+      metricTile('Avg margin', m.avg_margin == null ? '-' : String(m.avg_margin), mb && mb.unit ? mb.unit + 's' : 'runs/points'),
       // MB_SPORT_MARGINS_20261113: the server sends the margins it used (one score football, one
       // goal hockey...). Without them (older server) the old baseball wording stays.
       metricTile(mb ? 'Close games' : '1-run/close', m.one_run_pct == null ? '-' : m.one_run_pct + '%',
@@ -1323,11 +1323,13 @@
       var tr = m.team_record, venue = el('gameHomeAway').value;
       tiles.push(metricTile(tr.team_contains + (venue === 'home' ? ' at home' : venue === 'away' ? ' on the road' : ''),
         tr.win_pct + '%', tr.wins + '-' + tr.losses + (tr.ties ? '-' + tr.ties : '')));
-    } else if (m.side_win_pct != null) tiles.push(metricTile('Side win', m.side_win_pct + '%', el('gameHomeAway').value + ' teams'));
+    } else if (m.side_win_pct != null && el('gameHomeAway').value !== 'home') {
+      // MB_TILES_20261113: "Side win, home teams" repeated the Home win tile beside it.
+      tiles.push(metricTile('Road win', m.side_win_pct + '%', 'away teams'));
+    }
     if (m.extra_innings_pct != null) tiles.push(metricTile('Extra inns', m.extra_innings_pct + '%', 'went to extras'));
     if (m.first_five) tiles.push(metricTile('First 5 avg', String(m.first_five.avg_total), 'runs, n=' + m.first_five.sample));
     if (m.over_under) tiles.push(metricTile('O/U ' + m.over_under.line, m.over_under.record, (m.over_under.over_pct == null ? '-' : m.over_under.over_pct + '% over')));
-    tiles = tiles.concat(closingMarketTiles(m));
 
     var c = res.comparisons || {};
     var table = '<h3 class="section-title">How it compares</h3>'
@@ -1342,6 +1344,7 @@
       + kpiTile('Avg total', m.avg_total == null ? '-' : String(m.avg_total), 'per game')
       + '</div>';
     el('gameResultsBody').innerHTML = gHero + '<div class="metric-grid">' + tiles.slice(3).join('') + '</div>'
+      + closingMarketBlock(m)
       + warningsHtml(res.warnings) + table
       + boxScoreBlocks(res.filters.sport_key, res.box_scores)
       + '<p class="model-meta" style="margin-top:12px">Data source: ' + esc(res.data_source) + ' &middot; ' + res.sport_games_total + ' completed games in this sport.</p>';
@@ -1350,21 +1353,35 @@
   /* MB_BLP_DATASET_20261113: results against the real closing lines, when the server sends them
      (the BetLegend Pro dataset). Each tile says how many games had that market. An older server
      sends no closing_market and nothing is added. */
+  /* MB_TILES_20261113: the three closing-line results sat in the 132 px result tiles and their
+     captions wrapped to four lines. They now have their own block, wider tiles and one sentence
+     saying what a closing line is and which games count. */
+  function closingMarketBlock(m) {
+    var t = closingMarketTiles(m);
+    if (!t.length) return '';
+    return '<h3 class="section-title">Against the closing lines</h3>'
+      + '<div class="metric-grid closing-grid">' + t.join('') + '</div>'
+      + '<p class="model-meta closing-note">The closing line is the last spread, total and moneyline a sportsbook posted before the game started. '
+      + 'A game counts toward a figure only when a real closing line was recorded for that market'
+      + (m.closing_market && m.closing_market.ats === null && m.closing_market.moneyline === null
+        ? '. Choose home or away, or name a team, to see results against the spread and the moneyline return.' : '.') + '</p>';
+  }
+
   function closingMarketTiles(m) {
     var c = m && m.closing_market, out = [];
     if (!c) return out;
     if (c.totals) {
       out.push(metricTile('O/U vs closing total', c.totals.record,
-        (c.totals.over_pct == null ? '-' : c.totals.over_pct + '% over') + ', avg line ' + c.totals.avg_closing_total + ', ' + c.totals.games + ' games'));
+        (c.totals.over_pct == null ? '-' : c.totals.over_pct + '% went over') + ' \u00b7 ' + c.totals.games + ' games \u00b7 average line ' + c.totals.avg_closing_total));
     }
     if (c.ats) {
       out.push(metricTile('Against the spread', c.ats.record,
-        (c.ats.cover_pct == null ? '-' : c.ats.cover_pct + '% covered') + ', ' + c.ats.games + ' games with a closing spread'));
+        (c.ats.cover_pct == null ? '-' : c.ats.cover_pct + '% covered') + ' \u00b7 ' + c.ats.games + ' games'));
     }
     if (c.moneyline) {
       var ml = c.moneyline;
       out.push(metricTile('Moneyline return', (ml.roi > 0 ? '+' : '') + Number(ml.roi).toFixed(2) + '%',
-        fmtUnits(ml.net_units) + ' on ' + ml.games + ' games, 1u each at the closing price (avg ' + fmtOdds(ml.avg_price) + ')', signClass(ml.roi)));
+        fmtUnits(ml.net_units) + ' \u00b7 ' + ml.games + ' games \u00b7 1 unit each at the closing price, average ' + fmtOdds(ml.avg_price), signClass(ml.roi)));
     }
     return out;
   }
@@ -1381,7 +1398,7 @@
     var hint = el('datasetHint');
     if (hint) {
       hint.textContent = isGames
-        ? 'Study what actually happened in completed games: win rates, average totals and margins, Over/Under against a line you set, and recent box scores. Nothing is tracked forward from here.'
+        ? 'Study what actually happened in completed games: win rates, average totals and margins, Over/Under against a line you set, and recent box scores. For MLB, NBA, NFL and NHL it also shows results against the real closing spread, total and moneyline. Nothing is tracked forward from here.'
         : 'Build a model on the bets handicappers posted, backtest it, then set it running on the live board.';
     }
     if (isGames) {

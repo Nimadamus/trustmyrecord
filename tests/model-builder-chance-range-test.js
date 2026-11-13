@@ -16,8 +16,8 @@ function grab(name) {
   for (; i < js.length; i += 1) { if (js[i] === '{') depth += 1; else if (js[i] === '}') { depth -= 1; if (!depth) break; } }
   return js.slice(at, i + 1);
 }
-const src = ['esc', 'fmtOdds', 'fmtUnits', 'fmtPct', 'signClass', 'metricTile', 'closingMarketTiles', 'verdictHtml', 'roiCell', 'roiSub', 'comparisonRow', 'warningsHtml'].map(grab).join('\n')
-  + '\nthis.out = { verdictHtml, roiCell, roiSub, comparisonRow, warningsHtml, closingMarketTiles };';
+const src = ['esc', 'fmtOdds', 'fmtUnits', 'fmtPct', 'signClass', 'metricTile', 'closingMarketTiles', 'closingMarketBlock', 'verdictHtml', 'roiCell', 'roiSub', 'comparisonRow', 'warningsHtml'].map(grab).join('\n')
+  + '\nthis.out = { verdictHtml, roiCell, roiSub, comparisonRow, warningsHtml, closingMarketTiles, closingMarketBlock };';
 const box = {}; vm.runInNewContext(src, box);
 const F = box.out;
 
@@ -53,9 +53,15 @@ const cm = { totals: { games: 285, record: '148-137', over_pct: 51.9, avg_closin
   ats: { games: 285, record: '139-141-5', cover_pct: 49.6 },
   moneyline: { games: 285, roi: -5.72, net_units: -16.3, avg_price: -128 } };
 const tiles = F.closingMarketTiles({ closing_market: cm }).join('');
-ok('totals tile names the record, the rate, the average line and the count', /O\/U vs closing total/.test(tiles) && /148-137/.test(tiles) && /51\.9% over, avg line 45\.12, 285 games/.test(tiles), tiles.slice(0, 300));
-ok('spread tile', /Against the spread/.test(tiles) && /139-141-5/.test(tiles) && /49\.6% covered, 285 games with a closing spread/.test(tiles));
-ok('moneyline tile: return, units, basis and average price', /Moneyline return/.test(tiles) && /-5\.72%/.test(tiles) && /-16\.30u on 285 games, 1u each at the closing price \(avg -128\)/.test(tiles) && /neg/.test(tiles));
+ok('totals tile names the record, the rate, the average line and the count', /O\/U vs closing total/.test(tiles) && /148-137/.test(tiles) && /51\.9% went over \u00b7 285 games \u00b7 average line 45\.12/.test(tiles), tiles.slice(0, 300));
+ok('spread tile', /Against the spread/.test(tiles) && /139-141-5/.test(tiles) && /49\.6% covered \u00b7 285 games/.test(tiles));
+ok('moneyline tile: return, units, basis and average price', /Moneyline return/.test(tiles) && /-5\.72%/.test(tiles) && /-16\.30u \u00b7 285 games \u00b7 1 unit each at the closing price, average -128/.test(tiles) && /neg/.test(tiles));
 ok('no side asked for: only the totals tile', F.closingMarketTiles({ closing_market: { totals: cm.totals, ats: null, moneyline: null } }).length === 1);
 ok('older server (no closing_market): nothing added', F.closingMarketTiles({}).length === 0);
+/* MB_TILES_20261113: the closing-line block */
+const block = F.closingMarketBlock({ closing_market: cm });
+ok('block has its own heading, a wide grid and a plain explanation', /Against the closing lines/.test(block) && /closing-grid/.test(block) && /last spread, total and moneyline a sportsbook posted before the game started/.test(block));
+ok('with no side chosen it says how to get the spread and moneyline results', /Choose home or away, or name a team/.test(F.closingMarketBlock({ closing_market: { totals: cm.totals, ats: null, moneyline: null } })));
+ok('nothing is drawn for an older server', F.closingMarketBlock({}) === '');
+ok('page styles the wide grid', /\.metric-grid\.closing-grid/.test(html));
 console.log(`model-builder-chance-range-test: ${n} passed`);
