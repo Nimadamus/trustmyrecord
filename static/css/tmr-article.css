@@ -1211,7 +1211,9 @@ body.tmr-ds .gf-sample { color: var(--ed-faint); font-size: .78rem; }
      nickname and record their own lines (2026-09-03). */
   body.tmr-ds .ed-team-logo,
   body.tmr-ds .ed-cover .ed-team-logo { width: 54px; height: 54px; margin-bottom: 9px; }
-  body.tmr-ds .gf-bar { grid-template-columns: 1fr minmax(66px, auto) 1fr; gap: 6px; }
+  body.tmr-ds .gf-bar { grid-template-columns: minmax(0, 1fr) minmax(66px, auto) minmax(0, 1fr); gap: 6px; }
+  /* A long bar pushed its value past the phone edge: the bar gives way, never the number. */
+  body.tmr-ds .gf-bar-t { flex: 0 1 auto; min-width: 2px; }
   body.tmr-ds .gf-bar-v { font-size: 1.15rem; min-width: 3ch; }
   /* 9px was SMALLER than the 10px this label uses on desktop, so the phone
      got the least readable version of the chart. 11px with tighter tracking
