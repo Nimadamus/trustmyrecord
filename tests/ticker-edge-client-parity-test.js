@@ -256,7 +256,7 @@ if (String(Object.keys(edgeBug.SCOREBUG_SPORTS).sort())
 {
   const LANE_FNS = ['logoImg', 'isFootball', 'footballStatus', 'statusChip', 'rankedName', 'nameSpan',
     'bugRow', 'postgameDwell', 'insightStrip', 'pitcherLine', 'scorebugCard',
-    'mlbCardHtml', 'espnCardHtml', 'tickerTier', 'tickerOrder'];
+    'mlbCardHtml', 'espnCardHtml', 'tickerTier', 'tickerStartMs', 'tickerCmp', 'tickerOrder'];
   const clientLane = new Function(
     ['INSIGHT_ROTATE_MS', 'POSTGAME_DWELL_MIN_MS', 'POSTGAME_DWELL_STEP_MS', 'POSTGAME_DWELL_STEPS']
       .map((n) => `var ${n} = ${constOf(n)};`).join('')
@@ -311,10 +311,11 @@ if (String(Object.keys(edgeBug.SCOREBUG_SPORTS).sort())
     failures.push('tickerOrder differs between edge and client');
   }
 
-  /* League-complete order: each sport is a contiguous block in TICKER_SPORT_ORDER;
-     inside a sport, live / delayed / final / scheduled / lookahead. */
+  /* Season-aware order (2026-11-13): each sport is one contiguous block, blocks
+     ordered by their best game; inside a sport live / delayed / scheduled /
+     final / lookahead. */
   const tier = (g) => (g.lookahead || g.carryover) ? 4 : g.status === 'live' ? 0
-    : (g.status === 'delayed' || g.status === 'suspended') ? 1 : g.status === 'final' ? 2 : g.status === 'scheduled' ? 3 : 4;
+    : (g.status === 'delayed' || g.status === 'suspended') ? 1 : g.status === 'scheduled' ? 2 : g.status === 'final' ? 3 : 4;
   const sportBlocks = [];
   order.forEach((e) => {
     if (!sportBlocks.length || sportBlocks[sportBlocks.length - 1].key !== e.key) {
@@ -323,13 +324,12 @@ if (String(Object.keys(edgeBug.SCOREBUG_SPORTS).sort())
       sportBlocks[sportBlocks.length - 1].games.push(e);
     }
   });
-  const sportRank = (k) => {
-    const i = ['nfl', 'mlb', 'nba', 'nhl', 'cfb'].indexOf(k);
-    return i < 0 ? 99 : i;
-  };
-  for (let i = 1; i < sportBlocks.length; i++) {
-    if (sportRank(sportBlocks[i].key) < sportRank(sportBlocks[i - 1].key)) {
-      failures.push(`sport order broken: ${sportBlocks[i].key} after ${sportBlocks[i - 1].key}`);
+  const seenKeys = {};
+  for (let i = 0; i < sportBlocks.length; i++) {
+    if (seenKeys[sportBlocks[i].key]) { failures.push(`sport ${sportBlocks[i].key} split into two blocks`); break; }
+    seenKeys[sportBlocks[i].key] = 1;
+    if (i && tier(sportBlocks[i].games[0].g) < tier(sportBlocks[i - 1].games[0].g)) {
+      failures.push(`sport order broken: ${sportBlocks[i].key} (better games) after ${sportBlocks[i - 1].key}`);
       break;
     }
   }
@@ -347,6 +347,26 @@ if (String(Object.keys(edgeBug.SCOREBUG_SPORTS).sort())
   const nflLast = order.filter((e) => e.key === 'nfl').pop();
   if (!nflLast || nflLast.g !== nflNext) failures.push('a lookahead NFL fixture is not at the back of the NFL block');
   if (order.length !== rows.reduce((n, r) => n + r.games.length, 0)) failures.push('tickerOrder dropped or duplicated a card');
+
+  /* FRIDAY IN NOVEMBER (Nima, 2026-11-13): Sunday's NFL lookahead must not lead
+     over tonight's NBA and NHL; the sooner tip leads, MLB (off season) is absent,
+     and the client and the edge agree. */
+  {
+    const nfl = [{ sport: 'nfl', away: 'NE', home: 'DET', status: 'scheduled', lookahead: true, start_time_utc: '2026-11-15T14:30:00Z' }];
+    const nba = [
+      { sport: 'nba', away: 'LAL', home: 'GS', status: 'scheduled', start_time_utc: '2026-11-14T03:00:00Z' },
+      { sport: 'nba', away: 'NY', home: 'IND', status: 'scheduled', start_time_utc: '2026-11-14T00:00:00Z' },
+      { sport: 'nba', away: 'BOS', home: 'MIA', status: 'final', start_time_utc: '2026-11-13T17:00:00Z' }];
+    const nhl = [{ sport: 'nhl', away: 'NYR', home: 'VAN', status: 'scheduled', start_time_utc: '2026-11-14T02:00:00Z' }];
+    const fri = [{ key: 'mlb', games: [] }, { key: 'nfl', games: nfl }, { key: 'nba', games: nba }, { key: 'nhl', games: nhl }, { key: 'cfb', games: [] }];
+    const got = clientLane.tickerOrder(fri).map((e) => e.key + ':' + e.g.away).join(',');
+    const want = 'nba:NY,nba:LAL,nba:BOS,nhl:NYR,nfl:NE';
+    if (got !== want) failures.push(`season-aware order wrong: ${got} (want ${want})`);
+    const edgeGot = edgeLane.tickerOrder(fri).map((e) => e.key + ':' + e.g.away).join(',');
+    if (edgeGot !== got) failures.push(`edge season-aware order differs: ${edgeGot}`);
+    const liveNhl = fri.map((r) => r.key === 'nhl' ? { key: 'nhl', games: [Object.assign({}, nhl[0], { status: 'live' })] } : r);
+    if (clientLane.tickerOrder(liveNhl)[0].key !== 'nhl') failures.push('a live NHL game does not lead the strip');
+  }
 
   /* The live NFL card is a scorebug with the quarter, the clock, both scores and
      the ball on the home side; the final carries no possession marker. */

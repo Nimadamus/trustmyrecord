@@ -23,7 +23,7 @@
      always lands on the current deployment. localStorage auth is untouched;
      sessionStorage keeps this from ever looping. 'dev' (unstamped source)
      never triggers. */
-  var BUILD = '7c1d9172cba3';
+  var BUILD = 'f109107c59be';
   var docBuild = document.documentElement.getAttribute('data-tmr-build') || '';
   if (BUILD !== 'dev' && docBuild !== BUILD) {
     try {
@@ -132,8 +132,9 @@
     } catch (e) { return ''; }
   }
 
-  var LOADING_TEXT = 'Loading today’s MLB slate…';
+  var LOADING_TEXT = 'Loading today’s games…';
   var UNAVAILABLE_TEXT = 'Today’s games are temporarily unavailable';
+  var NO_GAMES_TEXT = 'Off day · See upcoming games ›';
   // Longer than the slate's own SWR window, short enough that a visitor is
   // told the truth instead of watching a skeleton pulse indefinitely.
   var SLATE_TIMEOUT_MS = 10000;
@@ -534,10 +535,12 @@
     updateTickerNav();
   }
 
-  function laneMsg(lane, text, slateDate) {
+  function laneMsg(lane, text, slateDate, href) {
     showTicker();
     lane.innerHTML = '<div class="ticker-track"><div class="ticker-page">' +
-      '<span class="gm is-msg"><span class="st">' + esc(text) + '</span></span>' +
+      (href
+        ? '<a class="gm is-msg" href="' + esc(href) + '"><span class="st">' + esc(text) + '</span></a>'
+        : '<span class="gm is-msg"><span class="st">' + esc(text) + '</span></span>') +
       '</div></div>';
     lane.setAttribute('data-slate-date', slateDate || '');
     lane.setAttribute('aria-busy', 'false');
@@ -816,39 +819,66 @@
      the parity test holds the two together. */
   var TICKER_SPORT_ORDER = ['nfl', 'mlb', 'nba', 'nhl', 'cfb'];
 
+  /* SEASON-AWARE PRIORITY (Nima, 2026-11-13: a Friday homepage opened on
+     Sunday's NFL card while tonight's NBA, NHL and college games sat behind
+     twelve lookahead fixtures, and an all-empty slate said "No MLB games
+     scheduled today" in the off season). Live first, then today's upcoming
+     games by start time, then today's finals (latest first), then lookahead
+     and carryover fixtures last. Each sport stays one contiguous block
+     (league-complete, 2026-09-20), but the BLOCKS are ordered by their best
+     game, so the sport that is playing now leads and an out-of-season sport
+     (no games at all) never appears. TICKER_SPORT_ORDER only breaks ties. */
   function tickerTier(g) {
     var s = String((g && g.status) || 'scheduled');
     if (g && (g.lookahead || g.carryover)) return 4;
     return s === 'live' ? 0
       : (s === 'delayed' || s === 'suspended') ? 1
-      : s === 'final' ? 2
-      : s === 'scheduled' ? 3
+      : s === 'scheduled' ? 2
+      : s === 'final' ? 3
       : 4;
+  }
+  function tickerStartMs(g) {
+    var t = Date.parse((g && g.start_time_utc) || '');
+    return isFinite(t) ? t : Infinity;
+  }
+  function tickerCmp(a, b) {
+    var ta = tickerTier(a.g), tb = tickerTier(b.g);
+    if (ta !== tb) return ta - tb;
+    var sa = tickerStartMs(a.g), sb = tickerStartMs(b.g);
+    if (sa !== sb) {
+      if (sa === Infinity) return 1;
+      if (sb === Infinity) return -1;
+      return ta === 3 ? sb - sa : sa - sb;   // finals: most recent first
+    }
+    return a.i - b.i;
   }
 
   function tickerOrder(rows) {
-    /* League-complete (2026-09-20): finish every game in a sport before the
-       next sport. Inside a sport keep live / delayed / final / scheduled /
-       lookahead. Empty sports are skipped. */
     var bySport = {};
+    var keys = [];
     (rows || []).forEach(function (row) {
       (row.games || []).forEach(function (g) {
-        (bySport[row.key] = bySport[row.key] || []).push(g);
+        if (!bySport[row.key]) { bySport[row.key] = []; keys.push(row.key); }
+        bySport[row.key].push({ g: g, i: bySport[row.key].length });
       });
     });
-    var out = [];
-    var seen = {};
-    TICKER_SPORT_ORDER.forEach(function (key) {
-      var list = bySport[key];
-      if (!list || !list.length) return;
-      seen[key] = 1;
-      list.slice().sort(function (a, b) {
-        return tickerTier(a) - tickerTier(b);
-      }).forEach(function (g) { out.push({ key: key, g: g }); });
+    var rank = function (k) {
+      var i = TICKER_SPORT_ORDER.indexOf(k);
+      return i < 0 ? TICKER_SPORT_ORDER.length + keys.indexOf(k) : i;
+    };
+    var blocks = keys.map(function (k) {
+      var list = bySport[k].slice().sort(tickerCmp);
+      return { key: k, list: list, best: tickerTier(list[0].g), first: tickerStartMs(list[0].g) };
     });
-    Object.keys(bySport).forEach(function (key) {
-      if (seen[key]) return;
-      (bySport[key] || []).forEach(function (g) { out.push({ key: key, g: g }); });
+    blocks.sort(function (a, b) {
+      if (a.best !== b.best) return a.best - b.best;
+      /* Two sports with upcoming games: the one that starts sooner leads. */
+      if (a.best === 2 && a.first !== b.first) return a.first < b.first ? -1 : 1;
+      return rank(a.key) - rank(b.key);
+    });
+    var out = [];
+    blocks.forEach(function (b) {
+      b.list.forEach(function (e) { out.push({ key: b.key, g: e.g }); });
     });
     return out;
   }
@@ -882,7 +912,9 @@
     lastSlate = payload;
     var games = payload.games || [];
     if (!games.length && !otherGames) {
-      laneMsg(lane, 'No MLB games scheduled today', payload.slate_date || '');
+      /* Never announce an empty league (Nima, 2026-11-13). Every sport is
+         empty only on a true off day, so point at what is next instead. */
+      laneMsg(lane, NO_GAMES_TEXT, payload.slate_date || '', '/sportsbook/');
       return;
     }
 

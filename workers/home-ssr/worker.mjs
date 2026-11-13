@@ -712,10 +712,11 @@ function espnCardHtml(g, key) {
   ));
 }
 
-/* League-complete order: a port of tickerTier()/tickerOrder() in
-   tmr-home-live.js, lockstep rule as above. Finish every game in a sport
-   before the next sport; inside a sport, live / delayed / final / scheduled /
-   lookahead. Empty sports are skipped. */
+/* Season-aware order: a port of tickerTier()/tickerCmp()/tickerOrder() in
+   tmr-home-live.js, lockstep rule as above. Each sport is one contiguous
+   block; inside it live / delayed / scheduled (soonest first) / final
+   (latest first) / lookahead. Blocks are ordered by their best game, then
+   soonest start for upcoming blocks, then TICKER_SPORT_ORDER. */
 const TICKER_SPORT_ORDER = ['nfl', 'mlb', 'nba', 'nhl', 'cfb'];
 
 function tickerTier(g) {
@@ -723,31 +724,52 @@ function tickerTier(g) {
   if (g && (g.lookahead || g.carryover)) return 4;
   return s === 'live' ? 0
     : (s === 'delayed' || s === 'suspended') ? 1
-    : s === 'final' ? 2
-    : s === 'scheduled' ? 3
+    : s === 'scheduled' ? 2
+    : s === 'final' ? 3
     : 4;
+}
+
+function tickerStartMs(g) {
+  const t = Date.parse((g && g.start_time_utc) || '');
+  return isFinite(t) ? t : Infinity;
+}
+
+function tickerCmp(a, b) {
+  const ta = tickerTier(a.g); const tb = tickerTier(b.g);
+  if (ta !== tb) return ta - tb;
+  const sa = tickerStartMs(a.g); const sb = tickerStartMs(b.g);
+  if (sa !== sb) {
+    if (sa === Infinity) return 1;
+    if (sb === Infinity) return -1;
+    return ta === 3 ? sb - sa : sa - sb;
+  }
+  return a.i - b.i;
 }
 
 function tickerOrder(rows) {
   const bySport = {};
+  const keys = [];
   (rows || []).forEach((row) => {
     (row.games || []).forEach((g) => {
-      (bySport[row.key] = bySport[row.key] || []).push(g);
+      if (!bySport[row.key]) { bySport[row.key] = []; keys.push(row.key); }
+      bySport[row.key].push({ g, i: bySport[row.key].length });
     });
   });
+  const rank = (k) => {
+    const i = TICKER_SPORT_ORDER.indexOf(k);
+    return i < 0 ? TICKER_SPORT_ORDER.length + keys.indexOf(k) : i;
+  };
+  const blocks = keys.map((k) => {
+    const list = bySport[k].slice().sort(tickerCmp);
+    return { key: k, list, best: tickerTier(list[0].g), first: tickerStartMs(list[0].g) };
+  });
+  blocks.sort((a, b) => {
+    if (a.best !== b.best) return a.best - b.best;
+    if (a.best === 2 && a.first !== b.first) return a.first < b.first ? -1 : 1;
+    return rank(a.key) - rank(b.key);
+  });
   const out = [];
-  const seen = {};
-  TICKER_SPORT_ORDER.forEach((key) => {
-    const list = bySport[key];
-    if (!list || !list.length) return;
-    seen[key] = 1;
-    list.slice().sort((a, b) => tickerTier(a) - tickerTier(b))
-      .forEach((g) => { out.push({ key, g }); });
-  });
-  Object.keys(bySport).forEach((key) => {
-    if (seen[key]) return;
-    (bySport[key] || []).forEach((g) => { out.push({ key, g }); });
-  });
+  blocks.forEach((b) => { b.list.forEach((e) => { out.push({ key: b.key, g: e.g }); }); });
   return out;
 }
 

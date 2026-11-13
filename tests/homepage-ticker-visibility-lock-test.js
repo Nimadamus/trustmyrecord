@@ -60,7 +60,7 @@ const HTML_REQUIRED = [
   '.ticker-games,.ticker-track,.ticker-page{min-height:134px}',
   '.gm.is-skel{width:454px;height:134px',
 
-  'role="status">Loading today&rsquo;s MLB slate&hellip;</span>',
+  'role="status">Loading today&rsquo;s games&hellip;</span>',
 ];
 for (const needle of HTML_REQUIRED) {
   assert.ok(html.includes(needle), 'index.html missing ticker markup: ' + needle);
@@ -83,12 +83,14 @@ const JS_REQUIRED = [
   // renderTicker marks the request settled and reveals before painting
   'tickerSettled = true;',
   'laneMsg(lane, UNAVAILABLE_TEXT',
-  "laneMsg(lane, 'No MLB games scheduled today'",
+  "laneMsg(lane, NO_GAMES_TEXT, payload.slate_date || '', '/sportsbook/')",
   // the sweep reports state instead of hiding
   'if (tickerSettled) laneMsg(lane, UNAVAILABLE_TEXT',
   // a height-reserving skeleton lane, never an empty or collapsed one
   'function laneSkeleton(lane)',
 ];
+/* Never announce that one (inactive) league has no games (Nima, 2026-11-13). */
+assert.ok(!/No MLB games scheduled/.test(js), 'the homepage ticker announces an empty MLB slate again');
 for (const needle of JS_REQUIRED) {
   assert.ok(js.includes(needle), 'tmr-home-live.js missing ticker state handling: ' + needle);
 }
