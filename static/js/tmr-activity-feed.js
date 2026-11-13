@@ -283,8 +283,20 @@
     slot.appendChild(node);
     /* Next frame, so the browser has painted the entering state before the
        transition to the resting state begins. */
+    /* TICKER_ORDER_20261113 (Nima: "the latest one should appear on top"). On a
+       two-row strip the rows are ordered by their own timestamps, newest on
+       top, whatever order the rotation reaches them in. The loop walks back
+       through the day, so the entering item is often OLDER than the one it
+       joins; it used to take the top row anyway and the strip read "40 min
+       ago" above "12 min ago". An older arrival now takes the lower row and the
+       newer item keeps (or moves up to) the top. */
+    var lower = !!(old && old.node && rows() > 1
+      && (Date.parse(ev.created_at) || 0) < (Date.parse(old.data && old.data.created_at) || 0));
     requestAnimationFrame(function () {
-      requestAnimationFrame(function () { node.classList.remove('is-in'); });
+      requestAnimationFrame(function () {
+        node.classList.remove('is-in');
+        if (lower && current && current.node === node) node.classList.add('is-prev');
+      });
     });
     /* The outgoing item is kept one more turn as .is-prev. On a strip with room
        for two rows (CSS sets --tkact-rows: 2) it slides down to the second
@@ -294,7 +306,7 @@
     if (prev && prev.node) retire(prev.node);
     prev = null;
     if (old && old.node) {
-      old.node.classList.add('is-prev');
+      if (lower) old.node.classList.remove('is-prev'); else old.node.classList.add('is-prev');
       prev = old;
     }
     current = { data: ev, node: node };
