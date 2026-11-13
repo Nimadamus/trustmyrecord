@@ -399,7 +399,15 @@ test.describe('homepage approved-baseline geometry', () => {
           const r = el.getBoundingClientRect();
           if (r.width < 2 || r.height < 2) return;
           if (!el.textContent || !el.textContent.trim()) return;
-          const fs = parseFloat(getComputedStyle(el).fontSize);
+          // HERO_TEXT_FLOOR_20261113: the size as DRAWN. The phone analytics board is laid out
+          // small and drawn at zoom 2.05, so its computed 5.15px is 10.56px on the glass. A lock
+          // that reads the computed size alone calls legible phone text unreadable.
+          let zoom = 1;
+          for (let p = el; p && p !== document.documentElement; p = p.parentElement) {
+            const z = parseFloat(getComputedStyle(p).zoom);
+            if (Number.isFinite(z) && z > 0) zoom *= z;
+          }
+          const fs = parseFloat(getComputedStyle(el).fontSize) * zoom;
           if (Number.isFinite(fs) && fs < minFont) minFont = fs;
         });
 
@@ -498,12 +506,18 @@ test.describe('homepage approved-baseline geometry', () => {
 
       // --- card spacing + mobile stacking ------------------------------------
       const cols = m.gridCols.trim().split(/\s+/);
-      if (width > 1400) {
-        // 568 / 502: the 2026-08-30 legibility reconcile (3a3b7971) steps the
-        // 624px / 552px approved columns down by 0.91 in two desktop bands.
-        expect(cols[cols.length - 1], `capper-card column must be 568px at ${width}px`).toBe('568px');
-      } else if (width > 1180) {
-        expect(cols[cols.length - 1], `capper-card column must be 502px at ${width}px`).toBe('502px');
+      if (width > 1180) {
+        // HERO_GRID_REBASE_20261113: the 11/10 and 11/11 hero redesign (2afe4b9d, edf5347f,
+        // 67a757cf: copy, gutter, TMR Live Analytics board) replaced the fixed 568px / 502px
+        // card column with three fluid tracks. Measured on the approved live page at 1920,
+        // 1680, 1600, 1440, 1366, 1280 and 1200 wide: board / copy = 1.0652 and gutter / copy
+        // = 0.1087 at every width. The lock holds those proportions, not a pixel width.
+        const px = cols.map((c) => parseFloat(c));
+        expect(cols.length, `hero must be copy, gutter and board (three tracks) at ${width}px`).toBe(3);
+        expect(px[2] / px[0], `board track must stay 1.065x the copy track at ${width}px`).toBeGreaterThan(1.055);
+        expect(px[2] / px[0], `board track must stay 1.065x the copy track at ${width}px`).toBeLessThan(1.075);
+        expect(px[1] / px[0], `gutter must stay 0.109x the copy track at ${width}px`).toBeGreaterThan(0.099);
+        expect(px[1] / px[0], `gutter must stay 0.109x the copy track at ${width}px`).toBeLessThan(0.119);
       } else {
         expect(cols.length, `hero must stack to a single column at ${width}px`).toBe(1);
         // stacked means the card sits BELOW the copy, not beside it
