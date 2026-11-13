@@ -1236,51 +1236,82 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,700;0,800;1,800&display=swap">
 <link rel="stylesheet" href="/static/css/tmr-aplus.css?v=8b894834b70c">
 <script defer src="/static/js/tmr-aplus.js?v=fef00566de34"></script>
+<link rel="stylesheet" href="/static/css/feed-v2.css?v=20261113a">
 </head>
-<body class="tmr-site-shell tmr-ds-shell tmr-dark tmr-aplus" data-aplus="community">
+<body class="feed-v2 tmr-site-shell tmr-ds-shell tmr-dark tmr-aplus" data-aplus="community">
     <div class="page-layout">
         <aside class="left-sidebar">
-            <div class="sidebar-nav">
-                <a href="/sportsbook/" class="sidebar-link"><i class="fas fa-basketball-ball"></i> Make Picks</a>
-                <a href="/feed/" class="sidebar-link active"><i class="fas fa-stream"></i> Feed</a>
-                <a href="/leaderboards/" class="sidebar-link"><i class="fas fa-chart-line"></i> Leaderboards</a>
+            <nav class="sidebar-nav" aria-label="Community">
+                <a href="/feed/" class="sidebar-link active" aria-current="page"><i class="fas fa-house"></i> Feed</a>
+                <a href="/leaderboards/" class="sidebar-link"><i class="fas fa-ranking-star"></i> Leaderboards</a>
                 <a href="/arena/" class="sidebar-link"><i class="fas fa-trophy"></i> Arena</a>
                 <a href="/forum/" class="sidebar-link"><i class="fas fa-comments"></i> Forums</a>
                 <a href="/marketplace/" class="sidebar-link"><i class="fas fa-store"></i> Sell Picks</a>
                 <div class="sidebar-divider"></div>
-                <a href="/profile/" class="sidebar-link"><i class="fas fa-user-circle"></i> My Profile</a>
-                <a href="/messages/" class="sidebar-link"><i class="fas fa-envelope"></i> Messages</a>
-            </div>
+                <a href="/profile/" class="sidebar-link"><i class="fas fa-circle-user"></i> My Profile</a>
+                <a href="/messages/" class="sidebar-link"><i class="fas fa-envelope"></i> Messages <span class="fv-nav-badge" id="fvMsgBadge" hidden></span></a>
+            </nav>
             <div class="sidebar-card" id="myStatsCard" style="display:none;">
                 <div class="sidebar-card-title">Your Record</div>
                 <div id="sidebarMyStats"></div>
             </div>
+            <div class="fv-pro-card">
+                <div class="fv-pro-title"><i class="fas fa-crown"></i> TMR Pro</div>
+                <ul class="fv-pro-list">
+                    <li><i class="fas fa-check"></i> Sports Simulators</li>
+                    <li><i class="fas fa-check"></i> Handicapper Watchdog</li>
+                    <li><i class="fas fa-check"></i> Trend Spotter</li>
+                    <li><i class="fas fa-check"></i> Model Builder</li>
+                </ul>
+                <a href="/premium/" class="fv-pro-btn" id="fvProBtn">Upgrade to Pro <i class="fas fa-chevron-right"></i></a>
+            </div>
+            <p class="fv-privacy"><i class="fas fa-lock"></i> Pending picks stay hidden until they are graded. <a href="/sportsbook/">Make a pick</a> <span>&middot;</span> <a href="/how-grading-works/">How grading works</a></p>
         </aside>
 
         <main class="main-feed">
-            <section class="feed-hero">
-                <div class="feed-hero-copy">
-                    <div class="feed-hero-eyebrow"><span class="pip"></span>Sports Social Feed</div>
-                    <h1>Your Sports Network</h1>
-                    <p>Submit picks without exposing pending details, build a verified public record, and post the takes, polls, recaps, links, comments, and replies that shape your reputation.</p>
-                    <div class="feed-hero-points">
-                        <div class="feed-hero-point"><i class="fas fa-lock"></i> Pending picks stay hidden</div>
-                        <div class="feed-hero-point"><i class="fas fa-chart-line"></i> Records update after grading. <a href="/how-grading-works/" style="color:inherit;text-decoration:underline;">How grading works</a></div>
-                        <div class="feed-hero-point"><i class="fas fa-comments"></i> Takes, blogs, polls, and replies</div>
-                        <div class="feed-hero-point"><i class="fas fa-trophy"></i> Leaderboards, arena, trivia, forums</div>
-                    </div>
-                    <div class="feed-hero-actions">
-                        <a href="/sportsbook/" class="btn btn-primary"><i class="fas fa-bolt"></i> Lock a Pick</a>
-                        <a href="/forum/" class="btn btn-ghost"><i class="fas fa-comments"></i> Forums</a>
-                        <a href="/leaderboards/" class="btn btn-ghost"><i class="fas fa-chart-line"></i> Leaderboards</a>
-                    </div>
+            <div class="fv-banner">
+                <div class="fv-banner-art fv-banner-art--l" aria-hidden="true">
+                    <img src="https://a.espncdn.com/i/headshots/nfl/players/full/3139477.png" alt="" width="600" height="436" onerror="this.remove()">
+                    <img src="https://a.espncdn.com/i/headshots/mlb/players/full/33192.png" alt="" width="600" height="436" onerror="this.remove()">
                 </div>
-            </section>
+                <div class="fv-banner-copy">
+                    <h1><span>TMR Feed</span></h1>
+                    <p>Picks <b>&bull;</b> Hot Takes <b>&bull;</b> Discussion <b>&bull;</b> Milestones</p>
+                </div>
+                <div class="fv-banner-art fv-banner-art--r" aria-hidden="true">
+                    <img src="https://a.espncdn.com/i/headshots/nba/players/full/1966.png" alt="" width="600" height="436" onerror="this.remove()">
+                    <img src="https://a.espncdn.com/i/headshots/nhl/players/full/3895074.png" alt="" width="600" height="436" onerror="this.remove()">
+                </div>
+            </div>
 
             <div class="composer-card" id="composerCard">
                 <div class="composer-top">
                     <div class="composer-avatar" id="compAvatar">?</div>
-                    <textarea class="composer-textarea" id="compInput" placeholder="What's your take?" maxlength="500"></textarea>
+                    <div class="fv-composer-field">
+                        <textarea class="composer-textarea" id="compInput" rows="1" placeholder="Share a pick, hot take, milestone, or opinion..." maxlength="500"></textarea>
+                        <div class="composer-actions">
+                            <button type="button" class="composer-action" id="takeBtn" onclick="toggleType('hot-take')" title="Hot take" aria-label="Hot take"><i class="fas fa-fire"></i></button>
+                            <button type="button" class="composer-action" id="pollBtn" onclick="toggleType('poll')" title="Poll" aria-label="Poll"><i class="fas fa-square-poll-vertical"></i></button>
+                            <button type="button" class="composer-action" id="recapBtn" onclick="toggleType('pick-recap')" title="Pick recap" aria-label="Pick recap"><i class="fas fa-chart-line"></i></button>
+                            <button type="button" class="composer-action" id="fvEmojiBtn" onclick="fvToggleEmoji(event)" title="Emoji" aria-label="Emoji" aria-expanded="false"><i class="far fa-face-smile"></i></button>
+                        </div>
+                    </div>
+                    <button class="btn-post" id="postBtn" onclick="submitPost()" disabled>Post</button>
+                </div>
+                <div class="fv-emoji" id="fvEmoji" hidden></div>
+                <div class="fv-composer-extra" id="fvComposerExtra">
+                    <span class="fv-type-label" id="fvTypeLabel">Post</span>
+                    <select class="composer-sport" id="sportPick" aria-label="Sport">
+                        <option value="">Sport</option>
+                        <option value="NFL">NFL</option>
+                        <option value="NBA">NBA</option>
+                        <option value="MLB">MLB</option>
+                        <option value="NHL">NHL</option>
+                        <option value="NCAAB">NCAAB</option>
+                        <option value="NCAAF">NCAAF</option>
+                        <option value="Soccer">Soccer</option>
+                    </select>
+                    <span class="fv-count" id="fvCount">0/500</span>
                 </div>
                 <div class="poll-builder" id="pollBuilder">
                     <div id="pollOpts">
@@ -1288,24 +1319,6 @@
                         <div class="poll-row"><input class="poll-input" placeholder="Option 2" maxlength="60"><button class="poll-rm" onclick="rmPollOpt(this)"><i class="fas fa-times"></i></button></div>
                     </div>
                     <button class="poll-add" onclick="addPollOpt()">+ Add Option</button>
-                </div>
-                <div class="composer-bottom">
-                    <div class="composer-actions">
-                        <button class="composer-action" id="takeBtn" onclick="toggleType('hot-take')"><i class="fas fa-fire"></i> Hot Take</button>
-                        <button class="composer-action" id="pollBtn" onclick="toggleType('poll')"><i class="fas fa-poll"></i> Poll</button>
-                        <button class="composer-action" id="recapBtn" onclick="toggleType('pick-recap')"><i class="fas fa-receipt"></i> Pick Recap</button>
-                        <select class="composer-sport" id="sportPick">
-                            <option value="">Sport</option>
-                            <option value="NFL">NFL</option>
-                            <option value="NBA">NBA</option>
-                            <option value="MLB">MLB</option>
-                            <option value="NHL">NHL</option>
-                            <option value="NCAAB">NCAAB</option>
-                            <option value="NCAAF">NCAAF</option>
-                            <option value="Soccer">Soccer</option>
-                        </select>
-                    </div>
-                    <button class="btn-post" id="postBtn" onclick="submitPost()" disabled>Post</button>
                 </div>
             </div>
             <div class="composer-login-state" id="loginBanner">
@@ -1320,16 +1333,26 @@
                  the Day (GET /api/polls/featured, same record as /polls/). Preview only -
                  no questions, no answer options, no response controls render in the feed;
                  the card links to /polls/. Hides itself when none exists. -->
-            <div id="tmrQuizOfDay" style="display:none;margin-bottom:16px;"></div>
 
-            <div class="feed-tabs">
-                <button class="feed-tab active" onclick="setFilter('all',this)"><i class="fas fa-stream"></i> For You</button>
-                <button class="feed-tab" onclick="setFilter('picks',this)"><i class="fas fa-crosshairs"></i> Picks</button>
-                <button class="feed-tab" onclick="setFilter('milestones',this)"><i class="fas fa-award"></i> Milestones</button>
-                <button class="feed-tab" onclick="setFilter('hot-takes',this)"><i class="fas fa-fire"></i> Hot Takes</button>
-                <button class="feed-tab" onclick="setFilter('polls',this)"><i class="fas fa-poll"></i> Polls</button>
-                <button class="feed-tab" onclick="setFilter('following',this)"><i class="fas fa-user-friends"></i> Following</button>
-                <button class="feed-tab" onclick="setFilter('site-updates',this)"><i class="fas fa-bullhorn"></i> Site Updates</button>
+
+            <div class="fv-tabs-row">
+                <div class="feed-tabs" role="tablist">
+                    <button class="feed-tab active" onclick="setFilter('all',this)"><i class="fas fa-water"></i> For You</button>
+                    <button class="feed-tab" onclick="setFilter('picks',this)"><i class="fas fa-bullseye"></i> Picks</button>
+                    <button class="feed-tab" onclick="setFilter('hot-takes',this)"><i class="fas fa-fire"></i> Hot Takes</button>
+                    <button class="feed-tab" onclick="setFilter('milestones',this)"><i class="fas fa-trophy"></i> Milestones</button>
+                    <button class="feed-tab" onclick="setFilter('polls',this)"><i class="fas fa-chart-simple"></i> Polls</button>
+                    <button class="feed-tab" onclick="setFilter('following',this)"><i class="fas fa-user-group"></i> Following</button>
+                    <button class="feed-tab" onclick="setFilter('site-updates',this)"><i class="fas fa-bullhorn"></i> Site Updates</button>
+                </div>
+                <div class="fv-sort" id="fvSort">
+                    <button type="button" class="fv-sort-btn" id="fvSortBtn" onclick="fvToggleSort(event)" aria-haspopup="menu" aria-expanded="false"><span id="fvSortLabel">Latest</span> <i class="fas fa-chevron-down"></i></button>
+                    <div class="fv-menu" id="fvSortMenu" role="menu" hidden>
+                        <button type="button" role="menuitemradio" aria-checked="true" onclick="fvSetSort('latest')">Latest</button>
+                        <button type="button" role="menuitemradio" aria-checked="false" onclick="fvSetSort('liked')">Most Liked</button>
+                        <button type="button" role="menuitemradio" aria-checked="false" onclick="fvSetSort('discussed')">Most Discussed</button>
+                    </div>
+                </div>
             </div>
 
             <div class="milestone-pref-row" id="milestonePrefRow" style="display:none;"></div>
@@ -1349,30 +1372,21 @@
         </main>
 
         <aside class="right-sidebar">
-            <div class="rs-card is-getting-started">
-                <div class="rs-title"><i class="fas fa-rocket" style="color:var(--neon-gold);"></i>Start Building</div>
-                <ul class="rs-getting-started-list">
-                    <li><i class="fas fa-lock"></i><span>Submit picks now; pending details stay private.</span></li>
-                    <li><i class="fas fa-circle-check"></i><span>Graded outcomes build your verified public record.</span></li>
-                    <li><i class="fas fa-pen-nib"></i><span>Add hot takes, blogs, links, polls, recaps, and replies.</span></li>
-                </ul>
-            </div>
             <div class="rs-card">
-                <div class="rs-title"><i class="fas fa-fire" style="color:var(--accent-red);"></i>Record Activity</div>
-                <div id="trendingList"><div class="rs-live-placeholder"><strong>Loading real activity</strong>Verified graded picks and public activity appear here when the backend returns them.</div></div>
+                <div class="rs-title"><span class="fv-live-dot"></span>Record Activity <span class="fv-live-tag">(Live)</span></div>
+                <div id="trendingList"><div class="rs-live-placeholder"><strong>Loading real activity</strong>Verified graded picks appear here as records update.</div></div>
             </div>
-            <div class="rs-card">
-                <div class="rs-title"><i class="fas fa-chart-line" style="color:var(--accent-green);"></i>Top Cappers</div>
-                <div id="topCappersList">
-                    <div class="rs-live-placeholder"><strong>Loading verified records</strong>Ranked cappers appear after real public records are available.</div>
-                </div>
+            <div class="rs-card" id="fvTrendCard" hidden>
+                <div class="rs-title"><i class="fas fa-fire fv-ico-fire"></i>Trending in the Feed</div>
+                <div id="fvTrendList"></div>
             </div>
-            <div class="rs-card">
-                <div class="rs-title"><i class="fas fa-bolt" style="color:var(--accent-gold);"></i>Community Queue</div>
-                <div id="arenaWatchList"><div class="rs-live-placeholder"><strong>Loading arena activity</strong>Live challenges and results appear here when users compete.</div></div>
+            <div class="rs-card" id="fvHighCard" hidden>
+                <div class="rs-title"><i class="fas fa-trophy fv-ico-gold"></i>Feed Highlights</div>
+                <div id="fvHighList"></div>
             </div>
+            <div id="tmrQuizOfDay" style="display:none;"></div>
             <div class="rs-card">
-                <div class="rs-title"><i class="fas fa-user-plus" style="color:var(--accent-blue);"></i>Who to Follow</div>
+                <div class="rs-title"><i class="fas fa-user-plus fv-ico-blue"></i>Who to Follow</div>
                 <div id="suggestedList"><div class="rs-empty">Real production users will appear here when follow suggestions are available. No fake users or synthetic records are shown.</div></div>
             </div>
         </aside>
@@ -1387,6 +1401,7 @@
     <script src="/static/js/pick-display-format.js?v=319fa778d480"></script>
     <script src="/static/js/social-home.js?v=62bbda61d8d2-drill"></script>
     <script src="/static/js/feed-ui-overrides.js?v=b2647d888f63-drill"></script>
+    <script src="/static/js/feed-v2.js?v=20261113a"></script>
     <script src="/static/js/quiz-of-day.js?v=590126381c8f"></script>
     <script>if(window.TMRQuizOfDay)TMRQuizOfDay.mount('#tmrQuizOfDay');</script>
 <script src="/static/js/tmr-session.b423be9e9588.js"></script><script src="/static/js/tmr-ds-nav.efba06947a32.js"></script>

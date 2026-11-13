@@ -602,6 +602,11 @@ function normalizePublicPick(item) {
         total_public_graded: item.total_public_graded,
         /* This batch only. Kept separate so it can never reach getRecordText. */
         batch_net_units: item.batch_net_units,
+        /* FEED_V2_20261113: a backend summary row (one per member per grading
+           day) already counts that day's picks; a single discover pick carries
+           its own result instead. Kept apart so the two are never added up. */
+        _summary: item.batch_net_units != null || /^[a-z_]+:\d+:\d{8}$/.test(String(item.item_id || '')),
+        result_units: item.result_units,
         wins_count: item.wins_count,
         losses_count: item.losses_count,
         pushes_count: item.pushes_count,
@@ -682,25 +687,62 @@ function aggregateFeedItems(items) {
         const key = username + '|' + bucket + '|' + day;
         const existing = pickGroups.get(key);
         const itemCount = Number(item.pick_count || item.activity_count || 1) || 1;
+        /* FEED_V2_20261113: the day's backend summary and the same day's
+           discover picks describe the SAME picks. Adding them printed
+           "2 picks processed: 1 win, 1 pending" for a member with one graded
+           pick. The summary is the count of record; discover picks only fill a
+           group that has no summary, with the outcome read from their status. */
+        const isSummary = item._summary === true;
+        const rawStatus = String(item.status || '').toLowerCase();
+        const single = isSummary ? null : {
+            wins: rawStatus === 'won' || rawStatus === 'win' ? 1 : 0,
+            losses: rawStatus === 'lost' || rawStatus === 'loss' ? 1 : 0,
+            pushes: rawStatus === 'push' ? 1 : 0,
+            voids: rawStatus === 'void' || rawStatus === 'cancelled' || rawStatus === 'canceled' ? 1 : 0
+        };
+        const pickIds = (!isSummary && /^\d+$/.test(String(item.pick_id || ''))) ? [String(item.pick_id)] : [];
+        const singleUnits = (!isSummary && bucket === 'graded' && item.result_units != null && isFinite(Number(item.result_units))) ? Number(item.result_units) : null;
+        const fresh = () => ({
+            ...item,
+            item_id: 'pick_group_' + feedId(key),
+            pick_id: 'pick_group_' + feedId(key),
+            pick_count: itemCount,
+            wins_count: single ? single.wins : Number(item.wins_count || 0),
+            losses_count: single ? single.losses : Number(item.losses_count || 0),
+            pushes_count: single ? single.pushes : Number(item.pushes_count || 0),
+            voids_count: single ? single.voids : Number(item.voids_count || 0),
+            batch_net_units: isSummary ? item.batch_net_units : (singleUnits != null ? singleUnits : undefined),
+            _has_summary: isSummary,
+            _pick_ids: pickIds,
+            status: bucket === 'locked' ? 'pending' : 'graded'
+        });
         if (!existing) {
-            pickGroups.set(key, {
-                ...item,
-                item_id: 'pick_group_' + feedId(key),
-                pick_id: 'pick_group_' + feedId(key),
-                pick_count: itemCount,
-                wins_count: Number(item.wins_count || 0),
-                losses_count: Number(item.losses_count || 0),
-                pushes_count: Number(item.pushes_count || 0),
-                voids_count: Number(item.voids_count || 0),
-                status: bucket === 'locked' ? 'pending' : 'graded'
-            });
+            pickGroups.set(key, fresh());
+            return;
+        }
+        if (existing._has_summary && !isSummary) {
+            // Already counted by the summary; keep the pick id so a one-pick
+            // card can still be liked and commented on.
+            existing._pick_ids = existing._pick_ids.concat(pickIds);
+            return;
+        }
+        if (!existing._has_summary && isSummary) {
+            const replaced = fresh();
+            replaced._pick_ids = existing._pick_ids;
+            replaced.likes_count = existing.likes_count;
+            replaced.comments_count = existing.comments_count;
+            replaced.liked_by_user = existing.liked_by_user;
+            pickGroups.set(key, replaced);
             return;
         }
         existing.pick_count += itemCount;
-        existing.wins_count = Number(existing.wins_count || 0) + Number(item.wins_count || 0);
-        existing.losses_count = Number(existing.losses_count || 0) + Number(item.losses_count || 0);
-        existing.pushes_count = Number(existing.pushes_count || 0) + Number(item.pushes_count || 0);
-        existing.voids_count = Number(existing.voids_count || 0) + Number(item.voids_count || 0);
+        existing._pick_ids = existing._pick_ids.concat(pickIds);
+        if (singleUnits != null) existing.batch_net_units = Number(existing.batch_net_units || 0) + singleUnits;
+        else if (isSummary && item.batch_net_units != null) existing.batch_net_units = Number(existing.batch_net_units || 0) + Number(item.batch_net_units);
+        existing.wins_count = Number(existing.wins_count || 0) + (single ? single.wins : Number(item.wins_count || 0));
+        existing.losses_count = Number(existing.losses_count || 0) + (single ? single.losses : Number(item.losses_count || 0));
+        existing.pushes_count = Number(existing.pushes_count || 0) + (single ? single.pushes : Number(item.pushes_count || 0));
+        existing.voids_count = Number(existing.voids_count || 0) + (single ? single.voids : Number(item.voids_count || 0));
         const existingTime = new Date(existing.graded_at || existing.created_at || 0).getTime();
         const itemTime = new Date(item.graded_at || item.created_at || 0).getTime();
         if (itemTime > existingTime) {
@@ -971,6 +1013,7 @@ async function loadFeedItems() {
             if (currentFilter === 'picks') items = items.filter(i => i.item_type === 'pick' || i.post_type === 'pick' || i.post_type === 'pick_share');
             if (currentFilter === 'polls') items = items.filter(i => i.item_type === 'poll' || i.post_type === 'poll');
             if (currentFilter === 'milestones') items = items.filter(i => i.item_type === 'milestone');
+            if (typeof fvSortItems === 'function') items = fvSortItems(items);
         }
     } catch(e) {
         renderFeedUnavailable('Live feed data is temporarily unavailable. TrustMyRecord does not substitute fake feed posts when the backend is unavailable.');
@@ -978,6 +1021,7 @@ async function loadFeedItems() {
     }
 
     updateHeroCounts(items.length);
+    if (typeof fvAfterFeed === 'function') { try { fvAfterFeed(items); } catch (e) {} }
     if (!items.length) {
         c.innerHTML = '<div class="empty-state"><i class="fas fa-stream"></i><h3>No activity yet.</h3><p>Follow handicappers or make your first pick to start building the feed.</p></div>';
         const lm = document.getElementById('loadMore');
