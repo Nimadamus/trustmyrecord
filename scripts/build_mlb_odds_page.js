@@ -341,7 +341,10 @@ function page(inp, result, shell, state) {
   const bubble = result.teams.filter((t) => t.playoffs > 0.1 && t.playoffs < 0.9).sort((a, b) => b.playoffs - a.playoffs);
   const last = inp.schedule[inp.schedule.length - 1];
   const ptDay = (iso) => H.ptDate(iso);
-  const title = `MLB Playoff Odds ${inp.season} | Live Postseason Chances, Byes and World Series Odds`;
+  /* FINAL_TITLE_20261113: a finished postseason is not "Live". The leading phrase stays the same. */
+  const title = done
+    ? `MLB Playoff Odds ${inp.season} | Final Postseason Results and World Series Champion`
+    : `MLB Playoff Odds ${inp.season} | Live Postseason Chances, Byes and World Series Odds`;
   const desc = done
     ? `${inp.season} MLB playoff odds, final: the ${state.champion.name} won the World Series over the ${state.runner_up.name}, ${state.world_series.games[0]} games to ${state.world_series.games[1]}. Every club's playoff, division, pennant and title result for the ${inp.season} season.`
     : `Live ${inp.season} MLB playoff odds for all 30 teams from ${H.count(result.runs)} simulations of the ${remaining} games left: division titles, first round byes, the Wild Card Series and World Series chances.`;

@@ -48,6 +48,7 @@ if (done) {
   const bad = (html) => STALE.filter((re) => re.test(text(html))).map(String);
   ok(`/mlb-playoff-odds/ states the ${state.season} season is complete and names the ${c}`, odds.includes(`${state.season} season complete`) && odds.includes(c));
   ok('/mlb-playoff-odds/ presents no simulation of the finished season and no >99% / <1%', !bad(odds).length, bad(odds).join(', '));
+  ok('/mlb-playoff-odds/ title says Final, not Live', /<title>[^<]*Final[^<]*<\/title>/.test(odds) && !/<title>[^<]*Live[^<]*<\/title>/.test(odds));
   ok('/mlb-playoff-odds/ meta description is the final result, not live odds', /<meta name="description" content="[^"]*final/.test(odds) && !/<meta name="description" content="Live /.test(odds));
   ok(`/mlb-playoff-odds/ shows the ${c} at exactly 100% to win it all`, /100%<\/td><\/tr>/.test(odds));
   if (state.next_opening_day) ok('/mlb-playoff-odds/ gives the next Opening Day', odds.includes(SS.ptLongDate(state.next_opening_day)));
