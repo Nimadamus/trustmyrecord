@@ -778,6 +778,38 @@ test.describe('bankroll simulator', () => {
   // KELLY_STAKE_LABEL_20261113: live on 2026-11-13 a full Kelly run (55% at -110, stake 5.5% of the
   // roll) was headed "kelly staking at 2% of the running bankroll", the flat default the API
   // still returns beside the Kelly fraction.
+  // RUIN_RATE_20261113: "Bust rate" could only ever read 0% (stakes are a share of the running
+  // roll). When the server sends ruin_rate the tile reports it with its threshold; an older
+  // server without the field keeps the old tile.
+  test('the ruin tile shows the share of runs that fell below the stated share of the start', async ({ page }) => {
+    await open(page, {
+      simulation: {
+        ...SIMULATION,
+        result: {
+          ...SIMULATION.result,
+          parameters: { ...SIMULATION.result.parameters, ruin_threshold_pct: 0.05 },
+          results: { ...SIMULATION.result.results, bust_rate: 0, ruin_rate: 0.1234, below_half_rate: 0.4 },
+        },
+      },
+    });
+    await page.getByRole('tab', { name: 'Bankroll Simulator' }).click();
+    await page.locator('#simSubmit').click();
+    const out = page.locator('#simResult');
+    await expect(out).toContainText('Fell below 5% of start');
+    await expect(out).toContainText('12.3%');
+    await expect(out).toContainText('at any point, even if it later recovered');
+    await expect(out).not.toContainText('Bust rate');
+  });
+
+  test('without ruin_rate from the server the old Bust rate tile stays', async ({ page }) => {
+    await open(page);
+    await page.getByRole('tab', { name: 'Bankroll Simulator' }).click();
+    await page.locator('#simSubmit').click();
+    const out = page.locator('#simResult');
+    await expect(out).toContainText('Bust rate');
+    await expect(out).not.toContainText('Fell below');
+  });
+
   for (const [strategy, fraction, reads] of [
     ['kelly', 0.055, 'kelly staking at 5.5% of the running bankroll'],
     ['half_kelly', 0.0275, 'half kelly staking at 2.75% of the running bankroll'],

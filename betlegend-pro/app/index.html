@@ -3585,6 +3585,11 @@
     });
 
     // ==================================================== BANKROLL SIM
+    /** "5%" from parameters.ruin_threshold_pct (0.05); "5%" when an older server omits it. */
+    function ruinShare(p) {
+        var t = p && p.ruin_threshold_pct != null ? Number(p.ruin_threshold_pct) : 0.05;
+        return String(Number((t * 100).toFixed(1))) + '%';
+    }
     var simSubmit = $('simSubmit');
     submitButtons.push(simSubmit);
 
@@ -3689,7 +3694,14 @@
                 { v: '$' + fmtInt(Math.round(out.median_final_bankroll)), l: 'Median finish', h: 'The middle outcome, a better guide than the mean, which a few huge runs can drag upward.' },
                 { v: '$' + fmtInt(Math.round(out.mean_final_bankroll)), l: 'Mean finish', h: 'Average across every simulated run.' },
                 { v: pct(out.profit_probability), l: 'Finished ahead', h: 'Share of runs that ended above the starting bankroll.', tone: out.profit_probability >= 0.5 ? 'pos' : '' },
-                { v: pct(out.bust_rate), l: 'Bust rate', h: 'Share of runs that lost the bankroll entirely.', tone: out.bust_rate > 0.05 ? 'neg' : '' },
+                // RUIN_RATE_20261113: stakes are a share of the running roll, so the roll never
+                // reaches zero and "Bust rate" could only read 0%. When the server sends ruin_rate
+                // the tile shows the share of runs that fell below the stated share of the start.
+                (out.ruin_rate != null
+                    ? { v: pct(out.ruin_rate), l: 'Fell below ' + ruinShare(params) + ' of start',
+                        h: 'Share of runs where the roll dropped under ' + ruinShare(params) + ' of the starting bankroll at any point, even if it later recovered.',
+                        tone: out.ruin_rate > 0.05 ? 'neg' : '' }
+                    : { v: pct(out.bust_rate), l: 'Bust rate', h: 'Share of runs that lost the bankroll entirely.', tone: out.bust_rate > 0.05 ? 'neg' : '' }),
                 { v: pct(out.avg_max_drawdown), l: 'Avg max drawdown', h: 'Typical worst peak-to-trough fall along the way.', tone: out.avg_max_drawdown > 0.3 ? 'neg' : '' }
             ];
             // ROI and bankroll growth are different numbers and were being
@@ -3955,7 +3967,9 @@
                     + '<div class="kpis-lg">' + [['$' + fmtInt(Math.round(out.median_final_bankroll)), 'Median finish'],
                         ['$' + fmtInt(Math.round(out.mean_final_bankroll)), 'Mean finish'],
                         [pct(out.profit_probability), 'Finished ahead'],
-                        [pct(out.bust_rate), 'Bust rate'],
+                        (out.ruin_rate != null
+                            ? [pct(out.ruin_rate), 'Fell below ' + ruinShare((d.result || {}).parameters) + ' of start']
+                            : [pct(out.bust_rate), 'Bust rate']),
                         [pct(out.avg_max_drawdown), 'Avg max drawdown']]
                         // BLP_LIBRARY_ROI_LABEL_20261111: a reopened run called bankroll
                         // growth "Expected ROI". Same two names as the live result.
