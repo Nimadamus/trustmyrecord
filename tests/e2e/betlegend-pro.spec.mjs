@@ -706,6 +706,75 @@ test.describe('bankroll simulator', () => {
     await expect(out).toContainText('2% of the running bankroll');
   });
 
+  // BANKROLL_INPUTS_20261113: bet count and flat stake were fixed at 100 and 2% with no input.
+  test('bet count and flat stake are sent as entered', async ({ page }) => {
+    const calls = await open(page);
+    await page.getByRole('tab', { name: 'Bankroll Simulator' }).click();
+    await page.locator('#simBets').fill('250');
+    await page.locator('#simStake').fill('1.5');
+    await page.locator('#simSubmit').click();
+    await expect(page.locator('#simResult')).toContainText('Bankroll growth');
+    expect(calls.simulation).toHaveLength(1);
+    expect(calls.simulation[0].num_bets).toBe(250);
+    expect(calls.simulation[0].stake_pct).toBeCloseTo(0.015, 10);
+    expect(calls.simulation[0].strategy).toBe('flat');
+  });
+
+  test('defaults still send 100 bets at 2%, and the result names the bet count', async ({ page }) => {
+    const calls = await open(page);
+    await page.getByRole('tab', { name: 'Bankroll Simulator' }).click();
+    await page.locator('#simSubmit').click();
+    await expect(page.locator('#simResult')).toContainText('100 bets per run');
+    expect(calls.simulation[0].num_bets).toBe(100);
+    expect(calls.simulation[0].stake_pct).toBeCloseTo(0.02, 10);
+  });
+
+  test('a Kelly run sends no flat stake and the stake box is disabled', async ({ page }) => {
+    const calls = await open(page);
+    await page.getByRole('tab', { name: 'Bankroll Simulator' }).click();
+    await page.locator('#simStrategy').selectOption('kelly');
+    await expect(page.locator('#simStake')).toBeDisabled();
+    await page.locator('#simSubmit').click();
+    await expect(page.locator('#simResult')).toContainText('Bankroll growth');
+    expect(calls.simulation[0].stake_pct).toBeUndefined();
+    expect(calls.simulation[0].strategy).toBe('kelly');
+  });
+
+  for (const [field, value] of [['#simBets', '0'], ['#simBets', '1001'], ['#simBets', '12.5'], ['#simStake', '0'], ['#simStake', '30']]) {
+    test(`${field} = ${value} is rejected before anything is sent`, async ({ page }) => {
+      const calls = await open(page);
+      await page.getByRole('tab', { name: 'Bankroll Simulator' }).click();
+      await page.locator(field).fill(value);
+      await page.locator('#simSubmit').click();
+      await expect(page.locator(field + 'Field .errmsg')).toBeVisible();
+      expect(calls.simulation).toHaveLength(0);
+    });
+  }
+
+  // BANKROLL_RANGE_20261113: the percentiles the API returns were never shown.
+  test('the outcome range is shown from the returned percentiles', async ({ page }) => {
+    await open(page);
+    await page.getByRole('tab', { name: 'Bankroll Simulator' }).click();
+    await page.locator('#simSubmit').click();
+    const range = page.locator('#simResult .simrange');
+    await expect(range).toContainText('9 in 10 runs finished between $7,994 and $14,735');
+    await expect(range).toContainText('middle half finished between $9,678 and $12,172');
+    await expect(range).toContainText('median $10,853');
+    await expect(range).toContainText('starting $10,000');
+    const box = await range.boundingBox();
+    expect(box.width).toBeGreaterThan(200);
+  });
+
+  test('a result without percentiles (older server) simply has no range block', async ({ page }) => {
+    const results = { ...SIMULATION.result.results };
+    delete results.percentile_5;
+    await open(page, { simulation: { ...SIMULATION, result: { ...SIMULATION.result, results } } });
+    await page.getByRole('tab', { name: 'Bankroll Simulator' }).click();
+    await page.locator('#simSubmit').click();
+    await expect(page.locator('#simResult')).toContainText('Bankroll growth');
+    await expect(page.locator('#simResult .simrange')).toHaveCount(0);
+  });
+
   // KELLY_STAKE_LABEL_20261113: live on 2026-11-13 a full Kelly run (55% at -110, stake 5.5% of the
   // roll) was headed "kelly staking at 2% of the running bankroll", the flat default the API
   // still returns beside the Kelly fraction.

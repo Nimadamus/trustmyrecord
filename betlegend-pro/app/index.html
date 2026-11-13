@@ -619,10 +619,23 @@
                                 <div class="field">
                                     <label class="lbl" for="simStrategy">Staking strategy</label>
                                     <select class="sel" id="simStrategy">
-                                        <option value="flat">2% of current bankroll per bet</option>
+                                        <option value="flat">Fixed % of current bankroll per bet</option>
                                         <option value="half_kelly">Half Kelly</option>
                                         <option value="kelly">Full Kelly</option>
                                     </select>
+                                </div>
+                            </div>
+                            <!-- BANKROLL_INPUTS_20261113: the simulator always ran 100 bets at 2% with no way to change either. -->
+                            <div class="grid2" style="margin-top:11px">
+                                <div class="field" id="simBetsField">
+                                    <label class="lbl" for="simBets">Number of bets</label>
+                                    <input class="inp" id="simBets" type="number" min="1" max="1000" step="1" value="100">
+                                    <span class="errmsg">Enter a whole number between 1 and 1,000.</span>
+                                </div>
+                                <div class="field" id="simStakeField">
+                                    <label class="lbl" for="simStake">Stake per bet (% of bankroll)</label>
+                                    <input class="inp" id="simStake" type="number" min="0.25" max="25" step="0.25" value="2">
+                                    <span class="errmsg">Enter a stake between 0.25 and 25.</span>
                                 </div>
                             </div>
                             <p class="note" id="simEdgeNote" style="margin-top:12px"></p>
@@ -3604,7 +3617,46 @@
         var oOk = isValidAmericanOdds(odds);
         setFieldError($('simProbField'), !pOk);
         setFieldError($('simOddsField'), !oOk);
-        return pOk && oOk;
+        var nb = Number($('simBets').value), st = Number($('simStake').value);
+        var bOk = Number.isInteger(nb) && nb >= 1 && nb <= 1000;
+        var sOk = $('simStrategy').value !== 'flat' || (isFinite(st) && st >= 0.25 && st <= 25);
+        setFieldError($('simBetsField'), !bOk);
+        setFieldError($('simStakeField'), !sOk);
+        return pOk && oOk && bOk && sOk;
+    }
+    /* A Kelly run sizes its own stake, so the stake box does not apply to it. */
+    function syncStakeField() {
+        var flat = $('simStrategy').value === 'flat';
+        $('simStake').disabled = !flat;
+        $('simStakeField').style.opacity = flat ? '' : '.5';
+        if (!flat) setFieldError($('simStakeField'), false);
+    }
+    $('simStrategy').addEventListener('change', syncStakeField);
+    syncStakeField();
+
+    /* BANKROLL_RANGE_20261113: the API has always returned the 5th, 25th, 75th and 95th
+       percentile finish; the page showed none of them. One bar, drawn to scale, with the
+       starting bankroll marked, says more about risk than a mean does. */
+    function simRangeHtml(out, params) {
+        var p5 = out.percentile_5, p25 = out.percentile_25, p75 = out.percentile_75, p95 = out.percentile_95;
+        var med = out.median_final_bankroll, start = params.bankroll;
+        if ([p5, p25, p75, p95, med, start].some(function (v) { return v == null || !isFinite(v); })) return '';
+        var lo = Math.min(p5, start), hi = Math.max(p95, start);
+        if (!(hi - lo > 0)) return '';
+        var pad = 0.06 * (hi - lo); lo -= pad; hi += pad; var span = hi - lo;
+        var x = function (v) { return (100 * (v - lo) / span).toFixed(2); };
+        var money = function (v) { return '$' + fmtInt(Math.round(v)); };
+        return '<div class="simrange" style="margin-top:14px">'
+            + '<div class="kpi-l" style="margin-bottom:6px">Where the runs finished</div>'
+            + '<div role="img" aria-label="Range of final bankrolls" style="position:relative;height:26px;border-radius:6px;background:rgba(148,163,184,.14)">'
+            + '<span style="position:absolute;top:8px;height:10px;border-radius:5px;background:rgba(37,99,235,.28);left:' + x(p5) + '%;width:' + (x(p95) - x(p5)).toFixed(2) + '%"></span>'
+            + '<span style="position:absolute;top:5px;height:16px;border-radius:5px;background:rgba(37,99,235,.78);left:' + x(p25) + '%;width:' + (x(p75) - x(p25)).toFixed(2) + '%"></span>'
+            + '<span title="Median" style="position:absolute;top:2px;height:22px;width:3px;margin-left:-1px;background:#0f172a;box-shadow:0 0 0 1px #fff;left:' + x(med) + '%"></span>'
+            + '<span title="Starting bankroll" style="position:absolute;top:0;height:26px;width:0;border-left:2px dashed #b45309;left:' + x(start) + '%"></span>'
+            + '</div>'
+            + '<p class="note-s" style="margin-top:7px">9 in 10 runs finished between <strong>' + esc(money(p5)) + '</strong> and <strong>' + esc(money(p95))
+            + '</strong>. The middle half finished between <strong>' + esc(money(p25)) + '</strong> and <strong>' + esc(money(p75))
+            + '</strong>. Dark line: median ' + esc(money(med)) + '. Dashed line: your starting ' + esc(money(start)) + '.</p></div>';
     }
 
     var simLastKey = null, simLastSig = null;
@@ -3616,7 +3668,9 @@
         var odds = Number($('simOdds').value);
         var bankroll = Number($('simBank').value) || undefined;
         var strategy = $('simStrategy').value;
-        var sig = winProb + '|' + odds + '|' + bankroll + '|' + strategy;
+        var numBets = Number($('simBets').value);
+        var stakePct = strategy === 'flat' ? Number($('simStake').value) / 100 : undefined;
+        var sig = winProb + '|' + odds + '|' + bankroll + '|' + strategy + '|' + numBets + '|' + stakePct;
         var key = (sig === simLastSig && simLastKey) ? simLastKey : uuid();
         simLastSig = sig; simLastKey = key;
         var balanceBefore = Number(($('balanceValue').textContent || '').replace(/,/g, ''));
@@ -3626,7 +3680,8 @@
         $('simLoading').hidden = false;
         try {
             var res = await window.api.submitBetLegendProSimulation({
-                win_probability: winProb, odds: odds, bankroll: bankroll, strategy: strategy, idempotency_key: key
+                win_probability: winProb, odds: odds, bankroll: bankroll, strategy: strategy,
+                num_bets: numBets, stake_pct: stakePct, idempotency_key: key
             });
             simLastSig = null; simLastKey = null;
             var r = res.result || {}, out = r.results || {}, params = r.parameters || {};
@@ -3672,12 +3727,14 @@
                     var shown = String(Number((f * 100).toFixed(2)));
                     return ' staking at ' + esc(shown) + '% of the running bankroll';
                 })()
+                + (params.num_bets != null ? ' · ' + fmtInt(params.num_bets) + ' bets per run' : '')
                 + ' · ' + fmtInt(params.num_simulations) + ' simulated runs · '
                 + esc(pct(winProb)) + ' assumed win rate at ' + esc(odds > 0 ? '+' + odds : odds) + '</p>'
                 + '<div class="kpis-lg" style="margin-top:11px">' + kpis.map(function (k) {
                     return '<div class="kpi-lg"><div class="kpi-v' + (k.tone ? ' is-' + k.tone : '') + '">' + esc(k.v)
                         + '</div><div class="kpi-l">' + esc(k.l) + '</div><div class="kpi-h">' + esc(k.h) + '</div></div>';
                 }).join('') + '</div>'
+                + simRangeHtml(out, params)
                 + '<div class="unavail" style="margin-top:11px">These outcomes follow entirely from the win '
                 + 'probability you supplied. BetLegend Pro does not verify that assumption. If it is wrong, '
                 + 'so is everything above.</div>' + receiptRow(res) + '</section>';
