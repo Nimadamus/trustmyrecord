@@ -494,7 +494,7 @@
 <link rel="stylesheet" href="/static/css/tmr-light.css?v=21433b023833">
 <!-- The one approved navbar: the shared header component (tmr-ds-nav.js)
      plus the homepage's own navbar rules, so every page renders the same bar. -->
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&family=Montserrat:ital,wght@0,700;0,800;1,800&display=swap">
 <link rel="stylesheet" href="/static/css/tmr-navbar.css?v=68ec3081d29a">
     <style id="premium-polish-20261105">
     /* PRO_DARK_20261105. Same look as the simulators (tmr-sim-broadcast.css): night background, one stage panel,
@@ -715,8 +715,9 @@
         body.tmr-light .pm .pm-fine{padding:18px 0 96px}
     }
     </style>
+<link rel="stylesheet" href="/static/css/tmr-premium-aplus.css?v=20261113">
 </head>
-<body class="tmr-site-shell tmr-ds-shell tmr-light pro-page" data-tier="visitor">
+<body class="tmr-site-shell tmr-ds-shell tmr-light pro-page pmx" data-tier="visitor">
     <!-- Sitewide global nav is injected by tmr-sitewide.js -->
 
     <!-- PREMIUM_REDESIGN_20261102. A div, not a header: tmr-ds-nav hides every legacy <header>. -->
@@ -725,10 +726,11 @@
     <!-- ===================================================== A: membership header -->
     <div class="pm-head">
         <span id="dashboard" class="pm-anchor"></span>
+        <div class="pmx-stage" aria-hidden="true"><i class="pmx-photo"></i><i class="pmx-shade"></i><i class="pmx-glow"></i><i class="pmx-glow2"></i><i class="pmx-floor"></i><i class="pmx-beam b1"></i><i class="pmx-beam b2"></i><i class="pmx-fade"></i></div>
         <div class="pm-wrap pm-head-grid">
             <div class="pm-id">
                 <span class="pm-eyebrow"><i aria-hidden="true"></i><span id="pmEyebrow">TrustMyRecord membership</span></span>
-                <h1 class="pm-title" id="pmTitle">TMR Pro <em>&amp;</em> Ultimate</h1>
+                <h1 class="pm-title" id="pmTitle">TMR Pro <em>&amp;</em> <span class="pmx-gold">Ultimate</span></h1>
                 <p class="pm-lead" id="pmLead">Simulate every game. Check every record.</p>
                 <p class="pm-tag" id="pmTag">Research tools that show their evidence, not promises of profit.</p>
                 <div class="pm-live" id="pxhPanel" aria-label="Handicapper Watchdog live numbers">
@@ -821,6 +823,10 @@
                         <li>Win probability</li>
                         <li>Full box score</li>
                     </ul>
+                    <div class="pmx-vis" aria-hidden="true">
+                        <div class="pmx-vis-row"><i class="pmx-dot"></i><div class="pmx-bar"><b style="width:64%"></b></div><span class="pmx-cap">Win prob.</span></div>
+                        <div class="pmx-vis-row"><i class="pmx-dot alt"></i><div class="pmx-bar alt"><b style="width:36%"></b></div><span class="pmx-cap">Win prob.</span></div>
+                    </div>
                     <a class="pm-btn pm-btn--gold" data-go href="/sports-simulators/" data-free-label="Run a free simulation" data-pro-label="Run a simulation">Run a free simulation</a>
                 </article>
 
@@ -832,6 +838,11 @@
                     </div>
                     <h3>Handicapper Watchdog</h3>
                     <p>Pending picks from tracked handicappers, beside their graded records.</p>
+                    <div class="pmx-vis" aria-hidden="true">
+                        <div class="pmx-vis-row"><i class="pmx-dot"></i><div><div class="pmx-skel"></div><div class="pmx-skel s"></div></div><span class="pmx-pill">Graded record</span></div>
+                        <div class="pmx-vis-row"><i class="pmx-dot alt"></i><div><div class="pmx-skel"></div><div class="pmx-skel s"></div></div><span class="pmx-pill wait">Pending</span></div>
+                        <div class="pmx-vis-row"><i class="pmx-dot"></i><div><div class="pmx-skel"></div><div class="pmx-skel s"></div></div><span class="pmx-pill wait">Pending</span></div>
+                    </div>
                     <div class="pm-wdlive" id="pdxWdLive" hidden><i aria-hidden="true"></i><span id="pmWdLiveText"></span></div>
                     <a class="pm-btn pm-btn--gold" data-go href="#pricing" data-free-href="#pricing" data-free-label="Unlock the board with Pro" data-pro-href="/pro/board/" data-pro-label="Open today's board">Unlock the board with Pro</a>
                 </article>
@@ -890,6 +901,36 @@
     </section>
 
 
+    <!-- PREMIUM_APLUS_20261113: TMR Ultimate showcase. Illustrative panel, no figures. -->
+    <section class="pmx-ult" id="pmxUlt" aria-labelledby="pmxUltH">
+        <div class="pm-wrap pmx-ult-grid">
+            <div>
+                <span class="pmx-k">TMR Ultimate &middot; $99.99 a month</span>
+                <h2 class="pmx-h2" id="pmxUltH">Your record, <em>examined.</em></h2>
+                <p class="pmx-ult-lede">Ultimate reads your own graded TrustMyRecord picks and tests every one against the break-even rate of the prices you actually paid. Everything in TMR Pro is included.</p>
+                <ul class="pmx-ult-list">
+                    <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19h16M6 16V9M11 16V5M16 16v-4"/></svg><div>Results against the prices you paid<span>Every graded pick, compared with its own break-even rate.</span></div></li>
+                    <li><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><div>Where chance still explains your record<span>How strong the evidence is, stated plainly.</span></div></li>
+                    <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 7 6 6 4-4 8 8"/><path d="M15 17h6v-6"/></svg><div>Loss drivers by sport, bet type and side<span>Plus stake sizing, swings and concentration.</span></div></li>
+                    <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg><div>A personal plan<span>Measured over your next picks.</span></div></li>
+                </ul>
+                <div class="pmx-ult-cta">
+                    <a class="pm-btn pm-btn--gold" href="/ultimate/">See the sample report</a>
+                    <a class="pm-btn pm-btn--ghost" href="#pricing">Compare plans</a>
+                </div>
+            </div>
+            <div class="pmx-rep" aria-hidden="true">
+                <div class="pmx-rep-top"><b>Performance Intelligence</b><span>Sample report</span></div>
+                <div class="pmx-rep-grid">
+                    <div class="pmx-tile wide"><h4>Results vs prices paid</h4><div class="pmx-cols"><i style="height:46%"></i><i class="g" style="height:72%"></i><i style="height:58%"></i><i class="r" style="height:30%"></i><i style="height:64%"></i><i class="g" style="height:88%"></i><i style="height:52%"></i><i class="r" style="height:38%"></i><i style="height:70%"></i></div><div class="pmx-lbls"><span>MLB</span><span>NBA</span><span>NFL</span><span>NHL</span></div></div>
+                    <div class="pmx-tile"><h4>Chance check</h4><svg class="pmx-gauge" viewBox="0 0 120 64"><path d="M10 60a50 50 0 0 1 100 0" stroke="rgba(255,255,255,.1)" stroke-width="10" fill="none" stroke-linecap="round"/><path d="M10 60a50 50 0 0 1 78-41" stroke="url(#pmxg)" stroke-width="10" fill="none" stroke-linecap="round"/><defs><linearGradient id="pmxg"><stop offset="0" stop-color="#2fe0ff"/><stop offset="1" stop-color="#f5c84c"/></linearGradient></defs></svg></div>
+                    <div class="pmx-tile"><h4>Stake sizing</h4><svg class="pmx-gauge" viewBox="0 0 120 64"><polyline points="4,50 18,40 30,44 44,26 58,32 72,18 86,24 100,10 116,14" fill="none" stroke="#2fe0ff" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/><polyline points="4,50 18,40 30,44 44,26 58,32 72,18 86,24 100,10 116,14 116,64 4,64" fill="rgba(47,224,255,.12)" stroke="none"/></svg></div>
+                    <div class="pmx-tile wide"><h4>Your plan</h4><div class="pmx-checks"><div><i></i><span class="pmx-skel"></span></div><div><i></i><span class="pmx-skel" style="width:78%"></span></div><div><i></i><span class="pmx-skel" style="width:64%"></span></div></div></div>
+                </div>
+                <p class="pmx-rep-foot">Illustration. Open the sample report for a full example.</p>
+            </div>
+        </div>
+    </section>
     <!-- ===================================================== C: starting points (members) -->
     <section class="pm-sec pm-start" id="start" aria-labelledby="pmStartH">
         <div class="pm-wrap">
