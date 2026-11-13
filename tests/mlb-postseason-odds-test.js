@@ -148,9 +148,12 @@ if (built.postseason) {
         if (status[ab].state === 'alive' || status[ab].state === 'champion') continue;
         const row = rows.find((r) => r.includes(nameOf[ab]) || r.includes('>' + ab + '<'));
         if (!row) continue;
-        const cells = row.split('<td class="p"').slice(1);
+        // SETTLED_TABLE_GATE_20261113: once the season is settled the builder (settledOddsHtml) prints
+        // Yes / No cells (class "p yes" / "p no") instead of 100% / 0%. The old split on class="p" found
+        // no cells at all, failed this check on every club and stopped every bake from 11/12 to 11/13.
+        const cells = row.split(/<td class="p[" ]/).slice(1);
         const last = cells[cells.length - 1] || '';
-        if (!/>0%</.test(last)) bad.push(ab);
+        if (!cells.length || !(/>0%</.test(last) || /^no"[^>]*>(<span[^>]*>)?No</.test(last))) bad.push(ab);
     }
     ok('/mlb-playoff-odds/ shows 0% to win it all for every eliminated or non qualifying club', !bad.length, bad.join(','));
 } else {
