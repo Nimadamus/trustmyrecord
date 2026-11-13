@@ -198,8 +198,12 @@ assert(!/http-equiv="refresh"/.test(communityHtml), 'community hub must not regr
 assert(!communityHtml.includes('url=/feed/'), 'community hub must not regress into the feed shim');
 
 const predictionsHtml = read('predictions/index.html');
-assert(predictionsHtml.includes('<title>MLB Run Prediction Model | TrustMyRecord</title>'), 'predictions page should remain the MLB prediction model page');
-assert(predictionsHtml.includes('href="https://trustmyrecord.com/predictions/"'), 'predictions page canonical should stay on /predictions/');
+// PREDICTIONS_REMOVED_20261113 (Nima: "remove the page"). The MLB Run Prediction Model page showed a
+// May 10, 2026 slate and was never asked for. The address now forwards to the MLB simulator.
+assert(!predictionsHtml.includes('MLB Run Prediction Model'), 'the removed prediction model page must not come back');
+assert(predictionsHtml.includes('<link rel="canonical" href="https://trustmyrecord.com/mlb-simulator/">'), 'predictions stub canonical points at the MLB simulator');
+assert(!/noindex/.test(predictionsHtml), 'owner rule: a redirect stub is never noindex; the canonical does the work');
+assert(predictionsHtml.includes('url=/mlb-simulator/'), 'predictions stub forwards to the MLB simulator');
 assert(!predictionsHtml.includes('url=/polls/'), 'predictions page must not regress into the polls shim');
 assert(!predictionsHtml.includes('url=/hangout/'), 'predictions page must not regress into the hangout shim');
 

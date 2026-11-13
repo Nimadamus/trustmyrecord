@@ -35,8 +35,9 @@ function assert(condition, message) {
 
 [
   'https://trustmyrecord.com/polls-trivia/',
-  // /predictions/ is no longer a shim: it is the MLB Run Prediction Model page
-  // (own canonical, indexable), so it is allowed in the sitemap.
+  // PREDICTIONS_REMOVED_20261113: /predictions/ forwards to the MLB simulator again, so it is
+  // a shim and stays out of the sitemap.
+  'https://trustmyrecord.com/predictions/',
   'https://trustmyrecord.com/forums/',
   'https://trustmyrecord.com/leaderboard/',
   'https://trustmyrecord.com/cappers/',
