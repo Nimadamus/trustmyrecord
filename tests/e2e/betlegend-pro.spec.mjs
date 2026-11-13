@@ -232,7 +232,7 @@ async function open(page, opts = {}) {
     failReport: !!opts.failReport,
     freeUsed: !!opts.freeUsed,
     reportBody: opts.report || report(),
-    simulation: SIMULATION,
+    simulation: opts.simulation || SIMULATION,
   });
 
   await page.goto('file:///' + path.join(APP, 'index.html').replace(/\\/g, '/'));
@@ -705,6 +705,31 @@ test.describe('bankroll simulator', () => {
     // "flat" alone reads as a fixed dollar stake.
     await expect(out).toContainText('2% of the running bankroll');
   });
+
+  // KELLY_STAKE_LABEL_20261113: live on 2026-11-13 a full Kelly run (55% at -110, stake 5.5% of the
+  // roll) was headed "kelly staking at 2% of the running bankroll", the flat default the API
+  // still returns beside the Kelly fraction.
+  for (const [strategy, fraction, reads] of [
+    ['kelly', 0.055, 'kelly staking at 5.5% of the running bankroll'],
+    ['half_kelly', 0.0275, 'half kelly staking at 2.75% of the running bankroll'],
+  ]) {
+    test(`a ${strategy} run states the Kelly stake, not the flat default`, async ({ page }) => {
+      await open(page, {
+        simulation: {
+          ...SIMULATION,
+          result: {
+            ...SIMULATION.result,
+            parameters: { ...SIMULATION.result.parameters, strategy, stake_pct: 0.02, kelly_fraction: fraction },
+          },
+        },
+      });
+      await page.getByRole('tab', { name: 'Bankroll Simulator' }).click();
+      await page.locator('#simSubmit').click();
+      const out = page.locator('#simResult');
+      await expect(out).toContainText(reads);
+      await expect(out).not.toContainText(' 2% of the running bankroll');
+    });
+  }
 });
 
 // ----------------------------------------------------------- navigation

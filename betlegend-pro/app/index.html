@@ -3663,10 +3663,15 @@
                 // FRACTION of the current bankroll, so it compounds — a
                 // different strategy with a different variance profile.
                 + '<p class="note-s" style="margin-top:0">' + esc((params.strategy || strategy).replace('_', ' '))
-                + (params.stake_pct != null
-                    ? ' staking at ' + esc((params.stake_pct * 100).toFixed(params.stake_pct * 100 % 1 ? 1 : 0))
-                        + '% of the running bankroll'
-                    : ' staking')
+                // KELLY_STAKE_LABEL_20261113: a Kelly run stakes its Kelly fraction (5.5% at 55% and
+                // -110, 2.75% at half Kelly). The API still returns stake_pct 0.02 beside it, and
+                // this line printed that, so every Kelly result claimed "2% of the running bankroll".
+                + (function () {
+                    var f = params.kelly_fraction != null ? params.kelly_fraction : params.stake_pct;
+                    if (f == null) return ' staking';
+                    var shown = String(Number((f * 100).toFixed(2)));
+                    return ' staking at ' + esc(shown) + '% of the running bankroll';
+                })()
                 + ' · ' + fmtInt(params.num_simulations) + ' simulated runs · '
                 + esc(pct(winProb)) + ' assumed win rate at ' + esc(odds > 0 ? '+' + odds : odds) + '</p>'
                 + '<div class="kpis-lg" style="margin-top:11px">' + kpis.map(function (k) {
