@@ -478,10 +478,24 @@
       + m.roi.toFixed(2) + '% ROI, ' + Math.abs(d).toFixed(2) + ' points '
       + word + ' the ' + (b.label || 'baseline').toLowerCase() + ' at ' + b.roi.toFixed(2) + '%.';
     var rc = c && c.random_control;
-    if (rc && rc.roi != null) {
-      txt += ' A same-size random sample of the same picks returned ' + rc.roi.toFixed(2) + '%.';
+    /* MB_CHANCE_RANGE_20261113: the server now sends the range that random samples of the
+       same size fall in, and a 95% range on the result itself. An older server sends one
+       random draw and neither range; that wording is kept for it. */
+    if (m.roi_low != null && m.roi_high != null) {
+      txt += ' The 95% range on that ROI is ' + m.roi_low.toFixed(2) + '% to ' + m.roi_high.toFixed(2) + '%.';
     }
-    if (m.sample_size < 100) txt += ' The sample is small, so treat the gap as directional.';
+    if (rc && rc.roi_low != null && rc.roi_high != null) {
+      var inside = m.roi >= rc.roi_low && m.roi <= rc.roi_high;
+      txt += ' Random samples of ' + rc.sample_size + ' picks from this sport land between '
+        + rc.roi_low.toFixed(2) + '% and ' + rc.roi_high.toFixed(2) + '% 95% of the time, so this result is '
+        + (inside ? 'inside the range luck alone produces.' : 'outside that range for a single test.');
+      if (inside) cls = '';
+    } else {
+      if (rc && rc.roi != null) {
+        txt += ' A same-size random sample of the same picks returned ' + rc.roi.toFixed(2) + '%.';
+      }
+      if (m.sample_size < 100) txt += ' The sample is small, so treat the gap as directional.';
+    }
     return '<p class="verdict ' + cls + '">' + esc(txt) + '</p>';
   }
 
@@ -492,10 +506,24 @@
     }).join('') + '</div>';
   }
 
+  function roiCell(m) {
+    if (m.roi == null) return '-';
+    /* a chance range row has no single ROI to show: it is the range itself */
+    if (m.method && m.roi_low != null) return m.roi_low.toFixed(2) + '% to ' + m.roi_high.toFixed(2) + '%';
+    return m.roi.toFixed(2) + '%';
+  }
+  /* ROI_BASIS_20261113: say what the ROI is divided by, and show the figure without push
+     stakes beside it when pushes exist, so the backtest and the model board can be compared. */
+  function roiSub(m) {
+    if (!m || !m.roi_basis) return 'return on risk';
+    var t = 'net units / units risked, pushes included';
+    if (m.push_staked_units > 0 && m.roi_decided != null) t += ' (' + m.roi_decided.toFixed(2) + '% without push stakes)';
+    return t;
+  }
   function comparisonRow(label, m) {
     if (!m) return '';
     return '<tr><td>' + esc(label) + '</td><td>' + esc(m.record || '-') + '</td><td>' + fmtPct(m.win_rate)
-      + '</td><td>' + fmtUnits(m.net_units) + '</td><td>' + (m.roi == null ? '-' : m.roi.toFixed(2) + '%')
+      + '</td><td>' + fmtUnits(m.net_units) + '</td><td>' + roiCell(m)
       + '</td><td>' + fmtOdds(m.avg_odds) + '</td><td>' + (m.sample_size || 0) + '</td></tr>';
   }
 
@@ -545,7 +573,7 @@
     // Three headline numbers carry the result; the rest support them.
     var hero = '<div class="kpi-hero">'
       + kpiTile('Record', m.record, m.sample_size + ' graded picks')
-      + kpiTile('ROI', m.roi == null ? '-' : m.roi.toFixed(2) + '%', 'return on risk', signClass(m.roi))
+      + kpiTile('ROI', m.roi == null ? '-' : m.roi.toFixed(2) + '%', roiSub(m), signClass(m.roi))
       + kpiTile('Net units', fmtUnits(m.net_units), 'on ' + m.staked_units + 'u staked', signClass(m.net_units))
       + '</div>';
     var tiles = [
