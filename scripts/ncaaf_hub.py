@@ -608,9 +608,15 @@ def coach(team_id, season):
         j = _get(r)
         if not j:
             continue
-        exp = j.get("experience") or {}
+        # COACH_EXPERIENCE_INT_20261113: ESPN now answers "experience": 7 (a bare number) for some
+        # coaches where it used to answer {"years": 7}. exp.get() on the number raised and took
+        # the whole hub bake down for every sport from 11/13 9:59 AM PT.
+        exp = j.get("experience")
+        years = exp.get("years") if isinstance(exp, dict) else (exp if isinstance(exp, (int, float)) and not isinstance(exp, bool) else None)
         rec = j.get("record")
-        return {"name": j.get("displayName") or "",
-                "years": exp.get("years"),
+        # the same feed change dropped displayName in favour of firstName / lastName
+        name = j.get("displayName") or " ".join(x for x in (j.get("firstName"), j.get("lastName")) if x)
+        return {"name": name or "",
+                "years": years,
                 "record": rec.get("summary") if isinstance(rec, dict) else None}
     return None
