@@ -59,27 +59,46 @@ function seasonFaq(state) {
 
 function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
 
-function block(state) {
+/* SEASON_FIRST_PAINT_20261113: with next season's entries open, the season page must not
+   bake the closed state. Before this the static page said "2026 Season, Entries closed"
+   next to "2027 entries are open" and hid Save, Lock and the log in prompt until the
+   script heard from the server. The two entry controls are left out of the hide rule
+   (no !important on them, so the script can still close them if the server says closed)
+   and the kicker is baked with the same words the script writes for an open window. */
+const ENTRY_CONTROLS = ['ss-actions', 'ss-auth-cta'];
+function entriesOpenOn(page) { return !!ENTRIES_OPEN_SEASON && page === 'mlb-season-simulator'; }
+const KICKER_RE = /(<span class="ss-kicker">)[\s\S]*?(<\/span>)/;
+function kicker(html, state, page) {
+  if (!SS.isComplete(state) || page !== 'mlb-season-simulator') return html;
+  const inner = ENTRIES_OPEN_SEASON
+    ? `<i class="fas fa-unlock"></i> ${ENTRIES_OPEN_SEASON} Season &middot; Entries open`
+    : `<i class="fas fa-lock"></i> ${state.season} Season &middot; Entries closed`;
+  if (!KICKER_RE.test(html)) throw new Error(page + ': no ss-kicker to stamp');
+  return html.replace(KICKER_RE, (all, o, c) => o + inner + c);
+}
+
+function block(state, page) {
   if (!SS.isComplete(state)) return '<!--MK:mlbSeasonState--><!--/MK:mlbSeasonState-->';
+  const keep = entriesOpenOn(page) ? ENTRY_CONTROLS.map((id) => `:not(#${id})`).join('') : '';
   const c = state.champion, r = state.runner_up, g = state.world_series.games;
   const next = state.next_opening_day ? ` The ${state.next_season} season opens on ${esc(SS.ptLongDate(state.next_opening_day))}.` : '';
   return '<!--MK:mlbSeasonState-->'
-    + '<style>[data-mlb-season-only]{display:none!important}[data-mlb-offseason-only]{display:flex!important}</style>'
+    + `<style>[data-mlb-season-only]${keep}{display:none!important}[data-mlb-offseason-only]{display:flex!important}</style>`
     + `<p class="mlb-season-banner" data-mlb-phase="complete" role="status" style="margin:14px 0;padding:12px 14px;border-left:4px solid #e0a800;border-radius:10px;background:rgba(224,168,0,.12);font-size:.95rem;line-height:1.5;color:inherit;">`
     + `<strong>${state.season} season complete: the ${esc(c.name)} won the World Series.</strong> They beat the ${esc(r ? r.name : 'their opponent')} ${g[0]} games to ${g[1]}.${next} `
     + `<a href="/mlb-playoff-odds/" style="color:inherit;font-weight:700;">Final ${state.season} results</a></p>`
     + '<!--/MK:mlbSeasonState-->';
 }
 
-function apply(html, state, file) {
-  const b = block(state);
+function apply(html, state, file, page) {
+  const b = block(state, page);
   if (RE.test(html)) return html.replace(RE, b);
   const at = html.indexOf('</h1>');
   if (at < 0) throw new Error(file + ': no </h1> to anchor the season block');
   return html.slice(0, at + 5) + (html.includes('\r\n') ? '\r\n' : '\n') + b + html.slice(at + 5);
 }
 
-module.exports = { PAGES, block, apply, applyPhaseCopy, PHASE_COPY, seasonFaq, SEASON_FAQ_Q };
+module.exports = { PAGES, block, apply, applyPhaseCopy, PHASE_COPY, seasonFaq, SEASON_FAQ_Q, kicker, entriesOpenOn, ENTRY_CONTROLS, ENTRIES_OPEN_SEASON };
 
 if (require.main === module) {
   const state = SS.readState(ROOT);
@@ -87,7 +106,7 @@ if (require.main === module) {
   for (const d of PAGES) {
     const f = path.join(ROOT, d, 'index.html');
     const html = fs.readFileSync(f, 'utf8');
-    let next = applyPhaseCopy(apply(html, state, f), state);
+    let next = kicker(applyPhaseCopy(apply(html, state, f, d), state), state, d);
     if (d === 'mlb-season-simulator' && SS.isComplete(state)) {
       const r = require('./stamp-sim-run-policy.js').stampPage(next, SEASON_FAQ_Q, seasonFaq(state));
       if (r.problems.length) throw new Error('season FAQ: ' + r.problems.join('; '));

@@ -57,7 +57,7 @@ if (done) {
     const html = read(`${d}/index.html`);
     const m = html.match(/<!--MK:mlbSeasonState-->([\s\S]*?)<!--\/MK:mlbSeasonState-->/);
     ok(`/${d}/ carries the season complete banner naming the ${c}`, !!m && m[1].includes(c) && m[1].includes(`${state.season} season complete`));
-    ok(`/${d}/ hides its in-season calls to action`, !!m && m[1].includes('[data-mlb-season-only]{display:none'));
+    ok(`/${d}/ hides its in-season calls to action`, !!m && /\[data-mlb-season-only\](:not\(#ss-(actions|auth-cta)\))*\{display:none/.test(m[1]));
   }
 } else {
   for (const d of PAGES) {
