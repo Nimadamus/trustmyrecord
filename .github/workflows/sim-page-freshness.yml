@@ -1,0 +1,64 @@
+name: Simulator Page Freshness
+
+# SIM_PAGE_FRESHNESS_ALERT_20261113. Reads the eight served simulator pages every hour and
+# keeps ONE alert issue (label sim-page-stale) in step with what it finds:
+# opens it when pages go stale, comments only when the set of stale pages changes, closes it
+# when everything is fresh. From 11/12 12:50 AM PT to 11/13 the bake published nothing for
+# 40 hours and no check looked at the pages themselves.
+# Read only: it never changes the site. It runs after the bake's slot (minute 47).
+
+on:
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: sim-page-freshness
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Check the served pages
+        run: |
+          for i in 1 2 3; do
+            node scripts/check-sim-page-freshness.js --json > check.json && break
+            # exit 1 means stale OR unreachable; retry twice so one slow answer is not an alert
+            grep -q '"fresh":false' check.json && [ "$i" = 3 ] && break
+            sleep 45
+          done
+          cat check.json
+      - name: Keep the one alert issue in step
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          L=sim-page-stale
+          gh label create "$L" --color B60205 --description "Baked simulator pages are behind" >/dev/null 2>&1 || true
+          N=$(gh issue list --label "$L" --state open --json number --jq '.[0].number' 2>/dev/null || true)
+          : > open.txt
+          if [ -n "$N" ]; then gh issue view "$N" --json body --jq .body > open.txt; fi
+          node scripts/sim-page-freshness-alert.js check.json open.txt > decision.json
+          cat decision.json
+          ACTION=$(node -p "require('./decision.json').action")
+          node -e "const d=require('./decision.json');const fs=require('fs');fs.writeFileSync('body.md',d.body||'');fs.writeFileSync('comment.md',d.comment||'');fs.writeFileSync('title.txt',d.title||'')"
+          RUN_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          case "$ACTION" in
+            open)    gh issue create --label "$L" --title "$(cat title.txt)" --body-file body.md ;;
+            comment) gh issue edit "$N" --body-file body.md && gh issue comment "$N" --body "$(cat comment.md) Run: $RUN_URL" ;;
+            close)   gh issue close "$N" --comment "$(cat comment.md) Run: $RUN_URL" ;;
+            none)    echo "no notice needed" ;;
+          esac
+          # the job goes red while pages are stale, so the Actions tab shows it too
+          [ "$ACTION" = "none" ] && grep -q '"fresh":true' check.json && exit 0
+          grep -q '"fresh":true' check.json
