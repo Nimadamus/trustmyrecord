@@ -751,6 +751,31 @@ test.describe('bankroll simulator', () => {
     });
   }
 
+  // QUARTER_KELLY_20261113
+  test('quarter Kelly is sent as a quarter of the Kelly fraction and named in the result', async ({ page }) => {
+    const calls = await open(page, {
+      simulation: { ...SIMULATION, result: { ...SIMULATION.result, parameters: { ...SIMULATION.result.parameters, strategy: 'flat', stake_pct: 0.01375 } } },
+    });
+    await page.getByRole('tab', { name: 'Bankroll Simulator' }).click();
+    await page.locator('#simStrategy').selectOption('quarter_kelly');
+    await expect(page.locator('#simStake')).toBeDisabled();
+    await page.locator('#simSubmit').click();
+    await expect(page.locator('#simResult')).toContainText('quarter kelly staking at 1.38% of the running bankroll');
+    expect(calls.simulation[0].strategy).toBe('flat');
+    // 55% at -110: Kelly (0.55 * 0.90909 - 0.45) / 0.90909 = 0.055, a quarter of it 0.01375
+    expect(calls.simulation[0].stake_pct).toBeCloseTo(0.01375, 6);
+  });
+
+  test('quarter Kelly with no edge sends nothing and says why', async ({ page }) => {
+    const calls = await open(page);
+    await page.getByRole('tab', { name: 'Bankroll Simulator' }).click();
+    await page.locator('#simProb').fill('50');
+    await page.locator('#simStrategy').selectOption('quarter_kelly');
+    await page.locator('#simSubmit').click();
+    await expect(page.locator('#simError')).toContainText('Kelly stakes nothing');
+    expect(calls.simulation).toHaveLength(0);
+  });
+
   // BANKROLL_RANGE_20261113: the percentiles the API returns were never shown.
   test('the outcome range is shown from the returned percentiles', async ({ page }) => {
     await open(page);

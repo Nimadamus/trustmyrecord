@@ -620,6 +620,7 @@
                                     <label class="lbl" for="simStrategy">Staking strategy</label>
                                     <select class="sel" id="simStrategy">
                                         <option value="flat">Fixed % of current bankroll per bet</option>
+                                        <option value="quarter_kelly">Quarter Kelly</option>
                                         <option value="half_kelly">Half Kelly</option>
                                         <option value="kelly">Full Kelly</option>
                                     </select>
@@ -3675,6 +3676,21 @@
         var strategy = $('simStrategy').value;
         var numBets = Number($('simBets').value);
         var stakePct = strategy === 'flat' ? Number($('simStake').value) / 100 : undefined;
+        /* QUARTER_KELLY_20261113: the engine knows full and half Kelly. A quarter Kelly run is the
+           same fixed share of the roll every bet, so it is sent as that share: Kelly fraction
+           (p*b - q) / b, divided by four. With no edge Kelly stakes nothing and there is nothing to run. */
+        var shownStrategy = strategy;
+        if (strategy === 'quarter_kelly') {
+            var bNet = odds > 0 ? odds / 100 : 100 / Math.abs(odds);
+            var kFull = (winProb * bNet - (1 - winProb)) / bNet;
+            if (!(kFull > 0)) {
+                $('simError').textContent = 'At these inputs Kelly stakes nothing: the win probability is at or below break even for this price.';
+                $('simError').hidden = false;
+                return;
+            }
+            strategy = 'flat';
+            stakePct = Math.min(0.25, Math.round(kFull / 4 * 1e6) / 1e6);
+        }
         var sig = winProb + '|' + odds + '|' + bankroll + '|' + strategy + '|' + numBets + '|' + stakePct;
         var key = (sig === simLastSig && simLastKey) ? simLastKey : uuid();
         simLastSig = sig; simLastKey = key;
@@ -3729,7 +3745,7 @@
                 // "flat" alone reads as a fixed dollar stake. It is a fixed
                 // FRACTION of the current bankroll, so it compounds — a
                 // different strategy with a different variance profile.
-                + '<p class="note-s" style="margin-top:0">' + esc((params.strategy || strategy).replace('_', ' '))
+                + '<p class="note-s" style="margin-top:0">' + esc((shownStrategy === 'quarter_kelly' ? shownStrategy : (params.strategy || strategy)).replace('_', ' '))
                 // KELLY_STAKE_LABEL_20261113: a Kelly run stakes its Kelly fraction (5.5% at 55% and
                 // -110, 2.75% at half Kelly). The API still returns stake_pct 0.02 beside it, and
                 // this line printed that, so every Kelly result claimed "2% of the running bankroll".
