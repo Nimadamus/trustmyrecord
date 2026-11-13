@@ -264,6 +264,22 @@ async function chooseMatchup(page, away = 'New York Yankees', home = 'Boston Red
   await page.locator('#mHome').selectOption(home);
 }
 
+// SITUATION_AREAS_20261113: on 2026-09-02 the single "+ Add Situation" popover (#addCond, #condMenu,
+// #condList) was replaced by three areas, one per team and one for the game (#sitAreas). These
+// tests kept driving the removed popover and failed on every run from then on. They now drive
+// the shipped areas; what they guarantee is unchanged.
+const sitHead = (page, b) => page.locator(`.sit-head[data-toggle="${b}"]`);
+const sitOptions = (page, b) => page.locator(`#sitOptions-${b}`);
+const sitActive = (page, b) => page.locator(`#sitActive-${b}`);
+async function openArea(page, b) {
+  if ((await sitHead(page, b).getAttribute('aria-expanded')) !== 'true') await sitHead(page, b).click();
+  await expect(page.locator(`#sitBody-${b}`)).toBeVisible();
+}
+async function addSituation(page, b, label) {
+  await openArea(page, b);
+  await sitOptions(page, b).locator('.condopt', { hasText: label }).locator('.cond-add').click();
+}
+
 // -------------------------------------------------- situational filters
 
 /**
@@ -276,119 +292,110 @@ async function chooseMatchup(page, away = 'New York Yankees', home = 'Boston Red
  * only, and a situation's controls exist only after it is chosen.
  */
 test.describe('situational filters', () => {
-  const list = (page) => page.locator('#condMenu');
-
   test('an incomplete matchup states what to do instead of greying out in silence',
     async ({ page }) => {
       await open(page);
-      await expect(page.locator('#addCondHint'))
-        .toContainText('Choose two different teams above to unlock situational filters.');
-      await expect(page.locator('#addCond')).toBeDisabled();
+      await expect(page.locator('#addCondHint')).toContainText('Pick both teams above to add situations.');
+      for (const b of ['t1', 't2', 'game']) await expect(sitHead(page, b)).toBeDisabled();
 
       // A team against itself is not a matchup, so the lock stays stated.
       await chooseMatchup(page, 'New York Yankees', 'New York Yankees');
       await expect(page.locator('#addCondHint')).toBeVisible();
-      await expect(page.locator('#addCond')).toBeDisabled();
+      for (const b of ['t1', 't2', 'game']) await expect(sitHead(page, b)).toBeDisabled();
     });
 
   test('two different teams unlock it immediately, with no reload', async ({ page }) => {
     await open(page);
     await chooseMatchup(page);
     await expect(page.locator('#addCondHint')).toBeHidden();
-    await expect(page.locator('#addCond')).toBeEnabled();
-    await expect(page.locator('#addCond')).toHaveText('+ Add Situation');
+    for (const b of ['t1', 't2', 'game']) await expect(sitHead(page, b)).toBeEnabled();
+    await expect(page.locator('#sitName-t1')).toHaveText('New York Yankees');
+    await expect(page.locator('#sitName-t2')).toHaveText('Boston Red Sox');
+    await expect(page.locator('#sitCta-t1')).toHaveText('Add situations');
   });
 
   test('the list offers names only — no control exists until a situation is chosen',
     async ({ page }) => {
       await open(page);
       await chooseMatchup(page);
-      await expect(page.locator('#condList')).toBeEmpty();
-      await expect(page.locator('#condActiveH')).toBeHidden();
+      await expect(page.locator('#sitAreas .cond')).toHaveCount(0);
+      await expect(page.locator('#sitBody-t1')).toBeHidden();
 
-      await page.locator('#addCond').click();
-      await expect(list(page)).toBeVisible();
-      await expect(list(page)).toContainText('Previous game result');
-      await expect(list(page)).toContainText('Opposing starter handedness');
-      await expect(list(page)).toContainText('Minimum rest');
+      await openArea(page, 't1');
+      const list = sitOptions(page, 't1');
+      await expect(list).toContainText('Previous game result');
+      await expect(list).toContainText('Opposing starter handedness');
+      await expect(list).toContainText('Minimum rest');
       // Names and add buttons. Nothing in the list is a value control.
-      await expect(list(page).locator('select, input[type="number"], input[type="text"]'))
-        .toHaveCount(0);
+      await expect(list.locator('select, input[type="number"], input[type="text"]')).toHaveCount(0);
     });
 
-  test('choosing one moves it into Active situations and only then shows its control',
+  test('choosing one moves it under its team and only then shows its control',
     async ({ page }) => {
       await open(page);
       await chooseMatchup(page);
 
       // 1. A win/loss pick-one.
-      await page.locator('#addCond').click();
-      await list(page).locator('.condopt', { hasText: 'Previous game result' })
-        .getByRole('button', { name: /New York Yankees/ }).click();
-      await expect(page.locator('#condActiveH')).toBeVisible();
-      const prev = page.locator('#condList .cond', { hasText: 'Previous game result' });
+      await addSituation(page, 't1', 'Previous game result');
+      const prev = sitActive(page, 't1').locator('.cond', { hasText: 'Previous game result' });
       await expect(prev).toContainText('New York Yankees');
       await expect(prev.locator('select, [role="group"] button, input')).not.toHaveCount(0);
       await expect(prev.getByRole('button', { name: /^Remove situation/ })).toBeVisible();
 
-      // 2. A handedness pick-one — a different control, same interaction.
-      await page.locator('#addCond').click();
-      await list(page).locator('.condopt', { hasText: 'Opposing starter handedness' })
-        .getByRole('button', { name: /New York Yankees/ }).click();
-      const hand = page.locator('#condList .cond', { hasText: 'Opposing starter handedness' });
+      // 2. A handedness pick-one: a different control, same interaction.
+      await addSituation(page, 't1', 'Opposing starter handedness');
+      const hand = sitActive(page, 't1').locator('.cond', { hasText: 'Opposing starter handedness' });
       await expect(hand).toContainText(/lefty|righty/i);
 
-      // 3. A whole number — a number field, and it says it is unset until answered.
-      await page.locator('#addCond').click();
-      await list(page).locator('.condopt', { hasText: 'Minimum rest' })
-        .getByRole('button', { name: /Boston Red Sox/ }).click();
-      const rest = page.locator('#condList .cond', { hasText: 'Minimum rest' });
-      await expect(rest.locator('input[type="number"]')).toBeVisible();
-      await expect(rest).toContainText(/Set a value/i);
-      await rest.locator('input[type="number"]').fill('0');
-      await expect(rest).not.toContainText(/Set a value/i);
+      // 3. A whole number: a number field, and it says it is unset until answered.
+      await addSituation(page, 't2', 'Minimum rest');
+      const rest = () => sitActive(page, 't2').locator('.cond', { hasText: 'Minimum rest' });
+      await expect(rest().locator('input[type="number"]')).toBeVisible();
+      await expect(rest()).toContainText(/Set a value/i);
+      await rest().locator('input[type="number"]').fill('0');
+      await rest().locator('input[type="number"]').blur();
+      await expect(rest()).not.toContainText(/Set a value/i);
 
-      await expect(page.locator('#condList .cond')).toHaveCount(3);
+      await expect(page.locator('#sitAreas .cond')).toHaveCount(3);
+      await expect(sitActive(page, 't1').locator('.cond')).toHaveCount(2);
       await expect(page.locator('#filterCount')).toContainText('3 situations');
+      await expect(page.locator('#sitCount-t1')).toHaveText('2 situations added');
     });
 
   test('a situation already added cannot be added again, and returns to the list when removed',
     async ({ page }) => {
       await open(page);
       await chooseMatchup(page);
-      await page.locator('#addCond').click();
-      const row = list(page).locator('.condopt', { hasText: 'Previous game result' });
-      await row.getByRole('button', { name: /New York Yankees/ }).click();
+      await addSituation(page, 't1', 'Previous game result');
 
-      // Reopened, the side already asked is refused; the other bench is not.
-      await page.locator('#addCond').click();
-      await expect(row.getByRole('button', { name: /New York Yankees/ })).toBeDisabled();
-      await expect(row.getByRole('button', { name: /Boston Red Sox/ })).toBeEnabled();
+      // The team already asked is refused; the other team is not.
+      await openArea(page, 't1');
+      const mine = sitOptions(page, 't1').locator('.condopt', { hasText: 'Previous game result' }).locator('.cond-add');
+      await expect(mine).toBeDisabled();
+      await expect(mine).toHaveText('Added');
+      await openArea(page, 't2');
+      const theirs = sitOptions(page, 't2').locator('.condopt', { hasText: 'Previous game result' }).locator('.cond-add');
+      await expect(theirs).toBeEnabled();
 
-      // Removing it hands it straight back. The remove button sits outside the
-      // popover, so clicking it also dismisses the list -- what must be true is
-      // that the situation is selectable again the next time the list is
-      // opened, with no reload and no other action in between.
-      await page.locator('#condList .cond')
-        .getByRole('button', { name: /^Remove situation/ }).first().click();
-      await expect(page.locator('#condList .cond')).toHaveCount(0);
-      await expect(page.locator('#condActiveH')).toBeHidden();
-      await page.locator('#addCond').click();
-      await expect(row.getByRole('button', { name: /New York Yankees/ })).toBeEnabled();
-      await expect(row.getByRole('button', { name: /Boston Red Sox/ })).toBeEnabled();
+      // Removing it hands it straight back, with no reload and nothing else in between.
+      await sitActive(page, 't1').getByRole('button', { name: /^Remove situation/ }).first().click();
+      await expect(page.locator('#sitAreas .cond')).toHaveCount(0);
+      await expect(page.locator('#sitCount-t1')).toHaveText('No situations added');
+      await openArea(page, 't1');
+      await expect(sitOptions(page, 't1').locator('.condopt', { hasText: 'Previous game result' }).locator('.cond-add')).toBeEnabled();
     });
 
   test('the list is searchable, and says so when nothing matches', async ({ page }) => {
     await open(page);
     await chooseMatchup(page);
-    await page.locator('#addCond').click();
+    await openArea(page, 't1');
 
-    await page.locator('#filterSearch').fill('rest');
-    await expect(list(page)).toContainText('Minimum rest');
-    await expect(list(page)).not.toContainText('Previous game result');
+    await page.locator('#sitSearch-t1').fill('rest');
+    await expect(sitOptions(page, 't1')).toContainText('Minimum rest');
+    await expect(sitOptions(page, 't1')).not.toContainText('Previous game result');
 
-    await page.locator('#filterSearch').fill('zzzz-not-a-situation');
-    await expect(list(page)).toContainText('No situation matches that search');
+    await page.locator('#sitSearch-t1').fill('zzzz-not-a-situation');
+    await expect(sitOptions(page, 't1')).toContainText('No situation matches that search');
   });
 
   test('the chosen situations reach the request on the team they were added for',
@@ -396,17 +403,12 @@ test.describe('situational filters', () => {
       const calls = await open(page);
       await chooseMatchup(page);
 
-      await page.locator('#addCond').click();
-      await list(page).locator('.condopt', { hasText: 'Previous game result' })
-        .getByRole('button', { name: /New York Yankees/ }).click();
-      await page.locator('#addCond').click();
-      await list(page).locator('.condopt', { hasText: 'Opposing starter handedness' })
-        .getByRole('button', { name: /New York Yankees/ }).click();
-      await page.locator('#addCond').click();
-      await list(page).locator('.condopt', { hasText: 'Minimum rest' })
-        .getByRole('button', { name: /Boston Red Sox/ }).click();
-      await page.locator('#condList .cond', { hasText: 'Minimum rest' })
-        .locator('input[type="number"]').fill('0');
+      await addSituation(page, 't1', 'Previous game result');
+      await addSituation(page, 't1', 'Opposing starter handedness');
+      await addSituation(page, 't2', 'Minimum rest');
+      const rest = sitActive(page, 't2').locator('.cond', { hasText: 'Minimum rest' }).locator('input[type="number"]');
+      await rest.fill('0');
+      await rest.blur();
 
       await page.locator('#mSubmit').click();
       await expect.poll(() => calls.matchup.length).toBe(1);
@@ -447,9 +449,7 @@ test.describe('initialisation safety', () => {
 
     // So is a situation, on its own.
     await chooseMatchup(page);
-    await page.locator('#addCond').click();
-    await page.locator('#condMenu .condopt', { hasText: 'Previous game result' })
-      .getByRole('button', { name: /New York Yankees/ }).click();
+    await addSituation(page, 't1', 'Previous game result');
     expect(await idle()).toBe(false);
 
     await page.locator('#clearAll').click();
@@ -466,19 +466,19 @@ test.describe('initialisation safety', () => {
     async ({ page }) => {
       await open(page);
       await chooseMatchup(page);
-      await expect(page.locator('#addCond')).toBeEnabled();
+      await expect(sitHead(page, 't1')).toBeEnabled();
 
       // A sport change is the one case where the old teams must NOT survive:
       // they are not in the new league's list at all.
       await page.locator('#mSport').selectOption('NBA');
       await expect(page.locator('#mAway')).toHaveValue('');
       await expect(page.locator('#mHome')).toHaveValue('');
-      await expect(page.locator('#addCond')).toBeDisabled();
+      await expect(sitHead(page, 't1')).toBeDisabled();
 
       // Chosen again in the new league, the selection holds.
       await page.locator('#mAway').selectOption('Boston Celtics');
       await page.locator('#mHome').selectOption('Atlanta Hawks');
-      await expect(page.locator('#addCond')).toBeEnabled();
+      await expect(sitHead(page, 't1')).toBeEnabled();
       await expect(page.locator('#mAway')).toHaveValue('Boston Celtics');
     });
 });
@@ -539,18 +539,19 @@ test.describe('filters', () => {
 
   test('the condition picker opens only once both teams are chosen', async ({ page }) => {
     await open(page);
-    await expect(page.locator('#addCond')).toBeDisabled();
+    await expect(sitHead(page, 't1')).toBeDisabled();
+    await expect(page.locator('#sitBody-t1')).toBeHidden();
     await chooseMatchup(page);
-    await expect(page.locator('#addCond')).toBeEnabled();
-    await page.locator('#addCond').click();
-    await expect(page.locator('#condMenu')).toBeVisible();
+    await expect(sitHead(page, 't1')).toBeEnabled();
+    await openArea(page, 't1');
+    await expect(sitOptions(page, 't1')).toBeVisible();
   });
 
   test('a condition this sport cannot answer is shown as unavailable, not hidden', async ({ page }) => {
     await open(page);
     await chooseMatchup(page);
-    await page.locator('#addCond').click();
-    const menu = page.locator('#condMenu');
+    await openArea(page, 't1');
+    const menu = sitOptions(page, 't1');
     await expect(menu).toContainText('Closing spread range');
     await expect(menu).toContainText(/no varying point spread/i);
   });
@@ -572,17 +573,14 @@ test.describe('filters', () => {
   test('a combination of conditions is sent together, and clearing removes all of them', async ({ page }) => {
     const calls = await open(page);
     await chooseMatchup(page);
-    await page.locator('#addCond').click();
     // Add the same condition for each team: the two must not collapse into one.
-    const rows = page.locator('#condMenu .condopt', { hasText: 'Previous game result' });
-    await rows.getByRole('button', { name: /New York Yankees/ }).click();
-    await page.locator('#addCond').click();
-    await rows.getByRole('button', { name: /Boston Red Sox/ }).click();
-    await expect(page.locator('#condList')).toContainText('New York Yankees');
-    await expect(page.locator('#condList')).toContainText('Boston Red Sox');
+    await addSituation(page, 't1', 'Previous game result');
+    await addSituation(page, 't2', 'Previous game result');
+    await expect(sitActive(page, 't1').locator('.cond')).toContainText('New York Yankees');
+    await expect(sitActive(page, 't2').locator('.cond')).toContainText('Boston Red Sox');
 
     await page.locator('#clearAll').click();
-    await expect(page.locator('#condList')).not.toContainText('Previous game result');
+    await expect(page.locator('#sitAreas .cond')).toHaveCount(0);
     await page.locator('#mSubmit').click();
     await expect.poll(() => calls.matchup.length).toBe(1);
     expect(calls.matchup[0].team_1_filters).toBeUndefined();
