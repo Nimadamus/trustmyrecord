@@ -73,6 +73,27 @@
 .pk-msg{padding:26px 22px;text-align:center;color:#2E4459;}
 .pk-msg a{color:#0B4FA8;}
 @media(max-width:620px){.pk-grid{grid-template-columns:repeat(2,minmax(0,1fr));}.pk-sel{font-size:1.7rem;}}
+/* PK_CONTRAST_20261114: the card is dark, but its name, values, pills and links still used the dark ink of the light theme and could not be read */
+.pk-card{color:#E8F1FF}
+.pk-card .pk-who a{color:#F2F7FF}.pk-card .pk-who a:hover{color:#9CC4FF}
+.pk-card .pk-sub,.pk-card .pk-matchup,.pk-card .pk-note{color:#B4C5D8}
+.pk-card .pk-note{border-top-color:#2B3F55}
+.pk-card .pk-pill{color:#E8F1FF;border-color:#33485F}
+.pk-card .pk-pill.is-won{color:#4ADE80}.pk-card .pk-pill.is-lost{color:#FF8A80}.pk-card .pk-pill.is-pending{color:#F5C451}
+.pk-card .pk-stat{border-color:#33485F}.pk-card .pk-stat span{color:#8FB8F5}.pk-card .pk-stat b{color:#F2F7FF}
+.pk-card .pk-stat b.pk-pos{color:#4ADE80}.pk-card .pk-stat b.pk-neg{color:#FF8A80}
+.pk-card .pk-link{color:#E8F1FF;border-color:#33485F}.pk-card .pk-link:hover{color:#fff;border-color:#6FA8F5}
+/* VERIFIED_RECEIPT_20261114 */
+.pk-rc{margin:20px 0 4px;padding:16px 18px;border:1px solid #33485F;border-radius:14px;background:rgba(255,255,255,.03);text-align:left}
+.pk-rc.is-verified{border-color:#1F9D57;background:rgba(31,157,87,.10)}
+.pk-card .pk-rc-h{margin:0 0 6px;font-family:'Inter',system-ui,sans-serif;font-style:normal;font-size:1.05rem;font-weight:800;letter-spacing:0;text-transform:none;color:#F2F7FF;-webkit-text-fill-color:#F2F7FF;background:none;text-shadow:none}
+.pk-rc-tick{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:#1F9D57;color:#fff;-webkit-text-fill-color:#fff;font-size:.8rem;vertical-align:-3px;margin-right:4px}
+.pk-rc-p{margin:0 0 10px;color:#B4C5D8;font-size:.9rem;line-height:1.45}
+.pk-rc-grid{display:grid;grid-template-columns:1fr}
+.pk-rc-row{display:flex;justify-content:space-between;gap:14px;padding:8px 0;border-top:1px solid #2B3F55;font-size:.93rem}
+.pk-rc-row span{color:#9FB3C8;flex:none}.pk-rc-row b{color:#F2F7FF;text-align:right;overflow-wrap:anywhere}
+.pk-rc-fp{margin:10px 0 0;padding-top:10px;border-top:1px solid #2B3F55;font-size:.8rem;color:#9FB3C8}.pk-rc-fp span{display:block;margin-bottom:4px}
+.pk-rc-fp code{display:block;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.74rem;color:#CFE2FF;background:none;overflow-wrap:anywhere;word-break:break-all}
 </style>
 <link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=1851624eaf1a">
 <script defer src="/static/js/tmr-linkhub.js?v=e6689603a915"></script>
@@ -201,6 +222,36 @@
       '</div>';
 
     root.insertAdjacentHTML('afterend', ctaHtml());
+
+    // VERIFIED_RECEIPT_20261114: the proof behind this pick, from the server
+    // (GET /api/share/receipt/pick/<id>). The page is unchanged when the
+    // receipt is not available.
+    fetch(API + '/share/receipt/pick/' + id).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }).then(function (rc) {
+      if (!rc || !rc.ok) return;
+      var fmt = function (iso) { return iso ? new Date(iso).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', timeZoneName: 'short' }) : ''; };
+      var lead = function (s) {
+        if (s == null || s <= 0) return '';
+        var d = Math.floor(s / 86400), h = Math.floor((s % 86400) / 3600), m = Math.floor((s % 3600) / 60);
+        return (d ? d + 'd ' : '') + (h ? h + 'h ' : '') + m + 'm before the start';
+      };
+      var rows = '';
+      var row = function (k, v) { if (v) rows += '<div class="pk-rc-row"><span>' + esc(k) + '</span><b>' + esc(v) + '</b></div>'; };
+      row('Locked', fmt(rc.locked_at));
+      row('Game start', fmt(rc.game_start));
+      row('Lead time', lead(rc.locked_before_start_seconds));
+      row('Graded', fmt(rc.graded_at));
+      if (rc.final_score) row('Final score', rc.final_score.away_team + ' ' + rc.final_score.away + ', ' + rc.final_score.home_team + ' ' + rc.final_score.home);
+      var head = rc.verified ? 'Verified receipt' : (rc.graded ? 'Pick receipt' : 'Locked pick receipt');
+      var block =
+        '<section class="pk-rc' + (rc.verified ? ' is-verified' : '') + '" id="pkReceipt" aria-label="' + head + '">' +
+          '<h2 class="pk-rc-h">' + (rc.verified ? '<span class="pk-rc-tick" aria-hidden="true">&#10003;</span> ' : '') + head + '</h2>' +
+          (rc.pregame_text ? '<p class="pk-rc-p">' + esc(rc.pregame_text) + '</p>' : '') +
+          '<div class="pk-rc-grid">' + rows + '</div>' +
+          (rc.fingerprint ? '<p class="pk-rc-fp"><span>Ledger fingerprint</span><code>' + esc(rc.fingerprint) + '</code></p>' : '') +
+        '</section>';
+      var actions = root.querySelector('.pk-actions');
+      if (actions) actions.insertAdjacentHTML('beforebegin', block); else root.insertAdjacentHTML('beforeend', block);
+    });
   });
 }());
 </script>
