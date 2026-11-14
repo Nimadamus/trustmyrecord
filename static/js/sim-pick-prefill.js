@@ -197,7 +197,7 @@
        unchanged: same matching, same board price, same no-submit guarantee. */
     var ORIGIN_LABEL = (intent.source === 'poll')
         ? 'From your poll vote: '
-        : 'From your simulation: ';
+        : (intent.source === 'feed' ? 'From the feed: ' : 'From your simulation: ');
     var INTENT_SPORT = (intent.sport && /^[A-Z]{2,5}$/.test(intent.sport)) ? intent.sport : 'MLB';
     /* SIM_HANDOFF_NEXT_20261105: the path for the board visitors actually see. */
     var nextSportOpened = false;
