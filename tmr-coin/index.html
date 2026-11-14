@@ -141,105 +141,167 @@
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <style>
-        .tcoin-hero{display:flex;align-items:center;gap:14px;}
-        .tcoin-hero img{width:52px;height:52px;flex:0 0 52px;}
-        .tcoin-live-badge{display:inline-flex;align-items:center;gap:7px;background:rgba(16,96,107,0.10);border:1px solid rgba(16,96,107,.40);color:#0C4F58;font-family:'Barlow',sans-serif;font-weight:800;font-size:12px;letter-spacing:.9px;text-transform:uppercase;padding:5px 11px;border-radius:999px;margin-bottom:9px;}
-        .tcoin-live-dot{width:7px;height:7px;border-radius:50%;background:#1D7FE8;}
-        .tcoin-grid{display:grid;gap:12px;margin-top:18px;}
-        .tcoin-item{background:rgba(7,24,42,0.02);border:1px solid #D2DEEA;border-radius:10px;padding:14px 16px;display:flex;gap:14px;align-items:flex-start;}
-        .tcoin-amt{flex:0 0 auto;min-width:64px;font-family:'Barlow',sans-serif;font-weight:800;font-size:1.1rem;color:#8A6304;}
-        .tcoin-item strong{display:block;color:var(--tmrp-text-primary,#07182A);margin-bottom:4px;}
-        .tcoin-item span{color:var(--tmrp-text-secondary,#2E4459);font-size:14px;line-height:1.5;}
-        .tcoin-supply{margin-top:14px;padding:16px 18px;background:rgba(185,133,5,0.08);border:1px solid rgba(185,133,5,.30);border-radius:10px;}
-        .tcoin-supply strong{color:#8A6206;font-size:1.15rem;}
-        .tcoin-links{display:flex;gap:12px;flex-wrap:wrap;margin-top:22px;}
-        .tcoin-info-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin-top:8px;}
-        .tcoin-info-item{background:rgba(7,24,42,0.02);border:1px solid var(--tmrp-glass-border);border-radius:10px;padding:14px 16px;}
-        .tcoin-info-label{font-size:11px;text-transform:uppercase;letter-spacing:0.8px;color:var(--tmrp-text-muted);margin-bottom:6px;}
-        .tcoin-info-value{font-size:14.5px;color:var(--tmrp-text-primary);font-weight:700;overflow-wrap:break-word;}
-        .tcoin-info-value.tcoin-mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-weight:600;font-size:13px;word-break:break-all;}
-        .tcoin-copy-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
-        .tcoin-copy-btn{flex-shrink:0;background:rgba(7,24,42,0.021);border:1px solid var(--tmrp-glass-border);color:var(--tmrp-text-primary);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;padding:6px 10px;border-radius:7px;cursor:pointer;}
-        .tcoin-copy-btn:hover{border-color:var(--tmrp-neon-cyan);}
-        .tcoin-copy-btn[data-copied="1"]{border-color:var(--tmrp-neon-gold);color:var(--tmrp-neon-gold);}
-        .tcoin-verify-banner{background:rgba(185,133,5,0.08);border:1px solid rgba(185,133,5,.30);border-radius:10px;padding:14px 16px;margin-top:16px;color:var(--tmrp-text-primary);font-weight:700;font-size:14px;line-height:1.6;}
-        .tcoin-risk-list{list-style:none;padding:0;margin:14px 0 0;}
-        .tcoin-risk-list li{padding:10px 0 10px 26px;position:relative;font-size:14.5px;line-height:1.6;color:var(--tmrp-text-secondary);border-bottom:1px solid #D2DEEA;}
-        .tcoin-risk-list li:last-child{border-bottom:none;}
-        .tcoin-risk-list li::before{content:'⚠';position:absolute;left:0;color:var(--tmrp-neon-gold);}
-        .tcoin-two{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:12px;}
-        .tcoin-col{border:1px solid #D2DEEA;border-radius:10px;padding:16px 18px;background:rgba(7,24,42,0.02);}
-        .tcoin-col h3{font-family:'Barlow',sans-serif;font-size:1rem;font-weight:800;margin:0 0 4px;color:var(--tmrp-text-primary);}
-        .tcoin-col .tcoin-col-tag{font-size:11px;text-transform:uppercase;letter-spacing:.8px;font-weight:800;margin-bottom:10px;display:block;}
-        .tcoin-col.is-token{border-color:rgba(16,96,107,.35);background:rgba(16,96,107,.05);}
-        .tcoin-col.is-token .tcoin-col-tag{color:#0C4F58;}
-        .tcoin-col.is-points .tcoin-col-tag{color:#8A6304;}
-        .tcoin-col ul{margin:0;padding-left:18px;}
-        .tcoin-col li{font-size:14px;line-height:1.55;color:var(--tmrp-text-secondary);margin-bottom:6px;}
-        .tcoin-market{margin-top:6px;}
-        .tcoin-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:#D2DEEA;border:1px solid #D2DEEA;border-radius:10px;overflow:hidden;}
-        .tcoin-metric{background:#fff;padding:14px 16px;}
-        .tcoin-metric .tcoin-info-label{margin-bottom:4px;}
-        .tcoin-metric-val{font-family:'Barlow',sans-serif;font-weight:800;font-size:1.32rem;color:var(--tmrp-text-primary);font-variant-numeric:tabular-nums;line-height:1.15;}
-        .tcoin-metric-sub{font-size:12px;color:var(--tmrp-text-muted);margin-top:3px;}
-        .tcoin-state{padding:14px 16px;border-radius:10px;font-size:14px;font-weight:600;line-height:1.6;}
-        .tcoin-state.is-loading{background:rgba(7,24,42,0.03);border:1px solid #D2DEEA;color:var(--tmrp-text-secondary);}
-        .tcoin-state.is-down{background:rgba(151,54,44,0.07);border:1px solid rgba(151,54,44,.35);color:#7C2D24;}
-        .tcoin-depth{margin-top:14px;padding:14px 16px;background:rgba(151,54,44,0.06);border:1px solid rgba(151,54,44,.30);border-radius:10px;font-size:14px;line-height:1.6;color:var(--tmrp-text-primary);font-weight:600;}
-        .tcoin-hidden{display:none;}
-        .tcoin-announce{border-color:rgba(16,96,107,.32)!important;background:linear-gradient(180deg,rgba(16,96,107,.055),rgba(16,96,107,.015))!important;}
-        .tcoin-announce-kick{display:block;font-family:'Barlow',sans-serif;font-weight:800;font-size:11px;letter-spacing:1.1px;text-transform:uppercase;color:#0C4F58;margin-bottom:8px;}
-        .tcoin-announce-lede{font-size:16.5px;line-height:1.62;font-weight:600;color:var(--tmrp-text-primary);}
-        .tcoin-announce-sub{font-family:'Barlow',sans-serif;font-size:1rem;font-weight:800;margin:20px 0 2px;color:var(--tmrp-text-primary);}
-        @media (max-width: 720px){ .tcoin-two{grid-template-columns:1fr;} }
-        @media (max-width: 560px){ .tcoin-info-grid{grid-template-columns:1fr;} }
+        /* TCOIN_COMPACT_20261114: compact coin dashboard on the sitewide A+ layer (data-aplus=coin).
+           Hero with live market tiles, one risk box, Earn / Use / Trade cards, four detail drawers.
+           Element ids read by the live market script are unchanged. */
+        body.tcoin-dark{background:#030816 !important;color:#e6eef8}
+        .tc{--g:#f5c84c;--b:#5cc2ff;--ink:#f4f8ff;--mute:#a9bbd6;--line:rgba(120,170,255,.2);--glass:linear-gradient(180deg,rgba(18,36,72,.72),rgba(8,18,40,.82));
+            max-width:1180px !important;margin:0 auto !important;padding:10px 16px 56px !important;box-sizing:border-box;font-family:Inter,system-ui,sans-serif}
+        .tc *{box-sizing:border-box}
+        .tc a{color:#8fd0ff}
+        .tcoin-hidden{display:none !important}
 
-        /* TCOIN_DARK_20261111: the coin page in the dark family (the light layer is no longer
-           loaded here). Stadium hero, readable live market figures, quiet home strip. Copy,
-           risk wording, links, ids and the live market script are unchanged. */
-        body.tcoin-dark{background:#040a16 !important;color:#e6eef8}
-        body.tcoin-dark header:has(> .tcoin-hero){
-            position:relative;overflow:hidden;margin:10px 0 22px;padding:46px 40px 40px;border:1px solid rgba(148,163,184,.26);border-radius:18px;
-            background:linear-gradient(90deg,rgba(4,10,22,.96) 0%,rgba(4,10,22,.84) 50%,rgba(4,10,22,.38) 100%),#040a16 url(/static/img/model-builder/stadium-hero.jpg) center 30%/cover no-repeat;
-            box-shadow:0 22px 54px rgba(2,8,18,.5);
-        }
-        body.tcoin-dark .tcoin-hero{align-items:flex-start;gap:26px;text-align:left}
-        body.tcoin-dark .tcoin-hero > div{text-align:left;max-width:760px}
-        body.tcoin-dark .tcoin-hero img{width:104px;height:104px;flex:0 0 104px;filter:drop-shadow(0 10px 26px rgba(244,201,93,.28))}
-        body.tcoin-dark .tcoin-live-badge{background:rgba(29,127,232,.13);border-color:rgba(29,127,232,.42);color:#8CC0FF}
-        body.tcoin-dark .tcoin-live-dot{background:#34d399;box-shadow:0 0 0 4px rgba(52,211,153,.18)}
-        body.tcoin-dark .tcoin-hero h1{
-            font-family:Anton,'Barlow',sans-serif !important;font-weight:400 !important;text-transform:uppercase;letter-spacing:.005em !important;
-            font-size:clamp(44px,6.4vw,84px) !important;line-height:.96 !important;margin:14px 0 0 !important;text-align:left !important;
-            background:linear-gradient(100deg,#fff 30%,#f4c95d 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;width:fit-content;padding-right:4px;
-        }
-        body.tcoin-dark .tcoin-positioning{margin:16px 0 0 !important;text-align:left !important;max-width:640px;color:#d6e2ef !important;font-size:clamp(16px,1.4vw,19px) !important;line-height:1.5 !important}
-        body.tcoin-dark .tcoin-announce-kick{color:#8CC0FF}
-        body.tcoin-dark .tcoin-col{border-color:rgba(148,163,184,.2);background:#0a1322}
-        body.tcoin-dark .tcoin-col.is-points{border-color:rgba(244,201,93,.34)}
-        body.tcoin-dark .tcoin-col.is-points .tcoin-col-tag{color:#f4c95d !important}
-        body.tcoin-dark .tcoin-col.is-token{border-color:rgba(29,127,232,.4);background:rgba(29,127,232,.07)}
-        body.tcoin-dark .tcoin-item{border-color:rgba(148,163,184,.2) !important;background:#0a1322 !important}
-        body.tcoin-dark .tcoin-amt{display:inline-grid;place-items:center;min-width:34px;height:34px;padding:0 9px;border-radius:999px;background:#1569c9;color:#fff !important;font-weight:800;font-size:14px}
-        body.tcoin-dark .tcoin-info-item{border-color:rgba(148,163,184,.18);background:#0a1322}
-        body.tcoin-dark .tcoin-info-item:has(.tcoin-info-value:not(.tcoin-mono)):last-child{grid-column:1 / -1}
-        body.tcoin-dark .tcoin-info-item:last-child .tcoin-info-value{max-width:900px;font-weight:600;line-height:1.55}
-        body.tcoin-dark .tcoin-col-tag{color:#8CC0FF !important}
-        body.tcoin-dark a.tmr-cta-primary{background:linear-gradient(180deg,#2b8df3,#1569c9) !important;color:#fff !important;border-color:transparent !important;box-shadow:0 10px 26px rgba(29,127,232,.32)}
-        body.tcoin-dark header:has(> .tcoin-hero){box-sizing:border-box !important;display:block !important;width:100% !important;max-width:none !important}
-        body.tcoin-dark .tcoin-metrics{background:#0a1322 !important;border:1px solid rgba(148,163,184,.2) !important}
-        body.tcoin-dark .tcoin-metric{background:transparent !important;border-color:rgba(148,163,184,.16) !important}
-        body.tcoin-dark .tcoin-metric .tcoin-info-label{color:#93a3b8 !important}
-        body.tcoin-dark .tcoin-metric-val{color:#f8fafc !important}
-        body.tcoin-dark .tcoin-metric-sub{color:#93a3b8 !important}
+        /* hero */
+        body.tmr-aplus.tcoin-dark header.tc-top{display:block !important;width:100% !important;max-width:none !important;margin:8px 0 16px !important;text-align:left !important;
+            padding:clamp(22px,3.2vw,40px) clamp(18px,3.2vw,40px) !important}
+        .tc-top-grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:clamp(20px,3vw,36px);align-items:center}
+        .tc-brand{display:flex;align-items:center;gap:14px}
+        .tc-brand img{width:64px;height:64px;flex:0 0 64px;filter:drop-shadow(0 8px 22px rgba(245,200,76,.35))}
+        .tc-badge{display:inline-flex;align-items:center;gap:8px;padding:7px 13px;border-radius:999px;border:1.5px solid rgba(245,200,76,.6);background:rgba(245,200,76,.1);color:#ffe7a3;
+            font:800 12px/1 "Barlow Condensed",Inter,sans-serif;letter-spacing:.16em;text-transform:uppercase}
+        .tc-badge i{width:8px;height:8px;border-radius:50%;background:#34d399;box-shadow:0 0 0 4px rgba(52,211,153,.2)}
+        body.tmr-aplus.tcoin-dark .tc-top h1{margin:14px 0 10px !important;text-align:left !important;font-size:clamp(38px,5vw,60px) !important}
+        body.tcoin-dark .tc-top h1{font-family:Montserrat,Inter,system-ui,sans-serif !important;font-style:italic !important;font-weight:800 !important;letter-spacing:-.025em !important;line-height:1.02 !important;text-transform:none !important;background:none !important;color:#fff !important;-webkit-text-fill-color:#fff !important}
+        body.tcoin-dark .tc-top h1 em{font-style:italic;background:linear-gradient(180deg,#ffdf7e,#f5c84c 60%,#d99a1e) !important;-webkit-background-clip:text !important;background-clip:text !important;color:transparent !important;-webkit-text-fill-color:transparent !important;padding-right:.06em}
+        body.tmr-aplus.tcoin-dark .tc-top p.tc-sub{margin:0 !important;max-width:54ch;text-align:left !important;font-size:clamp(15px,1.25vw,17.5px) !important;line-height:1.55 !important;color:#dbe6f7 !important}
+        .tc-acts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:20px}
+        .tc a.tc-act{display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding:13px 14px;border-radius:14px;text-decoration:none;color:#fff;min-height:84px;
+            background:rgba(8,18,40,.74);border:1px solid rgba(160,200,255,.3);transition:transform .15s,border-color .15s,box-shadow .15s}
+        .tc a.tc-act:hover{transform:translateY(-2px);border-color:var(--g);box-shadow:0 12px 28px rgba(0,0,0,.4)}
+        .tc-act i{font-size:17px;color:var(--g)}
+        .tc-act b{font:800 17px/1.1 "Barlow Condensed",Inter,sans-serif;letter-spacing:.04em;text-transform:uppercase}
+        .tc-act small{font-size:11.5px;line-height:1.25;color:var(--mute)}
+        .tc a.tc-act.is-main{background:linear-gradient(180deg,#ffe28a,#f5c84c 55%,#e0a52a);border-color:transparent;color:#1a1204;box-shadow:0 10px 26px rgba(245,200,76,.28)}
+        .tc-act.is-main i{color:#1a1204}.tc-act.is-main small{color:#4a3608}
+        .tc-act.is-chain i{color:var(--b)}
+        .tc-ca{display:flex;align-items:center;gap:8px 10px;flex-wrap:wrap;margin-top:14px;padding:10px 12px;border-radius:12px;border:1px dashed rgba(245,200,76,.5);background:rgba(4,10,24,.72)}
+        .tc-ca-l{flex:1 1 100%;font:800 11px/1 "Barlow Condensed",Inter,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#ffe7a3}
+        .tc-ca-l i{color:#34d399;margin-right:5px}
+        .tc-mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;font-weight:600;color:#f4f8ff;word-break:break-all;flex:1 1 220px;min-width:0}
+        .tc .tcoin-copy-btn{flex:0 0 auto;background:rgba(245,200,76,.14);border:1px solid rgba(245,200,76,.55);color:#ffe7a3;font:800 12px/1 Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;
+            padding:9px 13px;border-radius:9px;cursor:pointer;min-height:34px}
+        .tc .tcoin-copy-btn:hover{background:rgba(245,200,76,.24)}
+        .tc .tcoin-copy-btn[data-copied="1"]{background:#34d399;border-color:#34d399;color:#04210f}
+        .tc-ca a{font-size:12.5px;font-weight:700;text-decoration:none;white-space:nowrap}
+
+        /* live market panel */
+        .tc-panel{border:1px solid rgba(160,200,255,.26);border-radius:18px;background:rgba(4,10,24,.78);backdrop-filter:blur(6px);padding:16px}
+        .tc-panel-h{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+        .tc-panel-h b{font:800 15px/1 "Barlow Condensed",Inter,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#fff}
+        .tc-panel-h span{font-size:11.5px;color:var(--mute);text-align:right}
+        .tc-tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+        .tc-tile{border:1px solid rgba(120,170,255,.18);border-radius:12px;background:linear-gradient(180deg,rgba(18,36,72,.6),rgba(8,18,40,.7));padding:11px 13px;min-width:0}
+        .tc-tile.is-price{border-color:rgba(245,200,76,.5);background:linear-gradient(180deg,rgba(245,200,76,.13),rgba(8,18,40,.7))}
+        .tc-k{font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--mute);margin-bottom:5px}
+        .tc-v{font:800 clamp(21px,2.1vw,27px)/1.08 "Barlow Condensed",Inter,sans-serif;color:#fff;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+        .tc-tile.is-price .tc-v{color:#ffe28a}
+        .tc-s{font-size:11.5px;line-height:1.35;color:var(--mute);margin-top:4px;overflow-wrap:anywhere}
+        .tc-links{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;align-items:center}
+        .tc a.tc-btn,.tc button.tc-btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:40px;padding:0 14px;border-radius:10px;font:700 13.5px/1 Inter,sans-serif;text-decoration:none;cursor:pointer;
+            background:rgba(255,255,255,.05);color:#fff;border:1px solid rgba(160,200,255,.35)}
+        .tc a.tc-btn:hover,.tc button.tc-btn:hover{border-color:var(--g);background:rgba(245,200,76,.1)}
+        .tc a.tc-btn.is-gold{background:linear-gradient(180deg,#ffe28a,#f5c84c 55%,#e0a52a);color:#1a1204;border-color:transparent;font-weight:800}
+        .tc a.tc-btn.is-blue{background:linear-gradient(180deg,#3aa0ff,#1569c9);border-color:transparent;font-weight:800}
+        .tc [hidden]{display:none !important}
+        .tc-note{font-size:12px;line-height:1.5;color:var(--mute);margin-top:10px}
+        .tc-state{padding:14px;border-radius:12px;font-size:14px;font-weight:600;line-height:1.55;border:1px solid var(--line);color:#dbe6f7;background:rgba(18,36,72,.5)}
+        .tc-state.is-down{border-color:rgba(248,113,113,.5);background:rgba(127,29,29,.28);color:#fecaca}
+
+        /* risk box */
+        .tc-risk{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 14px;padding:16px 18px;border-radius:16px;border:1px solid rgba(248,113,113,.5);background:linear-gradient(180deg,rgba(127,29,29,.3),rgba(60,14,20,.34))}
+        .tc-risk>i{grid-row:1 / span 3;font-size:22px;color:#fca5a5;margin-top:2px}
+        .tc-risk-t{font:800 17px/1.1 "Barlow Condensed",Inter,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#fecaca}
+        .tc-risk ul{margin:6px 0 0;padding:0;list-style:none;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px 22px}
+        .tc-risk li{font-size:13.5px;line-height:1.5;color:#f3dcdc}
+        .tc-risk li b{color:#fff}
+        .tc-risk-live{font-size:13px;line-height:1.5;color:#fecaca;margin-top:8px;overflow-wrap:anywhere}
+        .tc-risk-live:empty{display:none}
+        .tc-risk-live::before{content:"Right now: ";font-weight:800;color:#fff}
+        .tc-risk-live.is-trade::before{content:"Before you trade: "}
+        .tc-risk a{color:#fff;font-weight:700}
+
+        /* earn / use / trade */
+        .tc-split{margin:18px 0 12px !important;font-size:14.5px;line-height:2;color:#dbe6f7;scroll-margin-top:90px}
+        .tc-split .tc-tag{vertical-align:middle;margin-right:2px}
+        .tc-tag{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;font:800 11.5px/1 "Barlow Condensed",Inter,sans-serif;letter-spacing:.14em;text-transform:uppercase;white-space:nowrap}
+        .tc-tag.is-credit{background:rgba(245,200,76,.14);border:1px solid rgba(245,200,76,.55);color:#ffe7a3}
+        .tc-tag.is-chain{background:rgba(92,194,255,.13);border:1px solid rgba(92,194,255,.55);color:#bfe6ff}
+        .tc-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+        .tc-card{position:relative;display:flex;flex-direction:column;border-radius:18px;border:1px solid var(--line);background:var(--glass);padding:18px 20px 18px;overflow:hidden}
+        .tc-card::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:linear-gradient(90deg,var(--g),#f59e0b)}
+        .tc-card.is-chain::before{background:linear-gradient(90deg,var(--b),#1569c9)}
+        .tc-card-h{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+        .tc-card-h .tc-tag{margin-left:auto}
+        .tc-ico{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:18px;color:#1a1204;background:linear-gradient(180deg,#ffe28a,#e0a52a)}
+        .tc-card.is-chain .tc-ico{color:#fff;background:linear-gradient(180deg,#3aa0ff,#1569c9)}
+        body.tmr-aplus.tcoin-dark .tc-card h2{margin:0 !important;font-size:clamp(24px,2.3vw,30px) !important}
+        .tc-card-p{font-size:14px;line-height:1.5;color:var(--mute);margin:0 0 12px}
+        .tc-rows{list-style:none;margin:0 0 12px;padding:0;display:grid;gap:7px}
+        .tc-rows li{display:flex;align-items:center;gap:10px;font-size:14px;line-height:1.4;color:#e6eef8}
+        .tc-rows li span{min-width:0}
+        .tc-rows em{flex:0 0 auto;min-width:46px;text-align:center;font:800 15px/1 "Barlow Condensed",Inter,sans-serif;font-style:normal;padding:6px 8px;border-radius:8px;background:rgba(245,200,76,.14);border:1px solid rgba(245,200,76,.4);color:#ffe28a}
+        .tc-card.is-chain .tc-rows em{background:rgba(92,194,255,.12);border-color:rgba(92,194,255,.4);color:#bfe6ff}
+        .tc-fine{font-size:12.5px;line-height:1.5;color:var(--mute);margin:0 0 14px}
+        .tc-card .tc-links{margin-top:auto}
+
+        /* drawers */
+        .tc-h{font:800 14px/1 "Barlow Condensed",Inter,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--mute);margin:22px 0 8px}
+        .tc-d{border:1px solid var(--line);border-radius:14px;background:var(--glass);margin-top:8px;scroll-margin-top:90px}
+        .tc-d>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:12px;padding:15px 18px;min-height:54px}
+        .tc-d>summary::-webkit-details-marker{display:none}
+        .tc-d>summary>i:first-child{color:var(--g);width:18px;text-align:center}
+        .tc-d>summary b{font-size:15.5px;font-weight:700;color:#fff}
+        .tc-d>summary span{font-size:13px;color:var(--mute);margin-left:auto;text-align:right}
+        .tc-d>summary::after{content:"+";font:700 22px/1 Inter,sans-serif;color:var(--g);width:18px;text-align:center}
+        .tc-d[open]>summary::after{content:"\2212"}
+        .tc-d-b{padding:2px 18px 18px;font-size:14px;line-height:1.6;color:#d3deee}
+        .tc-d-b p{margin:10px 0 0}
+        .tc-facts{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:1px;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--line);margin:0}
+        .tc-facts>div{background:#0a1630;padding:10px 13px;min-width:0}
+        .tc-facts>div.is-wide{grid-column:1 / -1;display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
+        .tc-facts dt{font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--mute);margin-bottom:3px}
+        .tc-facts dd{margin:0;font-size:14px;font-weight:700;color:#fff;overflow-wrap:anywhere}
+        .tc-facts .is-wide dt{flex:1 1 100%;margin:0}
+        .tc-steps{margin:0;padding:0;list-style:none;counter-reset:s;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 22px}
+        .tc-steps li{counter-increment:s;position:relative;padding-left:38px;min-height:28px}
+        .tc-steps li::before{content:counter(s);position:absolute;left:0;top:1px;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:#1569c9;color:#fff;font-weight:800;font-size:13px}
+        .tc-steps b{color:#fff}
+        .tc-list{margin:0;padding:0;list-style:none;display:grid;gap:8px}
+        .tc-list li{position:relative;padding-left:24px}
+        .tc-list li::before{content:"\f071";font-family:"Font Awesome 6 Free";font-weight:900;position:absolute;left:0;top:1px;font-size:12px;color:var(--g)}
+        .tc-list b{color:#fff}
+        .tc-more{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+        .tc a.tc-chip{display:inline-flex;align-items:center;min-height:38px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:rgba(18,36,72,.5);color:#dbe6f7;font-size:13.5px;font-weight:600;text-decoration:none}
+        .tc a.tc-chip:hover{border-color:var(--g);color:#fff}
+
         body.tcoin-dark :is(nav,div,p):has(> .tmrlh-home.tmrlh-a){background:none !important;border:0 !important;box-shadow:none !important;padding:0 !important;min-height:0 !important}
         body.tcoin-dark .tmrlh-home.tmrlh-a{background:none !important;border:0 !important;box-shadow:none !important;padding:4px 0 !important;font-size:13px}
         html body.tcoin-dark .tmrlh-home.tmrlh-a.tmrlh-a span:not(.tmrlh-home-mark){color:#9fb0c9 !important;font-weight:600}
         body.tcoin-dark .tmrlh-home-mark{background:rgba(148,163,184,.16) !important;color:#dbe6f2 !important}
-        @media (max-width:700px){
-            body.tcoin-dark header:has(> .tcoin-hero){padding:26px 18px 24px}
-            body.tcoin-dark .tcoin-hero{flex-direction:column;gap:14px}
-            body.tcoin-dark .tcoin-hero img{width:72px;height:72px;flex-basis:72px}
+
+        @media (max-width:980px){
+            .tc-top-grid{grid-template-columns:1fr}
+            .tc-cards{grid-template-columns:1fr}
+            .tc-risk ul{grid-template-columns:1fr}
+        }
+        @media (max-width:640px){
+            .tc{padding:6px 16px 44px !important}
+            .tc-brand img{width:52px;height:52px;flex-basis:52px}
+            .tc-acts{grid-template-columns:1fr 1fr}
+            .tc a.tc-act{min-height:0;flex-direction:row;align-items:center;gap:10px;padding:13px 12px}
+            .tc-act small{display:none}
+            .tc-steps{grid-template-columns:1fr}
+            .tc-risk{grid-template-columns:1fr;padding:14px}
+            .tc-risk>i{display:none}
+            .tc-d>summary span{display:none}
+            .tc-d>summary{padding:14px}
+            .tc-d-b{padding:2px 14px 16px}
+            .tc-card{padding:16px 16px 16px}
+            .tc-risk-live{font-size:12.5px}
+            .tc-v{font-size:21px}
+            .tc-tile{padding:10px 11px}
+            .tc-panel{padding:13px}
+            .tc-links .tc-btn{flex:1 1 auto}
         }
     </style>
     <link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=a1651b8162ca">
@@ -248,293 +310,224 @@
 <link rel="stylesheet" href="/static/css/tmr-ds-header.cc364e352e74.css">
 <!-- The one approved navbar: the shared header component (tmr-ds-nav.js)
      plus the homepage's own navbar rules, so every page renders the same bar. -->
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@600;700;800;900&family=Montserrat:ital,wght@1,800&family=Inter:wght@400;500;600;700;800;900&display=swap">
 <link rel="stylesheet" href="/static/css/tmr-navbar.css?v=68ec3081d29a">
+<link rel="stylesheet" href="/static/css/tmr-aplus.css?v=8b894834b70c">
+<script defer src="/static/js/tmr-aplus.js?v=fef00566de34"></script>
 </head>
-<body class="tmr-ds-shell tmr-polished-page tcoin-dark">
+<body class="tmr-ds-shell tmr-polished-page tmr-dark tmr-aplus tcoin-dark" data-aplus="coin">
 
-<main class="tmr-shell">
-    <header class="tmr-page-header">
-        <div class="tcoin-hero">
-            <img src="/static/branding/tmr-coin/tmr-coin-logo.svg" alt="TMR Coin" aria-hidden="true">
-            <div>
-                <span class="tcoin-live-badge"><span class="tcoin-live-dot"></span>Live on Base</span>
-                <h1 class="tmr-h1">TMR Coin</h1>
-                <p class="tmr-page-sub tcoin-positioning">A fixed supply ERC-20 cryptocurrency on Base. It is separate from the site credits you earn and use on TrustMyRecord, and nothing converts one into the other. Prices are volatile and you can lose money.</p>
+<main class="tmr-shell tc">
+    <header class="tmr-page-header tc-top">
+        <div class="tc-top-grid">
+            <div class="tc-lead">
+                <div class="tc-brand">
+                    <img src="/static/branding/tmr-coin/tmr-coin-logo.svg" alt="" aria-hidden="true">
+                    <span class="tc-badge"><i></i>Live on Base</span>
+                </div>
+                <h1 class="tmr-h1">TMR <em>Coin</em></h1>
+                <p class="tmr-page-sub tc-sub">TMR Coin is a fixed supply cryptocurrency on Base that anyone can buy or sell in a public pool. It is separate from the site credits you earn and spend on TrustMyRecord, and nothing converts one into the other.</p>
+                <nav class="tc-acts" aria-label="TMR Coin actions">
+                    <a class="tc-act is-main" href="#tc-earn"><i class="fa-solid fa-gift"></i><b>Earn</b><small>Free site credits</small></a>
+                    <a class="tc-act" href="/marketplace/?pay=tmr"><i class="fa-solid fa-bag-shopping"></i><b>Spend</b><small>Picks and perks</small></a>
+                    <a class="tc-act" href="/wallet/"><i class="fa-solid fa-wallet"></i><b>Wallet</b><small>Your site balance</small></a>
+                    <a class="tc-act is-chain" href="#tc-market"><i class="fa-solid fa-right-left"></i><b>Trade</b><small>On-chain, on Base</small></a>
+                </nav>
+                <div class="tc-ca">
+                    <span class="tc-ca-l"><i class="fa-solid fa-circle-check"></i>Verified contract, check it before you trade</span>
+                    <span class="tc-mono" id="tcoin-contract">0x522ddf023d0E2Cab5cB05660573165301519AE9e</span>
+                    <button class="tcoin-copy-btn" type="button" data-copy-target="tcoin-contract">Copy</button>
+                    <a href="https://basescan.org/token/0x522ddf023d0E2Cab5cB05660573165301519AE9e" rel="nofollow noopener" target="_blank">Basescan →</a>
+                </div>
+            </div>
+
+            <div class="tc-panel" id="tc-market">
+                <div class="tc-panel-h"><b>Live market</b><span>On-chain TMR, read from the pool <span id="tcoin-read-at"></span></span></div>
+                <div id="tcoin-market-loading" class="tc-state is-loading">Reading the pool on Base&hellip;</div>
+                <div id="tcoin-market-down" class="tc-state is-down tcoin-hidden">Live market data could not be read right now. Price and liquidity are read from the pool on every page load and are never cached or hard-coded, so nothing is shown rather than something stale. The contract details on this page are unaffected.</div>
+                <div id="tcoin-market-live" class="tcoin-hidden">
+                    <div class="tc-tiles">
+                        <div class="tc-tile is-price"><div class="tc-k">Price</div><div class="tc-v" id="tcoin-price">&hellip;</div><div class="tc-s" id="tcoin-price-eth">&hellip;</div></div>
+                        <div class="tc-tile"><div class="tc-k">Pool liquidity</div><div class="tc-v" id="tcoin-tvl">&hellip;</div><div class="tc-s" id="tcoin-tvl-sub">&hellip;</div></div>
+                        <div class="tc-tile"><div class="tc-k">In the pool, can be bought</div><div class="tc-v" id="tcoin-liquid">&hellip;</div><div class="tc-s" id="tcoin-liquid-sub">&hellip;</div></div>
+                        <div class="tc-tile"><div class="tc-k">Total supply</div><div class="tc-v">1 billion</div><div class="tc-s">1,000,000,000 TMR, fixed, no mint</div></div>
+                        <div class="tc-tile"><div class="tc-k">Market</div><div class="tc-v" id="tcoin-dex">&hellip;</div><div class="tc-s" id="tcoin-dex-sub">&hellip;</div></div>
+                        <div class="tc-tile"><div class="tc-k">Liquidity lock</div><div class="tc-v">365 day timelock</div><div class="tc-s">Delayed and public, not burned</div></div>
+                    </div>
+                    <div class="tc-links">
+                        <a class="tc-btn is-blue" id="tcoin-trade-link" href="#" rel="nofollow noopener" target="_blank" hidden>Trade on KyberSwap →</a>
+                        <a class="tc-btn" id="tcoin-chart-link" href="#" rel="nofollow noopener" target="_blank">Live chart →</a>
+                        <a class="tc-btn" id="tcoin-pool-link" href="#" rel="nofollow noopener" target="_blank">Pool on Basescan →</a>
+                        <button type="button" class="tc-btn" id="tcoin-add-wallet" hidden>Add TMR to your wallet</button>
+                        <span id="tcoin-add-wallet-msg" class="tc-note" style="margin:0" hidden></span>
+                        <script>
+                        // ADD_WALLET_20261031: asks the visitor's own wallet to show TMR (EIP-747). Nothing is sent or signed.
+                        (function () {
+                            var btn = document.getElementById('tcoin-add-wallet'), msg = document.getElementById('tcoin-add-wallet-msg');
+                            if (!btn || !window.ethereum || !window.ethereum.request) return;
+                            btn.hidden = false;
+                            btn.addEventListener('click', function () {
+                                window.ethereum.request({ method: 'wallet_watchAsset', params: { type: 'ERC20', options: {
+                                    address: '0x522ddf023d0E2Cab5cB05660573165301519AE9e', symbol: 'TMR', decimals: 18,
+                                    image: 'https://trustmyrecord.com/static/branding/tmr-coin/tmr-coin-256.png' } } })
+                                .then(function (ok) { msg.textContent = ok ? 'TMR added. Switch your wallet to Base to see it.' : 'Not added.'; msg.hidden = false; })
+                                .catch(function () { msg.textContent = 'Your wallet did not add it. You can import the contract address above by hand.'; msg.hidden = false; });
+                            });
+                        })();
+                        </script>
+                    </div>
+<div class="tc-note">TrustMyRecord does not sell TMR, does not take payment for it, and earns nothing from these links.</div>
+                </div>
             </div>
         </div>
     </header>
 
-    <section class="tmr-glass tcoin-announce">
-        <span class="tcoin-announce-kick">Announcement</span>
-        <h2 class="tmr-h2">TMR Coin is live on Base</h2>
-        <p class="tcoin-announce-lede">TMR Coin is a real cryptocurrency on Base. Anyone with a wallet can buy or sell it in a public pool without going through TrustMyRecord, and there is more in the works. Only use money you can afford to lose.</p>
-        <p>What that means in practice. The token is on Base at a verified contract with a fixed supply of 1,000,000,000 and no mint function, so nobody can print more of it. It is not a promise, a voucher, or an IOU from us. It is a token you hold in your own wallet, and its price is whatever people are willing to pay for it at that moment.</p>
-        <h3 class="tcoin-announce-sub">Two things we want you to hear from us first</h3>
-        <ul class="tcoin-risk-list">
-            <li><strong>Where it trades.</strong> TMR trades in the Uniswap v3 TMR/WETH pool (0.3% fee tier) on Base. The trade link in the live market section below opens KyberSwap, which routes through this pool; select TMR by pasting the contract address, and check it before you trade.</li>
-            <li><strong>Site credits are not TMR tokens.</strong> What you earn on the site is site credits, an internal balance in your TrustMyRecord wallet. Site credits and the TMR token are separate. Nothing converts one into the other, in either direction. Site credits cannot be withdrawn, sold or transferred off the site.</li>
-        </ul>
-        <h3 class="tcoin-announce-sub">What we are working on next</h3>
-        <p>The work in front of us is on the product: making site credits more useful inside TrustMyRecord, and keeping this page accurate about what is live and what is off. Since 30 October 2026 the company TMR is locked on chain: 908.17 million in a vesting contract that releases nothing until 25 October 2027, 50 million in a timelock that needs 30 days of public notice before any use, and the pool position in a timelock that needs 365 days of public notice. Locked here means delayed and public, not burned. Everything is controlled by a 2 of 3 multisig Safe. Details are in the supply section below.</p>
-        <p>That is work on the product. It is not a promise about the price, and you should not read it as one. Nobody at TrustMyRecord controls what TMR trades at. It can go up, it can go to nothing, and you should never put in money you cannot afford to lose.</p>
-        <div class="tcoin-links">
-            <a class="tmr-cta-secondary" href="#tcoin-market-live">See the live market below &rarr;</a>
+    <aside class="tc-risk" aria-label="Risk warning">
+        <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+        <div class="tc-risk-t">Risk warning</div>
+        <div>
+            <ul>
+                <li><b>You can lose everything.</b> The price is set only by trading and can fall to zero. Nothing here is an investment offer.</li>
+                <li><b>Liquidity is low.</b> The pool is small, so even modest trades move the price sharply. The pool position sits in a 365 day timelock, which is a delay, not a burn.</li>
+                <li><b>Site credits are not TMR.</b> They cannot be withdrawn, sold, transferred or converted to TMR or cash.</li>
+            </ul>
+            <div class="tc-risk-live" id="tcoin-depth"></div><div class="tc-risk-live is-trade" id="tcoin-trade-notice" hidden></div>
+            <div class="tc-note"><a href="#tc-risks">Read all risks →</a></div>
         </div>
-    </section>
+    </aside>
 
-    <section class="tmr-glass">
-        <h2 class="tmr-h2">Site Credits and TMR Coin Are Separate</h2>
-        <p>Site credits on TrustMyRecord and the TMR token on Base are two separate things. Site credits and the TMR token are separate. Nothing converts one into the other, in either direction.</p>
-        <div class="tcoin-two">
-            <div class="tcoin-col is-points">
-                <span class="tcoin-col-tag">In your account</span>
-                <h3>Site credits</h3>
-                <ul>
-                    <li>Earned on the site and used for simulator runs, tips and the marketplace.</li>
-                    <li>Instant and free to use. No wallet, no gas, no transaction to sign.</li>
-                    <li>Not a token and not backed by tokens. Card purchases of credits were turned off on 25 October 2026.</li>
-                    <li><strong>There is no way to take them off the site.</strong> No withdrawal, no transfer, no sale, no conversion to TMR or to cash.</li>
-                </ul>
-            </div>
-            <div class="tcoin-col is-token">
-                <span class="tcoin-col-tag">On Base</span>
-                <h3>TMR Coin, on chain</h3>
-                <ul>
-                    <li>A fixed supply ERC-20 you hold in your own wallet.</li>
-                    <li>Transferable, and can be bought and sold on a decentralised exchange.</li>
-                    <li>Has a market price, set entirely by whatever people trade at.</li>
-                    <li>Bought with ETH, never earned on the site.</li>
-                </ul>
-            </div>
-        </div>
-        <div class="tcoin-verify-banner">Site credits are not backed by TMR Coin and cannot be converted into it. Separately, TrustMyRecord records a cash reserve from credit revenue. The reserve does not support or guarantee the market price, and it does not buy TMR.</div>
-        <p style="margin-top:12px;font-size:13.5px;color:var(--tmrp-text-muted);">How the cash reserve is calculated is explained on the <a href="/tmr-coin/revenue-reserve/">cash reserve page</a>.</p>
-    </section>
+    <p class="tc-split" id="tc-earn"><span class="tc-tag is-credit">Site credits</span> stay on TrustMyRecord. <span class="tc-tag is-chain">On-chain TMR</span> is only bought with ETH. Nothing converts one into the other, in either direction.</p>
 
-    <section class="tmr-glass">
-        <h2 class="tmr-h2">Site Credits and the Token, Side by Side</h2>
-        <p>Earning on the site gives you site credits. Buying on chain gives you TMR tokens. Site credits and the TMR token are separate. Nothing converts one into the other, in either direction.</p>
-        <div class="tcoin-two">
-            <div class="tcoin-col is-points">
-                <span class="tcoin-col-tag">On the site, free</span>
-                <h3>Earn site credits</h3>
-                <ul>
-                    <li>25 credits for signing up, once.</li>
-                    <li>10 for your first sportsbook pick, once.</li>
-                    <li>5 for your first forum thread, once.</li>
-                    <li>1 for creating a forum thread. These four are the only active earning rules. Others, such as pick wins, trivia, polls and referrals, are paused.</li>
-                    <li>Tips from other members who liked your work. A tip moves credits between members, it does not create any.</li>
-                </ul>
-                <p style="margin:10px 0 0;font-size:13.5px;color:var(--tmrp-text-muted);">Spend it on the site: BetLegend Pro reports at 5 each after the free daily one, a badge at 500, custom forum flair at 1,500, priority support at 3,000. Spending destroys the credits you spend.</p>
+    <div class="tc-cards">
+        <section class="tc-card">
+            <div class="tc-card-h"><span class="tc-ico"><i class="fa-solid fa-gift"></i></span><h2>Earn</h2><span class="tc-tag is-credit">Site credits</span></div>
+            <ul class="tc-rows">
+                <li><em>25</em><span>Sign up, once</span></li>
+                <li><em>10</em><span>Your first <a href="/sportsbook/">sportsbook</a> pick, once</span></li>
+                <li><em>5</em><span>Your first <a href="/forum/">forum</a> thread, once</span></li>
+                <li><em>1</em><span>Each forum thread you create</span></li>
+            </ul>
+            <p class="tc-fine">Members can also tip each other. Pick wins, trivia, polls and referrals are paused.</p>
+            <div class="tc-links">
+                <a class="tc-btn is-gold" href="/sportsbook/">Post a pick →</a>
+                <a class="tc-btn" href="/wallet/">View your wallet →</a>
             </div>
-            <div class="tcoin-col is-token">
-                <span class="tcoin-col-tag">On Base, costs money</span>
-                <h3>Buy the token</h3>
-                <ul>
-                    <li>Swap ETH for TMR on Base using the verified contract address below.</li>
-                    <li>It sits in your own wallet. We never hold it and never see your keys.</li>
-                    <li>Can be sold back into the pool for ETH.</li>
-                    <li>The price is set by trading. It can fall to nothing.</li>
-                </ul>
-                <p style="margin:10px 0 0;font-size:13.5px;color:var(--tmrp-text-muted);">Prices can move sharply. Keep your wallet's slippage protection on.</p>
-            </div>
-        </div>
-        <div class="tcoin-verify-banner">Earning site credits never puts tokens in your wallet, and buying tokens never adds to your site balance. Site credits cannot be cashed out.</div>
-    </section>
+        </section>
 
-    <section class="tmr-glass">
-        <h2 class="tmr-h2">Live Market</h2>
-        <div class="tcoin-market">
-            <div id="tcoin-market-loading" class="tcoin-state is-loading">Reading the pool on Base&hellip;</div>
-            <div id="tcoin-market-down" class="tcoin-state is-down tcoin-hidden">Live market data could not be read right now. Price and liquidity are read from the pool on every page load and are never cached or hard-coded, so nothing is shown rather than something stale. The contract details below are unaffected.</div>
-            <div id="tcoin-market-live" class="tcoin-hidden">
-                <div class="tcoin-metrics">
-                    <div class="tcoin-metric"><div class="tcoin-info-label">Price</div><div class="tcoin-metric-val" id="tcoin-price">&hellip;</div><div class="tcoin-metric-sub" id="tcoin-price-eth">&hellip;</div></div>
-                    <div class="tcoin-metric"><div class="tcoin-info-label">Pool liquidity</div><div class="tcoin-metric-val" id="tcoin-tvl">&hellip;</div><div class="tcoin-metric-sub" id="tcoin-tvl-sub">&hellip;</div></div>
-                    <div class="tcoin-metric"><div class="tcoin-info-label">In the pool, can be bought</div><div class="tcoin-metric-val" id="tcoin-liquid">&hellip;</div><div class="tcoin-metric-sub" id="tcoin-liquid-sub">&hellip;</div></div>
-                    <div class="tcoin-metric"><div class="tcoin-info-label">Market</div><div class="tcoin-metric-val" id="tcoin-dex">&hellip;</div><div class="tcoin-metric-sub" id="tcoin-dex-sub">&hellip;</div></div>
-                </div>
-                <div class="tcoin-depth" id="tcoin-depth" style="overflow-wrap:anywhere;"></div>
-                <div class="tcoin-info-grid" style="margin-top:16px;">
-                    <div class="tcoin-info-item" style="grid-column:1 / -1;">
-                        <div class="tcoin-info-label">Pool address</div>
-                        <div class="tcoin-copy-row">
-                            <div class="tcoin-info-value tcoin-mono" id="tcoin-pool-addr">&hellip;</div>
-                            <button class="tcoin-copy-btn" type="button" data-copy-target="tcoin-pool-addr">Copy</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="tcoin-links">
-                    <a class="tmr-cta-secondary" id="tcoin-chart-link" href="#" rel="nofollow noopener" target="_blank">Live chart →</a>
-                    <a class="tmr-cta-secondary" id="tcoin-pool-link" href="#" rel="nofollow noopener" target="_blank">Pool on Basescan →</a>
-                    <a class="tmr-cta-secondary" id="tcoin-trade-link" href="#" rel="nofollow noopener" target="_blank" hidden>Trade on KyberSwap →</a>
-                    <button type="button" class="tmr-cta-secondary" id="tcoin-add-wallet" hidden>Add TMR to your wallet</button>
-                    <span id="tcoin-add-wallet-msg" style="font-size:13px;color:var(--tmrp-text-muted);" hidden></span>
-                    <script>
-                    // ADD_WALLET_20261031: asks the visitor's own wallet to show TMR (EIP-747). Nothing is sent or signed.
-                    (function () {
-                        var btn = document.getElementById('tcoin-add-wallet'), msg = document.getElementById('tcoin-add-wallet-msg');
-                        if (!btn || !window.ethereum || !window.ethereum.request) return;
-                        btn.hidden = false;
-                        btn.addEventListener('click', function () {
-                            window.ethereum.request({ method: 'wallet_watchAsset', params: { type: 'ERC20', options: {
-                                address: '0x522ddf023d0E2Cab5cB05660573165301519AE9e', symbol: 'TMR', decimals: 18,
-                                image: 'https://trustmyrecord.com/static/branding/tmr-coin/tmr-coin-256.png' } } })
-                            .then(function (ok) { msg.textContent = ok ? 'TMR added. Switch your wallet to Base to see it.' : 'Not added.'; msg.hidden = false; })
-                            .catch(function () { msg.textContent = 'Your wallet did not add it. You can import the contract address above by hand.'; msg.hidden = false; });
-                        });
-                    })();
-                    </script>
-                </div>
-                <p id="tcoin-trade-notice" style="margin-top:12px;font-size:13.5px;" hidden></p>
-                <p style="margin-top:12px;font-size:13.5px;color:var(--tmrp-text-muted);">Read live from the pool on Base <span id="tcoin-read-at"></span>. TrustMyRecord does not sell TMR, does not take payment for it, and earns nothing from these links.</p>
+        <section class="tc-card">
+            <div class="tc-card-h"><span class="tc-ico"><i class="fa-solid fa-bag-shopping"></i></span><h2>Use</h2><span class="tc-tag is-credit">Site credits</span></div>
+            <p class="tc-card-p">No wallet, no gas, nothing to sign.</p>
+            <ul class="tc-rows">
+                <li><em>Picks</em><span>Buy picks in the marketplace</span></li>
+                <li><em>Tips</em><span>Tip a member for a post or pick</span></li>
+                <li><em>5</em><span>Extra <a href="/betlegend-pro/">BetLegend Pro</a> report, after the free daily one</span></li>
+                <li><em>500+</em><span>Badge 500, forum flair 1,500, priority support 3,000</span></li>
+            </ul>
+            <p class="tc-fine">Spending destroys the credits you spend. They are not resold and not transferred to TrustMyRecord.</p>
+            <div class="tc-links">
+                <a class="tc-btn is-gold" href="/marketplace/?pay=tmr">Spend on picks →</a>
+                <a class="tc-btn" href="/wallet/rewards/">Rewards catalog →</a>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <section class="tmr-glass">
-        <h2 class="tmr-h2">Token Facts</h2>
-        <div class="tcoin-info-grid">
-            <div class="tcoin-info-item" style="grid-column:1 / -1;">
-                <div class="tcoin-info-label">Contract address (verify this before you trade)</div>
-                <div class="tcoin-copy-row">
-                    <div class="tcoin-info-value tcoin-mono" id="tcoin-contract">0x522ddf023d0E2Cab5cB05660573165301519AE9e</div>
-                    <button class="tcoin-copy-btn" type="button" data-copy-target="tcoin-contract">Copy</button>
-                </div>
+        <section class="tc-card is-chain">
+            <div class="tc-card-h"><span class="tc-ico"><i class="fa-solid fa-right-left"></i></span><h2>Trade</h2><span class="tc-tag is-chain">On-chain TMR</span></div>
+            <p class="tc-card-p">The token on Base. It costs real money and is never earned on the site.</p>
+            <ul class="tc-rows">
+                <li><em>Buy</em><span>Swap ETH for TMR on a decentralised exchange</span></li>
+                <li><em>Hold</em><span>In your own wallet. We never hold it or see your keys</span></li>
+                <li><em>Sell</em><span>Swap back into the pool for ETH</span></li>
+            </ul>
+            <p class="tc-fine">Buying tokens never adds to your site balance. Start small and keep slippage protection on.</p>
+            <div class="tc-links">
+                <a class="tc-btn is-blue" href="#tc-market">Live market →</a>
+                <a class="tc-btn" href="#tc-buy">How to buy →</a>
             </div>
-            <div class="tcoin-info-item"><div class="tcoin-info-label">Network</div><div class="tcoin-info-value">Base (chain ID 8453)</div></div>
-            <div class="tcoin-info-item"><div class="tcoin-info-label">Symbol / decimals</div><div class="tcoin-info-value">TMR / 18</div></div>
-            <div class="tcoin-info-item"><div class="tcoin-info-label">Total and max supply</div><div class="tcoin-info-value">1,000,000,000 TMR, fixed</div></div>
-            <div class="tcoin-info-item"><div class="tcoin-info-label">Source code</div><div class="tcoin-info-value">Verified, exact match</div></div>
-            <div class="tcoin-info-item"><div class="tcoin-info-label">Mint function</div><div class="tcoin-info-value">None, so supply cannot increase</div></div>
-            <div class="tcoin-info-item"><div class="tcoin-info-label">Owner or admin role</div><div class="tcoin-info-value">None exists</div></div>
-            <div class="tcoin-info-item"><div class="tcoin-info-label">Pause, freeze, blacklist</div><div class="tcoin-info-value">None exist</div></div>
-            <div class="tcoin-info-item"><div class="tcoin-info-label">Transfer tax or fee</div><div class="tcoin-info-value">None</div></div>
-            <div class="tcoin-info-item"><div class="tcoin-info-label">Upgradeable or proxy</div><div class="tcoin-info-value">No, the code cannot be changed</div></div>
-            <div class="tcoin-info-item"><div class="tcoin-info-label">Liquidity locked</div><div class="tcoin-info-value">The pool position is in a 365 day timelock. It holds three ranges: TMR above the price, ETH below it, and since 31 October 2026 a range across the current price, all in the same timelock. See supply below.</div></div>
-        </div>
-        <p style="margin-top:12px;">Because the contract has no privileged functions at all, nobody, including TrustMyRecord, can mint more TMR, freeze a holder, block a transfer, take a fee, or alter the code. That is checkable rather than promised: the source is published and verified, so you can read it yourself.</p>
-        <div class="tcoin-links">
-            <a class="tmr-cta-secondary" href="https://basescan.org/token/0x522ddf023d0E2Cab5cB05660573165301519AE9e" rel="nofollow noopener" target="_blank">Token on Basescan →</a>
-            <a class="tmr-cta-secondary" href="https://repo.sourcify.dev/8453/0x522ddf023d0E2Cab5cB05660573165301519AE9e" rel="nofollow noopener" target="_blank">Verified source →</a>
-        </div>
-    </section>
+        </section>
+    </div>
 
-    <section class="tmr-glass">
-        <h2 class="tmr-h2">How To Buy, Hold or Sell TMR</h2>
-        <p>TMR is bought on a decentralised exchange, so there is no account to open and nothing to buy from TrustMyRecord. TMR can be sold the same way. You will need a self-custody wallet and ETH on the Base network.</p>
-        <div class="tcoin-grid">
-            <div class="tcoin-item">
-                <span class="tcoin-amt">1</span>
-                <div><strong>Get a wallet</strong><span>Any self-custody wallet that supports Base, such as Coinbase Wallet, MetaMask, Rabby. You control the keys; TrustMyRecord never sees them and never needs them.</span></div>
-            </div>
-            <div class="tcoin-item">
-                <span class="tcoin-amt">2</span>
-                <div><strong>Switch to Base</strong><span>Base is an Ethereum layer-2 network, chain ID 8453. Most wallets have it built in. Fees are typically a fraction of a cent.</span></div>
-            </div>
-            <div class="tcoin-item">
-                <span class="tcoin-amt">3</span>
-                <div><strong>Fund it with ETH on Base</strong><span>Bridge ETH to Base or buy it directly in your wallet. You need ETH both to swap and to pay network fees.</span></div>
-            </div>
-            <div class="tcoin-item">
-                <span class="tcoin-amt">4</span>
-                <div><strong>Swap using the verified address</strong><span>Open the trade link in the live market section (KyberSwap on Base, which routes through this pool). Paste the contract address above into the token search rather than searching by name, check it character by character, and import it. KyberSwap may say it cannot estimate the price impact for TMR; read the quote before you confirm.</span></div>
-            </div>
-            <div class="tcoin-item">
-                <span class="tcoin-amt">5</span>
-                <div><strong>Add the token to your wallet</strong><span>If your balance does not appear, use your wallet's "import token" option with the same contract address, symbol TMR and 18 decimals.</span></div>
-            </div>
-            <div class="tcoin-item">
-                <span class="tcoin-amt">6</span>
-                <div><strong>Start small and set slippage</strong><span>Start with a small trade and leave your wallet's slippage protection on. It will refuse a trade that would fill at a bad price, which is exactly what you want.</span></div>
-            </div>
-            <div class="tcoin-item">
-                <span class="tcoin-amt">7</span>
-                <div><strong>Selling</strong><span>Use the same screen with TMR as the token you pay and ETH as the token you receive. Check the quote before you confirm.</span></div>
-            </div>
-        </div>
-    </section>
+    <div class="tc-h">Details</div>
 
-    <section class="tmr-glass">
-        <h2 class="tmr-h2">Site Credits On TrustMyRecord</h2>
-        <p>Earning site credits is live today. Four earning rules are active, and credits are used for simulator runs, tips and the marketplace:</p>
-        <div class="tcoin-grid">
-            <div class="tcoin-item">
-                <span class="tcoin-amt">25</span>
-                <div><strong>Sign-up grant</strong><span>Every new member receives 25 credits for creating an account.</span></div>
-            </div>
-            <div class="tcoin-item">
-                <span class="tcoin-amt">10</span>
-                <div><strong>First sportsbook pick</strong><span>Post your first pick on the <a href="/sportsbook/">sportsbook</a> and earn a 10 credit bonus.</span></div>
-            </div>
-            <div class="tcoin-item">
-                <span class="tcoin-amt">Spend</span>
-                <div><strong>BetLegend Pro reports</strong><span>Extra <a href="/betlegend-pro/">BetLegend Pro</a> matchup reports cost 5 credits each after the free daily one. This spends credits, it does not earn them.</span></div>
-            </div>
-            <div class="tcoin-item">
-                <span class="tcoin-amt">5</span>
-                <div><strong>First forum thread</strong><span>Start your first thread in the <a href="/forum/">forum</a> for 5 credits, once. Creating a thread after that pays 1 credit.</span></div>
-            </div>
-            <div class="tcoin-item">
-                <span class="tcoin-amt">Tips</span>
-                <div><strong>Tip other members</strong><span>Send credits to someone whose post or pick deserved it.</span></div>
-            </div>
-            <div class="tcoin-item">
-                <span class="tcoin-amt">1</span>
-                <div><strong>Create a thread</strong><span>1 credit for creating a <a href="/forum/">forum</a> thread, on top of the one-time first-thread bonus.</span></div>
-            </div>
-            <div class="tcoin-item">
-                <span class="tcoin-amt">Paused</span>
-                <div><strong>Other earning rules</strong><span>Pick wins, trivia, polls, referrals and other earning rules are paused.</span></div>
-            </div>
-            <div class="tcoin-item">
-                <span class="tcoin-amt">Perks</span>
-                <div><strong>Contests and cosmetics</strong><span>Enter free site contests (paid contests are off) and unlock badges and profile customisation from the <a href="/wallet/rewards/">rewards catalog</a>.</span></div>
+    <details class="tc-d" id="tc-facts">
+        <summary><i class="fa-solid fa-file-contract"></i><b>Token facts</b><span>No owner, no mint, no pause, no tax</span></summary>
+        <div class="tc-d-b">
+            <dl class="tc-facts">
+                <div><dt>Network</dt><dd>Base (chain ID 8453)</dd></div>
+                <div><dt>Symbol / decimals</dt><dd>TMR / 18</dd></div>
+                <div><dt>Total and max supply</dt><dd>1,000,000,000 TMR, fixed</dd></div>
+                <div><dt>Source code</dt><dd>Verified, exact match</dd></div>
+                <div><dt>Mint function</dt><dd>None, so supply cannot increase</dd></div>
+                <div><dt>Owner or admin role</dt><dd>None exists</dd></div>
+                <div><dt>Pause, freeze, blacklist</dt><dd>None exist</dd></div>
+                <div><dt>Transfer tax or fee</dt><dd>None</dd></div>
+                <div><dt>Upgradeable or proxy</dt><dd>No, the code cannot be changed</dd></div>
+                <div class="is-wide"><dt>Pool address (Uniswap v3 TMR/WETH)</dt><dd class="tc-mono" id="tcoin-pool-addr">&hellip;</dd><button class="tcoin-copy-btn" type="button" data-copy-target="tcoin-pool-addr">Copy</button></div>
+            </dl>
+            <p>Nobody, including TrustMyRecord, can mint more TMR, freeze a holder, block a transfer, take a fee, or alter the code. That is checkable rather than promised: the source is published and verified.</p>
+            <div class="tc-links">
+                <a class="tc-btn" href="https://basescan.org/token/0x522ddf023d0E2Cab5cB05660573165301519AE9e" rel="nofollow noopener" target="_blank">Token on Basescan →</a>
+                <a class="tc-btn" href="https://repo.sourcify.dev/8453/0x522ddf023d0E2Cab5cB05660573165301519AE9e" rel="nofollow noopener" target="_blank">Verified source →</a>
             </div>
         </div>
-        <p style="margin-top:12px;">Spending destroys the credits you spend. They are not resold and not transferred to TrustMyRecord. Site credits are not backed by TMR Coin, cannot be withdrawn and cannot be converted.</p>
-        <div class="tcoin-links">
-            <a class="tmr-cta-primary" href="/wallet/">View Your Wallet →</a>
-            <a class="tmr-cta-secondary" href="/tmr-coin/leaderboard/">TMR Leaderboard →</a>
-            <a class="tmr-cta-secondary" href="/marketplace/?pay=tmr">Spend Credits on Picks →</a>
-            <a class="tmr-cta-secondary" href="/wallet/rewards/">See the Rewards Catalog →</a>
-            <a class="tmr-cta-secondary" href="/how-tmr-coin-works/">Full Guide: How TMR Coin Works →</a>
-            <a class="tmr-cta-secondary" href="/tmr-coin/partners/">For Partners and Integrations →</a>
-            <a class="tmr-cta-secondary" href="/tmr-coin/transparency/">Live Transparency Figures →</a> <a class="tmr-cta-secondary" href="/tmr-coin/revenue-reserve/">Cash Reserve →</a>
-            <a class="tmr-cta-secondary" href="/tmr-coin/press/">Press Kit →</a>
-        </div>
-    </section>
+    </details>
 
-    <section class="tmr-glass">
-        <h2 class="tmr-h2">Supply</h2>
-        <div class="tcoin-info-grid">
-            <div class="tcoin-info-item"><div class="tcoin-info-label">Maximum supply, on-chain</div><div class="tcoin-info-value">1,000,000,000 TMR, immutable</div></div>
-            <div class="tcoin-info-item"><div class="tcoin-info-label">In the pool, can be bought</div><div class="tcoin-info-value" id="tcoin-supply-liquid">Read live above</div></div>
-            <div class="tcoin-info-item"><div class="tcoin-info-label">Held by the company Safe (unlocked)</div><div class="tcoin-info-value" id="tcoin-supply-treasury">Read live below</div></div>
-            <div class="tcoin-info-item"><div class="tcoin-info-label">Tokens distributed to members</div><div class="tcoin-info-value">None, ever</div></div>
+    <details class="tc-d" id="tc-buy">
+        <summary><i class="fa-solid fa-cart-shopping"></i><b>How to buy, hold or sell</b><span>Seven steps, wallet and ETH on Base</span></summary>
+        <div class="tc-d-b">
+            <ol class="tc-steps">
+                <li><b>Get a wallet.</b> Any self-custody wallet that supports Base, such as Coinbase Wallet, MetaMask or Rabby. You control the keys.</li>
+                <li><b>Switch to Base.</b> An Ethereum layer-2 network, chain ID 8453. Fees are typically a fraction of a cent.</li>
+                <li><b>Fund it with ETH on Base.</b> Bridge ETH or buy it in your wallet. You need ETH to swap and to pay network fees.</li>
+                <li><b>Swap using the verified address.</b> Open the trade link in the live market panel. Paste the contract address into the token search rather than searching by name, and check it character by character. KyberSwap may say it cannot estimate the price impact for TMR, so read the quote before you confirm.</li>
+                <li><b>Add the token to your wallet.</b> If your balance does not appear, import the same contract address, symbol TMR, 18 decimals.</li>
+                <li><b>Start small and set slippage.</b> Slippage protection refuses a trade that would fill at a bad price, which is exactly what you want.</li>
+                <li><b>Selling.</b> Same screen, TMR as the token you pay and ETH as the token you receive. Check the quote first.</li>
+            </ol>
         </div>
-        <p style="margin-top:12px;">Only the TMR sitting in the pool can actually be bought. The company holdings are locked on chain, in standard OpenZeppelin contracts anyone can read: 908.17 million TMR sit in a vesting contract (<a href="https://basescan.org/address/0x80a54441fd30C0ab54c720e2aEe63C2D6592f3DF" target="_blank" rel="noopener">0x80a54441fd30C0ab54c720e2aEe63C2D6592f3DF</a>) that releases nothing until 25 October 2027, then releases evenly to the company Safe over 48 months, ending 4 October 2031. 50 million TMR sit in a timelock (<a href="https://basescan.org/address/0x0ED7396212F6f4c491De86e203E45B26F006C6B5" target="_blank" rel="noopener">0x0ED7396212F6f4c491De86e203E45B26F006C6B5</a>): any use must be announced on chain 30 days ahead. The pool position is held by a timelock (<a href="https://basescan.org/address/0xf0b5295ED26c9023967ec7412386C999c07a08A6" target="_blank" rel="noopener">0xf0b5295ED26c9023967ec7412386C999c07a08A6</a>): it cannot be withdrawn without a public 365 day notice. The company Safe (<a href="https://basescan.org/address/0xb15736a022E0399A4ac2e8bc008ef0D93C4b2dB1" target="_blank" rel="noopener">0xb15736a022E0399A4ac2e8bc008ef0D93C4b2dB1</a>) needs 2 of 3 signatures and holds 50,000 unlocked TMR. These are not scanner "locks", and nothing here is a promise of price or value.</p>
-        <div class="tcoin-supply">
-            <strong>Separately:</strong> site credits have their own ceiling in the platform, 250,000,000, which has nothing to do with the token supply. Site credits and the TMR token are separate. Nothing converts one into the other, in either direction. Site credits cannot be withdrawn.
-        </div>
-    </section>
+    </details>
 
-    <section class="tmr-glass">
-        <h2 class="tmr-h2">Risks, Please Read</h2>
-        <ul class="tcoin-risk-list">
-            <li><strong>You can lose everything you put in.</strong> Crypto prices are volatile. TMR could fall to effectively zero and stay there. Never spend money you cannot afford to lose.</li>
-            <li><strong>Prices move fast.</strong> Check every quote before you confirm and keep slippage protection on.</li>
-            <li><strong>The liquidity lock is a timelock, not a burn.</strong> The pool position can be withdrawn, but only by a call scheduled on chain in public 365 days in advance. Collecting pool fees goes through the same delay.</li>
-            <li><strong>The company still owns most of the supply.</strong> It is locked as described above, but from 25 October 2027 vested TMR reaches the company Safe, and any 30 day reserve use is announced on chain first. Like any holder, the company could then sell. Any movement is visible on chain.</li>
-            <li><strong>Nothing here is an investment offer.</strong> No return, profit, price increase or future listing is promised or implied. TrustMyRecord does not sell TMR tokens and takes no payment for them.</li>
-            <li><strong>Site credits are not TMR.</strong> They cannot be withdrawn, transferred or converted, and they are not backed by tokens. The cash reserve does not support or guarantee the market price.</li>
-            <li><strong>Verify the contract address</strong> every time, from this page. Fake tokens reuse real names and logos.</li>
-            <li><strong>There is no official TMR Coin Telegram, Discord or chat group.</strong> None exists. If you were invited to one, it is not run by us. The only official surfaces are this website and the email address on it.</li>
-            <li><strong>Nobody from TrustMyRecord will ever</strong> DM you an offer, ask you to connect a wallet to the site, ask for a seed phrase, or ask you to send funds. Anyone doing so is running a scam.</li>
-        </ul>
-        <p style="margin-top:12px;">The full terms for site credits are on the <a href="/tmr-coin/terms/">TMR Coin terms page</a>.</p>
-    </section>
+    <details class="tc-d" id="tc-supply">
+        <summary><i class="fa-solid fa-lock"></i><b>Supply and locks</b><span>Where the 1,000,000,000 TMR sit</span></summary>
+        <div class="tc-d-b">
+            <dl class="tc-facts">
+                <div><dt>In the pool, can be bought</dt><dd id="tcoin-supply-liquid">See the live market above</dd></div>
+                <div><dt>Vesting contract</dt><dd>908.17 million TMR</dd></div>
+                <div><dt>30 day timelock reserve</dt><dd>50 million TMR</dd></div>
+                <div><dt>Company Safe, unlocked</dt><dd id="tcoin-supply-treasury">Read live from the chain</dd></div>
+                <div><dt>Distributed to members</dt><dd>None, ever</dd></div>
+            </dl>
+            <p>Only the TMR in the pool can be bought. The rest is locked in standard OpenZeppelin contracts anyone can read. The <a href="https://basescan.org/address/0x80a54441fd30C0ab54c720e2aEe63C2D6592f3DF" target="_blank" rel="noopener">vesting contract</a> releases nothing until 25 October 2027, then evenly to the company Safe over 48 months, ending 4 October 2031. Any use of the <a href="https://basescan.org/address/0x0ED7396212F6f4c491De86e203E45B26F006C6B5" target="_blank" rel="noopener">reserve timelock</a> must be announced on chain 30 days ahead. The pool position sits in a <a href="https://basescan.org/address/0xf0b5295ED26c9023967ec7412386C999c07a08A6" target="_blank" rel="noopener">365 day timelock</a> with no admin and holds three ranges: TMR above the price, ETH below it, and one across the current price. The <a href="https://basescan.org/address/0xb15736a022E0399A4ac2e8bc008ef0D93C4b2dB1" target="_blank" rel="noopener">company Safe</a> needs 2 of 3 signatures. Locked means delayed and public, not burned, and nothing here is a promise of price or value.</p>
+            <p>Site credits have their own ceiling of 250,000,000, which has nothing to do with the token supply.</p>
+        </div>
+    </details>
+
+    <details class="tc-d" id="tc-risks">
+        <summary><i class="fa-solid fa-triangle-exclamation"></i><b>All risks, please read</b><span>Nine things to know before you trade</span></summary>
+        <div class="tc-d-b">
+            <ul class="tc-list">
+                <li><b>You can lose everything you put in.</b> Crypto prices are volatile. TMR could fall to effectively zero and stay there. Never spend money you cannot afford to lose.</li>
+                <li><b>Prices move fast.</b> Check every quote before you confirm and keep slippage protection on.</li>
+                <li><b>The liquidity lock is a timelock, not a burn.</b> The pool position can be withdrawn, but only by a call scheduled on chain in public 365 days in advance. Collecting pool fees goes through the same delay.</li>
+                <li><b>The company still owns most of the supply.</b> It is locked, but from 25 October 2027 vested TMR reaches the company Safe, and any 30 day reserve use is announced on chain first. Like any holder, the company could then sell. Any movement is visible on chain.</li>
+                <li><b>Nothing here is an investment offer.</b> No return, profit, price increase or future listing is promised or implied. Nobody at TrustMyRecord controls what TMR trades at, and TrustMyRecord does not sell TMR tokens or take payment for them.</li>
+                <li><b>Site credits are not TMR.</b> They are not backed by tokens. TrustMyRecord records a <a href="/tmr-coin/revenue-reserve/">cash reserve</a> from credit revenue, which does not support or guarantee the market price and does not buy TMR. Card purchases of credits were turned off on 25 October 2026.</li>
+                <li><b>Verify the contract address</b> every time, from this page. Fake tokens reuse real names and logos.</li>
+                <li><b>There is no official TMR Coin Telegram, Discord or chat group.</b> If you were invited to one, it is not run by us. The only official surfaces are this website and the email address on it.</li>
+                <li><b>Nobody from TrustMyRecord will ever</b> DM you an offer, ask you to connect a wallet to the site, ask for a seed phrase, or ask you to send funds. Anyone doing so is running a scam.</li>
+            </ul>
+            <p>The full terms for site credits are on the <a href="/tmr-coin/terms/">TMR Coin terms page</a>.</p>
+        </div>
+    </details>
+
+    <nav class="tc-more" aria-label="More about TMR Coin">
+        <a class="tc-chip" href="/how-tmr-coin-works/">Full guide</a>
+        <a class="tc-chip" href="/tmr-coin/leaderboard/">Leaderboard</a>
+        <a class="tc-chip" href="/tmr-coin/transparency/">Live transparency figures</a>
+        <a class="tc-chip" href="/tmr-coin/revenue-reserve/">Cash reserve</a>
+        <a class="tc-chip" href="/tmr-coin/partners/">Partners and integrations</a>
+        <a class="tc-chip" href="/tmr-coin/press/">Press kit</a>
+        <a class="tc-chip" href="/tmr-coin/terms/">Terms</a>
+    </nav>
 </main>
 
 <script src="/static/js/analytics.js?v=471dc3fea1e5"></script>
@@ -633,6 +626,18 @@
             cell.textContent = whole(s.treasury_balance) + ' TMR';
         })
         .catch(function () { /* leave the placeholder rather than guess */ });
+
+    // Links to a details drawer (#tc-buy, #tc-risks) open it before scrolling.
+    function openDrawer() {
+        var el = location.hash.length > 1 ? document.getElementById(location.hash.slice(1)) : null;
+        if (el && el.tagName === 'DETAILS') { el.open = true; el.scrollIntoView({ block: 'start' }); }
+    }
+    window.addEventListener('hashchange', openDrawer);
+    document.addEventListener('click', function (ev) {
+        var a = ev.target.closest ? ev.target.closest('a[href^="#tc-"]') : null;
+        if (a && a.getAttribute('href') === location.hash) openDrawer();
+    });
+    openDrawer();
 })();
 </script>
 <script src="/static/js/tmr-session.b423be9e9588.js"></script><script src="/static/js/tmr-ds-nav.2206f3eaebdf.js"></script>
