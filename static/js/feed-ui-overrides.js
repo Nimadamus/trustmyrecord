@@ -903,6 +903,18 @@ async function unfollowFromFollowingTab(userId) {
 // "No activity yet." list, or as another tab's posts.
 let _feedLoadSeq = 0;
 
+// Signed in means a hydrated user or a stored session token: the token check keeps
+// a member who opens the page on the Following tab from seeing the sign-in card
+// in the moment before their profile has loaded.
+function feedViewerSignedIn() {
+    if (typeof auth !== 'undefined' && auth && auth.currentUser) return true;
+    if (typeof api !== 'undefined' && api && api.token) return true;
+    try {
+        return !!(localStorage.getItem('trustmyrecord_token') || localStorage.getItem('accessToken') ||
+            localStorage.getItem('access_token') || localStorage.getItem('token') || localStorage.getItem('tmr_token'));
+    } catch (e) { return false; }
+}
+
 async function loadFeedItems() {
     const c = document.getElementById('feedList');
     if (!c) return;
@@ -910,6 +922,20 @@ async function loadFeedItems() {
     const isStaleLoad = () => seq !== _feedLoadSeq;
     c.setAttribute('aria-busy', 'true');
     loadFollowingPeople();
+
+    // FEED_FOLLOWING_SIGNED_OUT_20261113: a signed-out visitor follows nobody, and
+    // the API answers filter=following with the general feed for them. The tab
+    // showed the For You timeline under a "Following" label; it now says so.
+    if (currentFilter === 'following' && !feedViewerSignedIn()) {
+        c.removeAttribute('aria-busy');
+        const more = document.getElementById('loadMore');
+        if (more) more.style.display = 'none';
+        c.innerHTML = '<div class="empty-state"><i class="fas fa-user-group"></i><h3>Follow handicappers to build this tab.</h3>' +
+            '<p>Sign in and follow the handicappers you trust. Their posts and graded results show up here. Following is free.</p>' +
+            '<div class="empty-state-actions"><a class="is-primary" href="/login/?next=%2Ffeed%2F">Sign In</a>' +
+            '<a href="/handicappers/">Discover Handicappers</a></div></div>';
+        return;
+    }
 
     // FEED_LOAD_MORE_20261113: a later page is added under the posts already on
     // screen. It used to replace them, so "Load More" threw away what the reader
