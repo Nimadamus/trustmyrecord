@@ -884,7 +884,20 @@ function getNotificationDestination(notification) {
         const un = notification?.sender_username || notification?.from_username || notification?.username || notification?.actor_username;
         return un ? '/messages/?to=' + encodeURIComponent(un) : '/messages/';
     }
-    if (type === 'challenge_invite' || type === 'challenge_result' || type === 'challenge') return '/challenges/';
+    // NOTIFY_LINKS_20261114: every challenge family opens its own page. Video
+    // game challenges live in the Arena, coin challenges open the exact
+    // challenge, and the free net-units challenges keep /challenges/.
+    if (type.indexOf('gaming_') === 0 || type.indexOf('arena_') === 0) return '/arena/';
+    if (type.indexOf('tmr_challenge') === 0 || resourceType === 'tmr_challenge') {
+        const cid = notification?.resource_id || notification?.resourceId;
+        return cid ? '/tmr-challenges/?id=' + encodeURIComponent(cid) : '/tmr-challenges/';
+    }
+    if (type.indexOf('challenge') === 0) return '/challenges/';
+    // A feed alert (like, comment, quote, mention) opens the post it is about.
+    if (resourceType === 'feed_post') {
+        const fid = notification?.resource_id || notification?.resourceId;
+        return fid ? '/feed/?post=' + encodeURIComponent(fid) : '/feed/';
+    }
     if (type === 'premium_upgrade' || type === 'premium_expired') return '/premium/';
     // Graded poll -> the permanent final results page with everyone's standings.
     if (type === 'poll_results' || resourceType === 'poll_results') {
@@ -921,6 +934,8 @@ function getNotificationDestination(notification) {
     if (type === 'follow' && (notification?.username)) {
         return '/profile/?user=' + encodeURIComponent(notification.username);
     }
+    // Older feed alerts were stored without the post: open the feed, never a dead row.
+    if (type === 'quote' || type === 'mention' || ((type === 'like' || type === 'comment') && !relatedPickId)) return '/feed/';
 
     return null;
 }
