@@ -735,7 +735,7 @@
     '/static/js/config.js?v=60a0696a58ba',
     '/static/js/backend-api.js?v=83068a1a1e78',
     '/static/js/auth-persistent.js?v=b0b217feaa25',
-    '/static/js/notifications.js?v=6df3eacc7353'
+    '/static/js/notifications.js?v=110ae0c6e964'
   ];
 
   /* REALM-LEVEL LOAD REGISTRY (2026-08-06)
