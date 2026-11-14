@@ -480,3 +480,11 @@ body.mk-v2 #mk .mkb.mkb-primary.is-soon {
     background: linear-gradient(180deg, #1A2B4D 0%, #101E3A 100%) !important; border-color: rgba(140, 170, 220, .45) !important;
     color: #B8C8E4 !important; box-shadow: none !important; cursor: default; opacity: 1 !important;
 }
+
+/* the banner spans the same column as everything under it */
+body.mk-v2 #mk .mx-center > .hero { width: 100% !important; max-width: none !important; box-sizing: border-box !important; align-self: stretch !important; }
+/* while the market is closed the one notice is the closed note */
+body.mk-v2.mk-closed #mk #signedOutNote { display: none !important; }
+body.mk-v2 #mk .notice.mk-soon { flex-wrap: nowrap; }
+body.mk-v2 #mk .notice.mk-soon .mkb { flex: 0 0 auto; white-space: nowrap; }
+@media (max-width: 640px) { body.mk-v2 #mk .notice.mk-soon { flex-wrap: wrap; } }

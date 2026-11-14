@@ -1596,10 +1596,20 @@
         // Same endpoints the Challenge page uses, so identity and balance are read one way
         // across the site rather than two. A signed out visitor calls neither and still
         // gets the whole market.
+        // MATCH_FIRST_READ_RETRY_20261114: these three go out while the session token
+        // may still be refreshing, and a read that lost that race used to leave the
+        // page saying "Your balance could not be loaded" beside a working wallet.
+        // One quiet retry before giving up.
+        function softRead(path) {
+            return window.api.request(path).catch(function () {
+                return new Promise(function (r) { setTimeout(r, 900); })
+                    .then(function () { return window.api.request(path); });
+            }).catch(function () { return null; });
+        }
         Promise.all([
-            window.api.request('/tmr-match/meta').catch(function () { return null; }),
-            isLoggedIn ? window.api.request('/auth/me').catch(function () { return null; }) : Promise.resolve(null),
-            isLoggedIn ? window.api.request('/coins/balance').catch(function () { return null; }) : Promise.resolve(null),
+            softRead('/tmr-match/meta'),
+            isLoggedIn ? softRead('/auth/me') : Promise.resolve(null),
+            isLoggedIn ? softRead('/coins/balance') : Promise.resolve(null),
         ]).then(function (res) {
             state.meta = res[0];
             var me = res[1] && (res[1].user || res[1]);
