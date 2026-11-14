@@ -1068,7 +1068,7 @@ async function loadFeedItems() {
             items = aggregateFeedItems(items);
             items.sort((a, b) => new Date(b.graded_at || b.created_at || b.locked_at || 0) - new Date(a.graded_at || a.created_at || a.locked_at || 0));
             if (currentFilter === 'hot-takes') items = items.filter(i => i.post_type === 'hot_take');
-            if (currentFilter === 'picks') items = items.filter(i => i.item_type === 'pick' || i.post_type === 'pick' || i.post_type === 'pick_share');
+            if (currentFilter === 'picks') items = items.filter(i => i.item_type === 'pick' || i.item_type === 'open_pick' || i.post_type === 'pick' || i.post_type === 'pick_share');
             if (currentFilter === 'polls') items = items.filter(i => i.item_type === 'poll' || i.post_type === 'poll');
             if (currentFilter === 'milestones') items = items.filter(i => i.item_type === 'milestone');
             if (typeof fvSortItems === 'function') items = fvSortItems(items);

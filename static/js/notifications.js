@@ -893,6 +893,11 @@ function getNotificationDestination(notification) {
         return cid ? '/tmr-challenges/?id=' + encodeURIComponent(cid) : '/tmr-challenges/';
     }
     if (type.indexOf('challenge') === 0) return '/challenges/';
+    // A tail or fade on one of your public open picks opens that card in the feed.
+    if (resourceType === 'open_pick') {
+        const oid = notification?.resource_id || notification?.resourceId;
+        return oid ? '/feed/?post=' + encodeURIComponent('openpick:' + oid) : '/feed/';
+    }
     // A feed alert (like, comment, quote, mention) opens the post it is about.
     if (resourceType === 'feed_post') {
         const fid = notification?.resource_id || notification?.resourceId;

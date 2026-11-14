@@ -184,7 +184,7 @@
             if (type === 'new_message' || type === 'message') return 'messages';
             if (type.indexOf('forum') !== -1 || rt.indexOf('forum') !== -1 || rt === 'thread' || rt === 'reply') return 'forum';
             if (type.indexOf('pick') !== -1 || type.indexOf('bet') !== -1 || rt === 'pick' || rt === 'receipt') return 'picks';
-            if (['follow', 'friend_request', 'friend_accept', 'like', 'comment', 'mention', 'quote'].indexOf(type) !== -1) return 'social';
+            if (['follow', 'friend_request', 'friend_accept', 'like', 'comment', 'mention', 'quote', 'pick_tail', 'pick_fade'].indexOf(type) !== -1) return 'social';
             return 'general';
         }
 
@@ -212,6 +212,10 @@
                 return cid ? '/tmr-challenges/?id=' + encodeURIComponent(cid) : '/tmr-challenges/';
             }
             if (t.indexOf('challenge') !== -1) return '/challenges/';
+            if (rt === 'open_pick') {
+                var oid = raw.resource_id || raw.resourceId;
+                return oid ? '/feed/?post=' + encodeURIComponent('openpick:' + oid) : '/feed/';
+            }
             if (rt === 'feed_post') {
                 var fid = raw.resource_id || raw.resourceId;
                 return fid ? '/feed/?post=' + encodeURIComponent(fid) : '/feed/';
@@ -288,7 +292,7 @@
             if (t.indexOf('challenge') !== -1 || t.indexOf('premium') !== -1 || t.indexOf('mod') !== -1) return 'alert';
             if (t === 'new_message' || t === 'message') return 'message';
             if (t.indexOf('forum') !== -1) return 'forum';
-            if (['follow', 'friend_request', 'friend_accept', 'like', 'comment', 'mention', 'quote'].indexOf(t) !== -1) return 'social';
+            if (['follow', 'friend_request', 'friend_accept', 'like', 'comment', 'mention', 'quote', 'pick_tail', 'pick_fade'].indexOf(t) !== -1) return 'social';
             return 'system';
         }
 

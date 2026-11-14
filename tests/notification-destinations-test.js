@@ -31,6 +31,8 @@ const cases = [
   [{ type: 'comment', resource_type: 'feed_post', resource_id: 42 }, '/feed/?post=42'],
   [{ type: 'mention', resource_type: 'feed_post', resource_id: 7 }, '/feed/?post=7'],
   [{ type: 'quote', resource_type: 'feed_post', resource_id: 7 }, '/feed/?post=7'],
+  [{ type: 'pick_tail', resource_type: 'open_pick', resource_id: 88, username: 'sam' }, '/feed/?post=openpick%3A88'],
+  [{ type: 'pick_fade', resource_type: 'open_pick', resource_id: 88 }, '/feed/?post=openpick%3A88'],
   [{ type: 'like' }, '/feed/'],
   [{ type: 'mention' }, '/feed/'],
   [{ type: 'quote' }, '/feed/'],
