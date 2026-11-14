@@ -893,9 +893,19 @@ async function unfollowFromFollowingTab(userId) {
     } catch (e) {}
 }
 
+// FEED_TAB_RACE_20261113: every load takes a ticket. A response that lands after
+// a newer tab click, sort change or "load more" is dropped instead of being
+// painted under the wrong tab. Before this, a slow Milestones response arriving
+// after a click on Hot Takes was filtered as hot takes and rendered as an empty
+// "No activity yet." list, or as another tab's posts.
+let _feedLoadSeq = 0;
+
 async function loadFeedItems() {
     const c = document.getElementById('feedList');
     if (!c) return;
+    const seq = ++_feedLoadSeq;
+    const isStaleLoad = () => seq !== _feedLoadSeq;
+    c.setAttribute('aria-busy', 'true');
     loadFollowingPeople();
 
     let items = [];
@@ -1016,10 +1026,14 @@ async function loadFeedItems() {
             if (typeof fvSortItems === 'function') items = fvSortItems(items);
         }
     } catch(e) {
+        if (isStaleLoad()) return;
+        c.removeAttribute('aria-busy');
         renderFeedUnavailable('Live feed data is temporarily unavailable. TrustMyRecord does not substitute fake feed posts when the backend is unavailable.');
         return;
     }
 
+    if (isStaleLoad()) return;
+    c.removeAttribute('aria-busy');
     updateHeroCounts(items.length);
     if (typeof fvAfterFeed === 'function') { try { fvAfterFeed(items); } catch (e) {} }
     if (!items.length) {
