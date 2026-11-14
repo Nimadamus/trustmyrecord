@@ -179,7 +179,7 @@ function hubPage(s) {
           <h1>${s.name} Simulation Results</h1>
           <p class="sa-sub">Every completed ${s.name} simulation, kept permanently: the final score, the
              complete box score, and the aggregate picture that builds up as the same matchups are
-             simulated again and again. Numbers here are averages of simulator output &mdash; not
+             simulated again and again. Numbers here are averages of simulator output, not
              predictions, not forecasts, and not betting advice.
              <a href="/${s.sport}-simulator/">Run a ${s.name} simulation</a>.</p>
         </div>
