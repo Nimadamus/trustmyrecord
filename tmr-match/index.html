@@ -657,261 +657,307 @@
 <link rel="stylesheet" href="/static/css/tmr-navbar.css?v=68ec3081d29a">
 <link rel="stylesheet" href="/static/css/tmr-ds.d4d41a955166.css">
 <link rel="stylesheet" href="/static/css/tmr-ds-header.cc364e352e74.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="/static/css/tmr-match-v2.css?v=20261113a">
 <script src="/static/js/tmr-market-labels.js?v=2b7501bb0575"></script>
 </head>
-<body class="tmr-ds-shell tmr-theme-a">
+<body class="mk-v2 tmr-ds-shell tmr-theme-a">
     <main id="mk" class="mk-page">
+      <div class="mx-layout">
 
-        <!-- 1. HERO -->
-        <header class="hero">
-            <div class="hero-in">
-                <p class="mk-eyebrow">Peer-to-peer sports market</p>
-                <h1>TMR Match</h1>
-                <p class="hero-lede">Bet directly against other members. You set the game, market, side and price.</p>
-                <p class="hero-sub">No sportsbook sets the number. <b>TMR holds both sides</b> and settles the match after the result.</p>
-                <div class="mk-acts">
-                    <button class="mkb mkb-primary cta mk-tab mk-tab-cta" role="tab" data-tab="create" aria-selected="false" id="ctaPost">Post an Offer</button>
-                    <a class="mkb mkb-primary cta" href="/login/" id="ctaSignIn" hidden>Sign in to post</a>
-                    <a class="mkb ghost cta" href="#howto">How it works</a>
-                    <a class="mkb ghost cta" href="/wallet/earn/">Earn TMR</a>
-                </div>
+        <!-- LEFT: live offers -->
+        <aside class="mx-left mx-card" aria-label="Live offers">
+            <div class="mx-card-head">
+                <h2><span class="mx-dot" aria-hidden="true"></span>Live Offers</h2>
+                <span class="mx-pending"><span class="mx-dot sm" aria-hidden="true"></span><b id="cOpen">0</b> Pending</span>
             </div>
-        </header>
+            <div class="mx-live" id="liveList"></div>
+            <p class="mx-live-avail"><b><span id="cAvail">0</span> TMR</b> open to take right now</p>
+            <a class="mx-viewall" href="#market" data-goto="market">View all offers <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+        </aside>
 
-        <!-- 2. HOW TMR MATCH WORKS -->
-        <section class="steps-sec" id="howto">
-            <div class="sec-head">
-                <h2>How TMR Match works</h2>
-                <p class="sec-note">Four steps. No house, and no juice past the price the two of you agreed.</p>
-            </div>
-            <ol class="steps">
-                <li><span class="n">1</span><h3>Post</h3><p>Choose the game, market, side and price.</p></li>
-                <li><span class="n">2</span><h3>Match</h3><p>Another member takes the opposite side, in full or in part.</p></li>
-                <li><span class="n">3</span><h3>TMR holds</h3><p>Both sides are held the moment the match is accepted.</p></li>
-                <li><span class="n">4</span><h3>Settle</h3><p>After the game, the winner receives the TMR. No fee.</p></li>
-            </ol>
+        <!-- CENTER -->
+        <div class="mx-center">
 
-            <details class="intro" id="mkIntro">
-                <summary>The full rules</summary>
-                <div class="intro-body">
-                    <p><b>A peer-to-peer betting board.</b> You post the bet you want, game, market, selection, price in American odds and the TMR you are putting up, and it sits there until a member takes the other side. No house, no book setting the number.</p>
-                    <p><b>Taken in full or in part.</b> Post 500 TMR, a taker wants 200, the other 300 stays open. Your TMR is held at post time, so every offer on the board is funded, and anything nobody takes comes back when you withdraw it.</p>
-                    <p><b>Held in escrow</b> once matched, until the game settles, then paid in full to the winner. <b>No fee on a match</b> and no juice past the price the two of you agreed. Pushes and postponed games return both sides.</p>
-                    <p><b>Where the money is</b> shows the TMR sitting behind each pick and price, so you can read which side the board is leaning on before you post. Everything settles in TMR held on TrustMyRecord and is not redeemable off site.</p>
+            <!-- 1. HERO -->
+            <header class="hero">
+                <div class="mx-hero-art mx-hero-art--l" aria-hidden="true"><img src="https://a.espncdn.com/i/headshots/nfl/players/full/3918298.png" alt="" width="600" height="436" onerror="this.remove()"></div>
+                <div class="mx-hero-art mx-hero-art--r" aria-hidden="true"><img src="https://a.espncdn.com/i/headshots/mlb/players/full/39832.png" alt="" width="600" height="436" onerror="this.remove()"></div>
+                <div class="hero-in">
+                    <h1>TMR <span>Match</span></h1>
+                    <p class="mk-eyebrow">Peer-to-peer sports market</p>
+                    <p class="hero-lede">Bet directly with other TMR members. Set the <b>game, market, side</b> and <b>price</b>.</p>
+                    <ul class="mx-feats">
+                        <li><i class="fas fa-users" aria-hidden="true"></i><span>No Sportsbook</span></li>
+                        <li><i class="fas fa-bolt" aria-hidden="true"></i><span>TMR Holds Both Sides</span></li>
+                        <li><i class="fas fa-shield-halved" aria-hidden="true"></i><span>No Fee on a Match</span></li>
+                        <li><i class="fas fa-coins" aria-hidden="true"></i><span>Set Your Own Price</span></li>
+                    </ul>
                 </div>
-            </details>
-        </section>
+            </header>
 
-        <div id="loadState" class="market skel" role="status" aria-busy="true" aria-label="Loading the market">
-            <div class="skel-head"></div>
-            <div class="skel-row"></div>
-            <div class="skel-row"></div>
-            <div class="skel-row"></div>
-            <div class="skel-row"></div>
-        </div>
-        <div id="errState" class="msg err" hidden></div>
-
-        <div id="mkBody" hidden>
-
-            <!-- 3. MARKETPLACE SUMMARY -->
-            <div class="strip">
-                <div class="mk-stat">
-                    <span class="ico" aria-hidden="true">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l5-5 4 3 6-7"/><path d="M14 8h6v6"/></svg>
-                    </span>
-                    <span>
-                        <span class="k">Open offers</span>
-                        <span class="v" id="cOpen">0</span>
-                    </span>
-                </div>
-                <div class="mk-stat gold">
-                    <span class="ico" aria-hidden="true">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v9M9.6 9.8h4.1a1.9 1.9 0 010 3.8H9.6"/></svg>
-                    </span>
-                    <span>
-                        <span class="k">Available to take</span>
-                        <span class="v"><span id="cAvail">0</span><small>TMR</small></span>
-                    </span>
-                </div>
-                <div class="mk-stat navy" id="balCard" hidden>
-                    <span class="ico" aria-hidden="true">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7.5A2.5 2.5 0 015.5 5H18a2 2 0 012 2v1"/><path d="M3 7.5V17a2 2 0 002 2h14a2 2 0 002-2v-7H6.5A3.5 3.5 0 013 7.5z"/><circle cx="16.5" cy="13.5" r="1.1" fill="currentColor" stroke="none"/></svg>
-                    </span>
-                    <span>
-                        <span class="k">Your balance</span>
-                        <span class="v"><span id="cBal">0</span><small>TMR</small></span>
-                    </span>
-                </div>
-                <div class="strip-tail">
-                    <a href="/tmr-coin/">What is TMR?</a>
-                </div>
+            <div class="mk-acts">
+                <button class="mkb mkb-primary cta mk-tab mk-tab-cta" role="tab" data-tab="create" aria-selected="false" id="ctaPost"><i class="fas fa-plus" aria-hidden="true"></i> Create Match</button>
+                <a class="mkb mkb-primary cta" href="/login/" id="ctaSignIn" hidden><i class="fas fa-right-to-bracket" aria-hidden="true"></i> Sign in to post</a>
+                <a class="mkb ghost cta" href="#howto"><i class="fas fa-book-open" aria-hidden="true"></i> How it works</a>
+                <a class="mkb ghost cta" href="#mkIntro" data-rules><i class="far fa-file-lines" aria-hidden="true"></i> Full rules</a>
+                <a class="mkb ghost cta" href="/wallet/earn/"><i class="fas fa-trophy" aria-hidden="true"></i> Earn TMR</a>
             </div>
 
-            <div id="signedOutNote" class="notice" hidden>
-                <span><b>You are browsing as a guest.</b> Anyone can read the market. Sign in to post an offer or take one.</span>
-                <a class="mkb sm" href="/login/">Sign in</a>
+            <div id="loadState" class="market skel" role="status" aria-busy="true" aria-label="Loading the market">
+                <div class="skel-head"></div>
+                <div class="skel-row"></div>
+                <div class="skel-row"></div>
+                <div class="skel-row"></div>
+                <div class="skel-row"></div>
             </div>
+            <div id="errState" class="msg err" hidden></div>
 
-            <div id="panelMsg" class="msg" hidden></div>
+            <div id="mkBody" hidden>
 
-            <!-- 4. MARKETPLACE: the tab bar and the board are one component -->
-            <div class="market">
-                <div class="tabsrow">
-                    <div class="mk-tabs" role="tablist">
-                        <button class="mk-tab" role="tab" data-tab="market" aria-selected="true">Market<span class="count" id="nMarket">0</span></button>
-                        <button class="mk-tab" role="tab" data-tab="depth" aria-selected="false">Where the money is</button>
-                        <button class="mk-tab" role="tab" data-tab="mine" aria-selected="false">My offers<span class="count" id="nMine">0</span></button>
-                        <button class="mk-tab" role="tab" data-tab="positions" aria-selected="false">My matches<span class="count" id="nPos">0</span></button>
-                    </div>
-                    <p class="mk-tabs-note">No fee on a match. Both sides are held until the game settles.</p>
+                <div id="signedOutNote" class="notice" hidden>
+                    <span><b>You are browsing as a guest.</b> Anyone can read the market. Sign in to post an offer or take one.</span>
+                    <a class="mkb sm" href="/login/">Sign in</a>
                 </div>
 
-                <section id="panel-market">
-                  <div class="xwrap">
-                    <div class="board">
-                        <div class="sportbar" id="sportBar" hidden></div>
-                        <div class="board-head" id="marketHead" hidden>
-                            <div>Selection</div>
-                            <div>Posted by</div>
-                            <div class="r">Price</div>
-                            <div class="r">Offered</div>
-                            <div class="r">Take</div>
+                <div id="panelMsg" class="msg" hidden></div>
+
+                <div class="sportbar" id="sportBar"></div>
+
+                <!-- 4. MARKETPLACE: the tab bar and the board are one component -->
+                <div class="market" id="market">
+                    <div class="tabsrow">
+                        <div class="mx-mkt-head">
+                            <h2>Marketplace <span>&ndash; Pending Matches</span></h2>
+                            <label class="mx-sort">Sort:
+                                <select id="mkSort" aria-label="Sort the marketplace">
+                                    <option value="newest">Newest</option>
+                                    <option value="largest">Largest</option>
+                                    <option value="smallest">Smallest</option>
+                                </select>
+                            </label>
                         </div>
-                        <div class="list" id="listMarket"></div>
-                        <div class="empty" id="boardError" hidden>
-                            <div class="eico" aria-hidden="true" style="background:rgba(255,90,90,.13);border-color:rgba(255,90,90,.34);color:#FF5A5A;">
-                                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v5"/><circle cx="12" cy="16.5" r=".9" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="9"/></svg>
-                            </div>
-                            <strong>The board could not be loaded</strong>
-                            <p>Your TMR and any offers you have up are unaffected.</p>
-                            <div class="empty-cta"><button class="mkb" type="button" data-retry>Try again</button></div>
-                        </div>
-                        <div class="empty" id="emptyFilter" hidden>
-                            <strong>Nothing open in this league</strong>
-                            <p>Clear the filter to see the rest of the board.</p>
-                        </div>
-                        <div class="empty" id="emptyMarket" hidden>
-                            <div class="eico" aria-hidden="true">
-                                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18V9M10 18V5M16 18v-6M22 18H2"/></svg>
-                            </div>
-                            <strong>No open offers yet</strong>
-                            <p>Start the market by posting the first TMR Match.</p>
-                            <div class="empty-cta" id="emptyCta"></div>
+                        <div class="mk-tabs" role="tablist">
+                            <button class="mk-tab" role="tab" data-tab="market" aria-selected="true">Market<span class="count" id="nMarket">0</span></button>
+                            <button class="mk-tab" role="tab" data-tab="depth" aria-selected="false">Where the money is</button>
+                            <button class="mk-tab" role="tab" data-tab="mine" aria-selected="false">My offers<span class="count" id="nMine">0</span></button>
+                            <button class="mk-tab" role="tab" data-tab="positions" aria-selected="false">My matches<span class="count" id="nPos">0</span></button>
                         </div>
                     </div>
 
-                    <aside class="slip is-idle" id="slip">
-                        <div class="slip-head">
-                            <span id="slipTitle">Bet slip</span>
-                            <button class="slip-x" type="button" data-slip-close aria-label="Close the slip">&times;</button>
-                        </div>
-                        <div class="slip-empty" id="slipEmpty">Pick a price on the board and it loads here.</div>
-                        <div class="slip-body" id="slipBody" hidden></div>
-                    </aside>
-                  </div>
-                </section>
-
-                <section id="panel-depth" hidden>
-                    <div class="board">
-                        <p class="board-note">How much TMR is sitting behind each pick and price. The longer the bar, the more money is waiting to be taken on that side.</p>
-                        <div class="depth-legend">
-                            <span class="key"><i class="f"></i> Backing the pick</span>
-                            <span class="key"><i class="a"></i> Betting against it</span>
-                            <span class="key">Share is that price's slice of all TMR open on the board.</span>
-                        </div>
-                        <div class="ladder" id="ladder"></div>
-                        <div class="empty" id="emptyDepth" hidden>
-                            <strong>No prices to show</strong>
-                            <p>Once offers are posted, this is where you see which side the board is leaning on.</p>
-                        </div>
-                    </div>
-                </section>
-
-                <section id="panel-mine" hidden>
-                    <div class="board">
-                        <div class="list" id="listMine"></div>
-                        <div class="empty" id="emptyMine" hidden>
-                            <strong>You have no offers up</strong>
-                            <p>Post one and it shows here until it is taken or you withdraw it.</p>
-                            <div class="empty-cta"><button class="mkb mkb-primary mk-tab" role="tab" data-tab="create" aria-selected="false">Post an offer</button></div>
-                        </div>
-                    </div>
-                </section>
-
-                <section id="panel-positions" hidden>
-                    <div class="board">
-                        <div class="list" id="listPositions"></div>
-                        <div class="empty" id="emptyPositions" hidden>
-                            <strong>No matches yet</strong>
-                            <p>When you take an offer, or somebody takes yours, it appears here.</p>
-                        </div>
-                    </div>
-                </section>
-
-                <section id="panel-create" hidden>
-                    <div class="board">
-                        <form class="create" id="createForm" novalidate>
-                            <div class="grid3">
-                                <div class="field">
-                                    <label for="fEvent">Game</label>
-                                    <input id="fEvent" name="event" placeholder="Giants at Dodgers" required>
-                                    <span class="hint">Which game this is about.</span>
-                                </div>
-                                <div class="field">
-                                    <label for="fSport">Sport</label>
-                                    <select id="fSport" name="sport">
-                                        <option>MLB</option><option>NFL</option><option>NBA</option>
-                                        <option>NHL</option><option>NCAAF</option><option>NCAAB</option><option>Soccer</option>
-                                    </select>
-                                </div>
-                                <div class="field">
-                                    <label for="fMarket">Bet type</label>
-                                    <select id="fMarket" name="market">
-                                        <option value="moneyline">Moneyline</option>
-                                        <option value="spread">Spread</option>
-                                        <option value="total">Total</option>
-                                        <option value="prop">Prop</option>
-                                    </select>
-                                </div>
+                    <section id="panel-market">
+                      <div class="xwrap xwrap--solo">
+                        <div class="board">
+                            <div class="board-head" id="marketHead" hidden>
+                                <div>Member</div>
+                                <div>Matchup</div>
+                                <div>Market</div>
+                                <div class="r">Price</div>
+                                <div class="r">Offer (TMR)</div>
+                                <div class="r">Action</div>
                             </div>
-                            <div class="grid3">
-                                <div class="field">
-                                    <label for="fSelection">Your pick</label>
-                                    <input id="fSelection" name="selection" placeholder="Giants -1.5" required>
-                                    <span class="hint">Exactly what you are backing.</span>
+                            <div class="list" id="listMarket"></div>
+                            <div class="empty" id="boardError" hidden>
+                                <div class="eico" aria-hidden="true" style="background:rgba(255,90,90,.13);border-color:rgba(255,90,90,.34);color:#FF5A5A;">
+                                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v5"/><circle cx="12" cy="16.5" r=".9" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="9"/></svg>
                                 </div>
-                                <div class="field">
-                                    <label for="fSide">You are</label>
-                                    <select id="fSide" name="side">
-                                        <option value="for">Backing this pick</option>
-                                        <option value="against">Betting against it</option>
-                                    </select>
-                                    <span class="hint">Whoever takes your offer gets the other side.</span>
-                                </div>
-                                <div class="field">
-                                    <label for="fPrice">Price (American odds)</label>
-                                    <input id="fPrice" name="price" type="number" step="5" placeholder="-110" required>
-                                    <span class="hint">Use 100 or more, or -100 or less.</span>
-                                </div>
+                                <strong>The board could not be loaded</strong>
+                                <p>Your TMR and any offers you have up are unaffected.</p>
+                                <div class="empty-cta"><button class="mkb" type="button" data-retry>Try again</button></div>
                             </div>
-                            <div class="grid3">
-                                <div class="field">
-                                    <label for="fQty">How much TMR are you putting up?</label>
-                                    <input id="fQty" name="quantity" type="number" min="10" step="1" placeholder="100" required>
-                                    <span class="hint" id="qtyHint">This is held as soon as you post, so anyone taking your offer knows it is funded.</span>
+                            <div class="empty" id="emptyFilter" hidden>
+                                <strong>Nothing open in this league</strong>
+                                <p>Pick All to see the rest of the board.</p>
+                            </div>
+                            <div class="empty" id="emptyMarket" hidden>
+                                <div class="eico" aria-hidden="true">
+                                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18V9M10 18V5M16 18v-6M22 18H2"/></svg>
                                 </div>
+                                <strong>No open offers yet</strong>
+                                <p>Start the market by posting the first TMR Match.</p>
+                                <div class="empty-cta" id="emptyCta"></div>
                             </div>
-                            <div class="form-foot">
-                                <button class="mkb mkb-primary" id="createBtn" type="submit">Post this offer</button>
-                                <span class="hint">Nothing moves until somebody takes it.</span>
+                        </div>
+                      </div>
+                    </section>
+
+                    <section id="panel-depth" hidden>
+                        <div class="board">
+                            <p class="board-note">How much TMR is sitting behind each pick and price. The longer the bar, the more money is waiting to be taken on that side.</p>
+                            <div class="depth-legend">
+                                <span class="key"><i class="f"></i> Backing the pick</span>
+                                <span class="key"><i class="a"></i> Betting against it</span>
+                                <span class="key">Share is that price's slice of all TMR open on the board.</span>
                             </div>
-                        </form>
-                    </div>
-                </section>
+                            <div class="ladder" id="ladder"></div>
+                            <div class="empty" id="emptyDepth" hidden>
+                                <strong>No prices to show</strong>
+                                <p>Once offers are posted, this is where you see which side the board is leaning on.</p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="panel-mine" hidden>
+                        <div class="board">
+                            <div class="list" id="listMine"></div>
+                            <div class="empty" id="emptyMine" hidden>
+                                <strong>You have no offers up</strong>
+                                <p>Post one and it shows here until it is taken or you withdraw it.</p>
+                                <div class="empty-cta"><button class="mkb mkb-primary mk-tab" role="tab" data-tab="create" aria-selected="false">Post an offer</button></div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="panel-positions" hidden>
+                        <div class="board">
+                            <div class="list" id="listPositions"></div>
+                            <div class="empty" id="emptyPositions" hidden>
+                                <strong>No matches yet</strong>
+                                <p>When you take an offer, or somebody takes yours, it appears here.</p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="panel-create" hidden>
+                        <div class="board">
+                            <form class="create" id="createForm" novalidate>
+                                <div class="grid3">
+                                    <div class="field">
+                                        <label for="fEvent">Game</label>
+                                        <input id="fEvent" name="event" placeholder="Giants at Dodgers" required>
+                                        <span class="hint">Which game this is about.</span>
+                                    </div>
+                                    <div class="field">
+                                        <label for="fSport">Sport</label>
+                                        <select id="fSport" name="sport">
+                                            <option>MLB</option><option>NFL</option><option>NBA</option>
+                                            <option>NHL</option><option>NCAAF</option><option>NCAAB</option><option>Soccer</option>
+                                        </select>
+                                    </div>
+                                    <div class="field">
+                                        <label for="fMarket">Bet type</label>
+                                        <select id="fMarket" name="market">
+                                            <option value="moneyline">Moneyline</option>
+                                            <option value="spread">Spread</option>
+                                            <option value="total">Total</option>
+                                            <option value="prop">Prop</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="grid3">
+                                    <div class="field">
+                                        <label for="fSelection">Your pick</label>
+                                        <input id="fSelection" name="selection" placeholder="Giants -1.5" required>
+                                        <span class="hint">Exactly what you are backing.</span>
+                                    </div>
+                                    <div class="field">
+                                        <label for="fSide">You are</label>
+                                        <select id="fSide" name="side">
+                                            <option value="for">Backing this pick</option>
+                                            <option value="against">Betting against it</option>
+                                        </select>
+                                        <span class="hint">Whoever takes your offer gets the other side.</span>
+                                    </div>
+                                    <div class="field">
+                                        <label for="fPrice">Price (American odds)</label>
+                                        <input id="fPrice" name="price" type="number" step="5" placeholder="-110" required>
+                                        <span class="hint">Use 100 or more, or -100 or less.</span>
+                                    </div>
+                                </div>
+                                <div class="grid3">
+                                    <div class="field">
+                                        <label for="fQty">How much TMR are you putting up?</label>
+                                        <input id="fQty" name="quantity" type="number" min="10" step="1" placeholder="100" required>
+                                        <span class="hint" id="qtyHint">This is held as soon as you post, so anyone taking your offer knows it is funded.</span>
+                                    </div>
+                                </div>
+                                <div class="form-foot">
+                                    <button class="mkb mkb-primary" id="createBtn" type="submit">Post this offer</button>
+                                    <span class="hint">Nothing moves until somebody takes it.</span>
+                                </div>
+                            </form>
+                        </div>
+                    </section>
+                </div>
+
+                <p class="mk-tabs-note">No fee on a match. Both sides are held until the game settles.</p>
             </div>
+
+            <!-- 2. HOW TMR MATCH WORKS -->
+            <section class="steps-sec" id="howto">
+                <div class="sec-head">
+                    <h2>How TMR Match works</h2>
+                    <p class="sec-note">Four steps. No house, and no juice past the price the two of you agreed.</p>
+                </div>
+                <ol class="steps">
+                    <li><span class="n">1</span><h3>Post</h3><p>Choose the game, market, side and price.</p></li>
+                    <li><span class="n">2</span><h3>Match</h3><p>Another member takes the opposite side, in full or in part.</p></li>
+                    <li><span class="n">3</span><h3>TMR holds</h3><p>Both sides are held the moment the match is accepted.</p></li>
+                    <li><span class="n">4</span><h3>Settle</h3><p>After the game, the winner receives the TMR. No fee.</p></li>
+                </ol>
+
+                <details class="intro" id="mkIntro">
+                    <summary>The full rules</summary>
+                    <div class="intro-body">
+                        <p><b>A peer-to-peer betting board.</b> You post the bet you want, game, market, selection, price in American odds and the TMR you are putting up, and it sits there until a member takes the other side. No house, no book setting the number.</p>
+                        <p><b>Taken in full or in part.</b> Post 500 TMR, a taker wants 200, the other 300 stays open. Your TMR is held at post time, so every offer on the board is funded, and anything nobody takes comes back when you withdraw it.</p>
+                        <p><b>Held in escrow</b> once matched, until the game settles, then paid in full to the winner. <b>No fee on a match</b> and no juice past the price the two of you agreed. Pushes and postponed games return both sides.</p>
+                        <p><b>Where the money is</b> shows the TMR sitting behind each pick and price, so you can read which side the board is leaning on before you post. Everything settles in TMR held on TrustMyRecord and is not redeemable off site.</p>
+                    </div>
+                </details>
+            </section>
 
             <p class="foot" id="footNote"></p>
         </div>
+
+        <!-- RIGHT -->
+        <div class="mx-right">
+            <aside class="slip is-idle" id="slip" hidden>
+                <div class="slip-head">
+                    <span id="slipTitle">Bet slip</span>
+                    <button class="slip-x" type="button" data-slip-close aria-label="Close the slip">&times;</button>
+                </div>
+                <div class="slip-empty" id="slipEmpty">Press Accept on an offer and it loads here.</div>
+                <div class="slip-body" id="slipBody" hidden></div>
+            </aside>
+
+            <section class="mx-card mx-acct" aria-label="Your TMR account">
+                <h2>Your TMR Account</h2>
+                <div class="mx-acct-row" id="balCard" hidden>
+                    <span class="mx-wallet" aria-hidden="true"><i class="fas fa-wallet"></i></span>
+                    <span class="mx-bal"><span class="k">Balance</span><span class="v"><span id="cBal">0</span><small>TMR</small></span></span>
+                    <span class="mx-acct-btns">
+                        <a class="mkb mkb-primary" href="/wallet/earn/">Earn TMR</a>
+                        <a class="mkb ghost" href="/wallet/">Wallet</a>
+                    </span>
+                </div>
+                <div class="mx-acct-guest" id="acctGuest" hidden>
+                    <p>Sign in to see your balance, post an offer or take one.</p>
+                    <a class="mkb mkb-primary" href="/login/">Sign in</a>
+                </div>
+                <p class="mx-acct-foot"><a href="/tmr-coin/">What is TMR?</a></p>
+            </section>
+
+            <section class="mx-card mx-act" id="actCard" aria-label="Your activity" hidden>
+                <h2>Your Activity</h2>
+                <button type="button" class="mx-act-row" data-goto="mine"><i class="far fa-handshake" aria-hidden="true"></i><span>Open Offers</span><b id="aOpen">0</b></button>
+                <button type="button" class="mx-act-row" data-goto="positions"><i class="fas fa-rotate" aria-hidden="true"></i><span>Active Matches</span><b id="aActive">0</b></button>
+                <button type="button" class="mx-act-row" data-goto="positions"><i class="far fa-clock" aria-hidden="true"></i><span>Pending Settlement</span><b id="aPending">0</b></button>
+                <button type="button" class="mx-act-row" data-goto="positions"><i class="far fa-circle-check" aria-hidden="true"></i><span>Completed</span><b id="aDone">0</b></button>
+            </section>
+
+            <section class="mx-card mx-why" aria-label="Why use TMR Match">
+                <h2>Why use TMR Match?</h2>
+                <ul>
+                    <li><i class="fas fa-circle-check" aria-hidden="true"></i>Bet with real members, not a sportsbook</li>
+                    <li><i class="fas fa-circle-check" aria-hidden="true"></i>TMR holds both sides until the game settles</li>
+                    <li><i class="fas fa-circle-check" aria-hidden="true"></i>Set your own sides, markets and prices</li>
+                    <li><i class="fas fa-circle-check" aria-hidden="true"></i>No fee on a match</li>
+                </ul>
+            </section>
+        </div>
+
+      </div>
     </main>
 
     <script src="/static/js/config.js?v=60a0696a58ba"></script>
@@ -950,7 +996,28 @@
         }
         function clearSay() { panelMsg.hidden = true; }
 
-        var state = { me: null, meta: null, offers: [], mine: [], fills: [], depth: [], balance: null, sport: 'all', readFailed: false };
+        var state = { me: null, meta: null, offers: [], mine: [], fills: [], depth: [], balance: null, sport: 'all', sort: 'newest', readFailed: false };
+
+        // The one avatar resolver the rest of the site uses: upload, else club mark, else silhouette.
+        function avatarUrl(name) {
+            var base = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://api.trustmyrecord.com/api';
+            return base + '/users/' + encodeURIComponent(name || '') + '/avatar?s=96';
+        }
+        function avatarHtml(name) {
+            return name
+                ? '<img class="av" src="' + esc(avatarUrl(name)) + '" alt="" loading="lazy">'
+                : '<span class="av">?</span>';
+        }
+        function marketLabel(m) {
+            return window.TMR_MARKET_LABELS ? window.TMR_MARKET_LABELS.label(m) : String(m || '').replace(/_/g, ' ');
+        }
+        // The league tabs are fixed; anything outside the five named leagues is Other.
+        var SPORT_TABS = [['all', 'All', 'fa-table-cells-large'], ['NFL', 'NFL', 'fa-football'], ['NBA', 'NBA', 'fa-basketball'],
+            ['MLB', 'MLB', 'fa-baseball'], ['NHL', 'NHL', 'fa-hockey-puck'], ['NCAAB', 'CBB', 'fa-basketball'], ['other', 'Other', 'fa-ellipsis']];
+        function sportBucket(o) {
+            var sp = String(o.sport || '').toUpperCase();
+            return ['NFL', 'NBA', 'MLB', 'NHL', 'NCAAB'].indexOf(sp) >= 0 ? sp : 'other';
+        }
 
         /**
          * Say what an offer IS in one line a bettor reads without translating. "for" and
@@ -987,33 +1054,33 @@
             var html = ''
                 + '<div class="row" data-id="' + o.id + '">'
                 + '  <div class="row-main">'
+                + '    <div class="c-who">' + avatarHtml(o.maker_username) + '<span class="nm">' + esc(who) + '</span></div>'
+                + '    <div class="c-match"><span class="ev">' + esc(o.event_label || o.event_ref) + '</span>'
+                + (o.sport ? '<span class="lg">' + esc(o.sport) + '</span>' : '') + '</div>'
                 + '    <div class="c-pick">'
-                + '      <div class="pick"><b>' + esc(offerHeadline(o)) + '</b>'
-                + '        <span class="side ' + esc(o.side) + '">' + (o.side === 'for' ? 'backing' : 'against') + '</span>' + status
-                + '      </div>'
-                + '      <div class="sub">' + (o.sport ? esc(o.sport) + '<span class="dot">&middot;</span>' : '')
-                + esc(o.event_label || o.event_ref) + '<span class="dot">&middot;</span>' + esc((window.TMR_MARKET_LABELS ? window.TMR_MARKET_LABELS.label(o.market) : String(o.market || '').replace(/_/g, ' ')))
+                + '      <div class="pick"><b>' + esc(offerHeadline(o)) + '</b>' + status + '</div>'
+                + '      <div class="sub">' + esc(marketLabel(o.market))
                 + '<span class="when"><span class="dot">&middot;</span>' + esc(when(o.created_at)) + '</span></div>'
                 + '    </div>'
-                + '    <div class="c-who"><span class="av">' + esc(initial(who)) + '</span><span class="nm">' + esc(who) + '</span></div>'
                 + '    <div class="c-price">' + esc(priceLabel(o.price_american)) + '</div>'
                 + '    <div class="c-size">'
                 + '      <div class="big">' + num(remaining) + '</div>'
-                + '      <div class="of">of ' + num(quantity) + ' TMR' + (filled ? ' &middot; ' + num(filled) + ' taken' : '') + '</div>'
-                + '      <div class="bar"><span style="width:' + pctFilled + '%"></span></div>'
+                + (filled ? '<div class="of">of ' + num(quantity) + ' &middot; ' + num(filled) + ' taken</div>'
+                    + '<div class="bar"><span style="width:' + pctFilled + '%"></span></div>' : '')
                 + '    </div>'
                 + '    <div class="c-act">';
 
             if (canTake) {
                 // The whole interaction is one price cell, the way a book's board works.
+                // Accept loads the slip; nothing is matched until Confirm take is pressed there.
                 html += '<button class="px" type="button" data-open="' + o.id + '" aria-pressed="false">'
-                    + '<span class="pxv">TAKE</span><span class="pxa">' + num(remaining) + ' TMR</span></button>';
+                    + '<span class="pxv">ACCEPT</span></button>';
             } else if (canCancel) {
                 html += '<button class="mkb danger sm" data-cancel="' + o.id + '">Withdraw</button>';
             } else if (mine) {
                 html += '<span class="px-dead">Your offer</span>';
             } else if (!opts.canTake && !opts.canCancel) {
-                html += '<a class="px" href="/login/"><span class="pxv">TAKE</span><span class="pxa">Sign in</span></a>';
+                html += '<a class="px" href="/login/"><span class="pxv">ACCEPT</span><span class="pxa">Sign in</span></a>';
             }
 
             html += ''
@@ -1035,14 +1102,15 @@
             return ''
                 + '<div class="row" data-fill="' + f.id + '">'
                 + '  <div class="row-main">'
+                + '    <div class="c-who"><span class="av">' + (f.my_role === 'maker' ? 'P' : 'T') + '</span><span class="nm">' + esc(role) + '</span></div>'
+                + '    <div class="c-match"><span class="ev">' + esc(f.event_label || '') + '</span></div>'
                 + '    <div class="c-pick">'
                 + '      <div class="pick"><b>' + esc(pick) + '</b>'
                 + (status ? '<span class="pill ' + esc(status) + '">' + esc(status.replace(/_/g, ' ')) + '</span>' : '')
                 + '      </div>'
-                + '      <div class="sub">' + esc(f.event_label || '') + '<span class="dot">&middot;</span>' + esc(f.market || '')
+                + '      <div class="sub">' + esc(marketLabel(f.market))
                 + '<span class="when"><span class="dot">&middot;</span>' + esc(when(f.created_at)) + '</span></div>'
                 + '    </div>'
-                + '    <div class="c-who"><span class="av">' + (f.my_role === 'maker' ? 'P' : 'T') + '</span><span class="nm">' + esc(role) + '</span></div>'
                 + '    <div class="c-price">' + esc(priceLabel(f.price_american)) + '</div>'
                 + '    <div class="c-size"><div class="big">' + num(f.quantity) + '</div><div class="of">TMR at risk</div></div>'
                 + '    <div class="c-act"><a class="mkb sm" href="/tmr-challenges/?id=' + encodeURIComponent(f.challenge_id) + '">See the match</a></div>'
@@ -1141,48 +1209,73 @@
         }
 
         /**
-         * A board reads by game, not by a flat list of picks, so offers are grouped
-         * under the event they belong to the way a book groups a slate.
+         * Every row names its own matchup, so the board is one flat table in the order
+         * the Sort control asks for.
          */
         function groupedBoard(list) {
-            var order = [];
-            var groups = {};
-            list.forEach(function (o) {
-                var key = (o.sport || 'Other') + '|' + (o.event_label || o.event_ref || 'Other');
-                if (!groups[key]) { groups[key] = []; order.push(key); }
-                groups[key].push(o);
-            });
-            return order.map(function (key) {
-                var rows = groups[key];
-                var sport = key.split('|')[0];
-                var open = rows.reduce(function (t, o) { return t + Number(o.remaining); }, 0);
-                return ''
-                    + '<div class="gh">'
-                    + '  <span class="lg">' + esc(sport) + '</span>'
-                    + '  <span class="ev">' + esc(rows[0].event_label || rows[0].event_ref) + '</span>'
-                    + '  <span class="meta">' + rows.length + (rows.length === 1 ? ' offer' : ' offers')
-                    + '    &middot; ' + num(open) + ' TMR open</span>'
-                    + '</div>'
-                    + rows.map(function (o) { return offerCard(o, { canTake: isLoggedIn }); }).join('');
-            }).join('');
+            var rows = list.slice();
+            var left = function (o) { return Number(o.remaining); };
+            if (state.sort === 'largest') rows.sort(function (a, b) { return left(b) - left(a); });
+            else if (state.sort === 'smallest') rows.sort(function (a, b) { return left(a) - left(b); });
+            else rows.sort(function (a, b) { return new Date(b.created_at || 0) - new Date(a.created_at || 0); });
+            return rows.map(function (o) { return offerCard(o, { canTake: isLoggedIn }); }).join('');
         }
 
         function renderSportBar(market) {
             var bar = document.getElementById('sportBar');
             var counts = {};
             market.forEach(function (o) {
-                var k = String(o.sport || 'Other');
+                var k = sportBucket(o);
                 counts[k] = (counts[k] || 0) + 1;
             });
-            var keys = Object.keys(counts).sort();
-            if (state.sport !== 'all' && keys.indexOf(state.sport) < 0) state.sport = 'all';
-            var html = '<button class="sp" type="button" data-sport="all" aria-pressed="'
-                + (state.sport === 'all') + '">All<span class="n">' + market.length + '</span></button>';
-            html += keys.map(function (k) {
-                return '<button class="sp" type="button" data-sport="' + esc(k) + '" aria-pressed="'
-                    + (state.sport === k) + '">' + esc(k) + '<span class="n">' + counts[k] + '</span></button>';
+            bar.innerHTML = SPORT_TABS.map(function (t) {
+                var n = t[0] === 'all' ? market.length : (counts[t[0]] || 0);
+                return '<button class="sp" type="button" data-sport="' + esc(t[0]) + '" aria-pressed="'
+                    + (state.sport === t[0]) + '"><i class="fas ' + t[2] + '" aria-hidden="true"></i>' + esc(t[1])
+                    + (n ? '<span class="n">' + n + '</span>' : '') + '</button>';
             }).join('');
-            bar.innerHTML = html;
+        }
+
+        /** The five newest open offers, as cards. Accept loads the same slip the table does. */
+        function renderLive(market) {
+            var el = document.getElementById('liveList');
+            if (!el) return;
+            var rows = market.slice().sort(function (a, b) { return new Date(b.created_at || 0) - new Date(a.created_at || 0); }).slice(0, 5);
+            if (!rows.length) {
+                el.innerHTML = '<div class="mx-live-empty"><strong>' + (state.readFailed ? 'Offers could not be loaded' : 'No live offers yet') + '</strong>'
+                    + (state.readFailed ? '' : '<p>The first offer posted shows up here.</p>'
+                        + (isLoggedIn ? '<button class="mkb mkb-primary" type="button" data-goto="create">Create Match</button>'
+                                      : '<a class="mkb mkb-primary" href="/login/">Sign in to post</a>'))
+                    + '</div>';
+                return;
+            }
+            el.innerHTML = rows.map(function (o) {
+                var remaining = Number(o.remaining);
+                var mine = state.me && Number(o.maker_id) === Number(state.me);
+                var who = mine ? 'You' : (o.maker_username || 'a member');
+                var act = mine ? '<span class="px-dead">Your offer</span>'
+                    : (isLoggedIn ? '<button class="px" type="button" data-open="' + o.id + '" aria-pressed="false"><span class="pxv">ACCEPT</span></button>'
+                                  : '<a class="px" href="/login/"><span class="pxv">ACCEPT</span></a>');
+                return '<div class="lv">'
+                    + avatarHtml(o.maker_username)
+                    + '<div class="lv-main"><div class="lv-name">' + esc(who) + '</div>'
+                    + '<div class="lv-ev">' + (o.sport ? '<span class="lg">' + esc(o.sport) + '</span>' : '') + '<span>' + esc(o.event_label || o.event_ref) + '</span></div>'
+                    + '<div class="lv-pick"><b>' + esc(offerHeadline(o)) + '</b> <span>(' + esc(priceLabel(o.price_american)) + ')</span></div></div>'
+                    + '<div class="lv-side"><span class="lv-k">Offering</span><b>' + num(remaining) + ' <small>TMR</small></b>' + act + '</div>'
+                    + '</div>';
+            }).join('');
+        }
+
+        function renderActivity() {
+            var card = document.getElementById('actCard');
+            if (!card) return;
+            card.hidden = !isLoggedIn;
+            var setN = function (id, n) { var e = document.getElementById(id); if (e) e.textContent = num(n); };
+            var statusOf = function (f) { return String(f.challenge_status || ''); };
+            setN('aOpen', state.mine.filter(function (o) { return ['open', 'partially_filled'].indexOf(o.status) >= 0; }).length);
+            setN('aActive', state.fills.filter(function (f) { return statusOf(f) === 'accepted'; }).length);
+            setN('aPending', state.fills.filter(function (f) { return statusOf(f) === 'awaiting_settlement'; }).length);
+            setN('aDone', state.fills.filter(function (f) { return ['settled', 'resolved'].indexOf(statusOf(f)) >= 0; }).length);
         }
 
         function render() {
@@ -1195,9 +1288,11 @@
             document.getElementById('nPos').textContent = num(state.fills.length);
 
             renderSportBar(market);
+            renderLive(market);
+            renderActivity();
             var shown = state.sport === 'all'
                 ? market
-                : market.filter(function (o) { return String(o.sport || 'Other') === state.sport; });
+                : market.filter(function (o) { return sportBucket(o) === state.sport; });
 
             var lm = document.getElementById('listMarket');
             lm.innerHTML = groupedBoard(shown);
@@ -1214,9 +1309,6 @@
             });
             var showSlip = takeable || openSlipId != null;
             slip.hidden = !showSlip;
-            var xw = document.querySelector('#panel-market .xwrap');
-            if (xw) xw.classList.toggle('xwrap--solo', !showSlip);
-            document.getElementById('sportBar').hidden = market.length === 0;
             // A slip left open on an offer that is gone would take a bet that no longer
             // exists, so it closes itself when its offer leaves the board.
             if (openSlipId != null && !findOffer(openSlipId)) closeSlip();
@@ -1293,10 +1385,21 @@
         }
 
         document.addEventListener('click', function (ev) {
-            var t = ev.target.closest('[data-take],[data-cancel],[data-all],[data-open],[data-sport],[data-stake],[data-slip-close]');
+            var t = ev.target.closest('[data-take],[data-cancel],[data-all],[data-open],[data-sport],[data-stake],[data-slip-close],[data-retry],[data-goto],[data-rules]');
             if (!t) return;
             ev.preventDefault();
             if (t.hasAttribute('data-slip-close')) { closeSlip(); return; }
+            if (t.hasAttribute('data-goto')) {
+                showTab(t.getAttribute('data-goto'));
+                var mk = document.getElementById('market');
+                if (mk) mk.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                return;
+            }
+            if (t.hasAttribute('data-rules')) {
+                var rules = document.getElementById('mkIntro');
+                if (rules) { rules.open = true; rules.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+                return;
+            }
             if (t.hasAttribute('data-retry')) {
                 t.disabled = true;
                 refresh().then(function () { t.disabled = false; });
@@ -1311,7 +1414,12 @@
                 // Clicking a price loads the slip; clicking the same price closes it.
                 var oid = t.getAttribute('data-open');
                 if (String(openSlipId) === String(oid)) closeSlip();
-                else openSlip(oid);
+                else {
+                    // An offer accepted from the Live Offers rail belongs to the market tab.
+                    showTab('market');
+                    slip.hidden = false;
+                    openSlip(oid);
+                }
                 return;
             }
             if (t.hasAttribute('data-stake')) {
@@ -1338,6 +1446,9 @@
             }
             cancelOffer(t.getAttribute('data-cancel'), t);
         });
+
+        var sortSel = document.getElementById('mkSort');
+        if (sortSel) sortSel.addEventListener('change', function () { state.sort = sortSel.value; render(); });
 
         var form = document.getElementById('createForm');
         if (form) {
@@ -1450,6 +1561,11 @@
                 document.getElementById('balCard').hidden = false;
             }
             if (!isLoggedIn) document.getElementById('signedOutNote').hidden = false;
+            // A member whose balance read failed still gets the account card, not a blank.
+            var guestCard = document.getElementById('acctGuest');
+            if (guestCard) guestCard.hidden = !document.getElementById('balCard').hidden;
+            if (guestCard && isLoggedIn) guestCard.querySelector('p').textContent = 'Your balance could not be loaded right now.';
+            if (guestCard && isLoggedIn) { var gl = guestCard.querySelector('a'); gl.textContent = 'Open wallet'; gl.setAttribute('href', '/wallet/'); }
             return refresh();
         }).then(function () {
             loadState.hidden = true;
