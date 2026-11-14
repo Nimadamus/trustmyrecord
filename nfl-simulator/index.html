@@ -381,7 +381,7 @@
 <link rel="stylesheet" href="/static/css/tmr-navbar.css?v=68ec3081d29a">
 <link rel="stylesheet" href="/static/css/tmr-nfl-game.css?v=97228d87d89b">
 <!--SIM_UX--><link rel="stylesheet" href="/static/css/tmr-sim-ux.css?v=f70e7f2b899b"><script defer src="/static/js/tmr-sim-ux.js?v=21a024cf4de7"></script><!--/SIM_UX-->
-<!--SIM_BC--><link rel="stylesheet" href="/static/css/tmr-sim-broadcast.css?v=080aa122124a"><script>(function(r){r.classList.add('simbc','simbc-game');r.setAttribute('data-bc','nfl');function g(){r.classList.add('bc-ready')}addEventListener('load',g);setTimeout(g,2500)}(document.documentElement))</script><script defer src="/static/js/tmr-sim-broadcast.js?v=d20bb61c9942"></script><!--/SIM_BC-->
+<!--SIM_BC--><link rel="stylesheet" href="/static/css/tmr-sim-broadcast.css?v=080aa122124a"><script>(function(r){r.classList.add('simbc','simbc-game');r.setAttribute('data-bc','nfl');function g(){r.classList.add('bc-ready')}addEventListener('load',g);setTimeout(g,2500)}(document.documentElement))</script><script defer src="/static/js/tmr-sim-broadcast.js?v=1acb1432a72e"></script><!--/SIM_BC-->
 <!--SIM_A11Y--><style>.simux-sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}html.simbc :is(a,button,select,input,textarea,summary,[tabindex]):focus-visible{outline:2px solid #2fe0ff;outline-offset:2px}html.simbc main :is(p,li) a:not([class]){text-decoration:underline;text-underline-offset:2px}html.simbc .simcrumb,html.simbc main>nav[aria-label="Breadcrumb"]{opacity:.9}</style><script defer src="/static/js/tmr-sim-a11y.js?v=0e86cff426c8"></script><!--/SIM_A11Y-->
 </head>
 <body class="tmr-ds-shell tmr-ds--dark"><a class="simux-skip" href="#simux-main">Skip to main content</a>
@@ -451,7 +451,7 @@
     <details class="adv" id="advSettings">
     <summary><span>Simulation settings</span><span class="chip" id="cSims"><b id="cSimsN">10,000</b>&nbsp;sims</span><span class="chip" id="cVenue">Home field</span><span class="chip" id="cWindow">Late afternoon</span></summary>
     <div class="setgrid">
-      <div class="fld"><span>Simulations</span>
+      <div class="fld" hidden style="display:none" data-one-game-20261114><span>Simulations</span>
         <div class="seg" id="simSeg" role="group" aria-label="Simulation count">
           <button data-sims="100">100</button>
           <button data-sims="1000">1,000</button>
@@ -1467,7 +1467,7 @@ function startProgress(out,label){
       :(sec<8?`Playing out ${n} games, drive by drive (${sec}s)`
       :(sec<20?`Still simulating (${sec}s). A first run can take up to 20 seconds.`:`Taking longer than usual (${sec}s). Hang on, or try again in a moment.`));
   },500);
-  simStatus(label+', '+n+' simulations.');
+  simStatus(label+'.');
   revealResult(out,null);
 }
 function revealResult(out,focusEl){
@@ -1689,16 +1689,15 @@ function renderResult(out,d){
   const even=aPts===hPts;
   grid.appendChild(side(aAbbr,g.away,neutral?'Team A':'Away',aPts,awayWP,even?null:aPts>hPts));
   const mid=el('div','mh-mid');
-  mid.innerHTML=`<div class="mh-scorelabel" data-sim-score-label>${rep?'This simulation'+(rep.ot?' · OT':''):'Projected score'}</div><div class="at">${neutral?'vs':'at'}</div>`;
+  mid.innerHTML=`<div class="mh-scorelabel" data-sim-score-label>${rep?'Final'+(rep.ot?' · OT':''):'Projected score'}</div><div class="at">${neutral?'vs':'at'}</div>`;
   grid.appendChild(mid);
   grid.appendChild(side(hAbbr,g.home,neutral?'Team B':'Home',hPts,homeWP,even?null:hPts>aPts));
   mh.appendChild(grid);
-  if(rep){const av=el('div','hl-final');av.id='simAverage';av.textContent=`Average of ${nSims} simulations: ${aAbbr} ${nz(p.score.away)}, ${hAbbr} ${nz(p.score.home)}`;mh.appendChild(av)}
   if(g.final){mh.appendChild(Object.assign(el('div','hl-final'),{textContent:`Actual final: ${aAbbr} ${g.final.away}, ${hAbbr} ${g.final.home}`}))}
   let runAt='';try{runAt=new Date().toLocaleString('en-US',{timeZone:'America/Los_Angeles',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})+' PT'}catch(e){}
   let kick='';try{if(g.kickoff_utc&&!g.is_custom)kick=isTbdKick(g.kickoff_utc)?'TBD':new Date(g.kickoff_utc).toLocaleString('en-US',{timeZone:'America/Los_Angeles',weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})+' PT'}catch(e){}
   const hm=el('div','hl-meta');hm.id='simMeta';
-  hm.innerHTML=[`<b>${nSims}</b> simulations`,d.meta&&d.meta.model?esc(d.meta.model):'',runAt?'Run '+esc(runAt):'',kick?'Kickoff '+esc(kick):''].filter(Boolean).join(' · ');
+  hm.innerHTML=[d.meta&&d.meta.model?esc(d.meta.model):'',runAt?'Run '+esc(runAt):'',kick?'Kickoff '+esc(kick):''].filter(Boolean).join(' · ');
   mh.appendChild(hm);
 
   /* environment summary strip */
@@ -1733,7 +1732,7 @@ function renderResult(out,d){
   const k=el('div','kpis');
   const cards=[
     `<div class="kpi"><div class="k">Projected total</div><div class="v">${nz(p.projected_total)}</div><div class="s">combined points</div></div>`,
-    p.confidence_range?`<div class="kpi"><div class="k">Margin range</div><div class="v" style="font-size:1.05rem"><span style="white-space:nowrap">${esc(byTxt(p.confidence_range.margin_low))}</span> <span style="white-space:nowrap">to ${esc(byTxt(p.confidence_range.margin_high))}</span></div><div class="s">8 in 10 simulations land here</div></div>`:'',
+    p.confidence_range?`<div class="kpi"><div class="k">Margin range</div><div class="v" style="font-size:1.05rem"><span style="white-space:nowrap">${esc(byTxt(p.confidence_range.margin_low))}</span> <span style="white-space:nowrap">to ${esc(byTxt(p.confidence_range.margin_high))}</span></div><div class="s">8 in 10 games land here</div></div>`:'',
     env?`<div class="kpi"><div class="k">Venue</div><div class="v" style="font-size:1.05rem">${esc(env.neutral?'Neutral':(hAbbr+' home'))}</div><div class="s">${esc(env.kickoff_window_label)} · ${env.indoor?'indoor':'outdoor'}</div></div>`:'',
     d.market&&d.market.spread?(()=>{const hl=d.market.spread.home_line!=null?d.market.spread.home_line:-d.market.spread.line;return `<div class="kpi"><div class="k">${esc(hAbbr)} covers ${hl>0?'+':''}${hl}</div><div class="v">${pct(d.market.spread.home_cover_prob)}</div><div class="s">vs ${d.market.source==='current'?'current line'+(d.market.book?' ('+esc(d.market.book)+')':''):'closing line'}</div></div>`})():'',
     d.market&&d.market.total?`<div class="kpi"><div class="k">Over ${d.market.total.line}</div><div class="v">${pct(d.market.total.over_prob)}</div><div class="s">model total ${d.market.total.model_total!=null?nz(Math.round(d.market.total.model_total*10)/10):''} vs ${d.market.source==='current'?'current':'closing'} ${d.market.total.line}</div></div>`:'',
@@ -1770,7 +1769,7 @@ function renderResult(out,d){
   const charts=el('div','chartgrid');
   charts.appendChild(chartCard('Win probability',svgWinDonut(homeWP,awayWP,hAbbr,aAbbr),
     `<div class="legend"><span><i style="background:${col(hAbbr)}"></i>${esc(hAbbr)} ${wpTxt(homeWP,awayWP)}</span><span><i style="background:${col(aAbbr)}"></i>${esc(aAbbr)} ${wpTxt(awayWP,homeWP)}</span></div>`));
-  charts.appendChild(chartCard('Projected points by team · average of '+nSims+' simulations',svgPointsByTeam(p.score.home,p.score.away,hAbbr,aAbbr,g.home,g.away)));
+  charts.appendChild(chartCard('Projected points by team',svgPointsByTeam(p.score.home,p.score.away,hAbbr,aAbbr,g.home,g.away)));
   if(p.distributions&&p.distributions.margin&&p.distributions.margin.length){
     // MARKER_COLLISION_20260817: both markers were always drawn, so on a
     // typical game where the median margin is a point or two off zero the
@@ -1829,7 +1828,7 @@ function renderResult(out,d){
   const pd=d.meta&&d.meta.player_data;
   const partial=pd&&pd.status&&pd.status!=='FRESH';
   const lowUse=d.roster&&((d.roster.home&&d.roster.home.confidence!=null&&d.roster.home.confidence<0.5)||(d.roster.away&&d.roster.away.confidence!=null&&d.roster.away.confidence<0.5));
-  meta.innerHTML=`Model: <b>${esc(d.meta.model)}</b> · <b>${fmtN(d.meta.simulations)}</b> simulations · calibration: ${esc(d.meta.calibration)} · run dated ${esc(runDatedPT(d.meta.data_freshness))}${lowUse?' · <span class="pill warn">player usage confidence is low</span>':''}${partial?' · <span class="pill warn">player usage feed incomplete</span>':''}. ${esc(d.disclaimer)}`;
+  meta.innerHTML=`Model: <b>${esc(d.meta.model)}</b> · calibration: ${esc(d.meta.calibration)} · run dated ${esc(runDatedPT(d.meta.data_freshness))}${lowUse?' · <span class="pill warn">player usage confidence is low</span>':''}${partial?' · <span class="pill warn">player usage feed incomplete</span>':''}. ${esc(d.disclaimer)}`;
   out.appendChild(meta);
   const clock=el('div','disc');
   clock.textContent='Roster table age: checking the live status.';
@@ -1920,7 +1919,7 @@ function renderTab(body,id,d,g,hAbbr,aAbbr){
     if(!bx||bx.unavailable||!bx.projections){body.appendChild(Object.assign(el('div','unavail'),{textContent:'Player projections unavailable for this matchup.'}));return}
     const lead=el('p','muted');
     lead.style.cssText='margin:0 0 14px;font-size:.88rem';
-    lead.innerHTML='Across <b>'+fmtN(d.meta.simulations)+'</b> simulations. <b>Range</b> is the tenth to ninetieth percentile: '
+    lead.innerHTML='<b>Range</b> is the tenth to ninetieth percentile: '
       +'eight runs in ten land inside it, one below, one above. <b>Median</b> is the middle outcome, which is not the same as the average '
       +'and is the more honest single number for a stat with a long tail. Milestone columns are how often that line was cleared, '
       +'not a prediction that it will be.';
@@ -1998,7 +1997,7 @@ function renderTab(body,id,d,g,hAbbr,aAbbr){
     ]));
     board.appendChild(ls);body.appendChild(board);
     const cta=el('div','callout');
-    cta.innerHTML=`<span style="font-size:1.1rem;line-height:1">🎲</span><span><b>This is one simulated game</b>, a single outcome drawn at random from the ${fmtN(d.meta.simulations)} simulations and shown play by play so the numbers reconcile. Simulate again and you get a different game: sometimes a blowout, sometimes an upset, at the rates the model actually produces them. The projected score at the top is the opposite: the average of every run, so it barely moves.</span>`;
+    cta.innerHTML=`<span style="font-size:1.1rem;line-height:1">🎲</span><span><b>This is one simulated game</b>, shown play by play so the numbers reconcile. Simulate again and you get a different game: sometimes a blowout, sometimes an upset, at the rates the model actually produces them.</span>`;
     body.appendChild(cta);
     const block=(title,tbl)=>{const b=el('div','statblock');b.appendChild(Object.assign(el('h3',null,title)));b.appendChild(tbl);return b};
     const grp=(a,bl)=>{const w=el('div','grp');w.appendChild(a);if(bl)w.appendChild(bl);return w};
@@ -2508,7 +2507,7 @@ function simRenderSavedCard(out,saved,why){
   };
   grid.appendChild(side(aAbbr,r.awayTeam,'Away',aPts,win==='h'));
   const mid=el('div','mh-mid');
-  mid.innerHTML='<div class="mh-scorelabel" data-sim-score-label>'+(simulated?'Simulated final score'+(r.simulatedOt?' · OT':''):'Projected average'+(sims?' of '+sims+' simulations':''))+'</div><div class="at">@</div>';
+  mid.innerHTML='<div class="mh-scorelabel" data-sim-score-label>'+(simulated?'Simulated final score'+(r.simulatedOt?' · OT':''):'Projected average')+'</div><div class="at">@</div>';
   grid.appendChild(mid);
   grid.appendChild(side(hAbbr,r.homeTeam,'Home',hPts,win==='a'));
   card.appendChild(grid);
@@ -2521,13 +2520,13 @@ function simRenderSavedCard(out,saved,why){
     card.appendChild(ls);
   }
   const facts=[];
-  if(simulated&&r.projectedAwayScore!=null)facts.push('Projected average'+(sims?' of '+sims+' simulations':'')+': '+esc(aAbbr)+' <b>'+esc(r.projectedAwayScore)+'</b>, '+esc(hAbbr)+' <b>'+esc(r.projectedHomeScore)+'</b>');
+  if(simulated&&r.projectedAwayScore!=null)facts.push('Projected average'+': '+esc(aAbbr)+' <b>'+esc(r.projectedAwayScore)+'</b>, '+esc(hAbbr)+' <b>'+esc(r.projectedHomeScore)+'</b>');
   if(r.winner&&r.winProbability)facts.push('Projected winner '+esc(r.winner)+' ('+esc(r.winProbability)+')');
   if(facts.length){const f=el('div','mh-avg');f.innerHTML=facts.join(' · ');card.appendChild(f)}
   const note=el('p','muted');note.style.cssText='font-size:.86rem;margin:12px 0 0';
   note.textContent='Saved '+simSavedWhen(saved)+'. '+(simulated
     ?'This is the simulated game you saved.'
-    :'This save holds the projected average'+(sims?' of its '+sims+' simulations':'')+'.');
+    :'This save holds the projected average.');
   card.appendChild(note);
   simSavedActions(card,saved);
   out.innerHTML='';out.appendChild(card);
@@ -2656,7 +2655,7 @@ function svgHist(bins,opt){
     const lab=opt.kind==='margin'
       ?(b.x===0?'Tie in regulation':(b.x>0?`${opt.hAbbr} by ${b.x}`:`${opt.aAbbr} by ${-b.x}`))
       :`${b.x} total points`;
-    s+=`<rect class="b" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${Math.max(0.8,bw-0.8).toFixed(1)}" height="${Math.max(0,h).toFixed(1)}" rx="1" fill="${fill}" opacity="0.88"><${"title"}>${esc(lab)}: ${(b.p/tot*100).toFixed(1)}% of simulations</${"title"}></rect>`;
+    s+=`<rect class="b" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${Math.max(0.8,bw-0.8).toFixed(1)}" height="${Math.max(0,h).toFixed(1)}" rx="1" fill="${fill}" opacity="0.88"><${"title"}>${esc(lab)}: ${(b.p/tot*100).toFixed(1)}%</${"title"}></rect>`;
   }
   s+=`<line class="axl" x1="${pl}" x2="${W-pr}" y1="${H-pb}" y2="${H-pb}"/>`;
   // ticks every 7 for margins (the football number), every 10 for totals
@@ -2674,7 +2673,7 @@ function svgHist(bins,opt){
     s+=`<line class="mk" x1="${x.toFixed(1)}" x2="${x.toFixed(1)}" y1="${pt}" y2="${H-pb}" stroke="${m.c}"/>`;
     const r=rows.findIndex(R=>!R.some(u=>Math.abs(u-x)<34));
     if(r>=0){rows[r].push(x);s+=`<text class="mkt" x="${x.toFixed(1)}" y="${r===0?pt-4:pt+8}" text-anchor="middle" fill="${m.c}">${esc(m.label)}</text>`}}
-  const title=opt.kind==='margin'?'Margin of victory across the simulations':'Total points across the simulations';
+  const title=opt.kind==='margin'?'Margin of victory':'Total points';
   const desc=opt.kind==='margin'
     ?`Median margin ${sgn(opt.median,0)} for ${opt.hAbbr}. Half of the simulated games fall between ${numTxt(pc.p25)} and ${numTxt(pc.p75)}; 90% between ${numTxt(pc.p05)} and ${numTxt(pc.p95)}.${opt.line!=null?' Market line '+numTxt(opt.line)+'.':''}`
     :`Median total ${numTxt(opt.median)}. Half of the simulated games fall between ${numTxt(pc.p25)} and ${numTxt(pc.p75)} points; 90% between ${numTxt(pc.p05)} and ${numTxt(pc.p95)}.${opt.line!=null?' Market total '+numTxt(opt.line)+'.':''}`;
@@ -2908,7 +2907,7 @@ async function drawCardPng(S,withImages){
   facts.forEach((t,i)=>{let fs=26;x.font=`600 ${fs}px ${F}`;while(x.measureText(t).width>W/2-60&&fs>16){fs-=1;x.font=`600 ${fs}px ${F}`}
     x.fillText(t,i%2===0?W/4:3*W/4,470+Math.floor(i/2)*44)});
   x.font=`500 20px ${F}`;x.fillStyle='#5b6b82';
-  x.fillText(`${S.sims?fmtN(S.sims)+' simulations. ':''}Model estimate, not betting advice. trustmyrecord.com/nfl-simulator`,600,592);
+  x.fillText(`Model estimate, not betting advice. trustmyrecord.com/nfl-simulator`,600,592);
   x.textAlign='left';
   return await new Promise((res,rej)=>{try{cv.toBlob(b=>b?res(b):rej(new Error('blob')),'image/png')}catch(e){rej(e)}});
 }
@@ -2994,7 +2993,7 @@ function nflUpgradeRender(out,d,ctx){
    auto-resume never fires against empty selectors. */
 boot().then(installSimGate,installSimGate);
 </script>
-<script src="/static/js/tmr-session.b423be9e9588.js"></script><script src="/static/js/tmr-take.js?v=2bb7d244d487"></script><script src="/static/js/tmr-ds-nav.9a282378fb0d.js"></script>
+<script src="/static/js/tmr-session.b423be9e9588.js"></script><script src="/static/js/tmr-take.js?v=244b3eebd360"></script><script src="/static/js/tmr-ds-nav.9a282378fb0d.js"></script>
   <script defer src="/static/js/tmr-nfl-game.js?v=18faa0a69b42"></script>
   <script defer src="/static/js/pick-progress-nudge.js?v=d83b51180b6b"></script>
   <script defer src="/static/js/first-pick-onboarding.js?v=73dc762988a9"></script>

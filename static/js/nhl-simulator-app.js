@@ -203,7 +203,7 @@
     var grid = el('div', 'chartgrid');
 
     grid.appendChild(S.chartCard(
-      'Margin, ' + d.meta.simulations.toLocaleString() + ' simulations',
+      'Margin',
       S.histogram(p.distributions.margin, {
         title: 'Distribution of the final margin',
         colorOf: function (b) { return b.bucket > 0 ? homeColor : awayColor; },
@@ -826,8 +826,7 @@
       { h: 'Runs', fmt: function (r) { return r.count.toLocaleString(); } },
     ], list));
     wrap.appendChild(el('div', 'disc',
-      'Out of ' + d.meta.simulations.toLocaleString() + ' simulated games. '
-      + 'The projected score above is an average of all of them and may itself never have been played.'));
+      'How often each final score comes up.'));
     return wrap;
   }
 
@@ -1200,7 +1199,7 @@
       winner: winner,
       status: decided === 'regulation' ? 'Final'
         : (decided === 'overtime' ? 'Final/OT' : 'Final/SO'),
-      subStatus: 'Simulated · ' + (d.meta.simulations || 0).toLocaleString() + ' runs',
+      subStatus: 'Simulated',
       line: { cols: cols, away: aw, home: hm },
       footnote: rosterFootnote(d),
     }));
@@ -1392,7 +1391,7 @@
       li.appendChild(el('b', '', wholePct(g.share)));
       legend.appendChild(li);
     });
-    wrap.appendChild(el('div', 'k', 'How the ' + n.toLocaleString() + ' games ended'));
+    wrap.appendChild(el('div', 'k', 'How this game tends to end'));
     wrap.appendChild(bar);
     wrap.appendChild(legend);
     return wrap;
@@ -1405,7 +1404,7 @@
     var n = p.simulations;
     var hero = S.matchupHeader(away, home, Math.round(p.win_probability.away * 100),
       Math.round(p.win_probability.home * 100), p.win_probability.away, p.win_probability.home,
-      ['Win probability', n.toLocaleString() + ' simulations',
+      ['Win probability',
         d.meta.neutral_site ? 'Neutral ice' : home.name + ' at home']);
     var pts = hero.querySelectorAll('.mh-team .pts');
     var wps = hero.querySelectorAll('.mh-team .wp');
@@ -1592,8 +1591,7 @@
       away, home,
       d.result.final.away, d.result.final.home,
       p.win_probability.away, p.win_probability.home,
-      [decided, projected ? 'One of ' + d.meta.simulations.toLocaleString() + ' runs'
-        : d.meta.simulations.toLocaleString() + ' simulations',
+      [decided,
         d.meta.neutral_site ? 'Neutral ice' : home.name + ' at home'],
     );
     if (projected) gameHeader.classList.add('nhl-sample');
@@ -1727,8 +1725,7 @@
       { id: 'charts', label: 'Distributions', build: function (node) {
         node.appendChild(charts(d));
         node.appendChild(el('div', 'disc',
-          'Every bar is a share of the ' + d.meta.simulations.toLocaleString()
-          + ' simulated games. Hover or tap a bar for its exact share.'));
+          'Every bar is how often that result comes up. Hover or tap a bar for its exact share.'));
       } },
       { id: 'range', label: 'Range of outcomes', build: function (node) {
         node.appendChild(S.table(
@@ -1746,7 +1743,7 @@
           { k: away.abbr + ' by two or more', v: pct(p.puckline.away_minus_1_5, 0), s: 'Covers a 1.5-goal puck line' },
         ]));
         node.appendChild(el('div', 'disc',
-          'Across ' + d.meta.simulations.toLocaleString() + ' simulations. A projection is a range, not a number.'));
+          'A projection is a range, not a number.'));
       } },
     ];
     // THE ORDER THE SECTIONS ARE ASKED FOR IN.

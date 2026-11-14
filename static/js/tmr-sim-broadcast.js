@@ -365,7 +365,7 @@
     row.appendChild(bar);
     row.appendChild(el('div', 'pc', pair[1]));
     box.appendChild(row);
-    var cap = 'Win chance, ' + Number(n).toLocaleString() + ' games';
+    var cap = 'Win chance';
     if (score) cap += ' · projected ' + score;
     box.appendChild(el('div', 'bc-cap', cap));
     return box;
@@ -557,7 +557,7 @@
       });
       var n = (d.meta && d.meta.simulations) || 0;
       var sub = $('.sb-sub', sb);
-      if (sub) sub.textContent = n > 1 ? 'One game of ' + n.toLocaleString() : 'One simulated game';
+      if (sub) sub.textContent = 'Simulated game';
 
       var after = sb.nextSibling;
       var p = d.projection || {};
@@ -785,7 +785,7 @@
         var q = quarterRow(rep);
         if (q) {
           var wrap = el('div', 'bc-line');
-          wrap.appendChild(el('div', 'bc-cap', 'One game of ' + Number(n).toLocaleString()));
+          wrap.appendChild(el('div', 'bc-cap', 'Simulated game'));
           var tb = el('table');
           var cols = q.a.map(function (v, i) { return i < 4 ? String(i + 1) : 'OT'; });
           var hr = el('tr');

@@ -98,8 +98,7 @@
   function promptFor(ctx) {
     ctx = ctx || {};
     if (ctx.kind === 'sim' && ctx.winner && pctText(ctx.winner_wp)) {
-      var sims = ctx.simulations ? ' of ' + Number(ctx.simulations).toLocaleString() + ' simulations' : ' of simulations';
-      return ctx.winner + ' won ' + pctText(ctx.winner_wp) + sims + '. Agree or disagree?';
+      return ctx.winner + ' has a ' + pctText(ctx.winner_wp) + ' chance to win. Agree or disagree?';
     }
     if (ctx.kind === 'team' && ctx.team) return 'How are you feeling about the ' + ctx.team + ' right now?';
     if (ctx.kind === 'game' && ctx.away && ctx.home) return "What's your take on " + ctx.away + ' vs ' + ctx.home + '?';

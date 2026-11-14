@@ -80,7 +80,7 @@
     var grid = el('div', 'chartgrid');
 
     grid.appendChild(S.chartCard(
-      'Margin, ' + d.meta.simulations.toLocaleString() + ' simulations',
+      'Margin',
       S.histogram(p.distributions.margin, {
         title: 'Distribution of the final margin',
         colorOf: function (b) { return b.bucket + b.width / 2 > 0 ? homeColor : awayColor; },
@@ -521,8 +521,7 @@
       { h: 'Runs', fmt: function (r) { return r.count.toLocaleString(); } },
     ], list));
     wrap.appendChild(el('div', 'disc',
-      'Out of ' + d.meta.simulations.toLocaleString() + ' simulated games. '
-      + 'The projected score above is an average of all of them and may itself never have been played.'));
+      'How often each final score comes up.'));
     return wrap;
   }
 
@@ -1029,7 +1028,7 @@
       records: { away: rec(away), home: rec(home) },
       winner: winner,
       status: ot > 0 ? (ot === 1 ? 'Final/OT' : 'Final/' + ot + 'OT') : 'Final',
-      subStatus: 'Simulated · ' + (d.meta.simulations || 0).toLocaleString() + ' runs',
+      subStatus: 'Simulated',
       line: {
         cols: cols,
         away: (ls.quarters.away || []).concat(ls.overtime.away || []),
@@ -1114,7 +1113,7 @@
       away, home,
       d.result.final.away, d.result.final.home,
       p.win_probability.away, p.win_probability.home,
-      [otText, d.meta.simulations.toLocaleString() + ' simulations',
+      [otText,
         d.meta.neutral_site ? 'Neutral site' : home.name + ' at home'],
     ));
 
@@ -1201,8 +1200,7 @@
       { id: 'charts', label: 'Distributions', build: function (node) {
         node.appendChild(charts(d));
         node.appendChild(el('div', 'disc',
-          'Every bar is a share of the ' + d.meta.simulations.toLocaleString()
-          + ' simulated games. Hover or tap a bar for its exact share.'));
+          'Every bar is how often that result comes up. Hover or tap a bar for its exact share.'));
       } },
       { id: 'range', label: 'Range of outcomes', build: function (node) {
         node.appendChild(S.table(
@@ -1217,8 +1215,7 @@
           ],
         ));
         node.appendChild(el('div', 'disc',
-          'Margin is from the home team\'s point of view across ' + d.meta.simulations.toLocaleString()
-          + ' simulations. A projection is a range, not a number.'));
+          'Margin is from the home team\'s point of view. A projection is a range, not a number.'));
       } },
     ];
     // THE ORDER THE SECTIONS ARE ASKED FOR IN.

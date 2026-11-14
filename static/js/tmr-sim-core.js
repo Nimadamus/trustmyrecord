@@ -900,7 +900,7 @@
     this.nodes.run.disabled = true;
     this.setState('loading', this.state.sims === 1
       ? 'Playing one game'
-      : 'Running ' + this.state.sims.toLocaleString() + ' simulations');
+      : 'Simulating the game');
 
     this.api('/simulate?' + params.toString()).then(function (d) {
       self.lastResult = d;

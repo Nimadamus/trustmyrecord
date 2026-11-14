@@ -137,8 +137,10 @@ t('compare keeps at most four results and survives a broken store', () => {
 t('the board shows the simulated game of this run, not the average (do not revert)', () => {
   assert.ok(html.includes('const aPts=rep?rep.away_score:p.score.away, hPts=rep?rep.home_score:p.score.home;'));
   assert.ok(!/const aPts=p\.score\.away, hPts=p\.score\.home;/.test(html));
-  assert.ok(html.includes("rep?'This simulation'"));
-  assert.ok(html.includes("av.id='simAverage'"));
+  assert.ok(html.includes("rep?'Final'"));
+  // ONE GAME (Nima 2026-11-14): no simulation counts and no average on the result.
+  assert.ok(!/Average of \$\{nSims\} simulations/.test(html));
+  assert.ok(html.includes('data-one-game-20261114'));
 });
 
 console.log(`\nnfl-simulator-upgrade-test: ${passed} passed`);
