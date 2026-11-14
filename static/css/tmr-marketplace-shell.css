@@ -60,3 +60,25 @@
   .mpx .mpx-row { align-items:flex-start; }
   .mpx .mpx-row-label { min-width:0; width:100%; }
 }
+
+/* MPX_STAGE_20261114: the marketplace header is its own stadium stage on the main marketplace page (body.mp-browse-page).
+   The sitewide A+ script used to mark the whole .mpx box (title, section nav and fee table) as the hero,
+   and the shell re-render then wiped its backdrop, leaving a flat gold slab. The stage now lives on
+   .mpx-top only; the nav and fee table sit below it as plain panels. Markup and behaviour unchanged. */
+body.mp-browse-page.tmr-aplus .mpx.aplus-hero{padding:0 !important;border:0 !important;background:none !important;box-shadow:none !important;border-radius:0 !important;overflow:visible !important;margin-bottom:18px !important}
+body.mp-browse-page.tmr-aplus .mpx.aplus-hero > .aplus-stage{display:none !important}
+body.mp-browse-page .mpx .mpx-top{position:relative;isolation:isolate;overflow:hidden;display:flex;align-items:flex-end;min-height:200px;margin:0 0 14px;padding:clamp(22px,3.2vw,40px);
+  border-radius:24px;border:1px solid transparent;
+  background:linear-gradient(180deg,rgba(6,14,32,.2),rgba(6,14,32,.2)) padding-box,
+  linear-gradient(140deg,rgba(245,200,76,.75),rgba(255,255,255,.06) 40%,rgba(255,255,255,.04) 60%,rgba(245,158,11,.6)) border-box;
+  box-shadow:0 26px 70px rgba(0,0,0,.45),0 0 60px rgba(245,200,76,.1)}
+body.mp-browse-page .mpx .mpx-top::before{content:"";position:absolute;inset:0;z-index:-2;background:url(/static/img/blp/stadium-hero.jpg) center 35%/cover no-repeat;opacity:.55;filter:hue-rotate(180deg) saturate(1.2)}
+body.mp-browse-page .mpx .mpx-top::after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,rgba(3,8,22,.95) 0%,rgba(3,8,22,.8) 50%,rgba(3,8,22,.38) 100%),linear-gradient(180deg,rgba(3,8,22,0) 55%,rgba(3,8,22,.85) 100%)}
+body.mp-browse-page .mpx .mpx-top > div:first-child::before{content:"Verified records only";display:inline-flex;margin-bottom:14px;padding:8px 15px;border-radius:999px;border:1.5px solid rgba(245,200,76,.65);
+  background:rgba(245,200,76,.1);color:#ffe7a3;font:800 12.5px/1 "Barlow Condensed",Inter,sans-serif;letter-spacing:.16em;text-transform:uppercase}
+body.mp-browse-page .mpx h1.mpx-title{font-family:Montserrat,Inter,system-ui,sans-serif !important;font-style:italic !important;font-weight:800 !important;font-size:clamp(34px,4.6vw,58px) !important;line-height:1.02 !important;
+  letter-spacing:-.025em !important;text-transform:none !important;color:#fff !important;-webkit-text-fill-color:#fff !important;margin:0 !important;max-width:none !important;text-shadow:0 6px 40px rgba(0,0,0,.45)}
+body.mp-browse-page .mpx h1.mpx-title .mpx-accent{background:linear-gradient(180deg,#ffdf7e,#f5c84c 60%,#d99a1e);-webkit-background-clip:text;background-clip:text;color:transparent !important;-webkit-text-fill-color:transparent !important;padding-right:.06em}
+body.mp-browse-page .mpx .mpx-top .mpx-sub{color:#dbe6f7 !important;font-size:clamp(15px,1.25vw,17.5px) !important;line-height:1.55 !important;margin:12px 0 0 !important;max-width:640px}
+body.mp-browse-page .mpx .mpx-top .mpx-sub b{color:#fff !important}
+@media (max-width:640px){body.mp-browse-page .mpx .mpx-top{min-height:0;padding:20px 16px;border-radius:20px}}
