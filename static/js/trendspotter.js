@@ -399,7 +399,8 @@
 
     var seasons = [['', 'All available history']];
     var thisYear = new Date().getFullYear();
-    var earliest = state.sport === 'MLB' ? 2010 : (state.sport === 'NFL' ? 2022 : 2023);
+    // TS_DEEP_HISTORY_20261114: the API says how far back each sport goes; the old floors are the fallback.
+    var earliest = c.earliest_season > 1900 ? c.earliest_season : (state.sport === 'MLB' ? 2010 : (state.sport === 'NFL' ? 2022 : 2023));
     for (var y = thisYear; y >= earliest; y--) seasons.push([y, 'Since ' + y]);
 
     var parts = [];
