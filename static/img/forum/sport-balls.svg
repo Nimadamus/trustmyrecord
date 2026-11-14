@@ -1,0 +1,115 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 240" role="img" aria-label="Baseball, football, basketball and hockey puck">
+  <defs>
+    <radialGradient id="bbWhite" cx="38%" cy="30%" r="78%">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset=".55" stop-color="#e9edf3"/>
+      <stop offset=".86" stop-color="#aab4c4"/>
+      <stop offset="1" stop-color="#5d6b82"/>
+    </radialGradient>
+    <radialGradient id="fbBrown" cx="36%" cy="24%" r="85%">
+      <stop offset="0" stop-color="#b9683a"/>
+      <stop offset=".45" stop-color="#8a4322"/>
+      <stop offset=".82" stop-color="#562510"/>
+      <stop offset="1" stop-color="#2a1006"/>
+    </radialGradient>
+    <radialGradient id="bkOrange" cx="36%" cy="26%" r="82%">
+      <stop offset="0" stop-color="#ffa457"/>
+      <stop offset=".42" stop-color="#e86a1c"/>
+      <stop offset=".8" stop-color="#a23c08"/>
+      <stop offset="1" stop-color="#4f1a02"/>
+    </radialGradient>
+    <linearGradient id="puckSide" x1="0" x2="1">
+      <stop offset="0" stop-color="#05070b"/>
+      <stop offset=".3" stop-color="#2b313b"/>
+      <stop offset=".55" stop-color="#0d1016"/>
+      <stop offset="1" stop-color="#020305"/>
+    </linearGradient>
+    <radialGradient id="puckTop" cx="40%" cy="30%" r="80%">
+      <stop offset="0" stop-color="#4a5261"/>
+      <stop offset=".6" stop-color="#1c2029"/>
+      <stop offset="1" stop-color="#0a0c11"/>
+    </radialGradient>
+    <radialGradient id="rimBlue" cx="50%" cy="50%" r="50%">
+      <stop offset=".8" stop-color="#3aa0ff" stop-opacity="0"/>
+      <stop offset="1" stop-color="#3aa0ff" stop-opacity=".55"/>
+    </radialGradient>
+    <radialGradient id="floor" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#000" stop-opacity=".7"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="grain" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="fractalNoise" baseFrequency="1.6" numOctaves="2" seed="7" result="n"/>
+      <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .55 -.12" result="a"/>
+      <feComposite in="a" in2="SourceGraphic" operator="in" result="g"/>
+      <feMerge><feMergeNode in="SourceGraphic"/><feMergeNode in="g"/></feMerge>
+    </filter>
+    <filter id="pebble" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="turbulence" baseFrequency="2.4" numOctaves="1" seed="3" result="n"/>
+      <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .7 -.2" result="a"/>
+      <feComposite in="a" in2="SourceGraphic" operator="in" result="g"/>
+      <feMerge><feMergeNode in="SourceGraphic"/><feMergeNode in="g"/></feMerge>
+    </filter>
+    <clipPath id="bkClip"><circle cx="438" cy="104" r="96"/></clipPath>
+    <clipPath id="fbClip"><path d="M-128 0C-84-66 84-66 128 0C84 66-84 66-128 0Z"/></clipPath>
+  </defs>
+
+  <!-- floor shadows -->
+  <ellipse cx="96" cy="222" rx="72" ry="10" fill="url(#floor)"/>
+  <ellipse cx="262" cy="212" rx="130" ry="14" fill="url(#floor)"/>
+  <ellipse cx="440" cy="212" rx="104" ry="14" fill="url(#floor)"/>
+  <ellipse cx="596" cy="226" rx="84" ry="10" fill="url(#floor)"/>
+
+  <!-- basketball (back) -->
+  <g>
+    <circle cx="438" cy="104" r="96" fill="url(#bkOrange)" filter="url(#pebble)"/>
+    <g clip-path="url(#bkClip)" fill="none" stroke="#1a0d05" stroke-width="4.5" stroke-linecap="round" opacity=".92">
+      <path d="M342 112C400 96 478 96 534 118"/>
+      <path d="M424 8C398 70 404 150 446 200"/>
+      <path d="M356 46C404 74 420 150 392 190"/>
+      <path d="M494 26C452 74 462 150 510 172"/>
+    </g>
+    <circle cx="438" cy="104" r="96" fill="url(#rimBlue)"/>
+    <ellipse cx="402" cy="52" rx="34" ry="18" fill="#fff" opacity=".16" transform="rotate(-28 402 52)"/>
+  </g>
+
+  <!-- football -->
+  <g transform="translate(262 122) rotate(-18)">
+    <path d="M-128 0C-84-66 84-66 128 0C84 66-84 66-128 0Z" fill="url(#fbBrown)" filter="url(#grain)"/>
+    <g clip-path="url(#fbClip)">
+      <path d="M-92-70C-78-30-78 30-92 70" fill="none" stroke="#f4f1ea" stroke-width="11" opacity=".95"/>
+      <path d="M92-70C78-30 78 30 92 70" fill="none" stroke="#f4f1ea" stroke-width="11" opacity=".95"/>
+      <path d="M-128 0C-70-10 70-10 128 0" fill="none" stroke="#2a1006" stroke-width="2" opacity=".55"/>
+    </g>
+    <g stroke="#f7f4ee" stroke-linecap="round">
+      <path d="M-46-33H46" stroke-width="5"/>
+      <path d="M-36-42V-24M-18-43V-23M0-44V-22M18-43V-23M36-42V-24" stroke-width="5.5"/>
+    </g>
+    <path d="M-128 0C-84-66 84-66 128 0" fill="none" stroke="#fff" stroke-width="2" opacity=".14"/>
+    <ellipse cx="-34" cy="-34" rx="60" ry="12" fill="#fff" opacity=".1"/>
+  </g>
+
+  <!-- baseball (front left) -->
+  <g>
+    <circle cx="96" cy="156" r="64" fill="url(#bbWhite)" filter="url(#grain)"/>
+    <g fill="none" stroke-linecap="round">
+      <path d="M52 110C76 132 78 178 56 204" stroke="#c81f2d" stroke-width="2.4"/>
+      <path d="M140 108C116 132 114 178 136 204" stroke="#c81f2d" stroke-width="2.4"/>
+      <path d="M52 110C76 132 78 178 56 204" stroke="#d4222f" stroke-width="9" stroke-dasharray="2 7" opacity=".95"/>
+      <path d="M140 108C116 132 114 178 136 204" stroke="#d4222f" stroke-width="9" stroke-dasharray="2 7" opacity=".95"/>
+    </g>
+    <circle cx="96" cy="156" r="64" fill="url(#rimBlue)" opacity=".7"/>
+    <ellipse cx="76" cy="122" rx="22" ry="11" fill="#fff" opacity=".55" transform="rotate(-30 76 122)"/>
+  </g>
+
+  <!-- hockey puck (front right) -->
+  <g>
+    <path d="M520 186V208C520 222 554 233 596 233C638 233 672 222 672 208V186Z" fill="url(#puckSide)"/>
+    <ellipse cx="596" cy="186" rx="76" ry="25" fill="url(#puckTop)"/>
+    <ellipse cx="596" cy="186" rx="76" ry="25" fill="none" stroke="#6f7c92" stroke-width="1.5" opacity=".7"/>
+    <ellipse cx="596" cy="186" rx="50" ry="15" fill="none" stroke="#8fa0bb" stroke-width="1.2" opacity=".35"/>
+    <g stroke="#3a4250" stroke-width="1.6" opacity=".8">
+      <path d="M528 202V220M540 207V226M554 211V230M570 213V232M586 214V233M602 214V233M618 213V232M634 211V230M648 207V226M660 202V220"/>
+    </g>
+    <ellipse cx="572" cy="179" rx="26" ry="6" fill="#fff" opacity=".14"/>
+  </g>
+</svg>

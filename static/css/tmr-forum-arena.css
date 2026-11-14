@@ -631,3 +631,17 @@ body.tmr-arena .tmrlh-footwrap{margin-left:0 !important}
   body.tmr-arena .fjump{flex-direction:column; align-items:stretch}
   body.tmr-arena .fjump select{width:100%}
 }
+
+/* FORUM_HERO_BALLS_20261114: the banner's ball art. Drawn in house (no league
+   marks). Wide screens on the forum home and category lists only. */
+@media (min-width:1180px){
+  body.tmr-arena .tfa-hero-art{
+    display:block; flex:0 0 auto; width:min(28vw,600px); aspect-ratio:680/240;
+    margin:-18px 0 -26px;
+    background:url(/static/img/forum/sport-balls.svg) center/contain no-repeat;
+    filter:drop-shadow(0 16px 26px rgba(0,0,0,.55));
+  }
+  body.tmr-arena.tfa-v-thread .tfa-hero-art,
+  body.tmr-arena.tfa-v-user .tfa-hero-art{display:none}
+  body.tmr-arena .tfa-hero-title{white-space:nowrap}
+}
