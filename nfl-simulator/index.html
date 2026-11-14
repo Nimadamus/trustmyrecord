@@ -1681,14 +1681,19 @@ function renderResult(out,d){
     return s;
   };
   const neutral=env&&env.neutral;
-  const aPts=p.score.away, hPts=p.score.home;
+  /* NFL_SIM_NEW_GAME_20261114 (Nima: every run must show a different result).
+     The board printed the average, so Simulate again showed the same score on
+     every run. It now shows THIS run's simulated game, the same one the Box
+     Score tab plays out, and the average sits under it with its own label. */
+  const aPts=rep?rep.away_score:p.score.away, hPts=rep?rep.home_score:p.score.home;
   const even=aPts===hPts;
   grid.appendChild(side(aAbbr,g.away,neutral?'Team A':'Away',aPts,awayWP,even?null:aPts>hPts));
   const mid=el('div','mh-mid');
-  mid.innerHTML=`<div class="mh-scorelabel">Projected score</div><div class="at">${neutral?'vs':'at'}</div>`;
+  mid.innerHTML=`<div class="mh-scorelabel" data-sim-score-label>${rep?'This simulation'+(rep.ot?' · OT':''):'Projected score'}</div><div class="at">${neutral?'vs':'at'}</div>`;
   grid.appendChild(mid);
   grid.appendChild(side(hAbbr,g.home,neutral?'Team B':'Home',hPts,homeWP,even?null:hPts>aPts));
   mh.appendChild(grid);
+  if(rep){const av=el('div','hl-final');av.id='simAverage';av.textContent=`Average of ${nSims} simulations: ${aAbbr} ${nz(p.score.away)}, ${hAbbr} ${nz(p.score.home)}`;mh.appendChild(av)}
   if(g.final){mh.appendChild(Object.assign(el('div','hl-final'),{textContent:`Actual final: ${aAbbr} ${g.final.away}, ${hAbbr} ${g.final.home}`}))}
   let runAt='';try{runAt=new Date().toLocaleString('en-US',{timeZone:'America/Los_Angeles',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})+' PT'}catch(e){}
   let kick='';try{if(g.kickoff_utc&&!g.is_custom)kick=isTbdKick(g.kickoff_utc)?'TBD':new Date(g.kickoff_utc).toLocaleString('en-US',{timeZone:'America/Los_Angeles',weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})+' PT'}catch(e){}
