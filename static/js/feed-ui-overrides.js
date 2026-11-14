@@ -807,12 +807,15 @@ function startFeedSources(filter, offset) {
         startedAt: Date.now(),
         fetchFeedPage: fetchFeedPage,
         feed: fetchFeedPage(),
-        discover: (filter === 'all' || filter === 'picks')
+        // FEED_LOAD_MORE_20261113: the side sources are not paged, so they belong
+        // to the first page only. Fetching them again for "load more" re-merged
+        // the same picks, polls and notifications into every later page.
+        discover: (offset === 0 && (filter === 'all' || filter === 'picks'))
             ? fetchDiscoverTop(12, true).catch(() => null) : null,
-        polls: (filter === 'all' || filter === 'polls')
+        polls: (offset === 0 && (filter === 'all' || filter === 'polls'))
             ? api.request('/polls/active?limit=5').then(loadHydratedActivePolls).catch(() => null) : null,
         notifViewer: viewer,
-        notif: ((filter === 'all' || filter === 'following') && viewer)
+        notif: (offset === 0 && (filter === 'all' || filter === 'following') && viewer)
             ? api.request('/notifications?limit=20').catch(() => null) : null
     };
     sources.feed.catch(() => {});
@@ -908,6 +911,11 @@ async function loadFeedItems() {
     c.setAttribute('aria-busy', 'true');
     loadFollowingPeople();
 
+    // FEED_LOAD_MORE_20261113: a later page is added under the posts already on
+    // screen. It used to replace them, so "Load More" threw away what the reader
+    // had just scrolled through.
+    const appending = feedOffset > 0;
+    let rawPageCount = 0;
     let items = [];
     try {
         if (api && typeof api.request === 'function') {
@@ -925,6 +933,7 @@ async function loadFeedItems() {
                 await new Promise(resolve => setTimeout(resolve, 1500));
                 data = await fetchFeedPage();
             }
+            rawPageCount = (data.feed || []).length;
             items = (data.feed || []).filter(isRealPublicFeedUser).map(item => {
                 if (
                     item.item_type === 'pick' ||
@@ -1028,12 +1037,33 @@ async function loadFeedItems() {
     } catch(e) {
         if (isStaleLoad()) return;
         c.removeAttribute('aria-busy');
+        if (appending) {
+            // Keep the posts on screen and step back so the button retries this page.
+            feedOffset = Math.max(0, feedOffset - FEED_LIMIT);
+            return;
+        }
         renderFeedUnavailable('Live feed data is temporarily unavailable. TrustMyRecord does not substitute fake feed posts when the backend is unavailable.');
         return;
     }
 
     if (isStaleLoad()) return;
     c.removeAttribute('aria-busy');
+    if (appending) {
+        const onPage = new Set(Array.from(c.querySelectorAll('.feed-item')).map(n => n.getAttribute('data-id')));
+        const fresh = [];
+        items.forEach(item => {
+            const html = renderFeedItem(item);
+            const m = /data-id="([^"]*)"/.exec(html);
+            const id = m ? m[1].replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>') : '';
+            if (id && onPage.has(id)) return;
+            if (id) onPage.add(id);
+            fresh.push(html);
+        });
+        if (fresh.length) c.insertAdjacentHTML('beforeend', fresh.join(''));
+        const more = document.getElementById('loadMore');
+        if (more) more.style.display = rawPageCount >= FEED_LIMIT ? 'block' : 'none';
+        return;
+    }
     updateHeroCounts(items.length);
     if (typeof fvAfterFeed === 'function') { try { fvAfterFeed(items); } catch (e) {} }
     if (!items.length) {

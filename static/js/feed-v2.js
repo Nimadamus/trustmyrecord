@@ -843,3 +843,13 @@ async function fvDeletePost(btn, card, itemId) {
         btn.innerHTML = '<i class="fas fa-triangle-exclamation"></i> Could not delete, try again';
     }
 }
+
+// ==================== LOAD MORE ====================
+// FEED_LOAD_MORE_20261113: one page per click. A second click while a page is
+// still loading used to skip a page (the offset moved twice, one response won).
+function loadMorePosts() {
+    const list = document.getElementById('feedList');
+    if (list && list.getAttribute('aria-busy') === 'true') return;
+    feedOffset += FEED_LIMIT;
+    loadFeed();
+}
