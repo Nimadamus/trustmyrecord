@@ -3302,8 +3302,19 @@
                     })
                     .filter(member => member.username && isProductionDirectoryUser(member));
                 members = pickMakerMembers;
+                // HC_FEATURED_STUCK_20261114: when the first load failed (a slow
+                // API answer on a cold start), this refresh is the first good
+                // member list. Without marking it fresh the featured grid kept
+                // its six skeleton cards and the summary counts stayed blank
+                // for the rest of the visit.
+                const firstGoodLoad = !membersAreFresh;
+                membersAreFresh = true;
                 applyFollowingSet();
                 syncFeaturedStatsIntoMembers();
+                if (firstGoodLoad) {
+                    document.documentElement.classList.remove('tmr-lw-dir');
+                    renderSummary();
+                }
                 fillSports();
                 applyFilters();
                 // Refresh the featured dataset alongside the member refresh so
