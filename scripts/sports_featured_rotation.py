@@ -864,10 +864,14 @@ def _write_page(root, sport, game, spec, href, headline, lede, when_line, body=N
   .when{color:#93a4bb}
   p{font:500 1.05rem/1.6 Inter,system-ui,sans-serif}
   .links{display:flex;flex-wrap:wrap;gap:10px;margin-top:28px}
-  .links a{color:#04101c;background:#35E0CB;text-decoration:none;font-weight:800;border-radius:999px;padding:8px 14px}
+  .links a{color:#04101c !important;background:#35E0CB;text-decoration:none;font-weight:800;border-radius:999px;padding:8px 14px}
 </style>
+<!-- SITEWIDE_APLUS_20261113 -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,700;0,800;1,800&display=swap">
+<link rel="stylesheet" href="/static/css/tmr-aplus.css">
+<script defer src="/static/js/tmr-aplus.js"></script>
 </head>
-<body class="tmr-ds tmr-ds--dark">
+<body class="tmr-ds tmr-ds--dark tmr-aplus" data-aplus="picks">
 <!-- %s %s %s -->
 <main>
 <p class="eyebrow">%s Featured Matchup</p>
