@@ -74,6 +74,12 @@
       u.searchParams.set('utm_medium', 'social_share');
       u.searchParams.set('utm_campaign', 'tmr_share');
       if (type) u.searchParams.set('utm_content', id ? type + '_' + id : type);
+      // CREATOR_REFERRALS_20261114: a signed in member's shared link names them,
+      // so a signup that starts from it is attributed to them (no reward attached).
+      try {
+        var me = window.auth && window.auth.currentUser && window.auth.currentUser.username;
+        if (me && /^[A-Za-z0-9_.-]{2,40}$/.test(me) && u.hostname.replace(/^www\./, '') === 'trustmyrecord.com' && !u.searchParams.get('ref')) u.searchParams.set('ref', me);
+      } catch (x) { /* signed out: plain link */ }
       return u.toString();
     } catch (e) {
       return absolute(url);
