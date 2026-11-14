@@ -252,7 +252,7 @@
         html += picks.map(function (p) {
             return '<div class="pick-row">' +
                 '<div class="pr-lock">&#128274;</div>' +
-                '<div class="pr-main"><div class="pr-game">' + esc(p.away_team) + ' @ ' + esc(p.home_team) + '</div>' +
+                '<div class="pr-main"><div class="pr-game">' + (p.away_team && p.home_team ? esc(p.away_team) + ' @ ' + esc(p.home_team) : esc(p.sport_title || 'Upcoming event')) + '</div>' +
                 '<div class="pr-meta"><b>Locked pick</b> &middot; ' + esc(p.sport_title || p.sport_key) + ' &middot; ' + gameTime(p.commence_time) + '</div></div>' +
                 pickBtn +
             '</div>';
