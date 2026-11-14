@@ -902,6 +902,10 @@ async function unfollowFromFollowingTab(userId) {
 // after a click on Hot Takes was filtered as hot takes and rendered as an empty
 // "No activity yet." list, or as another tab's posts.
 let _feedLoadSeq = 0;
+// FEED_LOAD_MORE_MERGE_20261114: the pages loaded so far, before grouping. A
+// later page is grouped together with them, so a handicapper's graded-picks card
+// that spans two pages is updated in place instead of the later part being dropped.
+let _feedRawItems = [];
 
 // Signed in means a hydrated user or a stored session token: the token check keeps
 // a member who opens the page on the Following tab from seeing the sign-in card
@@ -942,6 +946,8 @@ async function loadFeedItems() {
     // had just scrolled through.
     const appending = feedOffset > 0;
     let rawPageCount = 0;
+    let rawPage = [];
+    let pageOnlyItems = [];
     let items = [];
     try {
         if (api && typeof api.request === 'function') {
@@ -1052,6 +1058,13 @@ async function loadFeedItems() {
 
             const userMap = buildUserMapFromFeed(items);
             items = items.map(i => attachUserRecord(i, userMap[getUsername(i)]));
+            rawPage = items;
+            if (appending) {
+                pageOnlyItems = aggregateFeedItems(rawPage.map(i => ({ ...i })));
+                items = _feedRawItems.concat(rawPage).map(i => ({ ...i }));
+            } else {
+                items = rawPage.map(i => ({ ...i }));
+            }
             items = aggregateFeedItems(items);
             items.sort((a, b) => new Date(b.graded_at || b.created_at || b.locked_at || 0) - new Date(a.graded_at || a.created_at || a.locked_at || 0));
             if (currentFilter === 'hot-takes') items = items.filter(i => i.post_type === 'hot_take');
@@ -1075,13 +1088,27 @@ async function loadFeedItems() {
     if (isStaleLoad()) return;
     c.removeAttribute('aria-busy');
     if (appending) {
-        const onPage = new Set(Array.from(c.querySelectorAll('.feed-item')).map(n => n.getAttribute('data-id')));
+        _feedRawItems = _feedRawItems.concat(rawPage);
+        const idOf = html => {
+            const m = /data-id="([^"]*)"/.exec(html);
+            return m ? m[1].replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>') : '';
+        };
+        const nodes = Array.from(c.querySelectorAll('.feed-item'));
+        const onPage = new Set(nodes.map(n => n.getAttribute('data-id')));
+        // grouped pick cards this page added picks to
+        const grown = new Set(pageOnlyItems.map(item => idOf(renderFeedItem(item))).filter(id => id.indexOf('pick_group_') === 0));
         const fresh = [];
         items.forEach(item => {
             const html = renderFeedItem(item);
-            const m = /data-id="([^"]*)"/.exec(html);
-            const id = m ? m[1].replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>') : '';
-            if (id && onPage.has(id)) return;
+            const id = idOf(html);
+            if (id && onPage.has(id)) {
+                if (grown.has(id)) {
+                    const node = nodes.find(n => n.getAttribute('data-id') === id);
+                    if (node) node.outerHTML = html;
+                    grown.delete(id);
+                }
+                return;
+            }
             if (id) onPage.add(id);
             fresh.push(html);
         });
@@ -1090,6 +1117,7 @@ async function loadFeedItems() {
         if (more) more.style.display = rawPageCount >= FEED_LIMIT ? 'block' : 'none';
         return;
     }
+    _feedRawItems = rawPage;
     updateHeroCounts(items.length);
     if (typeof fvAfterFeed === 'function') { try { fvAfterFeed(items); } catch (e) {} }
     if (!items.length) {

@@ -31,12 +31,13 @@ const moreSrc = lift(v2, 'function loadMorePosts() {', 'loadFeed();');
 function boot() {
   const attrs = {};
   const rendered = []; // ids on the page, in order
+  const replaced = []; // cards re-rendered in place
   const list = {
     get innerHTML() { return rendered.map((id) => '[' + id + ']').join(''); },
     set innerHTML(html) { rendered.length = 0; (html.match(/data-id="([^"]*)"/g) || []).forEach((m) => rendered.push(m.slice(9, -1))); list.raw = html; },
     raw: '',
     insertAdjacentHTML(pos, html) { assert.strictEqual(pos, 'beforeend'); (html.match(/data-id="([^"]*)"/g) || []).forEach((m) => rendered.push(m.slice(9, -1))); },
-    querySelectorAll: () => rendered.map((id) => ({ getAttribute: () => id })),
+    querySelectorAll: () => rendered.map((id) => ({ getAttribute: () => id, set outerHTML(html) { replaced.push(html); } })),
     setAttribute: (k, v) => { attrs[k] = v; },
     removeAttribute: (k) => { delete attrs[k]; },
     getAttribute: (k) => (k in attrs ? attrs[k] : null),
@@ -71,7 +72,7 @@ function boot() {
   sandbox.window = sandbox;
   vm.createContext(sandbox);
   vm.runInContext(loadSrc, sandbox);
-  return { sandbox, list, rendered, pending, calls, loadMore };
+  return { sandbox, list, rendered, replaced, pending, calls, loadMore };
 }
 
 const post = (id, at) => ({ item_type: 'feed_post', item_id: id, created_at: at });
@@ -137,6 +138,31 @@ async function firstPage(env) {
     assert.strictEqual(env.calls.unavailable, 0);
     assert.strictEqual(env.sandbox.feedOffset, 0);
     assert.strictEqual(env.list.getAttribute('aria-busy'), null);
+  });
+
+  await t('a grouped pick card that spans two pages is updated in place, not dropped', async () => {
+    const env = boot();
+    // group picks by handicapper, the way the real aggregator does
+    env.sandbox.aggregateFeedItems = (list) => {
+      const out = []; const groups = {};
+      list.forEach((i) => {
+        if (!i.capper) { out.push(i); return; }
+        if (!groups[i.capper]) { groups[i.capper] = { ...i, item_id: 'pick_group_' + i.capper, n: 0 }; out.push(groups[i.capper]); }
+        groups[i.capper].n++;
+      });
+      return out;
+    };
+    env.sandbox.renderFeedItem = (i) => '<div class="feed-item" data-id="' + i.item_id + '">' + (i.n ? i.n + ' picks' : '') + '</div>';
+    const pick = (id, capper, at) => ({ item_type: 'pick', item_id: id, capper, created_at: at });
+    const p = env.sandbox.loadFeedItems();
+    env.pending[0].resolve({ feed: [pick('p1', 'ken', '2026-11-13T03:00:00Z'), pick('p2', 'ken', '2026-11-13T02:00:00Z'), post('x', '2026-11-13T01:00:00Z')] }); await p;
+    assert.deepStrictEqual(env.rendered, ['pick_group_ken', 'x']);
+    env.sandbox.feedOffset = 3;
+    const q = env.sandbox.loadFeedItems();
+    env.pending[1].resolve({ feed: [pick('p3', 'ken', '2026-11-13T00:30:00Z'), pick('p4', 'sam', '2026-11-12T03:00:00Z'), post('y', '2026-11-12T02:00:00Z')] }); await q;
+    assert.deepStrictEqual(env.rendered, ['pick_group_ken', 'x', 'pick_group_sam', 'y'], 'got ' + env.rendered.join(','));
+    assert.strictEqual(env.replaced.length, 1, 'the grown card must be re-rendered once');
+    assert.ok(env.replaced[0].includes('data-id="pick_group_ken"') && env.replaced[0].includes('3 picks'), 'got ' + env.replaced[0]);
   });
 
   await t('side sources are fetched for the first page only', () => {
