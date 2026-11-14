@@ -76,8 +76,61 @@
         '</div>';
     }
 
+    /* CREATOR_REFERRALS_20261114: the member's own share link and how many
+       members joined from links they shared. Owner only (the API needs their
+       sign in), counts only, and no reward is attached to any of it. */
+    function creatorHtml(d) {
+        if (!d || !d.link || !d.stats) return '';
+        var st = d.stats;
+        var chip = function (n, label, cls) { return '<span class="tmr-pa-stat' + (cls || '') + '"><b>' + esc(Number(n) || 0) + '</b> ' + esc(label) + '</span>'; };
+        var sources = [];
+        if (st.from_picks) sources.push(plural(st.from_picks, 'from a pick', 'from picks'));
+        if (st.from_profile) sources.push(st.from_profile + ' from your profile');
+        if (st.from_feed) sources.push(st.from_feed + ' from the feed');
+        if (st.from_other) sources.push(st.from_other + ' from other links');
+        return '<div class="tmrx-section" id="tmrxCreator">' +
+            '<div class="tmrx-section-head"><div>' +
+            '<div class="tmrx-section-title">Your Share Link</div>' +
+            '<div class="tmrx-section-sub">Only you see this. When someone joins TrustMyRecord from a link you shared, they are counted here. You see counts, never who joined.</div></div></div>' +
+            '<div class="tmr-cr-linkrow"><input class="tmr-cr-link" id="tmrCrLink" type="text" readonly value="' + esc(d.link) + '" aria-label="Your share link">' +
+            '<button type="button" class="tmr-cr-copy" id="tmrCrCopy">Copy link</button></div>' +
+            '<div class="tmr-pa-stats">' + chip(st.joined, st.joined === 1 ? 'member joined' : 'members joined') + chip(st.joined_30d, 'in the last 30 days') +
+                chip(st.made_a_pick, st.made_a_pick === 1 ? 'has made a pick' : 'have made a pick', ' is-v') + '</div>' +
+            (sources.length ? '<p class="tmr-cr-note">' + esc(sources.join(' \u00b7 ')) + '</p>' : '') +
+            '<p class="tmr-cr-note">Links you share with the Share button on picks, posts and your profile already carry your name.</p>' +
+        '</div>';
+    }
+    var creatorDone = false;
+    function mountCreator() {
+        if (creatorDone) return;
+        var anchor = document.getElementById('tmrxPublicLedger');
+        var name = profileName();
+        var me = window.auth && window.auth.currentUser && window.auth.currentUser.username;
+        var c = window.api;
+        if (!anchor || !name || !me || !c || typeof c.request !== 'function') return;
+        if (String(name).toLowerCase() !== String(me).toLowerCase()) return;   // somebody else's profile: nothing
+        creatorDone = true;
+        c.request('/referrals/creator').then(function (d) {
+            var html = creatorHtml(d);
+            var old = document.getElementById('tmrxCreator');
+            if (old && old.parentNode) old.parentNode.removeChild(old);
+            if (html) anchor.insertAdjacentHTML('beforebegin', html);
+        }).catch(function () { /* older API: no section */ });
+    }
+    document.addEventListener('click', function (e) {
+        var b = e.target && e.target.closest ? e.target.closest('#tmrCrCopy') : null;
+        if (!b) return;
+        var input = document.getElementById('tmrCrLink'); if (!input) return;
+        var ok = function () { b.textContent = 'Copied'; setTimeout(function () { b.textContent = 'Copy link'; }, 1800); };
+        try {
+            if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(input.value).then(ok, function () { input.select(); document.execCommand('copy'); ok(); });
+            else { input.select(); document.execCommand('copy'); ok(); }
+        } catch (x) { input.select(); }
+    });
+
     var done = false;
     function mount() {
+        mountCreator();
         if (done) return;
         var anchor = document.getElementById('tmrxPublicLedger');
         var name = profileName();
@@ -99,14 +152,17 @@
         try {
             var pending = false;
             new MutationObserver(function () {
-                if (done || pending) return;
+                if ((done && creatorDone) || pending) return;
                 pending = true;
                 setTimeout(function () { pending = false; mount(); }, 300);
             }).observe(document.documentElement, { childList: true, subtree: true });
         } catch (e) {}
-        window.addEventListener('tmr-auth-changed', function () { if (!document.getElementById('tmrxActivity')) { done = false; mount(); } });
+        window.addEventListener('tmr-auth-changed', function () {
+            creatorDone = false; mountCreator();
+            if (!document.getElementById('tmrxActivity')) { done = false; mount(); }
+        });
     }
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
 
-    window.TMRProfileActivity = { _sectionHtml: sectionHtml, _ago: ago };
+    window.TMRProfileActivity = { _sectionHtml: sectionHtml, _creatorHtml: creatorHtml, _ago: ago };
 })();
