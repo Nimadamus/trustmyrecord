@@ -90,6 +90,17 @@
             (kind === 'tail' ? 'Tail' : 'Fade') + ' <span>' + count + '</span></button>';
     }
 
+    /* Members who put the same pick, or the other side, on their own verified
+       record from this card. Real picks, counted by the server. */
+    function verifiedLine(item) {
+        var t = Number(item.verified_tails_count) || 0, f = Number(item.verified_fades_count) || 0;
+        if (!t && !f) return '';
+        var parts = [];
+        if (t) parts.push(t + (t === 1 ? ' verified pick with it' : ' verified picks with it'));
+        if (f) parts.push(f + (f === 1 ? ' verified pick against it' : ' verified picks against it'));
+        return '<p class="fop-note fop-verified"><i class="fas fa-circle-check"></i> ' + e(parts.join(' \u00b7 ')) + '</p>';
+    }
+
     function render(item) {
         var id = String(item.item_id || ('openpick:' + item.pick_id));
         cards[id] = item;
@@ -129,6 +140,7 @@
             '<div class="fi-actions">' + reactBtn('tail', item) + reactBtn('fade', item) +
                 (typeof window.fvShareBtn === 'function' ? window.fvShareBtn(id) : '') +
             '</div>' +
+            verifiedLine(item) +
             '<p class="fop-note" aria-live="polite">' + e(note) + '</p>' +
         '</div>';
     }
@@ -197,6 +209,15 @@
         if (!h) return;
         var intent = Object.assign({ ts: Date.now() }, btn.getAttribute('data-fop-slip') === 'other' ? h.other : h.same);
         try { localStorage.setItem(INTENT_KEY, JSON.stringify(intent)); } catch (x) { return; }
+        // PICK_SOURCE_LINK_20261114: which card this came from. The server
+        // decides whether the link is real; this is only a hint, used once.
+        try {
+            sessionStorage.setItem('tmr_pick_source', JSON.stringify({
+                source_pick_id: item.pick_id,
+                source_kind: btn.getAttribute('data-fop-slip') === 'other' ? 'fade' : 'tail',
+                ts: Date.now()
+            }));
+        } catch (x) { /* the pick still works without the link */ }
         var dest = '/sportsbook/?simpick=1';
         window.location.href = loggedIn() ? dest : '/login/?next=' + encodeURIComponent(dest);
     }

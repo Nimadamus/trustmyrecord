@@ -49,6 +49,18 @@
         return c.request('/picks/visibility/default', { method: 'PUT', body: { visibility: v } });
     }
 
+    function takeSource() {
+        try {
+            var raw = sessionStorage.getItem('tmr_pick_source');
+            if (!raw) return null;
+            sessionStorage.removeItem('tmr_pick_source');
+            var v = JSON.parse(raw);
+            if (!v || !v.source_pick_id || (v.source_kind !== 'tail' && v.source_kind !== 'fade')) return null;
+            if (Date.now() - Number(v.ts || 0) > 30 * 60 * 1000) return null;
+            return v;
+        } catch (e) { return null; }
+    }
+
     /* Every slip submits through api.createPick: add the choice there. */
     function wrapCreatePick() {
         var c = window.api;
@@ -58,6 +70,12 @@
             try {
                 if (state.ready && pickData && typeof pickData === 'object' && pickData.pending_visibility == null) {
                     pickData = Object.assign({}, pickData, { pending_visibility: state.visibility });
+                }
+                // PICK_SOURCE_LINK_20261114: a pick that came from a feed card
+                // says so once (30 minutes at most); the server checks it.
+                var src = takeSource();
+                if (src && pickData && typeof pickData === 'object' && pickData.source_pick_id == null) {
+                    pickData = Object.assign({}, pickData, { source_pick_id: src.source_pick_id, source_kind: src.source_kind });
                 }
             } catch (e) { /* send the pick exactly as it was */ }
             return original.call(this, pickData);
