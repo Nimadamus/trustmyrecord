@@ -86,3 +86,20 @@ body.feed-v2.tmr-site-shell.tmr-dark .fs-brag:disabled { opacity: .6; cursor: de
     body.feed-v2.tmr-site-shell.tmr-dark .fs-stance-btns { justify-content: stretch; }
     body.feed-v2.tmr-site-shell.tmr-dark .fs-st { flex: 1 1 0; justify-content: center; }
 }
+
+/* ---- @mention suggestions (FEED_MENTION_SUGGEST_20261114) ---- */
+body.feed-v2.tmr-site-shell.tmr-dark .fs-mention-list {
+    display: flex; flex-direction: column; gap: 2px; margin: 8px 0 0 60px; padding: 6px; max-width: 360px;
+    border: 1px solid var(--fv-line); border-radius: 12px; background: var(--fv-card-2); box-shadow: 0 14px 34px rgba(0, 0, 0, .45);
+}
+body.feed-v2.tmr-site-shell.tmr-dark .fs-mention-list[hidden] { display: none; }
+body.feed-v2.tmr-site-shell.tmr-dark .fs-mention-opt {
+    display: flex; align-items: baseline; gap: 8px; width: 100%; min-height: 38px; padding: 6px 10px; border: 0; border-radius: 8px;
+    background: transparent; color: var(--fv-text); font: inherit; font-size: .92rem; text-align: left; cursor: pointer;
+}
+body.feed-v2.tmr-site-shell.tmr-dark .fs-mention-opt b { color: var(--fv-cyan); font-weight: 700; }
+body.feed-v2.tmr-site-shell.tmr-dark .fs-mention-opt em { font-style: normal; color: var(--fv-muted); font-size: .84rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+body.feed-v2.tmr-site-shell.tmr-dark .fs-mention-opt:hover, body.feed-v2.tmr-site-shell.tmr-dark .fs-mention-opt.is-active { background: rgba(43, 140, 255, .18); }
+@media (max-width: 640px) {
+    body.feed-v2.tmr-site-shell.tmr-dark .fs-mention-list { margin-left: 0; max-width: none; }
+}

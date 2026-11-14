@@ -388,6 +388,107 @@
         cta.insertAdjacentElement('afterend', b);
     }
 
+    // ------------------------------------------------- @mention suggestions
+    // FEED_MENTION_SUGGEST_20261114: typing "@ke" in the composer lists members
+    // whose username starts that way. Arrow keys move, Enter or Tab picks.
+    const MENTION_TOKEN = /(^|[^A-Za-z0-9_@])@([A-Za-z0-9_]{1,30})$/;
+    let mention = { list: null, rows: [], at: -1, active: 0, seq: 0, timer: null };
+
+    function mentionToken(input) {
+        const caret = input.selectionStart != null ? input.selectionStart : input.value.length;
+        const m = MENTION_TOKEN.exec(input.value.slice(0, caret));
+        return m ? { text: m[2], start: caret - m[2].length - 1, end: caret } : null;
+    }
+
+    function closeMentions() {
+        mention.rows = [];
+        mention.seq++;
+        clearTimeout(mention.timer);
+        if (mention.list) { mention.list.hidden = true; mention.list.innerHTML = ''; }
+    }
+
+    function paintMentions() {
+        const list = mention.list;
+        if (!list) return;
+        if (!mention.rows.length) { list.hidden = true; list.innerHTML = ''; return; }
+        list.innerHTML = mention.rows.map((r, i) =>
+            '<button type="button" role="option" class="fs-mention-opt' + (i === mention.active ? ' is-active' : '') + '" aria-selected="' + (i === mention.active ? 'true' : 'false') + '" data-i="' + i + '">' +
+            '<b>@' + esc(r.username) + '</b>' + (r.display_name && r.display_name !== r.username ? '<em>' + esc(r.display_name) + '</em>' : '') + '</button>').join('');
+        list.hidden = false;
+    }
+
+    function pickMention(input, i) {
+        const row = mention.rows[i];
+        const tok = mentionToken(input);
+        if (!row || !tok) { closeMentions(); return; }
+        const insert = '@' + row.username + ' ';
+        const next = input.value.slice(0, tok.start) + insert + input.value.slice(tok.end);
+        closeMentions();
+        if (next.length > 500) return;
+        input.value = next;
+        input.focus();
+        input.selectionStart = input.selectionEnd = tok.start + insert.length;
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+
+    function watchMentions(input) {
+        const tok = mentionToken(input);
+        if (!tok) { closeMentions(); return; }
+        const seq = ++mention.seq;
+        clearTimeout(mention.timer);
+        mention.timer = setTimeout(async () => {
+            try {
+                const data = await api.request('/feed/mention-search?q=' + encodeURIComponent(tok.text));
+                if (seq !== mention.seq) return; // a newer keystroke owns the list
+                const now = mentionToken(input);
+                if (!now || now.text !== tok.text) return;
+                mention.rows = ((data && data.members) || []).filter(r => r && /^[A-Za-z0-9_]{2,30}$/.test(r.username)).slice(0, 6);
+                mention.active = 0;
+                paintMentions();
+            } catch (e) { closeMentions(); }
+        }, 160);
+    }
+
+    function bootMentions() {
+        const input = document.getElementById('compInput');
+        if (!input || mention.list) return;
+        const list = document.createElement('div');
+        list.id = 'fsMentionList';
+        list.className = 'fs-mention-list';
+        list.setAttribute('role', 'listbox');
+        list.setAttribute('aria-label', 'Members');
+        list.hidden = true;
+        // under the composer's top row; the field itself is a single-line flex row
+        const top = input.closest('.composer-top') || input;
+        top.insertAdjacentElement('afterend', list);
+        mention.list = list;
+        input.addEventListener('input', () => watchMentions(input));
+        input.addEventListener('click', () => watchMentions(input));
+        input.addEventListener('blur', () => setTimeout(closeMentions, 180));
+        input.addEventListener('keydown', e => {
+            if (!mention.rows.length) return;
+            if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                e.preventDefault();
+                const n = mention.rows.length;
+                mention.active = (mention.active + (e.key === 'ArrowDown' ? 1 : n - 1)) % n;
+                paintMentions();
+            } else if ((e.key === 'Enter' && !e.ctrlKey && !e.metaKey) || e.key === 'Tab') {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                pickMention(input, mention.active);
+            } else if (e.key === 'Escape') {
+                e.stopPropagation();
+                closeMentions();
+            }
+        }, true);
+        list.addEventListener('mousedown', e => {
+            const b = e.target.closest('.fs-mention-opt');
+            if (!b) return;
+            e.preventDefault(); // keep the caret in the box
+            pickMention(input, Number(b.getAttribute('data-i')));
+        });
+    }
+
     // ------------------------------------------------------------------ wraps
     const ACTIONS = '<div class="fi-actions">';
     const COMMENT_BTN = '<button type="button" class="fi-action" onclick="toggleComments(';
@@ -487,6 +588,7 @@
         }
         hydrateStances();
         addBragButton();
+        try { bootMentions(); } catch (e) {}
         const stats = document.getElementById('sidebarMyStats');
         if (stats && typeof MutationObserver === 'function') {
             new MutationObserver(() => { try { addBragButton(); } catch (e) {} }).observe(stats, { childList: true });
@@ -496,6 +598,6 @@
 
     window.TMRFeedSocial = {
         disagree, startQuote, clearQuote, brag,
-        _linkMentions: linkMentions, _quoteHtml: quoteHtml, _drawBrag: drawBrag, _hydrate: hydrateStances
+        _mentionToken: mentionToken, _linkMentions: linkMentions, _quoteHtml: quoteHtml, _drawBrag: drawBrag, _hydrate: hydrateStances
     };
 })();

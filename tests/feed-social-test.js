@@ -108,5 +108,16 @@ const t = async (name, fn) => {
     assert.strictEqual(await s.submitPost(), 'base-submit');
   });
 
+  await t('the composer finds the @name being typed at the caret, and only there', () => {
+    const s = boot();
+    const tok = (value, caret) => s.TMRFeedSocial._mentionToken({ value, selectionStart: caret == null ? value.length : caret });
+    assert.deepStrictEqual({ ...tok('hey @ke') }, { text: 'ke', start: 4, end: 7 });
+    assert.deepStrictEqual({ ...tok('@Ken_B') }, { text: 'Ken_B', start: 0, end: 6 });
+    assert.strictEqual(tok('mail a@b'), null, 'an email is not a mention');
+    assert.strictEqual(tok('hey @ke now'), null, 'the caret has moved past the name');
+    assert.deepStrictEqual({ ...tok('hey @ke now', 7) }, { text: 'ke', start: 4, end: 7 });
+    assert.strictEqual(tok('hey @'), null);
+  });
+
   console.log(passed + ' passed');
 })();
