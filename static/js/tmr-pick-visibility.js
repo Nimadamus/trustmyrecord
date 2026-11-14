@@ -218,7 +218,10 @@
             var old = document.getElementById('tmrxOpenPicks');
             if (old && old.parentNode) old.parentNode.removeChild(old);
             if (!picks.length) return;
-            var own = isOwnProfile(name);
+            // OWNER_RACE_20261114: only the owner is ever sent a hidden pick, so a
+            // hidden row in the answer means this IS the owner, even when the page
+            // has not finished loading who is signed in yet.
+            var own = isOwnProfile(name) || picks.some(function (p) { return p.pending_visibility === 'hidden'; });
             if (!own) picks = picks.filter(function (p) { return p.pending_visibility === 'public'; });
             if (!picks.length) return;
             anchor.insertAdjacentHTML('beforebegin', sectionHtml(picks, own));
@@ -246,6 +249,12 @@
     }
     function boot() {
         document.addEventListener('click', onSwitchClick, true);
+        // When the sign in finishes after the first paint, load both again as that member.
+        window.addEventListener('tmr-auth-changed', function () {
+            state.loading = null;
+            profileDone = false;
+            tick();
+        });
         document.addEventListener('click', onRevealClick, false);
         tick();
         var pending = false;
