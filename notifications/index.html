@@ -184,7 +184,7 @@
             if (type === 'new_message' || type === 'message') return 'messages';
             if (type.indexOf('forum') !== -1 || rt.indexOf('forum') !== -1 || rt === 'thread' || rt === 'reply') return 'forum';
             if (type.indexOf('pick') !== -1 || type.indexOf('bet') !== -1 || rt === 'pick' || rt === 'receipt') return 'picks';
-            if (['follow', 'friend_request', 'friend_accept', 'like', 'comment', 'mention'].indexOf(type) !== -1) return 'social';
+            if (['follow', 'friend_request', 'friend_accept', 'like', 'comment', 'mention', 'quote'].indexOf(type) !== -1) return 'social';
             return 'general';
         }
 
@@ -206,7 +206,16 @@
             }
             if (t === 'friend_request' || t === 'friend_accept') return '/friends/';
             if (t === 'new_message' || t === 'message') return un ? '/messages/?to=' + encodeURIComponent(un) : '/messages/';
+            if (t.indexOf('gaming_') === 0 || t.indexOf('arena_') === 0) return '/arena/';
+            if (t.indexOf('tmr_challenge') === 0 || rt === 'tmr_challenge') {
+                var cid = raw.resource_id || raw.resourceId;
+                return cid ? '/tmr-challenges/?id=' + encodeURIComponent(cid) : '/tmr-challenges/';
+            }
             if (t.indexOf('challenge') !== -1) return '/challenges/';
+            if (rt === 'feed_post') {
+                var fid = raw.resource_id || raw.resourceId;
+                return fid ? '/feed/?post=' + encodeURIComponent(fid) : '/feed/';
+            }
             if (t.indexOf('premium') !== -1) return '/premium/';
             if (t.indexOf('trivia') !== -1) return '/trivia/';
             if (t.indexOf('forum') !== -1 || rt.indexOf('forum') !== -1) {
@@ -219,7 +228,7 @@
             if (pickId) return '/sportsbook/?pick=' + encodeURIComponent(pickId) + '#mypicks';
             if (t.indexOf('pick') !== -1 || rt === 'pick') return un ? '/profile/?user=' + encodeURIComponent(un) + '&view=picks' : '/mypicks/';
             if (t === 'follow' && un) return '/profile/?user=' + encodeURIComponent(un);
-            if (t === 'like' || t === 'comment' || t === 'mention') return '/feed/';
+            if (t === 'like' || t === 'comment' || t === 'mention' || t === 'quote') return '/feed/';
             return null;
         }
 
@@ -232,7 +241,10 @@
             if (href.indexOf('/messages/') === 0) return 'Open messages';
             if (href.indexOf('/friends/') === 0) return 'Open friends';
             if (href.indexOf('/challenges/') === 0) return 'Open challenge';
+            if (href.indexOf('/tmr-challenges/') === 0) return 'Open challenge';
+            if (href.indexOf('/arena/') === 0) return 'Open Arena';
             if (href.indexOf('/premium/') === 0) return 'Open premium';
+            if (href.indexOf('/feed/?post=') === 0) return 'Open post';
             if (href.indexOf('/feed/') === 0) return 'Open feed';
             if (href.indexOf('/forum/') === 0 || href.indexOf('/sports-talk/') === 0) return 'Open thread';
             if (href.indexOf('/sportsbook/') === 0 || href.indexOf('/mypicks/') === 0) return 'Open pick';
@@ -276,7 +288,7 @@
             if (t.indexOf('challenge') !== -1 || t.indexOf('premium') !== -1 || t.indexOf('mod') !== -1) return 'alert';
             if (t === 'new_message' || t === 'message') return 'message';
             if (t.indexOf('forum') !== -1) return 'forum';
-            if (['follow', 'friend_request', 'friend_accept', 'like', 'comment', 'mention'].indexOf(t) !== -1) return 'social';
+            if (['follow', 'friend_request', 'friend_accept', 'like', 'comment', 'mention', 'quote'].indexOf(t) !== -1) return 'social';
             return 'system';
         }
 
