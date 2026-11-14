@@ -170,11 +170,28 @@
     try { data = await req('/polls/featured'); }
     catch (e) { container.style.display = 'none'; return; }
     if (!data || !data.featured) { container.style.display = 'none'; return; }
+    // FEED_QUIZ_STALE_20261113: a quiz that stopped taking answers days ago is
+    // not "of the day". The feed rail showed one that closed Sep 17 through
+    // mid November; the card now closes up until a current quiz is featured.
+    if (isStale(data.featured, Date.now())) { container.innerHTML = ''; container.style.display = 'none'; return; }
     container.style.display = '';
     render(container, data.featured, data.game);
   }
 
+  var STALE_AFTER_MS = 3 * 24 * 60 * 60 * 1000;
+  /** True when the quiz is no longer open and its answering window ended over three days ago. */
+  function isStale(f, nowMs) {
+    if (!f) return true;
+    var isOpen = f.featured_status === 'open' && f.status !== 'resolved';
+    if (isOpen) return false;
+    var closed = f.closes_at ? new Date(f.closes_at).getTime() : NaN;
+    // No usable closing time: keep the card rather than guess.
+    if (!isFinite(closed)) return false;
+    return nowMs - closed > STALE_AFTER_MS;
+  }
+
   window.TMRQuizOfDay = {
+    isStale: isStale,
     mount: function (target) {
       var el = typeof target === 'string' ? document.querySelector(target) : target;
       if (!el) return;
