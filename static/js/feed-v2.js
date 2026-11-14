@@ -175,18 +175,168 @@ function fvContextArt(item) {
         : '<div class="fv-art fv-art--' + league + '" aria-hidden="true">' + inner + '</div>';
 }
 
+/* FEED_SIM_CARD_20261114: the simulation a Take was written about. `item.sim`
+   is built by the API from the archived run itself (never from the browser),
+   and `item.stance` is only what the member chose. A figure the run did not
+   produce is simply absent, and the row for it is not drawn. */
+function fvSimNum(n) {
+    const v = Number(n);
+    if (!isFinite(v)) return '';
+    return Math.abs(v - Math.round(v)) < 0.05 ? String(Math.round(v)) : v.toFixed(1);
+}
+
+function fvSimWhen(iso) {
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return '';
+    try {
+        return d.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+    } catch (e) { return ''; }
+}
+
+function fvSimTeamName(sim, abbr) {
+    if (!abbr) return '';
+    if (sim.away && sim.away.abbr === abbr) return sim.away.name || abbr;
+    if (sim.home && sim.home.abbr === abbr) return sim.home.name || abbr;
+    return abbr;
+}
+
+/* The member's position in words. Only parts they picked are named. */
+function fvSimStance(item, sim) {
+    const st = item.stance;
+    if (!st || (st.position !== 'agree' && st.position !== 'disagree')) return '';
+    const who = '<b>' + esc(getDisplayName(item)) + '</b>';
+    const agree = st.position === 'agree';
+    let line = who + (agree ? ' agrees with this simulation.' : ' disagrees with this simulation.');
+    let own = '';
+    if (!agree) {
+        const topics = Array.isArray(st.topics) ? st.topics : [];
+        const parts = [];
+        if (topics.indexOf('winner') > -1) {
+            parts.push(sim && sim.predicted_winner ? 'the ' + esc(fvSimTeamName(sim, sim.predicted_winner)) + ' winning' : 'the winner');
+        }
+        if (topics.indexOf('score') > -1) {
+            const ps = sim && (sim.projected_score || sim.simulated_game);
+            parts.push('the final score' + (ps ? ' (' + esc(sim.away.abbr) + ' ' + fvSimNum(ps.away) + ', ' + esc(sim.home.abbr) + ' ' + fvSimNum(ps.home) + ')' : ''));
+        }
+        if (topics.indexOf('spread') > -1) {
+            parts.push('the point spread' + (sim && sim.margin && sim.margin.team ? ' (' + esc(sim.margin.team) + ' by ' + fvSimNum(sim.margin.by) + ')' : ''));
+        }
+        if (topics.indexOf('total') > -1) {
+            parts.push('the total' + (sim && sim.total != null ? ' (' + fvSimNum(sim.total) + ')' : ''));
+        }
+        if (parts.length) {
+            const last = parts.pop();
+            line = who + ' disagrees with ' + (parts.length ? parts.join(', ') + ' and ' : '') + last + '.';
+        }
+        const sc = st.score;
+        if (sc && isFinite(Number(sc.away)) && isFinite(Number(sc.home))) {
+            const aw = sim ? sim.away.abbr : 'Away', hm = sim ? sim.home.abbr : 'Home';
+            own = '<div class="fv-sim-own"><span>' + esc(getDisplayName(item)) + '&rsquo;s score</span><b>' +
+                esc(aw) + ' ' + fvSimNum(sc.away) + ', ' + esc(hm) + ' ' + fvSimNum(sc.home) + '</b></div>';
+        }
+    }
+    return '<div class="fv-sim-stance fv-sim-stance--' + (agree ? 'agree' : 'disagree') + '">' +
+        '<i class="fas ' + (agree ? 'fa-thumbs-up' : 'fa-thumbs-down') + '"></i><span>' + line + '</span></div>' + own;
+}
+
+function fvSimTeam(t, score, side, won) {
+    /* dark-background mark first, the standard mark second, then leave the slot empty. */
+    const gone = "if(this.src.indexOf('/500-dark/')>-1){this.src=this.src.replace('/500-dark/','/500/');return;}this.style.visibility='hidden'";
+    const logo = /^https:\/\/a\.espncdn\.com\/i\/teamlogos\/[a-z]+\/500\/[a-z0-9]+\.png$/.test(String(t.logo || ''))
+        ? '<img src="' + esc(String(t.logo).replace('/500/', '/500-dark/')) + '" alt="" loading="lazy" onerror="' + gone + '">' : '';
+    return '<div class="fv-sim-team fv-sim-team--' + side + (won ? ' is-win' : '') + '">' +
+        '<span class="fv-sim-logo">' + logo + '</span>' +
+        '<span class="fv-sim-id"><b>' + esc(t.abbr) + '</b><em>' + esc(t.name || '') + '</em></span>' +
+        (score === '' ? '' : '<span class="fv-sim-pts">' + score + '</span>') +
+    '</div>';
+}
+
+function fvSimCard(item) {
+    const sim = item.sim;
+    const isSim = item.context_source === 'simulator';
+    if (!sim || !sim.away || !sim.home) {
+        if (!isSim) return '';
+        /* No archived run for this post: say so plainly and link the simulator. */
+        const url = String(item.context_url || '');
+        const safe = /^\/(?!\/)[^\s<>"']*$/.test(url) ? url : '';
+        return '<div class="fv-sim fv-sim--bare">' +
+            '<div class="fv-sim-head"><span class="fv-sim-kicker"><i class="fas fa-chart-bar"></i> Simulation</span>' +
+                (item.context_label ? '<span class="fv-sim-meta">' + esc(String(item.context_label).replace(/\s*simulation$/i, '')) + '</span>' : '') + '</div>' +
+            fvSimStance(item, null) +
+            '<p class="fv-sim-none">The original simulation result is not available for this post.</p>' +
+            (safe ? '<a class="fv-sim-cta fv-sim-cta--ghost" href="' + esc(safe) + '">Open the Simulator <i class="fas fa-chevron-right"></i></a>' : '') +
+        '</div>';
+    }
+    const url = /^\/(?!\/)[^\s<>"']*$/.test(String(sim.url || '')) ? sim.url : '';
+    const projected = sim.projected_score || null;
+    const shown = projected || sim.simulated_game || null;
+    const sims = Number(sim.n_sims) > 1 ? Number(sim.n_sims).toLocaleString() + ' simulations' : 'Single game simulation';
+    const when = fvSimWhen(sim.recorded_at);
+    const win = sim.predicted_winner;
+
+    let bar = '';
+    const wp = sim.win_probability;
+    if (wp && isFinite(Number(wp.away)) && isFinite(Number(wp.home))) {
+        const a = Math.round(Number(wp.away) * 100), h = Math.round(Number(wp.home) * 100);
+        bar = '<div class="fv-sim-wp" role="img" aria-label="Win probability: ' + esc(sim.away.abbr) + ' ' + a + ' percent, ' + esc(sim.home.abbr) + ' ' + h + ' percent">' +
+            '<div class="fv-sim-wp-top"><span class="' + (a > h ? 'is-fav' : '') + '">' + esc(sim.away.abbr) + ' <b>' + a + '%</b></span>' +
+                '<em>Win probability</em>' +
+                '<span class="' + (h > a ? 'is-fav' : '') + '"><b>' + h + '%</b> ' + esc(sim.home.abbr) + '</span></div>' +
+            '<div class="fv-sim-wp-bar"><i class="' + (a > h ? 'is-fav' : '') + '" style="width:' + a + '%"></i><i class="' + (h > a ? 'is-fav' : '') + '" style="width:' + h + '%"></i></div>' +
+        '</div>';
+    }
+
+    const stat = (label, value) => '<div class="fv-sim-stat"><span>' + label + '</span><b>' + value + '</b></div>';
+    let stats = '';
+    if (win) stats += stat(projected || wp ? 'Predicted winner' : 'Winner', esc(fvSimTeamName(sim, win)));
+    if (sim.margin) stats += stat('Point spread', sim.margin.team ? esc(sim.margin.team) + ' &minus;' + fvSimNum(sim.margin.by) : 'Even');
+    if (sim.total != null) stats += stat('Projected total', fvSimNum(sim.total));
+
+    let more = '';
+    if (projected && sim.simulated_game) {
+        more += '<div class="fv-sim-row"><span>Game played out in this run</span><b>' + esc(sim.away.abbr) + ' ' + fvSimNum(sim.simulated_game.away) + ', ' +
+            esc(sim.home.abbr) + ' ' + fvSimNum(sim.simulated_game.home) + '</b></div>';
+    }
+    if (sim.game_date) more += '<div class="fv-sim-row"><span>Game date</span><b>' + esc(sim.game_date) + '</b></div>';
+    more += '<div class="fv-sim-row"><span>Sample</span><b>' + esc(sims) + '</b></div>';
+    if (when) more += '<div class="fv-sim-row"><span>Simulated</span><b>' + esc(when) + '</b></div>';
+
+    return '<div class="fv-sim" data-sim-run="' + esc(sim.run_id) + '">' +
+        '<div class="fv-sim-head">' +
+            '<span class="fv-sim-kicker"><i class="fas fa-chart-bar"></i> ' + esc(sim.league || '') + ' Simulation</span>' +
+            '<span class="fv-sim-meta">' + esc(when) + '</span>' +
+        '</div>' +
+        fvSimStance(item, sim) +
+        '<div class="fv-sim-score">' +
+            fvSimTeam(sim.away, shown ? fvSimNum(shown.away) : '', 'away', win === sim.away.abbr) +
+            '<span class="fv-sim-mid">' + (projected ? 'Projected<br>score' : (shown ? 'Simulated<br>final' : 'at')) + '</span>' +
+            fvSimTeam(sim.home, shown ? fvSimNum(shown.home) : '', 'home', win === sim.home.abbr) +
+        '</div>' +
+        bar +
+        (stats ? '<div class="fv-sim-stats">' + stats + '</div>' : '') +
+        '<div class="fv-sim-foot">' +
+            '<details class="fv-sim-more"><summary>Simulation details</summary>' + more + '</details>' +
+            (url ? '<a class="fv-sim-cta" href="' + esc(url) + '">View Full Simulation <i class="fas fa-chevron-right"></i></a>' : '') +
+        '</div>' +
+    '</div>';
+}
+
 function renderTextPost(item) {
     const id = item.post_id || item.id || item.item_id;
     const isHotTake = String(item.post_type || '').toLowerCase() === 'hot_take' || String(item.type || '').toLowerCase() === 'hot-take';
-    const art = fvContextArt(item);
+    const simCard = fvSimCard(item);
+    /* The card carries the matchup, the logos and the link, so the side art
+       and the one-line tag stand down when it is there. */
+    const art = simCard && item.sim ? '' : fvContextArt(item);
+    const autoText = !!(simCard && item.stance && item.stance.auto_text);
     return '<div class="feed-item' + (art ? ' has-art' : '') + '" data-id="' + esc(id) + '" data-type="feed_post">' +
         art +
         '<div class="fv-post-main">' +
             renderFeedHeader(item, '') +
-            (String(item.content || item.body || item.text || '').trim()
+            (!autoText && String(item.content || item.body || item.text || '').trim()
                 ? '<div class="fi-content' + (isHotTake ? ' is-take' : '') + '">' + (isHotTake ? '<i class="fas fa-fire"></i>' : '') + '<span>' + esc(item.content || item.body || item.text || '') + '</span></div>'
                 : '') +
-            renderTakeContext(item) +
+            (simCard || renderTakeContext(item)) +
             fvPhotoHtml(item) +
             renderActionRow(id, 'feed_post', item.liked_by_user || item.user_liked, item.likes_count, item.comments_count) +
         '</div>' +

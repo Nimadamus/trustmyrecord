@@ -175,6 +175,21 @@
       '.tmr-take-sport.is-on{background:rgba(34,210,192,.16);border-color:rgba(34,210,192,.6);color:#CFF8F2}',
       '.tmr-take-pick{appearance:none;-webkit-appearance:none;max-width:210px;border:1px solid rgba(147,169,192,.3);background:#07111C;color:#C9D7E6;border-radius:999px;padding:4px 26px 4px 11px;font:600 12px/1.3 Inter,sans-serif;cursor:pointer;background-image:linear-gradient(45deg,transparent 50%,#93A9C0 50%),linear-gradient(135deg,#93A9C0 50%,transparent 50%);background-position:calc(100% - 13px) 50%,calc(100% - 9px) 50%;background-size:4px 4px;background-repeat:no-repeat}',
       '.tmr-take-pick:focus{outline:none;border-color:#22D2C0}',
+      /* FEED_SIM_CARD_20261114: agree / disagree on a simulation, what with, and an optional score. */
+      '.tmr-take-stance{margin:0 0 10px}',
+      '.tmr-take-stance-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}',
+      '.tmr-take-stance-row+.tmr-take-stance-row{margin-top:9px}',
+      '.tmr-take-stance-lab{flex:0 0 100%;font:600 12.5px/1.3 Inter,"Segoe UI",sans-serif;color:var(--tk-mut)}',
+      ':is(.tmr-take,#_tks) .tmr-take-opt{display:inline-flex!important;align-items:center;gap:6px;min-height:38px!important;height:auto!important;width:auto!important;margin:0!important;padding:0 14px!important;border-radius:999px!important;border:1px solid rgba(147,169,192,.38)!important;background:#07111C!important;color:#C9D7E6!important;font:700 13px/1 Inter,"Segoe UI",sans-serif!important;letter-spacing:0!important;text-transform:none!important;box-shadow:none!important;cursor:pointer}',
+      ':is(.tmr-take,#_tks) .tmr-take-opt:hover{border-color:#22D2C0!important;color:#EAF2FA!important}',
+      ':is(.tmr-take,#_tks) .tmr-take-opt:focus-visible{outline:2px solid #22D2C0;outline-offset:2px}',
+      ':is(.tmr-take,#_tks) .tmr-take-opt.is-on{background:rgba(34,210,192,.16)!important;border-color:rgba(34,210,192,.7)!important;color:#CFF8F2!important}',
+      ':is(.tmr-take,#_tks) .tmr-take-opt--no.is-on{background:rgba(255,107,107,.15)!important;border-color:rgba(255,107,107,.7)!important;color:#FFD2D2!important}',
+      '.tmr-take-score{display:inline-flex;align-items:center;gap:6px;font:700 13px/1 Inter,"Segoe UI",sans-serif;color:#C9D7E6}',
+      ':is(.tmr-take,#_tks) .tmr-take-score input{width:64px!important;height:38px!important;margin:0!important;padding:0 8px!important;border-radius:9px!important;border:1px solid rgba(147,169,192,.38)!important;background:#07111C!important;color:#EAF2FA!important;font:700 15px/1 Inter,"Segoe UI",sans-serif!important;text-align:center;-moz-appearance:textfield}',
+      ':is(.tmr-take,#_tks) .tmr-take-score input:focus{outline:none;border-color:#22D2C0!important;box-shadow:0 0 0 3px rgba(34,210,192,.18)}',
+      '.tmr-take-score input::-webkit-outer-spin-button,.tmr-take-score input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}',
+      '.tmr-take-stance [hidden]{display:none!important}',
       /* Host pages restyle every button with !important rules; ID weight via :is() wins. */
       ':is(.tmr-take--feed,#_tkf) .tmr-take-post{border:0!important;border-radius:12px!important;min-height:48px!important;padding:0 22px!important;background:linear-gradient(180deg,#14B8A6,#0C948C)!important;color:#fff!important;box-shadow:0 6px 18px rgba(20,184,166,.28)!important;text-transform:none!important;letter-spacing:0!important;font:800 15px/1 Inter,"Segoe UI",sans-serif!important}',
       ':is(.tmr-take--feed,#_tkf) .tmr-take-post:disabled{background:#1A2A3F!important;color:#5F7690!important;box-shadow:none!important}',
@@ -195,6 +210,28 @@
   /* ------------------------------------------------------------------ */
 
   var SPORTS = ['NFL', 'NCAAF', 'MLB', 'NBA', 'NHL', 'NCAAB', 'Soccer'];
+
+  /* FEED_SIM_CARD_20261114: what a member can disagree with on a simulation.
+     Keys match services/simArchive/feedCard.js on the API. */
+  var STANCE_TOPICS = [['winner', 'Winner'], ['score', 'Final score'], ['spread', 'Point spread'], ['total', 'Total points']];
+  var STANCE_WORDS = { winner: 'the winner', score: 'the final score', spread: 'the point spread', total: 'the total' };
+
+  function stanceText(stance, ctx) {
+    var about = ctx && ctx.label ? 'the ' + ctx.label : 'this simulation';
+    if (stance.position === 'agree') return 'Agree with ' + about + '.';
+    var out = 'Disagree with ' + about;
+    var parts = (stance.topics || []).map(function (k) { return STANCE_WORDS[k]; }).filter(Boolean);
+    if (parts.length) {
+      var last = parts.pop();
+      out += ': ' + (parts.length ? parts.join(', ') + ' and ' : '') + last;
+    }
+    out += '.';
+    if (stance.score) {
+      out += ' My score: ' + ((ctx && ctx.away_abbr) || 'Away') + ' ' + stance.score.away + ', ' +
+        ((ctx && ctx.home_abbr) || 'Home') + ' ' + stance.score.home + '.';
+    }
+    return out;
+  }
 
   /* Feed variant tag pickers. Team names match the TMRTeamLogo slugs so the
      card can draw the club mark; matchups come from the live board. */
@@ -261,7 +298,7 @@
     opts = opts || {};
     injectStyles();
     var feed = opts.variant === 'feed';
-    var state = { ctx: ctx, sport: ctx.sport || null, dropped: {}, posting: false, team: null, game: null };
+    var state = { ctx: ctx, sport: ctx.sport || null, dropped: {}, posting: false, team: null, game: null, stance: null, topics: {} };
 
     var root = el('section', 'tmr-take' + (feed ? ' tmr-take--feed' : '') + (opts.className ? ' ' + opts.className : ''));
     root.setAttribute('aria-label', 'Share your sports take');
@@ -290,6 +327,96 @@
       root.appendChild(head);
       prompt = el('div', 'tmr-take-prompt', promptFor(ctx));
       root.appendChild(prompt);
+    }
+
+    /* FEED_SIM_CARD_20261114: on a simulation the member says whether they
+       agree, and if not, with what. Everything here is optional detail on top
+       of one tap; the post never claims a reason they did not pick. */
+    var stanceBox = null, stanceUi = null;
+    if (!feed) {
+      stanceBox = el('div', 'tmr-take-stance');
+      stanceBox.hidden = true;
+      var r1 = el('div', 'tmr-take-stance-row');
+      var bAgree = el('button', 'tmr-take-opt', '\uD83D\uDC4D Agree');
+      var bDis = el('button', 'tmr-take-opt tmr-take-opt--no', '\uD83D\uDC4E Disagree');
+      bAgree.type = 'button'; bDis.type = 'button';
+      r1.appendChild(bAgree); r1.appendChild(bDis);
+      var r2 = el('div', 'tmr-take-stance-row');
+      r2.appendChild(el('div', 'tmr-take-stance-lab', 'What do you disagree with? Pick any that apply.'));
+      var topicBtns = {};
+      STANCE_TOPICS.forEach(function (t) {
+        var b = el('button', 'tmr-take-opt', t[1]);
+        b.type = 'button';
+        b.setAttribute('aria-pressed', 'false');
+        b.addEventListener('click', function () {
+          state.topics[t[0]] = !state.topics[t[0]];
+          b.className = 'tmr-take-opt' + (state.topics[t[0]] ? ' is-on' : '');
+          b.setAttribute('aria-pressed', state.topics[t[0]] ? 'true' : 'false');
+        });
+        topicBtns[t[0]] = b;
+        r2.appendChild(b);
+      });
+      var r3 = el('div', 'tmr-take-stance-row');
+      r3.appendChild(el('div', 'tmr-take-stance-lab', 'Your final score (optional)'));
+      var mkScore = function () {
+        var wrap = el('label', 'tmr-take-score');
+        var lab = el('span');
+        var inp = el('input');
+        inp.type = 'number'; inp.min = '0'; inp.max = '300'; inp.step = '1'; inp.inputMode = 'numeric';
+        wrap.appendChild(lab); wrap.appendChild(inp);
+        r3.appendChild(wrap);
+        return { lab: lab, inp: inp };
+      };
+      var sAway = mkScore(), sHome = mkScore();
+      stanceBox.appendChild(r1); stanceBox.appendChild(r2); stanceBox.appendChild(r3);
+      root.appendChild(stanceBox);
+      var paint = function () {
+        var isSim = state.ctx.kind === 'sim';
+        stanceBox.hidden = !isSim;
+        bAgree.className = 'tmr-take-opt' + (state.stance === 'agree' ? ' is-on' : '');
+        bDis.className = 'tmr-take-opt tmr-take-opt--no' + (state.stance === 'disagree' ? ' is-on' : '');
+        bAgree.setAttribute('aria-pressed', state.stance === 'agree' ? 'true' : 'false');
+        bDis.setAttribute('aria-pressed', state.stance === 'disagree' ? 'true' : 'false');
+        r2.hidden = r3.hidden = state.stance !== 'disagree';
+        var a = state.ctx.away_abbr || 'Away', h = state.ctx.home_abbr || 'Home';
+        sAway.lab.textContent = a; sHome.lab.textContent = h;
+        sAway.inp.setAttribute('aria-label', a + ' score'); sHome.inp.setAttribute('aria-label', h + ' score');
+        if (typeof input !== 'undefined' && input) {
+          input.placeholder = state.stance ? 'Why? (optional)' : (state.ctx.placeholder || 'Type your take…');
+        }
+      };
+      var pick = function (v) {
+        state.stance = state.stance === v ? null : v;
+        paint();
+        sync();
+      };
+      bAgree.addEventListener('click', function () { pick('agree'); });
+      bDis.addEventListener('click', function () { pick('disagree'); });
+      stanceUi = {
+        paint: paint,
+        reset: function () {
+          state.stance = null; state.topics = {};
+          STANCE_TOPICS.forEach(function (t) { topicBtns[t[0]].className = 'tmr-take-opt'; topicBtns[t[0]].setAttribute('aria-pressed', 'false'); });
+          sAway.inp.value = ''; sHome.inp.value = '';
+          paint();
+        },
+        /* -> { stance } | { error } | {} */
+        read: function () {
+          if (state.ctx.kind !== 'sim' || !state.stance) return {};
+          var out = { position: state.stance };
+          if (state.stance === 'disagree') {
+            var topics = STANCE_TOPICS.map(function (t) { return t[0]; }).filter(function (k) { return state.topics[k]; });
+            if (topics.length) out.topics = topics;
+            var av = sAway.inp.value.trim(), hv = sHome.inp.value.trim();
+            if (av !== '' || hv !== '') {
+              var ok = function (v) { return /^\d{1,3}$/.test(v) && Number(v) <= 300; };
+              if (!ok(av) || !ok(hv)) return { error: 'Enter a whole number for both teams, or leave both scores empty.' };
+              out.score = { away: Number(av), home: Number(hv) };
+            }
+          }
+          return { stance: out };
+        }
+      };
     }
 
     var row = el('div', 'tmr-take-row');
@@ -399,7 +526,8 @@
 
     function sync() {
       var len = input.value.trim().length;
-      post.disabled = state.posting || len === 0 || len > MAX_LEN;
+      var hasStance = !!(stanceUi && state.ctx.kind === 'sim' && state.stance);
+      post.disabled = state.posting || (len === 0 && !hasStance) || len > MAX_LEN;
       meta.textContent = len ? len + ' / ' + MAX_LEN : '';
       meta.className = 'tmr-take-meta' + (len > MAX_LEN ? ' is-over' : '');
       input.style.height = 'auto';
@@ -419,7 +547,16 @@
 
     function submit() {
       var content = input.value.trim();
-      if (!content || content.length > MAX_LEN || state.posting) return;
+      var picked = stanceUi ? stanceUi.read() : {};
+      if (picked.error) { show('err', [picked.error]); return; }
+      var stance = picked.stance || null;
+      if ((!content && !stance) || content.length > MAX_LEN || state.posting) return;
+      /* No words typed: the post's text is a plain restatement of what was
+         tapped, so every surface that shows a Take still has a line to show. */
+      if (!content && stance) {
+        content = stanceText(stance, state.ctx);
+        stance.auto_text = true;
+      }
       var S = window.TMRSession;
       if (!S || !S.authFetch) { show('err', ['Could not reach your session. ', link('Log in', '/login/?next=' + encodeURIComponent(location.pathname + location.search))]); return; }
       state.posting = true;
@@ -433,6 +570,7 @@
       if (c.label && !state.dropped.label) body.context_label = c.label;
       if (c.game_id && !state.dropped.label) body.context_game_id = c.game_id;
       if (c.url && !state.dropped.label) body.context_url = c.url;
+      if (stance && body.context_label) body.stance = stance;
       if (feed && state.team && !body.context_team) body.context_team = state.team;
       if (feed && state.game && !body.context_label) {
         body.context_label = state.game.away_team + ' @ ' + state.game.home_team;
@@ -462,6 +600,7 @@
         }
         var id = res.d && res.d.post && res.d.post.id;
         input.value = '';
+        if (stanceUi) stanceUi.reset();
         if (feed) show('ok', ['Posted. Your take is live.']);
         else show('ok', ['Posted. Your take is live in the ', link('Community Feed', '/feed/' + (id ? '?post=' + encodeURIComponent(id) : '')), '.']);
         try { document.dispatchEvent(new CustomEvent('tmr:take-posted', { detail: { post: res.d.post, context: c, sent: body } })); } catch (err) { }
@@ -483,6 +622,7 @@
     });
     post.addEventListener('click', submit);
     renderTags();
+    if (stanceUi) stanceUi.paint();
 
     return {
       root: root,
@@ -494,6 +634,7 @@
         prompt.textContent = promptFor(state.ctx);
         input.setAttribute('aria-label', prompt.textContent);
         renderTags();
+        if (stanceUi) { stanceUi.reset(); sync(); }
       }
     };
   }
@@ -592,6 +733,8 @@
       kind: 'sim',
       sport: sport,
       label: (d.away.abbr || d.away.name) + ' @ ' + (d.home.abbr || d.home.name) + ' simulation',
+      away_abbr: d.away.abbr || d.away.name,
+      home_abbr: d.home.abbr || d.home.name,
       url: (location.pathname + location.search).slice(0, 300),
       game_id: d.game_id || null,
       winner: fav.name || fav.abbr,
@@ -610,7 +753,7 @@
     simComposer = mount(simHost, ctx, { loginCta: true });
   });
 
-  window.TMRTake = { mount: mount, dock: dock, promptFor: promptFor, currentUser: currentUser };
+  window.TMRTake = { mount: mount, dock: dock, promptFor: promptFor, currentUser: currentUser, stanceText: stanceText };
 
   /* <script src="tmr-take.js" data-dock="1"> turns the homepage dock on. */
   var me = document.currentScript;
