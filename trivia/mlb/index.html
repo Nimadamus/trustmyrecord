@@ -1595,10 +1595,12 @@
 <link rel="stylesheet" href="/static/css/tmr-dark-finish.css?v=7af688e4057c">
 <!-- SITEWIDE_APLUS_20261113 -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,700;0,800;1,800&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="stylesheet" href="/static/css/tmr-aplus.css?v=8b894834b70c">
+<link rel="stylesheet" href="/static/css/trivia-v2.css?v=20261113a">
 <script defer src="/static/js/tmr-aplus.js?v=fef00566de34"></script>
 </head>
-<body class="tmr-site-shell tmr-ds-shell tmr-dark tmr-aplus" data-aplus="arena">
+<body class="trivia-v2 tmr-site-shell tmr-ds-shell tmr-dark tmr-aplus" data-aplus="arena">
 
 <!-- Legacy hardcoded header removed; sitewide global nav is injected by tmr-sitewide.js?v=20260729navclean1 -->
 
@@ -1606,64 +1608,54 @@
 <div class="main-container">
 
     <!-- Page Header -->
-    <div class="page-header trivia-page-header">
-        <div class="trivia-page-header-row">
-            <div class="trivia-page-header-copy">
+    <div class="page-header trivia-page-header tv-banner aplus-hero">
+        <div class="tv-banner-art" aria-hidden="true">
+            <img src="https://a.espncdn.com/i/headshots/mlb/players/full/33192.png" alt="" width="600" height="436" onerror="this.remove()">
+            <img src="https://a.espncdn.com/i/headshots/nfl/players/full/3139477.png" alt="" width="600" height="436" onerror="this.remove()">
+            <img src="https://a.espncdn.com/i/headshots/nba/players/full/1966.png" alt="" width="600" height="436" onerror="this.remove()">
+            <img src="https://a.espncdn.com/i/headshots/nhl/players/full/3895074.png" alt="" width="600" height="436" onerror="this.remove()">
+        </div>
+        <div class="trivia-page-header-copy tv-banner-copy">
+            <div class="tv-wordmark" aria-hidden="true"><i class="fas fa-wheat-awn tv-laurel tv-laurel--l"></i><span class="tv-w1">TMR</span><span class="tv-w2">TRIVIA</span><i class="fas fa-wheat-awn tv-laurel"></i></div>
+            <div class="tv-tagline">
                 <h1>MLB TRIVIA</h1>
-                <p>Timed MLB trivia questions on World Series history, career records, Hall of Famers and stats. Climb the leaderboard, or contribute your own questions to the community pool.</p>
+                <b>&bull;</b><span>Climb the Leaderboard</span>
+                <b>&bull;</b><span>Build Your Streak</span>
             </div>
-            <button type="button" class="trivia-create-cta" onclick="openCreateTrivia()">
-                <span aria-hidden="true">＋</span> Create Trivia Question
-            </button>
         </div>
+        <div class="tv-banner-brain" aria-hidden="true"><i class="fas fa-brain"></i><b>?</b></div>
     </div>
-
-    <!-- Stats Bar -->
-    <div class="stats-bar stats-bar--six" aria-label="Your trivia stats">
-        <div class="stat-box">
-            <div class="stat-value" id="statTotalPoints">--</div>
-            <div class="stat-label">Career Points</div>
-        </div>
-        <div class="stat-box">
-            <div class="stat-value" id="statQuestionsAnswered">--</div>
-            <div class="stat-label">Questions Attempted</div>
-        </div>
-        <div class="stat-box">
-            <div class="stat-value" id="statQuestionsCorrect">--</div>
-            <div class="stat-label">Correct Answers</div>
-        </div>
-        <div class="stat-box">
-            <div class="stat-value" id="statAccuracy">--</div>
-            <div class="stat-label">Accuracy</div>
-        </div>
-        <div class="stat-box">
-            <div class="stat-value" id="statStreak">--</div>
-            <div class="stat-label">Current Streak</div>
-        </div>
-        <div class="stat-box">
-            <div class="stat-value" id="statAvgTime">--</div>
-            <div class="stat-label">Avg Response</div>
-        </div>
-        <div class="stat-box">
-            <div class="stat-value" id="statGames">--</div>
-            <div class="stat-label">Games Played</div>
-        </div>
-        <div class="stat-box">
-            <div class="stat-value" id="statBestGame">--</div>
-            <div class="stat-label">Best Game</div>
-        </div>
-    </div>
-    <div class="trivia-load-status" id="statsStatus" role="status" aria-live="polite" hidden></div>
 
     <!-- View Tabs -->
     <div class="view-tabs" role="tablist" aria-label="Trivia modes">
-        <button class="view-tab active" role="tab" onclick="switchView('play')">Play</button>
-        <button class="view-tab" role="tab" onclick="switchView('leaderboard')">Leaderboard</button>
-        <button class="view-tab" role="tab" onclick="switchView('history')">History</button>
-        <button class="view-tab view-tab--create" role="tab" id="triviaTabCreate" onclick="switchView('create')">
+        <button class="view-tab active" role="tab" data-view="play" onclick="switchView('play')"><i class="fas fa-gamepad"></i> Play Trivia</button>
+        <button class="view-tab" role="tab" data-view="leaderboard" onclick="switchView('leaderboard')"><i class="fas fa-trophy"></i> Leaderboard</button>
+        <button class="view-tab" role="tab" data-view="history" onclick="switchView('history')"><i class="fas fa-clock-rotate-left"></i> History</button>
+        <button class="view-tab" role="tab" data-view="stats" onclick="switchView('stats')"><i class="fas fa-chart-simple"></i> Stats</button>
+        <button class="view-tab" type="button" onclick="tvScrollHow()"><i class="fas fa-circle-info"></i> How It Works</button>
+        <button class="view-tab view-tab--create" role="tab" data-view="create" id="triviaTabCreate" onclick="switchView('create')">
             <span aria-hidden="true">＋</span> Create
         </button>
     </div>
+
+    <div class="tv-intro">
+        <p>Timed MLB trivia questions on World Series history, career records, Hall of Famers and stats. Climb the leaderboard, or contribute your own questions to the community pool.</p>
+    </div>
+
+    <!-- Stats Bar -->
+    <div class="stats-bar tv-tiles" aria-label="Your trivia stats">
+        <div class="stat-box"><i class="fas fa-trophy tv-ico-gold" aria-hidden="true"></i>
+            <div><div class="stat-value" id="statQuestionsAnswered">--</div><div class="stat-label">Total Questions</div></div></div>
+        <div class="stat-box"><i class="fas fa-bullseye tv-ico-gold" aria-hidden="true"></i>
+            <div><div class="stat-value" id="statAccuracy">--</div><div class="stat-label">Overall Accuracy</div></div></div>
+        <div class="stat-box"><i class="fas fa-fire tv-ico-fire" aria-hidden="true"></i>
+            <div><div class="stat-value" id="statBestStreak">--</div><div class="stat-label">Best Streak</div></div></div>
+        <div class="stat-box"><i class="fas fa-chart-simple tv-ico-gold" aria-hidden="true"></i>
+            <div><div class="stat-value" id="statAvgTime">--</div><div class="stat-label">Avg. Response Time</div></div></div>
+        <div class="stat-box"><i class="fas fa-crown tv-ico-gold" aria-hidden="true"></i>
+            <div><div class="stat-value" id="statRank">--</div><div class="stat-label">Global Rank</div></div></div>
+    </div>
+    <div class="trivia-load-status" id="statsStatus" role="status" aria-live="polite" hidden></div>
 
     <!-- ===== PLAY VIEW ===== -->
     <div class="view-panel active" id="view-play">
@@ -1672,17 +1664,47 @@
 
     <!-- ===== LEADERBOARD VIEW ===== -->
     <div class="view-panel" id="view-leaderboard">
-        <div class="glass-card">
-            <h2>&#127942; Trivia Leaderboards</h2>
-            <p style="margin:0 0 12px;color:#2E4459;font-size:13.5px;">Updates the instant a question is settled. Weekly and monthly boards keep every past period &mdash; nothing is ever wiped.</p>
-            <div class="tb-tabs" id="triviaBoardTabs" role="tablist" aria-label="Leaderboard type"></div>
-            <div class="tb-period" id="leaderboardPeriod"></div>
-            <div id="leaderboardList"></div>
+        <div class="tv-lb-layout">
+            <div class="glass-card tv-lb-card">
+                <div class="tv-lb-head">
+                    <div class="tv-lb-title">
+                        <i class="fas fa-trophy tv-ico-gold" aria-hidden="true"></i>
+                        <div>
+                            <h2>Trivia Leaderboard</h2>
+                            <p id="tvBoardSub">Top performers based on points, accuracy, and streaks.</p>
+                        </div>
+                    </div>
+                    <div class="tb-tabs" id="triviaBoardTabs" role="tablist" aria-label="Leaderboard period"></div>
+                </div>
+                <div class="tb-period" id="leaderboardPeriod"></div>
+                <div id="leaderboardList"></div>
+                <p class="tv-lb-foot">Updates the instant a question is settled. Daily, weekly and monthly boards keep every past period &mdash; nothing is ever wiped.</p>
+            </div>
+            <aside class="glass-card tv-me" aria-label="Your trivia stats">
+                <div class="tv-me-title"><i class="fas fa-user tv-ico-gold" aria-hidden="true"></i><h2>Your Trivia Stats</h2></div>
+                <div id="tvMeBody"><div class="empty-state"><p>Loading your stats...</p></div></div>
+            </aside>
         </div>
+        <div class="tv-boards" id="tvBoardCards" aria-label="More leaderboards"></div>
         <div class="glass-card" style="margin-top:18px;">
             <h2>&#128221; Trivia Creators Leaderboard</h2>
-            <p style="margin:0 0 14px;color:#2E4459;font-size:13.5px;">Recognizing community members who contribute original trivia questions.</p>
+            <p class="tv-card-sub">Recognizing community members who contribute original trivia questions.</p>
             <div id="leaderboardCreatorsList"></div>
+        </div>
+    </div>
+
+    <!-- ===== STATS VIEW ===== -->
+    <div class="view-panel" id="view-stats">
+        <div class="glass-card">
+            <h2><i class="fas fa-chart-simple tv-ico-gold" aria-hidden="true"></i> Your Stats</h2>
+            <div class="tv-stat-grid">
+                <div class="tv-stat"><div class="stat-value" id="statTotalPoints">--</div><div class="stat-label">Career Points</div></div>
+                <div class="tv-stat"><div class="stat-value" id="statQuestionsCorrect">--</div><div class="stat-label">Correct Answers</div></div>
+                <div class="tv-stat"><div class="stat-value" id="statStreak">--</div><div class="stat-label">Current Streak</div></div>
+                <div class="tv-stat"><div class="stat-value" id="statGames">--</div><div class="stat-label">Games Played</div></div>
+                <div class="tv-stat"><div class="stat-value" id="statBestGame">--</div><div class="stat-label">Best Game</div></div>
+            </div>
+            <div id="tvBreakdown"></div>
         </div>
     </div>
 
@@ -1710,7 +1732,7 @@
     </div>
 
     <!-- Supporting info (moved below the game so the categories sit near the top) -->
-    <div class="trivia-info-row" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:28px;">
+    <div class="trivia-info-row" id="tvHow">
         <div class="glass-card">
             <h2 style="margin-bottom: 10px;font-size:1.05rem;">How Trivia Scoring Works</h2>
             <p style="color: var(--text-muted); line-height: 1.6; margin: 0;font-size:14px;" id="scoringExplainer">
@@ -1841,14 +1863,12 @@ function escapeHtml(str) {
 // VIEW SWITCHING
 // ================================================================
 function switchView(view) {
-    document.querySelectorAll('.view-tab').forEach(function(t) { t.classList.remove('active'); });
-    document.querySelectorAll('.view-panel').forEach(function(p) { p.classList.remove('active'); });
-    event.target.classList.add('active');
-    document.getElementById('view-' + view).classList.add('active');
+    switchViewDirect(view);
+}
 
-    if (view === 'leaderboard') renderLeaderboard();
-    if (view === 'history') renderHistory();
-    if (view === 'create') renderCreateView();
+function tvScrollHow() {
+    var el = document.getElementById('tvHow');
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 // ================================================================
@@ -2830,15 +2850,15 @@ function finishQuiz(results) {
 }
 
 function switchViewDirect(view) {
-    document.querySelectorAll('.view-tab').forEach(function(t, i) {
-        t.classList.remove('active');
-        if ((view === 'play' && i === 0) || (view === 'leaderboard' && i === 1) ||
-            (view === 'history' && i === 2) || (view === 'create' && i === 3)) {
-            t.classList.add('active');
-        }
+    var panel = document.getElementById('view-' + view);
+    if (!panel) return;
+    document.querySelectorAll('.view-tab').forEach(function(t) {
+        var on = t.getAttribute('data-view') === view;
+        t.classList.toggle('active', on);
+        if (t.hasAttribute('data-view')) t.setAttribute('aria-selected', on ? 'true' : 'false');
     });
     document.querySelectorAll('.view-panel').forEach(function(p) { p.classList.remove('active'); });
-    document.getElementById('view-' + view).classList.add('active');
+    panel.classList.add('active');
     if (view === 'leaderboard') renderLeaderboard();
     if (view === 'history') renderHistory();
     if (view === 'create') renderCreateView();
@@ -2848,13 +2868,23 @@ function switchViewDirect(view) {
 // LEADERBOARD (from backend API)
 // ================================================================
 var TRIVIA_BOARDS = [
-    { key: 'career',  label: 'Career Points', metric: 'points',   suffix: ' pts' },
-    { key: 'weekly',  label: 'This Week',     metric: 'points',   suffix: ' pts' },
-    { key: 'monthly', label: 'This Month',    metric: 'points',   suffix: ' pts' },
-    { key: 'correct', label: 'Correct Answers', metric: 'correct', suffix: '' },
-    { key: 'accuracy', label: 'Accuracy',     metric: 'accuracy', suffix: '%' },
-    { key: 'streak',  label: 'Best Streak',   metric: 'best_streak', suffix: '' },
-    { key: 'speed',   label: 'Fastest',       metric: 'avg_response_ms', suffix: '' }
+    { key: 'career',   label: 'All Time',         metric: 'points',          sub: 'Top performers based on points, accuracy, and streaks.' },
+    { key: 'monthly',  label: 'This Month',       metric: 'points',          sub: 'Most points scored this month.' },
+    { key: 'weekly',   label: 'This Week',        metric: 'points',          sub: 'Most points scored this week.' },
+    { key: 'daily',    label: 'Today',            metric: 'points',          sub: 'Most points scored today.' },
+    { key: 'streak',   label: 'Top Streaks',      metric: 'best_streak',     sub: 'Longest runs of correct answers.' },
+    { key: 'accuracy', label: 'Highest Accuracy', metric: 'accuracy',        sub: 'Best share of correct answers.' },
+    { key: 'correct',  label: 'Most Correct',     metric: 'correct',         sub: 'Most correct answers, all time.' },
+    { key: 'speed',    label: 'Fastest',          metric: 'avg_response_ms', sub: 'Quickest average time on correct answers.' }
+];
+// Period pills sit in the table header; the other boards are the cards below it.
+var TRIVIA_PERIOD_BOARDS = ['career', 'monthly', 'weekly', 'daily'];
+var TRIVIA_BOARD_CARDS = [
+    { key: 'streak',   icon: 'fa-fire',         tone: 'fire', title: 'Top Streaks',      sub: 'Longest answer streaks' },
+    { key: 'accuracy', icon: 'fa-bullseye',     tone: 'gold', title: 'Highest Accuracy', sub: 'Best share of correct answers' },
+    { key: 'correct',  icon: 'fa-chart-simple', tone: 'gold', title: 'Most Correct',     sub: 'Most correct answers' },
+    { key: 'speed',    icon: 'fa-bolt',         tone: 'gold', title: 'Fastest',          sub: 'Quickest correct answers' },
+    { key: 'monthly',  icon: 'fa-calendar-days', tone: 'gold', title: 'Monthly Leaders', sub: 'Top performers this month' }
 ];
 var currentBoard = 'career';
 var currentBoardOffset = 0;
@@ -2865,18 +2895,32 @@ var leaderboardRequestSeq = 0;
 
 function renderBoardTabs() {
     var bar = document.getElementById('triviaBoardTabs');
-    if (!bar) return;
-    bar.innerHTML = TRIVIA_BOARDS.map(function (b) {
-        return '<button type="button" class="tb-tab' + (b.key === currentBoard ? ' active' : '') +
-            '" onclick="selectBoard(\'' + b.key + '\')">' + escapeHtml(b.label) + '</button>';
-    }).join('');
+    if (bar) {
+        bar.innerHTML = TRIVIA_PERIOD_BOARDS.map(function (key) {
+            var b = TRIVIA_BOARDS.filter(function (x) { return x.key === key; })[0];
+            return '<button type="button" role="tab" aria-selected="' + (key === currentBoard ? 'true' : 'false') + '" class="tb-tab' + (key === currentBoard ? ' active' : '') +
+                '" onclick="selectBoard(\'' + key + '\')">' + escapeHtml(b.label) + '</button>';
+        }).join('');
+    }
+    var cards = document.getElementById('tvBoardCards');
+    if (cards) {
+        cards.innerHTML = TRIVIA_BOARD_CARDS.map(function (c) {
+            return '<button type="button" class="tv-board' + (c.key === currentBoard ? ' active' : '') + '" onclick="selectBoard(\'' + c.key + '\', true)">' +
+                '<i class="fas ' + c.icon + ' tv-ico-' + c.tone + '" aria-hidden="true"></i>' +
+                '<span><b>' + escapeHtml(c.title) + '</b><small>' + escapeHtml(c.sub) + '</small></span></button>';
+        }).join('');
+    }
 }
 
-function selectBoard(key) {
+function selectBoard(key, scrollToTable) {
     currentBoard = key;
     currentBoardOffset = 0;
     renderBoardTabs();
     renderLeaderboard();
+    if (scrollToTable) {
+        var card = document.querySelector('.tv-lb-card');
+        if (card) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
 }
 
 function shiftBoardPeriod(delta) {
@@ -2889,6 +2933,36 @@ function fmtMs(ms) {
     return n >= 1000 ? (n / 1000).toFixed(2) + 's' : n + 'ms';
 }
 
+function tvShowAllRows(btn) {
+    var t = btn.previousElementSibling;
+    if (t) t.classList.add('is-open');
+    btn.remove();
+}
+
+function tvApiBase() {
+    return (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://api.trustmyrecord.com/api';
+}
+
+// An uploaded picture when the row carries a normal URL; otherwise the one
+// avatar resolver (never an inline data URI, never a letter).
+function tvAvatar(username, url) {
+    var a = String(url || '');
+    if (!a || /^data:/i.test(a) || a.length > 400) {
+        a = tvApiBase() + '/users/' + encodeURIComponent(username || '') + '/avatar?s=96';
+    }
+    return a;
+}
+
+function tvViewerName() {
+    try {
+        if (window.auth && auth.currentUser && auth.currentUser.username) return String(auth.currentUser.username);
+        if (window.api && api.user && api.user.username) return String(api.user.username);
+    } catch (e) {}
+    return '';
+}
+
+function tvNum(v) { return (Number(v) || 0).toLocaleString(); }
+
 async function renderLeaderboard() {
     var container = document.getElementById('leaderboardList');
     var meta = document.getElementById('leaderboardPeriod');
@@ -2896,6 +2970,9 @@ async function renderLeaderboard() {
     container.innerHTML = '<div class="empty-state"><p>Loading leaderboard...</p></div>';
 
     var board = TRIVIA_BOARDS.filter(function (b) { return b.key === currentBoard; })[0] || TRIVIA_BOARDS[0];
+    var sub = document.getElementById('tvBoardSub');
+    if (sub) sub.textContent = board.sub;
+    var isPeriod = currentBoard === 'daily' || currentBoard === 'weekly' || currentBoard === 'monthly';
     var requestSeq = ++leaderboardRequestSeq;
     var lbEndpoint = '/trivia/v2/leaderboards?board=' + encodeURIComponent(currentBoard) +
         '&offset=' + currentBoardOffset + '&limit=50';
@@ -2905,64 +2982,152 @@ async function renderLeaderboard() {
         if (requestSeq !== leaderboardRequestSeq) return;
         var rows = data.leaderboard || [];
         var period = data.period || {};
+        // An older API answers an unknown board with the career board; never
+        // paint all-time rows under a "Today" heading.
+        if (data.board && data.board !== currentBoard) rows = [];
 
         if (meta) {
-            var periodBits = ['<strong>' + escapeHtml(board.label) + '</strong>'];
-            if (period.label) periodBits.push(escapeHtml(period.label));
+            var periodBits = [];
+            if (TRIVIA_PERIOD_BOARDS.indexOf(currentBoard) === -1) periodBits.push('<strong>' + escapeHtml(board.label) + '</strong>');
+            if (isPeriod && period.label && currentBoardOffset > 0) periodBits.push('<strong>' + escapeHtml(period.label) + '</strong>');
             if (period.start && period.end) {
-                periodBits.push(new Date(period.start).toLocaleDateString() + ' &ndash; ' +
-                    new Date(new Date(period.end).getTime() - 1).toLocaleDateString());
+                // Periods are cut on UTC days, so the dates are read in UTC too:
+                // November is 11/1 to 11/30 for every visitor.
+                var d0 = new Date(period.start).toLocaleDateString(undefined, { timeZone: 'UTC' });
+                var d1 = new Date(new Date(period.end).getTime() - 1).toLocaleDateString(undefined, { timeZone: 'UTC' });
+                periodBits.push(d0 === d1 ? d0 : d0 + ' &ndash; ' + d1);
             }
             if (period.resets_at) periodBits.push('Resets ' + new Date(period.resets_at).toLocaleString());
-            if (period.note) periodBits.push(escapeHtml(period.note));
-            var nav = (currentBoard === 'weekly' || currentBoard === 'monthly')
+            if (period.note && !isPeriod) periodBits.push(escapeHtml(period.note));
+            var nav = isPeriod
                 ? '<div class="tb-period-nav">' +
                     '<button type="button" onclick="shiftBoardPeriod(1)">&larr; Previous</button>' +
                     '<button type="button" onclick="shiftBoardPeriod(-1)"' + (currentBoardOffset === 0 ? ' disabled' : '') + '>Next &rarr;</button>' +
                   '</div>'
                 : '';
-            meta.innerHTML = '<div class="tb-period-copy">' + periodBits.join(' &middot; ') + '</div>' + nav;
+            meta.innerHTML = (periodBits.length || nav) ? '<div class="tb-period-copy">' + periodBits.join(' &middot; ') + '</div>' + nav : '';
         }
 
         if (!rows.length) {
-            container.innerHTML = '<div class="empty-state"><div class="big-icon">&#127942;</div><p>No qualifying players for this board yet.</p></div>';
+            container.innerHTML = '<div class="empty-state"><div class="big-icon">&#127942;</div><p>' +
+                (isPeriod ? 'No one has scored in this period yet. Play a round to take the top spot.' : 'No qualifying players for this board yet.') +
+                '</p>' + (isPeriod ? '<button type="button" class="tv-play-btn" onclick="switchView(\'play\')"><i class="fas fa-gamepad"></i> Play Trivia</button>' : '') + '</div>';
             renderCreatorsLeaderboard();
             return;
         }
 
-        var medals = ['🥇', '🥈', '🥉'];
-        container.innerHTML = rows.map(function (entry, idx) {
+        var isSpeed = board.metric === 'avg_response_ms';
+        var key = board.metric;
+        var me = tvViewerName().toLowerCase();
+        var cls = function (metric) { return 'tv-c' + (metric === key ? ' is-key' : ''); };
+        var head = '<div class="tv-row tv-row--head" role="row">' +
+            '<span class="tv-rank" role="columnheader">#</span>' +
+            '<span class="tv-user" role="columnheader">User</span>' +
+            '<span class="tv-c tv-c--q" role="columnheader">Questions</span>' +
+            '<span class="tv-c tv-c--k" role="columnheader">Correct</span>' +
+            '<span class="tv-c" role="columnheader">Accuracy</span>' +
+            '<span class="tv-c" role="columnheader">Points</span>' +
+            '<span class="tv-c" role="columnheader">' + (isSpeed ? 'Avg. Time' : 'Best Streak') + '</span>' +
+        '</div>';
+
+        container.innerHTML = '<div class="tv-table" role="table" aria-label="' + escapeHtml(board.label) + ' leaderboard">' + head + rows.map(function (entry, idx) {
             var username = entry.username || 'Unknown';
-            var primary;
-            if (board.metric === 'avg_response_ms') primary = fmtMs(entry.avg_response_ms);
-            else if (board.metric === 'accuracy') primary = (Number(entry.accuracy) || 0).toFixed(1) + '%';
-            else primary = (Number(entry[board.metric]) || 0).toLocaleString() + board.suffix;
-
-            var secondaryBits = [];
-            if (entry.games_played != null) secondaryBits.push(entry.games_played + ' game' + (Number(entry.games_played) === 1 ? '' : 's'));
-            if (entry.attempts != null) secondaryBits.push(entry.attempts + ' questions');
-            if (entry.correct != null) secondaryBits.push(entry.correct + ' correct');
-            if (entry.accuracy != null && board.metric !== 'accuracy') secondaryBits.push(Number(entry.accuracy).toFixed(1) + '% accuracy');
-            if (entry.points_per_question != null) secondaryBits.push(Number(entry.points_per_question).toFixed(1) + ' pts/question');
-            if (entry.best_streak != null && board.metric !== 'best_streak') secondaryBits.push('best streak ' + entry.best_streak);
-            if (entry.points != null && board.metric !== 'points') secondaryBits.push(Number(entry.points).toLocaleString() + ' pts');
-            if (board.metric === 'avg_response_ms' && entry.best_response_ms != null) secondaryBits.push('best ' + fmtMs(entry.best_response_ms));
-
-            return '<div class="lb-row">' +
-                '<div class="row-left">' +
-                    '<span class="icon" style="font-size:18px;width:32px;text-align:center;">' + (idx < 3 ? medals[idx] : '#' + entry.rank) + '</span>' +
-                    '<div><a class="info-primary" data-tmr-username="' + escapeHtml(username) + '" href="/u/' + encodeURIComponent(username) + '/">@' + escapeHtml(username) + '</a>' +
-                    '<div class="info-secondary">' + escapeHtml(secondaryBits.join(' · ')) + '</div></div>' +
-                '</div>' +
-                '<div class="row-right"><div class="pts" style="font-size:15px;font-weight:700;">' + primary + '</div></div>' +
+            var rank = Number(entry.rank) || (idx + 1);
+            var attempts = entry.attempts != null ? Number(entry.attempts) : null;
+            var correct = entry.correct != null ? Number(entry.correct) : null;
+            var acc = entry.accuracy != null ? Number(entry.accuracy)
+                : (attempts && correct != null ? (correct / attempts) * 100 : null);
+            var dash = '<span class="tv-dash">&ndash;</span>';
+            var last = isSpeed
+                ? (entry.avg_response_ms != null ? fmtMs(entry.avg_response_ms) : dash)
+                : (entry.best_streak != null ? '<i class="fas fa-fire tv-ico-fire" aria-hidden="true"></i> ' + tvNum(entry.best_streak) : dash);
+            return '<div class="tv-row' + (rank === 1 ? ' is-first' : '') + (me && username.toLowerCase() === me ? ' is-me' : '') + '" role="row">' +
+                '<span class="tv-rank" role="cell">' + (rank <= 3 ? '<b class="tv-medal tv-medal--' + rank + '">' + rank + '</b>' : '#' + rank) + '</span>' +
+                '<span class="tv-user" role="cell"><img class="tv-ava" src="' + escapeHtml(tvAvatar(username, entry.avatar_url)) + '" alt="" loading="lazy">' +
+                    '<a class="info-primary" data-tmr-username="' + escapeHtml(username) + '" href="/u/' + encodeURIComponent(username) + '/">' + escapeHtml(entry.display_name || username) + '</a></span>' +
+                '<span class="tv-c tv-c--q" role="cell">' + (attempts != null ? tvNum(attempts) : dash) + '</span>' +
+                '<span class="' + cls('correct') + ' tv-c--k" role="cell">' + (correct != null ? tvNum(correct) : dash) + '</span>' +
+                '<span class="' + cls('accuracy') + '" role="cell">' + (acc != null && isFinite(acc) ? acc.toFixed(1) + '%' : dash) + '</span>' +
+                '<span class="' + cls('points') + ' tv-c--pts" role="cell">' + (entry.points != null ? tvNum(entry.points) : dash) + '</span>' +
+                '<span class="' + cls(isSpeed ? 'avg_response_ms' : 'best_streak') + '" role="cell">' + last + '</span>' +
             '</div>';
-        }).join('');
+        }).join('') + '</div>' +
+        (rows.length > 10
+            ? '<button type="button" class="tv-more-rows" onclick="tvShowAllRows(this)">Show all ' + rows.length + ' players <i class="fas fa-chevron-down"></i></button>'
+            : '');
     } catch (e) {
         if (requestSeq !== leaderboardRequestSeq) return;
         triviaLogLoadError('leaderboard ' + board.key, lbEndpoint, e);
         container.innerHTML = triviaErrorHtml('the ' + board.label + ' leaderboard', e, 'renderLeaderboard()');
     }
     renderCreatorsLeaderboard();
+}
+
+// ---- Your Trivia Stats card + global rank + stats breakdown ----
+var tvRankPromise = null;
+function tvLoadRank() {
+    var name = tvViewerName().toLowerCase();
+    if (!name) return Promise.resolve(null);
+    if (!tvRankPromise) {
+        tvRankPromise = triviaGet('/trivia/v2/leaderboards?board=career&offset=0&limit=200').then(function (data) {
+            var rows = (data && data.leaderboard) || [];
+            for (var i = 0; i < rows.length; i++) {
+                if (String(rows[i].username || '').toLowerCase() === name) return Number(rows[i].rank) || (i + 1);
+            }
+            return null;
+        }).catch(function () { tvRankPromise = null; return null; });
+    }
+    return tvRankPromise;
+}
+
+function tvRenderMe(st) {
+    var box = document.getElementById('tvMeBody');
+    if (!box) return;
+    if (!st) {
+        box.innerHTML = '<div class="empty-state"><p>Log in to track your trivia stats and see where you rank.</p>' +
+            '<a class="tv-play-btn" href="/login/"><i class="fas fa-right-to-bracket"></i> Log In</a></div>';
+        return;
+    }
+    var name = tvViewerName();
+    var row = function (label, value, id) {
+        return '<div class="tv-me-row"><span>' + label + '</span><b' + (id ? ' id="' + id + '"' : '') + '>' + value + '</b></div>';
+    };
+    tvRankPromise = null; // a finished round can move the rank
+    box.innerHTML = '<div class="tv-me-box">' +
+        '<div class="tv-me-id"><img class="tv-ava tv-ava--lg" src="' + escapeHtml(tvAvatar(name, (window.auth && auth.currentUser && (auth.currentUser.avatar_url || auth.currentUser.avatar)) || '')) + '" alt="">' +
+            '<a href="/u/' + encodeURIComponent(name) + '/">' + escapeHtml(name) + '</a></div>' +
+        row('Rank', '--', 'tvMeRank') +
+        row('Total Questions', tvNum(st.attempts)) +
+        row('Correct Answers', tvNum(st.correct)) +
+        row('Accuracy', (Number(st.accuracy) || 0).toFixed(1) + '%') +
+        row('Total Points', tvNum(st.career_points)) +
+        row('Best Streak', tvNum(st.best_streak)) +
+        row('Avg. Response Time', st.avg_response_ms ? (st.avg_response_ms / 1000).toFixed(1) + 's' : '--') +
+    '</div>';
+    tvLoadRank().then(function (rank) {
+        var text = rank ? '#' + rank : (Number(st.attempts) > 0 ? '200+' : '--');
+        var a = document.getElementById('tvMeRank'); if (a) a.textContent = text;
+        var b = document.getElementById('statRank'); if (b) b.textContent = text;
+    });
+}
+
+function tvRenderBreakdown(st) {
+    var box = document.getElementById('tvBreakdown');
+    if (!box) return;
+    if (!st) { box.innerHTML = ''; return; }
+    var table = function (title, rows, nameKey) {
+        rows = (rows || []).filter(function (r) { return Number(r.attempts) > 0; });
+        if (!rows.length) return '';
+        return '<h3 class="tv-bd-title">' + title + '</h3><div class="tv-table tv-table--bd">' +
+            '<div class="tv-row tv-row--head"><span class="tv-user">' + title.replace('By ', '') + '</span><span class="tv-c">Questions</span><span class="tv-c">Correct</span><span class="tv-c">Accuracy</span><span class="tv-c">Points</span></div>' +
+            rows.map(function (r) {
+                var label = String(r[nameKey] || 'Unknown');
+                return '<div class="tv-row"><span class="tv-user tv-cap">' + escapeHtml(label) + '</span>' +
+                    '<span class="tv-c">' + tvNum(r.attempts) + '</span><span class="tv-c">' + tvNum(r.correct) + '</span>' +
+                    '<span class="tv-c">' + (Number(r.accuracy) || 0).toFixed(1) + '%</span><span class="tv-c tv-c--pts">' + tvNum(r.points) + '</span></div>';
+            }).join('') + '</div>';
+    };
+    box.innerHTML = table('By Category', st.by_category, 'category_name') + table('By Difficulty', st.by_difficulty, 'difficulty');
 }
 
 async function renderCreatorsLeaderboard() {
@@ -3488,7 +3653,8 @@ function triviaErrorHtml(what, e, retryCall) {
 
 async function loadUserStats() {
     var ids = ['statTotalPoints', 'statQuestionsAnswered', 'statQuestionsCorrect',
-               'statAccuracy', 'statStreak', 'statAvgTime', 'statGames', 'statBestGame'];
+               'statAccuracy', 'statStreak', 'statAvgTime', 'statGames', 'statBestGame',
+               'statBestStreak', 'statRank'];
     function set(id, v) { var el = document.getElementById(id); if (el) el.textContent = v; }
     function blank() { ids.forEach(function (i) { set(i, '--'); }); }
     var status = document.getElementById('statsStatus');
@@ -3497,6 +3663,8 @@ async function loadUserStats() {
     if (!isLoggedIn()) {
         blank();
         note('Log in to track your trivia stats.');
+        tvRenderMe(null);
+        tvRenderBreakdown(null);
         return;
     }
 
@@ -3514,6 +3682,9 @@ async function loadUserStats() {
         set('statAvgTime', st.avg_response_ms ? (st.avg_response_ms / 1000).toFixed(1) + 's' : '--');
         set('statGames', Number(st.games_played) || 0);
         set('statBestGame', (Number(st.best_game_score) || 0).toLocaleString());
+        set('statBestStreak', Number(st.best_streak) || 0);
+        tvRenderMe(st);
+        tvRenderBreakdown(st);
     } catch (e) {
         // Never show zeros for a failed load: that reads as "your history is gone".
         triviaLogLoadError('personal stats', endpoint, e);
@@ -3531,6 +3702,9 @@ async function loadUserStats() {
 // ================================================================
 document.addEventListener('DOMContentLoaded', async function() {
     loadScoringSpec().then(renderScoringExplainer);
+    // /trivia/#leaderboard (and #history, #stats) open straight on that view.
+    var tvHashView = String(location.hash || '').replace('#', '');
+    if (['leaderboard', 'history', 'stats'].indexOf(tvHashView) !== -1) switchViewDirect(tvHashView);
     await loadCategories();
     loadUserStats();
     // If a question was left live in a previous visit, settle it now so the
