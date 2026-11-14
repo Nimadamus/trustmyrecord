@@ -19,7 +19,7 @@ function boot(apiImpl) {
     readyState: 'complete', documentElement: {},
     addEventListener() {}, getElementById() { return null; }, querySelector() { return null; },
   };
-  const win = { api, auth: { currentUser: { username: 'Me' } } };
+  const win = { api, auth: { currentUser: { username: 'Me' } }, addEventListener() {} };
   const ctx = { window: win, document: doc, location: { search: '', pathname: '/sportsbook/' }, URLSearchParams, MutationObserver: function () { this.observe = function () {}; }, setTimeout, setInterval: () => 0, Promise, Object, Array, String, Number, Math, Date, isFinite, isNaN, encodeURIComponent, decodeURIComponent };
   vm.createContext(ctx);
   vm.runInContext(src, ctx);
