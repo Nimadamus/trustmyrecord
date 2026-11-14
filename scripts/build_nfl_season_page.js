@@ -107,6 +107,8 @@ const PICK_CSS = `
   .nsp-act .btn{min-height:40px}
   .nsp-act .btn:disabled{opacity:.5;cursor:not-allowed}
   .pick .wkc{font-size:.72rem;color:var(--mut,#9fb0c6);min-width:28px}
+  /* SIM_PHONE_TEXT_20261113: on a 390 px phone these pages drew 43 to 109 labels at 9.6 to 10.8 px (table heads, bracket round and matchup labels, seeds, badges). Phone only: they read at 11 px. */
+  @media (max-width:640px){thead th,.pb-round h4,.pb-mh,.pb-note,.pb-sd,.pb-champ small,.pick .pk small,.pick .wkc,td.seed .badge,.game .tag{font-size:11px !important}}
   .pick.fin{opacity:.75}
   .pk:disabled{cursor:default}
   .nsp td.cm{font-size:.8rem;white-space:nowrap}

@@ -184,6 +184,8 @@ const STYLE = `<!-- PB_NFL_HEAD:start -->
   table.pbn{width:100%;border-collapse:collapse;font-size:.86rem}
   table.pbn th,table.pbn td{padding:6px 7px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
   table.pbn th{color:var(--mut);font-weight:600;font-size:.72rem;text-transform:uppercase;letter-spacing:.04em}
+  /* SIM_PHONE_TEXT_20261113: on a 390 px phone these pages drew 43 to 109 labels at 9.6 to 10.8 px (table heads, bracket round and matchup labels, seeds, badges). Phone only: they read at 11 px. */
+  @media (max-width:640px){thead th,.pb-round h4,.pb-mh,.pb-note,.pb-sd,.pb-champ small,.pick .pk small,.pick .wkc,td.seed .badge,.game .tag{font-size:11px !important}}
   table.pbn td.num,table.pbn th:nth-child(n+3){text-align:right;font-variant-numeric:tabular-nums}
   .pbn .lt{display:inline-flex;align-items:center;gap:7px}
   .pbn .lt img{width:22px;height:22px;object-fit:contain}

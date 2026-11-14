@@ -478,6 +478,8 @@ const TEAM_CSS = `
   table.sched{width:100%;border-collapse:collapse;font-size:.88rem}
   table.sched th,table.sched td{padding:7px 8px;border-bottom:1px solid var(--line,#23324a);text-align:left;white-space:nowrap}
   table.sched thead th{font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--mut,#9fb0c6)}
+  /* SIM_PHONE_TEXT_20261113: on a 390 px phone these pages drew 43 to 109 labels at 9.6 to 10.8 px (table heads, bracket round and matchup labels, seeds, badges). Phone only: they read at 11 px. */
+  @media (max-width:640px){thead th,.pb-round h4,.pb-mh,.pb-note,.pb-sd,.pb-champ small,.pick .pk small,.pick .wkc,td.seed .badge,.game .tag{font-size:11px !important}}
   table.sched td.r{text-align:right;font-variant-numeric:tabular-nums}
   .w{color:#34d399;font-weight:700}.l{color:#f87171;font-weight:700}
   .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));gap:10px;margin:10px 0}

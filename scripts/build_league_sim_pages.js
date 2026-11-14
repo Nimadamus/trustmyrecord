@@ -185,6 +185,8 @@ const CSS = `
   table.lsim{width:100%;border-collapse:collapse;font-size:.88rem;min-width:520px}
   table.lsim th,table.lsim td{padding:7px 8px;border-bottom:1px solid var(--line,#23324a);text-align:right;white-space:nowrap}
   table.lsim thead th{font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--mut,#9fb0c6);font-weight:700}
+  /* SIM_PHONE_TEXT_20261113: on a 390 px phone these pages drew 43 to 109 labels at 9.6 to 10.8 px (table heads, bracket round and matchup labels, seeds, badges). Phone only: they read at 11 px. */
+  @media (max-width:640px){thead th,.pb-round h4,.pb-mh,.pb-note,.pb-sd,.pb-champ small,.pick .pk small,.pick .wkc,td.seed .badge,.game .tag{font-size:11px !important}}
   table.lsim th[scope=row],table.lsim thead th:first-child{text-align:left}
   table.lsim td.p{background:rgba(56,189,248,calc(var(--h,0)*.32));font-variant-numeric:tabular-nums}
   /* FINAL_TABLE_FINISH_20261111 */
