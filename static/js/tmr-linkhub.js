@@ -323,7 +323,42 @@
             ['/arena/rankings/', 'Gaming rankings'],
             ['/arena/leagues/', 'Gaming leagues']
         ],
+        /* TMR_MATCH_LINKS_20261114: TMR Match was reachable only from the Compete
+           menu. The pages around it (challenges, the coin, the wallet) now list it. */
+        'tmr-coin': [
+            ['/tmr-match/', 'TMR Match'],
+            ['/tmr-challenges/', 'TMR Challenges'],
+            ['/wallet/earn/', 'Earn TMR'],
+            ['/leaderboards/', 'Leaderboards'],
+            ['/handicappers/', 'Find Handicappers'],
+            ['/how-it-works/', 'How TrustMyRecord works']
+        ],
+        'tmr-challenges': [
+            ['/tmr-match/', 'TMR Match'],
+            ['/challenges/', 'Handicapper Challenges'],
+            ['/tmr-coin/', 'TMR Coin'],
+            ['/wallet/earn/', 'Earn TMR'],
+            ['/leaderboards/', 'Leaderboards'],
+            ['/rules/', 'Rules']
+        ],
+        'tmr-match': [
+            ['/tmr-challenges/', 'TMR Challenges'],
+            ['/challenges/', 'Handicapper Challenges'],
+            ['/tmr-coin/', 'TMR Coin'],
+            ['/wallet/earn/', 'Earn TMR'],
+            ['/leaderboards/', 'Leaderboards'],
+            ['/rules/', 'Rules']
+        ],
+        'wallet': [
+            ['/tmr-match/', 'TMR Match'],
+            ['/tmr-challenges/', 'TMR Challenges'],
+            ['/tmr-coin/', 'TMR Coin'],
+            ['/marketplace/', 'Pick marketplace'],
+            ['/leaderboards/', 'Leaderboards']
+        ],
         'challenges': [
+            ['/tmr-match/', 'TMR Match'],
+            ['/tmr-challenges/', 'TMR Challenges'],
             ['/sportsbook/', 'Sportsbook'],
             ['/leaderboards/', 'Leaderboards'],
             ['/contests/', 'Contests'],
