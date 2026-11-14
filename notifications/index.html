@@ -212,6 +212,10 @@
                 return cid ? '/tmr-challenges/?id=' + encodeURIComponent(cid) : '/tmr-challenges/';
             }
             if (t.indexOf('challenge') !== -1) return '/challenges/';
+            if (rt === 'pick_receipt') {
+                var prid = raw.resource_id || raw.resourceId;
+                return prid ? '/pick/?id=' + encodeURIComponent(prid) : '/feed/';
+            }
             if (rt === 'open_pick') {
                 var oid = raw.resource_id || raw.resourceId;
                 return oid ? '/feed/?post=' + encodeURIComponent('openpick:' + oid) : '/feed/';

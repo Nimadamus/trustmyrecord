@@ -893,6 +893,11 @@ function getNotificationDestination(notification) {
         return cid ? '/tmr-challenges/?id=' + encodeURIComponent(cid) : '/tmr-challenges/';
     }
     if (type.indexOf('challenge') === 0) return '/challenges/';
+    // OUTCOME_ALERTS_20261114: the result of a pick you tailed, faded or linked opens its verified receipt.
+    if (resourceType === 'pick_receipt') {
+        const rid = notification?.resource_id || notification?.resourceId;
+        return rid ? '/pick/?id=' + encodeURIComponent(rid) : '/feed/';
+    }
     // A tail or fade on one of your public open picks opens that card in the feed.
     if (resourceType === 'open_pick') {
         const oid = notification?.resource_id || notification?.resourceId;
