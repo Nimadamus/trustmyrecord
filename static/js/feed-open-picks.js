@@ -145,6 +145,24 @@
         '</div>';
     }
 
+    // ACTIVITY_UNIFIED_20261114: a line from the shared activity log (a member
+    // tailed, faded or locked a real pick with or against a public pick). Same
+    // header as every card; the line links to the pick it is about.
+    var ACT_ICON = { pick_tailed: 'fa-arrow-trend-up', pick_faded: 'fa-arrow-trend-down', pick_tail_verified: 'fa-circle-check', pick_fade_verified: 'fa-circle-check' };
+    function renderActivity(item) {
+        if (!item.activity_text) return '';
+        var id = String(item.item_id || '');
+        var header = (typeof window.renderFeedHeader === 'function')
+            ? window.renderFeedHeader(Object.assign({}, item, { item_type: 'pick' }), '')
+            : '';
+        var verified = /_verified$/.test(String(item.activity_kind || ''));
+        return '<div class="feed-item fop-card fop-activity" data-id="' + e(id) + '" data-type="social_activity">' +
+            header +
+            '<p class="fop-act-line' + (verified ? ' is-verified' : '') + '"><i class="fas ' + (ACT_ICON[item.activity_kind] || 'fa-bolt') + '"></i> ' + e(item.activity_text) + '</p>' +
+            (item.activity_href ? '<a class="fv-view-picks fop-act-link" href="' + e(item.activity_href) + '">' + (item.source_open ? 'See the pick' : 'See the record') + ' <i class="fas fa-chevron-right"></i></a>' : '') +
+        '</div>';
+    }
+
     function repaint(card, item) {
         ['tail', 'fade'].forEach(function (kind) {
             var b = card.querySelector('[data-fop-react="' + kind + '"]');
@@ -236,10 +254,11 @@
         window.renderFeedItem = function (item) {
             try {
                 if (item && item.item_type === 'open_pick') return render(item);
+                if (item && item.item_type === 'social_activity') return renderActivity(item);
             } catch (x) { return ''; }
             return base(item);
         };
     }
 
-    window.TMRFeedOpenPicks = { render: render, _handoff: handoff, _cards: cards };
+    window.TMRFeedOpenPicks = { render: render, renderActivity: renderActivity, _handoff: handoff, _cards: cards };
 })();
