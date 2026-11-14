@@ -785,9 +785,24 @@
                         }
                     } catch (error) {}
 
+                    /* REF_LINK_20261114: the referral link is /register/?ref=<member>. The short
+                       funnel of 9/13 stopped reading it, so the link attributed nobody. It is read
+                       again here (this page's own URL first, else a first touch that landed on the
+                       signup page) and sent exactly as the API has always accepted it. The rules
+                       of the referral program itself are unchanged and live on the server. */
+                    var referredByUsername = null;
+                    try {
+                        var refOk = function (v) { v = String(v || '').trim(); return /^[A-Za-z0-9_.-]{2,40}$/.test(v) ? v : null; };
+                        referredByUsername = refOk(new URLSearchParams(window.location.search).get('ref'));
+                        if (!referredByUsername && signupSource && typeof signupSource.landing === 'string' && /^\/(register|signup)\//.test(signupSource.landing)) {
+                            referredByUsername = refOk(new URL(signupSource.landing, window.location.origin).searchParams.get('ref'));
+                        }
+                    } catch (error) {}
+
                     const data = await window.api.register({
                         username, email, password, headline, favoriteSports, favoriteTeams,
                         signupSource, heardAbout,
+                        referredByUsername: referredByUsername || undefined,
                         company_website: companyWebsite,
                         formFillMs: formFillMs,
                         turnstileToken: turnstileToken
