@@ -1,0 +1,88 @@
+/* FEED_SOCIAL_20261114 -- Disagree, @mentions, quote posts, Ride / Fade, brag
+   card. Loads after feed-v2.css and uses its tokens. */
+
+/* ---- Disagree ---- */
+body.feed-v2.tmr-site-shell.tmr-dark .fi-action.fs-disagree.is-on { color: #ffb0b7 !important; }
+body.feed-v2.tmr-site-shell.tmr-dark .fi-action.fs-disagree.is-on i { color: var(--fv-red) !important; }
+
+/* ---- @mentions ---- */
+body.feed-v2.tmr-site-shell.tmr-dark .fi-content a.fs-mention { color: var(--fv-cyan); font-weight: 700; text-decoration: none; }
+body.feed-v2.tmr-site-shell.tmr-dark .fi-content a.fs-mention:hover { text-decoration: underline; }
+
+/* ---- quoted post ---- */
+body.feed-v2.tmr-site-shell.tmr-dark .fs-quote {
+    display: flex; align-items: stretch; gap: 14px; margin: 4px 0 12px 74px; padding: 12px 14px;
+    border: 1px solid var(--fv-line); border-left: 3px solid var(--fv-blue); border-radius: 12px;
+    background: var(--fv-inset); color: var(--fv-text-2); text-decoration: none;
+    transition: border-color .15s ease, background .15s ease;
+}
+body.feed-v2.tmr-site-shell.tmr-dark a.fs-quote:hover { border-color: var(--fv-blue); background: #0a1730; }
+body.feed-v2.tmr-site-shell.tmr-dark .fs-quote.is-gone { color: var(--fv-muted); font-size: .9rem; align-items: center; gap: 8px; border-left-color: var(--fv-muted); }
+body.feed-v2.tmr-site-shell.tmr-dark .fs-quote-body { display: flex; flex-direction: column; gap: 6px; min-width: 0; flex: 1 1 auto; }
+body.feed-v2.tmr-site-shell.tmr-dark .fs-quote-who { font-size: .86rem; color: var(--fv-muted); }
+body.feed-v2.tmr-site-shell.tmr-dark .fs-quote-who i { color: var(--fv-blue); margin-right: 4px; }
+body.feed-v2.tmr-site-shell.tmr-dark .fs-quote-who b { color: var(--fv-text); font-weight: 700; }
+body.feed-v2.tmr-site-shell.tmr-dark .fs-quote-who em { font-style: normal; }
+body.feed-v2.tmr-site-shell.tmr-dark .fs-quote-text {
+    color: var(--fv-text-2); font-size: .95rem; line-height: 1.45; overflow-wrap: anywhere;
+    display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;
+}
+body.feed-v2.tmr-site-shell.tmr-dark .fs-quote-img { flex: 0 0 auto; width: 96px; height: 96px; object-fit: cover; border-radius: 10px; border: 1px solid var(--fv-line-soft); }
+
+/* quote chip in the composer */
+body.feed-v2.tmr-site-shell.tmr-dark .fs-quote-tray {
+    display: flex; align-items: center; gap: 12px; margin: 12px 0 0 60px; padding: 10px 12px;
+    border: 1px solid var(--fv-line); border-left: 3px solid var(--fv-blue); border-radius: 12px; background: var(--fv-inset);
+}
+body.feed-v2.tmr-site-shell.tmr-dark .fs-quote-tray[hidden] { display: none; }
+body.feed-v2.tmr-site-shell.tmr-dark .fs-quote-chip { display: flex; align-items: flex-start; gap: 10px; min-width: 0; flex: 1 1 auto; color: var(--fv-text-2); }
+body.feed-v2.tmr-site-shell.tmr-dark .fs-quote-chip > i { color: var(--fv-blue); margin-top: 3px; }
+body.feed-v2.tmr-site-shell.tmr-dark .fs-quote-chip span { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+body.feed-v2.tmr-site-shell.tmr-dark .fs-quote-chip b { color: var(--fv-text); font-size: .88rem; }
+body.feed-v2.tmr-site-shell.tmr-dark .fs-quote-chip em { font-style: normal; font-size: .86rem; color: var(--fv-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+body.feed-v2.tmr-site-shell.tmr-dark .fs-quote-x {
+    flex: 0 0 auto; width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--fv-line);
+    background: transparent; color: var(--fv-text-2); cursor: pointer;
+}
+body.feed-v2.tmr-site-shell.tmr-dark .fs-quote-x:hover { color: #fff; border-color: var(--fv-blue); }
+
+/* ---- Ride / Fade ---- */
+body.feed-v2.tmr-site-shell.tmr-dark .fs-stance { display: none; }
+body.feed-v2.tmr-site-shell.tmr-dark .fs-stance.is-ready {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+    margin: 0 0 10px 74px; padding: 10px 14px; border: 1px solid var(--fv-line-soft); border-radius: 12px; background: var(--fv-inset);
+}
+body.feed-v2.tmr-site-shell.tmr-dark .fs-stance-q { color: var(--fv-text-2); font-size: .9rem; min-width: 0; overflow-wrap: anywhere; }
+body.feed-v2.tmr-site-shell.tmr-dark .fs-stance-q b { color: var(--fv-text); }
+body.feed-v2.tmr-site-shell.tmr-dark .fs-stance-btns { display: flex; gap: 8px; flex: 0 0 auto; }
+body.feed-v2.tmr-site-shell.tmr-dark .fs-st {
+    display: inline-flex; align-items: center; gap: 7px; min-height: 36px; padding: 0 14px; border-radius: 999px;
+    border: 1px solid var(--fv-line); background: transparent; color: var(--fv-text-2);
+    font: inherit; font-size: .88rem; font-weight: 700; cursor: pointer; transition: background .15s ease, border-color .15s ease, color .15s ease;
+}
+body.feed-v2.tmr-site-shell.tmr-dark .fs-st span { font-weight: 600; opacity: .85; }
+body.feed-v2.tmr-site-shell.tmr-dark .fs-st--ride:hover, body.feed-v2.tmr-site-shell.tmr-dark .fs-st--ride.is-on { border-color: var(--fv-green); color: var(--fv-green); background: rgba(46, 227, 123, .10); }
+body.feed-v2.tmr-site-shell.tmr-dark .fs-st--fade:hover, body.feed-v2.tmr-site-shell.tmr-dark .fs-st--fade.is-on { border-color: var(--fv-red); color: #ff8b96; background: rgba(255, 77, 94, .10); }
+body.feed-v2.tmr-site-shell.tmr-dark .fs-st.is-on { box-shadow: 0 0 0 1px currentColor inset; }
+
+/* ---- brag card button ---- */
+body.feed-v2.tmr-site-shell.tmr-dark .fs-brag {
+    display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 40px; margin-top: 10px;
+    border-radius: 10px; border: 1px solid rgba(246, 185, 43, .55); background: rgba(246, 185, 43, .08);
+    color: var(--fv-gold); font: inherit; font-size: .9rem; font-weight: 700; cursor: pointer; transition: background .15s ease;
+}
+body.feed-v2.tmr-site-shell.tmr-dark .fs-brag:hover { background: rgba(246, 185, 43, .16); }
+body.feed-v2.tmr-site-shell.tmr-dark .fs-brag:disabled { opacity: .6; cursor: default; }
+
+@media (max-width: 640px) {
+    body.feed-v2.tmr-site-shell.tmr-dark .fs-quote-tray { margin-left: 0; }
+    /* five actions on a phone: Disagree shows its icon and count */
+    body.feed-v2.tmr-site-shell.tmr-dark .fi-action.fs-disagree { font-size: 0 !important; gap: 0 !important; }
+    body.feed-v2.tmr-site-shell.tmr-dark .fi-action.fs-disagree i { font-size: 1.08rem !important; }
+    body.feed-v2.tmr-site-shell.tmr-dark .fi-action.fs-disagree span { font-size: .9rem !important; margin-left: 6px; }
+    body.feed-v2.tmr-site-shell.tmr-dark .fs-quote, body.feed-v2.tmr-site-shell.tmr-dark .fs-stance.is-ready { margin-left: 0; }
+    body.feed-v2.tmr-site-shell.tmr-dark .fs-quote-img { width: 72px; height: 72px; }
+    body.feed-v2.tmr-site-shell.tmr-dark .fs-stance.is-ready { flex-direction: column; align-items: stretch; }
+    body.feed-v2.tmr-site-shell.tmr-dark .fs-stance-btns { justify-content: stretch; }
+    body.feed-v2.tmr-site-shell.tmr-dark .fs-st { flex: 1 1 0; justify-content: center; }
+}
