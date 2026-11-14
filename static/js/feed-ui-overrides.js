@@ -524,24 +524,10 @@ async function postComment(id, type) {
 
 let _feedFollowingStatePromise = null;
 
-async function initAuth() {
-    // Only a stored session needs the backend probe before auth state is read;
-    // anonymous visitors skip the (up to 2.5s) wait so the feed starts at once.
-    // A member whose profile is already restored from storage does not need it
-    // either: the feed request carries their token regardless.
-    let hasStoredSession = true;
-    try { if (typeof api !== 'undefined' && typeof api.loadTokens === 'function') { api.loadTokens(); hasStoredSession = !!(api.token || api.refreshToken); } } catch (e) {}
-    const storedUser = (typeof auth !== 'undefined' && auth.currentUser) ? auth.currentUser : null;
-    if (hasStoredSession && !storedUser && typeof api !== 'undefined' && api.ready) {
-        try {
-            await Promise.race([
-                api.ready,
-                new Promise(resolve => setTimeout(resolve, 2500))
-            ]);
-        } catch(e) {}
-    }
-    const user = (typeof auth !== 'undefined' && auth.currentUser) ? auth.currentUser : null;
-    viewerUser = user;
+// LATE_AUTH_20261114: one place paints the composer or the sign in panel, so it
+// can run again when the sign in finishes after the first paint (a member whose
+// saved profile is missing is only known once /auth/me answers).
+function applyFeedAuthUi(user) {
     const composerCard = document.getElementById('composerCard');
     const loginBanner = document.getElementById('loginBanner');
     const compAvatar = document.getElementById('compAvatar');
@@ -561,6 +547,34 @@ async function initAuth() {
         if (composerCard) composerCard.style.display = 'none';
         if (loginBanner) loginBanner.style.display = 'flex';
     }
+}
+
+window.addEventListener('tmr-auth-changed', function () {
+    const user = (typeof auth !== 'undefined' && auth.currentUser) ? auth.currentUser : null;
+    if (!!user === !!viewerUser) return;
+    viewerUser = user;
+    try { applyFeedAuthUi(user); } catch (e) {}
+});
+
+async function initAuth() {
+    // Only a stored session needs the backend probe before auth state is read;
+    // anonymous visitors skip the (up to 2.5s) wait so the feed starts at once.
+    // A member whose profile is already restored from storage does not need it
+    // either: the feed request carries their token regardless.
+    let hasStoredSession = true;
+    try { if (typeof api !== 'undefined' && typeof api.loadTokens === 'function') { api.loadTokens(); hasStoredSession = !!(api.token || api.refreshToken); } } catch (e) {}
+    const storedUser = (typeof auth !== 'undefined' && auth.currentUser) ? auth.currentUser : null;
+    if (hasStoredSession && !storedUser && typeof api !== 'undefined' && api.ready) {
+        try {
+            await Promise.race([
+                api.ready,
+                new Promise(resolve => setTimeout(resolve, 2500))
+            ]);
+        } catch(e) {}
+    }
+    const user = (typeof auth !== 'undefined' && auth.currentUser) ? auth.currentUser : null;
+    viewerUser = user;
+    applyFeedAuthUi(user);
 
     const compInput = document.getElementById('compInput');
     const postBtn = document.getElementById('postBtn');
