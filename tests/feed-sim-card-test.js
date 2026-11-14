@@ -79,4 +79,15 @@ assert.ok(!/<script>|<b>X|javascript:|evil\.example/.test(html));
 assert.ok(/body\.stance = stance/.test(take), 'stance is sent with the take');
 assert.ok(/stanceUi\.reset\(\)/.test(take));
 assert.ok(/STANCE_TOPICS = \[\['winner'/.test(take));
+// The standalone copy for pages without the feed bundle is generated, never hand edited.
+const { spawnSync } = require('child_process');
+const chk = spawnSync('python', [path.join(root, 'scripts/build-sim-card.py'), '--check'], { encoding: 'utf8' });
+assert.strictEqual(chk.status, 0, chk.stdout + chk.stderr);
+const sandbox = { window: {}, document: { getElementById: () => null } };
+vm.createContext(sandbox);
+vm.runInContext(fs.readFileSync(path.join(root, 'static/js/tmr-sim-card.js'), 'utf8'), sandbox);
+assert.strictEqual(sandbox.window.TMRSimCard.html(post({ sim: SIM })), ctx.fvSimCard(post({ sim: SIM })), 'same card on every page');
+const takes = fs.readFileSync(path.join(root, 'static/js/tmr-takes-feed.js'), 'utf8');
+assert.ok(/window\.TMRSimCard\.node\(it\)/.test(takes), 'the profile Takes list draws the card');
+assert.ok(/tmr-sim-card\.js\?v=[0-9a-f]{12}/.test(fs.readFileSync(path.join(root, 'profile/index.html'), 'utf8')), 'profile loads the card');
 console.log('feed-sim-card-test: ok');

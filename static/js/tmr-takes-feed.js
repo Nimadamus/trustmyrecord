@@ -481,14 +481,23 @@
     if (sport) top.appendChild(el('span', 'tkf-sport', sport));
     main.appendChild(top);
 
-    var ctx = contextChips(it);
+    /* FEED_SIM_CARD_20261114: a Take about a simulation shows the simulation
+       (static/js/tmr-sim-card.js, the same card the Community Feed draws). The
+       card carries the matchup, so the matchup chip stands down when it is there. */
+    var simCard = window.TMRSimCard ? window.TMRSimCard.node(it) : null;
+    var ctx = simCard && it.sim && !it.context_team ? null : contextChips(it);
     if (ctx) main.appendChild(ctx);
 
     var text = String(it.content || '');
     var body = el('div', 'tkf-body');
     var long = !inThread && text.length > TRUNC;
     body.textContent = long ? text.slice(0, TRUNC).replace(/\s+\S*$/, '') + '…' : text;
-    main.appendChild(body);
+    if (!(simCard && it.stance && it.stance.auto_text)) main.appendChild(body);
+    if (simCard) {
+      /* Taps inside the card (details, the link) are its own, not the thread's. */
+      simCard.addEventListener('click', function (e) { e.stopPropagation(); });
+      main.appendChild(simCard);
+    }
     if (long) {
       var more = el('button', 'tkf-more', 'Show more');
       more.type = 'button';
@@ -736,6 +745,9 @@
       context_team: post.context_team || s.context_team || null,
       context_label: post.context_label || s.context_label || null,
       context_url: post.context_url || s.context_url || null,
+      context_source: post.context_source || s.context_source || null,
+      sim: post.sim || null,
+      stance: post.stance || post.context_stance || null,
       likes_count: 0,
       comments_count: 0,
       liked_by_user: false
