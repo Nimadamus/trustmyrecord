@@ -1849,17 +1849,28 @@
         // page were silently dropped from the directory.
         async function fetchAllUsers() {
             const PAGE = 50;
+            // HC_USERS_PARALLEL_20261114: pages are requested three at a time. The
+            // directory paints only when the whole list is in, and walking the
+            // offsets one by one made every visitor wait a full round trip per
+            // 50 members.
+            const WAVE = 3;
             const all = [];
-            for (let offset = 0; offset < 5000; offset += PAGE) {
-                let batch;
-                try {
-                    batch = extractUserArray(await directoryRequest('/users' + '?limit=' + PAGE + '&offset=' + offset));
-                } catch (error) {
-                    if (offset === 0) throw error;
-                    break;
+            for (let offset = 0; offset < 5000; offset += PAGE * WAVE) {
+                const settled = await Promise.allSettled(
+                    Array.from({ length: WAVE }, (_, i) =>
+                        directoryRequest('/users' + '?limit=' + PAGE + '&offset=' + (offset + i * PAGE))));
+                let done = false;
+                for (let i = 0; i < settled.length; i++) {
+                    if (settled[i].status !== 'fulfilled') {
+                        if (offset === 0 && i === 0) throw settled[i].reason;
+                        done = true;
+                        break;
+                    }
+                    const batch = extractUserArray(settled[i].value);
+                    all.push(...batch);
+                    if (batch.length < PAGE) { done = true; break; }
                 }
-                all.push(...batch);
-                if (batch.length < PAGE) break;
+                if (done) break;
             }
             return all;
         }
