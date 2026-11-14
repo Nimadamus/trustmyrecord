@@ -140,3 +140,13 @@ html body.tmr-ds-shell #sbnShell #sbnSlip .sbn-submit:disabled { filter: graysca
 @media (min-width: 1500px) {
     html body.tmr-ds-shell #picks #sbnShell.sbn-shell { grid-template-columns: 214px minmax(0, 1fr) 332px !important; }
 }
+
+/* SB_TAP_TARGETS_20261113: on a phone the "All markets" pill on every game is 22 px tall and the signed out
+   Log In button 28 px. Their look is a signed-off match to the approved preview (see @layer sbnext in
+   sportsbook-next-embed.css), so nothing visible changes: an invisible pad makes the area that answers a
+   tap 36 px and 40 px tall. It reaches 14 px up into the card's own padding and stops short of the odds below. */
+@media (max-width: 640px) {
+  html body.tmr-ds-shell #sbnShell .sbn-deep, html body .make-picks-loggedout-btn { position: relative; }
+  html body.tmr-ds-shell #sbnShell .sbn-deep::after { content: ""; position: absolute; left: -8px; right: -8px; top: -14px; bottom: -4px; }
+  html body .make-picks-loggedout-btn::after { content: ""; position: absolute; left: -4px; right: -4px; top: -6px; bottom: -6px; }
+}
