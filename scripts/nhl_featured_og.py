@@ -71,48 +71,47 @@ def build(root, ctx):
                 col = tuple(int(BASE[i] + (c[i] - BASE[i]) * k) for i in range(3))
                 xx = x if side == 0 else W - 1 - x
                 d.line([(xx, 0), (xx, H)], fill=col)
-        # lead players, bottom aligned at each edge
-        for side, t in (("away", a), ("home", h)):
-            ps = (ctx.get("key_players") or {}).get(side) or []
-            if ps and ps[0].get("headshot"):
-                try:
-                    face = _get(ps[0]["headshot"]).resize((420, 420), Image.LANCZOS)
-                    x = -50 if side == "away" else W - 370
-                    img.paste(face, (x, H - 420), face)
-                except Exception:
-                    pass
-        # centre panel
-        panel = Image.new("RGBA", (560, 630), (6, 16, 31, 0))
-        pd = ImageDraw.Draw(panel)
-        for y in range(630):
-            pd.line([(0, y), (560, y)], fill=(6, 16, 31, 215))
-        img.paste(panel, (320, 0), panel)
-        d = ImageDraw.Draw(img)
-        for i, t in enumerate((a, h)):
-            # the dark background version of the mark first, as on the page
-            for u in (t["logo"].replace("/teamlogos/nhl/500/", "/teamlogos/nhl/500-dark/"), t["logo"]):
-                try:
-                    logo = _get(u).resize((150, 150), Image.LANCZOS)
-                    img.paste(logo, (400 + i * 250, 130), logo)
-                    break
-                except Exception:
-                    continue
-        d.text((600, 205), "AT", font=_font(True, 34), fill=(143, 174, 203), anchor="mm")
+        # OG_CENTRED_20261114: link previews are also shown as a centre square, and
+        # the site's image gate checks it. The two lead players therefore stand
+        # together in the MIDDLE of the card (inside the square, a face never
+        # further than 100 px from the centre line), the club marks sit beside
+        # them, and every word stays inside the frame. The old layout put the
+        # players at the two edges, where the square crop cut them off.
+        d.rounded_rectangle([430, 34, 770, 78], radius=8, fill=(77, 163, 255))
+        d.text((600, 56), "NHL FEATURED GAME", font=_font(True, 24), fill=(4, 16, 28), anchor="mm")
 
-        def centre(y, text, size, bold=True, fill=(234, 242, 250)):
+        def centre(y, text, size, bold=True, fill=(234, 242, 250), width=1040):
             f = _font(bold, size)
-            while d.textlength(text, font=f) > 520 and size > 18:
+            while d.textlength(text, font=f) > width and size > 18:
                 size -= 2
                 f = _font(bold, size)
             d.text((600, y), text, font=f, fill=fill, anchor="mm")
 
-        d.rounded_rectangle([430, 48, 770, 92], radius=8, fill=(77, 163, 255))
-        d.text((600, 70), "NHL FEATURED GAME", font=_font(True, 24), fill=(4, 16, 28), anchor="mm")
-        centre(335, ("%s at %s" % (a["common"], h["common"])).upper(), 50)
-        centre(395, ctx["long_date"], 28, False, (195, 216, 236))
-        centre(438, "%s ET  |  %s PT" % (ctx["et_time"], ctx["pt_time"]), 28, False, (195, 216, 236))
-        centre(500, "Preview, prediction, odds and trends", 26, False, (143, 174, 203))
-        centre(575, "TrustMyRecord.com", 30, True, (77, 163, 255))
+        centre(128, ("%s at %s" % (a["common"], h["common"])).upper(), 58)
+        centre(186, "%s  |  %s ET  |  %s PT" % (ctx["long_date"], ctx["et_time"], ctx["pt_time"]), 26, False, (195, 216, 236))
+        for i, t in enumerate((a, h)):
+            # the dark background version of the mark first, as on the page
+            for u in (t["logo"].replace("/teamlogos/nhl/500/", "/teamlogos/nhl/500-dark/"), t["logo"]):
+                try:
+                    logo = _get(u).resize((190, 190), Image.LANCZOS)
+                    img.paste(logo, (95 if i == 0 else W - 285, 285), logo)
+                    break
+                except Exception:
+                    continue
+        for side, cx in (("away", 505), ("home", 695)):
+            ps = (ctx.get("key_players") or {}).get(side) or []
+            if ps and ps[0].get("headshot"):
+                try:
+                    face = _get(ps[0]["headshot"]).resize((340, 340), Image.LANCZOS)
+                    img.paste(face, (cx - 170, 245), face)
+                except Exception:
+                    pass
+        # footer bar over the jerseys: the site name, and it hides sponsor patches the frame would cut
+        bar = Image.new("RGBA", (W, 66), (6, 16, 31, 255))
+        img.paste(bar, (0, H - 66), bar)
+        d = ImageDraw.Draw(img)
+        d.line([(0, H - 66), (W, H - 66)], fill=(34, 58, 88), width=2)
+        d.text((600, H - 34), "TrustMyRecord.com  |  Preview, prediction, odds and trends", font=_font(True, 24), fill=(77, 163, 255), anchor="mm")
         os.makedirs(os.path.dirname(path), exist_ok=True)
         img.save(path, "JPEG", quality=84, optimize=True, progressive=True)
         return "/" + rel, (W, H)
