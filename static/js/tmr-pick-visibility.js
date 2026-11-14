@@ -166,11 +166,10 @@
                     : '<td><span class="tmr-op-chip">Hidden</span> <button type="button" class="tmr-op-reveal" data-tmr-reveal="' + esc(p.id) + '">Make public</button></td>';
             }
             return '<tr>' +
-                '<td><strong>' + esc(p.selection) + '</strong></td>' +
+                '<td><strong>' + esc(p.pick_text || p.selection) + '</strong></td>' +
                 '<td>' + game + '</td>' +
                 '<td>' + esc(fmtStart(p.commence_time)) + '</td>' +
-                '<td>' + esc(fmtMarket(p.market_type)) + '</td>' +
-                '<td class="num">' + esc(fmtLine(p.line_snapshot)) + '</td>' +
+                '<td>' + esc(p.wager_market_label || fmtMarket(p.market_type)) + '</td>' +
                 '<td class="num">' + esc(fmtOdds(p.odds_snapshot)) + '</td>' +
                 '<td class="num">' + esc(fmtStake(p)) + '</td>' + vis + '</tr>';
         }).join('');
@@ -183,7 +182,7 @@
             '<div class="tmrx-section-sub">' + sub + '</div></div>' +
             '<div class="tmrx-meta">' + picks.length + (picks.length === 1 ? ' open pick' : ' open picks') + '</div></div>' +
             '<div class="tmrx-table-shell"><table class="tmrx-table" id="tmrxTableOpenPicks"><thead><tr>' +
-            '<th>Pick</th><th>Game</th><th>Starts</th><th>Market</th><th class="num">Line</th><th class="num">Odds</th><th class="num">Stake</th>' +
+            '<th>Pick</th><th>Game</th><th>Starts</th><th>Market</th><th class="num">Odds</th><th class="num">Stake</th>' +
             (own ? '<th>Visibility</th>' : '') + '</tr></thead><tbody>' + rows + '</tbody></table></div></div>';
     }
     var profileDone = false;
