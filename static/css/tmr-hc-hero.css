@@ -41,31 +41,59 @@ html body.tmr-ds .hx-hero .hx-stage::before {
   -webkit-mask-image: linear-gradient(180deg, transparent, #000 9%, #000 72%, transparent);
           mask-image: linear-gradient(180deg, transparent, #000 9%, #000 72%, transparent);
 }
-html body.tmr-ds .hx-hero .hx-art {
+html body.tmr-ds .hx-hero .hx-stage::after {
+  content: "";
+  position: absolute;
+  top: 0; bottom: 0;
+  left: 50%;
+  width: min(100vw, 1680px);
+  transform: translateX(-50%);
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.9;
+  background:
+    url(/static/img/home/hero-stadium.jpg) right top / 50% 100% no-repeat;
+  -webkit-mask-image: linear-gradient(90deg, transparent 50%, #000 78%, #000 94%, transparent), linear-gradient(180deg, #000 55%, transparent 96%);
+          mask-image: linear-gradient(90deg, transparent 50%, #000 78%, #000 94%, transparent), linear-gradient(180deg, #000 55%, transparent 96%);
+  -webkit-mask-composite: source-in;
+          mask-composite: intersect;
+}
+html body.tmr-ds .hx-hero .hx-cast {
   position: absolute;
   bottom: 0;
   height: 100%;
-  width: auto;
-  max-width: none;
+  width: 470px;
   z-index: 1;
   pointer-events: none;
   user-select: none;
+  -webkit-mask-image: linear-gradient(180deg, #000 74%, transparent 99%);
+          mask-image: linear-gradient(180deg, #000 74%, transparent 99%);
 }
-html body.tmr-ds .hx-hero .hx-art--l {
-  left: calc(50% - min(50vw, 836px));
-  -webkit-mask-image: linear-gradient(90deg, transparent, #000 9%, #000 66%, transparent), linear-gradient(180deg, #000 80%, transparent);
-          mask-image: linear-gradient(90deg, transparent, #000 9%, #000 66%, transparent), linear-gradient(180deg, #000 80%, transparent);
-  -webkit-mask-composite: source-in;
-          mask-composite: intersect;
+html body.tmr-ds .hx-hero .hx-cast::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url(/static/img/home/hero-stadium.jpg) right top / 135% 100% no-repeat;
+  opacity: 0.85;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 30%, #000 70%, transparent);
+          mask-image: linear-gradient(90deg, transparent, #000 30%, #000 70%, transparent);
 }
-html body.tmr-ds .hx-hero .hx-art--r {
-  right: calc(50% - min(50vw, 836px));
-  -webkit-mask-image: linear-gradient(270deg, transparent, #000 9%, #000 76%, transparent), linear-gradient(180deg, #000 80%, transparent);
-          mask-image: linear-gradient(270deg, transparent, #000 9%, #000 76%, transparent), linear-gradient(180deg, #000 80%, transparent);
-  -webkit-mask-composite: source-in;
-          mask-composite: intersect;
+html body.tmr-ds .hx-hero .hx-cast--l { left: calc(50% - min(50vw, 836px) + 6px); }
+html body.tmr-ds .hx-hero .hx-cast--r { right: calc(50% - min(50vw, 836px) + 6px); }
+html body.tmr-ds .hx-hero .hx-cast--l::before { transform: scaleX(-1); }
+html body.tmr-ds .hx-hero .hx-p {
+  position: absolute;
+  bottom: -8px;
+  height: 104%;
+  width: auto;
+  max-width: none;
+  filter: drop-shadow(0 0 1px rgba(150, 205, 255, 0.95)) drop-shadow(0 0 22px rgba(47, 140, 255, 0.6)) saturate(1.06) contrast(1.04);
 }
-
+html body.tmr-ds .hx-hero .hx-p--back { height: 88%; filter: drop-shadow(0 0 1px rgba(150, 205, 255, 0.8)) drop-shadow(0 0 18px rgba(47, 140, 255, 0.5)) brightness(0.86); }
+html body.tmr-ds .hx-hero .hx-cast--l .hx-p--front { left: -34px; z-index: 2; }
+html body.tmr-ds .hx-hero .hx-cast--l .hx-p--back { left: 178px; z-index: 1; }
+html body.tmr-ds .hx-hero .hx-cast--r .hx-p--front { right: -34px; z-index: 2; }
+html body.tmr-ds .hx-hero .hx-cast--r .hx-p--back { right: 178px; z-index: 1; }
 /* ---------- title lockup ---------- */
 html body.tmr-ds .hx-hero .hx-title {
   position: relative;
@@ -242,12 +270,16 @@ html body.tmr-ds .hx-hero .hm-header-text p {
 
 /* ---------- responsive ---------- */
 @media (max-width: 1560px) {
-  html body.tmr-ds .hx-hero .hx-art--l { left: calc(50% - 50vw - 56px); }
-  html body.tmr-ds .hx-hero .hx-art--r { right: calc(50% - 50vw - 56px); }
+  html body.tmr-ds .hx-hero .hx-cast { width: 400px; }
+  html body.tmr-ds .hx-hero .hx-cast--l { left: calc(50% - 50vw); }
+  html body.tmr-ds .hx-hero .hx-cast--r { right: calc(50% - 50vw); }
+  html body.tmr-ds .hx-hero .hx-p { height: 96%; }
+  html body.tmr-ds .hx-hero .hx-p--back { height: 80%; }
+  html body.tmr-ds .hx-hero .hx-cast--l .hx-p--back { left: 150px; }
+  html body.tmr-ds .hx-hero .hx-cast--r .hx-p--back { right: 150px; }
 }
 @media (max-width: 1180px) {
-  html body.tmr-ds .hx-hero h1,
-  html body.tmr-ds .hx-hero .hx-art { opacity: 0.75; }
+  html body.tmr-ds .hx-hero .hx-p--back { display: none; }
   html body.tmr-ds .hx-hero .hm-metrics { gap: 10px; }
   html body.tmr-ds .hx-hero .hm-metric { column-gap: 10px; }
   html body.tmr-ds .hx-hero .hm-metric .x-ico, html body.tmr-ds .hx-hero .hm-metric .x-ico svg { width: 32px; height: 32px; }
@@ -255,7 +287,7 @@ html body.tmr-ds .hx-hero .hm-header-text p {
   html body.tmr-ds .hx-hero .hm-metric span { font-size: 0.7rem; }
 }
 @media (max-width: 860px) {
-  html body.tmr-ds .hx-hero .hx-art { opacity: 0.42; }
+  html body.tmr-ds .hx-hero .hx-cast { opacity: 0.5; }
   html body.tmr-ds .hx-hero .hm-metrics { grid-template-columns: repeat(6, minmax(0, 1fr)); }
   html body.tmr-ds .hx-hero .hm-metric { grid-column: span 2; }
   html body.tmr-ds .hx-hero .hm-metric:nth-child(n+4) { grid-column: span 3; }
@@ -263,9 +295,7 @@ html body.tmr-ds .hx-hero .hm-header-text p {
 @media (max-width: 640px) {
   html body.tmr-ds .hm-header.hx-hero { padding: 0; border-radius: 0; }
   html body.tmr-ds .hx-hero .hx-stage { height: 172px; }
-  html body.tmr-ds .hx-hero .hx-art { height: 82%; opacity: 0.34; }
-  html body.tmr-ds .hx-hero .hx-art--l { left: -70px; }
-  html body.tmr-ds .hx-hero .hx-art--r { right: -70px; }
+  html body.tmr-ds .hx-hero .hx-cast { display: none; }
   html body.tmr-ds .hx-hero .hx-title { gap: 4px; margin-top: -18px; }
   html body.tmr-ds .hx-hero .hx-laurel { width: 30px; margin-top: 16px; }
   html body.tmr-ds .hx-hero .hx-title::before { inset: -4px -20px -14px; }
