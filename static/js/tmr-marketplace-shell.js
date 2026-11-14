@@ -91,9 +91,14 @@
     var sub = host.getAttribute('data-mp-sub')
       || 'One marketplace for verified picks, with <b>two ways to pay</b>: cash or TMR Coin. '
        + 'Sellers set both prices on the same listing, so a single package can take either.';
+    /* A page with its own headline (Sell Picks, My Purchases) keeps that as its h1, so the shell title
+       is not a second one. Marking the host as the hero stops the sitewide A+ script from staging the
+       whole page a second time; the stage itself is drawn by tmr-marketplace-shell.css. */
+    var tag = document.querySelector('h1:not(.mpx-title)') ? 'p' : 'h1';
+    host.classList.add('aplus-hero');
     host.innerHTML =
       '<div class="mpx-top"><div>'
-      + '<h1 class="mpx-title">Pick <span class="mpx-accent">Marketplace</span></h1>'
+      + '<' + tag + ' class="mpx-title">Pick <span class="mpx-accent">Marketplace</span></' + tag + '>'
       + '<p class="mpx-sub">' + sub + '</p>'
       + '</div><div class="mpx-slot" data-mpx-slot></div></div>'
       + '<nav class="mpx-nav" aria-label="Pick Marketplace sections">'
