@@ -1,0 +1,43 @@
+/* PICK_VISIBILITY_20261114 - the Public / Hidden switch on the pick slip and
+   the Open Picks section on a profile. The switch reuses the slip's own
+   .sbn-mode / .sbn-modebtn control; only spacing and the note are set here. */
+.tmr-pv { margin: 0; }
+.tmr-pv .tmr-pv-note {
+    margin: 7px 18px 0;
+    font-size: 12px;
+    line-height: 1.35;
+    font-weight: 600;
+    color: #8b97a8;
+}
+.tmr-pv .sbn-modebtn:disabled { opacity: .45; cursor: not-allowed; }
+
+/* Profile: Open Picks */
+#tmrxOpenPicks .tmr-op-chip {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    background: rgba(255, 255, 255, .07);
+    color: #9BA7B8;
+    white-space: nowrap;
+}
+#tmrxOpenPicks .tmr-op-chip.is-public { background: rgba(34, 211, 238, .14); color: #8ff0ff; }
+#tmrxOpenPicks .tmr-op-reveal {
+    margin-left: 8px;
+    min-height: 30px;
+    padding: 4px 11px;
+    border: 1px solid rgba(255, 255, 255, .18);
+    border-radius: 8px;
+    background: transparent;
+    color: #dbe4f0;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+}
+#tmrxOpenPicks .tmr-op-reveal:hover { border-color: rgba(34, 211, 238, .55); color: #8ff0ff; }
+#tmrxOpenPicks .tmr-op-reveal:disabled { opacity: .55; cursor: default; }
