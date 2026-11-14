@@ -71,6 +71,21 @@
         .cr-two p { color: var(--cr-muted); font-size: 14.5px; line-height: 1.65; margin: 0 0 8px; }
         .cr-foot { margin-top: 34px; color: var(--cr-muted); font-size: 12.5px; line-height: 1.6; border-top: 1px solid var(--cr-line); padding-top: 16px; }
         .cr-foot a { color: #9fd2ff; }
+        /* RESERVE_STATEMENT_20261114: one statement per closed month. Books and bank are separate columns. */
+        .cr-stmts { display: grid; gap: 12px; }
+        .cr-stmt { border: 1px solid var(--cr-line); border-radius: 12px; background: var(--cr-panel2); padding: 14px 16px; }
+        .cr-stmt-h { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+        .cr-stmt-h b { font-size: 16px; }
+        .cr-stmt-g { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 28px; }
+        .cr-stmt-t { color: var(--cr-muted); font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 4px; }
+        .cr-stmt-r { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-bottom: 1px solid var(--cr-line); font-size: 14px; }
+        .cr-stmt-r:last-child { border-bottom: 0; }
+        .cr-stmt-r span:last-child { font-variant-numeric: tabular-nums; font-weight: 700; text-align: right; }
+        .cr-stmt-r.is-total span { font-weight: 800; }
+        .cr-stmt-r.is-none span:last-child { font-weight: 600; color: var(--cr-gold); }
+        .cr-stmt-n { margin: 10px 0 0; font-size: 13px; line-height: 1.5; color: var(--cr-muted); overflow-wrap: anywhere; }
+        .cr-stmt-n code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; color: #bfdbfe; }
+        @media (max-width: 700px) { .cr-stmt-g { grid-template-columns: 1fr; } }
         .cr-hidden { display: none !important; }
         @media (max-width: 900px) { .cr-three, .cr-steps { grid-template-columns: 1fr; } .cr-kpis { grid-template-columns: 1fr 1fr; } .cr-two { grid-template-columns: 1fr; } }
         @media (max-width: 560px) {
@@ -142,6 +157,7 @@
                     <thead><tr><th>Month (Pacific)</th><th class="num">Set aside</th><th class="num">Deposited</th><th class="num">Interest</th><th class="num">Bank balance</th><th>Statement fingerprint</th><th>Check</th></tr></thead>
                     <tbody id="cr-rows"></tbody>
                 </table>
+                <div class="cr-stmts cr-hidden" id="cr-stmts"></div>
             </div>
         </div>
     </section>
@@ -211,6 +227,53 @@
             tr.appendChild(td('Check', chip));
             rows.appendChild(tr);
         });
+        // RESERVE_STATEMENT_20261114: when the record carries monthly statements, show them instead of the
+        // table. What the books say is owed and what a bank statement shows is held are never mixed.
+        var stmts = d.statements || [];
+        if (stmts.length) {
+            var el = function (tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
+            var line = function (label, value, cls) { var r = el('div', 'cr-stmt-r' + (cls ? ' ' + cls : '')); r.appendChild(el('span', '', label)); r.appendChild(el('span', '', value)); return r; };
+            var checks = {}; months.forEach(function (m) { checks[m.period] = m.status; });
+            var RULES = {
+                CARRIED_BELOW_MINIMUM: function (t) { return 'Under the ' + usd(t.minimum_usd) + ' minimum transfer, so this amount is carried to the next statement. It is reviewed with the ' + monthName(t.review_period) + ' statement.'; },
+                DUE_MINIMUM_REACHED: function (t) { return 'The outstanding amount has reached the ' + usd(t.minimum_usd) + ' minimum transfer and is due to be deposited.'; },
+                DUE_QUARTERLY_REVIEW: function (t) { return 'Quarterly review: the outstanding amount is due to be deposited even though it is under the ' + usd(t.minimum_usd) + ' minimum, or the reason it is not is posted here.'; },
+                NOTHING_OUTSTANDING: function () { return 'Nothing is waiting to be transferred.'; }
+            };
+            var box = $('cr-stmts');
+            stmts.slice().reverse().forEach(function (s) {
+                var card = el('article', 'cr-stmt');
+                var head = el('div', 'cr-stmt-h'); head.appendChild(el('b', '', monthName(s.period)));
+                var cs = STATUS[checks[s.period]] || ['Needs review', 'bad']; head.appendChild(el('span', 'st ' + cs[1], cs[0]));
+                card.appendChild(head);
+                var grid = el('div', 'cr-stmt-g');
+                var books = el('div'); books.appendChild(el('div', 'cr-stmt-t', 'On the books: reserve obligation'));
+                books.appendChild(line('Opening obligation', usd(s.opening_obligation_usd)));
+                books.appendChild(line('New allocations', usd(s.new_allocations_usd)));
+                books.appendChild(line('Refund adjustments', usd(s.refund_adjustments_usd)));
+                books.appendChild(line('Closing obligation', usd(s.closing_obligation_usd), 'is-total'));
+                var bank = el('div'); bank.appendChild(el('div', 'cr-stmt-t', 'In the bank: cash'));
+                bank.appendChild(line('Actual deposits', usd(s.actual_deposits_usd)));
+                bank.appendChild(line('Outstanding transfer', usd(s.outstanding_transfer_usd)));
+                bank.appendChild(s.held_verified_usd == null ? line('Verified as held in reserve', 'No bank statement posted', 'is-none')
+                    : line('Verified as held in reserve', usd(s.held_verified_usd), 'is-total'));
+                grid.appendChild(books); grid.appendChild(bank); card.appendChild(grid);
+                if (s.statement_sha256) { var n1 = el('p', 'cr-stmt-n', 'Bank statement fingerprint: '); n1.appendChild(el('code', '', s.statement_sha256)); card.appendChild(n1); }
+                if (s.transfer && RULES[s.transfer.rule]) card.appendChild(el('p', 'cr-stmt-n', RULES[s.transfer.rule](s.transfer)));
+                box.appendChild(card);
+            });
+            var st = d.statement_totals;
+            if (st) {
+                var ks = document.querySelectorAll('#cr-body .cr-kpi .k');
+                ['Reserve obligation', 'Deposited', 'Outstanding transfer', 'Verified as held'].forEach(function (t, i) { if (ks[i]) ks[i].textContent = t; });
+                $('k-owed').textContent = usd(st.obligation_usd);
+                $('k-dep').textContent = usd(st.deposited_usd);
+                $('k-carry').textContent = usd(st.outstanding_transfer_usd);
+                $('k-close').textContent = st.held_verified_usd == null ? 'None yet' : usd(st.held_verified_usd);
+            }
+            document.querySelector('#cr-body table.cr-table').classList.add('cr-hidden');
+            box.classList.remove('cr-hidden');
+        }
         $('cr-state').classList.add('cr-hidden');
         $('cr-body').classList.remove('cr-hidden');
     }).catch(function () {
