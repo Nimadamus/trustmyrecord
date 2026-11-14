@@ -723,6 +723,14 @@
 /* TAP_TARGETS2_20261113: links that were 14 to 29 px tall on a phone */
 @media (max-width:640px){html body a.pm-btn,html body a.pm-btn.pm-btn--ghost{display:inline-flex !important;align-items:center;min-height:40px !important}}
 </style>
+<!-- ULTIMATE_PAUSED_20261113: TMR Ultimate is off sale while the report is rebuilt.
+     Delete this block (and revert this commit) to bring it back. -->
+<style id="ultPaused">
+    #pdUltCard,#pmxUlt,.pm-plan--ult,.pm-table .is-ult,[data-ult-paused]{display:none !important}
+    html body.pmx .pm .pm-plans{grid-template-columns:.85fr 1.1fr !important;max-width:860px;margin-left:auto;margin-right:auto}
+    html body.pmx .pm .pm-plan--free{grid-column:auto !important}
+    @media (max-width:640px){html body.pmx .pm .pm-plans{grid-template-columns:1fr !important}}
+</style>
 </head>
 <body class="tmr-site-shell tmr-ds-shell tmr-light pro-page pmx" data-tier="visitor">
     <!-- Sitewide global nav is injected by tmr-sitewide.js -->
@@ -737,7 +745,7 @@
         <div class="pm-wrap pm-head-grid">
             <div class="pm-id">
                 <span class="pm-eyebrow"><i aria-hidden="true"></i><span id="pmEyebrow">TrustMyRecord membership</span></span>
-                <h1 class="pm-title" id="pmTitle">TMR Pro <em>&amp;</em> <span class="pmx-gold">Ultimate</span></h1>
+                <h1 class="pm-title" id="pmTitle">TMR <em>Pro</em></h1>
                 <p class="pm-lead" id="pmLead">Simulate every game. Check every record.</p>
                 <p class="pm-tag" id="pmTag">Research tools that show their evidence, not promises of profit.</p>
                 <div class="pm-live" id="pxhPanel" aria-label="Handicapper Watchdog live numbers">
@@ -1049,7 +1057,7 @@
                 <summary>Compare every feature</summary>
                 <div class="pm-table-wrap">
                     <table class="pm-table">
-                        <caption class="pm-sr">Free, TMR Pro and TMR Ultimate compared</caption>
+                        <caption class="pm-sr">Free and TMR Pro compared</caption>
                         <thead><tr><th scope="col"><span class="pm-sr">Feature</span></th><th scope="col">Free</th><th scope="col" class="is-pro">TMR Pro</th><th scope="col" class="is-ult">TMR Ultimate</th></tr></thead>
                         <tbody>
                             <tr><th scope="row">Public graded record, profile, pick tracking, leaderboards</th><td><span class="pm-y" aria-label="Included">&#10003;</span></td><td class="is-pro"><span class="pm-y" aria-label="Included">&#10003;</span></td><td class="is-ult"><span class="pm-y" aria-label="Included">&#10003;</span></td></tr>
@@ -1060,7 +1068,7 @@
                             <tr><th scope="row">Bet Legend Pro historical research</th><td><span class="pm-n" aria-label="Not included">&ndash;</span></td><td class="is-pro"><span class="pm-y" aria-label="Included">&#10003;</span></td><td class="is-ult"><span class="pm-y" aria-label="Included">&#10003;</span></td></tr>
                             <tr><th scope="row">Trend Spotter</th><td>Records and games</td><td class="is-pro">Plus units, ROI, price</td><td class="is-ult">Plus units, ROI, price</td></tr>
                             <tr><th scope="row">Model Builder models tracked</th><td>2</td><td class="is-pro">15</td><td class="is-ult">15</td></tr>
-                            <tr><th scope="row">Performance Intelligence on your own picks</th><td><span class="pm-n" aria-label="Not included">&ndash;</span></td><td class="is-pro"><span class="pm-n" aria-label="Not included">&ndash;</span></td><td class="is-ult"><span class="pm-y" aria-label="Included">&#10003;</span></td></tr>
+                            <tr data-ult-paused><th scope="row">Performance Intelligence on your own picks</th><td><span class="pm-n" aria-label="Not included">&ndash;</span></td><td class="is-pro"><span class="pm-n" aria-label="Not included">&ndash;</span></td><td class="is-ult"><span class="pm-y" aria-label="Included">&#10003;</span></td></tr>
                             <tr><th scope="row">Price</th><td>Free</td><td class="is-pro">$49.99/mo or $500/yr</td><td class="is-ult">$99.99/mo</td></tr>
                         </tbody>
                     </table>
@@ -1111,7 +1119,7 @@
                 <div class="pm-faq-group">
                     <h3>Membership and billing</h3>
                     <div class="pm-acc">
-                        <details><summary>How much does it cost?</summary><p>TMR Pro is $49.99 a month or $500 a year. TMR Ultimate is $99.99 a month. Prices are in US dollars, before any applicable tax.</p></details>
+                        <details><summary>How much does it cost?</summary><p>TMR Pro is $49.99 a month or $500 a year. Prices are in US dollars, before any applicable tax.</p></details>
                         <details><summary>Is there a free trial?</summary><p>No. TMR Pro is $49.99 a month or $500 a year, and you can cancel any time from this page.</p></details>
                         <details><summary>How is billing handled?</summary><p>Payments run through Stripe. You enter your card on Stripe's secure checkout, never on TrustMyRecord. Manage membership opens Stripe's billing page for your card and invoices.</p></details>
                         <details><summary>Can I cancel? What happens next?</summary><p>Yes, any time, with Cancel subscription on this page. No contract and no fee. You keep access until the end of the period you already paid for, then your account returns to the free version of each tool. Your record and picks stay exactly as they are.</p></details>
@@ -1121,10 +1129,10 @@
                 <div class="pm-faq-group">
                     <h3>Features and access</h3>
                     <div class="pm-acc">
-                        <details><summary>What does TMR Ultimate add?</summary><p>Everything in TMR Pro plus Performance Intelligence on your own graded picks: your win rate against the break even rate of the prices you paid, units and ROI, where chance still explains the result, what stake size did, and a plan built from the findings that clear the bar. <span class="pst-ult-closed">It is not open for purchase yet. </span><a href="/ultimate/">See the sample report</a>.</p></details>
+                        <details data-ult-paused><summary>What does TMR Ultimate add?</summary><p>Everything in TMR Pro plus Performance Intelligence on your own graded picks: your win rate against the break even rate of the prices you paid, units and ROI, where chance still explains the result, what stake size did, and a plan built from the findings that clear the bar. <span class="pst-ult-closed">It is not open for purchase yet. </span><a href="/ultimate/">See the sample report</a>.</p></details>
                         <details><summary>Where do the Watchdog's pending picks come from?</summary><p>From public posts by the handicappers TrustMyRecord tracks on Covers, X, TheRX, Reddit and other sites. Handicappers are shown by tracking number, never by name, and only games that have not started appear.</p></details>
                         <details><summary>Are TrustMyRecord members' picks on the board?</summary><p>No. Members' picks stay private until their games start, for everyone, including subscribers.</p></details>
-                        <details><summary>Is Bet Legend Pro the same tool sold on its own?</summary><p>Yes. It is sold separately at $49 a month, and TMR Pro and TMR Ultimate include it in full.</p></details>
+                        <details><summary>Is Bet Legend Pro the same tool sold on its own?</summary><p>Yes. It is sold separately at $49 a month, and TMR Pro includes it in full.</p></details>
                     </div>
                 </div>
                 <div class="pm-faq-group">
@@ -1144,8 +1152,8 @@
 
     <div class="pm-wrap">
         <p class="pm-fine">
-            TMR Pro and TMR Ultimate are research and record keeping products. They provide historical data, measurement
-            and tracking tools. They do not provide predictions, guaranteed outcomes, profit or any form of edge, and
+            TMR Pro is a research and record keeping product. It provides historical data, measurement
+            and tracking tools. It does not provide predictions, guaranteed outcomes, profit or any form of edge, and
             nothing on this page is a claim that any strategy will win. Sports betting involves risk of loss. Prices are in
             US dollars and exclude any applicable tax. Bet Legend Pro remains separately available at its own price. If you
             or someone you know needs help with gambling, call 1-800-GAMBLER.
