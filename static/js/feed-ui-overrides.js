@@ -610,7 +610,7 @@ function normalizePublicPick(item) {
         record_wins: item.record_wins != null ? item.record_wins : item.wins,
         record_losses: item.record_losses != null ? item.record_losses : item.losses,
         record_pushes: item.record_pushes != null ? item.record_pushes : item.pushes,
-        net_units: item.net_units,
+        net_units: item.net_units, flair: item.flair || null, /* CREDIBILITY_FLAIR_20261114 */
         roi: item.roi,
         win_rate: item.win_rate,
         total_public_graded: item.total_public_graded,
@@ -650,7 +650,7 @@ function buildUserMapFromFeed(items) {
             record_wins: item.record_wins,
             record_losses: item.record_losses,
             record_pushes: item.record_pushes,
-            net_units: item.net_units,
+            net_units: item.net_units, flair: item.flair || null, /* CREDIBILITY_FLAIR_20261114 */
             roi: item.roi,
             win_rate: item.win_rate,
             total_public_graded: item.total_public_graded
@@ -674,6 +674,7 @@ function attachUserRecord(item, user) {
         record_losses: keep(item.record_losses, user.record_losses),
         record_pushes: keep(item.record_pushes, user.record_pushes),
         net_units: keep(item.net_units, user.net_units),
+        flair: keep(item.flair, user.flair), /* CREDIBILITY_FLAIR_20261114 */
         roi: keep(item.roi, user.roi),
         win_rate: keep(item.win_rate, user.win_rate),
         total_public_graded: keep(item.total_public_graded, user.total_public_graded)
