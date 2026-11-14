@@ -1292,7 +1292,7 @@
             var title = document.getElementById('pmTitle'), tag = document.getElementById('pmTag'), eb = document.getElementById('pmEyebrow');
             var tk = document.getElementById('pmToolsK'), th = document.getElementById('pmToolsH'), tl = document.getElementById('pmToolsLede');
             if (tier === 'ultimate') {
-                if (title) title.innerHTML = 'TMR <em>Ultimate</em>';
+                if (title) title.innerHTML = 'TMR <em>Pro</em>'; /* ULTIMATE_PAUSED_20261113 */
                 if (tag) tag.textContent = 'Your complete sports research and performance intelligence platform.';
             } else if (tier === 'pro') {
                 if (title) title.innerHTML = 'TMR <em>Pro</em>';
@@ -1443,7 +1443,7 @@
             paintUltimate(!!(me && me.ultimate_checkout_open), sub);
             if (sub) {
                 mode = 'subscribed';
-                var tname = sub.tier === 'ultimate' ? 'TMR Ultimate' : 'TMR Pro';
+                var tname = 'TMR Pro'; /* ULTIMATE_PAUSED_20261113 */
                 memberName = tname;
                 var plan = (sub.billing_period === 'yearly' ? 'Annual plan' : sub.billing_period === 'monthly' ? 'Monthly plan' : tname);
                 var when = fmtDate(sub.current_period_end || sub.expires_at);

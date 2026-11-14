@@ -122,7 +122,7 @@
       if (o.x.ok) return draw(o.b);
       if (o.x.status === 401) { window.location.href = '/login/?next=' + encodeURIComponent('/ultimate/report/'); return; }
       if (o.x.status === 403) {
-        state('<h2>Performance Intelligence is part of TMR Ultimate</h2><p>Ultimate includes everything in TMR Pro plus this report on your own record. See the full sample report first.</p><a class="ult-btn ult-btn--gold" href="/ultimate/">See TMR Ultimate</a>');
+        /* ULTIMATE_PAUSED_20261113 */ state('<h2>This report is not available right now</h2><p>Performance Intelligence is paused while it is rebuilt.</p><a class="ult-btn ult-btn--gold" href="/premium/">See TMR Pro</a>');
         return;
       }
       state('<h2>Your report could not load</h2><p>' + (o.b && o.b.error ? String(o.b.error).replace(/</g, '&lt;') : 'Please try again in a minute.') + '</p><button type="button" class="ult-btn ult-btn--ghost" data-ult-retry>Try again</button>');
