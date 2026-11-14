@@ -899,6 +899,8 @@ function forumRenderContent(raw) {
         return '<span class="fpost-embed"><video controls preload="metadata" playsinline><source src="' + url.replace(/"/g, '%22') + '"></video></span>';
     }
     function imgEmbed(url, kind) {
+        // Uploads made before the 2026-11 host move still carry the old API host.
+        url = url.replace(/^https?:\/\/trustmyrecord-api\.onrender\.com\/api\//i, 'https://api.trustmyrecord.com/api/');
         return '<span class="fpost-media"><img src="' + url.replace(/"/g, '%22') + '" alt="' + (kind || 'image') + '" loading="lazy"></span>';
     }
     function giphyDirect(url) {

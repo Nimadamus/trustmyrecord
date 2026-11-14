@@ -165,6 +165,11 @@ def iso_date(v):
 URL_RE = re.compile(r"(https?://[^\s<]+)")
 
 
+def live_media_url(u):
+    """Uploads made before the 2026-11 host move still carry the old API host."""
+    return re.sub(r"^https?://trustmyrecord-api\.onrender\.com/api/", "https://api.trustmyrecord.com/api/", u, flags=re.I)
+
+
 def render_content(raw):
     """Crawler-visible rendering of thread/post body text.
 
@@ -182,7 +187,7 @@ def render_content(raw):
 
     # [img]/[gif]url[/img] -> real <img>
     e = re.sub(r"\[(img|gif)\]\s*(https?://[^\s\]]+?)\s*\[/\1\]",
-               lambda m: slot(f'<img class="ft-media" src="{html.escape(m.group(2), quote=True)}" '
+               lambda m: slot(f'<img class="ft-media" src="{html.escape(live_media_url(m.group(2)), quote=True)}" '
                               f'alt="attached {m.group(1)}" loading="lazy">'),
                e, flags=re.I)
     # [video]url[/video] -> link (no iframe in the static fallback)
