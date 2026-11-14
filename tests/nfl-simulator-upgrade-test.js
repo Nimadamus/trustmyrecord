@@ -134,7 +134,7 @@ t('compare keeps at most four results and survives a broken store', () => {
    2026-10-21 UX overhaul (274cc9b6), fixed again 2026-11-14 on Nima's word:
    every run must show a different result. The board must print THIS run's
    sampled game, never the average, which is identical on every run. */
-t('the board shows this run's simulated game, not the average (do not revert)', () => {
+t('the board shows the simulated game of this run, not the average (do not revert)', () => {
   assert.ok(html.includes('const aPts=rep?rep.away_score:p.score.away, hPts=rep?rep.home_score:p.score.home;'));
   assert.ok(!/const aPts=p\.score\.away, hPts=p\.score\.home;/.test(html));
   assert.ok(html.includes("rep?'This simulation'"));
