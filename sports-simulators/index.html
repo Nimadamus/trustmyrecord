@@ -295,10 +295,69 @@
 <link rel="stylesheet" href="/static/css/tmr-light-surface.css?v=3bb2788875de">
 <!-- The one approved navbar: the shared header component (tmr-ds-nav.js)
      plus the homepage's own navbar rules, so every page renders the same bar. -->
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@600;700;800;900&family=Montserrat:ital,wght@1,800&family=Inter:wght@400;500;600;700;800;900&display=swap">
 <link rel="stylesheet" href="/static/css/tmr-navbar.css?v=68ec3081d29a">
 <!--SIM_UX--><link rel="stylesheet" href="/static/css/tmr-sim-ux.css?v=f70e7f2b899b"><script defer src="/static/js/tmr-sim-ux.js?v=21a024cf4de7"></script><!--/SIM_UX-->
 <!--SIM_BC--><link rel="stylesheet" href="/static/css/tmr-sim-broadcast.css?v=080aa122124a"><script>(function(r){r.classList.add('simbc','simbc-hub');r.setAttribute('data-bc','all');function g(){r.classList.add('bc-ready')}addEventListener('load',g);setTimeout(g,2500)}(document.documentElement))</script><script defer src="/static/js/tmr-sim-broadcast.js?v=d20bb61c9942"></script><!--/SIM_BC-->
+<!--SIMHUB_STAGE_20261114: stadium stage hero and richer league cards for the simulators hub. Page-only rules
+     layered over the broadcast hub layout; the fold behaviour, links and data hooks are unchanged.-->
+<style id="simhub-stage">
+html.simbc-hub body .simhero{position:relative;isolation:isolate;overflow:hidden;display:block;margin:6px 0 20px;padding:clamp(20px,3.2vw,42px);border-radius:26px;
+  border:1px solid transparent;background:linear-gradient(180deg,rgba(6,14,32,.25),rgba(6,14,32,.25)) padding-box,
+  linear-gradient(140deg,rgba(47,180,255,.75),rgba(255,255,255,.07) 40%,rgba(255,255,255,.04) 60%,rgba(77,107,255,.65)) border-box;
+  box-shadow:0 30px 80px rgba(0,0,0,.45),0 0 70px rgba(47,180,255,.12)}
+.shx-stage{position:absolute;inset:0;z-index:-1;pointer-events:none;overflow:hidden;border-radius:inherit}
+.shx-stage i{position:absolute;display:block}
+.shx-photo{inset:0;background:url(/static/img/blp/stadium-hero.jpg) center 30%/cover no-repeat;opacity:.62;filter:saturate(1.15)}
+.shx-shade{inset:0;background:linear-gradient(90deg,rgba(3,8,22,.95) 0%,rgba(3,8,22,.8) 46%,rgba(3,8,22,.5) 100%),linear-gradient(180deg,rgba(3,8,22,0) 30%,rgba(3,8,22,.92) 78%)}
+.shx-glow{width:680px;height:680px;right:-200px;top:-360px;background:radial-gradient(closest-side,rgba(47,180,255,.34),transparent)}
+html.simbc-hub body .simhero-copy{position:relative;display:block;max-width:760px}
+.shx-kicker{display:inline-flex;align-items:center;gap:8px;padding:8px 15px;border-radius:999px;border:1.5px solid rgba(47,180,255,.7);background:rgba(47,180,255,.12);color:#bfe6ff;
+  font:800 12.5px/1 "Barlow Condensed",Inter,sans-serif;letter-spacing:.16em;text-transform:uppercase;box-shadow:0 0 22px rgba(47,180,255,.2)}
+.shx-kicker i{width:8px;height:8px;border-radius:50%;background:#34d399;box-shadow:0 0 0 4px rgba(52,211,153,.2)}
+html.simbc-hub body #simhub-title{font:italic 800 clamp(2.1rem,4.8vw,3.75rem)/1.02 Montserrat,Inter,system-ui,sans-serif;letter-spacing:-.025em;text-transform:none;color:#fff;margin:14px 0 12px;text-shadow:0 6px 40px rgba(0,0,0,.45)}
+html.simbc-hub body #simhub-title em{font-style:italic;background:linear-gradient(180deg,#ffdf7e,#f5c84c 60%,#d99a1e);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;padding-right:.06em}
+.shx-sub{margin:0;max-width:56ch;color:#dbe6f7;font-size:clamp(15px,1.3vw,18px);line-height:1.55}
+.shx-facts{list-style:none;display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 0;padding:0}
+.shx-facts li{display:inline-flex;align-items:baseline;gap:7px;padding:8px 13px;border-radius:12px;border:1px solid rgba(130,175,240,.24);background:rgba(8,18,40,.7);color:#a9bbd6;font-size:13px;font-weight:600}
+.shx-facts b{font:800 17px/1 "Barlow Condensed",Inter,sans-serif;letter-spacing:.03em;color:#fff}
+html.simbc-hub body .simactions{margin:16px 0 0;padding:0}
+html.simbc-hub body .simactions a{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 18px;border-radius:12px;border:1px solid rgba(160,200,255,.35);background:rgba(255,255,255,.05);
+  color:#fff;font:700 14px/1 Inter,sans-serif;letter-spacing:0;text-decoration:none}
+html.simbc-hub body .simactions a:hover{border-color:#2fb4ff;background:rgba(47,180,255,.12);transform:none;box-shadow:none}
+html.simbc-hub body .simlaunch{position:relative;gap:16px;margin-top:26px}
+html.simbc-hub body .simtile{background:linear-gradient(180deg,rgba(18,36,72,.82),rgba(8,18,40,.92));border:1px solid rgba(130,175,240,.22);border-radius:20px;
+  transition:transform .18s,border-color .18s,box-shadow .18s}
+html.simbc-hub body .simtile::after{opacity:.2}
+html.simbc-hub body .simtile:hover{transform:translateY(-4px);border-color:var(--accent);box-shadow:0 24px 50px rgba(0,0,0,.45),0 0 44px color-mix(in srgb,var(--accent) 28%,transparent)}
+html.simbc-hub body .simtile-main{gap:12px;padding:26px 16px 18px}
+html.simbc-hub body .simtile-mark{width:92px;height:92px;padding:20px;border-radius:50%;border:1px solid color-mix(in srgb,var(--accent) 55%,transparent);
+  background:radial-gradient(circle at 32% 26%,color-mix(in srgb,var(--accent) 34%,#0b1730),#07101f 72%);box-shadow:0 0 36px color-mix(in srgb,var(--accent) 32%,transparent),inset 0 1px 0 rgba(255,255,255,.12)}
+html.simbc-hub body .simtile-txt{align-items:center;gap:5px}
+html.simbc-hub body .simtile-lg{font-size:2.7rem}
+html.simbc-hub body .simtile-name{color:var(--accent)}
+html.simbc-hub body .simtile-sub{display:block;max-width:24ch;margin-top:4px;font-size:.82rem;line-height:1.45;color:#a9bbd6;text-align:center}
+html.simbc-hub body .simtile-go{display:inline-flex;position:static;width:auto;height:auto;align-items:center;gap:8px;margin-top:4px;padding:11px 18px;border-radius:11px;border:0;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 88%,#fff),var(--accent));color:#04101f;font:800 14px/1 Inter,sans-serif;box-shadow:0 10px 24px color-mix(in srgb,var(--accent) 30%,transparent)}
+html.simbc-hub body .simtile-go::before{content:"Run a game"}
+html.simbc-hub body .simtile:hover .simtile-go{transform:none;filter:brightness(1.08)}
+html.simbc-hub body .simtile-links{border-top:1px solid rgba(130,175,240,.18)}
+html.simbc-hub body .simtile-links a{padding:13px 4px;color:#c9d6ea}
+html.simbc-hub body .simtile-links a:hover{color:#fff;background:color-mix(in srgb,var(--accent) 14%,transparent)}
+@media (max-width:900px){html.simbc-hub body .simlaunch{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}}
+@media (max-width:640px){
+  html.simbc-hub body .simhero{padding:18px 12px 14px;border-radius:20px}
+  html.simbc-hub body .simlaunch{gap:10px;margin-top:20px}
+  html.simbc-hub body .simtile-main{padding:18px 8px 14px;gap:9px}
+  html.simbc-hub body .simtile-mark{width:64px;height:64px;padding:14px}
+  html.simbc-hub body .simtile-lg{font-size:2rem}
+  html.simbc-hub body .simtile-sub{display:none}
+  html.simbc-hub body .simtile-go{padding:10px 12px;font-size:13px}
+  html.simbc-hub body .simtile-links a{font-size:.8rem;letter-spacing:0;padding:13px 1px}
+  .shx-facts li{padding:7px 10px;font-size:12px}
+}
+@media (prefers-reduced-motion:reduce){html.simbc-hub body .simtile,html.simbc-hub body .simtile:hover{transition:none;transform:none}}
+</style>
 </head>
 <body class="tmr-ds-shell tmr-ds--dark">
 <!-- CLS: tmr-ds-nav.js injects the shared header at the end of the body, which
@@ -331,9 +390,13 @@
   </nav>
 
   <section class="simhero" aria-labelledby="simhub-title">
+    <div class="shx-stage" aria-hidden="true"><i class="shx-photo"></i><i class="shx-shade"></i><i class="shx-glow"></i></div>
     <div class="simhero-copy">
+      <span class="shx-kicker"><i></i>Four live engines</span>
       <p class="kicker">Sports Simulators</p>
-      <h1 id="simhub-title">TMR Sports Simulators</h1>
+      <h1 id="simhub-title">TMR Sports <em>Simulators</em></h1>
+      <p class="shx-sub">Play the game out instead of guessing at the result. Each engine produces realistic scores, win probabilities and a full box score.</p>
+      <ul class="shx-facts" aria-label="At a glance"><li><b>4</b>sports</li><li><b>Full</b>box scores</li><li><b>Free</b>daily run on each simulator</li></ul>
       <p class="simlead">Advanced sports simulation engines built to produce realistic game outcomes, probabilities, statistics and box scores. Four sports, four engines, one idea: play the game out instead of guessing at the result.</p>
       <ol class="simsteps" aria-label="How it works">
         <li><b>1</b><span>Pick a sport and a matchup</span></li>
