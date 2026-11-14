@@ -107,4 +107,17 @@ const ok = (name) => { n++; console.log('  ok   ' + name); };
   assert.ok(!/createPick|\/picks'/.test(src), 'a reaction never submits a pick');
   ok('feed page loads the card after feed-social; Picks tab keeps it; no pick is submitted here');
 }
+{
+  const { win } = boot();
+  const none = win.TMRFeedOpenPicks.render(pick());
+  assert.ok(!none.includes('fop-verified'));
+  const some = win.TMRFeedOpenPicks.render(pick({ verified_tails_count: 2, verified_fades_count: 1 }));
+  assert.ok(some.includes('2 verified picks with it') && some.includes('1 verified pick against it'));
+  assert.ok(src.includes("sessionStorage.setItem('tmr_pick_source'"), 'the slip handoff remembers the card it came from');
+  const vis = fs.readFileSync(path.join(root, 'static/js/tmr-pick-visibility.js'), 'utf8');
+  assert.ok(vis.includes("sessionStorage.removeItem('tmr_pick_source');"), 'the hint is used once');
+  assert.ok(vis.includes('source_pick_id: src.source_pick_id, source_kind: src.source_kind'));
+  assert.ok(vis.includes('30 * 60 * 1000'), 'and it expires');
+  ok('verified picks made from the card are counted; the source hint is sent once and expires');
+}
 console.log(n + ' passed');
