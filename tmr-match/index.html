@@ -669,11 +669,12 @@
         <aside class="mx-left mx-card" aria-label="Live offers">
             <div class="mx-card-head">
                 <h2><span class="mx-dot" aria-hidden="true"></span>Live Offers</h2>
-                <span class="mx-pending"><span class="mx-dot sm" aria-hidden="true"></span><b id="cOpen">0</b> Pending</span>
+                <span class="mx-pending pv-hide"><span class="mx-dot sm" aria-hidden="true"></span><b id="cOpen">0</b> Pending</span><span class="mx-tag-preview pv-only">Preview</span>
             </div>
             <div class="mx-live" id="liveList"></div>
-            <p class="mx-live-avail"><b><span id="cAvail">0</span> TMR</b> open to take right now</p>
-            <a class="mx-viewall" href="#market" data-goto="market">View all offers <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+            <p class="mx-live-avail pv-hide"><b><span id="cAvail">0</span> TMR</b> open to take right now</p>
+            <p class="mx-live-avail pv-only pv-block">Example offers. This is how the board reads once the market opens.</p>
+            <a class="mx-viewall pv-hide" href="#market" data-goto="market">View all offers <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
         </aside>
 
         <!-- CENTER -->
@@ -722,14 +723,20 @@
 
                 <div id="panelMsg" class="msg" hidden></div>
 
+                <!-- MATCH_PREVIEW_20261114: shown while the market is not taking offers -->
+                <div id="closedNote" class="notice mk-soon" hidden>
+                    <span><b>TMR Match is not open yet.</b> The offers below are examples that show how the board works. Build your TMR balance now so you are ready.</span>
+                    <a class="mkb sm" href="/wallet/earn/">Earn TMR</a>
+                </div>
+
                 <div class="sportbar" id="sportBar"></div>
 
                 <!-- 4. MARKETPLACE: the tab bar and the board are one component -->
                 <div class="market" id="market">
                     <div class="tabsrow">
                         <div class="mx-mkt-head">
-                            <h2>Marketplace <span>&ndash; Pending Matches</span></h2>
-                            <label class="mx-sort">Sort:
+                            <h2>Marketplace <span class="pv-hide">&ndash; Pending Matches</span><span class="pv-only">&ndash; Preview</span></h2>
+                            <label class="mx-sort pv-hide">Sort:
                                 <select id="mkSort" aria-label="Sort the marketplace">
                                     <option value="newest">Newest</option>
                                     <option value="largest">Largest</option>
@@ -998,6 +1005,26 @@
 
         var state = { me: null, meta: null, offers: [], mine: [], fills: [], depth: [], balance: null, sport: 'all', sort: 'newest', readFailed: false };
 
+        // MATCH_PREVIEW_20261114: while the market is not taking offers and nothing is
+        // open, the board shows labelled example offers through the same renderers,
+        // so the page reads the way it will when it is live. They are never sent
+        // anywhere, cannot be accepted, and step aside for any real offer.
+        var PREVIEW_OFFERS = [
+            { sport: 'NFL', event_label: 'Bills vs Chiefs', market: 'spread', selection: 'KC -3.5', price_american: -110, quantity: 250 },
+            { sport: 'NBA', event_label: 'Lakers vs Suns', market: 'total', selection: 'Over 234.5', price_american: -108, quantity: 500 },
+            { sport: 'NHL', event_label: 'Rangers vs Bruins', market: 'moneyline', selection: 'BOS ML', price_american: 115, quantity: 150 },
+            { sport: 'NCAAB', event_label: 'Duke vs UNC', market: 'spread', selection: 'DUKE -6.5', price_american: -110, quantity: 300 },
+            { sport: 'MLB', event_label: 'Dodgers vs Padres', market: 'moneyline', selection: 'LAD ML', price_american: -125, quantity: 1000 }
+        ].map(function (o, i) {
+            o.id = 'preview-' + (i + 1); o._demo = true; o._who = 'Member ' + 'ABCDE'.charAt(i);
+            o.side = 'for'; o.remaining = o.quantity; o.filled_quantity = 0; o.status = 'open';
+            o.created_at = new Date(Date.UTC(2026, 0, 1, 0, 0, 5 - i)).toISOString();
+            return o;
+        });
+        function isClosed() { return !!(state.meta && state.meta.enabled === false); }
+        function demoAvatar(o) { return '<span class="av av-demo av-demo-' + (Number(String(o.id).slice(-1)) || 1) + '" aria-hidden="true"><i class="fas fa-user"></i></span>'; }
+        var DEMO_ACT = '<span class="px px-demo" aria-disabled="true" title="Example offer"><span class="pxv">ACCEPT</span></span>';
+
         // The one avatar resolver the rest of the site uses: upload, else club mark, else silhouette.
         function avatarUrl(name) {
             var base = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://api.trustmyrecord.com/api';
@@ -1044,7 +1071,7 @@
             var filled = quantity - remaining;
             var pctFilled = quantity ? Math.round((filled / quantity) * 100) : 0;
             var mine = state.me && Number(o.maker_id) === Number(state.me);
-            var who = mine ? 'You' : (o.maker_username || 'a member');
+            var who = o._demo ? o._who : (mine ? 'You' : (o.maker_username || 'a member'));
             var status = (o.status && o.status !== 'open')
                 ? ' <span class="pill ' + esc(o.status) + '">' + esc(String(o.status).replace(/_/g, ' ')) + '</span>'
                 : '';
@@ -1054,13 +1081,13 @@
             var html = ''
                 + '<div class="row" data-id="' + o.id + '">'
                 + '  <div class="row-main">'
-                + '    <div class="c-who">' + avatarHtml(o.maker_username) + '<span class="nm">' + esc(who) + '</span></div>'
+                + '    <div class="c-who">' + (o._demo ? demoAvatar(o) : avatarHtml(o.maker_username)) + '<span class="nm">' + esc(who) + '</span></div>'
                 + '    <div class="c-match"><span class="ev">' + esc(o.event_label || o.event_ref) + '</span>'
                 + (o.sport ? '<span class="lg">' + esc(o.sport) + '</span>' : '') + '</div>'
                 + '    <div class="c-pick">'
                 + '      <div class="pick"><b>' + esc(offerHeadline(o)) + '</b>' + status + '</div>'
                 + '      <div class="sub">' + esc(marketLabel(o.market))
-                + '<span class="when"><span class="dot">&middot;</span>' + esc(when(o.created_at)) + '</span></div>'
+                + (o._demo ? '<span class="when"><span class="dot">&middot;</span>Example</span>' : '<span class="when"><span class="dot">&middot;</span>' + esc(when(o.created_at)) + '</span>') + '</div>'
                 + '    </div>'
                 + '    <div class="c-price">' + esc(priceLabel(o.price_american)) + '</div>'
                 + '    <div class="c-size">'
@@ -1070,7 +1097,9 @@
                 + '    </div>'
                 + '    <div class="c-act">';
 
-            if (canTake) {
+            if (o._demo) {
+                html += DEMO_ACT;
+            } else if (canTake) {
                 // The whole interaction is one price cell, the way a book's board works.
                 // Accept loads the slip; nothing is matched until Confirm take is pressed there.
                 html += '<button class="px" type="button" data-open="' + o.id + '" aria-pressed="false">'
@@ -1252,12 +1281,12 @@
             el.innerHTML = rows.map(function (o) {
                 var remaining = Number(o.remaining);
                 var mine = state.me && Number(o.maker_id) === Number(state.me);
-                var who = mine ? 'You' : (o.maker_username || 'a member');
-                var act = mine ? '<span class="px-dead">Your offer</span>'
+                var who = o._demo ? o._who : (mine ? 'You' : (o.maker_username || 'a member'));
+                var act = o._demo ? DEMO_ACT : mine ? '<span class="px-dead">Your offer</span>'
                     : (isLoggedIn ? '<button class="px" type="button" data-open="' + o.id + '" aria-pressed="false"><span class="pxv">ACCEPT</span></button>'
                                   : '<a class="px" href="/login/"><span class="pxv">ACCEPT</span></a>');
                 return '<div class="lv">'
-                    + avatarHtml(o.maker_username)
+                    + (o._demo ? demoAvatar(o) : avatarHtml(o.maker_username))
                     + '<div class="lv-main"><div class="lv-name">' + esc(who) + '</div>'
                     + '<div class="lv-ev">' + (o.sport ? '<span class="lg">' + esc(o.sport) + '</span>' : '') + '<span>' + esc(o.event_label || o.event_ref) + '</span></div>'
                     + '<div class="lv-pick"><b>' + esc(offerHeadline(o)) + '</b> <span>(' + esc(priceLabel(o.price_american)) + ')</span></div></div>'
@@ -1280,6 +1309,23 @@
 
         function render() {
             var market = state.offers.filter(function (o) { return Number(o.remaining) > 0; });
+            var closed = isClosed();
+            var preview = closed && !state.readFailed && market.length === 0;
+            document.body.classList.toggle('mk-closed', closed);
+            document.body.classList.toggle('mk-preview', preview);
+            var closedNote = document.getElementById('closedNote');
+            if (closedNote) closedNote.hidden = !closed;
+            var ctaPost = document.getElementById('ctaPost');
+            if (ctaPost && closed && !ctaPost.dataset.soon) {
+                ctaPost.dataset.soon = '1';
+                ctaPost.disabled = true;
+                ctaPost.classList.add('is-soon');
+                ctaPost.innerHTML = '<i class="fas fa-lock" aria-hidden="true"></i> Not Open Yet';
+                var signIn = document.getElementById('ctaSignIn');
+                if (signIn) signIn.hidden = true;
+                ctaPost.hidden = false;
+            }
+            if (preview) market = PREVIEW_OFFERS;
             document.getElementById('cOpen').textContent = num(market.length);
             document.getElementById('cAvail').textContent = num(
                 market.reduce(function (s, o) { return s + Number(o.remaining); }, 0));
@@ -1299,12 +1345,15 @@
             // A failed read and an empty board look identical unless we say so.
             document.getElementById('boardError').hidden = !state.readFailed;
             document.getElementById('emptyMarket').hidden = state.readFailed || market.length > 0;
+            // Nothing can be posted while the market is closed, so the empty board says
+            // that instead of asking for a first offer.
+            if (closed) { var ec = document.getElementById('emptyCta'); if (ec) { ec.dataset.done = '1'; ec.innerHTML = '<a class="mkb mkb-primary" href="/wallet/earn/">Earn TMR</a>'; } }
             document.getElementById('emptyFilter').hidden = !(market.length > 0 && shown.length === 0);
             // The column header is about reading a populated board. With nothing on it
             // it would be labelling empty space.
             document.getElementById('marketHead').hidden = shown.length === 0;
             // The slip only belongs on screen when there is a price it could load.
-            var takeable = isLoggedIn && shown.some(function (o) {
+            var takeable = !preview && isLoggedIn && shown.some(function (o) {
                 return !(state.me && Number(o.maker_id) === Number(state.me)) && Number(o.remaining) > 0;
             });
             var showSlip = takeable || openSlipId != null;
@@ -1498,6 +1547,7 @@
         // --- tabs --------------------------------------------------------------
 
         function showTab(name) {
+            if (name === 'create' && isClosed()) { say('ok', 'TMR Match is not open yet. Nothing can be posted until it opens.'); return; }
             if (name !== 'market') closeSlip();
             ['market', 'depth', 'mine', 'positions', 'create'].forEach(function (n) {
                 var panel = document.getElementById('panel-' + n);

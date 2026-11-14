@@ -437,3 +437,46 @@ body.mk-v2 #mk .mx-sort select { border: 0 !important; background: transparent !
     body.mk-v2 #mk .mx-hero-art { width: 34%; }
     body.mk-v2 #mk .row-main { grid-template-columns: minmax(0, 1fr) auto !important; }
 }
+
+/* ==========================================================================
+   MATCH_PREVIEW_20261114: the market before it opens. Example offers are drawn
+   through the normal board, marked as a preview, and cannot be accepted.
+   ========================================================================== */
+body.mk-v2 #mk .pv-only { display: none !important; }
+body.mk-v2.mk-preview #mk .pv-only { display: inline !important; }
+body.mk-v2.mk-preview #mk .pv-only.pv-block { display: block !important; }
+body.mk-v2.mk-preview #mk .pv-hide { display: none !important; }
+body.mk-v2.mk-preview #mk .mk-tabs,
+body.mk-v2.mk-preview #mk .sportbar .sp .n,
+body.mk-v2.mk-preview #mk .mk-tabs-note { display: none !important; }
+
+body.mk-v2.mk-preview #mk .mx-tag-preview {
+    display: inline-flex !important; align-items: center; padding: 4px 12px; border-radius: 999px;
+    border: 1px solid rgba(246, 185, 43, .6); background: rgba(246, 185, 43, .10); color: #F6B92B;
+    font: 800 .78rem/1 var(--mx-display); letter-spacing: .12em; text-transform: uppercase; white-space: nowrap;
+}
+body.mk-v2.mk-preview #mk .mx-mkt-head h2 span.pv-only { color: #F6B92B; }
+
+body.mk-v2 #mk .px.px-demo {
+    cursor: default; pointer-events: none; filter: saturate(.55) brightness(.82); box-shadow: none !important;
+}
+body.mk-v2 #mk .av.av-demo {
+    display: flex !important; align-items: center; justify-content: center; color: #fff; font-size: 1.15rem;
+    background: linear-gradient(160deg, #2B8CFF 0%, #0F3F9E 100%) !important; border-color: rgba(160, 200, 255, .7) !important;
+}
+body.mk-v2 #mk .av.av-demo-2 { background: linear-gradient(160deg, #F6B92B 0%, #B26A08 100%) !important; }
+body.mk-v2 #mk .av.av-demo-3 { background: linear-gradient(160deg, #2EE37B 0%, #0E7A3F 100%) !important; }
+body.mk-v2 #mk .av.av-demo-4 { background: linear-gradient(160deg, #B58CFF 0%, #5A2FB8 100%) !important; }
+body.mk-v2 #mk .av.av-demo-5 { background: linear-gradient(160deg, #FF7A8A 0%, #B8203A 100%) !important; }
+body.mk-v2 #mk .c-who .av.av-demo { font-size: .95rem; }
+
+body.mk-v2 #mk .notice.mk-soon {
+    border-color: rgba(246, 185, 43, .5) !important; border-left: 3px solid #F6B92B !important;
+    background: linear-gradient(90deg, rgba(246, 185, 43, .10), rgba(246, 185, 43, .02)) !important;
+}
+body.mk-v2 #mk .notice.mk-soon b { color: #F6B92B !important; }
+body.mk-v2 #mk .mk-acts .mkb.mkb-primary.is-soon,
+body.mk-v2 #mk .mkb.mkb-primary.is-soon {
+    background: linear-gradient(180deg, #1A2B4D 0%, #101E3A 100%) !important; border-color: rgba(140, 170, 220, .45) !important;
+    color: #B8C8E4 !important; box-shadow: none !important; cursor: default; opacity: 1 !important;
+}
