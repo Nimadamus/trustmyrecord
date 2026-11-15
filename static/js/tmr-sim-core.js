@@ -730,6 +730,8 @@
       || saved.away !== this.state.away || saved.home !== this.state.home) return false;
     try {
       this.lastResult = saved.d;
+      // SIM_SHARE_20261114: a restored game gets its box score link back too (after the archive script has loaded).
+      (function (uid) { if (uid) global.setTimeout(function () { try { if (global.TMRSimArchive) global.TMRSimArchive.primeShare(uid); } catch (e) { /* the seed link stays */ } }, 1200); })(saved.d.archive_uid);
       this.pendingSeed = null;
       this.render(saved.d);
       return true;
@@ -904,6 +906,9 @@
 
     this.api('/simulate?' + params.toString()).then(function (d) {
       self.lastResult = d;
+      // SIM_SHARE_20261114: ask for this game's own box score link now, so the
+      // Share button has it the moment it is pressed.
+      try { if (d && d.archive_uid && global.TMRSimArchive) global.TMRSimArchive.primeShare(d.archive_uid); } catch (e) { /* the seed link stays */ }
       self.render(d);
       self.pushUrl(t, d);
       self.saveResult(t, d);
@@ -1210,15 +1215,28 @@
 
     add('Share result', '', function () {
       var url = global.location.href;
+      var boxScore = false;
+      // SIM_SHARE_20261114: share this game's own archived box score page. It
+      // unfurls as the game's scoreboard; the simulator URL unfurls as an advert
+      // for the simulator. Without it (archive off, row not landed) the seed
+      // link is shared exactly as before.
+      try {
+        var r = app && app.lastResult;
+        var own = r && r.archive_uid && global.TMRSimArchive && global.TMRSimArchive.shareUrlFor(r.archive_uid);
+        if (own) { url = own; boxScore = true; }
+        else if (r && r.archive_uid && global.TMRSimArchive) global.TMRSimArchive.primeShare(r.archive_uid);
+      } catch (e) { /* the seed link stays */ }
       var done = function () {
-        said.textContent = 'Link copied. It reproduces this exact simulation.';
+        said.textContent = boxScore ? 'Link copied. It opens the full box score of this game.'
+          : 'Link copied. It reproduces this exact simulation.';
       };
       // A phone's own share sheet where there is one; the link carries the seed
       // either way, so whoever opens it sees this exact game.
       if (global.navigator && global.navigator.share && global.matchMedia
         && global.matchMedia('(pointer: coarse)').matches) {
         global.navigator.share({ title: global.document.title, url: url }).then(function () {
-          said.textContent = 'Shared. The link reproduces this exact simulation.';
+          said.textContent = boxScore ? 'Shared. The link opens the full box score of this game.'
+            : 'Shared. The link reproduces this exact simulation.';
         }, function () { /* dismissed */ });
         return;
       }

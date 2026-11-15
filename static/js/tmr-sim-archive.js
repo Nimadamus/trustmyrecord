@@ -1627,7 +1627,46 @@
     });
   }
 
+  /* ================================================================ */
+  /* SIM_SHARE_20261114 - the run's own permanent link                 */
+  /* ================================================================ */
+  /*
+   * A simulator shares the archived run's own box score page, because that is
+   * the page that unfurls as this game's scoreboard. The archive writes on a
+   * queue, so the page id is asked for as soon as the game is played (and asked
+   * again while the row is still landing); by the time anyone presses Share the
+   * link is already in hand and the click stays a plain synchronous copy.
+   * No link yet, or the archive is off: the caller keeps its seed link.
+   */
+  var shareLinks = Object.create(null);   // archive identity -> absolute run URL
+  var shareAsked = Object.create(null);
+  function primeShare(uid, attempt) {
+    uid = String(uid || '');
+    if (!uid || shareLinks[uid]) return;
+    attempt = attempt || 0;
+    if (!attempt) {
+      if (shareAsked[uid]) return;
+      shareAsked[uid] = true;
+    }
+    var again = function () {
+      if (attempt < 6) window.setTimeout(function () { primeShare(uid, attempt + 1); }, 500 + attempt * 400);
+      else delete shareAsked[uid];
+    };
+    try {
+      fetch(apiBase() + ENDPOINT + '/runs/by-uid/' + encodeURIComponent(uid), { headers: { Accept: 'application/json' } })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (found) {
+          if (found && found.path && /^\/[a-z]+-simulator\/results\/run\/\?id=\d+$/.test(found.path)) {
+            shareLinks[uid] = window.location.origin + found.path;
+          } else again();
+        }, again);
+    } catch (e) { /* no fetch: the seed link stays */ }
+  }
+  function shareUrlFor(uid) { return shareLinks[String(uid || '')] || null; }
+
   window.TMRSimArchive = {
+    primeShare: primeShare,
+    shareUrlFor: shareUrlFor,
     api: api,
     mount: mount,
     renderOverview: renderOverview,

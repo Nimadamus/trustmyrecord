@@ -8967,6 +8967,23 @@
         return base + '?simAway=' + encodeURIComponent(result.away.abbreviation) + '&simHome=' + encodeURIComponent(result.home.abbreviation) +
             (seed ? '&simSeed=' + encodeURIComponent(seed) : '');
     }
+    // SIM_SHARE_20261114: what the share buttons hand out. The archived game has
+    // its own box score page, which unfurls as this game's scoreboard; the
+    // simulator URL unfurls as an advert for the simulator. The id is asked for
+    // when the game is recorded (mlb-sim-history-record.js), so this stays a
+    // synchronous read. No id yet: the seed link, exactly as before.
+    function shareLinkFor(result) {
+        try {
+            var A = typeof window !== 'undefined' ? window.TMRSimArchive : null;
+            var uid = result && result.archive_uid;
+            if (uid && A && typeof A.shareUrlFor === 'function') {
+                var own = A.shareUrlFor(uid);
+                if (own) return own;
+                A.primeShare(uid);
+            }
+        } catch (e) { /* the seed link stays */ }
+        return shareUrlFor(result);
+    }
     function shareTextFor(result) {
         if (!result || !result.boxScore) return '';
         var box = result.boxScore;
@@ -8976,7 +8993,7 @@
         lines.push(result.away.abbreviation + ' ' + box.away.runs + ', ' + result.home.abbreviation + ' ' + box.home.runs + (box.totalInnings > 9 ? ' (' + box.totalInnings + ' innings)' : '') + ' (simulated)');
         lines.push('Win probability: ' + result.away.abbreviation + ' ' + roundPct(result.awayWin) + ', ' + result.home.abbreviation + ' ' + roundPct(result.homeWin));
         if (result.awayPitcher && result.homePitcher) lines.push('Starters: ' + result.awayPitcher.name + ' vs ' + result.homePitcher.name);
-        var url = shareUrlFor(result);
+        var url = shareLinkFor(result);
         if (url) lines.push(url);
         return lines.join('\n');
     }
@@ -9003,8 +9020,8 @@
             b.addEventListener('click', handler);
             row.appendChild(b);
         }
-        add('copyResultButton', 'Copy Result', function () { copyText(shareTextFor(state.simulation), 'Result copied. Paste it anywhere; the link reruns this exact seed.'); });
-        add('copyShareLinkButton', 'Copy Share Link', function () { copyText(shareUrlFor(state.simulation), 'Share link copied.'); });
+        add('copyResultButton', 'Copy Result', function () { copyText(shareTextFor(state.simulation), 'Result copied. Paste it anywhere; the link opens this exact game.'); });
+        add('copyShareLinkButton', 'Copy Share Link', function () { copyText(shareLinkFor(state.simulation), 'Share link copied.'); });
     }
     function readShareParams() {
         try {

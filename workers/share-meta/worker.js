@@ -51,6 +51,15 @@ function resolveTarget(url) {
     return null; // the baked thread page already carries its own metadata
   }
 
+  // SIM_SHARE_20261114: one archived simulation, /<sport>-simulator/results/run/?id=<n>.
+  // Its Open Graph and Twitter tags become that game's scoreboard. Nothing else
+  // on the page is touched (see socialOnly below).
+  if (/^\/(nfl|nba|mlb|nhl)-simulator\/results\/run\/?$/.test(path)) {
+    const id = params.get('id');
+    if (id && /^\d{1,19}$/.test(id)) return { type: 'sim', id };
+    return null;
+  }
+
   return null;
 }
 
@@ -91,11 +100,16 @@ class HeadInjector {
     // Canonical is the clean, parameter-free URL the API declares - never the
     // tagged link the visitor happened to click.
     const canonical = m.canonical || m.url || this.requestUrl;
-    const tags = [
+    // socialOnly (simulation runs): the page keeps its own title, description,
+    // canonical and robots exactly as the origin wrote them. Only the tags a
+    // link preview reads are replaced, so nothing a search engine reads changes.
+    const pageTags = m.socialOnly ? [] : [
       `<title>${esc(m.title)}</title>`,
       `<meta name="description" content="${esc(m.description)}">`,
       `<link rel="canonical" href="${esc(canonical)}">`,
       `<meta name="robots" content="index, follow">`,
+    ];
+    const tags = pageTags.concat([
       `<meta property="og:site_name" content="TrustMyRecord">`,
       `<meta property="og:type" content="${esc(m.ogType || 'article')}">`,
       `<meta property="og:title" content="${esc(m.title)}">`,
@@ -110,7 +124,7 @@ class HeadInjector {
       `<meta name="twitter:description" content="${esc(m.description)}">`,
       `<meta name="twitter:image" content="${esc(image)}">`,
       `<meta name="twitter:image:alt" content="${esc(m.imageAlt || m.title)}">`,
-    ].join('\n');
+    ]).join('\n');
     head.append(`\n<!-- tmr-share-meta -->\n${tags}\n<!-- /tmr-share-meta -->\n`, { html: true });
   }
 }
@@ -136,12 +150,16 @@ export default {
       const meta = await fetchMeta(target);
       if (!meta) return originResponse;
 
-      const rewritten = new HTMLRewriter()
-        .on('title', new DropTag())
-        .on('meta[name="description"]', new DropTag())
+      let rewriter = new HTMLRewriter();
+      if (!meta.socialOnly) {
+        rewriter = rewriter
+          .on('title', new DropTag())
+          .on('meta[name="description"]', new DropTag())
+          .on('link[rel="canonical"]', new DropTag());
+      }
+      const rewritten = rewriter
         .on('meta[property^="og:"]', new DropTag())
         .on('meta[name^="twitter:"]', new DropTag())
-        .on('link[rel="canonical"]', new DropTag())
         .on('head', new HeadInjector(meta, url.toString()))
         .transform(originResponse);
 

@@ -434,10 +434,16 @@
     var payload;
     try { payload = buildPayload(result); } catch (e) { payload = null; }
     if (!payload) return;
-    if (recorded[payload.run_uid]) return;     // same result rendered twice
+    // SIM_SHARE_20261114: the game carries its archive identity, so the share
+    // buttons can hand out its own box score page (mlb-simulator.js shareLinkFor).
+    var primeShare = function () {
+      try { if (window.TMRSimArchive) window.TMRSimArchive.primeShare(payload.run_uid); } catch (e) { /* the seed link stays */ }
+    };
+    try { result.archive_uid = payload.run_uid; } catch (e) { /* a frozen result keeps its seed link */ }
+    if (recorded[payload.run_uid]) { primeShare(); return; }   // same result rendered twice
     recorded[payload.run_uid] = true;
 
-    api('/runs', { method: 'POST', body: payload }).catch(function () {
+    api('/runs', { method: 'POST', body: payload }).then(primeShare).catch(function () {
       // Recording is a nice-to-have. A network failure, an ad blocker, or the
       // feature being switched off must never surface to the visitor or leave
       // the page in a different state than before.
