@@ -1,0 +1,65 @@
+/* ACCOUNT_SETTINGS_20261115 -- hand-written half of the Light appearance.
+   Appended last by scripts/build_theme_light.py so these decisions win. */
+
+/* 1. Tokens: the theme-a dark ramp re-pointed at the design-system light ramp. */
+html[data-tmr-theme="light"],
+html[data-tmr-theme="light"] body,
+html[data-tmr-theme="light"] body.tmr-ds,
+html[data-tmr-theme="light"] body.tmr-ds-shell,
+html[data-tmr-theme="light"] body.tmr-theme-a,
+html[data-tmr-theme="light"] body.tmr-ds--dark{
+  color-scheme: light;
+  --a-page:#F3F6FA !important; --a-surface:#FFFFFF !important; --a-surface-2:#F7F9FC !important;
+  --a-raised:#FFFFFF !important; --a-sunken:#EDF2F7 !important;
+  --a-blue:#0B5FCC !important; --a-blue-bright:#0B5FCC !important; --a-blue-deep:#0A4AA0 !important;
+  --a-blue-soft:rgba(11,95,204,.09) !important; --a-blue-glow:rgba(11,95,204,.18) !important;
+  --a-heading:#07182A !important; --a-silver-1:#07182A !important; --a-silver-2:#13283E !important; --a-silver-3:#3A5068 !important;
+  --a-text:#22374D !important; --a-muted:#566C83 !important; --a-faint:#7F93A9 !important;
+  --a-line:#D6E0EB !important; --a-line-strong:#B8C8DA !important; --a-line-faint:#E6EDF4 !important;
+  --a-pos:#0A8B4E !important; --a-pos-soft:#E2F4EA !important; --a-pos-line:rgba(10,139,78,.30) !important;
+  --a-neg:#C2352B !important; --a-neg-soft:#FBEAE8 !important; --a-neg-line:rgba(194,53,43,.28) !important;
+  --a-warn:#A87400 !important; --a-warn-soft:#FBF1D8 !important; --a-warn-line:rgba(168,116,0,.30) !important;
+  --a-info:#4B5FD1 !important;
+  --a-sh:0 1px 2px rgba(7,24,42,.06), 0 2px 8px rgba(7,24,42,.05) !important;
+  --a-sh-up:0 1px 2px rgba(7,24,42,.07), 0 10px 28px rgba(7,24,42,.09) !important;
+  --a-focus:0 0 0 3px rgba(11,95,204,.22) !important;
+  --page:#F3F6FA !important; --panel:#FFFFFF !important; --panel-2:#F7F9FC !important; --panel-3:#EEF3F8 !important;
+  --ink:#07182A !important; --ink-2:#22374D !important; --muted:#566C83 !important;
+  --line:#D6E0EB !important; --line-2:#B8C8DA !important; --edge:rgba(7,24,42,.12) !important;
+  --brand:#0B5FCC !important; --brand-dk:#0A4AA0 !important; --brand-lt:#0B5FCC !important; --brand-soft:#E3EEFB !important;
+  --gold:#A87400 !important; --gold-soft:#FBF1D8 !important; --green:#0A8B4E !important; --green-soft:#E2F4EA !important;
+  --red:#C2352B !important; --red-soft:#FBEAE8 !important; --blue:#0B5FCC !important; --blue-soft:#E3EEFB !important;
+  --sh:0 1px 2px rgba(7,24,42,.06), 0 2px 8px rgba(7,24,42,.05) !important;
+  --sh-up:0 1px 2px rgba(7,24,42,.07), 0 10px 28px rgba(7,24,42,.09) !important;
+  --tmr-bg:#F3F6FA !important; --tmr-surface:#FFFFFF !important; --tmr-panel:#FFFFFF !important;
+  --tmr-text:#22374D !important; --tmr-heading:#07182A !important; --tmr-muted:#566C83 !important; --tmr-border:#D6E0EB !important;
+}
+
+/* 2. Ground. */
+html[data-tmr-theme="light"]{background:#F3F6FA !important}
+html[data-tmr-theme="light"] body{background:#F3F6FA !important;color:#22374D !important}
+html[data-tmr-theme="light"] body :is(h1,h2,h3,h4,h5,h6){color:#07182A}
+
+/* 3. Form fields read as fields on a light page. */
+html[data-tmr-theme="light"] body :is(input:not([type=checkbox]):not([type=radio]):not([type=range]),select,textarea){
+  background-color:#FFFFFF !important;color:#07182A !important;border-color:#C5D3E2 !important}
+html[data-tmr-theme="light"] body ::placeholder{color:#7F93A9 !important}
+
+/* 4. Primary buttons keep white type on brand blue. */
+html[data-tmr-theme="light"] body :is(.ds-btn.p,.btn-primary,.nv-btn.p,.tmr-btn-primary){color:#FFFFFF !important}
+
+/* 5. The navy header and footer stay navy (chrome), with their own white type. */
+html[data-tmr-theme="light"] .ds-nav,html[data-tmr-theme="light"] .ds-footer{color-scheme:dark}
+
+/* 6. Images, logos and photos are never recoloured; components that paint
+   themselves white already (light surfaces) are left alone. */
+
+/* 7. Token names the role mapper reads as surfaces but the pages use as type. */
+html[data-tmr-theme="light"] body.tmr-ds{--x-soft:#3A5068 !important}
+
+/* 8. A+ hero stage on a light page: a pale wash over the photo, dark type. */
+html[data-tmr-theme="light"] body.tmr-aplus .ap-shade{background:linear-gradient(90deg,rgba(243,246,250,.97) 0%,rgba(243,246,250,.9) 50%,rgba(243,246,250,.62) 100%) !important}
+html[data-tmr-theme="light"] body.tmr-aplus .ap-photo{opacity:.35 !important}
+html[data-tmr-theme="light"] body.tmr-aplus .aplus-hero{box-shadow:0 12px 34px rgba(7,24,42,.09) !important}
+html[data-tmr-theme="light"] body.tmr-aplus h1.aplus-h1{color:#07182A !important;-webkit-text-fill-color:#07182A !important;text-shadow:none !important}
+html[data-tmr-theme="light"] body.tmr-aplus .aplus-hero p{color:#2A3F55 !important}

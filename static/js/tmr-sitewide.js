@@ -456,7 +456,7 @@
                 </button>
                 <div class="tmr-user-menu-panel" role="menu" aria-label="Account menu" hidden>
                     <a class="tmr-user-menu-item" role="menuitem" href="${profileHref}"><i class="fas fa-user" aria-hidden="true"></i> My Profile</a>
-                    <a class="tmr-user-menu-item" role="menuitem" href="/profile/?action=edit"><i class="fas fa-gear" aria-hidden="true"></i> Settings</a>
+                    <a class="tmr-user-menu-item" role="menuitem" href="/account/settings/"><i class="fas fa-gear" aria-hidden="true"></i> Account Settings</a>
                     <a class="tmr-user-menu-item" role="menuitem" href="/contact/"><i class="fas fa-circle-question" aria-hidden="true"></i> Help &amp; Support</a>
                     <div class="tmr-user-menu-divider" role="separator"></div>
                     <button class="tmr-user-menu-item tmr-user-menu-item--logout" role="menuitem" type="button" data-tmr-logout><i class="fas fa-sign-out-alt" aria-hidden="true"></i> Log Out</button>
