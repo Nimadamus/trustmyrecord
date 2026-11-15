@@ -72,7 +72,7 @@ def js_css(src: str) -> str:
 # Page-only sheets ride with their page instead of every light page.
 PAGE_EXTRA = {
     "home": ["tmr-concept-a.css", "home-holo.css"],
-    "feed": ["social-home.css", "feed-v2.css", "feed-social.css", "feed-open-picks.css"],
+    "feed": ["social-home.css", "feed-v2.css", "feed-social.css", "feed-open-picks.css", "feed-comments.css"],
     "forum": ["tmr-forum-app.css", "tmr-forum-arena.css"],
 }
 
