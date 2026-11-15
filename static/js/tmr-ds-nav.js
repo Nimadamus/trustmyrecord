@@ -110,7 +110,7 @@
       if (!scale) {
         nav = document.createElement('link');
         nav.rel = 'stylesheet';
-        nav.href = '/static/css/tmr-navbar.css?v=68ec3081d29a';
+        nav.href = '/static/css/tmr-navbar.css?v=6cf1ec145b8d';
       }
     }
     if (nav) document.head.appendChild(nav);
