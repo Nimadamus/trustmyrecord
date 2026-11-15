@@ -27,6 +27,13 @@
 
 :root{ --tmr-nav-shell: .tmr-ds; }
 
+/* BODY_FONT_FLOOR_20261115: shell pages that never set a body font fell back
+   to the browser default (Times New Roman) on BetLegend Pro game pages, sim
+   results, NFL Game of the Week and the coin account page. :where() has zero
+   specificity, so any body font a page sets still wins; this only fills the
+   gap. */
+:where(body){ font-family: Inter, 'Segoe UI', Arial, sans-serif; }
+
 /* ---- 1. the bar itself --------------------------------------------------- */
 body:is(.tmr-ds,.tmr-ds-shell,.tmr-site-shell,.tmr-theme-a,.classic-forum) .ds-nav{
   background:rgba(2,5,10,.94);
