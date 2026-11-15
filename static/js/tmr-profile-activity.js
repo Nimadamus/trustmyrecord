@@ -41,7 +41,7 @@
         return new Date(t).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     }
     var ICON = {
-        pick_tailed: 'fa-arrow-trend-up', pick_faded: 'fa-arrow-trend-down', pick_tail_verified: 'fa-circle-check', pick_fade_verified: 'fa-circle-check',
+        pick_tailed: 'fa-arrow-trend-up', pick_faded: 'fa-arrow-trend-down', pick_tail_verified: 'fa-circle-check', pick_fade_verified: 'fa-people-arrows', duel_won: 'fa-trophy',
         picks_entered: 'fa-lock', forum_thread: 'fa-comments', forum_reply: 'fa-reply', feed_post: 'fa-pen', poll_vote: 'fa-square-poll-vertical',
         trivia_completed: 'fa-circle-question', user_followed: 'fa-user-plus', milestone: 'fa-trophy', units_milestone: 'fa-trophy', roi_milestone: 'fa-trophy',
         achievement_earned: 'fa-medal', contest_entered: 'fa-flag-checkered', contest_placed: 'fa-ranking-star', user_joined: 'fa-door-open', sim_run: 'fa-dice'
@@ -128,9 +128,61 @@
         } catch (x) { input.select(); }
     });
 
+    /* HEAD_TO_HEAD_20261115: the member's head to head record. A head to head is
+       two real picks on opposite sides of one game (GET /api/duels/user/<name>).
+       Public, like the picks it is made of; nothing is drawn when there is none. */
+    function h2hHtml(d, name) {
+        if (!d || !d.ok || !d.record || !Array.isArray(d.duels) || !d.duels.length) return '';
+        var r = d.record, me = String(d.username || name || '').toLowerCase();
+        var chip = function (n, label, cls) { return '<span class="tmr-pa-stat' + (cls || '') + '"><b>' + esc(Number(n) || 0) + '</b> ' + esc(label) + '</span>'; };
+        var chips = chip(r.wins, r.wins === 1 ? 'win' : 'wins', ' is-v') + chip(r.losses, r.losses === 1 ? 'loss' : 'losses') +
+            (r.level ? chip(r.level, 'level') : '') + (r.open ? chip(r.open, 'in play') : '');
+        var rivals = (d.rivals || []).map(function (x) {
+            return '<a class="tmr-h2h-rival" href="/profile/?user=' + encodeURIComponent(x.username) + '">vs ' + esc(x.username) + ' <b>' + esc(x.wins) + '-' + esc(x.losses) + (x.level ? '-' + esc(x.level) : '') + '</b></a>';
+        }).join('');
+        var rows = d.duels.map(function (x) {
+            var mine = String(x.owner.username).toLowerCase() === me ? x.owner : x.challenger;
+            var theirs = mine === x.owner ? x.challenger : x.owner;
+            var state = x.status === 'open' ? ['In play', ''] : (!x.winner_username ? ['Level', ''] : (String(x.winner_username).toLowerCase() === me ? ['Won', ' is-won'] : ['Lost', ' is-lost']));
+            var when = x.status === 'open' ? '' : ago(x.settled_at);
+            return '<li><a class="tmr-pa-row tmr-h2h-row" href="/pick/?id=' + encodeURIComponent(mine.pick_id) + '">' +
+                '<span class="tmr-h2h-chip' + state[1] + '">' + state[0] + '</span>' +
+                '<span class="tmr-pa-text"><b>' + esc(mine.pick_text) + '</b> vs ' + esc(theirs.username) + '\u2019s ' + esc(theirs.pick_text) +
+                    (x.matchup ? '<span class="tmr-h2h-sub">' + esc((x.league ? x.league + ' \u00b7 ' : '') + x.matchup) + '</span>' : '') + '</span>' +
+                '<span class="tmr-pa-time">' + esc(when) + '</span></a></li>';
+        }).join('');
+        return '<div class="tmrx-section" id="tmrxH2H">' +
+            '<div class="tmrx-section-head"><div>' +
+            '<div class="tmrx-section-title">Head to Head</div>' +
+            '<div class="tmrx-section-sub">Two members, two real picks on opposite sides of one game. Nothing is staked; each pick counts on its owner\u2019s record.</div></div>' +
+            '<div class="tmrx-meta">' + esc(r.wins) + '-' + esc(r.losses) + (r.level ? '-' + esc(r.level) : '') + '</div></div>' +
+            '<div class="tmr-pa-stats">' + chips + '</div>' +
+            (rivals ? '<div class="tmr-h2h-rivals">' + rivals + '</div>' : '') +
+            '<ul class="tmr-pa-list">' + rows + '</ul>' +
+        '</div>';
+    }
+    var h2hDone = false;
+    function mountH2H() {
+        if (h2hDone) return;
+        var anchor = document.getElementById('tmrxPublicLedger');
+        var name = profileName();
+        if (!anchor || !name) return;
+        h2hDone = true;
+        fetch(apiBase() + '/duels/user/' + encodeURIComponent(name) + '?limit=10', { credentials: 'omit' })
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (d) {
+                var html = h2hHtml(d, name);
+                var old = document.getElementById('tmrxH2H');
+                if (old && old.parentNode) old.parentNode.removeChild(old);
+                if (html) anchor.insertAdjacentHTML('beforebegin', html);
+            })
+            .catch(function () { h2hDone = false; });
+    }
+
     var done = false;
     function mount() {
         mountCreator();
+        mountH2H();
         if (done) return;
         var anchor = document.getElementById('tmrxPublicLedger');
         var name = profileName();
@@ -152,7 +204,7 @@
         try {
             var pending = false;
             new MutationObserver(function () {
-                if ((done && creatorDone) || pending) return;
+                if ((done && creatorDone && h2hDone) || pending) return;
                 pending = true;
                 setTimeout(function () { pending = false; mount(); }, 300);
             }).observe(document.documentElement, { childList: true, subtree: true });
@@ -164,5 +216,5 @@
     }
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
 
-    window.TMRProfileActivity = { _sectionHtml: sectionHtml, _creatorHtml: creatorHtml, _ago: ago };
+    window.TMRProfileActivity = { _sectionHtml: sectionHtml, _creatorHtml: creatorHtml, _h2hHtml: h2hHtml, _ago: ago };
 })();

@@ -97,7 +97,8 @@
         if (!t && !f) return '';
         var parts = [];
         if (t) parts.push(t + (t === 1 ? ' verified pick with it' : ' verified picks with it'));
-        if (f) parts.push(f + (f === 1 ? ' verified pick against it' : ' verified picks against it'));
+        // HEAD_TO_HEAD_20261115: a real pick locked against this one is a head to head challenge
+        if (f) parts.push(f + (f === 1 ? ' challenger took the other side' : ' challengers took the other side'));
         return '<p class="fop-note fop-verified"><i class="fas fa-circle-check"></i> ' + e(parts.join(' \u00b7 ')) + '</p>';
     }
 
@@ -122,7 +123,7 @@
         var formal = h
             ? '<div class="fop-formal">' +
                 '<button type="button" class="fv-view-picks fop-slip" data-fop-slip="same">Add to my slip <i class="fas fa-chevron-right"></i></button>' +
-                '<button type="button" class="fv-view-picks fop-slip fop-slip--other" data-fop-slip="other">Take ' + e(h.otherLabel) + ' <i class="fas fa-chevron-right"></i></button>' +
+                '<button type="button" class="fv-view-picks fop-slip fop-slip--other" data-fop-slip="other" title="Lock the other side with a real pick of your own. Whoever is right wins the head to head.">Challenge: take ' + e(h.otherLabel) + ' <i class="fas fa-chevron-right"></i></button>' +
               '</div>'
             : '';
         var note = item.is_own_pick
@@ -148,14 +149,14 @@
     // ACTIVITY_UNIFIED_20261114: a line from the shared activity log (a member
     // tailed, faded or locked a real pick with or against a public pick). Same
     // header as every card; the line links to the pick it is about.
-    var ACT_ICON = { pick_tailed: 'fa-arrow-trend-up', pick_faded: 'fa-arrow-trend-down', pick_tail_verified: 'fa-circle-check', pick_fade_verified: 'fa-circle-check' };
+    var ACT_ICON = { pick_tailed: 'fa-arrow-trend-up', pick_faded: 'fa-arrow-trend-down', pick_tail_verified: 'fa-circle-check', pick_fade_verified: 'fa-people-arrows', duel_won: 'fa-trophy' };
     function renderActivity(item) {
         if (!item.activity_text) return '';
         var id = String(item.item_id || '');
         var header = (typeof window.renderFeedHeader === 'function')
             ? window.renderFeedHeader(Object.assign({}, item, { item_type: 'pick' }), '')
             : '';
-        var verified = /_verified$/.test(String(item.activity_kind || ''));
+        var verified = /_verified$|^duel_won$/.test(String(item.activity_kind || ''));
         return '<div class="feed-item fop-card fop-activity" data-id="' + e(id) + '" data-type="social_activity">' +
             header +
             '<p class="fop-act-line' + (verified ? ' is-verified' : '') + '"><i class="fas ' + (ACT_ICON[item.activity_kind] || 'fa-bolt') + '"></i> ' + e(item.activity_text) + '</p>' +

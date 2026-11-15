@@ -54,7 +54,7 @@ const ok = (name) => { n++; console.log('  ok   ' + name); };
   assert.ok(/data-fop-react="tail" aria-pressed="false">.*Tail <span>3<\/span>/.test(html));
   assert.ok(/data-fop-react="fade" aria-pressed="false">.*Fade <span>1<\/span>/.test(html));
   assert.ok(html.includes('Tail and Fade are reactions. They do not add a pick to your record.'));
-  assert.ok(html.includes('data-fop-slip="same"') && html.includes('Take Under 224.5'));
+  assert.ok(html.includes('data-fop-slip="same"') && html.includes('Challenge: take Under 224.5'));
   ok('card shows the pick, the game, the market, the price and both counts');
 }
 {
@@ -112,7 +112,7 @@ const ok = (name) => { n++; console.log('  ok   ' + name); };
   const none = win.TMRFeedOpenPicks.render(pick());
   assert.ok(!none.includes('fop-verified'));
   const some = win.TMRFeedOpenPicks.render(pick({ verified_tails_count: 2, verified_fades_count: 1 }));
-  assert.ok(some.includes('2 verified picks with it') && some.includes('1 verified pick against it'));
+  assert.ok(some.includes('2 verified picks with it') && some.includes('1 challenger took the other side'));
   assert.ok(src.includes("sessionStorage.setItem('tmr_pick_source'"), 'the slip handoff remembers the card it came from');
   const vis = fs.readFileSync(path.join(root, 'static/js/tmr-pick-visibility.js'), 'utf8');
   assert.ok(vis.includes("sessionStorage.removeItem('tmr_pick_source');"), 'the hint is used once');

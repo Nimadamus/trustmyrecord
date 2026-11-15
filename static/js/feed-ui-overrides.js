@@ -1001,7 +1001,11 @@ async function loadFeedItems() {
                         .filter(isRealPublicFeedUser)
                         .filter(p => p && p.is_public !== false && !p.is_private && !['pending', 'locked'].includes(String(p.status || '').toLowerCase()))
                         .map(normalizePublicPick);
-                    const seen = new Map(items.map((i, idx) => [String(i.pick_id || i.item_id || i.id), idx]));
+                    // ACTIVITY_KEY_20261115: an activity line or an open pick card carries the id of the pick it is
+                    // ABOUT, not its own. Keyed by pick id, a graded discover pick with that id overwrote the line
+                    // (a head to head win vanished once the game was graded). Those rows keep their own item id.
+                    const ownKey = (i) => (i && (i.item_type === 'social_activity' || i.item_type === 'open_pick')) ? 'item:' + i.item_id : String(i.pick_id || i.item_id || i.id);
+                    const seen = new Map(items.map((i, idx) => [ownKey(i), idx]));
                     picks.forEach(p => {
                         const key = String(p.pick_id || p.item_id || p.id);
                         if (seen.has(key)) {
