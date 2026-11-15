@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@1,800&display=swap');
 /* tmr-sim-arena.css -- shared styling for the NBA and NHL simulators.
  *
  * Lifted from the NFL simulator's page-local <style> block so the three tools
@@ -633,4 +634,39 @@ html:not(.simbc) body.tmr-ds--dark main.wrap .morelinks a:hover{transform:transl
   html:not(.simbc) body.tmr-ds--dark main.wrap > .hero > p{font-size:.95rem}
   html:not(.simbc) body.tmr-ds--dark main.wrap .panel{padding:14px;border-radius:14px}
   html:not(.simbc) body.tmr-ds--dark main.wrap .btn{padding:11px 16px}
+}
+/* =============================================================================
+   SIM_SUBHERO_20261115: matchup and team pages get the same title bar as the
+   main simulators (.tsb in tmr-sim-broadcast.css): stadium photo with shade,
+   pill kicker, Montserrat italic title with the last word in gold. The kicker
+   and the gold word are added by heroTitle() in tmr-sim-ux.js; without it the
+   title still reads correctly in white.
+   ============================================================================= */
+html:not(.simbc) body.tmr-ds--dark main.wrap > .hero{
+  padding:clamp(20px,2.8vw,34px) clamp(18px,2.8vw,36px);border-radius:22px;border:1px solid transparent;
+  background:linear-gradient(180deg,#071228,#050b1a) padding-box,
+    linear-gradient(140deg,rgba(47,180,255,.75),rgba(255,255,255,.07) 40%,rgba(255,255,255,.04) 60%,rgba(77,107,255,.65)) border-box;
+  box-shadow:0 24px 60px rgba(0,0,0,.42),0 0 60px rgba(47,180,255,.10)}
+html:not(.simbc) body.tmr-ds--dark main.wrap > .hero::before{
+  opacity:1;-webkit-mask-image:none;mask-image:none;
+  background:linear-gradient(90deg,rgba(3,8,22,.94) 0%,rgba(3,8,22,.72) 48%,rgba(3,8,22,.25) 100%),
+    linear-gradient(180deg,rgba(3,8,22,0) 45%,rgba(3,8,22,.7) 100%),
+    url(/static/img/blp/stadium-hero.jpg) center 30%/cover no-repeat !important}
+html:not(.simbc) body.tmr-ds--dark main.wrap > .hero::after{display:none}
+html:not(.simbc) body.tmr-ds--dark main.wrap > .hero h1{
+  display:block;margin:12px 0 8px;font:italic 800 clamp(1.9rem,4.2vw,3.2rem)/1.04 Montserrat,Inter,system-ui,sans-serif !important;
+  letter-spacing:-.025em !important;text-transform:none !important;color:#fff;background:none;-webkit-text-fill-color:#fff;filter:none;
+  text-shadow:0 6px 40px rgba(0,0,0,.45)}
+html:not(.simbc) body.tmr-ds--dark main.wrap > .hero h1 em{
+  font-style:italic;background:linear-gradient(180deg,#ffdf7e,#f5c84c 60%,#d99a1e);-webkit-background-clip:text;background-clip:text;
+  color:transparent;-webkit-text-fill-color:transparent;padding-right:.06em}
+html:not(.simbc) body.tmr-ds--dark main.wrap > .hero .simux-kicker{
+  display:inline-flex;align-items:center;gap:8px;padding:7px 14px;border-radius:999px;border:1.5px solid rgba(47,180,255,.7);
+  background:rgba(47,180,255,.12);color:#bfe6ff;font:800 12px/1 "Barlow Condensed",Inter,sans-serif;letter-spacing:.16em;
+  text-transform:uppercase;box-shadow:0 0 22px rgba(47,180,255,.18)}
+html:not(.simbc) body.tmr-ds--dark main.wrap > .hero .simux-kicker i{width:8px;height:8px;border-radius:50%;background:#34d399;box-shadow:0 0 0 4px rgba(52,211,153,.2)}
+@media(max-width:640px){
+  html:not(.simbc) body.tmr-ds--dark main.wrap > .hero{padding:18px 14px 16px;border-radius:18px}
+  html:not(.simbc) body.tmr-ds--dark main.wrap > .hero h1{font-size:clamp(1.55rem,7.4vw,2.1rem) !important}
+  html:not(.simbc) body.tmr-ds--dark main.wrap > .hero .simux-kicker{font-size:11px;padding:6px 11px}
 }
