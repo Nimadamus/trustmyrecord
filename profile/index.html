@@ -1736,6 +1736,18 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,700;0,800;1,800&display=swap">
 <link rel="stylesheet" href="/static/css/tmr-aplus.css?v=8b894834b70c">
 <script defer src="/static/js/tmr-aplus.js?v=4308438d502c"></script>
+
+<style id="tmr-persona-profile-css">
+  /* COMMUNITY_PERSONAS_20261115 */
+  html body.tmr-persona-profile.tmr-social-profile .profile-rail-block,
+  html body.tmr-persona-profile.tmr-social-profile .profile-header .profile-trust-row,
+  html body.tmr-persona-profile.tmr-social-profile [data-tmr-embed-btn],
+  html body.tmr-persona-profile.tmr-social-profile .profile-top-strip,
+  html body.tmr-persona-profile.tmr-social-profile #tmrFanIdentityCard,
+  html body.tmr-persona-profile.tmr-social-profile .profile-header-section ~ section { display: none !important; }
+  body.tmr-persona-profile.profile-page.tmr-social-profile .profile-header::after { content: "TMR Persona" !important; }
+  body.tmr-persona-profile.profile-page.tmr-social-profile .profile-header { grid-template-columns: 1fr !important; }
+</style>
 </head>
 <body class="tmr-ds-shell profile-page tmr-social-profile tmr-aplus" data-aplus="picks">
     <div class="profile-top-strip">
@@ -12219,6 +12231,8 @@
             '<div class="profile-handle">@' + p.username + '</div>' +
             (p.is_admin ? '<div><span class="profile-admin-badge">ADMIN</span></div>' : (p.is_moderator ? '<div><span class="profile-admin-badge">MOD</span></div>' : '')) +
             (p.has_early_access_badge ? '<div><span class="profile-early-access-badge">🪙 TMR Early Access</span></div>' : '') +
+            /* COMMUNITY_PERSONAS_20261115: a TMR operated persona says so up front. */
+            (p.author_persona ? '<div class="profile-persona-disclosure" style="margin-top:8px;display:flex;flex-wrap:wrap;align-items:center;gap:8px;"><span style="display:inline-flex;align-items:center;gap:5px;padding:2px 10px;border-radius:999px;font:700 12px/1.6 Inter,sans-serif;color:#0b1117;background:#7dd3fc;border:1px solid #bae6fd;">&#129302; ' + escapeHtml(p.author_persona.badge || 'TMR Persona') + '</span><span style="color:#9fb3c8;font-size:13px;">' + escapeHtml(p.author_persona.disclosure || '') + ' No picks, no record, not on any leaderboard.</span></div>' : '') +
             headlineHtml +
             '</div>' +
             '</div>' +
@@ -12236,6 +12250,10 @@
             emptyLedgerNote +
             '</div>' + rail;
 
+        /* COMMUNITY_PERSONAS_20261115: a persona has no record, so the
+           record surfaces (stats rail, trust pills, verified label, embed,
+           ledger sections) are hidden and the header says what it is. */
+        try { document.body.classList.toggle('tmr-persona-profile', !!p.author_persona); } catch (_) {}
         updateWorkspaceLinks(p.username);
         updateProfileSidebar(p);
         // Fill the top-rail Correlated Picks card if correlation data already

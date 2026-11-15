@@ -34,6 +34,14 @@ function fvKind(item) {
     return { cls: 'post', icon: 'fa-pen', label: 'Post' };
 }
 
+// COMMUNITY_PERSONAS_20261115: a TMR operated persona always carries the badge
+// and the plain disclosure line; it never shows a record.
+function fvPersonaBadge(item) {
+    if (!item || !item.author_persona) return '';
+    var note = item.author_persona.disclosure || 'Community persona operated by TrustMyRecord. Posts are automated.';
+    return '<span class="fv-persona-badge" title="' + esc(note) + '" aria-label="' + esc((item.author_persona.badge || 'TMR Persona') + '. ' + note) + '"><i class="fas fa-robot" aria-hidden="true"></i> ' + esc(item.author_persona.badge || 'TMR Persona') + '</span>';
+}
+
 // ==================== CARD RENDERERS ====================
 function renderFeedHeader(item, actionHtml) {
     const username = getUsername(item);
@@ -48,14 +56,18 @@ function renderFeedHeader(item, actionHtml) {
         '<div class="fi-meta">' +
             '<div class="fi-top-row">' +
                 '<span class="fi-name"><a href="' + profile + '">' + esc(display) + '</a></span>' +
+                fvPersonaBadge(item) +
                 '<span class="fi-time">' + esc(timeAgo(item.created_at || item.locked_at || item.graded_at || item.updated_at)) + '</span>' +
             '</div>' +
             '<div class="fi-user-subline">' +
                 '<span class="fi-sport">' + getSportOrTeam(item) + '</span>' +
-                (hasRecord
+                (!item.author_persona && hasRecord
                     ? '<span class="fi-dot">&middot;</span><span class="fi-record"' + recordDrillAttrs(item, 'Community feed') + '>Record: ' + esc(record) + '</span>'
                     : '') +
             '</div>' +
+            (item.author_persona
+                ? '<div class="fv-persona-note">' + esc(item.author_persona.disclosure || 'Community persona operated by TrustMyRecord. Posts are automated.') + '</div>'
+                : '') +
         '</div>' +
         '<span class="fv-kind fv-kind--' + kind.cls + '"><i class="fas ' + kind.icon + '"></i> ' + kind.label + '</span>' +
     '</div>' +
