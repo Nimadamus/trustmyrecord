@@ -101,7 +101,7 @@
     root.textContent = '';
     var box = el('div', 'mh2-card mh2-gate');
     box.appendChild(el('h2', null, 'Log in to see your dashboard'));
-    box.appendChild(el('p', null, 'Your simulations, how they did against the real results, and today’s games in your sports.'));
+    box.appendChild(el('p', null, 'How the simulator did against the real results, your pick record, and today’s games in your sports.'));
     box.appendChild(link('mh2-sim', '/login/?next=%2Fhome%2F', 'Log in'));
     root.appendChild(box);
   }
@@ -222,7 +222,7 @@
 
   function buildPerf(d, openGlossary) {
     var scard = el('section', 'mh2-card mh2-perf');
-    var sh = cardHead('bars', 'Your Performance', 'Your simulations graded against the real results and the closing betting line.');
+    var sh = cardHead('bars', 'Simulator Performance', 'Track how our simulations perform against actual game results and closing betting lines.');
     var ib = el('button', 'mh2-ib mh2-r'); ib.type = 'button'; ib.setAttribute('aria-label', 'What these numbers mean'); ib.appendChild(icon('info'));
     ib.addEventListener('click', openGlossary);
     sh.appendChild(ib);
@@ -472,7 +472,7 @@
       show(withGames[0]);
     }
 
-    /* 2. Your performance: SIM_RECORD_AUDIT_20261111. Moneyline / Spread / Totals graded on
+    /* 2. Simulator performance: SIM_RECORD_AUDIT_20261111. Moneyline / Spread / Totals graded on
        their own against the real result and the ESPN closing line, filterable by sport. Every
        row opens to show the original prediction, the line, the final and how it was graded. */
     var scard = buildPerf(d, function () { openGlossary(); });
