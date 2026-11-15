@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@1,800&display=swap');
 /* BROADCAST_PRESENTATION_20261105. The product shell for every simulator page.
    Scoped to html.simbc (set in the head by the SIM_BC block). Restraint: navy,
    one electric blue to cyan gradient, team colour as an accent, numbers large.
@@ -374,3 +375,22 @@ html.simbc-run .bc-runabout{margin:12px 0 18px}
 /* The shared lockup, kept on sim pages even if tmr-ds.css lands after tmr-navbar.css. */
 html.simbc body .ds-nav .ds-logo .mk{width:37px;height:40px;font-size:0;line-height:0;color:transparent;background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 140 152'><defs><linearGradient id='s' x1='0' y1='0' x2='0.22' y2='1'><stop offset='0' stop-color='%23FFFFFF'/><stop offset='.40' stop-color='%23E9EFF6'/><stop offset='.74' stop-color='%23A3B4C8'/><stop offset='1' stop-color='%23F4F8FC'/></linearGradient><linearGradient id='b' x1='0' y1='0' x2='0.28' y2='1'><stop offset='0' stop-color='%235AA9FF'/><stop offset='.50' stop-color='%231D7FE8'/><stop offset='1' stop-color='%230A4694'/></linearGradient></defs><path d='M70 3 137 23v15l-9 7 9 7v33c0 33-26 58-67 69C29 143 3 118 3 85V52l9-7-9-7V23z' fill='url(%23b)'/><path d='M70 17 124 33v52c0 25-21 45-54 55-33-10-54-30-54-55V33z' fill='%2305101B' stroke='url(%23s)' stroke-width='7'/><text x='70' y='83' text-anchor='middle' font-family='Arial Narrow,Haettenschweiler,Impact,Arial,sans-serif' font-size='47' font-weight='700' font-style='italic' fill='url(%23s)'>TMR</text><path d='M50 105l13 14 28-31' fill='none' stroke='%232B8CFF' stroke-width='12' stroke-linecap='round' stroke-linejoin='round'/></svg>") center / contain no-repeat; border:0;border-radius:0;box-shadow:none}
 @media (max-width:640px){html.simbc body .ds-nav .ds-logo .mk{width:30px;height:33px}}
+
+/* SIM_TITLEBAR_20261115: the stage header every simulator page opens with (same look as the Tools pages). */
+html.simbc .tsb{position:relative;isolation:isolate;overflow:hidden;display:block;margin:2px 0 18px;padding:clamp(20px,2.8vw,34px) clamp(18px,2.8vw,36px);border-radius:22px;
+  border:1px solid transparent;background:linear-gradient(180deg,rgba(6,14,32,.25),rgba(6,14,32,.25)) padding-box,
+  linear-gradient(140deg,rgba(47,180,255,.75),rgba(255,255,255,.07) 40%,rgba(255,255,255,.04) 60%,rgba(77,107,255,.65)) border-box;
+  box-shadow:0 24px 60px rgba(0,0,0,.42),0 0 60px rgba(47,180,255,.10)}
+html.simbc .tsb-stage{position:absolute;inset:0;z-index:-1;pointer-events:none;overflow:hidden;border-radius:inherit}
+html.simbc .tsb-stage i{position:absolute;display:block}
+html.simbc .tsb-photo{inset:0;background:url(/static/img/blp/stadium-hero.jpg) center 30%/cover no-repeat;opacity:.8;filter:saturate(1.2)}
+html.simbc .tsb-shade{inset:0;background:linear-gradient(90deg,rgba(3,8,22,.94) 0%,rgba(3,8,22,.72) 48%,rgba(3,8,22,.25) 100%),linear-gradient(180deg,rgba(3,8,22,0) 45%,rgba(3,8,22,.7) 100%)}
+html.simbc .tsb-glow{width:560px;height:560px;right:-180px;top:-320px;background:radial-gradient(closest-side,rgba(47,180,255,.32),transparent)}
+html.simbc .tsb-kicker{display:inline-flex;align-items:center;gap:8px;padding:7px 14px;border-radius:999px;border:1.5px solid rgba(47,180,255,.7);background:rgba(47,180,255,.12);color:#bfe6ff;
+  font:800 12px/1 "Barlow Condensed",Inter,sans-serif;letter-spacing:.16em;text-transform:uppercase;box-shadow:0 0 22px rgba(47,180,255,.18)}
+html.simbc .tsb-kicker i{width:8px;height:8px;border-radius:50%;background:#34d399;box-shadow:0 0 0 4px rgba(52,211,153,.2)}
+html.simbc .tsb h1,html.simbc main .tsb h1{font:italic 800 clamp(1.9rem,4.2vw,3.2rem)/1.04 Montserrat,Inter,system-ui,sans-serif !important;letter-spacing:-.025em !important;text-transform:none !important;
+  color:#fff !important;margin:12px 0 8px !important;text-shadow:0 6px 40px rgba(0,0,0,.45)}
+html.simbc .tsb h1 em{font-style:italic;background:linear-gradient(180deg,#ffdf7e,#f5c84c 60%,#d99a1e);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;padding-right:.06em}
+html.simbc .tsb-sub{margin:0;max-width:60ch;color:#dbe6f7;font-size:clamp(14px,1.2vw,17px);line-height:1.5}
+@media (max-width:640px){html.simbc .tsb{padding:18px 14px 16px;border-radius:18px;margin-bottom:14px}html.simbc .tsb-kicker{font-size:11px;padding:6px 11px}}
