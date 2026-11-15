@@ -1079,8 +1079,64 @@
       } else if (root.classList.contains('simbc-run')) {
         bootRun();
       }
+      titleBar();
     } finally {
       ready();
+    }
+  }
+
+  /* SIM_TITLEBAR_20261115. Every simulator page opens with the same stage
+     header the Tools pages use (stadium photo, kicker, italic title with the
+     last word in gold, one line on what the page does). Built around the page's
+     own h1, after the layout above has placed it; the h1 text never changes.
+     Runs once; a page that already has the header is left alone. */
+  function titleBar() {
+    if (!root.classList.contains('simbc-game') && !root.classList.contains('simbc-shell')) return;
+    var main = $('main');
+    var h1 = main ? $('h1', main) : null;
+    if (!h1 || h1.closest('.tsb')) return;
+    var league = String(root.getAttribute('data-bc') || '').toUpperCase();
+    var path = String(global.location.pathname || '');
+    var kind = /playoff/.test(path) ? 'playoff' : (/season/.test(path) ? 'season' : 'game');
+    if (!league || league === 'ALL') { var m = path.match(/\/(mlb|nfl|nba|nhl)-/); league = m ? m[1].toUpperCase() : ''; }
+    var KICK = { game: 'Game simulator', season: 'Season simulator', playoff: 'Playoff simulator' };
+    var SUB = {
+      game: 'Pick a matchup and play it out: projected score, win probability and a full box score.',
+      season: 'Every remaining game played out: projected standings, playoff odds and seeds.',
+      playoff: 'The bracket played out from today: each team\u2019s odds to advance and win it all.',
+    };
+    var bar = el('header', 'tsb');
+    bar.setAttribute('data-tsb', league.toLowerCase() || 'all');
+    var stage = el('div', 'tsb-stage');
+    stage.setAttribute('aria-hidden', 'true');
+    ['tsb-photo', 'tsb-shade', 'tsb-glow'].forEach(function (c) { stage.appendChild(el('i', c)); });
+    bar.appendChild(stage);
+    var kick = el('span', 'tsb-kicker');
+    kick.appendChild(el('i', ''));
+    kick.appendChild(document.createTextNode((league ? league + ' \u00b7 ' : '') + KICK[kind]));
+    h1.parentNode.insertBefore(bar, h1);
+    bar.appendChild(kick);
+    /* gold on the last word: rebuilt from the h1's own text, nothing else */
+    var words = String(h1.textContent || '').trim().split(/\s+/);
+    if (words.length > 1) {
+      var last = words.pop();
+      h1.textContent = words.join(' ') + ' ';
+      var em = document.createElement('em');
+      em.textContent = last;
+      h1.appendChild(em);
+    }
+    var home = h1.parentNode;
+    bar.appendChild(h1);
+    bar.appendChild(el('p', 'tsb-sub', SUB[kind]));
+    /* One order on every page: breadcrumb, sport switcher, then this header. */
+    var sw = $('.simds-switch', main);
+    if (sw && sw.parentNode) {
+      sw.parentNode.insertBefore(bar, sw.nextSibling);
+      bar.style.order = global.getComputedStyle(sw).order;
+    }
+    /* the block the title came from, if nothing else is left in it */
+    if (home && home !== bar && home !== main && !String(home.textContent || '').trim() && !$('img,svg,button,a,input,select,table', home)) {
+      home.style.display = 'none';
     }
   }
 
