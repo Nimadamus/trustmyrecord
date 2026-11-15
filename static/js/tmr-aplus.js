@@ -40,8 +40,10 @@
        inline CSS. Turn those into dark glass, and lift dark text inside them, so nothing reads as a white hole. */
     function lum(c) { var m = c && c.match(/[\d.]+/g); if (!m || (m.length > 3 && +m[3] < 0.5)) return -1; return 0.2126 * m[0] + 0.7152 * m[1] + 0.0722 * m[2]; }
     function ink(k) { if (k.classList.contains('aplus-h1')) return; k.classList.add('aplus-inkfix'); k.style.setProperty('color', '#dbe6f7', 'important'); k.style.setProperty('-webkit-text-fill-color', '#dbe6f7', 'important'); }
+    // ACCOUNT_SETTINGS_20261115: these repaint light panels dark; a member on the Light appearance wants them light.
+    function lightTheme() { return document.documentElement.getAttribute('data-tmr-theme') === 'light'; }
     function darkfix() {
-        if (!document.body || !document.body.classList.contains('tmr-aplus')) return;
+        if (!document.body || !document.body.classList.contains('tmr-aplus') || lightTheme()) return;
         var skip = /^(IMG|SVG|CANVAS|VIDEO|PICTURE|IFRAME|path|I|svg)$/;
         document.querySelectorAll('body *').forEach(function (e) {
             if (skip.test(e.tagName) || e.closest('.ds-nav, header.tmr-ds-header, #tmr-global-nav, .tmr-ds-nav, [class*="live-chat"], .aplus-stage, footer')) return;
@@ -70,7 +72,7 @@
         return 10;
     }
     function inkfix() {
-        if (!document.body || !document.body.classList.contains('tmr-aplus')) return;
+        if (!document.body || !document.body.classList.contains('tmr-aplus') || lightTheme()) return;
         document.querySelectorAll('main *, .aplus-hero *, body > section *, body > div *').forEach(function (e) {
             if (/^(SCRIPT|STYLE|SVG|path|IMG)$/.test(e.tagName) || e.classList.contains('aplus-inkfix')) return;
             var has = false; for (var n = e.firstChild; n; n = n.nextSibling) if (n.nodeType === 3 && n.nodeValue.trim()) { has = true; break; }

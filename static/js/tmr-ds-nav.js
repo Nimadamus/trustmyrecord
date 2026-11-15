@@ -818,7 +818,7 @@
         '<div class="ds-menu-panel v2nav-menu-panel" role="menu" aria-label="Account menu">' +
           '<a href="/home/" role="menuitem">My Dashboard</a>' +  // MEMBER_HOME_20261101
           '<a href="/u/' + encodeURIComponent(name) + '/" role="menuitem">My Profile</a>' +
-          '<a href="/profile/?action=edit" role="menuitem">Settings</a>' +
+          '<a href="/account/settings/" role="menuitem">Account Settings</a>' +  // ACCOUNT_SETTINGS_20261115
           '<a href="/premium/#dashboard" role="menuitem">TMR Pro Dashboard</a>' +
           '<a href="/contact/" role="menuitem">Help &amp; Support</a>' +
           '<button type="button" class="v2nav-logout" role="menuitem" data-tmr-logout>Log Out</button>' +
@@ -843,6 +843,20 @@
         .then(function (r) { return r.ok ? r.json() : null; });
     }
 
+    // ACCOUNT_SETTINGS_20261115: the appearance saved on the account wins over
+    // this browser's copy, read once per browser session. The head boot snippet
+    // already painted the local copy before first paint; this only corrects a
+    // device that has never seen the member's choice.
+    try {
+      if (!sessionStorage.getItem('tmr_theme_synced')) {
+        headerRead('/account/appearance').then(function (d) {
+          if (!d || ['dark', 'light', 'system'].indexOf(d.theme) < 0) return;
+          try { sessionStorage.setItem('tmr_theme_synced', '1'); } catch (e) {}
+          applyThemeChoice(d.theme);
+        }).catch(function () {});
+      }
+    } catch (e) {}
+
     var unreadStarted = Date.now();
     headerRead('/notifications/unread-count')
       .then(function (d) {
@@ -865,6 +879,24 @@
         if (bal) bal.textContent = Number(d.balance).toLocaleString('en-US');
         if (pill) { pill.hidden = false; if (d.is_frozen) pill.classList.add('is-frozen'); }
       }).catch(function () {});
+  }
+
+  // Pages that predate the head boot snippet have no window.TMRTheme: apply
+  // the choice late there (one repaint) rather than ignore it.
+  function applyThemeChoice(theme) {
+    if (window.TMRTheme && typeof window.TMRTheme.set === 'function') {
+      if (window.TMRTheme.get() !== theme) window.TMRTheme.set(theme);
+      return;
+    }
+    try { localStorage.setItem('tmr_theme', theme); } catch (e) {}
+    var light = theme === 'light' || (theme === 'system' && window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches);
+    if (!light) return;
+    document.documentElement.setAttribute('data-tmr-theme', 'light');
+    if (!document.getElementById('tmrThemeLight0')) {
+      var l = document.createElement('link');
+      l.rel = 'stylesheet'; l.id = 'tmrThemeLight0'; l.href = '/static/css/tmr-theme-light.css?v=7a6ea6634b49';
+      document.head.appendChild(l);
+    }
   }
 
   function signOutHeader() {
@@ -954,6 +986,52 @@
      and leaderboards, the one-a-day free reveal, GA4 on pages that lacked it, and funnel
      source tracking. Adds page elements after load only; no URL or metadata change. */
   loadChain(['/static/js/tmr-pro-funnel.bf860e64747c.js']);
+
+  // ACCOUNT_SETTINGS_20261115: Light appearance contrast guard. A coloured
+  // fill (active tab, primary button) keeps its hue in light mode; where a page
+  // rule gave its label a dark or same-hue colour, the label goes white. Only
+  // runs while html[data-tmr-theme="light"] is set; undone when it is not.
+  (function lightGuard() {
+    function rgb(c) { var m = c && c.match(/[\d.]+/g); return m ? [+m[0], +m[1], +m[2], m.length > 3 ? +m[3] : 1] : null; }
+    function lum(c) { var f = function (v) { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }; return 0.2126 * f(c[0]) + 0.7152 * f(c[1]) + 0.0722 * f(c[2]); }
+    function fillOf(cs) {
+      var c = rgb(cs.backgroundColor);
+      if (c && c[3] > 0.6) return c;
+      if (cs.backgroundImage && cs.backgroundImage.indexOf('gradient') >= 0 && cs.backgroundImage.indexOf('url(') < 0) {
+        var m = cs.backgroundImage.match(/rgba?\([^)]*\)/); c = m && rgb(m[0]);
+        if (c && c[3] > 0.6) return c;
+      }
+      return null;
+    }
+    function pass() {
+      var light = document.documentElement.getAttribute('data-tmr-theme') === 'light';
+      if (!light) {
+        document.querySelectorAll('.tmr-lt-fix').forEach(function (e) { e.style.removeProperty('color'); e.style.removeProperty('-webkit-text-fill-color'); e.classList.remove('tmr-lt-fix'); });
+        return;
+      }
+      document.querySelectorAll('a,button,[role="tab"],.active,.on,.is-active').forEach(function (e) {
+        if (e.closest('.ds-nav,.ds-footer')) return;
+        var cs = getComputedStyle(e), bg = fillOf(cs);
+        if (!bg) { if (e.classList.contains('tmr-lt-fix')) { e.style.removeProperty('color'); e.style.removeProperty('-webkit-text-fill-color'); e.classList.remove('tmr-lt-fix'); } return; }
+        var chroma = (Math.max(bg[0], bg[1], bg[2]) - Math.min(bg[0], bg[1], bg[2])) / 255;
+        var lb = lum(bg);
+        if (chroma < 0.25 || lb > 0.45) return;
+        var fg = rgb(cs.color); if (!fg) return;
+        var lf = lum(fg), cr = (Math.max(lf, lb) + 0.05) / (Math.min(lf, lb) + 0.05);
+        if (cr >= 3) return;
+        e.classList.add('tmr-lt-fix');
+        e.style.setProperty('color', '#FFFFFF', 'important');
+        e.style.setProperty('-webkit-text-fill-color', '#FFFFFF', 'important');
+      });
+    }
+    var t = null;
+    function soon(ms) { clearTimeout(t); t = setTimeout(pass, ms); }
+    window.TMRLightGuard = pass;
+    function start() { pass(); soon(1500); setTimeout(pass, 4000); }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+    document.addEventListener('click', function () { if (document.documentElement.getAttribute('data-tmr-theme') === 'light') soon(120); }, true);
+    try { new MutationObserver(function () { soon(60); }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-tmr-theme'] }); } catch (e) {}
+  })();
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();

@@ -50,8 +50,18 @@ jobs:
         # though the next step silently corrects it.
         run: python scripts/version_static_refs.py --check || true
 
+      - name: Light appearance (Account Settings) - rebuild sheets, keep the head boot snippet on every page
+        # ACCOUNT_SETTINGS_20261115: page generators rebake HTML without the
+        # snippet and shared sheets change; both are restored here before pinning.
+        run: |
+          python scripts/build_theme_light.py
+          python scripts/inject_theme_boot.py
+
       - name: Re-pin every reference to its content hash
-        run: python scripts/version_static_refs.py
+        # inject again: the featured sync inside version_static_refs rebakes pages
+        run: |
+          python scripts/version_static_refs.py
+          python scripts/inject_theme_boot.py
 
       - name: Re-publish the content-hashed design-system builds
         # THE TWO VERSIONING SYSTEMS USED TO FIGHT EACH OTHER (2026-08-06).
