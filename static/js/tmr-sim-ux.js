@@ -212,7 +212,8 @@
     var m = path.match(/^\/(mlb|nfl|nba|nhl)-/);
     var sport = m ? m[1] : '';
     var saved = /^\/sports-simulators\/saved/.test(path);
-    if (!sport && !saved) return;
+    var todayPage = /^\/sports-simulators\/today/.test(path); // SIM_TODAY_20261115
+    if (!sport && !saved && !todayPage) return;
     var mode = /season/.test(path) ? 'season' : (/playoff/.test(path) ? 'playoff' : 'game');
     var isHome = sport && path === simHref(sport, mode);
     var nav = doc.createElement('nav');
@@ -234,7 +235,7 @@
       }
       html += '</div>';
     }
-    html += '<div class="simds-extra"><a href="/sports-simulators/">All simulators</a><a href="/sports-simulators/saved/"' + (saved ? ' aria-current="page"' : '') + '>Saved</a></div>';
+    html += '<div class="simds-extra"><a href="/sports-simulators/">All simulators</a><a href="/sports-simulators/today/"' + (todayPage ? ' aria-current="page"' : '') + '>Today</a><a href="/sports-simulators/saved/"' + (saved ? ' aria-current="page"' : '') + '>Saved</a></div>';
     nav.innerHTML = html;
     var crumb = main.querySelector('nav.simcrumb, nav[aria-label="Breadcrumb"], nav[aria-label="breadcrumb"], .crumbs, .ss-crumb, .breadcrumbs');
     if (crumb && crumb.parentNode) crumb.parentNode.insertBefore(nav, crumb.nextSibling);

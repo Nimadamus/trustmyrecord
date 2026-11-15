@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="canonical" href="https://trustmyrecord.com/sports-simulators/today/">
+<title>Today's Simulated Games | TrustMyRecord Sports Simulators</title>
+<meta name="description" content="Every MLB, NFL, NBA and NHL game simulated on TrustMyRecord in the last 24 hours, with the simulated final score and the member who ran it.">
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="TrustMyRecord" />
+<meta property="og:title" content="Today's Simulated Games" />
+<meta property="og:description" content="Every game simulated on TrustMyRecord in the last 24 hours, with the score and who ran it." />
+<meta property="og:url" content="https://trustmyrecord.com/sports-simulators/today/" />
+<meta property="og:image" content="https://trustmyrecord.com/static/og/og-home.png" />
+<link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+<script src="/static/js/config.js?v=60a0696a58ba"></script>
+<script src="/static/js/backend-api.js?v=83068a1a1e78"></script>
+<link rel="stylesheet" href="/static/css/tmr-ds.d4d41a955166.css">
+<link rel="stylesheet" href="/static/css/tmr-ds-header.cc364e352e74.css">
+<!-- The one approved navbar: the shared header component (tmr-ds-nav.js)
+     plus the homepage's own navbar rules, so every page renders the same bar. -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap">
+<link rel="stylesheet" href="/static/css/tmr-navbar.css?v=6cf1ec145b8d">
+<!-- SITEWIDE_APLUS_20261113 -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,700;0,800;1,800&display=swap">
+<!--SIM_UX--><link rel="stylesheet" href="/static/css/tmr-sim-ux.css?v=f70e7f2b899b"><script defer src="/static/js/tmr-sim-ux.js?v=7d6de5eba59c"></script><!--/SIM_UX-->
+<style id="sim-today-css">/* SIM_TODAY_20261115: Today's Simulated Games */
+html body.tmr-ds-shell{background:radial-gradient(1200px 600px at 80% -10%,rgba(40,120,255,.16),transparent 60%),#050b1a;color:#e6eefb}
+.std{max-width:1180px;margin:0 auto;padding:10px 20px 60px;color:#e6eefb;font-family:Inter,system-ui,sans-serif}
+.std-crumb{font-size:.8rem;opacity:.85;margin:8px 0 12px}.std-crumb a{color:inherit;text-decoration:none}.std-crumb i{opacity:.45;margin:0 6px;font-style:normal}
+.std-hero{position:relative;isolation:isolate;overflow:hidden;margin:2px 0 18px;padding:clamp(20px,2.8vw,34px) clamp(18px,2.8vw,36px);border-radius:22px;border:1px solid rgba(47,180,255,.5);
+ background:linear-gradient(90deg,rgba(3,8,22,.94) 0%,rgba(3,8,22,.72) 48%,rgba(3,8,22,.25) 100%),linear-gradient(180deg,rgba(3,8,22,0) 45%,rgba(3,8,22,.7) 100%),url(/static/img/blp/stadium-hero.jpg) center 30%/cover no-repeat;
+ box-shadow:0 24px 60px rgba(0,0,0,.42),0 0 60px rgba(47,180,255,.10)}
+.std-kicker{display:inline-flex;align-items:center;gap:8px;padding:7px 14px;border-radius:999px;border:1.5px solid rgba(47,180,255,.7);background:rgba(47,180,255,.12);color:#bfe6ff;font:800 12px/1 "Barlow Condensed",Inter,sans-serif;letter-spacing:.16em;text-transform:uppercase}
+.std-kicker i{width:8px;height:8px;border-radius:50%;background:#34d399;box-shadow:0 0 0 4px rgba(52,211,153,.2)}
+.std-hero h1{font:italic 800 clamp(1.9rem,4.2vw,3.2rem)/1.04 Montserrat,Inter,system-ui,sans-serif;letter-spacing:-.025em;color:#fff;margin:12px 0 8px;text-shadow:0 6px 40px rgba(0,0,0,.45)}
+.std-hero h1 em{font-style:italic;background:linear-gradient(180deg,#ffdf7e,#f5c84c 60%,#d99a1e);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;padding-right:.06em}
+.std-sub{margin:0;max-width:62ch;color:#dbe6f7;font-size:clamp(14px,1.2vw,17px);line-height:1.5}
+.std-totals{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}.std-totals b{display:inline-flex;gap:6px;align-items:baseline;padding:8px 14px;border-radius:12px;background:rgba(5,12,28,.7);border:1px solid rgba(84,150,255,.3);font-weight:800;color:#fff}.std-totals b span{color:#a9bbd6;font-weight:600;font-size:.85rem}
+.std-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}.std-tabs button{cursor:pointer;border:1px solid rgba(84,150,255,.35);background:rgba(8,15,30,.7);color:#dbe8ff;border-radius:999px;padding:8px 16px;font:800 13px/1 Inter,sans-serif}
+.std-tabs button[aria-pressed="true"]{background:linear-gradient(180deg,#3d9bff,#1c62d8);border-color:transparent;color:#fff}
+.std-list{display:grid;gap:10px}
+.std-row{display:grid;grid-template-columns:78px 52px minmax(0,1fr) minmax(0,200px) auto;align-items:center;gap:14px;padding:12px 16px;border-radius:14px;border:1px solid rgba(84,150,255,.22);background:linear-gradient(180deg,rgba(11,21,42,.96),rgba(6,12,25,.97))}
+.std-time{color:#a9bbd6;font-size:.85rem;font-weight:600}
+.std-sport{justify-self:start;padding:4px 8px;border-radius:8px;font:800 11px/1 "Barlow Condensed",Inter,sans-serif;letter-spacing:.12em;background:rgba(47,140,255,.14);color:#9fd0ff}
+.std-game{display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-width:0}
+.std-team{display:inline-flex;align-items:center;gap:7px;font-weight:700;color:#fff;white-space:nowrap}.std-team img{width:26px;height:26px;object-fit:contain}
+.std-pts{font:800 1.15rem/1 Inter,sans-serif;color:#dbe6f5;min-width:2ch;text-align:right}.std-team.win .std-pts{color:#ffd166}
+.std-at{color:#7f93b3;font-size:.8rem}
+.std-by{color:#a9bbd6;font-size:.9rem;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.std-by a{color:#7cc4ff;font-weight:700;text-decoration:none}.std-by small{display:block;color:#7f93b3;font-size:.75rem}
+.std-run{border-radius:10px;padding:9px 14px;font-weight:800;font-size:.85rem;color:#fff;text-decoration:none;background:linear-gradient(180deg,#3d9bff,#1c62d8);white-space:nowrap}
+.std-more{display:block;margin:16px auto 0;cursor:pointer;border:1px solid rgba(84,150,255,.45);background:rgba(8,15,30,.7);color:#dbe8ff;border-radius:12px;padding:11px 20px;font-weight:800}
+.std-empty{padding:28px;text-align:center;color:#a9bbd6;border:1px dashed rgba(84,150,255,.3);border-radius:14px}.std-empty a{color:#7cc4ff}
+@media(max-width:760px){.std{padding:8px 14px 48px}.std-row{grid-template-columns:auto 1fr auto;grid-template-areas:"sport time run" "game game game" "by by by";gap:8px 10px;padding:12px}
+ .std-sport{grid-area:sport}.std-time{grid-area:time}.std-game{grid-area:game}.std-by{grid-area:by;white-space:normal}.std-run{grid-area:run;padding:7px 11px}}
+</style>
+
+</head>
+<body class="tmr-ds-shell tmr-ds--dark">
+<!-- CLS: reserve the shared header's height until tmr-ds-nav.js lands it
+     (same pattern as /sports-simulators/). -->
+<div id="dsNavReserve" aria-hidden="true" style="height:70px"></div>
+<script>
+(function () {
+  var r = document.getElementById('dsNavReserve');
+  if (!r) return;
+  var drop = function () { if (r && r.parentNode) { r.parentNode.removeChild(r); r = null; } };
+  if (document.querySelector('nav.ds-nav')) return drop();
+  var o = new MutationObserver(function () {
+    if (document.querySelector('nav.ds-nav')) { o.disconnect(); drop(); }
+  });
+  o.observe(document.documentElement, { childList: true, subtree: true });
+  window.addEventListener('load', function () {
+    setTimeout(function () { o.disconnect(); drop(); }, 2000);
+  });
+}());
+</script>
+
+<main class="std" id="simToday">
+  <nav class="std-crumb" aria-label="Breadcrumb"><a href="/">Home</a><i aria-hidden="true">&rsaquo;</i><a href="/sports-simulators/">Sports Simulators</a><i aria-hidden="true">&rsaquo;</i><span aria-current="page">Today's Simulated Games</span></nav>
+  <header class="std-hero">
+    <span class="std-kicker"><i aria-hidden="true"></i>Live &middot; Last 24 hours</span>
+    <h1>Today's Simulated <em>Games</em></h1>
+    <p class="std-sub">Every game run on the TrustMyRecord simulators in the last 24 hours: the simulated final score and who ran it.</p>
+    <div class="std-totals" id="stdTotals" hidden></div>
+  </header>
+  <div class="std-tabs" role="group" aria-label="Sport" id="stdTabs">
+    <button type="button" data-sport="" aria-pressed="true">All</button><button type="button" data-sport="mlb" aria-pressed="false">MLB</button><button type="button" data-sport="nfl" aria-pressed="false">NFL</button><button type="button" data-sport="nba" aria-pressed="false">NBA</button><button type="button" data-sport="nhl" aria-pressed="false">NHL</button>
+  </div>
+  <div class="std-list" id="stdList" aria-live="polite"><div class="std-empty">Loading today's simulations&hellip;</div></div>
+  <button type="button" class="std-more" id="stdMore" hidden>Show more</button>
+</main>
+<script>
+/* SIM_TODAY_20261115: reads GET /api/sim-archive/today (last 24 hours, newest first). */
+(function () {
+  var API = 'https://api.trustmyrecord.com/api';
+  try { if (window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) API = CONFIG.api.baseUrl; } catch (e) {}
+  var list = document.getElementById('stdList'), more = document.getElementById('stdMore'), totals = document.getElementById('stdTotals');
+  var state = { sport: '', runs: [], shown: 40 };
+  var ENT = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return ENT[c]; }); }
+  function when(iso) { try { return new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' }) + ' PT'; } catch (e) { return ''; } }
+  function runHref(r) {
+    if (r.sport === 'mlb') return '/mlb-simulator/';
+    return '/' + r.sport + '-simulator/?away=' + encodeURIComponent(r.away.abbr) + '&home=' + encodeURIComponent(r.home.abbr);
+  }
+  function team(t, win) {
+    return '<span class="std-team' + (win ? ' win' : '') + '">' + (t.logo ? '<img src="' + esc(t.logo) + '" alt="" loading="lazy">' : '') +
+      esc(t.abbr || t.name) + ' <span class="std-pts">' + esc(t.score) + '</span></span>';
+  }
+  function row(r) {
+    var by = r.by && r.by.username ? '<a href="/u/' + encodeURIComponent(r.by.username) + '/">' + esc(r.by.username) + '</a>' : esc((r.by && r.by.label) || 'Guest');
+    var times = r.times > 1 ? '<small>ran it ' + r.times + ' times</small>' : '';
+    var aw = r.away || {}, hm = r.home || {};
+    return '<div class="std-row"><span class="std-time">' + when(r.recorded_at) + '</span><span class="std-sport">' + esc(String(r.sport || '').toUpperCase()) + '</span>' +
+      '<span class="std-game">' + team(aw, r.winner_abbr && r.winner_abbr === aw.abbr) + '<span class="std-at">at</span>' + team(hm, r.winner_abbr && r.winner_abbr === hm.abbr) + '</span>' +
+      '<span class="std-by">by ' + by + times + '</span><a class="std-run" href="' + runHref(r) + '">Run it</a></div>';
+  }
+  function paint() {
+    if (!state.runs.length) {
+      list.innerHTML = '<div class="std-empty">No games simulated in the last 24 hours' + (state.sport ? ' for ' + state.sport.toUpperCase() : '') + '. <a href="/sports-simulators/">Run the first one</a>.</div>';
+      more.hidden = true; return;
+    }
+    list.innerHTML = state.runs.slice(0, state.shown).map(row).join('');
+    more.hidden = state.runs.length <= state.shown;
+  }
+  function load() {
+    list.setAttribute('aria-busy', 'true');
+    fetch(API + '/sim-archive/today?limit=200' + (state.sport ? '&sport=' + state.sport : ''), { credentials: 'omit' })
+      .then(function (r) { if (!r.ok) throw new Error(String(r.status)); return r.json(); })
+      .then(function (d) {
+        state.runs = d.runs || []; state.shown = 40;
+        var t = d.totals || {};
+        totals.innerHTML = '<b>' + Number(t.runs || 0).toLocaleString() + ' <span>simulations</span></b><b>' + Number(t.people || 0).toLocaleString() + ' <span>people</span></b>';
+        totals.hidden = false; paint();
+      })
+      .catch(function () { list.innerHTML = '<div class="std-empty">Could not load the simulations right now. <a href="">Try again</a>.</div>'; })
+      .then(function () { list.removeAttribute('aria-busy'); });
+  }
+  document.getElementById('stdTabs').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-sport]'); if (!b) return;
+    [].forEach.call(this.querySelectorAll('button'), function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+    state.sport = b.getAttribute('data-sport'); load();
+  });
+  more.addEventListener('click', function () { state.shown += 40; paint(); });
+  load();
+})();
+</script>
+<script src="/static/js/tmr-session.b423be9e9588.js"></script><script src="/static/js/tmr-ds-nav.b00dd3e461de.js"></script>
+<script src="/static/js/tmr-live-chat.js?v=3d9491f06dde"></script>
+<script src="/static/js/tmr-lc-yield.js?v=83f3225bf6d6"></script>
+</body>
+</html>
