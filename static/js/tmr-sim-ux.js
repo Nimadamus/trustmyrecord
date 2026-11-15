@@ -241,7 +241,33 @@
     else main.insertBefore(nav, main.firstChild);
   }
 
+  /* SIM_SUBHERO_20261115: matchup and team pages carry the same title bar as
+     the main simulators: a "<LEAGUE> · Matchup simulator" pill above the title
+     and the title's last word in gold. Text only; styled in tmr-sim-arena.css. */
+  function heroTitle() {
+    if (doc.documentElement.classList.contains('simbc')) return;
+    var m = location.pathname.match(/^\/(mlb|nfl|nba|nhl)-simulator\/(teams\/)?([a-z0-9-]+)\/?$/);
+    if (!m || (!m[2] && m[3].indexOf('-vs-') < 0)) return;
+    var h1 = doc.querySelector('main.wrap > section.hero > h1');
+    if (!h1 || h1.getAttribute('data-simux-title')) return;
+    h1.setAttribute('data-simux-title', '1');
+    var t = h1.lastChild;
+    if (t && t.nodeType === 3) {
+      var txt = t.textContent.replace(/\s+$/, ''), cut = txt.lastIndexOf(' ');
+      if (cut > 0) {
+        var em = doc.createElement('em'); em.textContent = txt.slice(cut + 1);
+        t.textContent = txt.slice(0, cut + 1);
+        h1.appendChild(em);
+      }
+    }
+    var k = doc.createElement('div');
+    k.className = 'simux-kicker';
+    k.innerHTML = '<i aria-hidden="true"></i>' + m[1].toUpperCase() + ' · ' + (m[2] ? 'Team simulator' : 'Matchup simulator');
+    h1.parentNode.insertBefore(k, h1);
+  }
+
   function start() {
+    try { heroTitle(); } catch (e) {}
     try { switcher(); } catch (e) {}
     skipLink();
     run();
