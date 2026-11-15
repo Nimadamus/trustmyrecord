@@ -1,0 +1,40 @@
+name: Matchup of the Day final scores
+
+# MOTD_FINALS_20261115 (Nima): once a featured game is over, its page keeps its URL and content and its
+# <title> and <h1> change to the final score. scripts/motd_finals.py reads ESPN's public scoreboard.
+on:
+  schedule:
+    - cron: '30 9 * * *'
+    - cron: '30 15 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: matchup-finals
+  cancel-in-progress: false
+
+jobs:
+  finals:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Set final scores
+        run: python scripts/motd_finals.py
+      - name: SEO indexability regression
+        run: node tests/seo-indexability-regression-test.js
+      - name: Commit
+        run: |
+          set -euo pipefail
+          git config user.name  'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add matchup-of-the-day data/matchup-finals.json
+          if git diff --cached --quiet; then echo "Nothing changed; no commit."; exit 0; fi
+          git commit -m "Matchup of the Day: final scores [skip ci]"
+          for i in 1 2 3; do git pull --rebase -q && git push && exit 0; sleep 20; done
+          exit 1

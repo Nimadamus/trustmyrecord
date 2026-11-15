@@ -1077,7 +1077,20 @@ def graphics_spec(article):
     return spec
 
 
+def _motd_finals():
+    """MOTD_FINALS_20261115 (Nima): finished games show the final score as <title> and <h1>. Written by scripts/motd_finals.py."""
+    try:
+        with open(os.path.join(ROOT, "data", "matchup-finals.json"), encoding="utf-8") as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return {}
+
+
 def render_article(article, provenance, neighbours):
+    fin = _motd_finals().get(article.get("slug") or "")
+    if fin:
+        line = "%s vs. %s Final Score: %s-%s" % (fin["away"], fin["home"], fin["away_score"], fin["home_score"])
+        article = dict(article, title=line, h1=line)
     sport = article["sport"]
     sport_label = SPORT_LABEL.get(sport, sport.upper())
     url = article_abs(article)
