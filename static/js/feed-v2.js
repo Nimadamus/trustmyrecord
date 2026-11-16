@@ -51,6 +51,15 @@ function renderFeedHeader(item, actionHtml) {
     const record = getRecordText(item);
     const graded = Number(item.record_wins ?? item.wins ?? item.user_wins ?? 0) + Number(item.record_losses ?? item.losses ?? item.user_losses ?? 0) + Number(item.record_pushes ?? item.pushes ?? item.user_pushes ?? 0);
     const hasRecord = record !== 'public record pending' && graded > 0;
+    // FEED_NO_FAKE_VERIFIED_20261116: with no sport on the item the chip fell
+    // back to "Verified record", so members with zero graded picks wore it.
+    // The fallback now needs a real graded record; otherwise there is no chip.
+    const sportRaw = formatSport(item.sport || item.sport_key || item.league || item.primary_sport);
+    const chip = sportRaw ? esc(sportRaw) : (hasRecord && !item.author_persona ? 'Verified record' : '');
+    const subline = (chip ? '<span class="fi-sport">' + chip + '</span>' : '') +
+        (!item.author_persona && hasRecord
+            ? (chip ? '<span class="fi-dot">&middot;</span>' : '') + '<span class="fi-record"' + recordDrillAttrs(item, 'Community feed') + '>Record: ' + esc(record) + '</span>'
+            : '');
     return '<div class="fi-header">' +
         getAvatarHtml(item, 'fi-avatar') +
         '<div class="fi-meta">' +
@@ -59,12 +68,7 @@ function renderFeedHeader(item, actionHtml) {
                 fvPersonaBadge(item) +
                 '<span class="fi-time">' + esc(timeAgo(item.created_at || item.locked_at || item.graded_at || item.updated_at)) + '</span>' +
             '</div>' +
-            '<div class="fi-user-subline">' +
-                '<span class="fi-sport">' + getSportOrTeam(item) + '</span>' +
-                (!item.author_persona && hasRecord
-                    ? '<span class="fi-dot">&middot;</span><span class="fi-record"' + recordDrillAttrs(item, 'Community feed') + '>Record: ' + esc(record) + '</span>'
-                    : '') +
-            '</div>' +
+            (subline ? '<div class="fi-user-subline">' + subline + '</div>' : '') +
             (item.author_persona
                 ? '<div class="fv-persona-note">' + esc(item.author_persona.disclosure || 'Community persona operated by TrustMyRecord. Posts are automated.') + '</div>'
                 : '') +
@@ -686,11 +690,25 @@ async function loadTrending(fresh) {
     if (!el) return;
     try {
         const data = await fvPicksFeed(fresh === true);
-        const rows = ((data && data.feed) || [])
+        // FEED_RAIL_LOCAL_DAY_20261116: the timeline shows one graded card per
+        // member per local day, so the rail adds up that member's same-day rows
+        // too ("graded 39" here vs "181" on the card was the mismatch).
+        const dayOf = p => { const d = new Date(p.graded_at || p.created_at || 0); return isNaN(d.getTime()) ? '' : d.toDateString(); };
+        const graded = ((data && data.feed) || [])
             .filter(isRealPublicFeedUser)
-            .filter(p => p.username && !['pending', 'locked'].includes(String(p.status || p.pick_status || '').toLowerCase()))
+            .filter(p => p.username && !['pending', 'locked'].includes(String(p.status || p.pick_status || '').toLowerCase()));
+        const rows = graded
             .filter((p, i, all) => all.findIndex(q => q.username === p.username) === i)
-            .slice(0, 3);
+            .slice(0, 3)
+            .map(p => {
+                const same = graded.filter(q => q.username === p.username && dayOf(q) === dayOf(p));
+                if (same.length < 2) return p;
+                const units = same.reduce((s, q) => (q.batch_net_units != null && isFinite(Number(q.batch_net_units)) ? s + Number(q.batch_net_units) : s), 0);
+                return Object.assign({}, p, {
+                    activity_count: same.reduce((s, q) => s + (Number(q.activity_count || q.pick_count || 1) || 1), 0),
+                    batch_net_units: same.some(q => q.batch_net_units != null) ? Math.round(units * 100) / 100 : p.batch_net_units
+                });
+            });
         if (rows.length) {
             el.innerHTML = rows.map(p => {
                 const display = p.display_name || p.username;

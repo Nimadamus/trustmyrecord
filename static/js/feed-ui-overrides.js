@@ -868,8 +868,15 @@ function renderFollowingPeople(list) {
         host.innerHTML = '';
         return;
     }
-    host.hidden = false;
     const people = Array.isArray(list) ? list : [];
+    // FEED_FOLLOWING_EMPTY_ONCE_20261116: following nobody, this box and the
+    // empty state under it said the same thing twice. The empty state says it.
+    if (!people.length) {
+        host.hidden = true;
+        host.innerHTML = '';
+        return;
+    }
+    host.hidden = false;
     const chips = people.map(function(u) {
         const un = u.username || '';
         const name = esc(u.display_name || un || 'Handicapper');
@@ -1147,6 +1154,11 @@ async function loadFeedItems() {
                     const node = nodes.find(n => n.getAttribute('data-id') === id);
                     const m = /data-group-sig="([^"]*)"/.exec(html);
                     if (node && m && node.getAttribute('data-group-sig') !== m[1]) node.outerHTML = html;
+                    // a member that was its own card on screen is now inside this
+                    // group: drop the stand-alone copy (it showed the same member twice)
+                    nodes.forEach(n => {
+                        if (n.parentNode === c && n.getAttribute('data-id') !== id && members.indexOf(n.getAttribute('data-id')) !== -1) n.remove();
+                    });
                 }
                 order.push({ id: id, html: null });
                 return;

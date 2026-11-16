@@ -180,7 +180,9 @@
             var best = -1, bestGap = Infinity;
             out.forEach(function (i, idx) {
                 if (!i || i.item_type !== 'open_pick' || uname(i).toLowerCase() !== u || i._first_pick_ms) return;
-                var gap = Math.abs(t(i) - t(ms));
+                // a first pick is the OLDEST pick of its sitting, so a group is
+                // measured by its closest member, not by its newest one
+                var gap = (i._members || [i]).reduce(function (g, m) { return Math.min(g, Math.abs(t(m) - t(ms))); }, Infinity);
                 if (gap <= FIRST_PICK_WINDOW_MS && gap < bestGap) { best = idx; bestGap = gap; }
             });
             if (best < 0) return;
@@ -196,6 +198,7 @@
     // milestone keeps its own Congrats.
     var MILESTONE_WINDOW_MS = 30 * 60 * 1000;
     var MIN_MILESTONES = 2;
+    var SAME_MEMBER_MS_WINDOW = 24 * 60 * 60 * 1000;
     function groupMilestones(items) {
         var ms = items.filter(isMilestone).sort(function (a, b) { return t(b) - t(a); });
         if (ms.length < MIN_MILESTONES) return items;
@@ -222,6 +225,21 @@
             run.push(m);
         });
         flush();
+        // FEED_MS_SAME_MEMBER_20261116: one member's milestones on the same day
+        // (100 picks, then a 7-pick streak, then 250 picks) were three cards.
+        var byUser = {};
+        ms.forEach(function (m) {
+            if (absorbed.has(m)) return;
+            var k = uname(m).toLowerCase();
+            (byUser[k] = byUser[k] || []).push(m);
+        });
+        Object.keys(byUser).forEach(function (k) {
+            byUser[k].forEach(function (m) {
+                if (run.length && t(run[0]) - t(m) > SAME_MEMBER_MS_WINDOW) flush();
+                run.push(m);
+            });
+            flush();
+        });
         if (!groups.length) return items;
         return items.filter(function (i) { return !absorbed.has(i); }).concat(groups);
     }
@@ -362,9 +380,10 @@
             '<div class="fpg-rhead"><span class="fpg-rico"><i class="fas fa-circle-check"></i></span>' +
                 '<div><b>Results are in</b><small>' + plural(n, 'handicapper') + ' had records updated · ' + e(ago(t(members[0]))) + '</small></div>' +
                 '<span class="fv-kind fv-kind--pick"><i class="fas fa-check"></i> Graded</span></div>' +
-            ((wins + losses) ? '<div class="fpg-sports"><span class="fpg-sport"><b>' + wins + '</b> wins</span><span class="fpg-sport"><b>' + losses + '</b> losses</span><span class="fpg-sport"><b>' + g.pick_count + '</b> picks graded</span></div>' : '') +
-            '<div class="fpg-list">' + members.slice(0, open ? n : Math.max(PREVIEW, 0)).map(resultRow).join('') +
-                (n > PREVIEW && !open ? '<div class="fpg-more-names">+ ' + plural(n - PREVIEW, 'more handicapper') + '</div>' : '') +
+            ((wins + losses) ? '<div class="fpg-sports"><span class="fpg-sport"><b>' + wins + '</b> ' + (wins === 1 ? 'win' : 'wins') + '</span><span class="fpg-sport"><b>' + losses + '</b> ' + (losses === 1 ? 'loss' : 'losses') + '</span><span class="fpg-sport"><b>' + g.pick_count + '</b> ' + (g.pick_count === 1 ? 'pick' : 'picks') + ' graded</span></div>' : '') +
+            // open = the full record cards replace the name list (same people twice was noise)
+            '<div class="fpg-list"' + (open ? ' hidden' : '') + '>' + members.slice(0, PREVIEW).map(resultRow).join('') +
+                (n > PREVIEW ? '<div class="fpg-more-names">+ ' + plural(n - PREVIEW, 'more handicapper') + '</div>' : '') +
             '</div>' +
             '<div class="fpg-rest fpg-rest--cards"' + (open ? '' : ' hidden') + '>' + full + '</div>' +
             toggleBtn(g.item_id, n, 'record updates') +
@@ -385,6 +404,19 @@
 
     function profileHref(m) { return '/profile/?user=' + encodeURIComponent(m.username || '') + '&view=picks'; }
 
+    // "KenBcapper has reached 250 graded picks." under the name KenBcapper read
+    // the name twice; the row keeps only the part after it.
+    function msLine(m) {
+        var text = String(m.content || '').replace(/\s*Nice start.*$/i, '').replace(/\s*Every record starts somewhere\.?$/i, '').trim();
+        var name = String(m.username || '');
+        if (name && text.toLowerCase().indexOf(name.toLowerCase() + ' ') === 0) {
+            text = text.slice(name.length + 1);
+            text = text.replace(/^has reached /i, 'reached ').replace(/^is now /i, 'now ').replace(/^is on /i, 'on ').replace(/^just made /i, 'made ');
+            text = text.charAt(0).toUpperCase() + text.slice(1);
+        }
+        return text;
+    }
+
     function renderMilestoneGroup(g) {
         var members = g._members;
         var n = members.length;
@@ -392,7 +424,7 @@
         var row = function (m) {
             return '<div class="fpg-ms" data-id="' + e(m.item_id) + '">' + avatar(m) +
                 '<span class="fpg-ms-text"><a href="' + e(profileHref(m)) + '"><b>' + e(m.display_name || m.username) + '</b></a>' +
-                '<small>' + e(String(m.content || '').replace(/\s*Nice start.*$/i, '').replace(/\s*Every record starts somewhere\.?$/i, '')) + '</small></span>' +
+                '<small>' + e(msLine(m)) + '</small></span>' +
                 congratsBtn(m) + '</div>';
         };
         return '<div class="feed-item fpg-card fpg-card--ms' + (open ? ' is-open' : '') + '" data-id="' + e(g.item_id) + '" data-type="milestone_group" data-group-sig="' + e(g._sig) + '">' +
@@ -423,14 +455,9 @@
         var rest = card.querySelector(':scope > .fpg-list > .fpg-rest, :scope > .fpg-rest');
         if (rest) rest.hidden = !open;
         if (card.classList.contains('fpg-card--results')) {
-            // the names list grows to every member when open
-            var g = cache[gid];
+            // open: the full record cards replace the short name list
             var list = card.querySelector(':scope > .fpg-list');
-            if (g && list) {
-                var n = g._members.length;
-                list.innerHTML = g._members.slice(0, open ? n : PREVIEW).map(resultRow).join('') +
-                    (n > PREVIEW && !open ? '<div class="fpg-more-names">+ ' + plural(n - PREVIEW, 'more handicapper') + '</div>' : '');
-            }
+            if (list) list.hidden = open;
         }
         var btn = card.querySelector(':scope > .fpg-toggle');
         if (btn) {
@@ -477,6 +504,18 @@
                 try { return renderJoined(item); } catch (x) { /* fall through to the old card */ }
             }
             var html = baseRender(item);
+            if (item && item.item_type === 'milestone' && item.post_type !== 'joined_summary' && uname(item)) {
+                // FEED_MS_NO_ECHO_20261116: the card title already says "made their
+                // first official pick"; the line under it said "johann just made
+                // their first official pick." again. Keep only what the title lacks.
+                try {
+                    var meta = (window.MILESTONE_META || {})[String(item.post_type || '')];
+                    var line = msLine(item);
+                    var norm = function (s) { return String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').replace(/\bgraded /g, '').trim(); };
+                    if (meta && norm(line) === norm(meta.label)) line = '';
+                    html = html.replace(/(<div class="fi-content">)([^<]*)/, function (m, open) { return open + e(line) + (line ? ' ' : ''); });
+                } catch (x) { /* keep the original card */ }
+            }
             if (item && item.item_type === 'open_pick') {
                 // FEED_NOTE_ONCE_20261116: the "Tail and Fade are reactions" line sat
                 // under every open pick. It now shows only after a reaction (the
@@ -489,6 +528,21 @@
                 return at > 0 ? html.slice(0, at) + firstPickRibbon(item._first_pick_ms) + html.slice(at) : html;
             }
             return html;
+        };
+    }
+
+    // Signed-out Congrats went to /login/ with no way back; it now returns here,
+    // the same way Tail and Fade do.
+    var baseCongrats = window.toggleCongrats;
+    if (typeof baseCongrats === 'function') {
+        window.toggleCongrats = function (itemId, btn) {
+            var signedIn = false;
+            try { signedIn = !!(window.auth && window.auth.currentUser) || !!(window.api && window.api.token); } catch (x) { signedIn = false; }
+            if (!signedIn) {
+                window.location.href = '/login/?next=' + encodeURIComponent(location.pathname + (location.search || ''));
+                return;
+            }
+            return baseCongrats.apply(this, arguments);
         };
     }
 
@@ -575,6 +629,23 @@
     }
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mountModeBtn);
     else mountModeBtn();
+
+    // SITE_UPDATES_OFFICIAL_ONLY_20261116: Site Updates now holds official
+    // TrustMyRecord posts only. Until there is one, the tab stays out of the row
+    // instead of opening onto an empty page.
+    function hideEmptySiteUpdates() {
+        if (typeof document.querySelectorAll !== 'function') return;
+        var btn = Array.prototype.find.call(document.querySelectorAll('.feed-tab'), function (b) {
+            return (b.getAttribute('onclick') || '').indexOf("'site-updates'") !== -1;
+        });
+        var c = (window.api && typeof window.api.request === 'function') ? window.api : null;
+        if (!btn || !c) return;
+        c.request('/feed?limit=1&offset=0&filter=site_updates').then(function (d) {
+            if (!(d && d.feed && d.feed.length) && !btn.classList.contains('active')) btn.hidden = true;
+        }).catch(function () { /* leave the tab as it is */ });
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { setTimeout(hideEmptySiteUpdates, 0); });
+    else setTimeout(hideEmptySiteUpdates, 0);
 
     window.TMRFeedGroups = {
         regroup: regroup, renderOpenGroup: renderOpenGroup, renderResultsGroup: renderResultsGroup,

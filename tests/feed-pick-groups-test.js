@@ -36,7 +36,7 @@ function boot(opts) {
     document: { readyState: 'complete', addEventListener() {}, getElementById: () => null, querySelector: () => null },
     timeAgo: () => 'just now',
     renderFeedHeader: (i) => '<div class="fi-header">' + i.username + '</div>',
-    renderFeedItem: (i) => '<div class="feed-item" data-id="' + i.item_id + '">' + (i.pick_count ? i.pick_count + ' picks' : '') + (i.item_type === 'open_pick' ? '<div class="fv-pick-grid"></div>' : '') + '</div>',
+    renderFeedItem: (i) => '<div class="feed-item" data-id="' + i.item_id + '">' + (i.pick_count ? i.pick_count + ' picks' : '') + (i.item_type === 'open_pick' ? '<div class="fv-pick-grid"></div>' : '') + (i.item_type === 'milestone' ? '<div class="fi-content">' + i.content + ' <a class="fi-milestone-link">View record</a></div>' : '') + '</div>',
     aggregateFeedItems: (x) => x,
     sharePost() {},
     TMRFeedOpenPicks: { _cards: {}, _handoff: (i) => (i.pick_market_type === 'h2h' ? { otherLabel: 'Other ML' } : null) },
@@ -195,6 +195,14 @@ function checkSession(n) {
     assert.ok(html.includes('View all 4 milestones'));
   });
 
+  await t('one member\'s milestones across a day become one card; other members stay alone', () => {
+    const sb = boot();
+    const list = [ms(1, 'KenBcapper', 'pick_count', '2026-11-15T21:30:00Z'), ms(2, 'KenBcapper', 'win_streak', '2026-11-15T12:30:00Z'), ms(3, 'KenBcapper', 'pick_count', '2026-11-15T02:00:00Z'), ms(4, 'Khaloy', 'first_win', '2026-11-14T02:55:00Z')];
+    const out = sb.aggregateFeedItems(list);
+    assert.strictEqual(out.length, 2);
+    assert.strictEqual(out.find((i) => i._group === 'milestones')._members.length, 3);
+  });
+
   await t('a first-pick milestone rides on the pick card instead of being a second card', () => {
     const sb = boot();
     const p = openPick('johann', 0, 'NBA', { created_at: '2026-11-16T14:05:23.704Z' });
@@ -204,6 +212,25 @@ function checkSession(n) {
     assert.ok(out[0]._member_ids.includes('milestone:1777'), 'the milestone is a member, for Load More folding');
     const html = sb.renderFeedItem(out[0]);
     assert.ok(html.includes('First official pick') && html.includes("toggleCongrats(&quot;milestone:1777&quot;"), 'ribbon with Congrats');
+  });
+
+  await t('a single milestone card does not repeat its title in the line under it', () => {
+    const sb = boot();
+    sb.MILESTONE_META = { first_pick: { label: 'made their first official pick' }, pick_count: { label: 'hit a pick milestone' } };
+    const first = sb.renderFeedItem(ms(9, 'johann', 'first_pick', '2026-11-16T14:05:00Z', 'johann just made their first official pick. Every record starts somewhere.'));
+    assert.ok(/<div class="fi-content"><a class="fi-milestone-link">/.test(first), 'echo removed, link kept: ' + first);
+    const count = sb.renderFeedItem(ms(10, 'KenBcapper', 'pick_count', '2026-11-16T14:05:00Z', 'KenBcapper has reached 250 graded picks.'));
+    assert.ok(count.includes('<div class="fi-content">Reached 250 graded picks. <a'), count);
+  });
+
+  await t('a first-pick milestone finds its sitting even when later picks pushed the card time on', () => {
+    const sb = boot();
+    const picks = session('newbie', 6, 0); // newest first, 30 s apart; oldest is the first pick
+    picks.push(openPick('newbie', 40)); // first pick, 40 min before the newest
+    const m = ms(55, 'newbie', 'first_pick', picks[picks.length - 1].created_at, 'newbie just made their first official pick.');
+    const out = sb.aggregateFeedItems(picks.concat([m]));
+    assert.strictEqual(out.length, 1, 'one card, got ' + out.map((i) => i.item_id).join(','));
+    assert.ok(out[0]._first_pick_ms && out[0]._group === 'open_picks');
   });
 
   await t('"new members joined" renders as a compact strip', () => {
