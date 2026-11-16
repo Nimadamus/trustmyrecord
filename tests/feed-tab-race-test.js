@@ -126,7 +126,7 @@ const t = async (name, fn) => {
     two.sandbox.currentFilter = 'hot-takes';
     const b = two.sandbox.loadFeedItems();
     two.pending[0].resolve({ feed: [] }); await b;
-    assert.ok(two.list.innerHTML.includes('No activity yet.'));
+    assert.ok(two.list.innerHTML.includes('No hot takes yet.')); // FEED_EMPTY_BY_TAB_20261116
     assert.strictEqual(two.list.getAttribute('aria-busy'), null);
   });
 

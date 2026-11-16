@@ -810,7 +810,10 @@ async function loadFeed() {
 // behind /feed. They are independent reads, so they all start together and are
 // merged in the original order once they land.
 function startFeedSources(filter, offset) {
-    const filterParam = filter === 'hot-takes' ? 'posts'
+    // FEED_POLLS_TAB_20261116: the API has no 'polls' filter (it answered
+    // "Invalid value" and the tab showed "Feed unavailable"). Poll posts are
+    // posts; active polls come from /polls/active below.
+    const filterParam = (filter === 'hot-takes' || filter === 'polls') ? 'posts'
         : filter === 'site-updates' ? 'site_updates'
         : filter;
     const viewer = (typeof auth !== 'undefined' && auth.currentUser) ? auth.currentUser : null;
@@ -1102,6 +1105,16 @@ async function loadFeedItems() {
 
     if (isStaleLoad()) return;
     c.removeAttribute('aria-busy');
+    // FEED_SORT_LOAD_MORE_20261116: under Most Liked / Most Discussed a later page
+    // can hold the top post, so the whole list is re-ranked instead of appended
+    // (appending left the most discussed take buried at the bottom).
+    if (appending && typeof fvSort !== 'undefined' && fvSort !== 'latest') {
+        _feedRawItems = _feedRawItems.concat(rawPage);
+        c.innerHTML = items.map(renderFeedItem).join('');
+        const more = document.getElementById('loadMore');
+        if (more) more.style.display = rawPageCount >= FEED_LIMIT ? 'block' : 'none';
+        return;
+    }
     if (appending) {
         _feedRawItems = _feedRawItems.concat(rawPage);
         const idOf = html => {
@@ -1154,7 +1167,16 @@ async function loadFeedItems() {
     updateHeroCounts(items.length);
     if (typeof fvAfterFeed === 'function') { try { fvAfterFeed(items); } catch (e) {} }
     if (!items.length) {
-        c.innerHTML = '<div class="empty-state"><i class="fas fa-stream"></i><h3>No activity yet.</h3><p>Follow handicappers or make your first pick to start building the feed.</p></div>';
+        // FEED_EMPTY_BY_TAB_20261116: each tab says what it is waiting for.
+        const emptyByTab = {
+            polls: ['fa-chart-simple', 'No open polls right now.', 'Start one from the composer above, or see past results on the <a href="/polls/">Polls page</a>.'],
+            'hot-takes': ['fa-fire', 'No hot takes yet.', 'Post the first one from the composer above.'],
+            milestones: ['fa-trophy', 'No milestones yet.', 'Milestones show up here as members hit records, streaks and firsts.'],
+            following: ['fa-user-group', 'Nothing new from the people you follow.', '<a href="/handicappers/">Discover handicappers</a> to follow. Their picks, posts and results show up here.'],
+            'site-updates': ['fa-bullhorn', 'No site updates yet.', '']
+        };
+        const em = emptyByTab[currentFilter] || ['fa-stream', 'No activity yet.', 'Follow handicappers or make your first pick to start building the feed.'];
+        c.innerHTML = '<div class="empty-state"><i class="fas ' + em[0] + '"></i><h3>' + em[1] + '</h3>' + (em[2] ? '<p>' + em[2] + '</p>' : '') + '</div>';
         const lm = document.getElementById('loadMore');
         if (lm) lm.style.display = 'none';
         return;

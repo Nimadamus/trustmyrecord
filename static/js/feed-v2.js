@@ -673,7 +673,9 @@ let _fvPicksFeedAt = 0;
 function fvPicksFeed(fresh) {
     if (fresh || !_fvPicksFeedPromise || Date.now() - _fvPicksFeedAt > 60000) {
         _fvPicksFeedAt = Date.now();
-        _fvPicksFeedPromise = api.request('/feed?limit=20&offset=0&filter=picks');
+        // FEED_RAIL_DEPTH_20261116: open picks share this list now; one member's
+        // 15-pick session pushed every graded update but one off the first 20.
+        _fvPicksFeedPromise = api.request('/feed?limit=60&offset=0&filter=picks');
         _fvPicksFeedPromise.catch(() => { _fvPicksFeedPromise = null; });
     }
     return _fvPicksFeedPromise;
@@ -687,6 +689,7 @@ async function loadTrending(fresh) {
         const rows = ((data && data.feed) || [])
             .filter(isRealPublicFeedUser)
             .filter(p => p.username && !['pending', 'locked'].includes(String(p.status || p.pick_status || '').toLowerCase()))
+            .filter((p, i, all) => all.findIndex(q => q.username === p.username) === i)
             .slice(0, 3);
         if (rows.length) {
             el.innerHTML = rows.map(p => {

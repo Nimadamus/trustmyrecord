@@ -286,7 +286,7 @@
                 reactBtn('tail', item) + reactBtn('fade', item) +
                 (h ? '<button type="button" class="fpg-act fop-slip" data-fop-slip="same"><i class="fas fa-plus"></i> Add to my slip</button>' : '') +
                 (h ? '<button type="button" class="fpg-act fop-slip fop-slip--other" data-fop-slip="other">Take ' + e(h.otherLabel) + '</button>' : '') +
-                '<button type="button" class="fpg-act" onclick="sharePost(' + e(JSON.stringify(id)) + ')" aria-label="Share this pick"><i class="fas fa-share"></i> Share</button>' +
+                '<button type="button" class="fpg-act fpg-share" onclick="sharePost(' + e(JSON.stringify(id)) + ')" aria-label="Share this pick"><i class="fas fa-share"></i> Share</button>' +
             '</div>' +
             ((vt || vf) ? '<p class="fpg-verified"><i class="fas fa-circle-check"></i> ' +
                 e([vt ? plural(vt, 'verified pick') + ' with it' : '', vf ? plural(vf, 'verified pick') + ' against it' : ''].filter(Boolean).join(' · ')) + '</p>' : '') +

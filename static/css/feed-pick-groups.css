@@ -146,7 +146,10 @@ body.feed-v2 .fv-tabs-row .feed-tabs {
     .fpg-row-main { gap: 9px; }
     .fpg-lg { min-width: 44px; }
     .fpg-row-actions, .fpg-row .fop-note, .fpg-row .fpg-verified { margin-left: 0 !important; }
-    .fpg-act { flex: 1 1 auto; justify-content: center; min-height: 38px; }
+    /* phone: Tail / Fade / Share on one line, the two slip buttons on the next */
+    .fpg-row-actions { gap: 6px; }
+    .fpg-act { flex: 1 1 calc(33.333% - 6px); min-width: 0; justify-content: center; min-height: 38px; padding: 0 8px; }
+    .fpg-act.fop-slip { order: 5; flex: 1 1 calc(50% - 6px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; line-height: 38px; text-align: center; }
     .fpg-card .fpg-headline b, .fpg-rhead b { font-size: 1.02rem; }
     .fpg-first { flex-wrap: wrap; }
     .fpg-ms { flex-wrap: wrap; padding: 10px 11px; }
