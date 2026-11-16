@@ -223,6 +223,16 @@ function checkSession(n) {
     assert.ok(count.includes('<div class="fi-content">Reached 250 graded picks. <a'), count);
   });
 
+  await t('a first-pick milestone finds its sitting even when later picks pushed the card time on', () => {
+    const sb = boot();
+    const picks = session('newbie', 6, 0); // newest first, 30 s apart; oldest is the first pick
+    picks.push(openPick('newbie', 40)); // first pick, 40 min before the newest
+    const m = ms(55, 'newbie', 'first_pick', picks[picks.length - 1].created_at, 'newbie just made their first official pick.');
+    const out = sb.aggregateFeedItems(picks.concat([m]));
+    assert.strictEqual(out.length, 1, 'one card, got ' + out.map((i) => i.item_id).join(','));
+    assert.ok(out[0]._first_pick_ms && out[0]._group === 'open_picks');
+  });
+
   await t('"new members joined" renders as a compact strip', () => {
     const sb = boot();
     const html = sb.renderFeedItem({ item_id: 'joined_summary:20261116', item_type: 'milestone', post_type: 'joined_summary', content: '7 new members joined TrustMyRecord.', activity_count: 7, created_at: '2026-11-16T15:12:42Z' });

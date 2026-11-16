@@ -180,7 +180,9 @@
             var best = -1, bestGap = Infinity;
             out.forEach(function (i, idx) {
                 if (!i || i.item_type !== 'open_pick' || uname(i).toLowerCase() !== u || i._first_pick_ms) return;
-                var gap = Math.abs(t(i) - t(ms));
+                // a first pick is the OLDEST pick of its sitting, so a group is
+                // measured by its closest member, not by its newest one
+                var gap = (i._members || [i]).reduce(function (g, m) { return Math.min(g, Math.abs(t(m) - t(ms))); }, Infinity);
                 if (gap <= FIRST_PICK_WINDOW_MS && gap < bestGap) { best = idx; bestGap = gap; }
             });
             if (best < 0) return;
@@ -378,7 +380,7 @@
             '<div class="fpg-rhead"><span class="fpg-rico"><i class="fas fa-circle-check"></i></span>' +
                 '<div><b>Results are in</b><small>' + plural(n, 'handicapper') + ' had records updated · ' + e(ago(t(members[0]))) + '</small></div>' +
                 '<span class="fv-kind fv-kind--pick"><i class="fas fa-check"></i> Graded</span></div>' +
-            ((wins + losses) ? '<div class="fpg-sports"><span class="fpg-sport"><b>' + wins + '</b> wins</span><span class="fpg-sport"><b>' + losses + '</b> losses</span><span class="fpg-sport"><b>' + g.pick_count + '</b> picks graded</span></div>' : '') +
+            ((wins + losses) ? '<div class="fpg-sports"><span class="fpg-sport"><b>' + wins + '</b> ' + (wins === 1 ? 'win' : 'wins') + '</span><span class="fpg-sport"><b>' + losses + '</b> ' + (losses === 1 ? 'loss' : 'losses') + '</span><span class="fpg-sport"><b>' + g.pick_count + '</b> ' + (g.pick_count === 1 ? 'pick' : 'picks') + ' graded</span></div>' : '') +
             // open = the full record cards replace the name list (same people twice was noise)
             '<div class="fpg-list"' + (open ? ' hidden' : '') + '>' + members.slice(0, PREVIEW).map(resultRow).join('') +
                 (n > PREVIEW ? '<div class="fpg-more-names">+ ' + plural(n - PREVIEW, 'more handicapper') + '</div>' : '') +
