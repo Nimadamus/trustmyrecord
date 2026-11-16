@@ -38,6 +38,7 @@ function game(id, sport, away, home, opts) {
             key: 'draftkings', title: 'DraftKings',
             markets: [
                 { key: 'h2h', outcomes: [{ name: away, price: 145 }, { name: home, price: -165 }] },
+                { key: 'spreads', outcomes: [{ name: away, price: -110, point: o.spread || 3.5 }, { name: home, price: -108, point: -(o.spread || 3.5) }] },
                 { key: 'totals', outcomes: [
                     { name: 'Over', price: -110, point: o.total || 44.5 },
                     { name: 'Under', price: -110, point: o.total || 44.5 }] },
@@ -264,3 +265,26 @@ assert.strictEqual(r.events.filter((e) => e === 'simulator_pick_submitted').leng
 assert.ok(!('tmr_sim_pick_intent' in r.store), 'intent spent');
 
 console.log('sim-pick-next-board-handoff-test: all checks passed');
+
+// FEED_SPREAD_HANDOFF_20261116: a spread from the feed lands on the slip at the same number
+r = boot({
+    boards: { MLB: [], NBA: nba },
+    intent: { pick_team: 'Sacramento Kings', market: 'spread', line: -3.5, away_team_name: 'Los Angeles Clippers', home_team_name: 'Sacramento Kings', sport: 'NBA', source: 'feed' },
+    loggedIn: true,
+});
+assert.strictEqual(r.sb.state.picks.length, 1, 'spread on the slip');
+assert.strictEqual(r.sb.state.picks[0].marketType, 'spreads');
+assert.strictEqual(r.sb.state.picks[0].selection, 'Sacramento Kings');
+assert.strictEqual(Number(r.sb.state.picks[0].line), -3.5);
+assert.strictEqual(r.sb.state.picks[0].odds, -108);
+assert.strictEqual(r.posted.length, 0, 'nothing submits on arrival');
+assert.ok(r.banners.some((b) => /Sacramento Kings -3\.5 is pre-selected/.test(b)));
+// the number moved: nothing selected, says so
+r = boot({
+    boards: { MLB: [], NBA: nba },
+    intent: { pick_team: 'Los Angeles Clippers', market: 'spread', line: 4.5, away_team_name: 'Los Angeles Clippers', home_team_name: 'Sacramento Kings', sport: 'NBA', source: 'feed' },
+    loggedIn: true,
+});
+assert.strictEqual(r.sb.state.picks.length, 0);
+assert.ok(r.banners.some((b) => /moved from \+4\.5 to \+3\.5/.test(b)));
+console.log('spread handoff ok');

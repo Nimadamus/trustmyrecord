@@ -80,8 +80,12 @@ const ok = (name) => { n++; console.log('  ok   ' + name); };
   assert.strictEqual(ml.same.pick_team, 'Boston Celtics');
   assert.strictEqual(ml.other.pick_team, 'Los Angeles Lakers');
   assert.strictEqual(ml.otherLabel, 'Los Angeles Lakers ML');
+  const sp = h(pick({ pick_market_type: 'spreads', pick_selection: 'Boston Celtics', pick_line: '-3.50' }));
+  assert.deepStrictEqual([sp.same.pick_team, sp.same.market, sp.same.line], ['Boston Celtics', 'spread', -3.5]);
+  assert.deepStrictEqual([sp.other.pick_team, sp.other.line], ['Los Angeles Lakers', 3.5]);
+  assert.strictEqual(sp.otherLabel, 'Los Angeles Lakers +3.5');
+  assert.strictEqual(h(pick({ pick_market_type: 'spreads', pick_selection: 'Boston Celtics', pick_line: null })), null);
   // no formal handoff where the opposite side is not a plain two way full game market
-  assert.strictEqual(h(pick({ pick_market_type: 'spreads', pick_selection: 'Boston Celtics', pick_line: -3.5 })), null);
   assert.strictEqual(h(pick({ pick_market_type: 'nba_points', pick_selection: 'Jayson Tatum Over', pick_line: 27.5 })), null);
   assert.strictEqual(h(pick({ pick_market_type: 'team_totals', pick_selection: 'Boston Celtics Over' })), null);
   assert.strictEqual(h(pick({ pick_market_type: 'h2h', pick_selection: 'Draw' })), null);

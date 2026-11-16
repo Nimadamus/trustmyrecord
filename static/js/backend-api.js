@@ -257,7 +257,9 @@ class TrustMyRecordAPI {
         // were measured going out twice per logged-in page (header + nav badges /
         // notification badge). Any write through this client clears the shared
         // reads (see request()), so a balance read after a spend is always fresh.
-        return /^\/(users\/[^/]+(\/(metrics|stats\/[a-z-]+))?|picks|coins\/balance|notifications\/unread-count)(\?|$)/;
+        // FEED_READ_DEDUPE_20261116: the feed page also asked for /messages/unread-count
+        // (rail badge + nav badge) and /notifications?limit=N twice per load.
+        return /^\/(users\/[^/]+(\/(metrics|stats\/[a-z-]+))?|picks|coins\/balance|notifications\/unread-count|messages\/unread-count|notifications)(\?|$)/;
     }
 
     async request(endpoint, options = {}) {

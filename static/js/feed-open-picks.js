@@ -68,6 +68,18 @@
             if (!other) return null;
             return { same: Object.assign({ pick_team: sel }, base), other: Object.assign({ pick_team: other }, base), otherLabel: other + ' ML' };
         }
+        // FEED_SPREAD_HANDOFF_20261116: the same team at the same number, or the other side.
+        if (mt === 'spreads' && isFinite(Number(item.pick_line)) && item.pick_line !== null && item.pick_line !== '') {
+            var opp2 = sel === item.pick_home_team ? item.pick_away_team : (sel === item.pick_away_team ? item.pick_home_team : null);
+            if (!opp2) return null;
+            var sl = Number(item.pick_line);
+            var sign = function (v) { return (v > 0 ? '+' : '') + v; };
+            return {
+                same: Object.assign({ pick_team: sel, market: 'spread', line: sl }, base),
+                other: Object.assign({ pick_team: opp2, market: 'spread', line: -sl }, base),
+                otherLabel: opp2 + ' ' + sign(-sl)
+            };
+        }
         if (mt === 'totals' && (sel === 'Over' || sel === 'Under') && isFinite(Number(item.pick_line))) {
             var opp = sel === 'Over' ? 'Under' : 'Over';
             var line = Number(item.pick_line);

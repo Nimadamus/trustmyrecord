@@ -1361,7 +1361,13 @@
         var cat = null;
         categories().forEach(function (c) { if (c.key === 'game_lines') cat = c; });
         var data = null;
-        if (want.team) {
+        if (want.market === 'spread' && want.team) {
+            // FEED_SPREAD_HANDOFF_20261116: a spread from the feed, at the line the member saw.
+            var sp = findSel(m.spread, want.team);
+            if (!sp || !oddsOk(cat, sp.odds)) return { status: 'no_price' };
+            if (Number(sp.line) !== Number(want.line)) return { status: 'moved', line: sp.line };
+            data = pickData(g, sp.marketType || 'spreads', want.team, want.team + ' ' + fmtLine(sp.line, true), sp.line, sp.odds, cat && cat.long, m.book);
+        } else if (want.team) {
             var ml = findSel(m.h2h, want.team);
             if (!ml || !oddsOk(cat, ml.odds)) return { status: 'no_price' };
             data = pickData(g, ml.marketType || 'h2h', want.team, want.team + ' ML', null, ml.odds, cat && cat.long, m.book);

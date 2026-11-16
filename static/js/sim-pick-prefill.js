@@ -37,6 +37,10 @@
        else about the record is unchanged. */
     var IS_TOTAL = !!intent && (intent.market === 'over' || intent.market === 'under') &&
                    intent.line != null && isFinite(Number(intent.line));
+    // FEED_SPREAD_HANDOFF_20261116: a spread intent names a team AND its line.
+    var IS_SPREAD = !!intent && intent.market === 'spread' && !!intent.pick_team &&
+                    intent.line != null && isFinite(Number(intent.line));
+    var signLine = function (v) { v = Number(v); return (v > 0 ? '+' : '') + v; };
     if (!intent || (!intent.pick_team && !IS_TOTAL) || (Date.now() - (intent.ts || 0)) > TTL_MS) {
         try { localStorage.removeItem(KEY); } catch (e) { }
         return;
@@ -203,7 +207,8 @@
     var nextSportOpened = false;
     function attemptNext() {
         var sb = window.__sbNext;
-        var label = intent.pick_team ? intent.pick_team + ' ML' : (intent.side || '') + ' ' + (intent.line || '');
+        var label = IS_SPREAD ? intent.pick_team + ' ' + signLine(intent.line)
+            : (intent.pick_team ? intent.pick_team + ' ML' : (intent.side || '') + ' ' + (intent.line || ''));
         var late = tries >= 100;   // ~40s window for slow API
         if (!sb || typeof sb.preselect !== 'function') {
             if (!late) { setTimeout(attempt, 400); return; }
@@ -239,6 +244,15 @@
                 return;
             }
             label = side + ' ' + intent.line;
+        } else if (IS_SPREAD) {
+            var steam = sameTeam(intent.pick_team, g.home) ? g.home : (sameTeam(intent.pick_team, g.away) ? g.away : null);
+            res = steam ? sb.preselect({ gameId: g.id, team: steam, market: 'spread', line: Number(intent.line) }) : { status: 'no_price' };
+            if (res.status === 'moved') {
+                showBanner('The spread for ' + steam + ' has moved from ' + signLine(intent.line) + ' to ' + signLine(res.line) +
+                    ', so nothing was pre-selected. Pick the line you want below.', false);
+                return;
+            }
+            if (steam) label = steam + ' ' + signLine(intent.line);
         } else {
             var team = sameTeam(intent.pick_team, g.home) ? g.home : (sameTeam(intent.pick_team, g.away) ? g.away : null);
             res = team ? sb.preselect({ gameId: g.id, team: team }) : { status: 'no_price' };
@@ -292,6 +306,10 @@
         }
         var game = games[idx];
 
+        if (IS_SPREAD) {
+            showBanner('Your pick (' + intent.pick_team + ' ' + signLine(intent.line) + ') is ready. Select it on the board to confirm; nothing is submitted automatically.', false);
+            return;
+        }
         if (IS_TOTAL) {
             var side = (intent.market === 'over') ? 'Over' : 'Under';
             var found = totalsAtLine(game, intent.line, side);
