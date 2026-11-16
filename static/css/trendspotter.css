@@ -1030,3 +1030,32 @@ body.ts-page .ts-card-head h2 {
 @media (max-width: 560px) {
   .ts-pro-note { padding: 12px 16px; }
 }
+
+/* TS_APLUS_20261116: luck test, matchup sheet, saved trends */
+.ts-confidence { margin: 14px 0 0; padding: 12px 14px; border: 1px solid var(--line); border-left: 4px solid var(--muted); border-radius: var(--ts-radius-sm); background: var(--panel-2); }
+.ts-confidence[data-level="above"] { border-left-color: var(--green); }
+.ts-confidence[data-level="below"] { border-left-color: var(--red); }
+.ts-confidence[data-level="not_proven"] { border-left-color: var(--gold); }
+.ts-confidence-label { margin: 0; font-weight: 700; color: var(--ink); font-size: 14px; }
+.ts-confidence-detail, .ts-confidence-note { margin: 6px 0 0; font-size: 13px; line-height: 1.45; color: var(--ink-2); }
+.ts-confidence-note { color: var(--muted); font-size: 12px; }
+.ts-sheet th[scope="row"], .ts-sheet th[scope="row"] small { text-align: left; font-weight: 700; color: var(--ink); white-space: normal; }
+.ts-sheet th[scope="row"] small { display: block; font-weight: 400; color: var(--muted); font-size: 12px; margin-top: 2px; }
+.ts-sheet-row { cursor: pointer; }
+.ts-sheet-row:hover th, .ts-sheet-row:hover td { background: var(--panel-3); }
+.ts-luck { font-size: 12px; font-weight: 600; white-space: nowrap; }
+.ts-luck[data-level="above"] { color: var(--green); }
+.ts-luck[data-level="below"] { color: var(--red); }
+.ts-luck[data-level="not_proven"], .ts-luck[data-level="insufficient"] { color: var(--muted); }
+.ts-small-sample { display: inline-block; margin-left: 4px; padding: 1px 6px; border-radius: 999px; font-size: 11px; color: var(--gold); border: 1px solid var(--gold); }
+.ts-saved .ts-btn, .ts-saved #compareOut { margin-top: 10px; }
+.ts-cmp-table th[scope="col"] { min-width: 160px; font-weight: 600; font-size: 12px; text-transform: none; letter-spacing: 0; }
+@media (max-width: 640px) {
+  .ts-sheet th[scope="row"] { min-width: 0; }
+  .ts-sheet th, .ts-sheet td { padding-left: 6px; padding-right: 6px; }
+  .ts-sheet .ts-luck { white-space: normal; }
+  .ts-sheet th:last-child, .ts-sheet td:last-child { display: none; }
+  .ts-sheet th[scope="row"] { display: block; padding: 6px 12px 4px; }
+  body .ts-result .ts-metrics dt { font-size: 11px; }
+  .ts-confidence { padding: 10px 12px; }
+}

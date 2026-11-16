@@ -23,7 +23,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/css/tmr-ds.d4d41a955166.css">
 <link rel="stylesheet" href="/static/css/tmr-ds-header.cc364e352e74.css">
-  <link rel="stylesheet" href="/static/css/trendspotter.css?v=783147c2f35a">
+  <link rel="stylesheet" href="/static/css/trendspotter.css?v=c6cd18893dcb">
   <link rel="stylesheet" href="/static/css/trendspotter-explainer.css?v=df9cd3257b70">
 <link rel="stylesheet" href="/static/css/trendspotter-dark.css?v=1c6442f8824b">
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "name": "TrendSpotter", "applicationCategory": "SportsApplication", "operatingSystem": "Web", "url": "https://trustmyrecord.com/trendspotter/", "description": "A free sports betting trends tool. Pick a team, a market and a situation, and Trend Spotter searches completed MLB, NBA, NFL and NHL games for the record, win rate, season splits and every game behind the number, graded at the line each game actually closed at. Units, ROI, average price and the profitability chart are part of TMR Pro.", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}, "featureList": ["Moneyline, spread and total records for MLB, NBA, NFL and NHL", "Situational filters for favorite, underdog, after a win, after a loss, head to head and starter handedness", "Venue, date range, price range, line range and minimum sample controls", "Free: record, win rate, sample size, date range, season splits and exclusions", "Free: every qualifying game listed with its final score and result", "Free: source, dataset, games considered and games excluded shown with every result", "TMR Pro: units, ROI, average closing price, the market-implied win rate and the profitability chart"], "publisher": {"@type": "Organization", "name": "TrustMyRecord", "url": "https://trustmyrecord.com/"}}</script>
@@ -337,6 +337,52 @@ html body.ts-page .ts-modal-panel h2{line-height:1.16;margin:0 0 var(--tsp-gap-m
       </div>
     </section>
 
+    <section class="ts-explain" aria-labelledby="methodHeading">
+      <div class="ts-explain-head">
+        <p class="ts-explain-kicker">Methodology</p>
+        <h2 id="methodHeading">How every number is worked out</h2>
+        <p>Every result is settled from the final score and the line that game actually closed at. Nothing is regraded
+          at a line you type in, and every game a result counts is listed under it.</p>
+      </div>
+      <div class="ts-limits">
+        <dl>
+          <div>
+            <dt>Record and win rate</dt>
+            <dd>Wins, losses and pushes at the closing line. The win rate is wins divided by wins plus losses; pushes are
+            shown separately and never counted as either.</dd>
+          </div>
+          <div>
+            <dt>Units and ROI</dt>
+            <dd>At the closing price each game carried: favorites risk enough to win 1 unit, underdogs risk 1 unit. Games
+            with no recorded price count in the record, not in units. Units are only stated when at least 10 games carry
+            a price, or every game does.</dd>
+          </div>
+          <div>
+            <dt>Seasons</dt>
+            <dd>NBA and NHL seasons run from autumn to summer and are named by both years (2025-26); NFL January playoffs
+            and the Super Bowl belong to the season before. MLB seasons are calendar years.</dd>
+          </div>
+          <div>
+            <dt>Rest</dt>
+            <dd>Days off since that team&#39;s previous game, counted from its own schedule. Season openers have no rest
+            figure and are left out of rest filters, and say so.</dd>
+          </div>
+          <div>
+            <dt>Luck test (TMR Pro)</dt>
+            <dd>With enough priced games, the units are compared with what the closing prices themselves expected; a result
+            outside the normal 95% range of luck is flagged. Spreads and totals without prices are compared with 52.4%, the
+            break-even at a standard -110 price, which is stated as an assumption. Under 30 games there is no verdict. Searching
+            many trends will turn up about 1 in 20 that pass by chance, and no past trend makes a future result more likely.</dd>
+          </div>
+          <div>
+            <dt>Sources</dt>
+            <dd>MLB: an ESPN-derived game corpus from 2010, with 2026 run lines taken from the DraftKings close. NBA, NFL and NHL:
+            the BetLegend Pro graded games dataset, topped up four times a day from ESPN scores and DraftKings closing lines.</dd>
+          </div>
+        </dl>
+      </div>
+    </section>
+
     <section class="ts-explain" aria-labelledby="limitsHeading">
       <div class="ts-explain-head">
         <p class="ts-explain-kicker">Limits, stated up front</p>
@@ -370,6 +416,19 @@ html body.ts-page .ts-modal-panel h2{line-height:1.16;margin:0 0 var(--tsp-gap-m
             fewer lines: NHL closing lines start in 2007, NFL totals in 1979 and NFL moneylines in 2006.</dd>
           </div>
           <div>
+            <dt>Spread and total prices</dt>
+            <dd>Prices on NBA, NFL and NHL spreads and totals are recorded only for games since April 2026, and MLB run
+            line prices not at all. Those records are complete; their units are shown only where the prices exist.</dd>
+          </div>
+          <div>
+            <dt>Regular season or playoffs</dt>
+            <dd>The sources do not mark playoff games reliably, so samples include both and there is no playoff filter.</dd>
+          </div>
+          <div>
+            <dt>Saved trends</dt>
+            <dd>Saved trends are kept in this browser only, with their numbers as of the day saved.</dd>
+          </div>
+          <div>
             <dt>Predictions</dt>
             <dd>Nothing here forecasts a game. A trend is a record of games already played, and past results do not
             carry forward.</dd>
@@ -392,7 +451,7 @@ html body.ts-page .ts-modal-panel h2{line-height:1.16;margin:0 0 var(--tsp-gap-m
           </thead>
           <tbody>
             <tr><th scope="row">The question</th><td class="is-here">One team, one market, one situation</td><td>Two named teams, as many conditions as you want</td></tr>
-            <tr><th scope="row">Conditions</th><td class="is-here">Venue, situation, date range, line or price range, recent games, minimum sample</td><td>86 conditions across matchup, market, form, schedule, performance, pitcher, venue and head to head, stacked and attachable to each team separately</td></tr>
+            <tr><th scope="row">Conditions</th><td class="is-here">Venue, situation, rest, season range, line or price range, recent games, minimum sample</td><td>86 conditions across matchup, market, form, schedule, performance, pitcher, venue and head to head, stacked and attachable to each team separately</td></tr>
             <tr><th scope="row">Markets</th><td class="is-here">Moneyline, spread, total</td><td>Moneyline, spread, total, and team totals at any number</td></tr>
             <tr><th scope="row">History</th><td class="is-here">Back to 2010 in MLB, 2007 in NBA, 2003 in NHL, 1966 in NFL</td><td>Every graded game on file, going back decades</td></tr>
             <tr><th scope="row">Pricing your bet</th><td class="is-here">Units and ROI at the closing prices those games carried</td><td>Also break-even, edge in points, and expected value against the price you are being offered</td></tr>
@@ -478,7 +537,7 @@ html body.ts-page .ts-modal-panel h2{line-height:1.16;margin:0 0 var(--tsp-gap-m
   <script src="/static/js/config.js?v=60a0696a58ba"></script>
   <script src="/static/js/tmr-team-logo-catalog.js?v=ee9a40965564"></script>
   <script src="/static/js/tmr-team-logo.js?v=3c857a27fcb0"></script>
-  <script src="/static/js/trendspotter.js?v=85a2419e8b37"></script>
+  <script src="/static/js/trendspotter.js?v=cb270911078a"></script>
   <script src="/static/js/tmr-ds-nav.7d4b5bb01f49.js"></script>
 
     <script src="/static/js/tmr-live-chat.js?v=3d9491f06dde"></script>
