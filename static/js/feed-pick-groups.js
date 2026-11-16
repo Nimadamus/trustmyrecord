@@ -509,7 +509,7 @@
                 try {
                     var meta = (window.MILESTONE_META || {})[String(item.post_type || '')];
                     var line = msLine(item);
-                    var norm = function (s) { return String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim(); };
+                    var norm = function (s) { return String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').replace(/graded /g, '').trim(); };
                     if (meta && norm(line) === norm(meta.label)) line = '';
                     html = html.replace(/(<div class="fi-content">)([^<]*)/, function (m, open) { return open + e(line) + (line ? ' ' : ''); });
                 } catch (x) { /* keep the original card */ }
