@@ -616,6 +616,23 @@
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mountModeBtn);
     else mountModeBtn();
 
+    // SITE_UPDATES_OFFICIAL_ONLY_20261116: Site Updates now holds official
+    // TrustMyRecord posts only. Until there is one, the tab stays out of the row
+    // instead of opening onto an empty page.
+    function hideEmptySiteUpdates() {
+        if (typeof document.querySelectorAll !== 'function') return;
+        var btn = Array.prototype.find.call(document.querySelectorAll('.feed-tab'), function (b) {
+            return (b.getAttribute('onclick') || '').indexOf("'site-updates'") !== -1;
+        });
+        var c = (window.api && typeof window.api.request === 'function') ? window.api : null;
+        if (!btn || !c) return;
+        c.request('/feed?limit=1&offset=0&filter=site_updates').then(function (d) {
+            if (!(d && d.feed && d.feed.length) && !btn.classList.contains('active')) btn.hidden = true;
+        }).catch(function () { /* leave the tab as it is */ });
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { setTimeout(hideEmptySiteUpdates, 0); });
+    else setTimeout(hideEmptySiteUpdates, 0);
+
     window.TMRFeedGroups = {
         regroup: regroup, renderOpenGroup: renderOpenGroup, renderResultsGroup: renderResultsGroup,
         isGrouping: function () { return grouping; }, _expanded: expanded
