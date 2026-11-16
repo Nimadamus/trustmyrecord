@@ -542,7 +542,22 @@
                 window.location.href = '/login/?next=' + encodeURIComponent(location.pathname + (location.search || ''));
                 return;
             }
-            return baseCongrats.apply(this, arguments);
+            var hasUser = false;
+            try { hasUser = !!(window.auth && window.auth.currentUser); } catch (x) { hasUser = false; }
+            if (hasUser || !(window.api && typeof window.api.request === 'function')) return baseCongrats.apply(this, arguments);
+            // Token is there but the profile has not loaded yet: send it straight to the API
+            // (the base handler would open the login box for a member who is signed in).
+            var mid = String(itemId).replace(/^milestone:/, '');
+            if (!/^\d+$/.test(mid) || !btn) return;
+            var isOn = btn.classList.contains('is-congratsed');
+            btn.disabled = true;
+            return Promise.resolve(window.api.request('/milestones/' + mid + '/congrats', { method: isOn ? 'DELETE' : 'POST' }))
+                .then(function (res) {
+                    btn.classList.toggle('is-congratsed', !isOn);
+                    var span = btn.querySelector('span');
+                    if (span && res && typeof res.congrats_count !== 'undefined') span.textContent = String(res.congrats_count);
+                }, function () {})
+                .then(function () { btn.disabled = false; });
         };
     }
 
@@ -578,6 +593,22 @@
         if (typeof baseFocus === 'function') return baseFocus.apply(this, arguments);
     };
 
+    // A shared open pick leaves the feed once its game starts (it is graded into a
+    // results card). When the first load is done and the pick is not on the page,
+    // open its own pick page, which shows it pending or graded.
+    var sharedChecked = false;
+    function sharedPickFallback() {
+        if (sharedChecked || focused) return;
+        if (!document.querySelector('#feedList .feed-item')) return; // feed did not load; leave the page alone
+        sharedChecked = true;
+        var wanted = '';
+        try { wanted = new URLSearchParams(location.search).get('post') || ''; } catch (x) { return; }
+        var m = /^openpick:(\d+)$/.exec(wanted);
+        if (!m) return;
+        if (document.querySelector('#feedList [data-id="' + wanted + '"]')) return;
+        location.replace('/pick/?id=' + m[1]);
+    }
+
     // A grouped first page can be short; fill the screen with up to two more pages.
     var baseLoadFeed = window.loadFeed;
     if (typeof baseLoadFeed === 'function') {
@@ -590,9 +621,10 @@
                     var list = document.getElementById('feedList');
                     var more = document.getElementById('loadMore');
                     var cardsShown = list ? list.querySelectorAll(':scope > .feed-item').length : 99;
-                    if (cardsShown < 10 && more && more.style.display === 'block' && typeof loadMorePosts === 'function') loadMorePosts();
+                    if (cardsShown < 10 && more && more.style.display === 'block' && typeof loadMorePosts === 'function') { loadMorePosts(); return r; }
                 }
             } catch (x) { /* the Load More button still works */ }
+            try { sharedPickFallback(); } catch (x) { /* optional */ }
             return r;
         };
     }

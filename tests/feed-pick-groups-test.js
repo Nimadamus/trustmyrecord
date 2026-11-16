@@ -42,6 +42,7 @@ function boot(opts) {
     TMRFeedOpenPicks: { _cards: {}, _handoff: (i) => (i.pick_market_type === 'h2h' ? { otherLabel: 'Other ML' } : null) },
   };
   if (opts.grouping === 'off') store.tmr_feed_grouping = 'off';
+  Object.assign(sandbox, opts.extra || {});
   sandbox.window = sandbox;
   vm.createContext(sandbox);
   vm.runInContext(groupsSrc, sandbox);
@@ -327,6 +328,35 @@ function checkSession(n) {
     assert.strictEqual(ids.filter((id) => id.startsWith('opgroup:')).length, 1);
     assert.strictEqual(ids.length, 20);
     assert.strictEqual(ids[19], 'opgroup:KenBcapper:' + ken[0].pick_id, 'the group sits where its newest pick was');
+  });
+
+  await t('Congrats works for a signed-in member whose profile is still loading', async () => {
+    const calls = []; let baseHit = 0;
+    const sb = boot({ extra: {
+      toggleCongrats: () => { baseHit++; },
+      auth: { currentUser: null },
+      api: { token: 'tok', request: (u, o) => { calls.push(o.method + ' ' + u); return Promise.resolve({ congrats_count: 3 }); } },
+    } });
+    const cls = new Set(); const span = { textContent: '2' };
+    const btn = { disabled: false, classList: { contains: (c) => cls.has(c), toggle: (c, on) => (on ? cls.add(c) : cls.delete(c)) }, querySelector: () => span };
+    await sb.toggleCongrats('milestone:42', btn);
+    assert.deepStrictEqual(calls, ['POST /milestones/42/congrats']);
+    assert.strictEqual(baseHit, 0, 'no login box');
+    assert.ok(cls.has('is-congratsed') && span.textContent === '3' && btn.disabled === false);
+    sb.auth.currentUser = { id: 1 };
+    sb.toggleCongrats('milestone:42', btn);
+    assert.strictEqual(baseHit, 1, 'loaded profile uses the normal handler');
+  });
+
+  await t('a shared open pick that left the feed opens its pick page', async () => {
+    for (const [onPage, expect] of [[false, '/pick/?id=555'], [true, null]]) {
+      let replaced = null;
+      const sb = boot({ search: '?post=openpick:555', extra: { loadFeed: async () => 'ok' } });
+      sb.location.replace = (u) => { replaced = u; };
+      sb.document.querySelector = (q) => (q === '#feedList .feed-item' || (onPage && q.includes('openpick:555')) ? {} : null);
+      await sb.loadFeed(); await sb.loadFeed();
+      assert.strictEqual(replaced, expect);
+    }
   });
 
   console.log(passed + ' passed');
