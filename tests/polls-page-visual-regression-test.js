@@ -14,14 +14,25 @@ const html = fs.readFileSync(path.join(root, 'polls', 'index.html'), 'utf8');
 // tmr-fb-sidebar) are gone for good; lock the current shape instead.
 for (const required of [
   // shell + hero
-  'class="tmr-shell2"',
-  'class="pl-hero"',
-  '<h1>Sports Polls</h1>',
-  'Vote on today&rsquo;s biggest games and see where the community stands.',
+  'class="tmr-shell2 pa-shell"',
+  // 2026-11-15 arena redesign (Nima's Desktop polls.png reference): stadium
+  // hero, discovery tabs, featured VS card, right sidebar.
+  'class="pa-hero"',
+  'id="statComments"',
+  'id="sportSelect"',
+  'id="paLbList"',
+  'id="paActivity"',
+  'id="pollsHistory"',
+  'id="createPreviewStep"',
+  'function inviteHtml(',
+  'function publishPendingPoll(',
+  '/static/css/polls-arena.css',
+  '<h1>Sports <span class="pa-blue">Polls</span></h1>',
+  'Your opinion. Your vote. Your community.',
   'id="statOpen"',
   'id="statVotesToday"',
   'id="pollsPrompt"',
-  'class="tmr-hbtn is-primary" id="createPollBtn"',
+  'class="pa-btn" id="createPollBtn"',
   // filter bar — every league + view chip the page ships with
   'id="pollsFilterBar"',
   'id="leagueChips"',
@@ -32,10 +43,11 @@ for (const required of [
   'data-league="WNBA"',
   'data-league="NHL"',
   'data-league="Other"',
-  'data-view="open"',
+  'data-view="trending"',
+  'data-view="most_discussed"',
   'data-view="ending"',
   'data-view="most_voted"',
-  'data-view="voted"',
+  'data-view="mine"',
   'data-view="closed"',
   'id="searchInput"',
   // board structure
