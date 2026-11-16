@@ -868,8 +868,15 @@ function renderFollowingPeople(list) {
         host.innerHTML = '';
         return;
     }
-    host.hidden = false;
     const people = Array.isArray(list) ? list : [];
+    // FEED_FOLLOWING_EMPTY_ONCE_20261116: following nobody, this box and the
+    // empty state under it said the same thing twice. The empty state says it.
+    if (!people.length) {
+        host.hidden = true;
+        host.innerHTML = '';
+        return;
+    }
+    host.hidden = false;
     const chips = people.map(function(u) {
         const un = u.username || '';
         const name = esc(u.display_name || un || 'Handicapper');
