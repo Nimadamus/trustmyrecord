@@ -1116,13 +1116,31 @@ async function loadFeedItems() {
         items.forEach(item => {
             const html = renderFeedItem(item);
             const id = idOf(html);
+            // FEED_GROUPS_20261116: a grouped card (pick session, results roll-up)
+            // lists its members. It is re-rendered when this page changed it, and a
+            // member that was on screen as its own card is folded into it.
+            const members = Array.isArray(item._member_ids) ? item._member_ids : null;
             if (id && onPage.has(id)) {
                 if (grown.has(id)) {
                     const node = nodes.find(n => n.getAttribute('data-id') === id);
                     if (node) node.outerHTML = html;
                     grown.delete(id);
+                } else if (members) {
+                    const node = nodes.find(n => n.getAttribute('data-id') === id);
+                    const m = /data-group-sig="([^"]*)"/.exec(html);
+                    if (node && m && node.getAttribute('data-group-sig') !== m[1]) node.outerHTML = html;
                 }
                 return;
+            }
+            if (members) {
+                // the group takes the place of its top-most member on screen
+                const folded = nodes.filter(n => n.parentNode === c && members.indexOf(n.getAttribute('data-id')) !== -1);
+                if (folded.length) {
+                    folded.slice(1).forEach(n => n.remove());
+                    folded[0].outerHTML = html;
+                    if (id) onPage.add(id);
+                    return;
+                }
             }
             if (id) onPage.add(id);
             fresh.push(html);
@@ -1148,7 +1166,9 @@ async function loadFeedItems() {
     // URL lands on an undifferentiated timeline.
     if (typeof focusSharedFeedItem === 'function') focusSharedFeedItem();
     const lm = document.getElementById('loadMore');
-    if (lm) lm.style.display = items.length >= FEED_LIMIT ? 'block' : 'none';
+    // FEED_GROUPS_20261116: grouped cards are fewer than the rows fetched, so a
+    // full page from the API still means there is more to load.
+    if (lm) lm.style.display = (rawPageCount >= FEED_LIMIT || items.length >= FEED_LIMIT) ? 'block' : 'none';
 
     if (!window.__msPrefInit) {
         window.__msPrefInit = true;

@@ -1,0 +1,457 @@
+/* FEED_GROUPS_20261116 - presentation-only grouping for the community feed.
+ *
+ * 1. Pick sessions: a member who posts several open picks in one sitting gets ONE
+ *    card ("KenBcapper posted 15 new picks", sport breakdown, the first picks
+ *    shown, "View all 15 picks" for the rest). Every pick stays a row of its own
+ *    with Tail, Fade, Add to my slip and Share, wired to the same handlers as the
+ *    single open pick card (feed-open-picks.js).
+ * 2. Results roll-up: one grading run that updates several members' records at
+ *    once becomes ONE "Results are in" card. Each member keeps a row, and the full
+ *    record cards (likes, comments, share) open under "View all".
+ *
+ * Nothing here changes data. It wraps aggregateFeedItems (after the existing
+ * per-day pick grouping), renderFeedItem and focusSharedFeedItem, and the reader
+ * can switch grouping off ("Show every update") at any time.
+ *
+ * Loaded after feed-open-picks.js.
+ */
+(function () {
+    'use strict';
+    if (window.TMRFeedGroups) return;
+
+    var SESSION_GAP_MS = 90 * 60 * 1000;   // picks closer together than this are one sitting
+    var MIN_SESSION = 2;                   // 2+ open picks from one member = one card
+    var RESULTS_WINDOW_MS = 30 * 60 * 1000; // record updates inside one grading run
+    var MIN_RESULTS = 3;                   // 3+ members graded together = one card
+    var PREVIEW = 3;                       // rows shown before "View all"
+    var MODE_KEY = 'tmr_feed_grouping';
+    var SPORT_CODE = {
+        americanfootball_nfl: 'NFL', americanfootball_ncaaf: 'NCAAF', basketball_nba: 'NBA',
+        basketball_ncaab: 'NCAAB', basketball_wncaab: 'NCAAW', basketball_wnba: 'WNBA',
+        baseball_mlb: 'MLB', icehockey_nhl: 'NHL', soccer_epl: 'EPL', mma_mixed_martial_arts: 'MMA'
+    };
+
+    var grouping = true;
+    try { grouping = localStorage.getItem(MODE_KEY) !== 'off'; } catch (x) { grouping = true; }
+    var expanded = {}; // group id -> true; survives re-renders and Load More
+
+    function e(v) {
+        return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+        });
+    }
+    function t(item) {
+        var v = new Date(item.graded_at || item.created_at || item.locked_at || 0).getTime();
+        return isFinite(v) ? v : 0;
+    }
+    function uname(item) {
+        return String(item.username || item.display_name || item.user_id || '');
+    }
+    function league(item) {
+        return String(item.pick_league || SPORT_CODE[String(item.pick_sport_key || item.sport || '')] || 'Other');
+    }
+    function plural(n, w, p) { return n + ' ' + (n === 1 ? w : (p || w + 's')); }
+    function ago(ts) {
+        return (typeof window.timeAgo === 'function') ? window.timeAgo(new Date(ts).toISOString()) : '';
+    }
+    function sig(parts) {
+        var s = parts.join('|'), h = 0;
+        for (var i = 0; i < s.length; i++) { h = ((h << 5) - h + s.charCodeAt(i)) | 0; }
+        return (h >>> 0).toString(36) + '.' + parts.length;
+    }
+    function isOpenPick(i) { return i && i.item_type === 'open_pick' && !i._group; }
+    function isResult(i) {
+        if (!i || i._group || i.item_type !== 'pick') return false;
+        var s = String(i.status || '').toLowerCase();
+        return s !== 'pending' && s !== 'locked' && !!uname(i);
+    }
+
+    // ---------------- grouping ----------------
+    function groupOpenPicks(items) {
+        var byUser = {};
+        items.forEach(function (i) {
+            if (!isOpenPick(i)) return;
+            var k = uname(i).toLowerCase();
+            (byUser[k] = byUser[k] || []).push(i);
+        });
+        var absorbed = new Set();
+        var groups = [];
+        Object.keys(byUser).forEach(function (k) {
+            var list = byUser[k].slice().sort(function (a, b) { return t(b) - t(a); });
+            var run = [];
+            var flush = function () {
+                if (run.length >= MIN_SESSION) {
+                    run.forEach(function (m) { absorbed.add(m); });
+                    groups.push(makeOpenGroup(run));
+                }
+                run = [];
+            };
+            list.forEach(function (p) {
+                if (run.length && t(run[run.length - 1]) - t(p) > SESSION_GAP_MS) flush();
+                run.push(p);
+            });
+            flush();
+        });
+        if (!groups.length) return items;
+        return items.filter(function (i) { return !absorbed.has(i); }).concat(groups);
+    }
+
+    function makeOpenGroup(members) {
+        var newest = members[0];
+        var oldest = members[members.length - 1];
+        var ids = members.map(function (m) { return String(m.item_id || ('openpick:' + m.pick_id)); });
+        var sum = function (k) { return members.reduce(function (s, m) { return s + (Number(m[k]) || 0); }, 0); };
+        return Object.assign({}, newest, {
+            _group: 'open_picks',
+            item_type: 'open_pick',
+            post_type: 'open_pick',
+            item_id: 'opgroup:' + uname(newest) + ':' + (newest.pick_id || ids[0]),
+            pick_id: null,
+            pick_count: members.length,
+            created_at: newest.created_at,
+            _first_at: oldest.created_at,
+            _members: members,
+            _member_ids: ids,
+            _sig: sig(members.map(function (m) {
+                return m.pick_id + ':' + (m.tails_count || 0) + ':' + (m.fades_count || 0) + ':' + (m.viewer_reaction || '') + ':' + (m.pick_started ? 1 : 0);
+            })),
+            likes_count: sum('likes_count'),
+            comments_count: sum('comments_count')
+        });
+    }
+
+    function groupResults(items) {
+        var results = items.filter(isResult).sort(function (a, b) { return t(b) - t(a); });
+        if (results.length < MIN_RESULTS) return items;
+        var absorbed = new Set();
+        var groups = [];
+        var run = [];
+        var flush = function () {
+            var users = new Set(run.map(function (m) { return uname(m).toLowerCase(); }));
+            if (run.length >= MIN_RESULTS && users.size >= MIN_RESULTS) {
+                run.forEach(function (m) { absorbed.add(m); });
+                groups.push(makeResultsGroup(run));
+            }
+            run = [];
+        };
+        results.forEach(function (r) {
+            if (run.length && t(run[0]) - t(r) > RESULTS_WINDOW_MS) flush();
+            run.push(r);
+        });
+        flush();
+        if (!groups.length) return items;
+        return items.filter(function (i) { return !absorbed.has(i); }).concat(groups);
+    }
+
+    function makeResultsGroup(members) {
+        var newest = members[0];
+        var ids = members.map(function (m) { return String(m.item_id || m.pick_id); });
+        return {
+            _group: 'results',
+            item_type: 'pick',
+            post_type: 'pick',
+            status: 'graded',
+            item_id: 'results:' + ids[0],
+            created_at: newest.graded_at || newest.created_at,
+            graded_at: newest.graded_at || newest.created_at,
+            pick_count: members.reduce(function (s, m) { return s + (Number(m.pick_count) || 1); }, 0),
+            likes_count: members.reduce(function (s, m) { return s + (Number(m.likes_count) || 0); }, 0),
+            comments_count: members.reduce(function (s, m) { return s + (Number(m.comments_count) || 0); }, 0),
+            _members: members,
+            _member_ids: ids,
+            _sig: sig(members.map(function (m) {
+                return (m.item_id || m.pick_id) + ':' + (m.pick_count || 1) + ':' + (m.wins_count || 0) + '-' + (m.losses_count || 0) + '-' + (m.pushes_count || 0) + ':' + (m.batch_net_units || '');
+            }))
+        };
+    }
+
+    function regroup(items) {
+        if (!grouping || !Array.isArray(items)) return items;
+        try { return groupResults(groupOpenPicks(items)); } catch (x) { return items; }
+    }
+
+    // ---------------- rendering ----------------
+    function fmtOdds(o) {
+        var n = Number(o);
+        if (!isFinite(n) || n === 0) return '';
+        return (n > 0 ? '+' : '') + Math.round(n);
+    }
+    function fmtUnits(u) {
+        var n = Number(u);
+        return isFinite(n) && n > 0 ? (Math.round(n * 100) / 100) + 'u' : '';
+    }
+    function fmtStart(ts) {
+        if (!ts) return '';
+        var d = new Date(ts);
+        if (isNaN(d.getTime())) return '';
+        return d.toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' });
+    }
+    function started(item) {
+        if (item.pick_started === true) return true;
+        var ts = item.pick_game_time ? new Date(item.pick_game_time).getTime() : NaN;
+        return isFinite(ts) && ts <= Date.now();
+    }
+    function reactBtn(kind, item) {
+        var on = item.viewer_reaction === kind;
+        var count = Number(kind === 'tail' ? item.tails_count : item.fades_count) || 0;
+        var dead = started(item) || item.is_own_pick;
+        return '<button type="button" class="fpg-act fop-react fop-' + kind + (on ? ' is-on' : '') + '"' +
+            ' data-fop-react="' + kind + '" aria-pressed="' + on + '"' + (dead ? ' disabled' : '') +
+            ' aria-label="' + (kind === 'tail' ? 'Tail' : 'Fade') + ' ' + e(item.pick_text || item.pick_selection || 'this pick') + '">' +
+            '<i class="fas ' + (kind === 'tail' ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down') + '"></i> ' +
+            (kind === 'tail' ? 'Tail' : 'Fade') + ' <span>' + count + '</span></button>';
+    }
+
+    function openRow(item) {
+        var id = String(item.item_id || ('openpick:' + item.pick_id));
+        var op = window.TMRFeedOpenPicks;
+        if (op && op._cards) op._cards[id] = item; // Tail / Fade / slip handlers read this
+        var h = (op && typeof op._handoff === 'function') ? op._handoff(item) : null;
+        var isStarted = started(item);
+        var matchup = (item.pick_away_team && item.pick_home_team) ? item.pick_away_team + ' @ ' + item.pick_home_team : '';
+        var meta = [item.pick_market_label, fmtOdds(item.pick_odds), fmtUnits(item.pick_units)].filter(Boolean).join(' · ');
+        var sub = [matchup, fmtStart(item.pick_game_time)].filter(Boolean).join(' · ');
+        var vt = Number(item.verified_tails_count) || 0, vf = Number(item.verified_fades_count) || 0;
+        return '<div class="fpg-row fop-card" data-id="' + e(id) + '" data-fop-pick="' + e(item.pick_id) + '">' +
+            '<div class="fpg-row-main">' +
+                '<span class="fpg-lg">' + e(league(item)) + '</span>' +
+                '<div class="fpg-row-text"><b>' + e(item.pick_text || item.pick_selection || 'Pick') + '</b>' +
+                    (meta ? '<small class="fpg-row-meta">' + e(meta) + '</small>' : '') +
+                    (sub ? '<small>' + e(sub) + '</small>' : '') +
+                '</div>' +
+                '<b class="fv-chip fv-chip--' + (isStarted ? 'graded' : 'pending') + '">' + (isStarted ? 'IN PLAY' : 'OPEN') + '</b>' +
+            '</div>' +
+            '<div class="fpg-row-actions">' +
+                reactBtn('tail', item) + reactBtn('fade', item) +
+                (h ? '<button type="button" class="fpg-act fop-slip" data-fop-slip="same"><i class="fas fa-plus"></i> Add to my slip</button>' : '') +
+                (h ? '<button type="button" class="fpg-act fop-slip fop-slip--other" data-fop-slip="other">Take ' + e(h.otherLabel) + '</button>' : '') +
+                '<button type="button" class="fpg-act" onclick="sharePost(' + e(JSON.stringify(id)) + ')" aria-label="Share this pick"><i class="fas fa-share"></i> Share</button>' +
+            '</div>' +
+            ((vt || vf) ? '<p class="fpg-verified"><i class="fas fa-circle-check"></i> ' +
+                e([vt ? plural(vt, 'verified pick') + ' with it' : '', vf ? plural(vf, 'verified pick') + ' against it' : ''].filter(Boolean).join(' · ')) + '</p>' : '') +
+            '<p class="fop-note" aria-live="polite"></p>' +
+        '</div>';
+    }
+
+    function toggleBtn(gid, n, label) {
+        var open = !!expanded[gid];
+        return '<button type="button" class="fpg-toggle" data-fpg-toggle="' + e(gid) + '" aria-expanded="' + open + '">' +
+            '<span>' + (open ? 'Show fewer' : 'View all ' + n + ' ' + label) + '</span> <i class="fas fa-chevron-down"></i></button>';
+    }
+
+    function renderOpenGroup(g) {
+        var members = g._members;
+        var n = members.length;
+        var counts = {};
+        members.forEach(function (m) { var l = league(m); counts[l] = (counts[l] || 0) + 1; });
+        var sports = Object.keys(counts).sort(function (a, b) { return counts[b] - counts[a] || (a < b ? -1 : 1); });
+        var live = members.filter(started).length;
+        var span = Math.max(0, t(members[0]) - t(members[n - 1]));
+        var mins = Math.round(span / 60000);
+        var when = mins < 2 ? 'Posted together' : 'Posted over ' + (mins < 90 ? mins + ' min' : Math.round(mins / 60) + ' h');
+        var header = (typeof window.renderFeedHeader === 'function')
+            ? window.renderFeedHeader(Object.assign({}, members[0], { item_type: 'pick', post_type: 'pick' }), '') : '';
+        var open = !!expanded[g.item_id];
+        var preview = members.slice(0, PREVIEW).map(openRow).join('');
+        var rest = members.slice(PREVIEW).map(openRow).join('');
+        return '<div class="feed-item fpg-card fpg-card--open' + (open ? ' is-open' : '') + '" data-id="' + e(g.item_id) + '" data-type="open_pick_group" data-group-sig="' + e(g._sig) + '">' +
+            header +
+            '<div class="fpg-summary">' +
+                '<div class="fpg-headline"><span class="fpg-count">' + n + '</span><div><b>' + e(g.display_name || g.username) + ' posted ' + n + ' new picks</b>' +
+                    '<small>' + e(when) + (live ? ' · ' + live + ' in play' : '') + '</small></div></div>' +
+                '<div class="fpg-sports" aria-label="Sport breakdown">' + sports.map(function (s) {
+                    return '<span class="fpg-sport"><b>' + counts[s] + '</b> ' + e(s) + '</span>';
+                }).join('') + '</div>' +
+            '</div>' +
+            '<div class="fpg-list">' + preview +
+                (rest ? '<div class="fpg-rest"' + (open ? '' : ' hidden') + '>' + rest + '</div>' : '') +
+            '</div>' +
+            (rest ? toggleBtn(g.item_id, n, 'picks') : '') +
+            '<p class="fpg-foot">Tail and Fade are reactions. They do not add a pick to your record.</p>' +
+        '</div>';
+    }
+
+    function avatar(m) {
+        var url = m.avatar_url || ((typeof window.fvAva === 'function') ? window.fvAva(m.username) : '');
+        return '<span class="fpg-ava">' + (url ? '<img src="' + e(url) + '" alt="" loading="lazy">' : '') + '</span>';
+    }
+
+    function resultRow(m) {
+        var w = Number(m.wins_count) || 0, l = Number(m.losses_count) || 0;
+        var p = (Number(m.pushes_count) || 0) + (Number(m.voids_count) || 0);
+        var n = Number(m.pick_count) || 1;
+        var line = (w + l + p) > 0 ? w + '-' + l + (p ? '-' + p : '') : plural(n, 'pick') + ' graded';
+        var bu = Number(m.batch_net_units);
+        var hasU = m.batch_net_units != null && m.batch_net_units !== '' && isFinite(bu);
+        var href = '/profile/?user=' + encodeURIComponent(m.username || '') + '&view=picks';
+        return '<a class="fpg-res" href="' + e(href) + '">' + avatar(m) +
+            '<span class="fpg-res-name"><b>' + e(m.display_name || m.username) + '</b><small>' + e(plural(n, 'pick')) + ' · ' + e(line) + '</small></span>' +
+            (hasU ? '<b class="fpg-res-u ' + (bu >= 0 ? 'fv-pos' : 'fv-neg') + '">' + (bu >= 0 ? '+' : '') + bu.toFixed(2) + 'u</b>' : '') +
+            '<i class="fas fa-chevron-right" aria-hidden="true"></i></a>';
+    }
+
+    function renderResultsGroup(g, base) {
+        var members = g._members;
+        var n = members.length;
+        var open = !!expanded[g.item_id];
+        var wins = 0, losses = 0;
+        members.forEach(function (m) { wins += Number(m.wins_count) || 0; losses += Number(m.losses_count) || 0; });
+        var full = members.map(function (m) { try { return base(m); } catch (x) { return ''; } }).join('');
+        return '<div class="feed-item fpg-card fpg-card--results' + (open ? ' is-open' : '') + '" data-id="' + e(g.item_id) + '" data-type="results_group" data-group-sig="' + e(g._sig) + '">' +
+            '<div class="fpg-rhead"><span class="fpg-rico"><i class="fas fa-circle-check"></i></span>' +
+                '<div><b>Results are in</b><small>' + plural(n, 'handicapper') + ' had records updated · ' + e(ago(t(members[0]))) + '</small></div>' +
+                '<span class="fv-kind fv-kind--pick"><i class="fas fa-check"></i> Graded</span></div>' +
+            ((wins + losses) ? '<div class="fpg-sports"><span class="fpg-sport"><b>' + wins + '</b> wins</span><span class="fpg-sport"><b>' + losses + '</b> losses</span><span class="fpg-sport"><b>' + g.pick_count + '</b> picks graded</span></div>' : '') +
+            '<div class="fpg-list">' + members.slice(0, open ? n : Math.max(PREVIEW, 0)).map(resultRow).join('') +
+                (n > PREVIEW && !open ? '<div class="fpg-more-names">+ ' + plural(n - PREVIEW, 'more handicapper') + '</div>' : '') +
+            '</div>' +
+            '<div class="fpg-rest fpg-rest--cards"' + (open ? '' : ' hidden') + '>' + full + '</div>' +
+            toggleBtn(g.item_id, n, 'record updates') +
+        '</div>';
+    }
+
+    function setExpanded(card, open) {
+        var gid = card.getAttribute('data-id');
+        if (open) expanded[gid] = true; else delete expanded[gid];
+        card.classList.toggle('is-open', open);
+        var rest = card.querySelector(':scope > .fpg-list > .fpg-rest, :scope > .fpg-rest');
+        if (rest) rest.hidden = !open;
+        if (card.classList.contains('fpg-card--results')) {
+            // the names list grows to every member when open
+            var g = cache[gid];
+            var list = card.querySelector(':scope > .fpg-list');
+            if (g && list) {
+                var n = g._members.length;
+                list.innerHTML = g._members.slice(0, open ? n : PREVIEW).map(resultRow).join('') +
+                    (n > PREVIEW && !open ? '<div class="fpg-more-names">+ ' + plural(n - PREVIEW, 'more handicapper') + '</div>' : '');
+            }
+        }
+        var btn = card.querySelector(':scope > .fpg-toggle');
+        if (btn) {
+            btn.setAttribute('aria-expanded', String(open));
+            var g2 = cache[gid];
+            var n2 = g2 ? g2._members.length : 0;
+            var label = card.classList.contains('fpg-card--results') ? 'record updates' : 'picks';
+            btn.querySelector('span').textContent = open ? 'Show fewer' : 'View all ' + n2 + ' ' + label;
+        }
+    }
+
+    var cache = {};
+    document.addEventListener('click', function (ev) {
+        var btn = ev.target && ev.target.closest ? ev.target.closest('[data-fpg-toggle]') : null;
+        if (!btn) return;
+        var card = btn.closest('.fpg-card');
+        if (!card) return;
+        ev.preventDefault();
+        var open = !card.classList.contains('is-open');
+        setExpanded(card, open);
+        if (!open) card.scrollIntoView({ block: 'nearest' });
+    });
+
+    // ---------------- wiring ----------------
+    var baseAggregate = window.aggregateFeedItems;
+    if (typeof baseAggregate === 'function') {
+        window.aggregateFeedItems = function (items) { return regroup(baseAggregate(items)); };
+    }
+
+    var baseRender = window.renderFeedItem;
+    if (typeof baseRender === 'function') {
+        window.renderFeedItem = function (item) {
+            if (item && item._group) {
+                try {
+                    cache[item.item_id] = item;
+                    if (item._group === 'open_picks') return renderOpenGroup(item);
+                    if (item._group === 'results') return renderResultsGroup(item, baseRender);
+                } catch (x) { return ''; }
+            }
+            return baseRender(item);
+        };
+    }
+
+    // The right rail (Most Active, Trending) keeps reading every update, not cards.
+    var baseAfter = window.fvAfterFeed;
+    if (typeof baseAfter === 'function') {
+        window.fvAfterFeed = function (items) {
+            var flat = [];
+            (items || []).forEach(function (i) { if (i && i._group) flat.push.apply(flat, i._members); else flat.push(i); });
+            return baseAfter.call(this, flat);
+        };
+    }
+
+    // A shared link to a pick inside a group opens the group and lands on the row.
+    var baseFocus = window.focusSharedFeedItem;
+    var focused = false;
+    window.focusSharedFeedItem = function () {
+        var wanted = '';
+        try { wanted = new URLSearchParams(location.search).get('post') || ''; } catch (x) { wanted = ''; }
+        if (wanted && !focused) {
+            var q = '[data-id="' + wanted.replace(/[\\"]/g, '\\$&') + '"]';
+            var top = document.querySelector('#feedList > .feed-item' + q);
+            var inner = top ? null : document.querySelector('#feedList .fpg-card ' + q);
+            if (inner) {
+                var card = inner.closest('.fpg-card');
+                if (card && !card.classList.contains('is-open') && inner.closest('.fpg-rest')) setExpanded(card, true);
+                inner.classList.add('is-shared-target');
+                focused = true;
+                inner.scrollIntoView({ block: 'center', behavior: 'smooth' });
+                return;
+            }
+        }
+        if (typeof baseFocus === 'function') return baseFocus.apply(this, arguments);
+    };
+
+    // A grouped first page can be short; fill the screen with up to two more pages.
+    var baseLoadFeed = window.loadFeed;
+    if (typeof baseLoadFeed === 'function') {
+        window.loadFeed = async function () {
+            var r = await baseLoadFeed.apply(this, arguments);
+            try {
+                if (grouping && typeof feedOffset !== 'undefined' && feedOffset < 2 * FEED_LIMIT) {
+                    var list = document.getElementById('feedList');
+                    var more = document.getElementById('loadMore');
+                    var cardsShown = list ? list.querySelectorAll(':scope > .feed-item').length : 99;
+                    if (cardsShown < 10 && more && more.style.display === 'block' && typeof loadMorePosts === 'function') loadMorePosts();
+                }
+            } catch (x) { /* the Load More button still works */ }
+            return r;
+        };
+    }
+
+    // "Group activity" switch at the bottom of the sort menu; off = every update.
+    function syncModeBtn(btn) {
+        btn.setAttribute('aria-checked', String(grouping));
+        btn.innerHTML = '<i class="fas ' + (grouping ? 'fa-square-check' : 'fa-square') + '"></i> Group activity';
+        btn.title = grouping ? 'Grouped. Uncheck to show every update on its own.' : 'Showing every update. Check to group activity.';
+    }
+    function mountModeBtn() {
+        var menu = document.getElementById('fvSortMenu');
+        if (!menu || document.getElementById('fpgMode')) return;
+        // a div, not a button: fvSetSort rewrites aria-checked on every menu button
+        var btn = document.createElement('div');
+        btn.id = 'fpgMode';
+        btn.className = 'fpg-mode';
+        btn.tabIndex = 0;
+        btn.setAttribute('role', 'menuitemcheckbox');
+        syncModeBtn(btn);
+        btn.addEventListener('keydown', function (ev) {
+            if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); btn.click(); }
+        });
+        btn.addEventListener('click', function (ev) {
+            ev.stopPropagation();
+            grouping = !grouping;
+            try { localStorage.setItem(MODE_KEY, grouping ? 'on' : 'off'); } catch (x) { /* session only */ }
+            syncModeBtn(btn);
+            if (typeof window.fvCloseMenus === 'function') window.fvCloseMenus();
+            if (typeof feedOffset !== 'undefined') feedOffset = 0;
+            if (typeof window.loadFeed === 'function') window.loadFeed();
+        });
+        menu.appendChild(btn);
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mountModeBtn);
+    else mountModeBtn();
+
+    window.TMRFeedGroups = {
+        regroup: regroup, renderOpenGroup: renderOpenGroup, renderResultsGroup: renderResultsGroup,
+        isGrouping: function () { return grouping; }, _expanded: expanded
+    };
+})();
