@@ -159,6 +159,7 @@ async function mount(routes, options = {}) {
       failed[failKey] = failed[failKey] || 0;
       if (failed[failKey] < failFirst[failKey].times) {
         failed[failKey] += 1;
+        if (failFirst[failKey].unreadable) return Promise.resolve({ ok: true, status: 200, json: () => Promise.reject(new SyntaxError('Unexpected end of JSON input')) });
         const status = failFirst[failKey].status;
         if (!status) return Promise.reject(new TypeError('Failed to fetch'));
         return Promise.resolve({ ok: false, status, json: () => Promise.resolve(null) });
@@ -646,6 +647,22 @@ const txt = (doc, sel) => ($(doc, sel) || {}).textContent || '';
     $(doc, '#compareSaved').dispatchEvent(new win.Event('click', { bubbles: true }));
     const out = txt(doc, '#compareOut');
     assert(/81-62/.test(out) && /10-5/.test(out), out);
+  });
+
+  // TS_UNREADABLE_BODY_20261116 ------------------------------------------------
+  await test('a 200 with an unreadable capabilities body is retried, and the page recovers', async () => {
+    const { doc, requested, consoleErrors } = await mount(base, { failFirst: { '/capabilities': { times: 1, unreadable: true } }, settle: 300 });
+    assert(requested.filter((u) => u.includes('/capabilities')).length >= 2, 'retried');
+    assert(/Verified game data connected/.test(txt(doc, '#sourceStatusText')), txt(doc, '#sourceStatusText'));
+    assert(doc.querySelectorAll('[id^=f_]').length > 0, 'the filters render');
+    assert.deepStrictEqual(consoleErrors, []);
+  });
+
+  await test('a capabilities body that never reads shows the retry state, never a stuck loading line', async () => {
+    const { doc, consoleErrors } = await mount(base, { failFirst: { '/capabilities': { times: 99, unreadable: true } }, settle: 500 });
+    assert(!/Checking data sources/.test(txt(doc, '#sourceStatusText')), txt(doc, '#sourceStatusText'));
+    assert($(doc, '#retryBoot'), 'the retry button is offered');
+    assert.deepStrictEqual(consoleErrors, []);
   });
 
   await test('no page errors are raised while all of the above runs', async () => {

@@ -178,6 +178,11 @@
       signal: controller ? controller.signal : undefined
     }).then(function (res) {
       return res.json().catch(function () { return null; }).then(function (body) {
+        /* TS_UNREADABLE_BODY_20261116: a 200 whose body cannot be read (an aborted or cut-off
+           read, an empty cached copy) used to resolve as null, and the page then threw on it and
+           sat on "Checking data sources" for good. It is now a failure, retried like a dropped
+           connection. */
+        if (res.ok && (body === null || typeof body !== 'object')) throw new Error('Unreadable response');
         if (!res.ok) {
           var err = new Error((body && body.message) || ('HTTP ' + res.status));
           err.status = res.status;
@@ -2203,6 +2208,9 @@
   // boot() would bind every listener a second time.
   function loadCapabilities() {
     fetchJson(apiBase() + '/trendspotter/capabilities', { timeout: 15000, retries: 2 }).then(function (data) {
+      if (!data || !Array.isArray(data.sports) || !data.sports.length) throw new Error('Capabilities missing sports');
+      return data;
+    }).then(function (data) {
       caps = data;
       capsBySport = {};
       caps.sports.forEach(function (s) { capsBySport[s.id] = s; });
