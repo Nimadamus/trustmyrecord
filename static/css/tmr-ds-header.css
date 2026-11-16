@@ -408,3 +408,24 @@ html body .ds-nav.ds-nav.ds-nav.ds-nav.ds-nav .v2nav-name {
     border-top: 1px solid rgba(255, 255, 255, .10) !important;
   }
 }
+
+/* --- HEADER_RESERVE_20261116: hold the bar's space until the bar exists ------
+   tmr-ds-nav.js inserts the bar as the body's first child after the page has
+   painted, which pushed every page down 71 to 83px: a layout shift of 0.06 to
+   0.14 on its own (Google's "good" is under 0.1). Until a .ds-nav exists the
+   body carries a transparent top border exactly the bar's height; the bar is
+   inserted inside the body's content box and the border goes in the same style
+   pass, so neither the body nor anything in it moves. A border rather than
+   padding so a page's own body padding is left alone, and rather than html
+   padding, which moves the body itself. Height = the bar's own ramp (70px x
+   --home-nav-scale, plus its 1px bottom rule), measured 71 / 73.09 / 76.11 /
+   80.28 / 83.25px at <=1180 / 1280 / 1366 / 1600 / 1920. Pages that already hold
+   the space themselves (#tmrNavReserve on the homepage, #dsNavReserve on 183
+   simulator pages) are left alone. No :has() support = no reserve, which is
+   exactly the old behaviour. */
+body:not(:has(.ds-nav)):not(:has(#tmrNavReserve, #dsNavReserve)) {
+  border-top: calc(70px * var(--home-nav-scale, 1) + 1px) solid transparent !important;
+}
+@media print {
+  body:not(:has(.ds-nav)):not(:has(#tmrNavReserve, #dsNavReserve)) { border-top: 0 !important; }
+}

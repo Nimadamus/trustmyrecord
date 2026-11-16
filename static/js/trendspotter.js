@@ -2234,6 +2234,8 @@
       // than a blip. Offer the retry in place: a visitor should not have to
       // know that reloading is the fix.
       setStatus('error', 'Research service unavailable');
+      // TS_CLS_20261116: the slate now paints its loading skeleton from the HTML; say it failed too.
+      matchupStatus = 'error'; renderSlate();
       renderState('error', 'Research service unavailable',
         'We could not reach the Trend Spotter data service.',
         '<button class="ts-btn ts-btn-ghost ts-btn-sm" type="button" id="retryBoot">Try again</button>');

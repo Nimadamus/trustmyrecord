@@ -1059,3 +1059,14 @@ body.ts-page .ts-card-head h2 {
   body .ts-result .ts-metrics dt { font-size: 11px; }
   .ts-confidence { padding: 10px 12px; }
 }
+
+/* TS_CLS_20261116: three late arrivals used to push the page down after it painted.
+   1. tmr-linkhub.js inserts its breadcrumb (32px + 4px margin at every width) at the top of
+      #main after first paint: hold that 36px as padding until the crumb is there.
+   2. The league tabs were empty until the capabilities loaded, then rendered 48px tall. index.html
+      now ships the tabs, so the row wraps the same way from the start; the height is held too.
+   3. The hero's one-paragraph summary sets in three lines in Inter at 900px and up, but in two in
+      the fallback face, so it grew 22px when the web font arrived: hold the three lines. */
+html body.ts-page.tmr-ds--dark .ts-app:not(:has(> .tmrlh-crumbs)) { padding-top: 54px; }
+.ts-slate #leagueTabs { min-height: 48px; }
+@media (min-width: 900px) { html body.ts-page .ts-hero-sub { min-height: 65px; } }
