@@ -1126,6 +1126,7 @@ async function loadFeedItems() {
         // grouped pick cards this page added picks to
         const grown = new Set(pageOnlyItems.map(item => idOf(renderFeedItem(item))).filter(id => id.indexOf('pick_group_') === 0));
         const fresh = [];
+        const order = []; // every card of the merged list, in sort order; html only for new ones
         items.forEach(item => {
             const html = renderFeedItem(item);
             const id = idOf(html);
@@ -1143,6 +1144,7 @@ async function loadFeedItems() {
                     const m = /data-group-sig="([^"]*)"/.exec(html);
                     if (node && m && node.getAttribute('data-group-sig') !== m[1]) node.outerHTML = html;
                 }
+                order.push({ id: id, html: null });
                 return;
             }
             if (members) {
@@ -1152,13 +1154,34 @@ async function loadFeedItems() {
                     folded.slice(1).forEach(n => n.remove());
                     folded[0].outerHTML = html;
                     if (id) onPage.add(id);
+                    order.push({ id: id, html: null });
                     return;
                 }
             }
             if (id) onPage.add(id);
             fresh.push(html);
+            order.push({ id: id, html: html });
         });
-        if (fresh.length) c.insertAdjacentHTML('beforeend', fresh.join(''));
+        // FEED_LOAD_MORE_ORDER_20261116: the first page also carries older graded
+        // picks from discover, so a later page can hold cards NEWER than the bottom
+        // of the screen. Under Latest each new card goes in front of the next card
+        // already on screen that sorts after it, instead of always at the bottom.
+        const liveNode = (nid) => {
+            if (!nid || typeof c.querySelector !== 'function') return null;
+            try { return c.querySelector(':scope > .feed-item[data-id="' + nid.replace(/[\\"]/g, '\\$&') + '"]'); } catch (e) { return null; }
+        };
+        const placeable = typeof c.querySelector === 'function' && (typeof fvSort === 'undefined' || fvSort === 'latest');
+        if (placeable && fresh.length) {
+            order.forEach((entry, i) => {
+                if (!entry.html) return;
+                let anchor = null;
+                for (let j = i + 1; j < order.length && !anchor; j++) {
+                    if (!order[j].html) anchor = liveNode(order[j].id);
+                }
+                if (anchor) anchor.insertAdjacentHTML('beforebegin', entry.html);
+                else c.insertAdjacentHTML('beforeend', entry.html);
+            });
+        } else if (fresh.length) c.insertAdjacentHTML('beforeend', fresh.join(''));
         const more = document.getElementById('loadMore');
         if (more) more.style.display = rawPageCount >= FEED_LIMIT ? 'block' : 'none';
         return;

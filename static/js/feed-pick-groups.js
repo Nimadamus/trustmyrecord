@@ -521,6 +521,8 @@
     if (typeof baseLoadFeed === 'function') {
         window.loadFeed = async function () {
             var r = await baseLoadFeed.apply(this, arguments);
+            // a shared post that arrived on a later page (Load More) still gets found
+            try { if (!focused && feedOffset > 0) window.focusSharedFeedItem(); } catch (x) { /* optional */ }
             try {
                 if (grouping && typeof feedOffset !== 'undefined' && feedOffset < 2 * FEED_LIMIT) {
                     var list = document.getElementById('feedList');
