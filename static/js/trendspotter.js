@@ -765,6 +765,13 @@
    */
   var TS_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   var ROLL_WINDOWS = [10, 25, 50, 100];
+  /* TS_THIN_PRICE_20261116. A 146-game spread record with 2 priced games showed ROI -100%.
+     Units and ROI are only stated when at least this many of the games carry a recorded price,
+     unless every game in the sample does (a last-5 query is fully priced and stays). */
+  var MIN_PRICED_GAMES = 10;
+  function thinPrice(s) {
+    return !!s && s.unpriced_games > 0 && s.priced_games > 0 && s.priced_games < MIN_PRICED_GAMES;
+  }
 
   function chartDay(iso) {
     var p = String(iso || '').split('-');
@@ -911,8 +918,9 @@
     chrono.forEach(function (g) { if (g.outcome !== 'push') totalDecided++; });
     var seed = Math.min(10, Math.max(1, totalDecided));
 
+    var thin = thinPrice(summary);
     chrono.forEach(function (g) {
-      var legs = (g.price === null || g.price === undefined) ? null : payoutLegs(g.price);
+      var legs = (thin || g.price === null || g.price === undefined) ? null : payoutLegs(g.price);
       if (legs && g.outcome !== 'push') {
         var u = (g.units === null || g.units === undefined)
           ? americanUnits(g.price, g.outcome === 'win') : Number(g.units);
@@ -1542,13 +1550,17 @@
       metric('Win rate', s.win_rate === null ? '—' : winRatePct(s).toFixed(1) + '%', s.decided_games + ' decided') +
       (!pro
         ? proMetric('Units', 'won or lost, and units risked')
-        : (s.units === null || s.units === undefined
+        : (thinPrice(s)
+          ? metric('Units', '—', 'only ' + s.priced_games + ' of ' + s.sample + ' games have a recorded price')
+          : s.units === null || s.units === undefined
           ? metric('Units', '—', 'no closing price recorded')
           : metric('Units', (s.units > 0 ? '+' : '') + s.units.toFixed(2) + 'u', s.units_risked.toFixed(2) + 'u risked',
             s.units > 0 ? 'up' : s.units < 0 ? 'down' : null))) +
       (!pro
         ? proMetric('ROI', 'per unit risked')
-        : (s.roi === null || s.roi === undefined
+        : (thinPrice(s)
+          ? metric('ROI', '—', 'too few priced games to measure')
+          : s.roi === null || s.roi === undefined
           ? metric('ROI', '—', 'needs a recorded price')
           : metric('ROI', (s.roi > 0 ? '+' : '') + s.roi.toFixed(2) + '%', 'per unit risked',
             s.roi > 0 ? 'up' : s.roi < 0 ? 'down' : null))) +
@@ -1599,6 +1611,8 @@
     /* Never share a number this viewer was not sent. */
     if (!isProResult(lastResult)) {
       /* nothing: the record and the sample above are the shareable facts */
+    } else if (thinPrice(s)) {
+      lines.push('Units and ROI not stated: only ' + s.priced_games + ' of ' + s.sample + ' games have a recorded price.');
     } else if (s.units === null || s.units === undefined) {
       lines.push('Units and ROI unavailable: no closing price is recorded for these games.');
     } else {
