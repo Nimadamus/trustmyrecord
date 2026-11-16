@@ -753,6 +753,9 @@
     return (100 * s.wins) / decided;
   }
 
+  // TS_DESIGN_20261116: a date never breaks at its hyphens (a phone split 2026-11-07 into 2026- / 11-07).
+  function nbDate(d) { return String(d).replace(/-/g, '‑'); }
+
   function metric(label, value, sub, tone) {
     if (value === null || value === undefined) return '';
     return '<div class="ts-metric"' + (tone ? ' data-tone="' + esc(tone) + '"' : '') + '>' +
@@ -1415,7 +1418,9 @@
       note = 'Running win rate across every decided game in this sample, pushes excluded. ' +
         'The line starts once ' + data.seed + ' games have been decided, so a one-game sample does not read as 100%. ' +
         (be === null
-          ? 'No closing price is recorded for these games, so there is no break-even rate to measure it against.'
+          // TS_DESIGN_20261116: a free viewer gets no prices, which is not the same as the games having none.
+          ? (gated ? 'The break-even rate at the prices actually paid is part of TMR Pro.'
+            : 'No closing price is recorded for these games, so there is no break-even rate to measure it against.')
           : 'Beating 50% is not the bar: at the prices actually paid this side had to win ' + be.toFixed(1) +
             '% to break even, and it is running at ' + current.toFixed(1) + '%.') +
         ' This view uses all ' + s.sample.toLocaleString() + ' qualifying games, not only the ones with a recorded price.';
@@ -1661,7 +1666,7 @@
         : ' · closing price and per-game units are part of TMR Pro'));
 
     return '<p class="ts-table-caption">' + esc(caption) + '</p>' +
-      '<div class="ts-table-wrap"><table class="ts-table">' +
+      '<div class="ts-table-wrap"><table class="ts-table ts-games-table">' +
       '<caption class="ts-sr">Every game included in this trend</caption>' +
       '<thead><tr>' + head + '</tr></thead><tbody>' + body + '</tbody></table></div>' + more;
   }
@@ -1753,7 +1758,7 @@
           (q.market === 'moneyline' && s.market_expected_win_rate !== null
             && s.market_expected_win_rate !== undefined)
             ? 'market implied ' + s.market_expected_win_rate.toFixed(1) + '%' : null)) +
-      metric('Sample', String(s.sample), s.date_range ? s.date_range.from + ' → ' + s.date_range.to : null);
+      metric('Sample', String(s.sample), s.date_range ? nbDate(s.date_range.from) + ' → ' + nbDate(s.date_range.to) : null);
 
     el.resultsBody.innerHTML = '<article class="ts-result">' +
       '<div class="ts-result-top">' +

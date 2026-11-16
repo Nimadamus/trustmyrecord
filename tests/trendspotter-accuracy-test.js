@@ -665,6 +665,21 @@ const txt = (doc, sel) => ($(doc, sel) || {}).textContent || '';
     assert.deepStrictEqual(consoleErrors, []);
   });
 
+  // TS_CLS_20261116 + TS_DESIGN_20261116 ---------------------------------------
+  await test('the page ships the league tabs and the slate skeleton in its HTML (no shift when they load)', async () => {
+    assert(/id="leagueTabs"><button type="button" role="tab" data-league="MLB"/.test(rawHtml), 'league tabs in the HTML');
+    assert(/id="matchupList"[^>]*><div class="ts-skeleton">/.test(rawHtml), 'slate skeleton in the HTML');
+    const nav = rawHtml.indexOf('tmr-navbar.css'); const arena = rawHtml.indexOf('tmr-ts-arena.css');
+    assert(nav > arena, 'tmr-navbar.css is linked after the arena layer (the nav script moves it last)');
+  });
+
+  await test('the evidence table is marked for the compact phone layout and dates never split at a hyphen', async () => {
+    const { doc } = await runIt({ ...base, '/query': priced() });
+    assert($(doc, 'table.ts-games-table'), 'games table class');
+    const sample = $$(doc, '.ts-metric').find((m) => /Sample/.test(m.querySelector('dt').textContent));
+    assert(sample && /‑/.test(sample.textContent) && !/\d-\d\d-\d\d/.test(sample.querySelector('small').textContent), sample && sample.textContent);
+  });
+
   await test('no page errors are raised while all of the above runs', async () => {
     const { consoleErrors } = await mount({ ...base, '/query': priced() });
     assert.strictEqual(consoleErrors.length, 0, consoleErrors.join('\n'));

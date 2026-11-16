@@ -1070,3 +1070,47 @@ body.ts-page .ts-card-head h2 {
 html body.ts-page.tmr-ds--dark .ts-app:not(:has(> .tmrlh-crumbs)) { padding-top: 54px; }
 .ts-slate #leagueTabs { min-height: 48px; }
 @media (min-width: 900px) { html body.ts-page .ts-hero-sub { min-height: 65px; } }
+/* 4. Between 900 and 1100px the slate's tools only just fit beside "Pick a matchup", so the row
+      flipped from two lines to one when the web fonts arrived. Keep them on their own line there. */
+@media (min-width: 900px) and (max-width: 1100px) { .ts-slate .ts-card-head .ts-slate-tools { flex-basis: 100%; } }
+
+/* TS_DESIGN_20261116: fixes from the design review (screenshots at 1366 and 390, free and Pro).
+   1. The query summary was meant to be sticky; the arena layer made every card position:relative,
+      which turned its sticky `top` into an offset: on phones it slid 100px down over the result. */
+html body.ts-page.tmr-ds--dark .ts-summary { position: sticky; }
+@media (max-width: 1080px) { html body.ts-page.tmr-ds--dark .ts-summary { position: relative; top: auto; } }
+/* 2. Numeric columns: the header now sits over its right-aligned numbers. */
+.ts-table th.num { text-align: right; }
+/* 3. Matchup sheet: the two team tables and the head-to-head table share one set of column
+      widths, so the columns line up down the page; long luck-test labels wrap instead of
+      pushing the table wider; the trend column no longer carries a darker band. */
+@media (min-width: 641px) {
+  .ts-table.ts-sheet { table-layout: fixed; min-width: 760px; }
+  .ts-sheet thead th:nth-child(1) { width: 34%; }
+  .ts-sheet thead th:nth-child(2) { width: 10%; }
+  .ts-sheet thead th:nth-child(3) { width: 9%; }
+  .ts-sheet thead th:nth-child(4) { width: 10%; }
+  .ts-sheet thead th:nth-child(5) { width: 9%; }
+  .ts-sheet thead th:nth-child(6) { width: 19%; }
+  .ts-sheet thead th:nth-child(7) { width: 9%; }
+  .ts-sheet .ts-luck { white-space: normal; }
+}
+html body.ts-page .ts-sheet tbody th[scope="row"] { background: transparent; }
+html body.ts-page .ts-sheet tbody .ts-sheet-row:hover th[scope="row"] { background: var(--panel-3); }
+.ts-table tbody tr:last-child th { border-bottom: 0; }
+@media (max-width: 640px) {
+  /* 4. A sheet row is one tap target on a phone; say so. */
+  .ts-sheet th[scope="row"] small::after { content: "  Open \203A"; white-space: pre; font-size: 12px; font-weight: 700; text-transform: none; letter-spacing: 0; color: var(--brand-2, #5aa9ff); }
+  /* 5. The chart's three views fit the phone's width instead of running off its edge. */
+  html body.ts-page .ts-chart-toggle { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100%; align-self: stretch; }
+  html body.ts-page .ts-chart-toggle .ts-ctab { font-size: 13px; line-height: 1.15; padding: 8px 4px; white-space: normal; }
+}
+@media (max-width: 760px) {
+  /* 6. Each game in the evidence list is two short rows instead of six. */
+  .ts-table.ts-games-table tr { display: grid; grid-template-columns: minmax(86px, 1.25fr) repeat(3, minmax(0, 1fr)); column-gap: 10px; row-gap: 4px; padding: 9px 12px; }
+  .ts-table.ts-games-table td { display: block; padding: 0; border: 0; text-align: left; min-width: 0; overflow-wrap: anywhere; }
+  .ts-table.ts-games-table td.num { text-align: left; }
+  .ts-table.ts-games-table td::before { display: block; margin-bottom: 1px; font-size: 10px; }
+  .ts-table.ts-games-table td[data-label="Opponent"] { grid-column: span 3; }
+  .ts-table.ts-games-table td[data-label="Date"] { white-space: nowrap; overflow-wrap: normal; }
+}
