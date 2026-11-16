@@ -502,6 +502,18 @@
                 try { return renderJoined(item); } catch (x) { /* fall through to the old card */ }
             }
             var html = baseRender(item);
+            if (item && item.item_type === 'milestone' && item.post_type !== 'joined_summary' && uname(item)) {
+                // FEED_MS_NO_ECHO_20261116: the card title already says "made their
+                // first official pick"; the line under it said "johann just made
+                // their first official pick." again. Keep only what the title lacks.
+                try {
+                    var meta = (window.MILESTONE_META || {})[String(item.post_type || '')];
+                    var line = msLine(item);
+                    var norm = function (s) { return String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim(); };
+                    if (meta && norm(line) === norm(meta.label)) line = '';
+                    html = html.replace(/(<div class="fi-content">)([^<]*)/, function (m, open) { return open + e(line) + (line ? ' ' : ''); });
+                } catch (x) { /* keep the original card */ }
+            }
             if (item && item.item_type === 'open_pick') {
                 // FEED_NOTE_ONCE_20261116: the "Tail and Fade are reactions" line sat
                 // under every open pick. It now shows only after a reaction (the
