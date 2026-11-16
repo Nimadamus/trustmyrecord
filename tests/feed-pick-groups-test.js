@@ -195,6 +195,14 @@ function checkSession(n) {
     assert.ok(html.includes('View all 4 milestones'));
   });
 
+  await t('one member\'s milestones across a day become one card; other members stay alone', () => {
+    const sb = boot();
+    const list = [ms(1, 'KenBcapper', 'pick_count', '2026-11-15T21:30:00Z'), ms(2, 'KenBcapper', 'win_streak', '2026-11-15T12:30:00Z'), ms(3, 'KenBcapper', 'pick_count', '2026-11-15T02:00:00Z'), ms(4, 'Khaloy', 'first_win', '2026-11-14T02:55:00Z')];
+    const out = sb.aggregateFeedItems(list);
+    assert.strictEqual(out.length, 2);
+    assert.strictEqual(out.find((i) => i._group === 'milestones')._members.length, 3);
+  });
+
   await t('a first-pick milestone rides on the pick card instead of being a second card', () => {
     const sb = boot();
     const p = openPick('johann', 0, 'NBA', { created_at: '2026-11-16T14:05:23.704Z' });

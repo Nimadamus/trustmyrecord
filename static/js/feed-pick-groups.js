@@ -196,6 +196,7 @@
     // milestone keeps its own Congrats.
     var MILESTONE_WINDOW_MS = 30 * 60 * 1000;
     var MIN_MILESTONES = 2;
+    var SAME_MEMBER_MS_WINDOW = 24 * 60 * 60 * 1000;
     function groupMilestones(items) {
         var ms = items.filter(isMilestone).sort(function (a, b) { return t(b) - t(a); });
         if (ms.length < MIN_MILESTONES) return items;
@@ -222,6 +223,21 @@
             run.push(m);
         });
         flush();
+        // FEED_MS_SAME_MEMBER_20261116: one member's milestones on the same day
+        // (100 picks, then a 7-pick streak, then 250 picks) were three cards.
+        var byUser = {};
+        ms.forEach(function (m) {
+            if (absorbed.has(m)) return;
+            var k = uname(m).toLowerCase();
+            (byUser[k] = byUser[k] || []).push(m);
+        });
+        Object.keys(byUser).forEach(function (k) {
+            byUser[k].forEach(function (m) {
+                if (run.length && t(run[0]) - t(m) > SAME_MEMBER_MS_WINDOW) flush();
+                run.push(m);
+            });
+            flush();
+        });
         if (!groups.length) return items;
         return items.filter(function (i) { return !absorbed.has(i); }).concat(groups);
     }
