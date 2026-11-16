@@ -177,7 +177,7 @@
     var personas = [];
     function nameOf(k){ var p = personas.filter(function(x){ return x.key === k; })[0]; return p ? p.username : k; }
     var DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    function fmtH(h){ return (h % 12 || 12) + (h < 12 ? ' AM' : ' PM'); }
+    function fmtH(h){ return h >= 24 ? 'midnight' : (h % 12 || 12) + (h < 12 ? ' AM' : ' PM'); }
     function sched(s){
       var days = s.days.length === 7 ? 'Any day' : s.days.map(function(d){ return DAYS[d]; }).join(', ');
       return days + ', ' + s.windows.map(function(w){ return fmtH(w[0]) + ' to ' + fmtH(w[1]); }).join(' or ') + ' PT';
