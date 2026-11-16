@@ -1335,7 +1335,7 @@
     if (view === 'units') {
       // Everything here is said in plain words. The band is a normal run of
       // luck at these prices; the tile says whether the finish sits outside it.
-      var band = round2(2 * points[points.length - 1].sd);
+      var band = round2(1.96 * points[points.length - 1].sd);
       var beyond = band > 0 && Math.abs(current) > band;
       var past = round2(beyond ? Math.abs(current) - band : 0);
       stats =
@@ -1347,7 +1347,7 @@
           beyond ? (current > 0 ? 'up' : 'down') : null) : '') +
         statTile('Odds-covered games', points.length.toLocaleString() + ' / ' + s.sample.toLocaleString());
       plot = plotHtml(points, {
-        ref: 0, split: true, band: 2,
+        ref: 0, split: true, band: 1.96,
         fmtTick: function (t) { return (t > 0 ? '+' : '') + (Math.round(t) === t ? t : t.toFixed(1)) + 'u'; },
         label: 'Cumulative units from ' + chartDay(points[0].date) + ' to ' + chartDay(points[points.length - 1].date) +
           ', peaking at ' + round2(peak) + ' and finishing at ' + round2(current) + ' units' +
