@@ -398,10 +398,10 @@
       .map(function (t) { return [t.id, t.name]; }));
 
     var seasons = [['', 'All available history']];
-    var thisYear = new Date().getFullYear();
+    var thisYear = currentSeasonStart(state.sport);
     // TS_DEEP_HISTORY_20261114: the API says how far back each sport goes; the old floors are the fallback.
     var earliest = c.earliest_season > 1900 ? c.earliest_season : (state.sport === 'MLB' ? 2010 : (state.sport === 'NFL' ? 2022 : 2023));
-    for (var y = thisYear; y >= earliest; y--) seasons.push([y, 'Since ' + y]);
+    for (var y = thisYear; y >= earliest; y--) seasons.push([y, 'Since the ' + seasonName(state.sport, y) + ' season']);
 
     var parts = [];
     parts.push(field('Team', 'f_team', select('f_team', teamOptions, state.team)));
@@ -491,7 +491,7 @@
       range = ', with a total of ' + (state.totalMin !== '' ? state.totalMin : 'any') + ' to ' + (state.totalMax !== '' ? state.totalMax : 'any');
     }
 
-    var window_ = state.lastN ? ', last ' + state.lastN + ' games' : (state.seasonFrom ? ', since ' + state.seasonFrom : '');
+    var window_ = state.lastN ? ', last ' + state.lastN + ' games' : (state.seasonFrom ? ', since the ' + seasonName(state.sport, state.seasonFrom) + ' season' : '');
     return name + market + venue + sit + range + window_ + '.';
   }
 
@@ -615,7 +615,7 @@
 
     var thisYear = new Date().getFullYear();
     var season = parseInt(p.get('seasonFrom'), 10);
-    if (isFinite(season) && season >= 2000 && season <= thisYear) state.seasonFrom = season;
+    if (isFinite(season) && season >= 1960 && season <= thisYear) state.seasonFrom = season;
 
     var lastN = parseInt(p.get('lastN'), 10);
     if ([5, 10, 25, 50, 100].indexOf(lastN) !== -1) state.lastN = lastN;
@@ -765,6 +765,20 @@
    */
   var TS_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   var ROLL_WINDOWS = [10, 25, 50, 100];
+
+  /* TS_SEASONS_20261116. NBA and NHL seasons are named by the two years they span (2025-26) and
+     start in August; the NFL season starts in March (its Super Bowl is February); MLB is the year.
+     Mirrors seasonOf() in the backend engine. */
+  function seasonName(sport, y) {
+    y = Number(y);
+    return (sport === 'NBA' || sport === 'NHL') ? y + '-' + String((y + 1) % 100).padStart(2, '0') : String(y);
+  }
+  function currentSeasonStart(sport) {
+    var d = new Date(), y = d.getFullYear(), m = d.getMonth() + 1;
+    if (sport === 'NFL') return m >= 3 ? y : y - 1;
+    if (sport === 'NBA' || sport === 'NHL') return m >= 8 ? y : y - 1;
+    return y;
+  }
   /* TS_THIN_PRICE_20261116. A 146-game spread record with 2 priced games showed ROI -100%.
      Units and ROI are only stated when at least this many of the games carry a recorded price,
      unless every game in the sample does (a last-5 query is fully priced and stays). */
@@ -1397,11 +1411,11 @@
         '<span class="ts-bar-track" style="height:' + pct + '%">' +
           '<span class="ts-bar-fill" style="height:' + winPct + '%"></span>' +
         '</span>' +
-        '<span class="ts-bar-label">' + esc(b.season) + '</span>' +
+        '<span class="ts-bar-label">' + esc(b.label || b.season) + '</span>' +
       '</div>';
     }).join('');
     return '<div class="ts-bars" role="img" aria-label="Record by season: ' +
-      esc(seasons.map(function (b) { return b.season + ' ' + b.wins + '-' + b.losses; }).join(', ')) + '">' +
+      esc(seasons.map(function (b) { return (b.label || b.season) + ' ' + b.wins + '-' + b.losses; }).join(', ')) + '">' +
       bars + '</div>' +
       '<p class="ts-chart-note">Wins (teal) out of qualifying games, by season. ' +
       'This sample is too short to draw a line.</p>';
