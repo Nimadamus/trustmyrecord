@@ -21,16 +21,20 @@ const ok = (label, cond) => { assert.ok(cond, label); checks++; console.log('  â
 
 console.log('\nSection and entry points');
 ok('the leaderboard section exists', /id="pollLeaderboard"/.test(html));
-ok('it sits below the poll content area, above the poll detail pane',
-  html.indexOf('id="pollLeaderboard"') > html.indexOf('id="pollsSection"') &&
-  html.indexOf('id="pollLeaderboard"') < html.indexOf('id="pollDetail"'));
-ok('a Leaderboard chip sits in the view row next to Closed',
-  /data-view="closed"[\s\S]{0,400}id="lbJumpChip"/.test(html));
-ok('the chip jumps to the section instead of hijacking the poll view',
-  /id="lbJumpChip"[^>]*onclick="jumpToLeaderboard\(\)"/.test(html) &&
-  !/id="lbJumpChip"[^>]*setView/.test(html));
-ok('the existing poll views are untouched',
-  ['open', 'ending', 'most_voted', 'voted', 'closed']
+// 2026-11-15 arena redesign: the poll detail pane opens in the main column
+// above the board, the full leaderboard sits below the board + sidebar, and
+// the sidebar carries a compact weekly/monthly/all-time board whose
+// "Full leaderboard" link replaces the old view-row chip.
+ok('it sits below the poll content area',
+  html.indexOf('id="pollLeaderboard"') > html.indexOf('id="pollsSection"'));
+ok('the poll detail pane sits in the main column above the board',
+  html.indexOf('id="pollDetail"') > -1 && html.indexOf('id="pollDetail"') < html.indexOf('id="pollsSection"'));
+ok('the sidebar board links to the full leaderboard without hijacking the poll view',
+  /class="pa-link" onclick="jumpToLeaderboard\(\)"/.test(html));
+ok('the sidebar board has week / month / all-time periods',
+  ['week', 'month', 'all'].every((p) => new RegExp('data-p="' + p + '"[^>]*onclick="setMiniLb').test(html)));
+ok('the discovery views exist',
+  ['trending', 'ending', 'most_voted', 'most_discussed', 'mine', 'closed']
     .every((v) => new RegExp('data-view="' + v + '"').test(html)));
 
 console.log('\nFilters');

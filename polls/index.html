@@ -980,66 +980,81 @@
 <link rel="stylesheet" href="/static/css/tmr-aplus.css?v=8b894834b70c">
 <script defer src="/static/js/tmr-aplus.js?v=4308438d502c"></script>
 <link rel="stylesheet" href="/static/css/compete-v2.css?v=548234562205">
+<link rel="stylesheet" href="/static/css/polls-arena.css?v=1">
 </head>
 <body class="cmp-v2 polls-page tmr-ds tmr-aplus" data-aplus="community">
     <!-- Global nav: same canonical component as the homepage (tmr-ds-nav.js),
          loaded with the page scripts at the end of body. -->
 
-    <div class="tmr-shell2">
-        <!-- ========== HERO / PAGE HEADER ========== -->
-        <header class="pl-hero">
-            <div class="pl-hero-main">
-                <nav class="tmr-fb-breadcrumb" aria-label="Breadcrumb"><a href="/">TrustMyRecord</a><span class="sep" aria-hidden="true">&rsaquo;</span><span aria-current="page">Polls</span></nav>
-                <h1>Sports Polls</h1>
-                <p class="pl-hero-sub">Vote on today&rsquo;s biggest games and see where the community stands.</p>
-                <div class="pl-prompt"><i class="fas fa-bolt" aria-hidden="true"></i><span id="pollsPrompt">Make your pick. Defend it in the discussion.</span></div>
-                <div class="pl-you" id="pollsYou" hidden></div>
-            </div>
-            <div class="pl-hero-side">
-                <div class="pl-stats" role="group" aria-label="Poll activity">
-                    <div class="pl-stat is-live">
-                        <b id="statOpen" aria-live="polite"><span class="pl-dot"></span>&mdash;</b>
-                        <span>Live polls</span>
-                    </div>
-                    <div class="pl-stat">
-                        <b id="statVotesToday" aria-live="polite">&mdash;</b>
-                        <span>Votes today</span>
-                    </div>
+    <div class="tmr-shell2 pa-shell">
+        <!-- ========== HERO (2026-11-15 arena redesign) ========== -->
+        <!-- Blocks the shared tmr-aplus.js hero wrapper: this page draws its own stadium hero. -->
+        <span class="aplus-hero" hidden style="display:none !important"></span>
+        <header class="pa-hero">
+            <div class="pa-hero-bg" aria-hidden="true"></div>
+            <div class="pa-hero-inner">
+                <div class="pa-hero-cast" aria-hidden="true">
+                    <img class="pa-c1" src="/static/img/players/mahomes.webp?v=1" alt="" width="600" height="436" decoding="async" fetchpriority="high">
+                    <img class="pa-c3" src="/static/img/players/judge.webp?v=1" alt="" width="600" height="436" decoding="async">
+                    <img class="pa-c2" src="/static/img/players/curry.webp?v=1" alt="" width="600" height="436" decoding="async">
                 </div>
-                <div class="pl-hero-actions">
-                    <button type="button" class="tmr-hbtn is-primary" id="createPollBtn" onclick="openCreatePollModal()"><i class="fas fa-plus" aria-hidden="true"></i> Create a Poll</button>
+                <div class="pa-hero-copy">
+                    <nav class="tmr-fb-breadcrumb" aria-label="Breadcrumb"><a href="/">TrustMyRecord</a><span class="sep" aria-hidden="true">&rsaquo;</span><span aria-current="page">Polls</span></nav>
+                    <h1>Sports <span class="pa-blue">Polls</span></h1>
+                    <p class="pa-hero-tag">Your opinion. Your vote. Your community.</p>
+                    <div class="pa-stats" role="group" aria-label="Poll activity">
+                        <div class="pa-stat"><span class="ic"><i class="fas fa-chart-simple" aria-hidden="true"></i></span><div><b id="statOpen" aria-live="polite">&mdash;</b><span class="lbl">Active Polls</span></div></div>
+                        <div class="pa-stat"><span class="ic"><i class="fas fa-users" aria-hidden="true"></i></span><div><b id="statVotesToday" aria-live="polite">&mdash;</b><span class="lbl">Votes Today</span></div></div>
+                        <div class="pa-stat"><span class="ic"><i class="fas fa-comments" aria-hidden="true"></i></span><div><b id="statComments" aria-live="polite">&mdash;</b><span class="lbl">Comments</span></div></div>
+                    </div>
+                    <div class="pa-hero-actions">
+                        <button type="button" class="pa-btn" id="createPollBtn" onclick="openCreatePollModal()"><i class="fas fa-plus" aria-hidden="true"></i> Create a Poll</button>
+                        <div class="pl-prompt"><i class="fas fa-bolt" aria-hidden="true"></i><span id="pollsPrompt">Make your pick. Defend it in the discussion.</span></div>
+                    </div>
+                    <div class="pl-you" id="pollsYou" hidden></div>
                 </div>
             </div>
         </header>
 
-        <!-- ========== FILTER BAR ========== -->
-        <div class="pl-filterbar" id="pollsFilterBar">
-            <div class="pl-chiprow" id="leagueChips" role="group" aria-label="Filter polls by league">
-                <button type="button" class="pl-chip is-active" data-league="all" aria-pressed="true" onclick="setLeague('all')">All</button>
-                <button type="button" class="pl-chip" data-league="MLB" aria-pressed="false" onclick="setLeague('MLB')">MLB</button>
-                <button type="button" class="pl-chip" data-league="NFL" aria-pressed="false" onclick="setLeague('NFL')">NFL</button>
-                <button type="button" class="pl-chip" data-league="NBA" aria-pressed="false" onclick="setLeague('NBA')">NBA</button>
-                <button type="button" class="pl-chip" data-league="WNBA" aria-pressed="false" onclick="setLeague('WNBA')">WNBA</button>
-                <button type="button" class="pl-chip" data-league="NHL" aria-pressed="false" onclick="setLeague('NHL')">NHL</button>
-                <button type="button" class="pl-chip" data-league="Other" aria-pressed="false" onclick="setLeague('Other')">Other</button>
-            </div>
-            <div class="pl-chiprow pl-chiprow--views" id="viewChips" role="group" aria-label="Filter and sort polls">
-                <button type="button" class="pl-chip is-active" data-view="open" aria-pressed="true" onclick="setView('open')"><i class="fas fa-circle-check" aria-hidden="true"></i> Open Polls</button>
+        <div class="pa-layout">
+        <div class="pa-main">
+        <!-- ========== POLL DISCOVERY ========== -->
+        <div class="pl-filterbar pa-tabs" id="pollsFilterBar">
+            <div class="pl-chiprow pl-chiprow--views" id="viewChips" role="group" aria-label="Sort and filter polls">
+                <button type="button" class="pl-chip is-active" data-view="trending" aria-pressed="true" onclick="setView('trending')"><i class="fas fa-fire" aria-hidden="true"></i> Trending</button>
                 <button type="button" class="pl-chip" data-view="ending" aria-pressed="false" onclick="setView('ending')"><i class="far fa-clock" aria-hidden="true"></i> Ending Soon</button>
-                <button type="button" class="pl-chip" data-view="most_voted" aria-pressed="false" onclick="setView('most_voted')"><i class="fas fa-fire" aria-hidden="true"></i> Most Voted</button>
-                <button type="button" class="pl-chip" data-view="voted" aria-pressed="false" onclick="setView('voted')"><i class="fas fa-user-check" aria-hidden="true"></i> My Votes</button>
-                <button type="button" class="pl-chip" data-view="closed" aria-pressed="false" onclick="setView('closed')"><i class="fas fa-flag-checkered" aria-hidden="true"></i> Closed</button>
-                <button type="button" class="pl-chip" id="lbJumpChip" onclick="jumpToLeaderboard()" aria-controls="pollLeaderboard"><i class="fas fa-ranking-star" aria-hidden="true"></i> Leaderboard</button>
+                <button type="button" class="pl-chip" data-view="most_voted" aria-pressed="false" onclick="setView('most_voted')"><i class="fas fa-trophy" aria-hidden="true"></i> Most Voted</button>
+                <button type="button" class="pl-chip" data-view="most_discussed" aria-pressed="false" onclick="setView('most_discussed')"><i class="fas fa-comment-dots" aria-hidden="true"></i> Most Discussed</button>
+                <button type="button" class="pl-chip" data-view="mine" aria-pressed="false" onclick="setView('mine')"><i class="fas fa-star" aria-hidden="true"></i> My Polls</button>
+                <button type="button" class="pl-chip" data-view="closed" aria-pressed="false" onclick="setView('closed')"><i class="fas fa-flag-checkered" aria-hidden="true"></i> Results</button>
             </div>
-            <div class="pl-toolspacer"></div>
-            <div class="pl-search" id="pollSearchWrap">
-                <label for="searchInput" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;">Search polls</label>
-                <input type="search" id="searchInput" placeholder="Search teams, leagues, questions&hellip;" autocomplete="off" aria-label="Search teams, leagues, or poll questions">
-                <button type="button" class="pl-search-clear" id="pollSearchClear" aria-label="Clear search" onclick="clearPollSearch()">&times;</button>
+            <div class="pa-tabs-right">
+                <div class="pa-sport" id="leagueChips">
+                    <label for="sportSelect" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;">Filter by sport</label>
+                    <select id="sportSelect" onchange="setLeague(this.value)">
+                        <option value="all" data-league="all">All Sports</option>
+                        <option value="NFL" data-league="NFL">NFL</option>
+                        <option value="NBA" data-league="NBA">NBA</option>
+                        <option value="MLB" data-league="MLB">MLB</option>
+                        <option value="NHL" data-league="NHL">NHL</option>
+                        <option value="WNBA" data-league="WNBA">WNBA</option>
+                        <option value="Other" data-league="Other">Other</option>
+                    </select>
+                </div>
             </div>
         </div>
 
+        <div class="pa-subbar">
         <p class="pl-resultline" id="pollsResultLine" aria-live="polite"></p>
+            <div class="pl-search" id="pollSearchWrap">
+                    <label for="searchInput" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;">Search polls</label>
+                    <input type="search" id="searchInput" placeholder="Search polls" autocomplete="off" aria-label="Search teams, leagues, or poll questions">
+                    <button type="button" class="pl-search-clear" id="pollSearchClear" aria-label="Clear search" onclick="clearPollSearch()">&times;</button>
+                </div>
+        </div>
+
+        <!-- Poll detail / discussion (opens in place, above the board) -->
+        <div id="pollDetail"></div>
 
         <!-- Featured poll -->
         <div class="pl-featwrap" id="featuredSlot"></div>
@@ -1047,7 +1062,10 @@
         <!-- Standard poll grid -->
         <main id="pollsSection" aria-label="Polls"></main>
 
-        <!-- Daily prediction challenges — own band, never blended into the poll grid -->
+        <!-- Latest final results: shown under an empty live board so history stays one tap away -->
+        <section id="pollsHistory" hidden></section>
+
+        <!-- Daily prediction challenges: own band, never blended into the poll grid -->
         <section class="pl-band" id="quizBand" hidden>
             <div class="tmr-sec-head">
                 <div>
@@ -1055,12 +1073,35 @@
                     <h2><i class="fas fa-list-ol" aria-hidden="true"></i> Daily Prediction Quizzes</h2>
                     <div class="sub">Multi-question challenges scored against real results. Answer every question before the deadline to put points on the leaderboard.</div>
                 </div>
-                <!-- Permanent archive of graded quizzes. Same scoring data as
-                     the contest pages and the Poll Leaderboard. -->
                 <a class="tmr-hbtn pl-prevlink" href="/polls/history/"><i class="fas fa-clock-rotate-left" aria-hidden="true"></i> Previous Polls</a>
             </div>
             <div class="pl-quizgrid" id="quizGrid"></div>
         </section>
+        </div><!-- /pa-main -->
+
+        <!-- ========== RIGHT SIDEBAR ========== -->
+        <aside class="pa-side" aria-label="Poll community">
+            <section class="pa-panel pa-create" aria-labelledby="paCreateHead">
+                <h2 class="pa-ptitle" id="paCreateHead"><i class="fas fa-pen-to-square" aria-hidden="true"></i> Create a Poll</h2>
+                <p class="pa-psub">Start a discussion, get the community&rsquo;s opinion, and see where fans stand.</p>
+                <button type="button" class="pa-btn is-block" onclick="openCreatePollModal()"><i class="fas fa-plus" aria-hidden="true"></i> Create a Poll</button>
+            </section>
+            <section class="pa-panel" aria-labelledby="paLbHead">
+                <h2 class="pa-ptitle" id="paLbHead"><i class="fas fa-trophy is-gold" aria-hidden="true"></i> Poll Leaderboard</h2>
+                <div class="pa-seg" id="paLbSeg" role="group" aria-label="Leaderboard period">
+                    <button type="button" data-p="week" class="is-active" aria-pressed="true" onclick="setMiniLb('week')">This Week</button>
+                    <button type="button" data-p="month" aria-pressed="false" onclick="setMiniLb('month')">This Month</button>
+                    <button type="button" data-p="all" aria-pressed="false" onclick="setMiniLb('all')">All-Time</button>
+                </div>
+                <div id="paLbList" aria-live="polite"><div class="pa-mini-empty">Loading standings&hellip;</div></div>
+                <button type="button" class="pa-link" onclick="jumpToLeaderboard()">Full leaderboard <i class="fas fa-arrow-right" aria-hidden="true"></i></button>
+            </section>
+            <section class="pa-panel" aria-labelledby="paActHead">
+                <h2 class="pa-ptitle" id="paActHead"><i class="fas fa-bolt is-gold" aria-hidden="true"></i> Recent Poll Activity</h2>
+                <div id="paActivity" aria-live="polite"><div class="pa-mini-empty">Loading activity&hellip;</div></div>
+            </section>
+        </aside>
+        </div><!-- /pa-layout -->
 
 
         <!-- ========== POLL LEADERBOARD ==========
@@ -1132,8 +1173,6 @@
             </details>
         </section>
 
-        <!-- Poll detail / discussion -->
-        <div id="pollDetail"></div>
     </div>
 
 
@@ -1158,7 +1197,7 @@
                     sportsbook. Do not add it back.
                 -->
                 <div id="createTypeStep">
-                    <p style="color:#2E4459;font-size:0.88rem;margin-bottom:14px;">A TMR poll is a multi-question quiz on NFL, NBA, MLB, NHL, WNBA or major college football and basketball. Single betting markets belong on the <a href="/sportsbook/" style="color:var(--tmr-fb-cyan,#0B4FA8);">sportsbook</a>.</p>
+                    <p class="pa-typeintro">A TMR poll is a set of three or more questions on the NFL, NBA, MLB, NHL, WNBA or major college football and basketball, each with 2 to 6 choices. You preview it before it goes live. Single betting markets belong on the <a href="/sportsbook/">sportsbook</a>.</p>
                     <div class="tmr-typegrid">
                         <button type="button" class="tmr-typebtn" onclick="setCreateType('quiz')">
                             <span class="ic"><i class="fas fa-trophy"></i></span>
@@ -1170,6 +1209,7 @@
                 <!-- STEP 2: the form -->
                 <div id="createFormStep" style="display:none;">
                 <button type="button" class="tmr-back-link" onclick="backToTypeStep()"><i class="fas fa-arrow-left"></i> Choose a different type</button>
+                <p class="pa-typeintro">Three or more questions on the NFL, NBA, MLB, NHL, WNBA or major college sports, each with 2 to 6 choices. Name both teams in the title (for example &ldquo;Chiefs at Bills&rdquo;) and the poll shows their logos. You preview it before it goes live.</p>
                 <div class="tmr-modal-error" id="createPollError"></div>
                 <form id="createPollForm" onsubmit="submitNewPoll(event)">
                     <div class="tmr-form-row">
@@ -1274,10 +1314,12 @@
                     </div>
                     <div class="tmr-modal-footer">
                         <button type="button" class="tmr-btn tmr-btn-outline" onclick="closeCreatePollModal()">Cancel</button>
-                        <button type="submit" class="tmr-btn tmr-btn-primary" id="createPollSubmit">Create Poll</button>
+                        <button type="submit" class="tmr-btn tmr-btn-primary" id="createPollSubmit">Preview Poll</button>
                     </div>
                 </form>
                 </div><!-- /createFormStep -->
+                <!-- STEP 3: preview before publishing -->
+                <div id="createPreviewStep" style="display:none;"></div>
             </div>
         </div>
     </div>
@@ -1353,8 +1395,46 @@
     }
     function pollMatchup(p) {
         var teams = findTeams(p && p.title);
-        if (teams.length !== 2) return null;
-        return { away: teams[0], home: teams[1], at: / at /i.test(String(p.title || '')) };
+        if (teams.length === 2) return { away: teams[0], home: teams[1], at: / at /i.test(String(p.title || '')) };
+        // "Lions at Bills" style titles: resolve each side by nickname within
+        // the poll's own league so the card still gets real logos.
+        var g = genericMatchup(p);
+        if (!g) return null;
+        var hint = pollLeagueKey(p);
+        var a = teamFromText(g.away.name, hint), h = teamFromText(g.home.name, hint);
+        if (!a || !h || a.name === h.name) return null;
+        return { away: a, home: h, at: g.at };
+    }
+    // Team lookup by full name or nickname ("Bills", "Blue Jays"). A nickname
+    // shared across leagues (Giants, Panthers, Kings...) only resolves when the
+    // poll's league settles it, so a logo is never guessed.
+    var TEAM_INDEX = null;
+    function buildTeamIndex() {
+        TEAM_INDEX = { full: {}, nick: {} };
+        Object.keys(TEAM_DATA).forEach(function(lg) {
+            Object.keys(TEAM_DATA[lg]).forEach(function(name) {
+                var rec = { name: name, lg: lg, d: TEAM_DATA[lg][name] };
+                TEAM_INDEX.full[name.toLowerCase()] = TEAM_INDEX.full[name.toLowerCase()] || [];
+                TEAM_INDEX.full[name.toLowerCase()].push(rec);
+                var nk = shortTeamName(name).toLowerCase();
+                (TEAM_INDEX.nick[nk] = TEAM_INDEX.nick[nk] || []).push(rec);
+            });
+        });
+    }
+    function teamFromText(text, leagueHint) {
+        if (!TEAM_INDEX) buildTeamIndex();
+        var t = String(text || '').trim().toLowerCase().replace(/^the\s+/, '').replace(/\s+(win|wins|to win)$/, '');
+        if (!t) return null;
+        var hits = TEAM_INDEX.full[t] || TEAM_INDEX.nick[t] || [];
+        if (leagueHint && TEAM_DATA[leagueHint]) {
+            var inLg = hits.filter(function(r) { return r.lg === leagueHint; });
+            if (inLg.length === 1) return inLg[0];
+            if (inLg.length > 1) return null;
+        }
+        return hits.length === 1 ? hits[0] : null;
+    }
+    function teamLogoUrl(t) {
+        return 'https://a.espncdn.com/i/teamlogos/' + t.lg.toLowerCase() + '/500/' + t.d.c + '.png';
     }
     // Compact abbreviation for teams we have no logo/abbr data for (soccer,
     // intl leagues): initials for multi-word names, first 3 letters otherwise.
@@ -1538,7 +1618,9 @@
 
     // ============== VIEW / FILTER STATE ==============
     state.league = 'all';
-    state.view = 'open';           // open | ending | most_voted | voted | closed
+    state.view = 'trending';       // trending | ending | most_voted | most_discussed | mine | closed
+    state.mine = { rows: null, user: null, at: 0 };
+    state.allPolls = null;         // every top-level poll (status=all): comments total + activity feed
     state.q = '';
     state.cache = { active: null, activeAt: 0 };
     state.closed = { rows: [], page: 0, pages: 0, total: 0, at: 0, loading: false };
@@ -1549,7 +1631,9 @@
     var renderSeq = 0;
 
     function isClosedView() { return state.view === 'closed'; }
-    function filtersActive() { return state.league !== 'all' || state.view !== 'open' || !!state.q; }
+    function filtersActive() { return state.league !== 'all' || state.view !== 'trending' || !!state.q; }
+    // Open-board views: every one of these narrows / orders the live feed.
+    function isOpenBoardView() { return state.view === 'trending' || state.view === 'ending' || state.view === 'most_voted' || state.view === 'most_discussed'; }
 
     function setLeague(key) {
         if (state.league === key) return;
@@ -1565,15 +1649,12 @@
         syncChips();
         // Open <-> Closed are different server feeds; everything else is a
         // client-side narrowing of the feed already in hand.
-        if (isClosedView() !== wasClosed) loadSection();
+        if (isClosedView() !== wasClosed || view === 'mine') loadSection();
         else renderFromCache();
     }
     function syncChips() {
-        document.querySelectorAll('#leagueChips .pl-chip').forEach(function(b) {
-            var on = b.getAttribute('data-league') === state.league;
-            b.classList.toggle('is-active', on);
-            b.setAttribute('aria-pressed', on ? 'true' : 'false');
-        });
+        var sel = document.getElementById('sportSelect');
+        if (sel && sel.value !== state.league) sel.value = state.league;
         document.querySelectorAll('#viewChips .pl-chip').forEach(function(b) {
             var on = b.getAttribute('data-view') === state.view;
             b.classList.toggle('is-active', on);
@@ -1582,7 +1663,7 @@
     }
     function clearPollFilters() {
         var needFetch = state.view === 'closed';
-        state.league = 'all'; state.q = ''; state.view = 'open';
+        state.league = 'all'; state.q = ''; state.view = 'trending';
         var si = document.getElementById('searchInput');
         if (si) si.value = '';
         syncSearchUi();
@@ -1603,10 +1684,11 @@
 
     // Legacy entry points (deep links, create flow, older inline handlers).
     function switchTab(tab) {
-        var map = { all: 'open', quick: 'open', quiz: 'open', featured: 'open', today: 'open',
-                    closing: 'ending', closed: 'closed', completed: 'closed', voted: 'voted', mine: 'voted' };
+        var map = { all: 'trending', open: 'trending', quick: 'trending', quiz: 'trending', featured: 'trending', today: 'trending',
+                    closing: 'ending', closed: 'closed', completed: 'closed', voted: 'mine', mine: 'mine' };
         state.league = (LEAGUE_KEYS.indexOf(tab) !== -1) ? tab : 'all';
-        state.view = map[tab] || 'open';
+        state.view = map[tab] || 'trending';
+        if (state.view === 'mine') state.mine.at = 0;
         syncChips();
         loadSection({ force: true });
     }
@@ -1617,9 +1699,32 @@
             .join(' ').toLowerCase();
         return hay.indexOf(q) !== -1;
     }
+    function voteN(p) { return parseInt(p.vote_count) || 0; }
+    function commentN(p) { return parseInt(p.comment_count) || 0; }
+    // Trending = real engagement (votes + comments, comments weighted as the
+    // stronger signal) decayed by age, so a busy new poll outranks a stale one.
+    function trendScore(p) {
+        var created = new Date(p.publish_at || p.created_at).getTime();
+        var hours = isNaN(created) ? 48 : Math.max(0, (Date.now() - created) / 3600000);
+        return (voteN(p) + 3 * commentN(p) + 1) / Math.pow(hours + 2, 0.8);
+    }
+    function byDeadline(a, b) {
+        var da = pollDeadline(a), db = pollDeadline(b);
+        return (da ? da.getTime() : Infinity) - (db ? db.getTime() : Infinity);
+    }
     function sortForView(list) {
         var arr = list.slice();
-        if (state.view === 'most_voted') {
+        if (state.view === 'trending') {
+            arr.sort(function(a, b) { return (trendScore(b) - trendScore(a)) || byDeadline(a, b); });
+        } else if (state.view === 'most_discussed') {
+            arr.sort(function(a, b) { return (commentN(b) - commentN(a)) || (voteN(b) - voteN(a)) || byDeadline(a, b); });
+        } else if (state.view === 'mine') {
+            arr.sort(function(a, b) {
+                var oa = isActiveOpen(a) ? 0 : 1, ob = isActiveOpen(b) ? 0 : 1;
+                if (oa !== ob) return oa - ob;
+                return new Date(b.created_at) - new Date(a.created_at);
+            });
+        } else if (state.view === 'most_voted') {
             arr.sort(function(a, b) {
                 var d = (parseInt(b.vote_count) || 0) - (parseInt(a.vote_count) || 0);
                 if (d) return d;
@@ -1653,9 +1758,9 @@
         // The closed feed is already narrowed server-side (resolved / canceled /
         // deadline passed) — re-filtering here would drop canceled polls whose
         // deadline has not arrived yet.
-        if (state.view !== 'closed') list = list.filter(isActiveOpen);
+        // My Polls mixes open and closed rows (your creations + your votes).
+        if (state.view !== 'closed' && state.view !== 'mine') list = list.filter(isActiveOpen);
         if (state.view === 'ending') list = list.filter(isClosingSoon);
-        if (state.view === 'voted') list = list.filter(function(p) { return !!p.user_voted; });
         // The closed feed is filtered and searched server-side; re-applying the
         // client matcher here would only ever remove rows the server matched.
         if (!isClosedView()) {
@@ -1698,6 +1803,18 @@
                 pages: first.pagination ? parseInt(first.pagination.pages) || 1 : 1 };
             return state.closed.rows;
         }
+        if (state.view === 'mine') {
+            // Logged out: an empty, settled feed (currentPolls() must not read
+            // as "not loaded", or renderFromCache/loadSection would loop).
+            if (!isLoggedIn()) { state.mine.rows = []; state.mine.at = Date.now(); return []; }
+            var all = await fetchAllPolls(force || !state.mine.at);
+            var me = String(currentUsername() || '').toLowerCase();
+            state.mine.rows = all.filter(function(p) {
+                return !!p.user_voted || (me && String(p.username || '').toLowerCase() === me);
+            });
+            state.mine.at = Date.now();
+            return state.mine.rows;
+        }
         if (!force && state.cache.active && (Date.now() - state.cache.activeAt) < CACHE_TTL_MS) return state.cache.active;
         var res = await fetchPolls('active', 120, 1);
         state.cache.active = res.polls;
@@ -1705,7 +1822,30 @@
         return state.cache.active;
     }
     function currentPolls() {
+        if (state.view === 'mine') return state.mine.at ? (state.mine.rows || []) : null;
         return state.view === 'closed' ? (state.closed.rows.length ? state.closed.rows : null) : state.cache.active;
+    }
+    // Every published top-level poll, open and closed. Feeds the hero comment
+    // total, the activity panel and My Polls. Pages until the server's own
+    // total is reached so the comment count is the whole board, not a sample.
+    var allPollsPromise = null;
+    async function fetchAllPolls(force) {
+        if (!force && state.allPolls && (Date.now() - state.allPollsAt) < CACHE_TTL_MS) return state.allPolls;
+        if (allPollsPromise && !force) return allPollsPromise;
+        allPollsPromise = (async function() {
+            var rows = [], page = 1, pages = 1;
+            do {
+                var r = await fetchPolls('all', 200, page);
+                rows = rows.concat(r.polls);
+                pages = r.pagination ? (parseInt(r.pagination.pages) || 1) : 1;
+                page++;
+            } while (page <= pages && page <= 10);
+            state.allPolls = rows;
+            state.allPollsAt = Date.now();
+            state.allPollsComplete = page > pages;
+            return rows;
+        })();
+        try { return await allPollsPromise; } finally { allPollsPromise = null; }
     }
     function hasMoreClosed() { return state.view === 'closed' && state.closed.page < state.closed.pages; }
     async function loadMoreClosed(btn) {
@@ -1739,7 +1879,7 @@
             Math.min(CLOSED_PAGE_SIZE, remaining) + ' more <span style="opacity:0.65;font-weight:600;">(' + remaining + ' left)</span>';
     }
     function allLoadedPolls() {
-        return (state.cache.active || []).concat(state.closed.rows || []);
+        return (state.cache.active || []).concat(state.closed.rows || [], state.mine.rows || [], state.allPolls || [], state.historyRows || []);
     }
     function findPoll(id) {
         var hit = null;
@@ -1836,7 +1976,7 @@
     }
     function inlineVotable(p) {
         var options = p.options || [];
-        return options.length >= 2 && options.length <= 4 &&
+        return options.length >= 2 && options.length <= 6 &&
             p.poll_type !== 'prediction_multi' && p.scoring_mode !== 'closest';
     }
     function openLinkHtml(p, label) {
@@ -1846,9 +1986,10 @@
     function optionsHtml(p, changing) {
         var options = p.options || [];
         var n = options.length;
-        var cols = (n === 3) ? 3 : 2;
-        var colsM = (n === 3) ? 3 : 2;
+        var cols = (n === 3 || n >= 5) ? 3 : 2;
+        var colsM = 2;
         var current = p.user_vote_option_id != null ? parseInt(p.user_vote_option_id) : null;
+        var hint = pollLeagueKey(p);
         return '<div class="pl-opts" style="--cols:' + cols + ';--cols-m:' + colsM + ';" role="group" aria-label="Voting options for: ' + escHtml(p.title) + '">' +
             options.map(function(o) {
                 var isCurrent = changing && current === parseInt(o.id);
@@ -1856,7 +1997,8 @@
                     (isCurrent ? 'aria-current="true" ' : '') +
                     'onclick="cardVote(' + p.id + ',' + o.id + ',this' + (changing ? ',true' : '') + ')" ' +
                     'aria-label="' + (isCurrent ? 'Keep your vote for ' : (changing ? 'Change your vote to ' : 'Vote for ')) + escHtml(o.option_text) + '">' +
-                    '<span>' + escHtml(o.option_text) + (isCurrent ? ' <b class="pl-optcur">Your pick</b>' : '') + '</span></button>';
+                    optLogoHtml(o.option_text, hint) +
+                    '<span>' + escHtml(optLabel(o.option_text, hint)) + (isCurrent ? ' <b class="pl-optcur">Your pick</b>' : '') + '</span></button>';
             }).join('') + '</div>' +
             (changing ? '<div class="pl-changerow"><span>Pick a different option to change your vote.</span>' +
                 '<button type="button" class="pl-changecancel" onclick="cancelVoteChange(' + p.id + ')">Keep my vote</button></div>' : '');
@@ -1957,9 +2099,81 @@
         return '';
     }
 
+    // ============== ARENA HELPERS (2026-11-15) ==============
+    var LEAGUE_COLORS = { NFL: '#ff3b4e', NBA: '#ff8a3d', MLB: '#46b3ff', NHL: '#b8c7dc', WNBA: '#ff7a2f', Other: '#46b3ff' };
+    var OPT_PALETTE = ['#ff3b4e', '#2f8cff', '#2fe08a', '#ffc53d', '#b36bff', '#5fd0ff'];
+    function mixHex(hex, withHex, amt) {
+        var a = String(hex || '').replace('#', ''), b = String(withHex || '#ffffff').replace('#', '');
+        if (a.length !== 6 || b.length !== 6) return hex;
+        var out = '#';
+        for (var i = 0; i < 6; i += 2) {
+            var x = parseInt(a.substr(i, 2), 16), y = parseInt(b.substr(i, 2), 16);
+            var v = Math.round(x + (y - x) * amt);
+            out += ('0' + v.toString(16)).slice(-2);
+        }
+        return out;
+    }
+    // Very dark team colours (navy, black) would vanish on the navy board, so
+    // they are lifted toward white until they read as a colour.
+    function readableTeamColor(hex) {
+        var h = String(hex || '').replace('#', '');
+        if (h.length !== 6) return '#2f8cff';
+        var r = parseInt(h.substr(0, 2), 16), g = parseInt(h.substr(2, 2), 16), b = parseInt(h.substr(4, 2), 16);
+        var lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+        if (lum < 40) return mixHex('#' + h, '#7fb6ff', 0.55);
+        if (lum < 90) return mixHex('#' + h, '#ffffff', 0.28);
+        return '#' + h;
+    }
+    // With a logo beside it, a team option reads by nickname ("Lakers"), as on
+    // a scoreboard; anything that is not a known team keeps its full text.
+    function optLabel(text, hint) {
+        var t = teamFromText(text, hint);
+        return t ? shortTeamName(t.name) : String(text || '');
+    }
+    function optLogoHtml(text, hint) {
+        var t = teamFromText(text, hint);
+        if (!t) return '';
+        return '<img class="pa-olg" src="' + teamLogoUrl(t) + '" alt="" aria-hidden="true" loading="lazy" onerror="this.remove()">';
+    }
+    function avatarHtml(username, url, cls) {
+        var u = String(url || '');
+        var ok = /^https?:\/\//i.test(u) || /^data:image\//i.test(u) || u.charAt(0) === '/';
+        if (ok && u.charAt(0) === '/') {
+            var base = (window.api && api.baseUrl) || (window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) || '';
+            u = base.replace(/\/$/, '') + u;
+        }
+        return ok
+            ? '<img class="pa-av' + (cls ? ' ' + cls : '') + '" src="' + escHtml(u) + '" alt="" loading="lazy" onerror="this.outerHTML=\'<span class=&quot;pa-av&quot;>' + initialOf(username) + '</span>\'">'
+            : '<span class="pa-av' + (cls ? ' ' + cls : '') + '" aria-hidden="true">' + initialOf(username) + '</span>';
+    }
+    function profileLink(username) {
+        return '<a href="' + lbProfileHref(username) + '">' + escHtml(username) + '</a>';
+    }
+    function creatorHtml(p) {
+        if (!p || !p.username) return '';
+        var when = timeAgo(p.publish_at || p.created_at);
+        return '<span class="pa-creator">' + avatarHtml(p.username, p.avatar_url) +
+            '<span>by ' + profileLink(p.username) + (when ? ' &middot; ' + escHtml(when) : '') + '</span></span>';
+    }
+    function shareBtnHtml(p) {
+        return '<button type="button" class="pa-iconbtn" onclick="sharePoll(' + p.id + ')" aria-label="Copy a link to this poll"><i class="fas fa-share-nodes" aria-hidden="true"></i> Share</button>';
+    }
+    function quizCtaHtml(p, withCount) {
+        var closed = isClosedPoll(p);
+        var n = parseInt(p.question_count || 0) || 0;
+        return '<div class="pa-qfacts">' +
+                (withCount ? '<span class="pa-pill"><i class="fas fa-list-ol" aria-hidden="true"></i> ' + n + ' questions</span>' : '') +
+                (p.category_name ? '<span class="pa-pill"><i class="fas fa-layer-group" aria-hidden="true"></i> ' + escHtml(p.category_name) + '</span>' : '') +
+            '</div>' +
+            '<button type="button" class="pl-open-link' + (closed ? ' is-quiet' : '') + '" onclick="openPoll(' + p.id + ')">' +
+                (closed ? 'View final standings' : (isScheduled(p) ? 'Preview quiz' : 'Enter the challenge')) +
+                ' <i class="fas fa-arrow-right" aria-hidden="true"></i></button>';
+    }
+
     // ============== STANDARD CARD ==============
     function cardHtml(p, justVoted) {
         var closed = isClosedPoll(p);
+        var quiz = isQuiz(p);
         var votes = parseInt(p.vote_count || 0);
         var top = leagueBadgeHtml(p) + typeBadgeHtml(p) +
             (popularPollId === p.id && !closed ? '<span class="pl-badge pl-badge--hot"><i class="fas fa-fire" aria-hidden="true"></i> Hot</span>' : '') +
@@ -1967,49 +2181,109 @@
             statusBadgesHtml(p) +
             '<span class="pl-spacer"></span>' + countdownHtml(p);
         var notes = footNotesHtml(p, justVoted);
-        return '<article class="pl-card' + (closed ? ' is-closed' : '') + (justVoted ? ' is-justvoted' : '') + '" id="pcard-' + p.id + '">' +
+        // A quiz parent carries no votes of its own (answers live on its
+        // questions), so its footer counts questions instead of printing "0 votes".
+        var tally = quiz
+            ? '<span class="pl-votes"><i class="fas fa-list-ol" aria-hidden="true"></i><b>' + (parseInt(p.question_count) || 0) + '</b> questions</span>'
+            : '<span class="pl-votes"><i class="fas fa-chart-simple" aria-hidden="true"></i><b>' + votes + '</b> vote' + (votes === 1 ? '' : 's') + '</span>';
+        return '<article class="pl-card' + (closed ? ' is-closed' : '') + (justVoted ? ' is-justvoted' : '') + '" id="pcard-' + p.id + '" style="--lc:' + (LEAGUE_COLORS[pollLeagueKey(p)] || '#46b3ff') + '">' +
             '<div class="pl-card-top">' + top + '</div>' +
             matchupRowHtml(p, false) +
             '<h3 class="pl-q"><a href="#poll-' + p.id + '" onclick="event.preventDefault();openPoll(' + p.id + ')">' + escHtml(p.title) + '</a></h3>' +
-            '<div class="pl-body">' + voteBodyHtml(p) + '</div>' +
-            '<div class="pl-foot">' +
-                '<span class="pl-votes"><i class="fas fa-chart-simple" aria-hidden="true"></i><b>' + votes + '</b> vote' + (votes === 1 ? '' : 's') + '</span>' +
-                notes +
-                '<span class="pl-spacer"></span>' + discussHtml(p) +
+            '<div class="pl-body">' + (quiz ? quizCtaHtml(p) : voteBodyHtml(p)) + '</div>' +
+            creatorHtml(p) +
+            '<div class="pl-foot">' + tally + notes +
+                '<span class="pl-spacer"></span>' + shareBtnHtml(p) + discussHtml(p) +
             '</div>' +
         '</article>';
     }
 
     // ============== FEATURED CARD ==============
+    function vsBlockHtml(p) {
+        var mu = pollMatchup(p);
+        function side(t) {
+            return '<div class="pa-vs-team"><span class="pa-vs-logo"><img src="' + teamLogoUrl(t) + '" alt="' + escHtml(t.name) + ' logo" ' +
+                'onerror="this.outerHTML=\'<span class=&quot;pa-vs-init&quot; style=&quot;--tc:' + escHtml(t.d.h) + '&quot;>' + escHtml(t.d.a) + '</span>\'"></span>' +
+                '<span class="pa-vs-name">' + escHtml(shortTeamName(t.name)) + '</span></div>';
+        }
+        if (mu) {
+            return { html: '<div class="pa-vs">' + side(mu.away) + '<span class="pa-vs-mid" aria-label="versus">VS</span>' + side(mu.home) + '</div>',
+                     away: mu.away.d.h, home: mu.home.d.h };
+        }
+        var g = genericMatchup(p);
+        if (g) {
+            function gside(n) { return '<div class="pa-vs-team"><span class="pa-vs-logo"><span class="pa-vs-init">' + escHtml(abbrOf(n)) + '</span></span><span class="pa-vs-name">' + escHtml(n) + '</span></div>'; }
+            return { html: '<div class="pa-vs">' + gside(g.away.name) + '<span class="pa-vs-mid" aria-label="versus">VS</span>' + gside(g.home.name) + '</div>' };
+        }
+        return null;
+    }
+    function bigOptionsHtml(p) {
+        var options = p.options || [];
+        var hint = pollLeagueKey(p);
+        var closed = isClosedPoll(p);
+        var voted = !!p.user_voted;
+        var showResults = closed || voted;
+        var total = options.reduce(function(s, o) { return s + (parseInt(o.vote_count) || 0); }, 0);
+        var resolved = String(p.status) === 'resolved';
+        var n = options.length;
+        var cols = n <= 2 ? n : (n === 4 ? 2 : 3);
+        return '<div class="pa-bigopts" style="--n:' + cols + '" role="group" aria-label="' + (showResults ? 'Results for: ' : 'Vote on: ') + escHtml(p.title) + '">' +
+            options.map(function(o, i) {
+                var t = teamFromText(o.option_text, hint);
+                var color = t ? readableTeamColor(t.d.h) : OPT_PALETTE[i % OPT_PALETTE.length];
+                var votes = parseInt(o.vote_count) || 0;
+                var pct = total > 0 ? Math.round(votes / total * 100) : 0;
+                var isYou = p.user_vote_option_id != null && parseInt(p.user_vote_option_id) === parseInt(o.id);
+                var isWin = resolved && truthy(o.is_correct);
+                var logo = t ? '<img class="pa-olg" style="width:34px;height:34px;object-fit:contain;" src="' + teamLogoUrl(t) + '" alt="" aria-hidden="true" onerror="this.remove()">' : '';
+                if (!showResults) {
+                    return '<button type="button" class="pa-bigopt" style="--oc:' + color + '" data-oid="' + o.id + '" ' +
+                        'onclick="cardVote(' + p.id + ',' + o.id + ',this)" aria-label="Vote for ' + escHtml(o.option_text) + '">' +
+                        '<span class="row"><span class="radio" aria-hidden="true"></span>' + logo + '<span class="lb">' + escHtml(optLabel(o.option_text, hint)) + '</span></span>' +
+                        '<span class="vt">Tap to vote &middot; results show instantly</span></button>';
+                }
+                return '<div class="pa-bigopt' + (isYou ? ' is-you' : '') + '" style="--oc:' + color + '" role="listitem" aria-label="' +
+                        escHtml(o.option_text + ': ' + pct + ' percent, ' + votes + ' vote' + (votes === 1 ? '' : 's') + (isYou ? ', your pick' : '') + (isWin ? ', correct answer' : '')) + '">' +
+                    '<span class="row"><span class="radio" aria-hidden="true"></span>' + logo + '<span class="lb">' + escHtml(optLabel(o.option_text, hint)) + '</span>' +
+                        (isWin ? '<span class="tag">Correct</span>' : '') + '<span class="pc">' + pct + '%</span></span>' +
+                    '<span class="bar" aria-hidden="true"><i data-w="' + pct + '"></i></span>' +
+                    '<span class="vt">' + votes.toLocaleString() + ' vote' + (votes === 1 ? '' : 's') + (isYou ? ' &middot; your pick' : '') + '</span>' +
+                '</div>';
+            }).join('') + '</div>';
+    }
     function featuredHtml(p, justVoted) {
         var closed = isClosedPoll(p);
+        var quiz = isQuiz(p);
         var dl = pollDeadline(p);
         var urgent = isClosingSoon60(p);
         var votes = parseInt(p.vote_count || 0);
-        var indicator = urgent
-            ? '<span class="pl-badge pl-badge--soon"><i class="far fa-clock" aria-hidden="true"></i> Ending soon</span>'
-            : '<span class="pl-badge pl-badge--feat"><i class="fas fa-star" aria-hidden="true"></i> Featured</span>';
         var clock = '';
         if (isScheduled(p)) {
-            clock = '<span class="pl-clock"><i class="far fa-calendar" aria-hidden="true"></i> Opens <b>' + escHtml(fmtDate(p.publish_at)) + '</b></span>';
+            clock = '<span class="pa-feat-clock"><i class="far fa-calendar" aria-hidden="true"></i> Opens ' + escHtml(fmtDate(p.publish_at)) + '</span>';
         } else if (closed) {
-            clock = '<span class="pl-clock"><i class="fas fa-flag-checkered" aria-hidden="true"></i> Closed <b>' + escHtml(dl ? fmtDate(dl) : '') + '</b></span>';
+            clock = '<span class="pa-feat-clock"><i class="fas fa-flag-checkered" aria-hidden="true"></i> Closed ' + escHtml(dl ? fmtDate(dl) : '') + '</span>';
         } else if (dl) {
-            clock = '<span class="pl-clock' + (urgent ? ' is-urgent' : '') + '"><i class="far fa-clock" aria-hidden="true"></i> Closes ' + escHtml(fmtDate(dl)) +
-                ' &middot; <b data-dl="' + dl.getTime() + '">' + escHtml(timeLeftTxt(dl)) + '</b></span>';
+            clock = '<span class="pa-feat-clock' + (urgent ? ' is-urgent' : '') + '" title="Closes ' + escHtml(fmtDate(dl)) + '"><i class="far fa-clock" aria-hidden="true"></i> <b data-dl="' + dl.getTime() + '">' + escHtml(timeLeftTxt(dl)) + '</b></span>';
         }
+        var vs = vsBlockHtml(p);
+        var bgVars = vs && vs.away ? ' style="--pa-away:' + mixHex(vs.away, '#000000', 0) + '88;--pa-home:' + vs.home + '99"' : '';
+        var body;
+        if (quiz) body = '<div class="pa-feat-quiz">' + quizCtaHtml(p, true) + '</div>';
+        else if (inlineVotable(p) && !isScheduled(p) && !(changingVoteFor[p.id])) body = bigOptionsHtml(p);
+        else body = '<div class="pl-body">' + voteBodyHtml(p) + '</div>';
         var notes = footNotesHtml(p, justVoted);
-        var mu = matchupRowHtml(p, true);
-        return '<article class="pl-feat' + (justVoted ? ' is-justvoted' : '') + '" id="pcard-' + p.id + '" aria-label="Featured poll">' +
-            '<div class="pl-feat-top">' + indicator + leagueBadgeHtml(p) + typeBadgeHtml(p) + statusBadgesHtml(p) +
-                '<span class="pl-spacer"></span>' + clock + '</div>' +
-            (mu ? '<div class="pl-feat-mid">' + mu + '</div>' : '') +
-            '<h2 class="pl-feat-q"><a href="#poll-' + p.id + '" onclick="event.preventDefault();openPoll(' + p.id + ')">' + escHtml(p.title) + '</a></h2>' +
-            '<div class="pl-body">' + voteBodyHtml(p) + '</div>' +
-            '<div class="pl-feat-foot">' +
-                '<span class="pl-votes"><i class="fas fa-chart-simple" aria-hidden="true"></i><b>' + votes + '</b> vote' + (votes === 1 ? '' : 's') + '</span>' +
-                notes +
-                '<span class="pl-spacer"></span>' + discussHtml(p) +
+        var tally = quiz
+            ? '<span><i class="fas fa-list-ol" aria-hidden="true"></i> <b>' + (parseInt(p.question_count) || 0) + '</b> questions</span>'
+            : '<span class="pl-votes"><i class="fas fa-chart-simple" aria-hidden="true"></i> <b>' + votes.toLocaleString() + '</b> vote' + (votes === 1 ? '' : 's') + '</span>';
+        return '<article class="pl-feat pa-feat' + (justVoted ? ' is-justvoted' : '') + '" id="pcard-' + p.id + '" aria-label="Featured poll">' +
+            '<div class="pa-feat-bg"' + bgVars + ' aria-hidden="true"></div>' +
+            '<div class="pa-feat-top"><span class="pa-feat-badge"><i class="fas fa-crown" aria-hidden="true"></i> Featured Poll</span>' +
+                leagueBadgeHtml(p) + typeBadgeHtml(p) + statusBadgesHtml(p) + clock + '</div>' +
+            '<h2 class="pa-feat-q"><a href="#poll-' + p.id + '" onclick="event.preventDefault();openPoll(' + p.id + ')">' + escHtml(p.title) + '</a></h2>' +
+            (vs ? vs.html : '') +
+            body +
+            '<div class="pa-feat-foot">' + tally + creatorHtml(p) + notes +
+                '<span class="pa-sp"></span>' + shareBtnHtml(p) + discussHtml(p) +
             '</div>' +
         '</article>';
     }
@@ -2054,11 +2328,39 @@
     // one-question sportsbook markets, seeded straight into a quick poll. They
     // are now quiz starters: each opens the multi-question form with a title
     // the author fills out with several related questions.
+    // TMR polls are multi-question multiple-choice quizzes centered on major
+    // American sports (services/pollPolicy.js: 3+ questions, 2+ choices each,
+    // approved leagues only). Each starter opens the builder with real
+    // questions pre-filled; the author edits anything before previewing.
     var POLL_TEMPLATES = {
-        slate:   { label: 'Today’s Slate', icon: 'calendar-day', title: 'Today’s slate: call every game' },
-        player:  { label: 'Player Props', icon: 'user-group', title: 'Player prop challenge: who hits their number?' },
-        weekend: { label: 'Weekend Card', icon: 'trophy', title: 'Weekend card: the full board, question by question' },
-        season:  { label: 'Season Outlook', icon: 'chart-line', title: 'Season outlook: division, awards and win totals' }
+        nfl: { label: 'NFL Sunday Rapid Fire', sub: '3 questions on this week’s slate', logo: 'https://a.espncdn.com/i/teamlogos/leagues/500/nfl.png',
+               sport: 'Football', league: 'NFL', title: 'NFL Sunday rapid fire',
+               questions: [
+                   { t: 'Which team scores the most points this Sunday?', o: [] },
+                   { t: 'How many Sunday games are decided by 3 points or fewer?', o: ['0 or 1', '2 or 3', '4 or more'] },
+                   { t: 'Which quarterback throws for the most yards this Sunday?', o: [] }
+               ] },
+        nba: { label: 'NBA MVP Race', sub: 'MVP ladder and conference leaders', logo: 'https://a.espncdn.com/i/teamlogos/leagues/500/nba.png',
+               sport: 'Basketball', league: 'NBA', title: 'NBA MVP race and conference leaders',
+               questions: [
+                   { t: 'Who leads the MVP race at the All-Star break?', o: ['Nikola Jokic', 'Shai Gilgeous-Alexander', 'Giannis Antetokounmpo', 'Luka Doncic'] },
+                   { t: 'Which team finishes with the best record in the West?', o: ['Oklahoma City Thunder', 'Denver Nuggets', 'Houston Rockets', 'Minnesota Timberwolves'] },
+                   { t: 'Which team finishes with the best record in the East?', o: ['Cleveland Cavaliers', 'New York Knicks', 'Boston Celtics', 'Orlando Magic'] }
+               ] },
+        nhl: { label: 'NHL Weekend Card', sub: 'Goals, overtime and saves', logo: 'https://a.espncdn.com/i/teamlogos/leagues/500/nhl.png',
+               sport: 'Hockey', league: 'NHL', title: 'NHL weekend card',
+               questions: [
+                   { t: 'Which team scores the most goals this weekend?', o: [] },
+                   { t: 'How many games go to overtime this weekend?', o: ['0 to 2', '3 to 5', '6 or more'] },
+                   { t: 'Which goalie makes the most saves this weekend?', o: [] }
+               ] },
+        cfb: { label: 'College Football Playoff Picture', sub: 'Final rankings and the title', icon: 'football',
+               sport: 'Football', league: 'NCAAF', title: 'College Football Playoff picture',
+               questions: [
+                   { t: 'Which team finishes No. 1 in the final CFP rankings?', o: [] },
+                   { t: 'How many SEC teams make the playoff field?', o: ['2 or fewer', '3', '4', '5 or more'] },
+                   { t: 'Which conference produces the national champion?', o: ['SEC', 'Big Ten', 'Big 12', 'ACC', 'Other'] }
+               ] }
     };
     function openCreateFromTemplate(key) {
         var t = POLL_TEMPLATES[key];
@@ -2066,13 +2368,54 @@
         if (!t || !document.getElementById('createPollModal').classList.contains('is-open')) return;
         setCreateType('quiz');
         var titleEl = document.getElementById('pollTitle');
-        if (titleEl) { titleEl.value = t.title; titleEl.focus(); titleEl.select(); }
+        if (titleEl) titleEl.value = t.title;
+        var q = document.getElementById('pollQuestion');
+        if (q) q.value = t.sub.charAt(0).toUpperCase() + t.sub.slice(1);
+        var sportEl = document.getElementById('pollSport');
+        if (sportEl) { sportEl.value = t.sport; onPollSportChange(); }
+        var lg = document.getElementById('pollLeague');
+        if (lg) lg.value = t.league;
+        var box = document.getElementById('pollSubQuestions');
+        box.innerHTML = '';
+        t.questions.forEach(function(qq) {
+            addSubQuestion();
+            var nodes = box.querySelectorAll('.tmr-subq');
+            var n = nodes[nodes.length - 1];
+            n.querySelector('.tmr-subq-title').value = qq.t;
+            var need = Math.max(2, qq.o.length);
+            while (n.querySelectorAll('.tmr-subq-opt').length < need) addSubQOption(n);
+            var inputs = n.querySelectorAll('.tmr-subq-opt');
+            qq.o.forEach(function(v, i) { if (inputs[i]) inputs[i].value = v; });
+        });
+        if (titleEl) { titleEl.focus(); titleEl.select(); }
     }
     function templateChipsHtml() {
-        return '<div class="tmr-tpl-row">' + Object.keys(POLL_TEMPLATES).map(function(k) {
+        return '<div class="pa-suggest">' + Object.keys(POLL_TEMPLATES).map(function(k) {
             var t = POLL_TEMPLATES[k];
-            return '<button type="button" class="tmr-tpl" onclick="openCreateFromTemplate(\'' + k + '\')"><i class="fas fa-' + t.icon + '" aria-hidden="true"></i> ' + t.label + '</button>';
+            var art = t.logo ? '<img src="' + t.logo + '" alt="" loading="lazy" onerror="this.outerHTML=\'<i class=&quot;fas fa-square-poll-vertical&quot;></i>\'">'
+                             : '<i class="fas fa-' + (t.icon || 'square-poll-vertical') + '" aria-hidden="true"></i>';
+            return '<button type="button" class="pa-sugg" onclick="openCreateFromTemplate(\'' + k + '\')">' +
+                '<span class="lg" aria-hidden="true">' + art + '</span>' +
+                '<span><b>' + escHtml(t.label) + '</b><small>' + escHtml(t.sub) + '</small></span></button>';
         }).join('') + '</div>';
+    }
+    // Shown in the featured slot whenever the live board for this view is
+    // empty: an invitation to start the next poll, never a dead "no polls" line.
+    function inviteHtml() {
+        var lg = state.league !== 'all' && state.league !== 'Other' ? state.league + ' ' : '';
+        var head = state.view === 'ending' ? 'Nothing closes in the next 24 hours.'
+                 : (lg ? 'No ' + lg + 'poll is live right now.' : 'No poll is live right now.');
+        return '<article class="pl-feat pa-feat pa-invite" aria-label="Start a poll">' +
+            '<div class="pa-feat-bg" aria-hidden="true"></div>' +
+            '<div class="pa-feat-top"><span class="pa-feat-badge"><i class="fas fa-bullhorn" aria-hidden="true"></i> Your move</span></div>' +
+            '<h2 class="pa-feat-q">' + escHtml(head) + ' Start the next one.</h2>' +
+            '<p>Build a poll in under a minute: three or more questions on the NFL, NBA, MLB, NHL, WNBA or college sports. Fans vote, results post the moment they do, and graded calls land on the leaderboard.</p>' +
+            '<div class="pa-invite-actions">' +
+                '<button type="button" class="pa-btn" onclick="openCreatePollModal()"><i class="fas fa-plus" aria-hidden="true"></i> Create a Poll</button>' +
+                '<button type="button" class="pa-btn is-ghost" onclick="setView(\'closed\')"><i class="fas fa-flag-checkered" aria-hidden="true"></i> See final results</button>' +
+            '</div>' +
+            '<div class="pa-suggest-h">Popular starters</div>' + templateChipsHtml() +
+        '</article>';
     }
     function emptyStateForView() {
         var leagueTxt = state.league === 'all' ? '' : (state.league === 'Other' ? 'other-league ' : state.league + ' ');
@@ -2082,42 +2425,29 @@
                 actions: '<button type="button" class="tmr-hbtn" onclick="clearPollSearch()">Clear search</button>' +
                          (filtersActive() ? '<button type="button" class="tmr-hbtn" onclick="clearPollFilters()">Reset all filters</button>' : '') });
         }
-        if (state.view === 'voted') {
+        if (state.view === 'mine') {
             if (!isLoggedIn()) {
-                return stateHtml({ icon: 'user-lock', title: 'Log in to see the polls you voted on.',
-                    sub: 'Every vote you cast is tied to your public profile and record.',
+                return stateHtml({ icon: 'user-lock', title: 'Log in to see your polls.',
+                    sub: 'My Polls keeps every poll you created and every poll you voted in.',
                     actions: '<a class="tmr-hbtn is-primary" href="/login/">Log in</a>' });
             }
-            return stateHtml({ icon: 'check-to-slot', title: 'No votes in yet.',
-                sub: 'Polls you vote on show up here with live percentages.',
-                actions: '<button type="button" class="tmr-hbtn" onclick="setView(\'open\')">Browse open polls</button>' });
-        }
-        if (state.view === 'ending') {
-            return stateHtml({ icon: 'clock', title: 'Nothing is closing soon.',
-                sub: 'No open ' + leagueTxt + 'poll locks within the next 24 hours.',
-                actions: '<button type="button" class="tmr-hbtn" onclick="setView(\'open\')">See all open polls</button>' });
+            return stateHtml({ icon: 'star', title: 'Nothing here yet.',
+                sub: 'Polls you create or vote in show up here with live results.',
+                actions: '<button type="button" class="tmr-hbtn is-primary" onclick="openCreatePollModal()"><i class="fas fa-plus" aria-hidden="true"></i> Create a Poll</button>' +
+                         '<button type="button" class="tmr-hbtn" onclick="setView(\'trending\')">Browse polls</button>' });
         }
         if (state.view === 'closed') {
             if (hasMoreClosed()) {
                 return stateHtml({ icon: 'magnifying-glass', title: 'No ' + leagueTxt + 'polls in what is loaded yet.',
-                    sub: 'The closed board loads ' + CLOSED_PAGE_SIZE + ' at a time — load more to search further back.',
-                    actions: '<button type="button" class="tmr-hbtn" onclick="setLeague(\'all\')">Show all leagues</button>' });
+                    sub: 'Results load ' + CLOSED_PAGE_SIZE + ' at a time. Load more to search further back.',
+                    actions: '<button type="button" class="tmr-hbtn" onclick="setLeague(\'all\')">Show all sports</button>' });
             }
-            return stateHtml({ icon: 'flag-checkered', title: 'No closed ' + leagueTxt + 'polls yet.',
+            return stateHtml({ icon: 'flag-checkered', title: 'No final ' + leagueTxt + 'results yet.',
                 sub: 'Final results land here once a poll reaches its deadline.',
-                actions: '<button type="button" class="tmr-hbtn" onclick="setView(\'open\')">See open polls</button>' });
+                actions: '<button type="button" class="tmr-hbtn" onclick="setView(\'trending\')">See open polls</button>' });
         }
-        if (state.league !== 'all') {
-            return stateHtml({ icon: 'square-poll-vertical', title: 'No open ' + state.league + ' polls right now.',
-                sub: 'The daily prediction quiz covers the live American slate. Check every league, or build your own multi-question quiz.',
-                actions: '<button type="button" class="tmr-hbtn" onclick="setLeague(\'all\')">Show all leagues</button>' +
-                         '<button type="button" class="tmr-hbtn is-primary" onclick="openCreatePollModal()"><i class="fas fa-plus" aria-hidden="true"></i> Create a Poll</button>' });
-        }
-        return stateHtml({ icon: 'square-poll-vertical', title: "No open polls right now.",
-            sub: 'The daily prediction quiz goes up each morning and locks at first pitch or kickoff. Build your own multi-question quiz, or catch up on final results.',
-            actions: '<button type="button" class="tmr-hbtn is-primary" onclick="openCreatePollModal()"><i class="fas fa-plus" aria-hidden="true"></i> Create a Poll</button>' +
-                     '<button type="button" class="tmr-hbtn" onclick="setView(\'closed\')">View closed polls</button>',
-            extra: templateChipsHtml() });
+        // Open-board views: the featured slot already carries the invitation.
+        return '';
     }
     function errorStateHtml(err) {
         var msg = (err && err.message) ? String(err.message) : '';
@@ -2130,26 +2460,29 @@
     function showLoadingState() {
         var feat = document.getElementById('featuredSlot');
         var sec = document.getElementById('pollsSection');
-        if (feat) feat.innerHTML = (state.view === 'open' || state.view === 'ending' || state.view === 'most_voted') ? skeletonFeaturedHtml() : '';
+        if (feat) feat.innerHTML = isOpenBoardView() ? skeletonFeaturedHtml() : '';
         if (sec) sec.innerHTML = skeletonGridHtml(6);
         var line = document.getElementById('pollsResultLine');
         if (line) line.textContent = 'Loading polls…';
     }
     function pickFeatured(list) {
         if (state.q) return null;
-        if (state.view === 'closed' || state.view === 'voted') return null;
-        if (!list.length) return null;
-        var first = list[0];
-        return isActiveOpen(first) ? first : null;
+        if (!isOpenBoardView()) return null;
+        // Prefer a real head-to-head among the top of the view so the VS
+        // presentation gets used whenever the board has one.
+        var top = list.slice(0, 3).filter(isActiveOpen);
+        var withMu = top.filter(function(p) { return !isQuiz(p) && !!pollMatchup(p); });
+        return withMu[0] || top[0] || null;
     }
     function renderResultLine(shown, quizCount) {
         var line = document.getElementById('pollsResultLine');
         if (!line) return;
         var LABELS = {
-            open:       ['open poll', 'open polls'],
+            trending:   ['open poll', 'open polls'],
             ending:     ['poll closing within 24h', 'polls closing within 24h'],
             most_voted: ['open poll', 'open polls'],
-            voted:      ['poll you voted on', 'polls you voted on'],
+            most_discussed: ['open poll', 'open polls'],
+            mine:       ['of your polls', 'of your polls'],
             closed:     ['closed poll', 'closed polls']
         };
         var pair = LABELS[state.view] || ['poll', 'polls'];
@@ -2167,42 +2500,45 @@
         line.innerHTML = bits;
     }
     function updateChipCounts(all) {
-        // On the closed board only one league's rows are ever in hand (the
-        // server filtered them), so per-chip counts would be a lie. Drop them.
-        if (isClosedView()) {
-            document.querySelectorAll('#leagueChips .pl-chipn').forEach(function(n) { n.remove(); });
-            return;
+        // Sport menu shows how many open polls each sport has, from the rows in
+        // hand. Results / My Polls are other feeds, so the counts drop there.
+        var sel = document.getElementById('sportSelect');
+        if (!sel) return;
+        var counts = null;
+        if (isOpenBoardView()) {
+            var base = (all || []).filter(isActiveOpen);
+            if (state.view === 'ending') base = base.filter(isClosingSoon);
+            if (state.q) base = base.filter(function(p) { return matchesQuery(p, state.q); });
+            counts = { all: base.length };
+            base.forEach(function(p) { var k = pollLeagueKey(p); counts[k] = (counts[k] || 0) + 1; });
         }
-        var base = (all || []).filter(function(p) { return !isQuiz(p); }).filter(isActiveOpen);
-        if (state.view === 'ending') base = base.filter(isClosingSoon);
-        if (state.view === 'voted') base = base.filter(function(p) { return !!p.user_voted; });
-        if (state.q) base = base.filter(function(p) { return matchesQuery(p, state.q); });
-        var counts = {};
-        base.forEach(function(p) { var k = pollLeagueKey(p); counts[k] = (counts[k] || 0) + 1; });
-        document.querySelectorAll('#leagueChips .pl-chip').forEach(function(b) {
-            var key = b.getAttribute('data-league');
-            var n = key === 'all' ? base.length : (counts[key] || 0);
-            var badge = b.querySelector('.pl-chipn');
-            if (!n) { if (badge) badge.remove(); return; }
-            if (!badge) { badge = document.createElement('span'); badge.className = 'pl-chipn'; b.appendChild(badge); }
-            badge.textContent = n;
+        Array.prototype.forEach.call(sel.options, function(o) {
+            var label = o.value === 'all' ? 'All Sports' : o.value;
+            var n = counts ? (counts[o.value] || 0) : 0;
+            o.textContent = (counts && n) ? (label + ' (' + n + ')') : label;
         });
     }
+    function fmtCount(n) { return (n == null || isNaN(n)) ? '—' : Number(n).toLocaleString(); }
     function renderHeroStats() {
         var s = state.stats;
         var openEl = document.getElementById('statOpen');
         var votesEl = document.getElementById('statVotesToday');
+        var comEl = document.getElementById('statComments');
         // Counted from the SAME rows the board renders, so the hero number and
-        // the grid can never disagree again. Read the ACTIVE cache, not
-        // state.openAll -- on the closed tab openAll holds closed rows and the
-        // hero would drop to 0 while two polls are still live. The server stat
-        // stays as the pre-load placeholder; its own eligibility rules were the
-        // source of the "2 LIVE POLLS / 0 open polls" contradiction.
+        // the grid can never disagree. The server stat is only the pre-load
+        // placeholder.
         var openRows = state.cache.active;
         var openN = openRows ? openRows.filter(isActiveOpen).length
                  : ((s && s.active_polls != null) ? parseInt(s.active_polls) : null);
-        if (openEl) openEl.innerHTML = '<span class="pl-dot"></span>' + (openN == null ? '&mdash;' : openN);
-        if (votesEl) votesEl.textContent = (s && s.votes_today != null) ? parseInt(s.votes_today) : '—';
+        if (openEl) openEl.textContent = fmtCount(openN);
+        if (votesEl) votesEl.textContent = (s && s.votes_today != null) ? fmtCount(parseInt(s.votes_today)) : '—';
+        // Comments = every discussion comment across all published polls,
+        // summed from the full board (paged to the server's own total).
+        if (comEl) {
+            var all = state.allPolls;
+            comEl.textContent = (all && state.allPollsComplete)
+                ? fmtCount(all.reduce(function(t, p) { return t + commentN(p); }, 0)) : '—';
+        }
         renderYouLine();
     }
     function renderYouLine() {
@@ -2223,7 +2559,7 @@
         var s = state.stats;
         if (s && s.me && s.me.streak_days > 0) bits.push('<span class="is-streak"><i class="fas fa-fire" aria-hidden="true"></i> ' + parseInt(s.me.streak_days) + '-day streak</span>');
         if (s && s.me && s.me.tmr_earned_today > 0) bits.push('<span class="is-streak"><b>+' + parseInt(s.me.tmr_earned_today) + '</b> TMR today</span>');
-        if (isLoggedIn()) bits.push('<button type="button" class="pl-link" onclick="setView(\'voted\')">My voted polls</button>');
+        if (isLoggedIn()) bits.push('<button type="button" class="pl-link" onclick="setView(\'mine\')">My Polls</button>');
         if (!bits.length) { row.hidden = true; return; }
         row.innerHTML = bits.join('<span class="sep" aria-hidden="true">&middot;</span>');
         row.hidden = false;
@@ -2253,34 +2589,154 @@
         var list = visiblePolls(polls);
         state.polls = list;
         computePopular(list);
-        state.openAll = polls.filter(isActiveOpen);
+        if (state.view !== 'mine' && state.view !== 'closed') state.openAll = polls.filter(isActiveOpen);
         renderHeroStats();
 
         var featured = pickFeatured(list);
         var featSlot = document.getElementById('featuredSlot');
-        if (featSlot) featSlot.innerHTML = featured ? featuredHtml(featured, featured.id === justVotedId) : '';
+        var boardEmpty = isOpenBoardView() && !state.q && !list.length;
+        if (featSlot) featSlot.innerHTML = featured ? featuredHtml(featured, featured.id === justVotedId)
+                                                  : (boardEmpty ? inviteHtml() : '');
 
         var rest = featured ? list.filter(function(p) { return p.id !== featured.id; }) : list;
         var sec = document.getElementById('pollsSection');
         if (sec) {
+            var head = '';
+            if (rest.length && isOpenBoardView()) {
+                head = '<div class="pa-sechead"><h2><i class="fas fa-square-poll-vertical" aria-hidden="true"></i> ' +
+                    (featured ? 'More polls' : 'Open polls') + '</h2></div>';
+            }
             var gridHtml = rest.length
-                ? ('<div class="pl-grid">' + rest.map(function(p) { return cardHtml(p, p.id === justVotedId); }).join('') + '</div>')
+                ? (head + '<div class="pl-grid">' + rest.map(function(p) { return cardHtml(p, p.id === justVotedId); }).join('') + '</div>')
                 : (featured ? '' : emptyStateForView());
             sec.innerHTML = gridHtml + closedPagerHtml();
         }
+        renderHistory(isOpenBoardView() && list.length < 3);
 
         var quizzes = polls.filter(isQuiz);
-        if (!isClosedView()) quizzes = quizzes.filter(isActiveOpen);
+        if (!isClosedView() && state.view !== 'mine') quizzes = quizzes.filter(isActiveOpen);
+        else quizzes = [];
         if (state.league !== 'all') quizzes = quizzes.filter(function(p) { return pollLeagueKey(p) === state.league; });
         if (state.q) quizzes = quizzes.filter(function(p) { return matchesQuery(p, state.q); });
         renderQuizBand(quizzes);
 
-        // The grid now lists the quizzes in every view, so the old "N quizzes
-        // below" hint would report the same polls a second time.
         renderResultLine(list.length, 0);
         updateChipCounts(polls);
         animateBars(document.body);
         if (window.TMRUsernames && window.TMRUsernames.decorate) { try { window.TMRUsernames.decorate(document.getElementById('pollsSection')); } catch (e) {} }
+    }
+
+    // ============== LATEST RESULTS (history under a quiet board) ==============
+    state.historyRows = null;
+    var historyLoading = false;
+    async function renderHistory(show) {
+        var box = document.getElementById('pollsHistory');
+        if (!box) return;
+        if (!show) { box.hidden = true; return; }
+        if (!state.historyRows) {
+            if (historyLoading) return;
+            historyLoading = true;
+            try {
+                var r = await fetchPolls('closed', 4, 1, { leagueKey: state.league === 'all' ? '' : state.league });
+                state.historyRows = r.polls;
+                state.historyKey = state.league;
+            } catch (e) { state.historyRows = []; }
+            historyLoading = false;
+        } else if (state.historyKey !== state.league) {
+            state.historyRows = null;
+            return renderHistory(show);
+        }
+        var rows = state.historyRows || [];
+        if (!rows.length || !isOpenBoardView()) { box.hidden = true; return; }
+        box.innerHTML = '<div class="pa-sechead"><h2 id="pollsHistoryHead"><i class="fas fa-flag-checkered" aria-hidden="true"></i> Latest results</h2>' +
+                '<span class="pa-sp"></span><button type="button" class="pa-link" style="margin:0" onclick="setView(\'closed\')">All results <i class="fas fa-arrow-right" aria-hidden="true"></i></button></div>' +
+            '<div class="pl-grid">' + rows.map(function(p) { return cardHtml(p); }).join('') + '</div>';
+        box.hidden = false;
+        animateBars(box);
+    }
+
+    // ============== SIDEBAR: MINI LEADERBOARD ==============
+    state.miniLb = { period: 'week', seq: 0 };
+    function setMiniLb(period) {
+        state.miniLb.period = period;
+        document.querySelectorAll('#paLbSeg button').forEach(function(b) {
+            var on = b.getAttribute('data-p') === period;
+            b.classList.toggle('is-active', on);
+            b.setAttribute('aria-pressed', on ? 'true' : 'false');
+        });
+        loadMiniLb();
+    }
+    async function loadMiniLb() {
+        var box = document.getElementById('paLbList');
+        if (!box) return;
+        var seq = ++state.miniLb.seq;
+        var period = state.miniLb.period;
+        box.innerHTML = '<div class="pa-mini-empty">Loading standings&hellip;</div>';
+        try {
+            var d = await api.request('/polls/leaderboard?period=' + period + '&league=all&limit=5&avatars=path');
+            if (seq !== state.miniLb.seq) return;
+            var rows = (d && d.leaderboard) || [];
+            if (!rows.length) {
+                var when = period === 'week' ? 'this week' : period === 'month' ? 'this month' : 'yet';
+                box.innerHTML = '<div class="pa-mini-empty">No graded poll entries ' + when + '. Enter a poll and your points post here once the games go final.</div>';
+                return;
+            }
+            box.innerHTML = rows.map(function(r) {
+                var rk = parseInt(r.rank) || 0;
+                var polls = parseInt(r.polls_entered != null ? r.polls_entered : r.total_polls_participated) || 0;
+                var pts = parseInt(r.total_points) || 0;
+                return '<a class="pa-lbrow" href="' + lbProfileHref(r.username) + '">' +
+                    '<span class="rk' + (rk <= 3 ? ' r' + rk : '') + '">' + rk + '</span>' +
+                    avatarHtml(r.username, r.avatar_path || r.avatar_url) +
+                    '<span class="nm">' + escHtml(r.display_name || r.username) + '</span>' +
+                    '<span class="st"><b>' + polls + '</b> poll' + (polls === 1 ? '' : 's') + ' &middot; <b>' + pts.toLocaleString() + '</b> pts</span>' +
+                '</a>';
+            }).join('');
+        } catch (e) {
+            if (seq !== state.miniLb.seq) return;
+            box.innerHTML = '<div class="pa-mini-empty">Standings could not load. <button type="button" class="pa-link" style="margin:0" onclick="loadMiniLb()">Retry</button></div>';
+        }
+    }
+
+    // ============== SIDEBAR: RECENT ACTIVITY ==============
+    // Built only from real rows: polls published, polls that went final, and
+    // discussion comments. Individual votes are never listed (voters can be
+    // anonymous), so nothing here names a voter.
+    async function loadActivity() {
+        var box = document.getElementById('paActivity');
+        if (!box) return;
+        try {
+            var all = await fetchAllPolls(false);
+            renderHeroStats();
+            var ev = [];
+            all.forEach(function(p) {
+                var created = p.publish_at || p.created_at;
+                if (created && p.username) ev.push({ t: new Date(created).getTime(), user: p.username, av: p.avatar_url, kind: 'created', poll: p });
+                if (String(p.status) === 'resolved' && p.resolved_at) ev.push({ t: new Date(p.resolved_at).getTime(), kind: 'final', poll: p });
+            });
+            var discussed = all.filter(function(p) { return commentN(p) > 0; })
+                .sort(function(a, b) { return new Date(b.created_at) - new Date(a.created_at); }).slice(0, 5);
+            var threads = await Promise.all(discussed.map(function(p) {
+                return api.request('/polls/' + p.id + '/comments?page=1&limit=5').then(function(d) { return { p: p, c: (d && d.comments) || [] }; }, function() { return { p: p, c: [] }; });
+            }));
+            threads.forEach(function(th) {
+                th.c.forEach(function(c) {
+                    if (c && c.username && c.created_at) ev.push({ t: new Date(c.created_at).getTime(), user: c.username, av: c.avatar_url, kind: 'comment', poll: th.p });
+                });
+            });
+            ev = ev.filter(function(e) { return !isNaN(e.t); }).sort(function(a, b) { return b.t - a.t; }).slice(0, 6);
+            if (!ev.length) { box.innerHTML = '<div class="pa-mini-empty">No poll activity yet. Create the first poll and it shows up here.</div>'; return; }
+            box.innerHTML = ev.map(function(e) {
+                var title = '<button type="button" onclick="openPoll(' + e.poll.id + ')">' + escHtml(String(e.poll.title || '').slice(0, 64)) + (String(e.poll.title || '').length > 64 ? '…' : '') + '</button>';
+                var text = e.kind === 'created' ? profileLink(e.user) + ' created a new poll: ' + title
+                         : e.kind === 'comment' ? profileLink(e.user) + ' commented on ' + title
+                         : 'Final results posted: ' + title;
+                var av = e.kind === 'final' ? '<span class="pa-av is-ic" aria-hidden="true"><i class="fas fa-flag-checkered"></i></span>' : avatarHtml(e.user, e.av);
+                return '<div class="pa-act">' + av + '<span class="tx">' + text + '</span><span class="tm">' + escHtml(timeAgo(new Date(e.t))) + '</span></div>';
+            }).join('');
+        } catch (e) {
+            box.innerHTML = '<div class="pa-mini-empty">Activity could not load. <button type="button" class="pa-link" style="margin:0" onclick="loadActivity()">Retry</button></div>';
+        }
     }
     async function loadSection(opts) {
         opts = opts || {};
@@ -2310,7 +2766,9 @@
         var grid = document.getElementById('quizGrid');
         if (!band || !grid) return;
         state.quizzes = quizzes || [];
-        band.hidden = false;
+        // Nothing live: the band steps aside (Results and Latest results carry
+        // the archive), so a quiet board never shows a second empty message.
+        band.hidden = !state.quizzes.length;
         if (!state.quizzes.length) {
             // The band head carries the "Previous Polls" entry point, so it
             // stays put when the current filter has no live quiz — otherwise
@@ -2433,7 +2891,7 @@
         }
         if (card) {
             card.setAttribute('data-voting', '1');
-            card.querySelectorAll('.pl-opt').forEach(function(b) { b.disabled = true; });
+            card.querySelectorAll('.pl-opt, .pa-bigopt').forEach(function(b) { b.disabled = true; });
         }
         if (btn) { btn.setAttribute('data-label', btn.textContent); btn.classList.add('is-busy'); btn.innerHTML = '<i class="fas fa-circle-notch fa-spin" aria-hidden="true"></i>'; }
         try {
@@ -2460,8 +2918,8 @@
             var c2 = document.getElementById('pcard-' + pollId);
             if (c2) {
                 c2.removeAttribute('data-voting');
-                c2.querySelectorAll('.pl-opt').forEach(function(b) { b.disabled = false; b.classList.remove('is-busy'); });
-                var foot = c2.querySelector('.pl-foot, .pl-feat-foot');
+                c2.querySelectorAll('.pl-opt, .pa-bigopt').forEach(function(b) { b.disabled = false; b.classList.remove('is-busy'); });
+                var foot = c2.querySelector('.pl-foot, .pl-feat-foot, .pa-feat-foot');
                 if (foot && !foot.querySelector('.pl-cardnote.is-error')) {
                     var note = document.createElement('span');
                     note.className = 'pl-cardnote is-error';
@@ -2470,7 +2928,8 @@
                     foot.insertBefore(note, foot.querySelector('.pl-spacer'));
                 }
             }
-            if (btn && btn.isConnected) { btn.classList.remove('is-busy'); btn.innerHTML = '<span>' + escHtml(btn.getAttribute('data-label') || 'Vote') + '</span>'; }
+            if (btn && btn.isConnected && btn.classList.contains('pa-bigopt')) rerenderCard(pollId);
+            else if (btn && btn.isConnected) { btn.classList.remove('is-busy'); btn.innerHTML = '<span>' + escHtml(btn.getAttribute('data-label') || 'Vote') + '</span>'; }
             if (/already voted|closed|deadline/i.test(msg)) setTimeout(function() { loadSection({ force: true }); }, 900);
         }
     }
@@ -3540,8 +3999,12 @@
         // Show the type-chooser step first
         document.getElementById('createTypeStep').style.display = '';
         document.getElementById('createFormStep').style.display = 'none';
+        document.getElementById('createPreviewStep').style.display = 'none';
+        state.pendingPoll = null;
         document.getElementById('createPollHeading').textContent = 'Create a Poll';
         document.getElementById('createPollModal').classList.add('is-open');
+        // Straight into the builder: there is one poll type, so no chooser step.
+        setCreateType('quiz');
     }
     function closeCreatePollModal() { document.getElementById('createPollModal').classList.remove('is-open'); }
     function backToTypeStep() {
@@ -3560,10 +4023,12 @@
         document.getElementById('pollNumericRow').style.display = 'none';
         if (!quiz) { document.getElementById('pollScoringMode').value = 'binary'; onScoringModeChange(); }
         document.getElementById('createPollHeading').textContent = quiz ? 'Create a Multi-Question Quiz' : 'Create a Quick Poll';
-        document.getElementById('createPollSubmit').textContent = quiz ? 'Publish Quiz' : 'Publish Poll';
+        document.getElementById('createPollSubmit').textContent = 'Preview Poll';
+        document.getElementById('createPreviewStep').style.display = 'none';
         document.getElementById('createTypeStep').style.display = 'none';
         document.getElementById('createFormStep').style.display = '';
-        if (quiz && document.querySelectorAll('#pollSubQuestions .tmr-subq').length === 0) addSubQuestion();
+        // Policy floor is three questions, so the builder starts with three.
+        if (quiz) { while (document.querySelectorAll('#pollSubQuestions .tmr-subq').length < 3) addSubQuestion(); }
     }
     window.addEventListener('click', function(e) {
         var m = document.getElementById('createPollModal');
@@ -3624,6 +4089,25 @@
         document.getElementById('pollMultiSelectRow').style.display = on ? '' : 'none';
     }
 
+    var SUBQ_MAX_OPTS = 6;
+    function subQOptLine(n) {
+        return '<div class="pa-optline"><input type="text" class="tmr-subq-opt" maxlength="160" placeholder="Choice ' + n + ' (team names show logos)" style="padding:6px 9px;border:1px solid var(--tmr-fb-border-strong);border-radius:5px;font-family:inherit;font-size:12.5px;">' +
+            '<button type="button" class="tmr-option-remove" onclick="removeSubQOption(this)" title="Remove choice" aria-label="Remove choice">&times;</button></div>';
+    }
+    function addSubQOption(subq) {
+        if (!subq) return;
+        var box = subq.querySelector('.tmr-subq-options');
+        var n = box.querySelectorAll('.tmr-subq-opt').length;
+        if (n >= SUBQ_MAX_OPTS) { showToast('Up to ' + SUBQ_MAX_OPTS + ' choices per question.', 'error'); return; }
+        var tmp = document.createElement('div');
+        tmp.innerHTML = subQOptLine(n + 1);
+        box.insertBefore(tmp.firstChild, box.querySelector('.pa-subq-addopt'));
+    }
+    function removeSubQOption(btn) {
+        var box = btn.closest('.tmr-subq-options');
+        if (box.querySelectorAll('.tmr-subq-opt').length <= 2) { showToast('Each question needs at least 2 choices.', 'error'); return; }
+        btn.parentElement.remove();
+    }
     function addSubQuestion() {
         var container = document.getElementById('pollSubQuestions');
         var existing = container.querySelectorAll('.tmr-subq').length;
@@ -3651,8 +4135,8 @@
                 '<option value="closest">Closest numeric answer</option>' +
             '</select>' +
             '<div class="tmr-subq-options" style="display:flex;flex-direction:column;gap:4px;">' +
-                '<input type="text" class="tmr-subq-opt" maxlength="160" placeholder="Option 1" style="padding:6px 9px;border:1px solid var(--tmr-fb-border-strong);border-radius:5px;font-family:inherit;font-size:12.5px;">' +
-                '<input type="text" class="tmr-subq-opt" maxlength="160" placeholder="Option 2" style="padding:6px 9px;border:1px solid var(--tmr-fb-border-strong);border-radius:5px;font-family:inherit;font-size:12.5px;">' +
+                subQOptLine(1) + subQOptLine(2) +
+                '<button type="button" class="pa-subq-addopt" onclick="addSubQOption(this.closest(\'.tmr-subq\'))"><i class="fas fa-plus" aria-hidden="true"></i> Add choice (up to 6)</button>' +
             '</div>' +
             '<input type="number" step="any" class="tmr-subq-numeric" placeholder="Numeric truth (optional, set at resolve time)" style="width:100%;margin-top:6px;padding:6px 9px;border:1px solid var(--tmr-fb-border-strong);border-radius:5px;font-family:inherit;font-size:12.5px;display:none;">';
         container.appendChild(div);
@@ -3751,6 +4235,10 @@
                 errorEl.textContent = 'Quiz needs at least 1 valid question (title >= 5 chars + 2 options or numeric truth).'; errorEl.classList.add('is-shown'); return;
             }
             if (subQuestions.length > 10) { errorEl.textContent = 'Maximum 10 questions per quiz.'; errorEl.classList.add('is-shown'); return; }
+            if (subQuestions.length < 3 && !isHangoutCategoryId(categoryId)) {
+                errorEl.textContent = 'A TMR poll needs at least 3 complete questions, each with a question of 5+ characters and 2 or more choices. You have ' + subQuestions.length + '.';
+                errorEl.classList.add('is-shown'); return;
+            }
         }
 
         var descParts = [];
@@ -3760,7 +4248,8 @@
         var fullDescription = descParts.join('\n\n');
 
         var payload = {
-            title: title + ' - ' + question,
+            // A quiz's title stands on its own; the tagline travels as `question`.
+            title: isSeason ? title : title + ' - ' + question,
             question: question,
             description: fullDescription,
             sport: sport,
@@ -3784,21 +4273,101 @@
         if (expiresAt) payload.voting_deadline = new Date(expiresAt).toISOString();
         if (publishAt) payload.publish_at = new Date(publishAt).toISOString();
 
-        var btn = document.getElementById('createPollSubmit');
-        var origLabel = btn.textContent;
-        btn.disabled = true; btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Publishing...';
+        state.pendingPoll = { payload: payload, isSeason: isSeason, display: { title: title, question: question, sport: sport, league: league, expires: expDate, publishAt: publishAt ? new Date(publishAt) : null, categoryId: categoryId, subQuestions: subQuestions, options: options } };
+        showCreatePreview();
+    }
+
+    // ============== PREVIEW + PUBLISH ==============
+    var HANGOUT_SLUGS = ['fun', 'general', 'debate', 'social', 'community', 'mixed'];
+    function isHangoutCategoryId(id) {
+        var c = (state.categories || []).filter(function(x) { return String(x.id) === String(id); })[0];
+        return !!(c && HANGOUT_SLUGS.indexOf(String(c.slug || '').toLowerCase()) !== -1);
+    }
+    function showCreatePreview() {
+        var pp = state.pendingPoll;
+        if (!pp) return;
+        var d = pp.display;
+        var cat = (state.categories || []).filter(function(x) { return String(x.id) === String(d.categoryId); })[0];
+        var fake = { title: pp.payload.title, sport: d.sport, league: d.league };
+        var mu = vsBlockHtml(fake);
+        var hint = pollLeagueKey(fake);
+        var qs = pp.isSeason ? d.subQuestions : [{ title: d.question, options: d.options }];
+        var list = '<ol>' + qs.map(function(q) {
+            var ch = (q.options || []).map(function(o) {
+                return '<span>' + optLogoHtml(o.text, hint).replace('class="pa-olg"', 'class="pa-olg" style="width:18px;height:18px;vertical-align:-4px;margin-right:5px;"') + escHtml(o.text) + '</span>';
+            }).join('');
+            return '<li>' + escHtml(q.title) + (q.scoring_mode === 'closest' ? ' <small>(closest number wins)</small>' : '') + (ch ? '<div class="ch">' + ch + '</div>' : '') + '</li>';
+        }).join('') + '</ol>';
+        var box = document.getElementById('createPreviewStep');
+        box.innerHTML =
+            '<div class="pa-prev-head">Preview: this is how your poll will appear</div>' +
+            '<div class="pa-prev">' +
+                '<span class="pl-badge pl-badge--league">' + escHtml(d.league || d.sport) + '</span> ' +
+                (cat ? '<span class="pl-badge">' + escHtml(cat.name) + '</span>' : '') +
+                '<h4>' + escHtml(pp.payload.title) + '</h4>' +
+                '<div class="meta">' + qs.length + ' question' + (qs.length === 1 ? '' : 's') + ' &middot; voting closes ' + escHtml(fmtDate(d.expires)) +
+                    (d.publishAt ? ' &middot; opens ' + escHtml(fmtDate(d.publishAt)) : ' &middot; goes live as soon as you publish') + '</div>' +
+                (mu ? mu.html.replace('class="pa-vs"', 'class="pa-vs" style="margin:4px 0 8px;transform:scale(.8);transform-origin:center top;"') : '') +
+                list +
+            '</div>' +
+            '<div class="tmr-modal-error" id="createPublishError" role="alert"></div>' +
+            '<div class="pa-prev-actions">' +
+                '<button type="button" class="tmr-btn tmr-btn-outline" onclick="backToCreateForm()"><i class="fas fa-pen" aria-hidden="true"></i> Edit</button>' +
+                '<button type="button" class="tmr-btn tmr-btn-primary" id="createPublishBtn" onclick="publishPendingPoll()"><i class="fas fa-paper-plane" aria-hidden="true"></i> Publish Poll</button>' +
+            '</div>';
+        document.getElementById('createFormStep').style.display = 'none';
+        box.style.display = '';
+        document.getElementById('createPollHeading').textContent = 'Preview your poll';
+        var pb = document.getElementById('createPublishBtn');
+        if (pb) pb.focus();
+    }
+    function backToCreateForm() {
+        document.getElementById('createPreviewStep').style.display = 'none';
+        document.getElementById('createFormStep').style.display = '';
+        document.getElementById('createPollHeading').textContent = 'Create a Multi-Question Quiz';
+    }
+    // Duplicate protection: one publish in flight, and the same poll cannot be
+    // published twice from this browser within 10 minutes (double taps, a
+    // retried request that actually landed, or a second tab).
+    var publishing = false;
+    function pollSignature(payload) {
+        var body = JSON.stringify([payload.title, payload.voting_deadline, (payload.sub_questions || []).map(function(q) { return q.title; }), (payload.options || []).map(function(o) { return o.text; })]);
+        var h = 0;
+        for (var i = 0; i < body.length; i++) { h = ((h << 5) - h + body.charCodeAt(i)) | 0; }
+        return 'tmr_poll_pub_' + h;
+    }
+    function recentlyPublished(sig) {
+        try { var t = parseInt(localStorage.getItem(sig) || '0'); return t && (Date.now() - t) < 600000; } catch (e) { return false; }
+    }
+    async function publishPendingPoll() {
+        var pp = state.pendingPoll;
+        if (!pp || publishing) return;
+        var err = document.getElementById('createPublishError');
+        if (err) err.classList.remove('is-shown');
+        var sig = pollSignature(pp.payload);
+        if (recentlyPublished(sig)) {
+            if (err) { err.textContent = 'You already published this exact poll a few minutes ago. Change the title or questions to post a new one.'; err.classList.add('is-shown'); }
+            return;
+        }
+        publishing = true;
+        var btn = document.getElementById('createPublishBtn');
+        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-circle-notch fa-spin" aria-hidden="true"></i> Publishing...'; }
         try {
-            var data = await api.request('/polls', { method: 'POST', body: payload });
-            showToast(isSeason ? 'Quiz published.' : 'Poll published.', 'success');
+            var data = await api.request('/polls', { method: 'POST', body: pp.payload });
+            try { localStorage.setItem(sig, String(Date.now())); } catch (e) {}
+            state.pendingPoll = null;
+            showToast(pp.isSeason ? 'Poll published.' : 'Poll published.', 'success');
             closeCreatePollModal();
-            switchTab(isSeason ? 'quiz' : 'quick');
+            state.allPolls = null; state.mine.at = 0;
+            switchTab('all');
+            loadActivity();
             if (data.poll && data.poll.id) setTimeout(function() { openPoll(data.poll.id); }, 250);
-        } catch(err) {
-            console.error('createPoll', err);
-            errorEl.textContent = (err && err.message) ? err.message : 'Could not create poll.';
-            errorEl.classList.add('is-shown');
+        } catch (e2) {
+            console.error('createPoll', e2);
+            if (err) { err.textContent = (e2 && e2.message) ? e2.message : 'Could not publish this poll.'; err.classList.add('is-shown'); }
+            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane" aria-hidden="true"></i> Publish Poll'; }
         } finally {
-            btn.disabled = false; btn.textContent = origLabel;
+            publishing = false;
         }
     }
 
@@ -4368,6 +4937,8 @@
             loadCategories();
             syncLbChips();
             loadLeaderboard({ reset: true });
+            loadMiniLb();
+            loadActivity();
             var hash = window.location.hash || '';
             var pid = hash.indexOf('#poll-') === 0 ? parseInt(hash.substring(6)) : 0;
             // #today = today's featured daily card, so a fixed link always lands on it.

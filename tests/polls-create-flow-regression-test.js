@@ -36,10 +36,15 @@ for (const required of [
   'id="leagueChips"',
   'id="viewChips"',
   // After publishing, the create flow still lands the author on the new poll.
-  "switchTab(isSeason ? 'quiz' : 'quick')",
+  "switchTab('all');",
   'function switchTab(tab)',
   'openPoll(data.poll.id);',
-  "api.request('/polls', { method: 'POST', body: payload })",
+  // 2026-11-15: publishing goes through a preview step; the POST is sent from
+  // publishPendingPoll() with a one-in-flight + same-poll-in-10-minutes guard.
+  "api.request('/polls', { method: 'POST', body: pp.payload })",
+  'function showCreatePreview(',
+  'if (!pp || publishing) return;',
+  'function recentlyPublished(sig)',
   "payload.options = options;",
   'scoring_mode: scoringMode',
   "if (!publicResults) descParts.push('[hide-results-until-vote]');",
@@ -51,7 +56,7 @@ for (const required of [
   // was rewritten when polls became multi-question quizzes; the guarantee is
   // unchanged, so assert the current invite and its primary action rather than
   // the retired "You're early. Start today's debate." string.
-  'No open polls right now.',
+  'No poll is live right now.',
   '<i class="fas fa-plus" aria-hidden="true"></i> Create a Poll',
   'function templateChipsHtml(',
 ]) {
