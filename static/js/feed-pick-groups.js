@@ -21,8 +21,8 @@
 
     var SESSION_GAP_MS = 90 * 60 * 1000;   // picks closer together than this are one sitting
     var MIN_SESSION = 2;                   // 2+ open picks from one member = one card
-    var RESULTS_WINDOW_MS = 30 * 60 * 1000; // record updates inside one grading run
-    var MIN_RESULTS = 3;                   // 3+ members graded together = one card
+    var RESULTS_WINDOW_MS = 60 * 60 * 1000; // record updates inside one grading hour
+    var MIN_RESULTS = 2;                   // 2+ members graded together = one card
     var PREVIEW = 3;                       // rows shown before "View all"
     var MODE_KEY = 'tmr_feed_grouping';
     var SPORT_CODE = {
@@ -257,7 +257,7 @@
         var count = Number(kind === 'tail' ? item.tails_count : item.fades_count) || 0;
         var dead = started(item) || item.is_own_pick;
         return '<button type="button" class="fpg-act fop-react fop-' + kind + (on ? ' is-on' : '') + '"' +
-            ' data-fop-react="' + kind + '" aria-pressed="' + on + '"' + (dead ? ' disabled' : '') +
+            ' data-fop-react="' + kind + '" aria-pressed="' + on + '"' + (dead ? ' disabled' : '') + ' title="' + REACT_NOTE + '"' +
             ' aria-label="' + (kind === 'tail' ? 'Tail' : 'Fade') + ' ' + e(item.pick_text || item.pick_selection || 'this pick') + '">' +
             '<i class="fas ' + (kind === 'tail' ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down') + '"></i> ' +
             (kind === 'tail' ? 'Tail' : 'Fade') + ' <span>' + count + '</span></button>';
@@ -461,6 +461,7 @@
         window.aggregateFeedItems = function (items) { return regroup(baseAggregate(items)); };
     }
 
+    var REACT_NOTE = 'Tail and Fade are reactions. They do not add a pick to your record.';
     var baseRender = window.renderFeedItem;
     if (typeof baseRender === 'function') {
         window.renderFeedItem = function (item) {
@@ -475,12 +476,19 @@
             if (item && item.item_type === 'milestone' && item.post_type === 'joined_summary') {
                 try { return renderJoined(item); } catch (x) { /* fall through to the old card */ }
             }
+            var html = baseRender(item);
+            if (item && item.item_type === 'open_pick') {
+                // FEED_NOTE_ONCE_20261116: the "Tail and Fade are reactions" line sat
+                // under every open pick. It now shows only after a reaction (the
+                // live note slot stays) and as the buttons' tooltip.
+                html = html.replace('<p class="fop-note" aria-live="polite">' + REACT_NOTE + '</p>', '<p class="fop-note" aria-live="polite"></p>')
+                    .replace(/(data-fop-react="(?:tail|fade)")/g, '$1 title="' + REACT_NOTE + '"');
+            }
             if (item && item._first_pick_ms) {
-                var html = baseRender(item);
                 var at = html.indexOf('<div class="fv-pick-grid">');
                 return at > 0 ? html.slice(0, at) + firstPickRibbon(item._first_pick_ms) + html.slice(at) : html;
             }
-            return baseRender(item);
+            return html;
         };
     }
 

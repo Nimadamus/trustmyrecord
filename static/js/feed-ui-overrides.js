@@ -697,7 +697,11 @@ function aggregateFeedItems(items) {
             return;
         }
         const username = getUsername(item) || String(item.user_id || 'user');
-        const day = new Date(item.graded_at || item.created_at || item.locked_at || Date.now()).toISOString().slice(0, 10);
+        // FEED_LOCAL_DAY_20261116: the viewer's own calendar day, not UTC. A US
+        // evening slate crossed midnight UTC and split one night's grading into
+        // two cards for the same member.
+        const when = new Date(item.graded_at || item.created_at || item.locked_at || Date.now());
+        const day = isNaN(when.getTime()) ? 'unknown' : when.getFullYear() + '-' + String(when.getMonth() + 1).padStart(2, '0') + '-' + String(when.getDate()).padStart(2, '0');
         const bucket = pickActivityBucket(item);
         const key = username + '|' + bucket + '|' + day;
         const existing = pickGroups.get(key);
@@ -1195,7 +1199,7 @@ async function loadFeedItems() {
             polls: ['fa-chart-simple', 'No open polls right now.', 'Start one from the composer above, or see past results on the <a href="/polls/">Polls page</a>.'],
             'hot-takes': ['fa-fire', 'No hot takes yet.', 'Post the first one from the composer above.'],
             milestones: ['fa-trophy', 'No milestones yet.', 'Milestones show up here as members hit records, streaks and firsts.'],
-            following: ['fa-user-group', 'Nothing new from the people you follow.', '<a href="/handicappers/">Discover handicappers</a> to follow. Their picks, posts and results show up here.'],
+            following: ['fa-user-group', 'Nothing in your Following feed yet.', '<a href="/handicappers/">Discover handicappers</a> to follow. Their picks, posts and results show up here.'],
             'site-updates': ['fa-bullhorn', 'No site updates yet.', '']
         };
         const em = emptyByTab[currentFilter] || ['fa-stream', 'No activity yet.', 'Follow handicappers or make your first pick to start building the feed.'];

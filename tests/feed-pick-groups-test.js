@@ -156,11 +156,12 @@ function checkSession(n) {
     assert.ok(html.includes('View all 5 record updates'));
   });
 
-  await t('two graded members are not rolled up', () => {
+  await t('two graded members roll up; one stays a normal card', () => {
     const sb = boot();
     const at = '2026-11-16T04:35:00Z';
     const res = ['a', 'b'].map((u) => ({ item_id: 'pick_group_' + u, item_type: 'pick', status: 'graded', username: u, created_at: at }));
-    assert.strictEqual(sb.aggregateFeedItems(res).filter((i) => i._group).length, 0);
+    assert.strictEqual(sb.aggregateFeedItems(res).filter((i) => i._group).length, 1);
+    assert.strictEqual(sb.aggregateFeedItems(res.slice(0, 1)).filter((i) => i._group).length, 0);
   });
 
   await t('"Every update" mode shows every item as before', () => {
