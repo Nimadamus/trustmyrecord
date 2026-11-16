@@ -363,8 +363,9 @@
                 '<div><b>Results are in</b><small>' + plural(n, 'handicapper') + ' had records updated · ' + e(ago(t(members[0]))) + '</small></div>' +
                 '<span class="fv-kind fv-kind--pick"><i class="fas fa-check"></i> Graded</span></div>' +
             ((wins + losses) ? '<div class="fpg-sports"><span class="fpg-sport"><b>' + wins + '</b> wins</span><span class="fpg-sport"><b>' + losses + '</b> losses</span><span class="fpg-sport"><b>' + g.pick_count + '</b> picks graded</span></div>' : '') +
-            '<div class="fpg-list">' + members.slice(0, open ? n : Math.max(PREVIEW, 0)).map(resultRow).join('') +
-                (n > PREVIEW && !open ? '<div class="fpg-more-names">+ ' + plural(n - PREVIEW, 'more handicapper') + '</div>' : '') +
+            // open = the full record cards replace the name list (same people twice was noise)
+            '<div class="fpg-list"' + (open ? ' hidden' : '') + '>' + members.slice(0, PREVIEW).map(resultRow).join('') +
+                (n > PREVIEW ? '<div class="fpg-more-names">+ ' + plural(n - PREVIEW, 'more handicapper') + '</div>' : '') +
             '</div>' +
             '<div class="fpg-rest fpg-rest--cards"' + (open ? '' : ' hidden') + '>' + full + '</div>' +
             toggleBtn(g.item_id, n, 'record updates') +
@@ -385,6 +386,19 @@
 
     function profileHref(m) { return '/profile/?user=' + encodeURIComponent(m.username || '') + '&view=picks'; }
 
+    // "KenBcapper has reached 250 graded picks." under the name KenBcapper read
+    // the name twice; the row keeps only the part after it.
+    function msLine(m) {
+        var text = String(m.content || '').replace(/\s*Nice start.*$/i, '').replace(/\s*Every record starts somewhere\.?$/i, '').trim();
+        var name = String(m.username || '');
+        if (name && text.toLowerCase().indexOf(name.toLowerCase() + ' ') === 0) {
+            text = text.slice(name.length + 1);
+            text = text.replace(/^has reached /i, 'reached ').replace(/^is now /i, 'now ').replace(/^is on /i, 'on ').replace(/^just made /i, 'made ');
+            text = text.charAt(0).toUpperCase() + text.slice(1);
+        }
+        return text;
+    }
+
     function renderMilestoneGroup(g) {
         var members = g._members;
         var n = members.length;
@@ -392,7 +406,7 @@
         var row = function (m) {
             return '<div class="fpg-ms" data-id="' + e(m.item_id) + '">' + avatar(m) +
                 '<span class="fpg-ms-text"><a href="' + e(profileHref(m)) + '"><b>' + e(m.display_name || m.username) + '</b></a>' +
-                '<small>' + e(String(m.content || '').replace(/\s*Nice start.*$/i, '').replace(/\s*Every record starts somewhere\.?$/i, '')) + '</small></span>' +
+                '<small>' + e(msLine(m)) + '</small></span>' +
                 congratsBtn(m) + '</div>';
         };
         return '<div class="feed-item fpg-card fpg-card--ms' + (open ? ' is-open' : '') + '" data-id="' + e(g.item_id) + '" data-type="milestone_group" data-group-sig="' + e(g._sig) + '">' +
@@ -423,14 +437,9 @@
         var rest = card.querySelector(':scope > .fpg-list > .fpg-rest, :scope > .fpg-rest');
         if (rest) rest.hidden = !open;
         if (card.classList.contains('fpg-card--results')) {
-            // the names list grows to every member when open
-            var g = cache[gid];
+            // open: the full record cards replace the short name list
             var list = card.querySelector(':scope > .fpg-list');
-            if (g && list) {
-                var n = g._members.length;
-                list.innerHTML = g._members.slice(0, open ? n : PREVIEW).map(resultRow).join('') +
-                    (n > PREVIEW && !open ? '<div class="fpg-more-names">+ ' + plural(n - PREVIEW, 'more handicapper') + '</div>' : '');
-            }
+            if (list) list.hidden = open;
         }
         var btn = card.querySelector(':scope > .fpg-toggle');
         if (btn) {
@@ -489,6 +498,21 @@
                 return at > 0 ? html.slice(0, at) + firstPickRibbon(item._first_pick_ms) + html.slice(at) : html;
             }
             return html;
+        };
+    }
+
+    // Signed-out Congrats went to /login/ with no way back; it now returns here,
+    // the same way Tail and Fade do.
+    var baseCongrats = window.toggleCongrats;
+    if (typeof baseCongrats === 'function') {
+        window.toggleCongrats = function (itemId, btn) {
+            var signedIn = false;
+            try { signedIn = !!(window.auth && window.auth.currentUser) || !!(window.api && window.api.token); } catch (x) { signedIn = false; }
+            if (!signedIn) {
+                window.location.href = '/login/?next=' + encodeURIComponent(location.pathname + (location.search || ''));
+                return;
+            }
+            return baseCongrats.apply(this, arguments);
         };
     }
 
