@@ -68,7 +68,34 @@
 .fpg-toggle:hover { background: rgba(43, 140, 255, .16); }
 .fpg-toggle i { transition: transform .15s ease; }
 .fpg-card.is-open > .fpg-toggle i { transform: rotate(180deg); }
-.fpg-foot { margin: 10px 0 0; font-size: 12px; color: #8b97a8; }
+/* first official pick ribbon (the milestone rides on the pick card) */
+.fpg-first {
+    display: flex; align-items: center; gap: 12px; margin: 6px 0 12px; padding: 10px 12px;
+    border-radius: 10px; border: 1px solid rgba(246, 185, 43, .35);
+    background: linear-gradient(90deg, rgba(246, 185, 43, .14), rgba(246, 185, 43, .03));
+}
+.fpg-first-ico { flex: 0 0 auto; width: 34px; height: 34px; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; background: rgba(246, 185, 43, .18); color: var(--fv-gold, #F6B92B); }
+.fpg-first-text { flex: 1 1 auto; min-width: 0; }
+.fpg-first-text b { display: block; color: var(--fv-gold, #F6B92B); font: 800 .95rem/1.2 'Inter', sans-serif; }
+.fpg-first-text small { display: block; color: var(--fv-text-2, #C3CFE2); font-size: .8rem; }
+.fpg-act.fi-congrats.is-congratsed, .fpg-act.fi-congrats.is-congratsed i, .fpg-act.fi-congrats.is-congratsed span { color: var(--fv-gold, #F6B92B); border-color: rgba(246, 185, 43, .45); font-weight: 800; }
+
+/* milestones roll-up */
+.fpg-rico--gold { background: rgba(246, 185, 43, .14); color: var(--fv-gold, #F6B92B); }
+.fpg-ms { display: flex; align-items: center; gap: 12px; padding: 10px 14px; }
+.fpg-ms + .fpg-ms, .fpg-rest .fpg-ms:first-child { border-top: 1px solid var(--fv-line-soft, rgba(110,145,205,.16)); }
+.fpg-ms-text { flex: 1 1 auto; min-width: 0; }
+.fpg-ms-text a { text-decoration: none; }
+.fpg-ms-text b { color: #f1f5fb; font: 700 .95rem/1.2 'Inter', sans-serif; }
+.fpg-ms-text small { display: block; margin-top: 2px; color: var(--fv-text-2, #C3CFE2); font-size: .82rem; line-height: 1.35; }
+
+/* compact "new members joined" strip */
+.feed-item.fpg-joined { display: flex !important; align-items: center; gap: 12px; padding: 12px 16px !important; }
+.fpg-joined-ico { flex: 0 0 auto; width: 38px; height: 38px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: rgba(43, 140, 255, .14); color: var(--fv-cyan, #63C3FF); }
+.fpg-joined-text { flex: 1 1 auto; min-width: 0; }
+.fpg-joined-text b { display: block; color: var(--fv-text, #F3F7FD); font: 700 .95rem/1.25 'Inter', sans-serif; }
+.fpg-joined-text small { color: var(--fv-muted, #8C9BB5); font-size: .78rem; }
+.fpg-joined-link { flex: 0 0 auto; color: var(--fv-cyan, #63C3FF) !important; font: 600 .84rem/1 'Inter', sans-serif; text-decoration: none !important; }
 
 /* results roll-up */
 .fpg-rhead { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
@@ -97,6 +124,14 @@
 .fpg-rest--cards { margin-top: 10px; border-top: 0; }
 .fpg-rest--cards > .feed-item { margin: 0 0 10px !important; box-shadow: none !important; }
 
+/* the tab row scrolls sideways; fade its right edge so the cut-off tab reads
+   as "more tabs" instead of a clipped label */
+body.feed-v2 .fv-tabs-row .feed-tabs {
+    padding-right: 32px;
+    -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 44px), transparent);
+    mask-image: linear-gradient(90deg, #000 calc(100% - 44px), transparent);
+}
+
 /* "Group activity" switch at the bottom of the sort menu */
 #fvSortMenu .fpg-mode {
     display: flex; align-items: center; gap: 8px; margin-top: 4px; padding: 10px 12px; border-radius: 8px;
@@ -113,4 +148,8 @@
     .fpg-row-actions, .fpg-row .fop-note, .fpg-row .fpg-verified { margin-left: 0 !important; }
     .fpg-act { flex: 1 1 auto; justify-content: center; min-height: 38px; }
     .fpg-card .fpg-headline b, .fpg-rhead b { font-size: 1.02rem; }
+    .fpg-first { flex-wrap: wrap; }
+    .fpg-ms { flex-wrap: wrap; padding: 10px 11px; }
+    .fpg-ms .fi-congrats { margin-left: 46px; }
+    .fpg-joined-link { display: none; }
 }

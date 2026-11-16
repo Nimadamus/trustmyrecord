@@ -165,9 +165,70 @@
         };
     }
 
+    // FEED_GROUPS_20261116b: a member's "first official pick" milestone and the
+    // pick itself are one event. The milestone rides on the pick card as a ribbon
+    // (with its Congrats) instead of being a second card.
+    var FIRST_PICK_WINDOW_MS = 15 * 60 * 1000;
+    function isMilestone(i) { return i && !i._group && i.item_type === 'milestone' && i.post_type !== 'joined_summary' && !!uname(i); }
+    function foldFirstPicks(items) {
+        var firsts = items.filter(function (i) { return isMilestone(i) && i.post_type === 'first_pick'; });
+        if (!firsts.length) return items;
+        var drop = new Set();
+        var out = items.slice();
+        firsts.forEach(function (ms) {
+            var u = uname(ms).toLowerCase();
+            var best = -1, bestGap = Infinity;
+            out.forEach(function (i, idx) {
+                if (!i || i.item_type !== 'open_pick' || uname(i).toLowerCase() !== u || i._first_pick_ms) return;
+                var gap = Math.abs(t(i) - t(ms));
+                if (gap <= FIRST_PICK_WINDOW_MS && gap < bestGap) { best = idx; bestGap = gap; }
+            });
+            if (best < 0) return;
+            var host = out[best];
+            var ids = (host._member_ids || [String(host.item_id || ('openpick:' + host.pick_id))]).concat([String(ms.item_id)]);
+            out[best] = Object.assign({}, host, { _first_pick_ms: ms, _member_ids: ids });
+            drop.add(ms);
+        });
+        return out.filter(function (i) { return !drop.has(i); });
+    }
+
+    // Milestones announced together (one grading run) become one card; every
+    // milestone keeps its own Congrats.
+    var MILESTONE_WINDOW_MS = 30 * 60 * 1000;
+    var MIN_MILESTONES = 2;
+    function groupMilestones(items) {
+        var ms = items.filter(isMilestone).sort(function (a, b) { return t(b) - t(a); });
+        if (ms.length < MIN_MILESTONES) return items;
+        var absorbed = new Set();
+        var groups = [];
+        var run = [];
+        var flush = function () {
+            if (run.length >= MIN_MILESTONES) {
+                run.forEach(function (m) { absorbed.add(m); });
+                var ids = run.map(function (m) { return String(m.item_id); });
+                groups.push({
+                    _group: 'milestones', item_type: 'milestone', post_type: 'milestone_group',
+                    item_id: 'msgroup:' + ids[0], created_at: run[0].created_at,
+                    likes_count: run.reduce(function (s, m) { return s + (Number(m.likes_count) || 0); }, 0),
+                    comments_count: 0,
+                    _members: run, _member_ids: ids,
+                    _sig: sig(run.map(function (m) { return m.item_id + ':' + (m.likes_count || 0) + ':' + (m.congratsed_by_user ? 1 : 0); }))
+                });
+            }
+            run = [];
+        };
+        ms.forEach(function (m) {
+            if (run.length && t(run[0]) - t(m) > MILESTONE_WINDOW_MS) flush();
+            run.push(m);
+        });
+        flush();
+        if (!groups.length) return items;
+        return items.filter(function (i) { return !absorbed.has(i); }).concat(groups);
+    }
+
     function regroup(items) {
         if (!grouping || !Array.isArray(items)) return items;
-        try { return groupResults(groupOpenPicks(items)); } catch (x) { return items; }
+        try { return groupMilestones(foldFirstPicks(groupResults(groupOpenPicks(items)))); } catch (x) { return items; }
     }
 
     // ---------------- rendering ----------------
@@ -256,6 +317,7 @@
         var rest = members.slice(PREVIEW).map(openRow).join('');
         return '<div class="feed-item fpg-card fpg-card--open' + (open ? ' is-open' : '') + '" data-id="' + e(g.item_id) + '" data-type="open_pick_group" data-group-sig="' + e(g._sig) + '">' +
             header +
+            firstPickRibbon(g._first_pick_ms) +
             '<div class="fpg-summary">' +
                 '<div class="fpg-headline"><span class="fpg-count">' + n + '</span><div><b>' + e(g.display_name || g.username) + ' posted ' + n + ' new picks</b>' +
                     '<small>' + e(when) + (live ? ' · ' + live + ' in play' : '') + '</small></div></div>' +
@@ -267,7 +329,6 @@
                 (rest ? '<div class="fpg-rest"' + (open ? '' : ' hidden') + '>' + rest + '</div>' : '') +
             '</div>' +
             (rest ? toggleBtn(g.item_id, n, 'picks') : '') +
-            '<p class="fpg-foot">Tail and Fade are reactions. They do not add a pick to your record.</p>' +
         '</div>';
     }
 
@@ -310,6 +371,51 @@
         '</div>';
     }
 
+    function congratsBtn(m) {
+        return '<button type="button" class="fpg-act fi-congrats' + (m.congratsed_by_user ? ' is-congratsed' : '') + '" onclick="toggleCongrats(' + e(JSON.stringify(String(m.item_id))) + ', this)">' +
+            '<i class="fas fa-hands-clapping"></i> Congrats <span>' + (Number(m.likes_count) || 0) + '</span></button>';
+    }
+
+    function firstPickRibbon(ms) {
+        if (!ms) return '';
+        return '<div class="fpg-first" data-id="' + e(ms.item_id) + '"><span class="fpg-first-ico"><i class="fas fa-flag-checkered"></i></span>' +
+            '<span class="fpg-first-text"><b>First official pick</b><small>' + e((ms.display_name || ms.username) + '’s record starts here.') + '</small></span>' +
+            congratsBtn(ms) + '</div>';
+    }
+
+    function profileHref(m) { return '/profile/?user=' + encodeURIComponent(m.username || '') + '&view=picks'; }
+
+    function renderMilestoneGroup(g) {
+        var members = g._members;
+        var n = members.length;
+        var open = !!expanded[g.item_id];
+        var row = function (m) {
+            return '<div class="fpg-ms" data-id="' + e(m.item_id) + '">' + avatar(m) +
+                '<span class="fpg-ms-text"><a href="' + e(profileHref(m)) + '"><b>' + e(m.display_name || m.username) + '</b></a>' +
+                '<small>' + e(String(m.content || '').replace(/\s*Nice start.*$/i, '').replace(/\s*Every record starts somewhere\.?$/i, '')) + '</small></span>' +
+                congratsBtn(m) + '</div>';
+        };
+        return '<div class="feed-item fpg-card fpg-card--ms' + (open ? ' is-open' : '') + '" data-id="' + e(g.item_id) + '" data-type="milestone_group" data-group-sig="' + e(g._sig) + '">' +
+            '<div class="fpg-rhead"><span class="fpg-rico fpg-rico--gold"><i class="fas fa-trophy"></i></span>' +
+                '<div><b>Milestones</b><small>' + plural(n, 'milestone') + ' · ' + e(ago(t(members[0]))) + '</small></div>' +
+                '<span class="fv-kind fv-kind--milestone"><i class="fas fa-trophy"></i> Milestone</span></div>' +
+            '<div class="fpg-list">' + members.slice(0, PREVIEW).map(row).join('') +
+                (n > PREVIEW ? '<div class="fpg-rest"' + (open ? '' : ' hidden') + '>' + members.slice(PREVIEW).map(row).join('') + '</div>' : '') +
+            '</div>' +
+            (n > PREVIEW ? toggleBtn(g.item_id, n, 'milestones') : '') +
+        '</div>';
+    }
+
+    function renderJoined(item) {
+        var n = Number(item.activity_count) || 0;
+        var text = n > 0 ? plural(n, 'new member') + ' joined TrustMyRecord' : String(item.content || 'New members joined TrustMyRecord').replace(/\.$/, '');
+        return '<div class="feed-item fpg-joined" data-id="' + e(item.item_id) + '" data-type="milestone">' +
+            '<span class="fpg-joined-ico"><i class="fas fa-user-plus"></i></span>' +
+            '<span class="fpg-joined-text"><b>' + e(text) + '</b><small>' + e(ago(t(item))) + '</small></span>' +
+            '<a class="fpg-joined-link" href="/handicappers/">Find handicappers <i class="fas fa-chevron-right"></i></a>' +
+        '</div>';
+    }
+
     function setExpanded(card, open) {
         var gid = card.getAttribute('data-id');
         if (open) expanded[gid] = true; else delete expanded[gid];
@@ -331,7 +437,8 @@
             btn.setAttribute('aria-expanded', String(open));
             var g2 = cache[gid];
             var n2 = g2 ? g2._members.length : 0;
-            var label = card.classList.contains('fpg-card--results') ? 'record updates' : 'picks';
+            var label = card.classList.contains('fpg-card--results') ? 'record updates'
+                : card.classList.contains('fpg-card--ms') ? 'milestones' : 'picks';
             btn.querySelector('span').textContent = open ? 'Show fewer' : 'View all ' + n2 + ' ' + label;
         }
     }
@@ -362,7 +469,16 @@
                     cache[item.item_id] = item;
                     if (item._group === 'open_picks') return renderOpenGroup(item);
                     if (item._group === 'results') return renderResultsGroup(item, baseRender);
+                    if (item._group === 'milestones') return renderMilestoneGroup(item);
                 } catch (x) { return ''; }
+            }
+            if (item && item.item_type === 'milestone' && item.post_type === 'joined_summary') {
+                try { return renderJoined(item); } catch (x) { /* fall through to the old card */ }
+            }
+            if (item && item._first_pick_ms) {
+                var html = baseRender(item);
+                var at = html.indexOf('<div class="fv-pick-grid">');
+                return at > 0 ? html.slice(0, at) + firstPickRibbon(item._first_pick_ms) + html.slice(at) : html;
             }
             return baseRender(item);
         };
@@ -387,7 +503,7 @@
         if (wanted && !focused) {
             var q = '[data-id="' + wanted.replace(/[\\"]/g, '\\$&') + '"]';
             var top = document.querySelector('#feedList > .feed-item' + q);
-            var inner = top ? null : document.querySelector('#feedList .fpg-card ' + q);
+            var inner = top ? null : document.querySelector('#feedList .feed-item ' + q);
             if (inner) {
                 var card = inner.closest('.fpg-card');
                 if (card && !card.classList.contains('is-open') && inner.closest('.fpg-rest')) setExpanded(card, true);
