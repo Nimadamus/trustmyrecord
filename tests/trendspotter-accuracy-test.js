@@ -174,6 +174,7 @@ async function mount(routes, options = {}) {
     return Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve(body) });
   };
   win.matchMedia = win.matchMedia || (() => ({ matches: false, addListener() {}, removeListener() {} }));
+  if (options.prepare) options.prepare(win);
 
   win.eval(js);
   // Let the capabilities -> matchups -> query chain settle.
@@ -577,8 +578,8 @@ const txt = (doc, sel) => ($(doc, sel) || {}).textContent || '';
   const conf = { level: 'not_proven', label: 'Not proven: within normal luck', method: 'units_vs_closing_prices', games_tested: 143,
     detail: '143 priced games. If every bet had won exactly as often as its closing price implied, the units would land within ±21.30u 95% of the time; this trend finished at -13.94u.',
     note: 'Describes past games only. A past trend does not make a future result more likely, and searching many trends turns up about 1 in 20 that pass this test by chance.' };
-  const runIt = async (routes) => {
-    const m = await mount(routes);
+  const runIt = async (routes, options) => {
+    const m = await mount(routes, options);
     $(m.doc, '#f_team').value = 'SF';
     $(m.doc, '#f_team').dispatchEvent(new m.win.Event('change', { bubbles: true }));
     await new Promise((r) => m.win.setTimeout(r, 20));
@@ -647,6 +648,62 @@ const txt = (doc, sel) => ($(doc, sel) || {}).textContent || '';
     $(doc, '#compareSaved').dispatchEvent(new win.Event('click', { bubbles: true }));
     const out = txt(doc, '#compareOut');
     assert(/81-62/.test(out) && /10-5/.test(out), out);
+  });
+
+  // TS_SAVED_ACCOUNT_20261116 --------------------------------------------------
+  await test('signed in, saved trends come from the account; save, remove and the one-time browser import use the API', async () => {
+    const calls = [];
+    const acct = [{ id: '9', name: 'Niners road favorites', query: { sport: 'NFL', team: 'SF', market: 'moneyline' }, sport: 'NFL',
+      supported: true, summary: { statement: 'x', record: '7-3', win_rate: 70, sample: 10 }, created_at: '2026-11-10T00:00:00Z' }];
+    const prepare = (win) => {
+      win.localStorage.setItem('trustmyrecord_token', 'tok');
+      win.localStorage.setItem('tmr.trendspotter.saved.v1', JSON.stringify([{ key: 'sport=NFL&team=KC&market=moneyline', statement: 'Chiefs', record: '5-5', win_rate: 50, sample: 10, saved_at: '2026-11-01' }]));
+      const inner = win.fetch;
+      win.fetch = (url, init) => {
+        if (!String(url).includes('/trendspotter/saved')) return inner(url, init);
+        const method = (init && init.method) || 'GET';
+        calls.push([method, String(url).replace(/^.*\/trendspotter\/saved/, ''), init && init.headers && init.headers.Authorization, init && init.body ? JSON.parse(init.body) : null]);
+        const ok = (status, body) => Promise.resolve({ ok: true, status, json: () => Promise.resolve(body) });
+        if (method === 'GET') return ok(200, { status: 'ok', items: acct });
+        if (method === 'DELETE') return ok(204, {});
+        if (String(url).endsWith('/import')) return ok(200, { status: 'ok', imported: 1, skipped: 0, items: acct.concat([{ id: '11', name: 'Chiefs', query: { sport: 'NFL', team: 'KC', market: 'moneyline' }, sport: 'NFL', summary: { record: '5-5' }, created_at: '2026-11-01T00:00:00Z' }]) });
+        const b = JSON.parse(init.body);
+        return ok(201, { status: 'ok', created: true, item: { id: '10', name: b.name, query: b.query, sport: 'NFL', summary: b.summary, last_run_at: '2026-11-16T22:00:00Z' } });
+      };
+    };
+    const { win, doc } = await runIt({ ...base, '/query': priced() }, { prepare });
+    const list = txt(doc, '#savedTrends');
+    assert(/Niners road favorites/.test(list) && /Saved to your account/.test(list), list);
+    assert(/1 trend is saved in this browser only/.test(list), 'the browser list is offered for import');
+    assert.strictEqual(calls[0][0], 'GET'); assert.strictEqual(calls[0][2], 'Bearer tok');
+    $(doc, '#saveTrend').dispatchEvent(new win.Event('click', { bubbles: true }));
+    for (let i = 0; i < 10; i++) await new Promise((r) => win.setTimeout(r, 5));
+    const post = calls.find((c) => c[0] === 'POST' && c[1] === '');
+    assert(post && post[3].query.team === 'SF' && post[3].summary.record === '81-62', JSON.stringify(post));
+    assert.strictEqual(txt(doc, '#saveTrend'), 'Saved');
+    assert.strictEqual(JSON.parse(win.localStorage.getItem('tmr.trendspotter.saved.v1')).length, 1, 'signed in, saving never writes the browser list');
+    $(doc, '#importSaved').dispatchEvent(new win.Event('click', { bubbles: true }));
+    for (let i = 0; i < 10; i++) await new Promise((r) => win.setTimeout(r, 5));
+    const imp = calls.find((c) => c[1] === '/import');
+    assert(imp && imp[3].items.length === 1 && imp[3].items[0].query.team === 'KC', JSON.stringify(imp));
+    assert(!$(doc, '#importSaved') && win.localStorage.getItem('tmr.trendspotter.import.offered.v1') === '1', 'offered once');
+    const idx = $$(doc, '[data-remove-saved]').length - 1;
+    $(doc, '[data-remove-saved="' + idx + '"]').dispatchEvent(new win.Event('click', { bubbles: true }));
+    for (let i = 0; i < 10; i++) await new Promise((r) => win.setTimeout(r, 5));
+    assert(calls.some((c) => c[0] === 'DELETE' && /^\/\d+$/.test(c[1])), JSON.stringify(calls));
+  });
+
+  await test('if the account list cannot be read, signed-in members keep the browser list', async () => {
+    const prepare = (win) => {
+      win.localStorage.setItem('trustmyrecord_token', 'tok');
+      const inner = win.fetch;
+      win.fetch = (url, init) => (String(url).includes('/trendspotter/saved')
+        ? Promise.resolve({ ok: false, status: 503, json: () => Promise.resolve({ message: 'down' }) }) : inner(url, init));
+    };
+    const { win, doc } = await runIt({ ...base, '/query': priced() }, { prepare });
+    $(doc, '#saveTrend').dispatchEvent(new win.Event('click', { bubbles: true }));
+    assert.strictEqual(JSON.parse(win.localStorage.getItem('tmr.trendspotter.saved.v1')).length, 1);
+    assert(/Kept in this browser/.test(txt(doc, '#savedTrends')));
   });
 
   // TS_UNREADABLE_BODY_20261116 ------------------------------------------------

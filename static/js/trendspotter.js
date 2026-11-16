@@ -809,9 +809,61 @@
       '<p class="ts-confidence-note">' + esc(c.note) + '</p></div>';
   }
 
-  /* TS_SAVED_20261116. Saved trends live in this browser only (account sync waits on a reviewed
-     database change). Each entry keeps the query and the numbers as they stood when saved. */
+  /* TS_SAVED_20261116. Signed out, saved trends live in this browser. Each entry keeps the query and
+     the numbers as they stood when saved.
+     TS_SAVED_ACCOUNT_20261116. Signed in, they live on the member's account (every device); the
+     browser list is offered once for copying in, never uploaded silently. If the account list cannot
+     be read the page keeps using the browser list. */
   var SAVED_KEY = 'tmr.trendspotter.saved.v1';
+  var IMPORT_OFFERED_KEY = 'tmr.trendspotter.import.offered.v1';
+  var accountSaved = null;      // null = browser mode; array = the member's account list
+  var savedBusy = false;
+  function fromAccount(it) {
+    var q = new URLSearchParams();
+    Object.keys(it.query || {}).forEach(function (k) { q.set(k, it.query[k]); });
+    var s = it.summary || {};
+    return { id: it.id, key: q.toString(), statement: it.name || s.statement, record: s.record || '\u2014',
+      win_rate: s.win_rate === undefined ? null : s.win_rate,
+      sample: s.sample === undefined || s.sample === null ? '\u2014' : s.sample,
+      units: s.units === undefined ? null : s.units, roi: s.roi === undefined ? null : s.roi,
+      confidence: s.confidence || null, supported: it.supported !== false,
+      saved_at: String(it.last_run_at || it.created_at || '').slice(0, 10) };
+  }
+  function savedList() { return accountSaved || readSaved(); }
+  function accountCall(method, path, body) {
+    var h = authHeaders();
+    if (body) h['Content-Type'] = 'application/json';
+    return fetch(apiBase() + '/trendspotter/saved' + (path || ''), { method: method, headers: h, body: body ? JSON.stringify(body) : undefined })
+      .then(function (res) {
+        if (res.status === 204) return {};
+        return res.json().catch(function () { return null; }).then(function (b) {
+          if (!res.ok || !b) { var err = new Error((b && b.message) || ('HTTP ' + res.status)); err.status = res.status; throw err; }
+          return b;
+        });
+      });
+  }
+  function loadAccountSaved() {
+    if (!memberToken()) return;
+    accountCall('GET').then(function (b) {
+      accountSaved = (b.items || []).map(fromAccount);
+      refreshSaved();
+      syncSaveButton();
+    }, function () { /* signed out, expired or unavailable: the browser list stays */ });
+  }
+  function importOffered() { try { return window.localStorage.getItem(IMPORT_OFFERED_KEY) === '1'; } catch (e) { return true; } }
+  function markImportOffered() { try { window.localStorage.setItem(IMPORT_OFFERED_KEY, '1'); } catch (e) { /* ignore */ } }
+  function localForImport() {
+    return readSaved().map(function (x) {
+      var q = {};
+      new URLSearchParams(x.key || '').forEach(function (v, k) { q[k] = v; });
+      return { query: q, name: x.statement, summary: { statement: x.statement, record: x.record, win_rate: x.win_rate,
+        sample: x.sample, units: x.units, roi: x.roi, confidence: x.confidence } };
+    });
+  }
+  function syncSaveButton() {
+    var b = document.getElementById('saveTrend');
+    if (b && !savedBusy) b.textContent = isSaved(queryParams().toString()) ? 'Saved' : 'Save';
+  }
   function readSaved() {
     try { var v = JSON.parse(window.localStorage.getItem(SAVED_KEY) || '[]'); return Array.isArray(v) ? v : []; }
     catch (e) { return []; }
@@ -819,7 +871,27 @@
   function writeSaved(list) {
     try { window.localStorage.setItem(SAVED_KEY, JSON.stringify(list.slice(0, 30))); return true; } catch (e) { return false; }
   }
-  function isSaved(key) { return readSaved().some(function (x) { return x.key === key; }); }
+  function isSaved(key) { return savedList().some(function (x) { return x.key === key; }); }
+  function saveToAccount(btn) {
+    if (!lastResult || !lastResult.summary) return;
+    var q = {};
+    queryParams().forEach(function (v, k) { q[k] = v; });
+    var s = lastResult.summary;
+    savedBusy = true;
+    if (btn) btn.textContent = 'Saving\u2026';
+    accountCall('POST', '', { query: q, name: lastResult.statement, summary: { statement: lastResult.statement, record: s.record,
+      win_rate: s.win_rate, sample: s.sample, units: s.units, roi: s.roi, confidence: s.confidence ? s.confidence.label : null } })
+      .then(function (b) {
+        var item = fromAccount(b.item);
+        accountSaved = [item].concat(accountSaved.filter(function (x) { return x.id !== item.id; }));
+        savedBusy = false;
+        if (btn) btn.textContent = 'Saved';
+        refreshSaved();
+      }, function (err) {
+        savedBusy = false;
+        if (btn) btn.textContent = err && err.status === 422 ? 'List full (50)' : 'Could not save';
+      });
+  }
   function saveCurrent() {
     if (!lastResult || !lastResult.summary) return false;
     var key = queryParams().toString();
@@ -830,19 +902,30 @@
       confidence: s.confidence ? s.confidence.label : null, saved_at: new Date().toISOString().slice(0, 10) });
     return writeSaved(list);
   }
+  function importOfferHtml() {
+    if (!accountSaved || importOffered()) return '';
+    var n = readSaved().length;
+    if (!n) return '';
+    return '<p class="ts-chart-note" id="importSavedOffer">' + n + ' trend' + (n === 1 ? ' is' : 's are') + ' saved in this browser only. ' +
+      '<button class="ts-btn ts-btn-ghost ts-btn-sm" type="button" id="importSaved">Copy to my account</button> ' +
+      '<button class="ts-btn ts-btn-ghost ts-btn-sm" type="button" id="dismissImport">Not now</button></p>';
+  }
   function savedHtml() {
-    var list = readSaved();
-    if (!list.length) return '';
+    var list = savedList();
+    var offer = importOfferHtml();
+    if (!list.length && !offer) return '';
+    if (!list.length) return '<div class="ts-section ts-saved" id="savedTrends"><h3>Saved trends</h3>' + offer + '</div>';
     var rows = list.map(function (x, i) {
       return '<tr><td><input type="checkbox" class="ts-cmp" data-i="' + i + '" aria-label="Compare this trend"></td>' +
-        '<td>' + esc(x.statement) + '</td><td>' + esc(x.record) + '</td>' +
+        '<td>' + esc(x.statement) + (x.supported === false ? ' <small>(no longer supported)</small>' : '') + '</td><td>' + esc(x.record) + '</td>' +
         '<td>' + (x.win_rate === null || x.win_rate === undefined ? '—' : esc(Number(x.win_rate).toFixed(1) + '%')) + '</td>' +
         '<td>' + esc(x.sample) + '</td><td>' + esc(x.saved_at) + '</td>' +
         '<td><button class="ts-btn ts-btn-ghost ts-btn-sm" type="button" data-open-saved="' + i + '">Open</button> ' +
         '<button class="ts-btn ts-btn-ghost ts-btn-sm" type="button" data-remove-saved="' + i + '">Remove</button></td></tr>';
     }).join('');
     return '<div class="ts-section ts-saved" id="savedTrends"><h3>Saved trends</h3>' +
-      '<p class="ts-chart-note">Kept in this browser. Numbers are as of the day saved; open a trend to rerun it on today\'s data.</p>' +
+      '<p class="ts-chart-note">' + (accountSaved ? 'Saved to your account, on every device you sign in on.' : 'Kept in this browser. Sign in to keep them on your account.') +
+      ' Numbers are as of the day saved; open a trend to rerun it on today\'s data.</p>' + offer +
       '<div class="ts-table-wrap"><table class="ts-table"><thead><tr><th scope="col"><span class="ts-sr">Compare</span></th>' +
       '<th scope="col">Trend</th><th scope="col">Record</th><th scope="col">Win rate</th><th scope="col">Games</th><th scope="col">Saved</th><th scope="col"></th></tr></thead>' +
       '<tbody>' + rows + '</tbody></table></div>' +
@@ -2045,23 +2128,65 @@
       }
       if (e.target.closest('#retryQuery')) { lastRunKey = ''; runQuery(); return; }
       var saveBtn = e.target.closest('#saveTrend');
-      if (saveBtn) { saveBtn.textContent = saveCurrent() ? 'Saved' : 'Could not save'; refreshSaved(); return; }
+      if (saveBtn) {
+        if (savedBusy) return;
+        if (accountSaved) { saveToAccount(saveBtn); return; }
+        saveBtn.textContent = saveCurrent() ? 'Saved' : 'Could not save';
+        refreshSaved();
+        return;
+      }
+      if (e.target.closest('#dismissImport')) { markImportOffered(); refreshSaved(); return; }
+      var importBtn = e.target.closest('#importSaved');
+      if (importBtn) {
+        importBtn.disabled = true;
+        importBtn.textContent = 'Copying\u2026';
+        accountCall('POST', '/import', { items: localForImport() }).then(function (b) {
+          markImportOffered();
+          accountSaved = (b.items || []).map(fromAccount);
+          refreshSaved();
+          syncSaveButton();
+        }, function () { importBtn.disabled = false; importBtn.textContent = 'Could not copy. Try again'; });
+        return;
+      }
       var sheetBtn = e.target.closest('[data-sheet-row]');
       if (sheetBtn) { openSheetRow(Number(sheetBtn.getAttribute('data-sheet-row'))); return; }
       var openSaved = e.target.closest('[data-open-saved]');
       if (openSaved) {
-        var item = readSaved()[Number(openSaved.getAttribute('data-open-saved'))];
+        var item = savedList()[Number(openSaved.getAttribute('data-open-saved'))];
         if (item) { window.location.search = '?' + item.key; }
         return;
       }
       var removeSaved = e.target.closest('[data-remove-saved]');
       if (removeSaved) {
-        var list = readSaved(); list.splice(Number(removeSaved.getAttribute('data-remove-saved')), 1); writeSaved(list);
+        var ri = Number(removeSaved.getAttribute('data-remove-saved'));
+        if (accountSaved) {
+          var gone = accountSaved[ri];
+          if (!gone) return;
+          removeSaved.disabled = true;
+          accountCall('DELETE', '/' + encodeURIComponent(gone.id)).then(function () {
+            accountSaved = accountSaved.filter(function (x) { return x.id !== gone.id; });
+            refreshSaved();
+            syncSaveButton();
+          }, function (err) {
+            if (err && err.status === 404) {
+              accountSaved = accountSaved.filter(function (x) { return x.id !== gone.id; });
+              refreshSaved();
+              return;
+            }
+            removeSaved.disabled = false;
+            removeSaved.textContent = 'Try again';
+          });
+          return;
+        }
+        var list = readSaved();
+        list.splice(ri, 1);
+        writeSaved(list);
         refreshSaved();
+        syncSaveButton();
         return;
       }
       if (e.target.closest('#compareSaved')) {
-        var all = readSaved();
+        var all = savedList();
         var picked = Array.prototype.slice.call(document.querySelectorAll('.ts-cmp:checked')).slice(0, 3)
           .map(function (x) { return all[Number(x.getAttribute('data-i'))]; }).filter(Boolean);
         var out = document.getElementById('compareOut');
@@ -2207,6 +2332,7 @@
     renderEmptyState();
     bind();
     loadCapabilities();
+    loadAccountSaved();
   }
 
   // Split out of boot() so the retry re-runs the failed call only; re-running
