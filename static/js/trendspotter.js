@@ -49,7 +49,7 @@
   var capsBySport = {};
   var state = {
     sport: 'MLB', team: '', opponent: '', market: 'moneyline', side: 'over',
-    venue: 'any', situation: 'any', seasonFrom: '', lastN: '',
+    venue: 'any', situation: 'any', seasonFrom: '', seasonTo: '', rest: 'any', lastN: '',
     lineMin: '', lineMax: '', totalMin: '', totalMax: '', priceMin: '', priceMax: '',
     minGames: 10
   };
@@ -425,6 +425,14 @@
     }
 
     parts.push(field('Date range', 'f_seasonFrom', select('f_seasonFrom', seasons, state.seasonFrom)));
+    // TS_SEASON_TO_20261116: an end to the window, so a past stretch can be studied on its own.
+    parts.push(field('Through', 'f_seasonTo', select('f_seasonTo', [['', 'Through today']].concat(
+      seasons.slice(1).map(function (o) { return [o[0], 'Through the ' + seasonName(state.sport, o[0]) + ' season']; })), state.seasonTo)));
+    // TS_REST_20261116: days off before the game, from the team's own schedule.
+    if (c.rest_options && c.rest_options.length) {
+      parts.push(field('Rest', 'f_rest', select('f_rest', c.rest_options.map(function (r) { return [r.id, r.label]; }), state.rest),
+        { hint: state.sport === 'NFL' ? 'Days between this game and the last one. Week 1 has none.' : 'Days off since the last game. Season openers have none.' }));
+    }
 
     parts.push(field('Most recent', 'f_lastN', select('f_lastN', [
       ['', 'All qualifying games'], [5, 'Last 5'], [10, 'Last 10'], [25, 'Last 25'], [50, 'Last 50'], [100, 'Last 100']
@@ -523,6 +531,9 @@
     if (state.situation === 'head_to_head' && !state.opponent) {
       return { field: 'f_opponent', message: 'Head-to-head needs an opponent.' };
     }
+    if (state.seasonFrom && state.seasonTo && Number(state.seasonFrom) > Number(state.seasonTo)) {
+      return { field: 'f_seasonTo', message: 'The last season is before the first season.' };
+    }
     var pairs = [['lineMin', 'lineMax', 'spread'], ['totalMin', 'totalMax', 'total'], ['priceMin', 'priceMax', 'price']];
     for (var i = 0; i < pairs.length; i++) {
       var lo = state[pairs[i][0]], hi = state[pairs[i][1]];
@@ -535,8 +546,8 @@
   }
 
   // --- URL state -----------------------------------------------------------
-  var URL_KEYS = ['sport', 'team', 'opponent', 'market', 'side', 'venue', 'situation',
-    'seasonFrom', 'lastN', 'lineMin', 'lineMax', 'totalMin', 'totalMax', 'priceMin', 'priceMax', 'minGames'];
+  var URL_KEYS = ['sport', 'team', 'opponent', 'market', 'side', 'venue', 'situation', 'rest',
+    'seasonFrom', 'seasonTo', 'lastN', 'lineMin', 'lineMax', 'totalMin', 'totalMax', 'priceMin', 'priceMax', 'minGames'];
 
   // True when the URL currently in the address bar was PUT there by a run or
   // by the back/forward button. Overwriting one of those with replaceState is
@@ -552,6 +563,7 @@
       if (v === '' || v === null || v === undefined) return;
       if (k === 'venue' && v === 'any') return;
       if (k === 'situation' && v === 'any') return;
+      if (k === 'rest' && v === 'any') return;
       if (k === 'side' && state.market !== 'total') return;
       if (k === 'opponent' && state.situation !== 'head_to_head') return;
       params.set(k, v);
@@ -616,6 +628,10 @@
     var thisYear = new Date().getFullYear();
     var season = parseInt(p.get('seasonFrom'), 10);
     if (isFinite(season) && season >= 1960 && season <= thisYear) state.seasonFrom = season;
+    var seasonTo = parseInt(p.get('seasonTo'), 10);
+    if (isFinite(seasonTo) && seasonTo >= 1960 && seasonTo <= thisYear) state.seasonTo = seasonTo;
+    var rest = String(p.get('rest') || 'any');
+    if ((c.rest_options || []).some(function (r) { return r.id === rest; })) state.rest = rest;
 
     var lastN = parseInt(p.get('lastN'), 10);
     if ([5, 10, 25, 50, 100].indexOf(lastN) !== -1) state.lastN = lastN;
@@ -641,6 +657,8 @@
     if (state.situation !== 'any') p.set('situation', state.situation);
     if (state.situation === 'head_to_head' && state.opponent) p.set('opponent', state.opponent);
     if (state.seasonFrom) p.set('seasonFrom', state.seasonFrom);
+    if (state.seasonTo) p.set('seasonTo', state.seasonTo);
+    if (state.rest && state.rest !== 'any') p.set('rest', state.rest);
     if (state.lastN) p.set('lastN', state.lastN);
     ['lineMin', 'lineMax', 'totalMin', 'totalMax', 'priceMin', 'priceMax'].forEach(function (k) {
       if (state[k] !== '' && state[k] !== null && state[k] !== undefined) p.set(k, state[k]);
@@ -651,6 +669,7 @@
 
   function runQuery() {
     touched = true;
+    sheetToken++;
     var problem = validate();
     if (problem) {
       renderSummary();
@@ -765,6 +784,148 @@
    */
   var TS_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   var ROLL_WINDOWS = [10, 25, 50, 100];
+
+  /* TS_CONFIDENCE_20261116. The luck test from the engine, stated with its method and the fixed
+     reminder that a past trend predicts nothing. Free viewers see what the tile is, not the verdict. */
+  function confidenceHtml(s, pro) {
+    if (!pro) {
+      return '<div class="ts-confidence" data-level="locked"><p class="ts-confidence-label">Luck test</p>' +
+        '<p class="ts-confidence-detail">Whether this record is more than normal luck at its prices is part of ' +
+        '<a href="' + PRO_LOCK_HREF + '">TMR Pro</a>. Past results never guarantee a future outcome.</p></div>';
+    }
+    var c = s.confidence;
+    if (!c) return '';
+    return '<div class="ts-confidence" data-level="' + esc(c.level) + '">' +
+      '<p class="ts-confidence-label"><span class="ts-confidence-dot" aria-hidden="true"></span>Luck test: ' + esc(c.label) + '</p>' +
+      '<p class="ts-confidence-detail">' + esc(c.detail) + '</p>' +
+      '<p class="ts-confidence-note">' + esc(c.note) + '</p></div>';
+  }
+
+  /* TS_SAVED_20261116. Saved trends live in this browser only (account sync waits on a reviewed
+     database change). Each entry keeps the query and the numbers as they stood when saved. */
+  var SAVED_KEY = 'tmr.trendspotter.saved.v1';
+  function readSaved() {
+    try { var v = JSON.parse(window.localStorage.getItem(SAVED_KEY) || '[]'); return Array.isArray(v) ? v : []; }
+    catch (e) { return []; }
+  }
+  function writeSaved(list) {
+    try { window.localStorage.setItem(SAVED_KEY, JSON.stringify(list.slice(0, 30))); return true; } catch (e) { return false; }
+  }
+  function isSaved(key) { return readSaved().some(function (x) { return x.key === key; }); }
+  function saveCurrent() {
+    if (!lastResult || !lastResult.summary) return false;
+    var key = queryParams().toString();
+    var s = lastResult.summary;
+    var list = readSaved().filter(function (x) { return x.key !== key; });
+    list.unshift({ key: key, statement: lastResult.statement, record: s.record, win_rate: s.win_rate, sample: s.sample,
+      units: s.units === undefined ? null : s.units, roi: s.roi === undefined ? null : s.roi,
+      confidence: s.confidence ? s.confidence.label : null, saved_at: new Date().toISOString().slice(0, 10) });
+    return writeSaved(list);
+  }
+  function savedHtml() {
+    var list = readSaved();
+    if (!list.length) return '';
+    var rows = list.map(function (x, i) {
+      return '<tr><td><input type="checkbox" class="ts-cmp" data-i="' + i + '" aria-label="Compare this trend"></td>' +
+        '<td>' + esc(x.statement) + '</td><td>' + esc(x.record) + '</td>' +
+        '<td>' + (x.win_rate === null || x.win_rate === undefined ? '—' : esc(Number(x.win_rate).toFixed(1) + '%')) + '</td>' +
+        '<td>' + esc(x.sample) + '</td><td>' + esc(x.saved_at) + '</td>' +
+        '<td><button class="ts-btn ts-btn-ghost ts-btn-sm" type="button" data-open-saved="' + i + '">Open</button> ' +
+        '<button class="ts-btn ts-btn-ghost ts-btn-sm" type="button" data-remove-saved="' + i + '">Remove</button></td></tr>';
+    }).join('');
+    return '<div class="ts-section ts-saved" id="savedTrends"><h3>Saved trends</h3>' +
+      '<p class="ts-chart-note">Kept in this browser. Numbers are as of the day saved; open a trend to rerun it on today\'s data.</p>' +
+      '<div class="ts-table-wrap"><table class="ts-table"><thead><tr><th scope="col"><span class="ts-sr">Compare</span></th>' +
+      '<th scope="col">Trend</th><th scope="col">Record</th><th scope="col">Win rate</th><th scope="col">Games</th><th scope="col">Saved</th><th scope="col"></th></tr></thead>' +
+      '<tbody>' + rows + '</tbody></table></div>' +
+      '<button class="ts-btn ts-btn-sm" type="button" id="compareSaved">Compare selected</button>' +
+      '<div id="compareOut"></div></div>';
+  }
+  function refreshSaved() {
+    var box = document.getElementById('savedTrends');
+    var html = savedHtml();
+    if (box) box.outerHTML = html;
+    else if (html) el.resultsBody.insertAdjacentHTML('beforeend', html);
+  }
+  function compareHtml(items) {
+    if (items.length < 2) return '<p class="ts-chart-note">Tick two or three saved trends to compare them.</p>';
+    var head = items.map(function (x) { return '<th scope="col">' + esc(x.statement) + '</th>'; }).join('');
+    function line(label, fn) { return '<tr><th scope="row">' + esc(label) + '</th>' + items.map(function (x) { return '<td>' + esc(fn(x)) + '</td>'; }).join('') + '</tr>'; }
+    return '<div class="ts-table-wrap"><table class="ts-table ts-cmp-table"><thead><tr><th scope="col"></th>' + head + '</tr></thead><tbody>' +
+      line('Record', function (x) { return x.record; }) +
+      line('Win rate', function (x) { return x.win_rate === null || x.win_rate === undefined ? '—' : Number(x.win_rate).toFixed(1) + '%'; }) +
+      line('Games', function (x) { return x.sample; }) +
+      line('Units', function (x) { return x.units === null || x.units === undefined ? '—' : fmtUnits(x.units); }) +
+      line('ROI', function (x) { return x.roi === null || x.roi === undefined ? '—' : (x.roi > 0 ? '+' : '') + Number(x.roi).toFixed(2) + '%'; }) +
+      line('Luck test', function (x) { return x.confidence || '—'; }) +
+      line('Saved', function (x) { return x.saved_at; }) +
+      '</tbody></table></div><p class="ts-chart-note">Different samples are not directly comparable: check the game counts first.</p>';
+  }
+
+  /* TS_SHEET_20261116. Picking a matchup shows the standard trends for both teams at once. Every
+     row is an ordinary query and opens as a full result with every game listed. */
+  var sheetData = null;
+  var sheetToken = 0;   // a trend run after the click wins: a late sheet never replaces it
+  function loadSheet(m) {
+    var token = ++sheetToken;
+    var p = new URLSearchParams();
+    p.set('sport', state.sport); p.set('home', m.home_id); p.set('away', m.away_id);
+    if (m.market && m.market.home_ml !== null && m.market.home_ml !== undefined) p.set('home_ml', m.market.home_ml);
+    if (m.market && m.market.away_ml !== null && m.market.away_ml !== undefined) p.set('away_ml', m.market.away_ml);
+    el.resultsBody.innerHTML = '<div class="ts-state ts-skeleton" role="status" aria-label="Loading matchup trends"><div></div><div></div><div></div></div>';
+    fetchJson(apiBase() + '/trendspotter/sheet?' + p.toString(), { timeout: 30000, retries: 1 }).then(function (data) {
+      if (token !== sheetToken) return;
+      sheetData = data; renderSheet(data);
+    }, function () {
+      if (token !== sheetToken) return;
+      el.resultsBody.innerHTML = '<div class="ts-state"><p>We could not load the trends for this matchup. Pick a team and run any trend below.</p></div>';
+    });
+  }
+  function renderSheet(d) {
+    if (!d || d.status !== 'ok') return;
+    var pro = d.entitlement === 'pro';
+    function rowHtml(r, i) {
+      var units = !pro ? '<a class="ts-pro-value" href="' + PRO_LOCK_HREF + '">Pro</a>'
+        : (r.units === null || r.units === undefined ? '—' : esc(fmtUnits(r.units)));
+      var luck = !pro ? '<a class="ts-pro-value" href="' + PRO_LOCK_HREF + '">Pro</a>'
+        : (r.confidence ? '<span class="ts-luck" data-level="' + esc(r.confidence.level) + '">' + esc(r.confidence.label) + '</span>' : '—');
+      return '<tr data-sheet-row="' + i + '" class="ts-sheet-row"><th scope="row">' + esc(r.market_label) + '<small>' + esc(r.context) + '</small></th>' +
+        '<td data-label="Record">' + esc(r.record || '—') + '</td>' +
+        '<td data-label="Win rate">' + (r.win_rate === null || r.win_rate === undefined ? '—' : esc(Number(r.win_rate).toFixed(1) + '%')) + '</td>' +
+        '<td data-label="Games"><span>' + esc(r.sample) + (r.sample && r.sample < 20 ? ' <span class="ts-small-sample" title="Small sample">small</span>' : '') + '</span></td>' +
+        '<td data-label="Units">' + units + '</td><td data-label="Luck test">' + luck + '</td>' +
+        '<td><button class="ts-btn ts-btn-ghost ts-btn-sm" type="button" data-sheet-row="' + i + '">Open</button></td></tr>';
+    }
+    function block(title, filter) {
+      var rows = [];
+      d.rows.forEach(function (r, i) { if (filter(r)) rows.push(rowHtml(r, i)); });
+      if (!rows.length) return '';
+      return '<div class="ts-section"><h3>' + esc(title) + '</h3><div class="ts-table-wrap"><table class="ts-table ts-sheet">' +
+        '<thead><tr><th scope="col">Trend</th><th scope="col">Record</th><th scope="col">Win rate</th><th scope="col">Games</th>' +
+        '<th scope="col">Units</th><th scope="col">Luck test</th><th scope="col"></th></tr></thead><tbody>' + rows.join('') + '</tbody></table></div></div>';
+    }
+    var role = function (t) { return t.role ? ' (' + t.role + ' tonight)' : ''; };
+    el.resultsBody.innerHTML = '<article class="ts-result ts-sheet-wrap">' +
+      '<div class="ts-result-top"><p class="ts-statement">' + esc(d.away.name) + ' at ' + esc(d.home.name) + ': matchup trends</p>' +
+      '<p class="ts-chart-note">' + esc(d.note) + ' Small samples (under 20 games) are marked.</p></div>' +
+      block(d.away.name + role(d.away), function (r) { return r.group === d.away.id; }) +
+      block(d.home.name + role(d.home), function (r) { return r.group === d.home.id; }) +
+      block('Head to head', function (r) { return r.group === 'h2h'; }) +
+      '</article>' + savedHtml();
+  }
+  function openSheetRow(i) {
+    var r = sheetData && sheetData.rows[i];
+    if (!r) return;
+    var q = r.query;
+    state.team = q.team; state.market = q.market; state.side = q.side || 'over';
+    state.venue = q.venue || 'any'; state.situation = q.situation || 'any'; state.opponent = q.opponent || '';
+    state.seasonFrom = q.seasonFrom || ''; state.seasonTo = ''; state.rest = 'any'; state.lastN = q.lastN || '';
+    state.lineMin = state.lineMax = state.totalMin = state.totalMax = state.priceMin = state.priceMax = '';
+    state.minGames = 1;
+    lastRunKey = '';
+    rerenderControls();
+    runQuery();
+  }
 
   /* TS_SEASONS_20261116. NBA and NHL seasons are named by the two years they span (2025-26) and
      start in August; the NFL season starts in March (its Super Bowl is February); MLB is the year.
@@ -1598,9 +1759,11 @@
           '<button class="ts-btn ts-btn-ghost ts-btn-sm" type="button" id="copyResult">Copy result</button>' +
           '<button class="ts-btn ts-btn-ghost ts-btn-sm" type="button" id="shareResult">Share</button>' +
           '<button class="ts-btn ts-btn-ghost ts-btn-sm" type="button" id="jumpGames">View games</button>' +
+          '<button class="ts-btn ts-btn-ghost ts-btn-sm" type="button" id="saveTrend">' + (isSaved(queryParams().toString()) ? 'Saved' : 'Save') + '</button>' +
         '</div>' +
       '</div>' +
       '<dl class="ts-metrics">' + metrics + '</dl>' +
+      confidenceHtml(s, pro) +
       (pro ? '' : proNoteHtml()) +
       '<div class="ts-section"><h3>' + (s.priced_games > 0 || s.decided_games > 1 ? 'Performance over time' : 'Record by season') + '</h3>' + chartHtml(s, data.games, q) + '</div>' +
       '<div class="ts-section" id="gamesSection"><h3>Games in this trend</h3>' +
@@ -1609,7 +1772,7 @@
         (data.interpretation || []).map(function (n) { return '<li>' + esc(n) + '</li>'; }).join('') +
       '</ul></div>' +
       '<div class="ts-section">' + detailsHtml(data) + '</div>' +
-      '</article>';
+      '</article>' + savedHtml();
 
     wireChart();
   }
@@ -1792,8 +1955,11 @@
       el.teamSearch.value = '';
       hideSuggest();
       lastRunKey = '';
+      lastResult = null;
       renderSlate();
       rerenderControls();
+      var picked = matchups.filter(function (m) { return m.home_id === state.team && m.away_id === state.opponent; })[0];
+      if (picked) loadSheet(picked);
     });
 
     el.filterFields.addEventListener('change', onFieldChange);
@@ -1813,6 +1979,8 @@
       state.opponent = '';
       state.side = 'over';
       state.seasonFrom = '';
+      state.seasonTo = '';
+      state.rest = 'any';
       state.lastN = '';
       state.lineMin = state.lineMax = state.totalMin = state.totalMax = state.priceMin = state.priceMax = '';
       state.minGames = 10;
@@ -1866,6 +2034,30 @@
         return;
       }
       if (e.target.closest('#retryQuery')) { lastRunKey = ''; runQuery(); return; }
+      var saveBtn = e.target.closest('#saveTrend');
+      if (saveBtn) { saveBtn.textContent = saveCurrent() ? 'Saved' : 'Could not save'; refreshSaved(); return; }
+      var sheetBtn = e.target.closest('[data-sheet-row]');
+      if (sheetBtn) { openSheetRow(Number(sheetBtn.getAttribute('data-sheet-row'))); return; }
+      var openSaved = e.target.closest('[data-open-saved]');
+      if (openSaved) {
+        var item = readSaved()[Number(openSaved.getAttribute('data-open-saved'))];
+        if (item) { window.location.search = '?' + item.key; }
+        return;
+      }
+      var removeSaved = e.target.closest('[data-remove-saved]');
+      if (removeSaved) {
+        var list = readSaved(); list.splice(Number(removeSaved.getAttribute('data-remove-saved')), 1); writeSaved(list);
+        refreshSaved();
+        return;
+      }
+      if (e.target.closest('#compareSaved')) {
+        var all = readSaved();
+        var picked = Array.prototype.slice.call(document.querySelectorAll('.ts-cmp:checked')).slice(0, 3)
+          .map(function (x) { return all[Number(x.getAttribute('data-i'))]; }).filter(Boolean);
+        var out = document.getElementById('compareOut');
+        if (out) out.innerHTML = compareHtml(picked);
+        return;
+      }
       if (e.target.closest('#retryBoot')) { loadCapabilities(); return; }
       var copyBtn = e.target.closest('#copyResult');
       if (copyBtn) { copyToClipboard(shareText(), copyBtn, 'Copied'); return; }
