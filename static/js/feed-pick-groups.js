@@ -290,7 +290,13 @@
         if (!ts) return '';
         var d = new Date(ts);
         if (isNaN(d.getTime())) return '';
-        return d.toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' });
+        // FEED_START_DATE: a bare weekday is only unambiguous inside the coming
+        // 6 days; next week's "Mon" read as tonight's game.
+        var ahead = d.getTime() - Date.now();
+        var opts = (ahead > -12 * 3600000 && ahead < 6 * 86400000)
+            ? { weekday: 'short', hour: 'numeric', minute: '2-digit' }
+            : { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' };
+        return d.toLocaleString([], opts);
     }
     function started(item) {
         if (item.pick_started === true) return true;
