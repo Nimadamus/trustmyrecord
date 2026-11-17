@@ -1110,6 +1110,13 @@ async function loadFeedItems() {
         if (appending) {
             // Keep the posts on screen and step back so the button retries this page.
             feedOffset = Math.max(0, feedOffset - FEED_LIMIT);
+            // FEED_LOAD_MORE_FAIL_20261116: say so; the button used to sit unchanged.
+            const lmBtn = document.querySelector('#loadMore .load-more-btn');
+            if (lmBtn) {
+                lmBtn.textContent = 'Could not load. Tap to try again';
+                clearTimeout(lmBtn._fvReset);
+                lmBtn._fvReset = setTimeout(() => { lmBtn.textContent = 'Load More'; }, 5000);
+            }
             return;
         }
         renderFeedUnavailable('Live feed data is temporarily unavailable. TrustMyRecord does not substitute fake feed posts when the backend is unavailable.');
