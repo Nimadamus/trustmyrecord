@@ -762,6 +762,18 @@ const txt = (doc, sel) => ($(doc, sel) || {}).textContent || '';
     assert.strictEqual(m.doc.getElementById('results').getAttribute('aria-busy'), 'false');
   });
 
+  await test('Bet against reruns the same games from the other side, and the URL keeps it', async () => {
+    const { win, doc, requested } = await runIt({ ...base, '/query': priced() });
+    const btn = $(doc, '#otherSide');
+    assert(btn && btn.textContent === 'Bet against', btn && btn.textContent);
+    btn.dispatchEvent(new win.Event('click', { bubbles: true }));
+    for (let i = 0; i < 20; i++) await new Promise((r) => win.setTimeout(r, 5));
+    const q = requested.filter((u) => u.includes('/trendspotter/query?')).pop();
+    assert(/side=against/.test(q) && /team=SF/.test(q), q);
+    assert(/side=against/.test(win.location.search), win.location.search);
+    assert(/^Betting against the /.test(txt(doc, '#querySummary')), txt(doc, '#querySummary'));
+  });
+
   // TS_UNREADABLE_BODY_20261116 ------------------------------------------------
   await test('a 200 with an unreadable capabilities body is retried, and the page recovers', async () => {
     const { doc, requested, consoleErrors } = await mount(base, { failFirst: { '/capabilities': { times: 1, unreadable: true } }, settle: 300 });

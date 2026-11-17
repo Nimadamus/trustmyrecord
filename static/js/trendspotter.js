@@ -517,6 +517,7 @@
     }
 
     var window_ = state.lastN ? ', last ' + state.lastN + ' games' : (state.seasonFrom ? ', since the ' + seasonName(state.sport, state.seasonFrom) + ' season' : '');
+    if (state.side === 'against' && state.market !== 'total') return 'Betting against the ' + name + market + venue + sit + range + window_ + '.';
     return name + market + venue + sit + range + window_ + '.';
   }
 
@@ -582,7 +583,7 @@
       if (k === 'venue' && v === 'any') return;
       if (k === 'situation' && v === 'any') return;
       if (k === 'rest' && v === 'any') return;
-      if (k === 'side' && state.market !== 'total') return;
+      if (k === 'side' && state.market !== 'total' && v !== 'against') return;
       if (k === 'opponent' && state.situation !== 'head_to_head') return;
       params.set(k, v);
     });
@@ -635,7 +636,9 @@
     if (c.markets.indexOf(market) !== -1) state.market = market;
 
     var side = String(p.get('side') || '').toLowerCase();
-    if (side === 'over' || side === 'under') state.side = side;
+    if (side === 'over' || side === 'under' || side === 'against') state.side = side;
+    if (state.market === 'total' && state.side === 'against') state.side = 'over';
+    if (state.market !== 'total' && state.side !== 'against') state.side = 'over';
 
     var venue = String(p.get('venue') || '').toLowerCase();
     if (['any', 'home', 'away'].indexOf(venue) !== -1) state.venue = venue;
@@ -671,6 +674,7 @@
     p.set('team', state.team);
     p.set('market', state.market);
     if (state.market === 'total') p.set('side', state.side);
+    else if (state.side === 'against') p.set('side', 'against');
     if (state.venue !== 'any') p.set('venue', state.venue);
     if (state.situation !== 'any') p.set('situation', state.situation);
     if (state.situation === 'head_to_head' && state.opponent) p.set('opponent', state.opponent);
@@ -1061,6 +1065,30 @@
     if (state.seasonTo !== '' && first && Number(state.seasonTo) < first) state.seasonTo = '';
     if (c.markets.indexOf(state.market) === -1) state.market = c.markets[0];
     if (state.market !== 'moneyline') { state.priceMin = ''; state.priceMax = ''; }
+  }
+
+  /* TS_OTHER_SIDE_20261116. One click shows the same games from the other side: the Under for an
+     Over, or betting against the team on the moneyline or spread (at the other side's own price). */
+  function otherSideButton(q) {
+    if (!q || !q.market) return '';
+    var label = q.market === 'total' ? (q.side === 'over' ? 'See the Under' : 'See the Over')
+      : (q.side === 'against' ? 'Back the ' + (q.team || 'team') : 'Bet against');
+    return '<button class="ts-btn ts-btn-ghost ts-btn-sm" type="button" id="otherSide">' + esc(label) + '</button>';
+  }
+  function showOtherSide() {
+    var q = lastResult && lastResult.query;
+    if (!q) return;
+    if (lastResultKey) {   // rebuild the form from the query on screen, not a filter changed since
+      var p = new URLSearchParams(lastResultKey);
+      Object.keys(DEFAULT_STATE).forEach(function (k) { state[k] = DEFAULT_STATE[k]; });
+      URL_KEYS.forEach(function (k) { if (p.has(k)) state[k] = p.get(k); });
+      if (p.has('minGames')) state.minGames = Number(p.get('minGames')) || DEFAULT_STATE.minGames;
+    }
+    if (q.market === 'total') state.side = q.side === 'over' ? 'under' : 'over';
+    else state.side = q.side === 'against' ? 'over' : 'against';
+    lastRunKey = '';
+    rerenderControls();
+    runQuery();
   }
 
   function openSheetRow(i) {
@@ -1913,6 +1941,7 @@
           '<button class="ts-btn ts-btn-ghost ts-btn-sm" type="button" id="shareResult">Share</button>' +
           '<button class="ts-btn ts-btn-ghost ts-btn-sm" type="button" id="jumpGames">View games</button>' +
           '<button class="ts-btn ts-btn-ghost ts-btn-sm" type="button" id="saveTrend">' + (isSaved(resultKey()) ? 'Saved' : 'Save') + '</button>' +
+          otherSideButton(data.query) +
         '</div>' +
       '</div>' +
       '<dl class="ts-metrics">' + metrics + '</dl>' +
@@ -2095,7 +2124,7 @@
       state.priceMin = ''; state.priceMax = '';
       state.lineMin = ''; state.lineMax = '';
       state.totalMin = ''; state.totalMax = '';
-      if (state.market !== 'total') state.side = 'over';
+      state.side = 'over';   // a new market starts on the team's own side (Over for totals)
       lastRunKey = '';
       renderMarketNotice('');
       rerenderControls();
@@ -2194,6 +2223,7 @@
         return;
       }
       if (e.target.closest('#retryQuery')) { lastRunKey = ''; runQuery(); return; }
+      if (e.target.closest('#otherSide')) { showOtherSide(); return; }
       var saveBtn = e.target.closest('#saveTrend');
       if (saveBtn) {
         if (savedBusy) return;
