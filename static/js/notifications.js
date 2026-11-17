@@ -876,7 +876,13 @@ function getNotificationDestination(notification) {
         const me = (window.auth && auth.currentUser && auth.currentUser.username) || notification?.username;
         return me ? '/profile/?user=' + encodeURIComponent(me) + '#awards' : '/profile/#awards';
     }
-    if (type === 'milestone_congrats') return '/feed/?filter=milestones';
+    // NOTIFY_MILESTONE_POST_20261117: Congrats and comments on a milestone (a new
+    // member's join post included) open that card, not the Milestones list or nowhere.
+    if (type === 'milestone_congrats' || type === 'milestone_comment' || resourceType === 'milestone') {
+        const mid = notification?.resource_id || notification?.resourceId;
+        if (mid && /^\d+$/.test(String(mid))) return '/feed/?post=' + encodeURIComponent('milestone:' + mid);
+        if (type === 'milestone_congrats') return '/feed/?filter=milestones';
+    }
     if (type === 'friend_request' || type === 'friend_accept') return '/friends/';
     if (type === 'new_message' || type === 'message') {
         // Deep-link straight into the conversation with the sender so the row
