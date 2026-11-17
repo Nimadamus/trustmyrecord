@@ -54,7 +54,9 @@ function renderFeedHeader(item, actionHtml) {
     // FEED_NO_FAKE_VERIFIED_20261116: with no sport on the item the chip fell
     // back to "Verified record", so members with zero graded picks wore it.
     // The fallback now needs a real graded record; otherwise there is no chip.
-    const sportRaw = formatSport(item.sport || item.sport_key || item.league || item.primary_sport);
+    // FEED_POST_NO_MULTI: persona posts carry sport "Multi"; on a post that chip says nothing.
+    const postSport = item.sport || item.sport_key || item.league || item.primary_sport;
+    const sportRaw = (item.item_type === 'feed_post' && /^multi$/i.test(String(postSport || '').trim())) ? '' : formatSport(postSport);
     const chip = sportRaw ? esc(sportRaw) : (hasRecord && !item.author_persona ? 'Verified record' : '');
     const subline = (chip ? '<span class="fi-sport">' + chip + '</span>' : '') +
         (!item.author_persona && hasRecord
