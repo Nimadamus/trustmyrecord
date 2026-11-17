@@ -348,6 +348,18 @@ function checkSession(n) {
     assert.strictEqual(baseHit, 1, 'loaded profile uses the normal handler');
   });
 
+  await t('grouped open picks run by game start, soonest first', async () => {
+    const sb = boot();
+    const picks = session('mcfly', 4, 0);
+    picks[0].pick_game_time = '2099-01-08T00:00:00Z';
+    picks[1].pick_game_time = '2099-01-02T00:00:00Z';
+    picks[2].pick_game_time = '2099-01-05T00:00:00Z';
+    picks[3].pick_game_time = '2099-01-01T00:00:00Z';
+    const g = sb.aggregateFeedItems(picks).filter((i) => i._group === 'open_picks')[0];
+    const rows = idsIn(sb.renderFeedItem(g)).filter((id) => id.startsWith('openpick:'));
+    assert.deepStrictEqual(rows, [picks[3], picks[1], picks[2], picks[0]].map((p) => p.item_id));
+  });
+
   await t('a shared open pick that left the feed opens its pick page', async () => {
     for (const [onPage, expect] of [[false, '/pick/?id=555'], [true, null]]) {
       let replaced = null;
