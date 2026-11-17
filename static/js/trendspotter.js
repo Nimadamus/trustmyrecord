@@ -827,7 +827,23 @@
       sample: s.sample === undefined || s.sample === null ? '\u2014' : s.sample,
       units: s.units === undefined ? null : s.units, roi: s.roi === undefined ? null : s.roi,
       confidence: s.confidence || null, supported: it.supported !== false,
-      saved_at: String(it.last_run_at || it.created_at || '').slice(0, 10) };
+      saved_at: localDay(it.last_run_at || it.created_at) };
+  }
+  /* The viewer's own calendar day, not the UTC one (an evening save in California is not tomorrow). */
+  function localDay(ts) {
+    var d = new Date(ts);
+    if (!ts || isNaN(d.getTime())) return '';
+    return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+  }
+  /* The account stores the query as an object whose key order the database does not keep, so two
+     keys for the same trend are compared as sorted params. */
+  function sameQuery(a, b) {
+    function norm(k) {
+      var out = [];
+      new URLSearchParams(k || '').forEach(function (v, n) { out.push(n + '=' + v); });
+      return out.sort().join('&');
+    }
+    return norm(a) === norm(b);
   }
   function savedList() { return accountSaved || readSaved(); }
   function accountCall(method, path, body) {
@@ -871,7 +887,7 @@
   function writeSaved(list) {
     try { window.localStorage.setItem(SAVED_KEY, JSON.stringify(list.slice(0, 30))); return true; } catch (e) { return false; }
   }
-  function isSaved(key) { return savedList().some(function (x) { return x.key === key; }); }
+  function isSaved(key) { return savedList().some(function (x) { return sameQuery(x.key, key); }); }
   function saveToAccount(btn) {
     if (!lastResult || !lastResult.summary) return;
     var q = {};

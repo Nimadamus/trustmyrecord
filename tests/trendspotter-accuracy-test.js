@@ -693,6 +693,26 @@ const txt = (doc, sel) => ($(doc, sel) || {}).textContent || '';
     assert(calls.some((c) => c[0] === 'DELETE' && /^\/\d+$/.test(c[1])), JSON.stringify(calls));
   });
 
+  await test('a trend saved on the account reads as Saved after a reload, whatever order the database keeps its params in', async () => {
+    const first = await runIt({ ...base, '/query': priced() });
+    const q = first.requested.filter((u) => u.includes('/trendspotter/query?')).pop().split('?')[1];
+    const pairs = []; new URLSearchParams(q).forEach((v, k) => pairs.push([k, v]));
+    const reversed = {}; pairs.reverse().forEach(([k, v]) => { reversed[k] = v; });
+    const prepare = (win) => {
+      win.localStorage.setItem('trustmyrecord_token', 'tok');
+      const inner = win.fetch;
+      win.fetch = (url, init) => (String(url).includes('/trendspotter/saved')
+        ? Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve({ status: 'ok', items: [{ id: '3', name: 'n', query: reversed, sport: 'NFL',
+          summary: { record: '81-62' }, last_run_at: '2026-11-17T03:30:00Z' }] }) })
+        : inner(url, init));
+    };
+    const { doc, win } = await runIt({ ...base, '/query': priced() }, { prepare });
+    assert.strictEqual(txt(doc, '#saveTrend'), 'Saved');
+    const d = new win.Date('2026-11-17T03:30:00Z');
+    const local = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    assert(txt(doc, '#savedTrends').includes(local), 'saved date is the viewer\'s local day');
+  });
+
   await test('if the account list cannot be read, signed-in members keep the browser list', async () => {
     const prepare = (win) => {
       win.localStorage.setItem('trustmyrecord_token', 'tok');
