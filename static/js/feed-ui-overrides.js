@@ -755,6 +755,7 @@ function aggregateFeedItems(items) {
             return;
         }
         existing.pick_count += itemCount;
+        existing._attach_only = !!existing._attach_only && !!item._attach_only;
         existing._pick_ids = existing._pick_ids.concat(pickIds);
         if (singleUnits != null) existing.batch_net_units = Number(existing.batch_net_units || 0) + singleUnits;
         else if (isSummary && item.batch_net_units != null) existing.batch_net_units = Number(existing.batch_net_units || 0) + Number(item.batch_net_units);
@@ -774,7 +775,7 @@ function aggregateFeedItems(items) {
             existing.graded_at = item.graded_at;
         }
     });
-    return [...pickGroups.values(), ...nonPicks];
+    return [...pickGroups.values()].filter(g => !g._attach_only).concat(nonPicks);
 }
 
 async function loadHydratedActivePolls(pollData) {
@@ -1030,6 +1031,11 @@ async function loadFeedItems() {
                         const key = String(p.pick_id || p.item_id || p.id);
                         if (seen.has(key)) {
                             items[seen.get(key)] = { ...items[seen.get(key)], ...p };
+                        } else {
+                            // attach-only: lends its pick id (Like / Comment on a
+                            // one-pick card) to that day's summary, never a card alone
+                            seen.set(key, items.length);
+                            items.push({ ...p, _attach_only: true });
                         }
                     });
                 } catch(e) {}
