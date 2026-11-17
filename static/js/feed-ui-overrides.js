@@ -762,6 +762,11 @@ function aggregateFeedItems(items) {
         existing.losses_count = Number(existing.losses_count || 0) + (single ? single.losses : Number(item.losses_count || 0));
         existing.pushes_count = Number(existing.pushes_count || 0) + (single ? single.pushes : Number(item.pushes_count || 0));
         existing.voids_count = Number(existing.voids_count || 0) + (single ? single.voids : Number(item.voids_count || 0));
+        // FEED_SUMMARY_SPORT_20261116: one card for a day across sports says Multi.
+        const sportOf = x => String(x.sport || x.sport_key || x.pick_sport_key || '');
+        if (sportOf(item) && sportOf(existing) && sportOf(item) !== sportOf(existing)) {
+            existing.sport = 'multi'; existing.sport_key = ''; existing.pick_sport_key = '';
+        }
         const existingTime = new Date(existing.graded_at || existing.created_at || 0).getTime();
         const itemTime = new Date(item.graded_at || item.created_at || 0).getTime();
         if (itemTime > existingTime) {
