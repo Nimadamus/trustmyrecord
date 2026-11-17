@@ -1395,10 +1395,10 @@
     // MB_TEAM_SIDE_20261113: with a team named the reader wants that team's record, not the
     // record of every home or road side.
     if (m.team_record && m.team_record.win_pct != null) {
-      var tr = m.team_record, venue = el('gameHomeAway').value;
+      var tr = m.team_record, venue = (res.filters && res.filters.home_away) || 'any'; // MB_FE_BUGHUNT_20261116
       tiles.push(metricTile(tr.team_contains + (venue === 'home' ? ' at home' : venue === 'away' ? ' on the road' : ''),
         tr.win_pct + '%', tr.wins + '-' + tr.losses + (tr.ties ? '-' + tr.ties : '')));
-    } else if (m.side_win_pct != null && el('gameHomeAway').value !== 'home') {
+    } else if (m.side_win_pct != null && ((res.filters && res.filters.home_away) || 'any') !== 'home') {
       // MB_TILES_20261113: "Side win, home teams" repeated the Home win tile beside it.
       tiles.push(metricTile('Road win', m.side_win_pct + '%', 'away teams'));
     }
