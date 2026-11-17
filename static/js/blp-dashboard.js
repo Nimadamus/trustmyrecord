@@ -363,15 +363,27 @@
         if (!loggedIn()) { location.href = '/login/?next=' + encodeURIComponent(appUrl(msg)); return; }
         var f = frame();
         if (!f || !f.contentWindow) { location.href = appUrl(msg); return; }
-        if (!frameReady) { pending = msg; } else { f.contentWindow.postMessage(msg, location.origin); }
+        // The app's listener exists once its page has loaded; its own ready
+        // note can arrive before this script listens, so check the page too.
+        if (frameReady || appLoaded(f)) f.contentWindow.postMessage(msg, location.origin); else pending = msg;
         var tool = $('tool') || f;
         tool.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
+    function appLoaded(f) {
+        try {
+            var w = f.contentWindow;
+            return w.location.pathname.indexOf('/betlegend-pro/app/') === 0 && w.document.readyState === 'complete';
+        } catch (e) { return false; }
+    }
+    function flush() {
+        var f = frame();
+        if (pending && f && f.contentWindow) { f.contentWindow.postMessage(pending, location.origin); pending = null; }
+    }
     window.addEventListener('message', function (ev) {
         if (ev.origin !== location.origin || !ev.data || ev.data.type !== 'blp-embed-ready') return;
-        frameReady = true;
-        if (pending) { var f = frame(); f.contentWindow.postMessage(pending, location.origin); pending = null; }
+        frameReady = true; flush();
     });
+    if (frame()) frame().addEventListener('load', function () { if (appLoaded(frame())) flush(); });
     function sportForIds(ids) {
         if (state.sport !== 'ALL') return state.sport;
         for (var k = 0; k < SPORTS.length; k++) if (ids.every(function (i) { return onFor(SPORTS[k])[i]; })) return SPORTS[k];
