@@ -366,7 +366,7 @@
   function describeFilters(f) {
     var bits = [sportLabel(f.sport_key)];
     bits.push((f.market_types && f.market_types.length)
-      ? f.market_types.map(marketLabel).join(', ') : 'all markets');
+      ? f.market_types.map(function (k) { return marketLabelFor(k, f.sport_key); }).join(', ') : 'all markets');
     if (f.side && f.side !== 'any') bits.push(f.side === 'favorite' ? 'favorites only' : 'underdogs only');
     if (f.home_away && f.home_away !== 'any') bits.push(f.home_away + ' side');
     if (f.min_odds != null || f.max_odds != null) {
@@ -427,6 +427,8 @@
     var sport = currentSport();
     if (!sport) { setMessage('Pick a sport first.', 'error'); return; }
     if (!sport.researchable) {
+      state.btSeq = (state.btSeq || 0) + 1; // any run still in flight must not overwrite this
+      el('runBtn').disabled = false;
       el('resultFreshness').textContent = '';
       state.lastDescribe = describeFilters(filtersFromForm());
       el('resultsBody').innerHTML = '<p class="result-summary"><b>Your conditions:</b> ' + esc(state.lastDescribe) + '</p>'
@@ -437,22 +439,28 @@
       setMessage('No history to backtest for this sport. You can still start tracking it forward.', 'ok');
       return;
     }
+    var oddsBad = oddsProblem();
+    if (oddsBad) { setMessage(oddsBad, 'error'); return; }
     setMessage('');
+    var seq = state.btSeq = (state.btSeq || 0) + 1;
     el('runBtn').disabled = true;
     skeletonResults();
     try {
       var filters = backtestFiltersFromForm();
-      state.lastDescribe = describeFilters(filters);
+      var describe = describeFilters(filters);
       var res = await api().runBacktest(filters);
+      if (seq !== state.btSeq) return; // a newer run was started; its answer is the one to show
+      state.lastDescribe = describe;
       renderResults(res);
       if (window.innerWidth <= 1000) {
         el('resultsBody').parentNode.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
     } catch (e) {
+      if (seq !== state.btSeq) return;
       el('resultFreshness').textContent = '';
       el('resultsBody').innerHTML = '<p class="notice error">' + esc((e && e.message) || 'Backtest failed. Try again.') + '</p>';
     } finally {
-      el('runBtn').disabled = false;
+      if (seq === state.btSeq) el('runBtn').disabled = false;
     }
   }
 
@@ -644,14 +652,34 @@
     }
   }
 
-  function isoDay(ms) { return new Date(ms).toISOString().slice(0, 10); }
+  // MB_FE_BUGHUNT_20261116: the user's own calendar day. toISOString() is UTC, so after 4 PM
+  // Pacific every preset period ended a day later than its label.
+  function isoDay(ms) {
+    var d = new Date(ms);
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+  // End of a picked day in the user's time zone, sent as an absolute instant. A bare
+  // 'YYYY-MM-DDT23:59:59' was read as UTC by the server: 3:59 PM Pacific, dropping that night.
+  function endOfDayIso(v) { return v ? new Date(v + 'T23:59:59').toISOString() : null; }
+  function untilProblem(v) {
+    if (!v) return '';
+    var t = new Date(v + 'T23:59:59').getTime();
+    if (!Number.isFinite(t)) return 'That end date is not a real day.';
+    if (t <= Date.now()) return 'The tracking end date has to be today or later.';
+    if (t > Date.now() + 730 * DAY_MS) return 'The tracking end date cannot be more than two years out.';
+    return '';
+  }
+  function oddsProblem() {
+    var bad = ['minOdds', 'maxOdds'].filter(function (id) { var x = el(id); return x && x.validity && x.validity.badInput; });
+    return bad.length ? 'Odds must be a whole number like -150 or 150 (no plus sign needed).' : '';
+  }
 
   function trackUntilPayload() {
     if (state.period === 'open') return null;
     var v = el('trackUntil').value;
     // A date input gives a bare day. Run to the end of it, not its midnight,
     // or "track until the 30th" drops the 30th's card.
-    return v ? v + 'T23:59:59' : null;
+    return endOfDayIso(v);
   }
 
   // A name the user recognises later, built from the conditions themselves.
@@ -682,7 +710,10 @@
   // One action creates the model AND starts it. A model that exists but is
   // not watching anything is not the product.
   async function startTracking() {
-    if (!hasSession()) { setMessage('Log in to start tracking a model. It is free.', 'error'); return; }
+    if (state.saving) return;
+    if (!hasSession()) { setMessage('Log in to start tracking a model. It is free.', 'error'); el('loginHint').hidden = false; return; }
+    var oddsBad = oddsProblem();
+    if (oddsBad) { setMessage(oddsBad, 'error'); return; }
     var input = el('modelName');
     var name = input ? input.value.trim() : '';
     if (!name) {
@@ -698,6 +729,8 @@
       setMessage('Choose how long to track this model, or pick "Until I stop it".', 'error');
       return;
     }
+    var untilBad = state.period === 'open' ? '' : untilProblem(el('trackUntil').value);
+    if (untilBad) { setMessage(untilBad, 'error'); return; }
     var payload = {
       name: name.slice(0, 120),
       sport_key: el('modelSport').value,
@@ -705,6 +738,8 @@
       criteria_json: { schema_version: 3, filters: filtersFromForm() },
       bankroll_json: {}
     };
+    state.saving = true;
+    if (el('saveBtn')) el('saveBtn').disabled = true;
     try {
       // A saved model tracks itself from the moment it is saved. The server
       // reconciles every future graded pick that matches on each read, so the
@@ -722,7 +757,12 @@
           var tr = await api().trackModel(newId, opts);
           tracking = true;
           taken = (tr && tr.board_picks_taken) || 0;
-        } catch (e) { trackError = (e && e.message) || ''; if (isModelLimit(e)) showModelLock(e); }
+        } catch (e) {
+          trackError = (e && e.message) || '';
+          if (isModelLimit(e)) showModelLock(e);
+          // A model that never started tracking is not kept: every retry used to leave a draft.
+          try { await api().deleteModel(newId); newId = null; } catch (_) { /* left as a draft */ }
+        }
       }
       state.nameTouched = false;
       var stakeTxt = (el('stakeUnits') && el('stakeUnits').value) || '1';
@@ -733,12 +773,19 @@
             + '. It read the board straight away and found '
             + taken + ' qualifying wager' + (taken === 1 ? '' : 's')
             + '. From here it checks on its own every 20 minutes and grades each one on the final score.')
-        : ('Model created but tracking did not start' + (trackError ? ': ' + trackError : '')
-            + '. Use Start tracking on its card below.'), tracking ? 'ok' : 'error');
+        : ('Tracking did not start' + (trackError ? ': ' + trackError : '')
+            + (newId ? '. The model was saved; use Start tracking on its card below.' : '. Nothing was saved.')), tracking ? 'ok' : 'error');
+      if (tracking) { var lock = document.getElementById('mbProLock'); if (lock) lock.remove(); }
       await loadModels();
       if (newId && tracking) viewForward(newId);
     } catch (e) {
-      setMessage((e && e.message) || 'Could not create the model.', 'error');
+      var why = e && e.data && Array.isArray(e.data.errors)
+        ? e.data.errors.map(function (x) { return x && (x.msg || x.message || x.error || (typeof x === 'string' ? x : '')); }).filter(Boolean).join('; ') : '';
+      setMessage(((e && e.message) || 'Could not create the model.') + (why ? ': ' + why : ''), 'error');
+      if (e && e.status === 401) el('loginHint').hidden = false;
+    } finally {
+      state.saving = false;
+      if (el('saveBtn')) el('saveBtn').disabled = false;
     }
   }
 
@@ -755,6 +802,7 @@
       state.models = (data && data.models) || [];
       renderModels();
     } catch (e) {
+      if (e && e.status === 401) { el('loginHint').hidden = false; el('modelList').innerHTML = ''; return; }
       el('modelList').innerHTML = '<div class="model-card"><p class="notice error">' + esc((e && e.message) || 'Could not load models.') + '</p></div>';
     }
   }
@@ -882,7 +930,7 @@
             + '<label>Units per wager<input type="number" min="0.1" max="100" step="any" data-f="stake" value="'
             + (m.stake_units ? Number(m.stake_units) : 1) + '"></label>'
             + '<label>Tracking ends<input type="date" data-f="until" value="'
-            + (m.track_until ? esc(new Date(m.track_until).toISOString().slice(0, 10)) : '') + '"></label>'
+            + (m.track_until ? esc(isoDay(new Date(m.track_until).getTime())) : '') + '"></label>'
             + '</div>'
             + '<span class="hint">Clear the date to run until you stop it. Wagers already logged keep the stake they were booked at.</span>'
             + '<div class="button-row split">'
@@ -898,6 +946,7 @@
             + (m.auto_scan === false ? 'Resume tracking' : 'Pause tracking') + '</button>'
             + '<button type="button" data-act="terms" data-id="' + m.id + '">Edit period</button>'
             + '<button type="button" data-act="publish" data-id="' + m.id + '">Submit for public listing</button>'
+            + '<button type="button" data-act="archive" data-id="' + m.id + '">Archive</button>'
           : '<button type="button" class="primary" data-act="track" data-id="' + m.id + '">Start tracking</button>')
       + '<button type="button" data-act="load" data-id="' + m.id + '">Reuse these conditions</button>'
       + '<button type="button" class="danger" data-act="delete" data-id="' + m.id + '">Delete</button>'
@@ -947,7 +996,9 @@
     if (!box) return;
     var stake = box.querySelector('[data-f="stake"]').value;
     var until = box.querySelector('[data-f="until"]').value;
-    var payload = { track_until: until ? until + 'T23:59:59' : null };
+    var bad = untilProblem(until);
+    if (bad) { setMessage(bad, 'error'); return; }
+    var payload = { track_until: endOfDayIso(until) };
     if (stake !== '') payload.stake_units = Number(stake);
     try {
       var res = await api().trackModel(id, payload);
@@ -991,14 +1042,30 @@
   }
 
   async function trackModel(id) {
+    var untilBad = state.period === 'open' ? '' : untilProblem(el('trackUntil').value);
+    if (untilBad) { setMessage(untilBad, 'error'); return; }
+    var opts = { track_until: trackUntilPayload() };
+    var stakeEl = el('stakeUnits');
+    if (stakeEl && stakeEl.value !== '') opts.stake_units = Number(stakeEl.value);
     try {
-      await api().trackModel(id);
+      await api().trackModel(id, opts);
       setMessage('Forward tracking started.', 'ok');
       await loadModels();
     } catch (e) {
       setMessage((e && e.message) || 'Could not start tracking.', 'error');
       if (isModelLimit(e)) showModelLock(e);
     }
+  }
+
+  // Archiving retires a model: it stops taking positions, frees an active slot, and its
+  // record is kept (only Delete removes it).
+  async function archiveModel(id) {
+    try {
+      await api().archiveModel(id);
+      if (state.forwardOpenId === id) { el('forwardPanel').hidden = true; state.forwardOpenId = null; }
+      setMessage('Model archived. It takes no new wagers and no longer counts toward your active models. Its record is kept.', 'ok');
+      await loadModels();
+    } catch (e) { setMessage((e && e.message) || 'Could not archive.', 'error'); }
   }
 
   async function deleteModel(id) {
@@ -1017,26 +1084,24 @@
     state.forwardOpenId = id;
     panel.hidden = false;
     panel.innerHTML = '<div class="skeleton" style="height:150px;border-radius:12px;margin-top:16px"></div>';
-    var autoHtml = '';
-    var fwdHtml = '';
-    try {
-      var auto = await api().getModelAuto(id);
-      autoHtml = renderAuto(auto);
-    } catch (e) {
-      autoHtml = '<p class="notice error">' + esc((e && e.message) || 'Could not load the model\'s positions.') + '</p>';
-    }
-    try {
-      var data = await api().getModelForward(id);
-      fwdHtml = forwardHtml(data);
-    } catch (e) {
-      fwdHtml = '<p class="notice error">' + esc((e && e.message) || 'Could not load matching picks.') + '</p>';
-    }
+    var out = await Promise.allSettled([api().getModelAuto(id), api().getModelForward(id)]);
+    if (state.forwardOpenId !== id) return; // another model was opened meanwhile
+    var autoHtml = out[0].status === 'fulfilled' ? renderAuto(out[0].value)
+      : '<p class="notice error">' + esc((out[0].reason && out[0].reason.message) || 'Could not load the model\'s positions.') + '</p>';
+    var fwdHtml = out[1].status === 'fulfilled' ? forwardHtml(out[1].value)
+      : '<p class="notice error">' + esc((out[1].reason && out[1].reason.message) || 'Could not load matching picks.') + '</p>';
     panel.innerHTML = autoHtml + fwdHtml;
+  }
+
+  // A spread of +1.5 read "Rays 1.5": the sign is the bet.
+  function signedLine(line, market) {
+    var n = Number(line);
+    return (Number.isFinite(n) && n > 0 && /spread/i.test(String(market || ''))) ? '+' + n : String(line);
   }
 
   function autoPickRow(p, showResult) {
     var when = p.commence_time ? new Date(p.commence_time) : null;
-    var sel = esc(p.selection) + (p.line != null ? ' ' + p.line : '');
+    var sel = esc(p.selection) + (p.line != null ? ' ' + signedLine(p.line, p.market) : '');
     return '<tr><td>' + esc(when ? when.toLocaleDateString() + ' ' + when.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '-')
       + '</td><td>' + esc(p.game || '-') + '</td><td>' + esc(marketLabel(p.market)) + '</td>'
       + '<td>' + sel + '</td><td>' + fmtOdds(p.odds) + '</td><td>' + esc(p.book || '-') + '</td>'
@@ -1112,6 +1177,16 @@
         + '</tbody></table></div>'
       : '';
 
+    var nowMs = Date.now();
+    var live = (data.picks || []).filter(function (p) {
+      return p.status === 'pending' && p.commence_time && new Date(p.commence_time).getTime() <= nowMs;
+    });
+    var liveHtml = live.length
+      ? '<h3 class="section-title">In progress (' + live.length + ')</h3>'
+        + '<div class="table-scroll"><table class="forward-list"><thead><tr><th>Started</th><th>Game</th>'
+        + '<th>Market</th><th>Selection</th><th>Price taken</th><th>Book</th><th>Stake</th></tr></thead><tbody>'
+        + live.map(function (p) { return autoPickRow(p, false); }).join('') + '</tbody></table></div>'
+      : '';
     var settled = (data.picks || []).filter(function (p) { return p.status !== 'pending'; }).slice(0, 40);
     var settledHtml = settled.length
       ? '<h3 class="section-title">Graded wagers</h3>'
@@ -1126,7 +1201,7 @@
       + ' a day, from games starting inside ' + (caps.lookahead_hours || 72)
       + ' hours. These wagers are the model\'s own forward record: they never touch the verified graded ledger, your profile or the leaderboards, and no backtest result is ever added to them.</p>';
 
-    return head + tiles + upcomingHtml + dayHtml + settledHtml + note;
+    return head + tiles + upcomingHtml + liveHtml + dayHtml + settledHtml + note;
   }
 
   function statusPill(s) {
@@ -1152,7 +1227,7 @@
       + '</div>';
     var rows = (data.picks || []).map(function (p) {
       return '<tr><td>' + esc(String(p.date).slice(0, 10)) + '</td><td>' + esc(p.game || '-') + '</td>'
-        + '<td>' + esc(marketLabel(p.market)) + '</td><td>' + esc(p.selection) + (p.line != null ? ' ' + p.line : '')
+        + '<td>' + esc(marketLabel(p.market)) + '</td><td>' + esc(p.selection) + (p.line != null ? ' ' + esc(signedLine(p.line, p.market)) : '')
         + '</td><td>' + fmtOdds(p.odds) + '</td><td>' + esc(p.source || '-') + '</td>'
         + '<td>' + statusPill(p.grading_status) + (p.admin_status ? ' <small>(admin)</small>' : '') + '</td>'
         + '<td>' + (p.units == null ? '-' : fmtUnits(p.units)) + '</td></tr>';
@@ -1481,20 +1556,22 @@
       if (act === 'terms-save') { saveTerms(id); return; }
       // Tracking and deleting are one-way, so they arm first and fire on the
       // second click. Same guard a confirm() gave, without the modal.
-      if (act === 'track' || act === 'delete') {
+      if (act === 'track' || act === 'delete' || act === 'archive') {
         if (b.getAttribute('data-armed')) {
           disarmActions();
-          if (act === 'track') trackModel(id); else deleteModel(id);
+          if (act === 'track') trackModel(id); else if (act === 'archive') archiveModel(id); else deleteModel(id);
           return;
         }
         disarmActions();
         b.setAttribute('data-armed', '1');
         b.setAttribute('data-label', b.textContent);
-        b.textContent = act === 'track' ? 'Confirm tracking' : 'Confirm delete';
+        b.textContent = act === 'track' ? 'Confirm tracking' : (act === 'archive' ? 'Confirm archive' : 'Confirm delete');
         b.classList.add('armed');
         setMessage(act === 'track'
           ? 'Tracking logs every future wager that meets these conditions, from now on. Click again to confirm.'
-          : 'This deletes the model and its whole forward record. Click again to confirm.', 'error');
+          : (act === 'archive'
+            ? 'Archiving stops this model taking new wagers and frees an active slot. Its record is kept. Click again to confirm.'
+            : 'This deletes the model and its whole forward record. Click again to confirm.'), 'error');
       }
     });
     var dt = el('datasetToggle');
