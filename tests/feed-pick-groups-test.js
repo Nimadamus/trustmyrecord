@@ -397,5 +397,14 @@ function checkSession(n) {
     assert.strictEqual(ids.filter((id) => id.startsWith('opgroup:')).length, 1, 'one card for the sitting');
   });
 
+  await t('welcome (joined) cards keep their own card and comment thread', () => {
+    const sb = boot();
+    const at = '2026-11-15T21:30:00Z';
+    const out = sb.aggregateFeedItems([ms(31, 'newbie1', 'joined', at), ms(32, 'newbie2', 'joined', at), ms(33, 'Ken', 'pick_count', at), ms(34, 'Ann', 'pick_count', at)]);
+    const g = out.find((i) => i._group === 'milestones');
+    assert.ok(g && g._members.every((m) => m.post_type !== 'joined'));
+    assert.strictEqual(out.filter((i) => i.post_type === 'joined').length, 2);
+  });
+
   console.log(passed + ' passed');
 })();

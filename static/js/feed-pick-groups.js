@@ -205,7 +205,9 @@
     var MIN_MILESTONES = 2;
     var SAME_MEMBER_MS_WINDOW = 24 * 60 * 60 * 1000;
     function groupMilestones(items) {
-        var ms = items.filter(isMilestone).sort(function (a, b) { return t(b) - t(a); });
+        // FEED_JOINED_STANDALONE_20261116: a welcome card carries its own comment
+        // thread (the official welcome), which a grouped row has no room for.
+        var ms = items.filter(function (i) { return isMilestone(i) && i.post_type !== 'joined'; }).sort(function (a, b) { return t(b) - t(a); });
         if (ms.length < MIN_MILESTONES) return items;
         var absorbed = new Set();
         var groups = [];
@@ -238,7 +240,7 @@
                     _group: 'milestones', item_type: 'milestone', post_type: 'milestone_group',
                     item_id: 'msgroup:' + ids[0], created_at: run[0].created_at,
                     likes_count: run.reduce(function (s, m) { return s + (Number(m.likes_count) || 0); }, 0),
-                    comments_count: 0,
+                    comments_count: run.reduce(function (s, m) { return s + (Number(m.comments_count) || 0); }, 0),
                     _members: run, _member_ids: ids,
                     _sig: sig(run.map(function (m) { return m.item_id + ':' + (m.likes_count || 0) + ':' + (m.congratsed_by_user ? 1 : 0); }))
                 });
