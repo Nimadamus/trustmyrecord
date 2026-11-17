@@ -250,7 +250,7 @@
         if ($('bxFilterCount')) $('bxFilterCount').textContent = String(n);
         var from = Math.min.apply(null, SPORTS.map(function (s) { return (CAT.sports[s] || {}).from || 9999; }));
         var to = Math.max.apply(null, SPORTS.map(function (s) { return (CAT.sports[s] || {}).to || 0; }));
-        if ($('bxYears') && from < 9999 && to) $('bxYears').textContent = from + '–' + to;
+        if ($('bxYears') && from < 9999 && to) $('bxYears').textContent = 'Since ' + from;
     }
 
     // ------------------------------------------------------ search
@@ -446,7 +446,7 @@
             var wk = Date.now() - 7 * 864e5;
             var last7 = items.filter(function (it) { return it.created_at && new Date(it.created_at).getTime() >= wk; }).length;
             var newest = items.reduce(function (m, it) { var t = it.created_at ? new Date(it.created_at).getTime() : 0; return t > m ? t : m; }, 0);
-            var latest = newest ? new Date(newest).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—';
+            var latest = newest ? new Date(newest).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'None yet';
             var cap = function (n) { return items.length >= 100 && n >= 100 ? '100+' : String(n); };
             box.innerHTML = '<div class="bx-stats">'
                 + '<div class="bx-stat"><b>' + last7 + '</b><span>Reports (7d)</span></div>'
