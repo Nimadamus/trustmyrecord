@@ -7633,6 +7633,9 @@
             }
         } else if (profileView === 'analytics' || profileView === 'stats') {
             target = document.getElementById('analyticsSection');
+        } else if ((location.hash || '').replace('#', '') === 'awards') {
+            // the feed's "View awards" opened the tab but left the page at the top
+            target = document.querySelector('.profile-tab-panel[data-panel="awards"]');
         }
 
         if (!target) return;
