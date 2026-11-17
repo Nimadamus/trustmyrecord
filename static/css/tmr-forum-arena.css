@@ -645,3 +645,11 @@ body.tmr-arena .tmrlh-footwrap{margin-left:0 !important}
   body.tmr-arena.tfa-v-user .tfa-hero-art{display:none}
   body.tmr-arena .tfa-hero-title{white-space:nowrap}
 }
+
+/* CLS_FORUM_20261116. The arena script builds the hero, toolbar and side rails after the first
+   paint, which pushed the whole forum down (layout shift ~1.0 on desktop). Until the hero exists the
+   forum body stays out of sight with the hero's space held, so it appears once, in place. If the
+   script never runs, the forum is revealed after 3 seconds as before. */
+body.classic-forum:not(:has(#tfaHero)) .fshell{visibility:hidden;margin-top:192px;animation:tfaClsReveal 0s 3s forwards}
+@media (max-width:860px){body.classic-forum:not(:has(#tfaHero)) .fshell{margin-top:141px}}
+@keyframes tfaClsReveal{to{visibility:visible;margin-top:0}}

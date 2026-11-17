@@ -948,3 +948,8 @@ html body.tmr-ds .tmr-lc-launcher.is-wide:not(:hover):not(:focus-visible) .tmr-l
 @media (min-width: 769px) {
   html body.tmr-ds .hm-feat-card.x-cat-streak .hm-feat-stats { grid-template-columns: 0.8fr 1.6fr 1fr 1fr; }
 }
+
+/* CLS_HANDICAPPERS_20261116. The breadcrumb is inserted at the top of the page after the first
+   paint and pushed the header down. Hold its space (crumb + 8px gap) until it arrives. */
+html body.tmr-ds .hm-page:not(:has(> .tmrlh-crumbs)){padding-top:70px}
+@media (max-width:768px){html body.tmr-ds .hm-page:not(:has(> .tmrlh-crumbs)){padding-top:68px}}
