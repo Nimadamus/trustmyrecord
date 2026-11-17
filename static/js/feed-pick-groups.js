@@ -652,6 +652,26 @@
                     if (cardsShown < 10 && more && more.style.display === 'block' && typeof loadMorePosts === 'function') { loadMorePosts(); return r; }
                 }
             } catch (x) { /* the Load More button still works */ }
+            // FEED_DAY_COMPLETE_20261116: the newest graded card adds up the member's
+            // whole day, but an earlier batch of that day can sit pages down (the card
+            // said KenBcapper 39 picks while the rail, which reads further, said 181).
+            // Read on, up to 5 pages, until the page reaches past the start of that day.
+            try {
+                if (typeof feedOffset !== 'undefined' && feedOffset < 4 * FEED_LIMIT && typeof _feedRawItems !== 'undefined' && _feedRawItems.length) {
+                    var raw = _feedRawItems;
+                    var newest = null;
+                    for (var i = 0; i < raw.length; i++) {
+                        if (raw[i] && raw[i].post_type === 'graded_pick_summary') { newest = raw[i]; break; }
+                    }
+                    if (newest) {
+                        var dayStart = new Date(newest.graded_at || newest.created_at || 0); dayStart.setHours(0, 0, 0, 0);
+                        var oldest = Infinity;
+                        raw.forEach(function (it) { var ts = t(it); if (ts && ts < oldest) oldest = ts; });
+                        var more2 = document.getElementById('loadMore');
+                        if (oldest >= dayStart.getTime() && more2 && more2.style.display === 'block' && typeof loadMorePosts === 'function') { loadMorePosts(); return r; }
+                    }
+                }
+            } catch (x) { /* the Load More button still works */ }
             try { sharedPickFallback(); } catch (x) { /* optional */ }
             return r;
         };
