@@ -631,10 +631,36 @@
         sharedChecked = true;
         var wanted = '';
         try { wanted = new URLSearchParams(location.search).get('post') || ''; } catch (x) { return; }
+        if (document.querySelector('#feedList [data-id="' + wanted.replace(/[\\"]/g, '\\$&') + '"]')) return;
         var m = /^openpick:(\d+)$/.exec(wanted);
-        if (!m) return;
-        if (document.querySelector('#feedList [data-id="' + wanted + '"]')) return;
-        location.replace('/pick/?id=' + m[1]);
+        if (m) { location.replace('/pick/?id=' + m[1]); return; }
+        // FEED_SHARED_OLD_POST_20261116: a shared post or milestone older than the
+        // pages the feed loads showed nothing at all. Fetch it and show it above
+        // the feed; a member's graded day opens their picks.
+        var g = /^pick_group_(.+)_(graded|locked)_\d{4}-\d{2}-\d{2}$/.exec(wanted);
+        if (g) { location.replace('/profile/?user=' + encodeURIComponent(g[1]) + '&view=picks'); return; }
+        var filter = /^\d+$/.test(wanted) ? 'posts' : (/^milestone:\d+$/.test(wanted) ? 'milestones' : '');
+        if (!filter || !window.api || typeof window.api.request !== 'function') return;
+        var pages = filter === 'posts' ? [0] : [0, 100, 200];
+        var look = function (i) {
+            if (i >= pages.length) return Promise.resolve(null);
+            return window.api.request('/feed?limit=100&offset=' + pages[i] + '&filter=' + filter).then(function (d) {
+                var hit = ((d && d.feed) || []).filter(function (x) { return String(x.item_id) === wanted || String(x.id) === wanted; })[0];
+                return hit || (((d && d.feed) || []).length < 100 ? null : look(i + 1));
+            });
+        };
+        look(0).then(function (item) {
+            if (!item || typeof window.renderFeedItem !== 'function') return;
+            var list = document.getElementById('feedList');
+            if (!list || document.getElementById('fpgShared')) return;
+            var wrap = document.createElement('div');
+            wrap.id = 'fpgShared';
+            wrap.className = 'fpg-shared';
+            wrap.innerHTML = '<div class="fpg-shared-label"><i class="fas fa-link"></i> Shared with you</div>' + window.renderFeedItem(item);
+            list.parentNode.insertBefore(wrap, list);
+            var card = wrap.querySelector('.feed-item');
+            if (card) { card.classList.add('is-shared-target'); card.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
+        }).catch(function () { /* the feed itself is still there */ });
     }
 
     // A grouped first page can be short; fill the screen with up to two more pages.
