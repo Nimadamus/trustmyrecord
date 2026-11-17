@@ -1091,6 +1091,14 @@ async function loadFeedItems() {
             items = items.map(i => attachUserRecord(i, userMap[getUsername(i)]));
             rawPage = items;
             if (appending) {
+                // FEED_PAGE_OVERLAP_20261116: pages are by offset, so a pick posted
+                // between two loads shifts the next page and repeats the last item
+                // (a summary then counted twice, an open pick listed twice).
+                const rawKey = i => String(i.item_type || '') + '|' + String(i.item_id != null ? i.item_id : (i.pick_id != null ? i.pick_id : (i.id != null ? i.id : '')));
+                const had = new Set(_feedRawItems.map(rawKey));
+                rawPage = rawPage.filter(i => /\|$/.test(rawKey(i)) || !had.has(rawKey(i)));
+            }
+            if (appending) {
                 pageOnlyItems = aggregateFeedItems(rawPage.map(i => ({ ...i })));
                 items = _feedRawItems.concat(rawPage).map(i => ({ ...i }));
             } else {

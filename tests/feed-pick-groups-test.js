@@ -382,5 +382,20 @@ function checkSession(n) {
     assert.ok(!sb.renderFeedItem(same[0]).includes('>Multi<'));
   });
 
+  await t('Load More: an item repeated by a shifted page is not listed twice', async () => {
+    const env = bootLoad();
+    const fill = []; for (let i = 0; i < 18; i++) fill.push({ item_id: 'post_' + i, item_type: 'feed_post', username: 'u' + i, created_at: new Date(Date.UTC(2026, 10, 16, 14, 0) - i * 60000).toISOString() });
+    const ken = session('KenBcapper', 4, 100);
+    let p = env.sb.loadFeedItems(); env.pending[0].resolve({ feed: fill.concat([ken[0], ken[1]]) }); await p;
+    env.sb.feedOffset = 20;
+    // a new post arrived on top, so page 2 starts with page 1's last item again
+    p = env.sb.loadFeedItems(); env.pending[1].resolve({ feed: [ken[1]].concat(ken.slice(2)) }); await p;
+    const raw = vm.runInContext('_feedRawItems', env.sb).map((i) => i.item_id);
+    assert.strictEqual(raw.length, new Set(raw).size, 'the repeated item is kept once');
+    assert.strictEqual(raw.filter((id) => String(id).startsWith('openpick:')).length, 4, 'all four picks present');
+    const ids = env.nodes.map((n) => n.id);
+    assert.strictEqual(ids.filter((id) => id.startsWith('opgroup:')).length, 1, 'one card for the sitting');
+  });
+
   console.log(passed + ' passed');
 })();
