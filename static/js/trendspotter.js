@@ -53,6 +53,11 @@
     lineMin: '', lineMax: '', totalMin: '', totalMax: '', priceMin: '', priceMax: '',
     minGames: 10
   };
+  /* TS_BUGHUNT_20261116. Back/forward restores exactly the URL's query, so it starts from these. */
+  var DEFAULT_STATE = JSON.parse(JSON.stringify(state));
+  var queryToken = 0;       // a response for an older query (or one the page moved away from) is dropped
+  var lastResultKey = '';   // the query that produced lastResult: Save and Share use it, not the live form
+  var restoringUrl = false; // set while back/forward rebuilds the page: nothing writes history then
   var matchups = [];
   var matchupStatus = 'idle';
   var running = false;
@@ -171,7 +176,8 @@
 
   function attemptJson(url, options) {
     var controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
-    var timer = controller ? setTimeout(function () { controller.abort(); }, options.timeout || 20000) : null;
+    var timedOut = false;
+    var timer = controller ? setTimeout(function () { timedOut = true; controller.abort(); }, options.timeout || 20000) : null;
     if (options.register && controller) options.register(controller);
     return fetch(url, {
       headers: authHeaders(),
@@ -196,6 +202,12 @@
       return body;
     }, function (error) {
       if (timer) clearTimeout(timer);
+      /* The page's own timeout is not a user abort: report it as a slow answer, never silently. */
+      if (timedOut && error && error.name === 'AbortError') {
+        var slow = new Error('Timed out');
+        slow.status = 504; slow.timedOut = true;
+        throw slow;
+      }
       throw error;
     });
   }
@@ -562,6 +574,7 @@
   var urlEntryIsNavigable = false;
 
   function writeUrl(replace) {
+    if (restoringUrl) return;
     var params = new URLSearchParams();
     URL_KEYS.forEach(function (k) {
       var v = state[k];
@@ -672,6 +685,15 @@
     return p;
   }
 
+  /* Moving to a matchup, another league or a reset: the query in flight is no longer wanted. */
+  function cancelQuery() {
+    queryToken++;
+    if (inflight) { inflight.abort(); inflight = null; }
+    running = false;
+    lastRunKey = '';
+    if (el && el.results) el.results.setAttribute('aria-busy', 'false');
+  }
+
   function runQuery() {
     touched = true;
     sheetToken++;
@@ -689,6 +711,7 @@
     if (!running && key === lastRunKey && lastResult) return;
 
     if (inflight) { inflight.abort(); inflight = null; }
+    var token = ++queryToken;
     lastRunKey = key;
     running = true;
     tableExpanded = false;
@@ -702,18 +725,21 @@
       timeout: 25000,
       register: function (ctrl) { inflight = ctrl; }
     }).then(function (data) {
+      if (token !== queryToken) return;
       running = false;
       inflight = null;
       lastResult = data;
+      lastResultKey = key;
       el.results.setAttribute('aria-busy', 'false');
       renderResult(data);
       renderSummary();
     }, function (error) {
+      if (token !== queryToken) return;
+      if (error && error.name === 'AbortError') return;
       running = false;
       inflight = null;
       el.results.setAttribute('aria-busy', 'false');
       renderSummary();
-      if (error && error.name === 'AbortError') return;
       if (error && error.status === 400 && error.body) { renderResult(error.body); return; }
       var slow = error && error.status === 504;
       renderState('error',
@@ -878,7 +904,7 @@
   }
   function syncSaveButton() {
     var b = document.getElementById('saveTrend');
-    if (b && !savedBusy) b.textContent = isSaved(queryParams().toString()) ? 'Saved' : 'Save';
+    if (b && !savedBusy) b.textContent = isSaved(resultKey()) ? 'Saved' : 'Save';
   }
   function readSaved() {
     try { var v = JSON.parse(window.localStorage.getItem(SAVED_KEY) || '[]'); return Array.isArray(v) ? v : []; }
@@ -891,7 +917,7 @@
   function saveToAccount(btn) {
     if (!lastResult || !lastResult.summary) return;
     var q = {};
-    queryParams().forEach(function (v, k) { q[k] = v; });
+    new URLSearchParams(resultKey()).forEach(function (v, k) { q[k] = v; });
     var s = lastResult.summary;
     savedBusy = true;
     if (btn) btn.textContent = 'Saving\u2026';
@@ -908,9 +934,10 @@
         if (btn) btn.textContent = err && err.status === 422 ? 'List full (50)' : 'Could not save';
       });
   }
+  function resultKey() { return lastResultKey || queryParams().toString(); }
   function saveCurrent() {
     if (!lastResult || !lastResult.summary) return false;
-    var key = queryParams().toString();
+    var key = resultKey();
     var s = lastResult.summary;
     var list = readSaved().filter(function (x) { return x.key !== key; });
     list.unshift({ key: key, statement: lastResult.statement, record: s.record, win_rate: s.win_rate, sample: s.sample,
@@ -974,6 +1001,8 @@
   var sheetData = null;
   var sheetToken = 0;   // a trend run after the click wins: a late sheet never replaces it
   function loadSheet(m) {
+    cancelQuery();
+    lastResult = null;
     var token = ++sheetToken;
     var p = new URLSearchParams();
     p.set('sport', state.sport); p.set('home', m.home_id); p.set('away', m.away_id);
@@ -1020,10 +1049,25 @@
       block('Head to head', function (r) { return r.group === 'h2h'; }) +
       '</article>' + savedHtml();
   }
+  /* After a league change, drop filters the new league does not offer (a baseball situation, a
+     season before its history, an NFL-only rest option). */
+  function fitStateToSport() {
+    var c = sportCaps();
+    if (!c) return;
+    if (state.situation !== 'any' && !(c.situations || []).some(function (x) { return x.id === state.situation; })) state.situation = 'any';
+    if (state.rest !== 'any' && !(c.rest_options || []).some(function (x) { return x.id === state.rest; })) state.rest = 'any';
+    var first = Number(c.earliest_season) || 0;
+    if (state.seasonFrom !== '' && first && Number(state.seasonFrom) < first) state.seasonFrom = '';
+    if (state.seasonTo !== '' && first && Number(state.seasonTo) < first) state.seasonTo = '';
+    if (c.markets.indexOf(state.market) === -1) state.market = c.markets[0];
+    if (state.market !== 'moneyline') { state.priceMin = ''; state.priceMax = ''; }
+  }
+
   function openSheetRow(i) {
     var r = sheetData && sheetData.rows[i];
     if (!r) return;
     var q = r.query;
+    if (q.sport && q.sport !== state.sport) return;   // a sheet from another league is stale
     state.team = q.team; state.market = q.market; state.side = q.side || 'over';
     state.venue = q.venue || 'any'; state.situation = q.situation || 'any'; state.opponent = q.opponent || '';
     state.seasonFrom = q.seasonFrom || ''; state.seasonTo = ''; state.rest = 'any'; state.lastN = q.lastN || '';
@@ -1584,7 +1628,7 @@
     var must = [ref];
     if (chartView === 'winrate' && chartData.breakEven !== null) must.push(chartData.breakEven);
     if (chartView === 'units') {
-      var widest = Math.max.apply(null, points.map(function (p) { return 2 * p.sd; }));
+      var widest = Math.max.apply(null, points.map(function (p) { return 1.96 * p.sd; }));
       must.push(widest); must.push(-widest);
     }
     var axis = axisTicks(Math.min.apply(null, vals), Math.max.apply(null, vals), must, 5);
@@ -1610,8 +1654,8 @@
       if (chartView === 'units') {
         rows.push('<span data-tone="' + (p.gameUnits >= 0 ? 'up' : 'down') + '">Game units: ' + esc(fmtUnits(p.gameUnits)) + '</span>');
         rows.push('<span data-tone="' + (p.value >= 0 ? 'up' : 'down') + '">Cumulative: ' + esc(fmtUnits(round2(p.value))) + '</span>');
-        rows.push('<span class="ts-tip-band">Normal luck range here: ' + fmtUnits(round2(-2 * p.sd)) +
-          ' to ' + fmtUnits(round2(2 * p.sd)) + '</span>');
+        rows.push('<span class="ts-tip-band">Normal luck range here: ' + fmtUnits(round2(-1.96 * p.sd)) +
+          ' to ' + fmtUnits(round2(1.96 * p.sd)) + '</span>');
       } else {
         rows.push('<span>Record: ' + p.wins + '-' + p.losses + '</span>');
         rows.push('<span data-tone="' + (chartData.breakEven === null
@@ -1868,7 +1912,7 @@
           '<button class="ts-btn ts-btn-ghost ts-btn-sm" type="button" id="copyResult">Copy result</button>' +
           '<button class="ts-btn ts-btn-ghost ts-btn-sm" type="button" id="shareResult">Share</button>' +
           '<button class="ts-btn ts-btn-ghost ts-btn-sm" type="button" id="jumpGames">View games</button>' +
-          '<button class="ts-btn ts-btn-ghost ts-btn-sm" type="button" id="saveTrend">' + (isSaved(queryParams().toString()) ? 'Saved' : 'Save') + '</button>' +
+          '<button class="ts-btn ts-btn-ghost ts-btn-sm" type="button" id="saveTrend">' + (isSaved(resultKey()) ? 'Saved' : 'Save') + '</button>' +
         '</div>' +
       '</div>' +
       '<dl class="ts-metrics">' + metrics + '</dl>' +
@@ -1887,8 +1931,14 @@
   }
 
   // --- share ---------------------------------------------------------------
+  /* The address of the result on screen, even if the form has been changed since it ran. */
+  function resultUrl() {
+    if (!lastResultKey) return window.location.href;
+    return window.location.origin + window.location.pathname + '?' + lastResultKey;
+  }
   function shareText() {
     if (!lastResult || !lastResult.summary) return window.location.href;
+    var shareUrl = resultUrl();
     var s = lastResult.summary;
     var lines = [lastResult.statement];
     lines.push('Record ' + s.record + (s.win_rate === null ? '' : ' (' + winRatePct(s).toFixed(1) + '%)') +
@@ -1905,7 +1955,7 @@
       lines.push('Units ' + fmtUnits(s.units) + ' · ROI ' + (s.roi > 0 ? '+' : '') + s.roi.toFixed(2) + '%');
     }
     lines.push('Trend Spotter · TrustMyRecord');
-    lines.push(window.location.href);
+    lines.push(shareUrl);
     return lines.join('\n');
   }
 
@@ -2013,8 +2063,12 @@
       state.sport = next;
       state.team = '';
       state.opponent = '';
+      cancelQuery();
+      sheetToken++;
+      sheetData = null;
       var c = sportCaps();
       if (c && c.markets.indexOf(state.market) === -1) state.market = c.markets[0];
+      fitStateToSport();
       lastRunKey = '';
       lastResult = null;
       renderLeagueTabs();
@@ -2107,16 +2161,13 @@
       var ex = e.target.closest('[data-example]');
       if (ex) {
         var preset = EXAMPLES[Number(ex.getAttribute('data-example'))];
-        state.venue = 'any';
-        state.situation = 'any';
-        state.opponent = '';
-        state.lastN = '';
-        state.lineMin = state.lineMax = state.totalMin = state.totalMax = state.priceMin = state.priceMax = '';
+        var prevSport = state.sport;
+        Object.keys(DEFAULT_STATE).forEach(function (k) { state[k] = DEFAULT_STATE[k]; });
         Object.keys(preset.state).forEach(function (k) { state[k] = preset.state[k]; });
         lastRunKey = '';
         renderLeagueTabs();
         rerenderControls();
-        renderSlate();
+        if (state.sport !== prevSport) { sheetToken++; sheetData = null; loadMatchups(); } else renderSlate();
         runQuery();
         return;
       }
@@ -2215,7 +2266,7 @@
       var shareBtn = e.target.closest('#shareResult');
       if (shareBtn) {
         if (navigator.share) {
-          navigator.share({ title: 'Trend Spotter | TrustMyRecord', text: shareText(), url: window.location.href })
+          navigator.share({ title: 'Trend Spotter | TrustMyRecord', text: shareText(), url: resultUrl() })
             .catch(function () { copyToClipboard(shareText(), shareBtn, 'Link copied'); });
         } else {
           copyToClipboard(shareText(), shareBtn, 'Link copied');
@@ -2301,10 +2352,21 @@
       // The entry we just landed on is one the user navigated to; the next
       // control change must add an entry rather than rewrite this one.
       urlEntryIsNavigable = true;
-      readUrl();
-      renderLeagueTabs();
-      rerenderControls();
-      renderSlate();
+      var prevSport = state.sport;
+      Object.keys(DEFAULT_STATE).forEach(function (k) { state[k] = DEFAULT_STATE[k]; });
+      cancelQuery();
+      sheetToken++;
+      restoringUrl = true;
+      try {
+        readUrl();
+        renderLeagueTabs();
+        rerenderControls();
+        if (state.sport !== prevSport) loadMatchups(); else renderSlate();
+        lastResult = null;
+        if (state.team) runQuery(); else { renderEmptyState(); renderSummary(); }
+      } finally {
+        restoringUrl = false;
+      }
     });
   }
 

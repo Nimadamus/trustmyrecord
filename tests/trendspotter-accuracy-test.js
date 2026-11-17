@@ -726,6 +726,42 @@ const txt = (doc, sel) => ($(doc, sel) || {}).textContent || '';
     assert(/Kept in this browser/.test(txt(doc, '#savedTrends')));
   });
 
+  // TS_BUGHUNT_20261116 ---------------------------------------------------------
+  await test('Save keeps the query that produced the result, not a filter changed afterwards', async () => {
+    const { win, doc } = await runIt({ ...base, '/query': priced() });
+    win.localStorage.clear();
+    const venue = $(doc, '#f_venue');
+    venue.value = venue.value === 'home' ? 'away' : 'home';
+    venue.dispatchEvent(new win.Event('change', { bubbles: true }));
+    $(doc, '#saveTrend').dispatchEvent(new win.Event('click', { bubbles: true }));
+    const saved = JSON.parse(win.localStorage.getItem('tmr.trendspotter.saved.v1'));
+    assert(saved && saved.length === 1 && !/venue=/.test(saved[0].key), saved && saved[0].key);
+  });
+
+  await test('a slow answer that arrives after a league switch is dropped', async () => {
+    let release;
+    const prepare = (win) => {
+      const inner = win.fetch;
+      win.fetch = (url, init) => (String(url).includes('/trendspotter/query?')
+        ? new Promise((resolve) => { release = () => resolve({ ok: true, status: 200, json: () => Promise.resolve(priced()) }); })
+        : inner(url, init));
+    };
+    const caps2 = JSON.parse(JSON.stringify(CAPABILITIES)); caps2.sports.push({ ...caps2.sports[0], id: 'NBA', label: 'NBA' });
+    const m = await mount({ ...base, '/capabilities': caps2, '/query': priced() }, { prepare });
+    $(m.doc, '#f_team').value = 'SF';
+    $(m.doc, '#f_team').dispatchEvent(new m.win.Event('change', { bubbles: true }));
+    await new Promise((r) => m.win.setTimeout(r, 20));
+    $(m.doc, '#runTrend').dispatchEvent(new m.win.Event('click', { bubbles: true }));
+    await new Promise((r) => m.win.setTimeout(r, 20));
+    const other = $$(m.doc, '#leagueTabs button[data-league]').find((b) => b.getAttribute('aria-selected') !== 'true');
+    other.dispatchEvent(new m.win.Event('click', { bubbles: true }));
+    await new Promise((r) => m.win.setTimeout(r, 20));
+    release();
+    for (let i = 0; i < 20; i++) await new Promise((r) => m.win.setTimeout(r, 5));
+    assert(!$(m.doc, '.ts-statement'), 'the old league result must not appear');
+    assert.strictEqual(m.doc.getElementById('results').getAttribute('aria-busy'), 'false');
+  });
+
   // TS_UNREADABLE_BODY_20261116 ------------------------------------------------
   await test('a 200 with an unreadable capabilities body is retried, and the page recovers', async () => {
     const { doc, requested, consoleErrors } = await mount(base, { failFirst: { '/capabilities': { times: 1, unreadable: true } }, settle: 300 });
