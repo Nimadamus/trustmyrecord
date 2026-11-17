@@ -697,7 +697,8 @@
                     if (firsts.length) {
                         var dayStart = new Date(Math.min.apply(null, firsts.map(function (x) { var d0 = new Date(x.graded_at || x.created_at || 0); d0.setHours(0, 0, 0, 0); return d0.getTime(); })));
                         var oldest = Infinity;
-                        raw.forEach(function (it) { var ts = t(it); if (ts && ts < oldest) oldest = ts; });
+                        // only the paged feed counts; the side list of latest graded picks is not paged
+                        raw.forEach(function (it) { if (it && it._attach_only) return; var ts = t(it); if (ts && ts < oldest) oldest = ts; });
                         var more2 = document.getElementById('loadMore');
                         if (oldest >= dayStart.getTime() && more2 && more2.style.display === 'block' && typeof loadMorePosts === 'function') { loadMorePosts(); return r; }
                     }
