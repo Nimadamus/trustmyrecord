@@ -421,14 +421,18 @@
         var members = g._members;
         var n = members.length;
         var open = !!expanded[g.item_id];
-        var wins = 0, losses = 0;
-        members.forEach(function (m) { wins += Number(m.wins_count) || 0; losses += Number(m.losses_count) || 0; });
+        var wins = 0, losses = 0, pushes = 0, voids = 0;
+        members.forEach(function (m) { wins += Number(m.wins_count) || 0; losses += Number(m.losses_count) || 0; pushes += Number(m.pushes_count) || 0; voids += Number(m.voids_count) || 0; });
+        // FEED_RESULTS_PUSH_VOID: "140 wins 123 losses 265 picks graded" did not add up;
+        // pushes and voids get their own chip when there are any.
+        var pv = (pushes ? '<span class="fpg-sport"><b>' + pushes + '</b> ' + (pushes === 1 ? 'push' : 'pushes') + '</span>' : '') +
+            (voids ? '<span class="fpg-sport"><b>' + voids + '</b> ' + (voids === 1 ? 'void' : 'voids') + '</span>' : '');
         var full = members.map(function (m) { try { return base(m); } catch (x) { return ''; } }).join('');
         return '<div class="feed-item fpg-card fpg-card--results' + (open ? ' is-open' : '') + '" data-id="' + e(g.item_id) + '" data-type="results_group" data-group-sig="' + e(g._sig) + '">' +
             '<div class="fpg-rhead"><span class="fpg-rico"><i class="fas fa-circle-check"></i></span>' +
                 '<div><b>Results are in</b><small>' + plural(n, 'handicapper') + ' had records updated · ' + e(ago(t(members[0]))) + '</small></div>' +
                 '<span class="fv-kind fv-kind--pick"><i class="fas fa-check"></i> Graded</span></div>' +
-            ((wins + losses) ? '<div class="fpg-sports"><span class="fpg-sport"><b>' + wins + '</b> ' + (wins === 1 ? 'win' : 'wins') + '</span><span class="fpg-sport"><b>' + losses + '</b> ' + (losses === 1 ? 'loss' : 'losses') + '</span><span class="fpg-sport"><b>' + g.pick_count + '</b> ' + (g.pick_count === 1 ? 'pick' : 'picks') + ' graded</span></div>' : '') +
+            ((wins + losses + pushes + voids) ? '<div class="fpg-sports"><span class="fpg-sport"><b>' + wins + '</b> ' + (wins === 1 ? 'win' : 'wins') + '</span><span class="fpg-sport"><b>' + losses + '</b> ' + (losses === 1 ? 'loss' : 'losses') + '</span>' + pv + '<span class="fpg-sport"><b>' + g.pick_count + '</b> ' + (g.pick_count === 1 ? 'pick' : 'picks') + ' graded</span></div>' : '') +
             // open = the full record cards replace the name list (same people twice was noise)
             '<div class="fpg-list"' + (open ? ' hidden' : '') + '>' + members.slice(0, PREVIEW).map(resultRow).join('') +
                 (n > PREVIEW ? '<div class="fpg-more-names">+ ' + plural(n - PREVIEW, 'more handicapper') + '</div>' : '') +
