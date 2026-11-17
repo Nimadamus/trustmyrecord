@@ -1016,13 +1016,15 @@ async function loadFeedItems() {
                         .filter(p => p && p.is_public !== false && !p.is_private && !['pending', 'locked'].includes(String(p.status || '').toLowerCase()))
                         .map(normalizePublicPick);
                     const seen = new Map(items.map((i, idx) => [String(i.pick_id || i.item_id || i.id), idx]));
+                    // FEED_DISCOVER_NO_PARTIAL_20261116: the 12 latest graded picks used to
+                    // build a member's day card on their own ("KenBcapper 4 picks 0-4") before
+                    // the day's summary (181 picks) had loaded. The summary is the count of
+                    // record and arrives with the feed pages; discover now only fills in
+                    // picks that are already on the page.
                     picks.forEach(p => {
                         const key = String(p.pick_id || p.item_id || p.id);
                         if (seen.has(key)) {
                             items[seen.get(key)] = { ...items[seen.get(key)], ...p };
-                        } else {
-                            seen.set(key, items.length);
-                            items.push(p);
                         }
                     });
                 } catch(e) {}

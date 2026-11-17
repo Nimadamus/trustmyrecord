@@ -661,7 +661,7 @@
                     var raw = _feedRawItems;
                     var newest = null;
                     for (var i = 0; i < raw.length; i++) {
-                        if (raw[i] && raw[i].post_type === 'graded_pick_summary') { newest = raw[i]; break; }
+                        if (raw[i] && (raw[i]._summary === true || raw[i].post_type === 'graded_pick_summary')) { newest = raw[i]; break; }
                     }
                     if (newest) {
                         var dayStart = new Date(newest.graded_at || newest.created_at || 0); dayStart.setHours(0, 0, 0, 0);
