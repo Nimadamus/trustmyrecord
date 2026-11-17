@@ -679,7 +679,13 @@
                 return hit || (((d && d.feed) || []).length < 100 ? null : look(i + 1));
             });
         };
-        look(0).then(function (item) {
+        // FEED_MS_SINGLE_20261117: a milestone is fetched by id (a welcome folded into
+        // the "N new members" card is not in any feed page); the page scan stays as backup.
+        var msId = /^milestone:(\d+)$/.exec(wanted);
+        var first = msId
+            ? window.api.request('/milestones/' + msId[1]).then(function (d) { return (d && d.item) || look(0); }, function () { return look(0); })
+            : look(0);
+        first.then(function (item) {
             if (!item || typeof window.renderFeedItem !== 'function') return;
             var list = document.getElementById('feedList');
             if (!list || document.getElementById('fpgShared')) return;
