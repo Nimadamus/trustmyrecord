@@ -1120,7 +1120,9 @@ async function loadFeedItems() {
             }
             items = aggregateFeedItems(items);
             items.sort((a, b) => new Date(b.graded_at || b.created_at || b.locked_at || 0) - new Date(a.graded_at || a.created_at || a.locked_at || 0));
-            if (currentFilter === 'hot-takes') items = items.filter(i => i.post_type === 'hot_take');
+            // FEED_TAKES_TEXT_POSTS: plain member posts ("46-40 lol") belong on the
+            // member-posts tab too; only hot_take matched, so they showed nowhere but For You.
+            if (currentFilter === 'hot-takes') items = items.filter(i => i.post_type === 'hot_take' || (i.item_type === 'feed_post' && (i.post_type === 'text' || i.post_type === 'status')));
             if (currentFilter === 'picks') items = items.filter(i => i.item_type === 'pick' || i.item_type === 'open_pick' || i.post_type === 'pick' || i.post_type === 'pick_share');
             if (currentFilter === 'polls') items = items.filter(i => i.item_type === 'poll' || i.post_type === 'poll');
             if (currentFilter === 'milestones') items = items.filter(i => i.item_type === 'milestone');
