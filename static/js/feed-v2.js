@@ -756,6 +756,25 @@ function fvGoToPost(ev, id) {
     el.scrollIntoView({ block: 'center', behavior: 'smooth' });
 }
 
+// FEED_TREND_SOURCE_20261116: the first feed page is mostly picks, so the
+// trending list read posts from it alone and showed whatever post was newest.
+// It now ranks the recent posts themselves (plus any polls on the page).
+let _fvTrendPosts = null;
+function fvLoadTrend(items) {
+    const polls = (items || []).filter(i => i.item_type === 'poll' || i.post_type === 'poll');
+    if (!_fvTrendPosts) {
+        _fvTrendPosts = api.request('/feed?limit=40&offset=0&filter=posts')
+            .then(d => ((d && d.feed) || []).filter(isRealPublicFeedUser))
+            .catch(() => { _fvTrendPosts = null; return null; });
+    }
+    _fvTrendPosts.then(posts => {
+        const twoWeeks = Date.now() - 14 * 864e5;
+        const recent = (posts || (items || []).filter(i => i.item_type === 'feed_post'))
+            .filter(i => new Date(i.created_at || 0).getTime() >= twoWeeks);
+        fvRenderTrend(recent.concat(polls));
+    });
+}
+
 function fvRenderTrend(items) {
     const card = document.getElementById('fvTrendCard');
     const list = document.getElementById('fvTrendList');
@@ -765,7 +784,9 @@ function fvRenderTrend(items) {
         return text && (i.item_type === 'feed_post' || i.item_type === 'poll' || i.post_type === 'poll' || i.post_type === 'hot_take');
     });
     const score = i => (Number(i.comments_count) || 0) * 2 + (Number(i.likes_count) || 0) + (Number(i.total_votes) || 0);
-    const ranked = posts.slice().sort((a, b) => score(b) - score(a)).slice(0, 3);
+    // FEED_TREND_ENGAGED_20261116: a post nobody has reacted to is not trending
+    // (the rail listed a persona's "46-40 lol" with no likes or comments as #1).
+    const ranked = posts.filter(i => score(i) > 0).sort((a, b) => score(b) - score(a)).slice(0, 3);
     if (!ranked.length) { card.hidden = true; return; }
     list.innerHTML = ranked.map((i, idx) => {
         const isPoll = i.item_type === 'poll' || i.post_type === 'poll';
@@ -853,7 +874,7 @@ let _fvRailBuilt = false;
 function fvAfterFeed(items) {
     if (typeof currentFilter !== 'undefined' && currentFilter === 'all' && feedOffset === 0) {
         _fvRailBuilt = true;
-        fvRenderTrend(items);
+        fvLoadTrend(items);
         fvRenderHighlights(items);
         return;
     }
@@ -861,7 +882,7 @@ function fvAfterFeed(items) {
     _fvRailBuilt = true;
     api.request('/feed?limit=20&offset=0&filter=all').then(data => {
         const rows = ((data && data.feed) || []).filter(isRealPublicFeedUser);
-        fvRenderTrend(rows);
+        fvLoadTrend(rows);
         fvRenderHighlights(rows);
     }).catch(() => {});
 }
