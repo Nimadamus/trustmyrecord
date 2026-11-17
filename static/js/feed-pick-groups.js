@@ -659,12 +659,17 @@
             try {
                 if (typeof feedOffset !== 'undefined' && feedOffset < 4 * FEED_LIMIT && typeof _feedRawItems !== 'undefined' && _feedRawItems.length) {
                     var raw = _feedRawItems;
-                    var newest = null;
-                    for (var i = 0; i < raw.length; i++) {
-                        if (raw[i] && (raw[i]._summary === true || raw[i].post_type === 'graded_pick_summary')) { newest = raw[i]; break; }
+                    // the first three members' day cards, as the rail shows them
+                    var firsts = [], seenU = {};
+                    for (var i = 0; i < raw.length && firsts.length < 3; i++) {
+                        var it0 = raw[i];
+                        if (!it0 || !(it0._summary === true || it0.post_type === 'graded_pick_summary')) continue;
+                        var uk = uname(it0).toLowerCase();
+                        if (seenU[uk]) continue;
+                        seenU[uk] = 1; firsts.push(it0);
                     }
-                    if (newest) {
-                        var dayStart = new Date(newest.graded_at || newest.created_at || 0); dayStart.setHours(0, 0, 0, 0);
+                    if (firsts.length) {
+                        var dayStart = new Date(Math.min.apply(null, firsts.map(function (x) { var d0 = new Date(x.graded_at || x.created_at || 0); d0.setHours(0, 0, 0, 0); return d0.getTime(); })));
                         var oldest = Infinity;
                         raw.forEach(function (it) { var ts = t(it); if (ts && ts < oldest) oldest = ts; });
                         var more2 = document.getElementById('loadMore');
