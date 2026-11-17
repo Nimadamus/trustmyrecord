@@ -415,6 +415,7 @@
                             <span class="condlock-i" aria-hidden="true">&#128274;</span>
                             <span class="condlock-t">Pick both teams above to add situations.</span>
                         </div>
+                        <div class="sitfocus" id="sitFocus" hidden aria-live="polite"></div>
                         <div class="sitareas" id="sitAreas">
                             <section class="sitarea" data-bucket="t1">
                                 <button class="sit-head" type="button" data-toggle="t1"
@@ -1195,6 +1196,7 @@
         if (!library) return [];
         var q = (sitSearch[bucket] || '').toLowerCase();
         var matches = function (spec) {
+            if (focus && !focus.ids[spec.id]) return false;
             if (!q) return true;
             return spec.label.toLowerCase().indexOf(q) !== -1
                 || (spec.help || '').toLowerCase().indexOf(q) !== -1
@@ -1328,6 +1330,7 @@
      *  situations. A team's list is that team's situations only; the
      *  game's list is the game's. */
     function renderSitAreas() {
+        paintFocus();
         BUCKETS.forEach(function (bucket) {
             var name = $('sitName-' + bucket), count = $('sitCount-' + bucket);
             var cta = $('sitCta-' + bucket), body = $('sitBody-' + bucket);
@@ -2023,6 +2026,106 @@
         closeAreas();
         renderConditions();
     });
+
+    // FOCUS_20261116: the research-tool cards on /betlegend-pro/ open this
+    // panel narrowed to one category of situations (the ids come from the
+    // same server library this panel reads). Nothing about the query changes:
+    // the list is only shortened, every situation keeps its own control,
+    // availability and reason, and "Show every situation" lifts the focus.
+    // The sidebar there can also switch tools, since the rail is hidden in
+    // embed mode. Same-origin messages only.
+    var focus = null;
+    (function () {
+        var st = document.createElement('style');
+        st.textContent = '.sitfocus{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin:0 0 12px;'
+            + 'padding:10px 14px;border:1px solid rgba(47,155,255,.45);border-radius:10px;background:rgba(47,155,255,.10);'
+            + 'font-size:13.5px;line-height:1.4}.sitfocus b{color:#7cc4ff}.sitfocus .linkbtn{margin-left:auto}';
+        root.appendChild(st);
+    })();
+    function focusCount() {
+        if (!focus || !library) return null;
+        var n = 0;
+        (library.groups || []).forEach(function (g) {
+            (g.filters || []).forEach(function (f) { if (focus.ids[f.id] && f.available && !STRUCTURAL[f.id]) n++; });
+        });
+        return n;
+    }
+    function paintFocus() {
+        var el = $('sitFocus');
+        if (!el) return;
+        if (!focus) { el.hidden = true; el.innerHTML = ''; return; }
+        var n = focusCount();
+        el.innerHTML = '<span>Showing <b>' + esc(focus.label) + '</b>'
+            + (n === null ? '' : ' &middot; ' + n + (n === 1 ? ' situation' : ' situations') + ' for ' + esc(mSport.value))
+            + '</span><button type="button" class="linkbtn" data-focus-clear="1">Show every situation</button>';
+        el.hidden = false;
+    }
+    $('sitFocus').addEventListener('click', function (ev) {
+        if (!ev.target.closest('[data-focus-clear]')) return;
+        focus = null;
+        renderSitAreas();
+    });
+    function pickedBoth() { return !!mAway.value && !!mHome.value && mAway.value !== mHome.value; }
+    function openFocusAreas() {
+        var any = false;
+        BUCKETS.forEach(function (b) {
+            sitOpen[b] = !!library && areaGroups(b).length > 0;
+            any = any || sitOpen[b];
+        });
+        if (!any) sitOpen.t1 = true;
+        renderSitAreas();
+    }
+    function whenAppReady(fn) {
+        var n = 0, t = setInterval(function () {
+            if ((!mAway.disabled && mAway.options.length > 1) || ++n > 80) { clearInterval(t); fn(); }
+        }, 250);
+    }
+    function applyFocus(d) {
+        var tool = TOOL_PANEL[d.tool] ? d.tool : 'matchup';
+        selectTool(tool, !EMBED);
+        if (tool !== 'matchup') { window.scrollTo({ top: 0 }); return; }
+        whenAppReady(function () {
+            if (d.sport && d.sport !== mSport.value
+                && [].some.call(mSport.options, function (o) { return o.value === d.sport; })) {
+                mSport.value = d.sport;
+                mSport.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+            var ids = {};
+            (Array.isArray(d.ids) ? d.ids : []).forEach(function (i) { if (typeof i === 'string') ids[i] = 1; });
+            focus = Object.keys(ids).length
+                ? { label: String(d.label || 'Selected situations').slice(0, 80), ids: ids, pending: true } : null;
+            BUCKETS.forEach(function (b) { sitSearch[b] = ''; var el = $('sitSearch-' + b); if (el) el.value = ''; });
+            if (focus && pickedBoth()) { focus.pending = false; openFocusAreas(); } else renderSitAreas();
+            var target = $(focus && pickedBoth() ? 'sitCard' : 'matchupCard');
+            if (target) window.scrollTo({ top: Math.max(0, target.getBoundingClientRect().top + window.pageYOffset - 12), behavior: 'smooth' });
+        });
+    }
+    // Teams chosen after a card was opened: open the focused list then.
+    [mAway, mHome].forEach(function (sel) {
+        sel.addEventListener('change', function () {
+            setTimeout(function () {
+                if (focus && focus.pending && pickedBoth()) { focus.pending = false; openFocusAreas(); }
+            }, 0);
+        });
+    });
+    // The library for a new sport arrives after the switch: recount.
+    var focusLibSeen = null;
+    setInterval(function () { if (focus && library !== focusLibSeen) { focusLibSeen = library; paintFocus(); } }, 700);
+    window.addEventListener('message', function (ev) {
+        if (ev.origin !== location.origin || !ev.data || typeof ev.data !== 'object') return;
+        if (ev.data.type === 'blp-focus') applyFocus(ev.data);
+    });
+    (function () {
+        var q = new URLSearchParams(location.search), f = q.get('focus'), tl = q.get('tool');
+        if (!f && !tl) return;
+        applyFocus({ tool: tl, sport: q.get('sport') || '', label: q.get('focusLabel') || '',
+            ids: f ? f.split(',').map(function (s) { return s.trim(); }).filter(Boolean).slice(0, 120) : [] });
+    })();
+    if (EMBED) {
+        whenAppReady(function () {
+            try { parent.postMessage({ type: 'blp-embed-ready' }, location.origin); } catch (e) { /* ignore */ }
+        });
+    }
 
     root.addEventListener('keydown', function (ev) {
         if (ev.key !== 'Escape') return;
