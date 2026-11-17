@@ -373,8 +373,14 @@
                 // when the sitting was 6 NCAAB, 1 NBA and 1 NCAAF.
                 sports.length > 1 ? { sport: 'Multi', sport_key: '', league: '', primary_sport: '', pick_league: '' } : {}), '') : '';
         var open = !!expanded[g.item_id];
-        var preview = members.slice(0, PREVIEW).map(openRow).join('');
-        var rest = members.slice(PREVIEW).map(openRow).join('');
+        // FEED_OPEN_SOONEST: rows run by game start, so tonight's game is not buried
+        // under next week's (the order they were posted in said nothing to a reader).
+        var gt = function (m) { var v = m.pick_game_time ? new Date(m.pick_game_time).getTime() : NaN; return isFinite(v) ? v : Infinity; };
+        var ordered = members.map(function (m, i) { return { m: m, i: i }; })
+            .sort(function (a, b) { return (gt(a.m) - gt(b.m)) || (a.i - b.i); })
+            .map(function (x) { return x.m; });
+        var preview = ordered.slice(0, PREVIEW).map(openRow).join('');
+        var rest = ordered.slice(PREVIEW).map(openRow).join('');
         return '<div class="feed-item fpg-card fpg-card--open' + (open ? ' is-open' : '') + '" data-id="' + e(g.item_id) + '" data-type="open_pick_group" data-group-sig="' + e(g._sig) + '">' +
             header +
             firstPickRibbon(g._first_pick_ms) +
