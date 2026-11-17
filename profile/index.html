@@ -7625,6 +7625,12 @@
         let target = null;
         if (profileView === 'picks' || profileView === 'ledger' || profileView === 'history') {
             target = document.querySelector('.picks-section');
+            // PROFILE_VIEW_PICKS_TAB_20261116: the pick ledger now lives on the
+            // Picks tab, so "View Picks" from the feed landed on Overview at the top.
+            if (target && target.offsetParent === null) {
+                const picksTab = document.querySelector('.profile-tab[data-tab="record"]');
+                if (picksTab) picksTab.click();
+            }
         } else if (profileView === 'analytics' || profileView === 'stats') {
             target = document.getElementById('analyticsSection');
         }
