@@ -197,6 +197,11 @@
     // Milestones announced together (one grading run) become one card; every
     // milestone keeps its own Congrats.
     var MILESTONE_WINDOW_MS = 30 * 60 * 1000;
+    function streakLen(m) {
+        if (String(m.post_type || '') !== 'win_streak') return null;
+        var x = /(\d+)-pick winning streak/i.exec(String(m.content || ''));
+        return x ? Number(x[1]) : null;
+    }
     var MIN_MILESTONES = 2;
     var SAME_MEMBER_MS_WINDOW = 24 * 60 * 60 * 1000;
     function groupMilestones(items) {
@@ -209,6 +214,26 @@
             if (run.length >= MIN_MILESTONES) {
                 run.forEach(function (m) { absorbed.add(m); });
                 var ids = run.map(function (m) { return String(m.item_id); });
+                // FEED_MS_STREAK_TOP_20261116: a 5-pick and a 7-pick streak by the same
+                // member in one card is the same news twice; show the longest one.
+                var top = {};
+                run.forEach(function (m) {
+                    var n = streakLen(m);
+                    if (n == null) return;
+                    var k = uname(m).toLowerCase();
+                    if (!top[k] || n > top[k].n) top[k] = { n: n, m: m };
+                });
+                var shown = run.filter(function (m) {
+                    var n = streakLen(m);
+                    return n == null || top[uname(m).toLowerCase()].m === m;
+                });
+                if (shown.length < MIN_MILESTONES) {
+                    // one milestone left: it stands as its own card
+                    shown.forEach(function (m) { absorbed.delete(m); });
+                    run = [];
+                    return;
+                }
+                run = shown;
                 groups.push({
                     _group: 'milestones', item_type: 'milestone', post_type: 'milestone_group',
                     item_id: 'msgroup:' + ids[0], created_at: run[0].created_at,
@@ -240,7 +265,7 @@
             });
             flush();
         });
-        if (!groups.length) return items;
+        if (!groups.length && !absorbed.size) return items;
         return items.filter(function (i) { return !absorbed.has(i); }).concat(groups);
     }
 
@@ -329,7 +354,10 @@
         var mins = Math.round(span / 60000);
         var when = mins < 2 ? 'Posted together' : 'Posted over ' + (mins < 90 ? mins + ' min' : Math.round(mins / 60) + ' h');
         var header = (typeof window.renderFeedHeader === 'function')
-            ? window.renderFeedHeader(Object.assign({}, members[0], { item_type: 'pick', post_type: 'pick' }), '') : '';
+            ? window.renderFeedHeader(Object.assign({}, members[0], { item_type: 'pick', post_type: 'pick' },
+                // FEED_GROUP_SPORT_20261116: the header named the newest pick's sport even
+                // when the sitting was 6 NCAAB, 1 NBA and 1 NCAAF.
+                sports.length > 1 ? { sport: 'Multi', sport_key: '', league: '', primary_sport: '', pick_league: '' } : {}), '') : '';
         var open = !!expanded[g.item_id];
         var preview = members.slice(0, PREVIEW).map(openRow).join('');
         var rest = members.slice(PREVIEW).map(openRow).join('');

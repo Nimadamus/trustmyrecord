@@ -359,5 +359,28 @@ function checkSession(n) {
     }
   });
 
+  await t('same member 5- and 7-pick streaks in one card show only the 7', () => {
+    const sb = boot();
+    const at = '2026-11-15T21:30:00Z';
+    const list = [ms(11, 'KenBcapper', 'win_streak', at, 'KenBcapper is on a 7-pick winning streak.'), ms(12, 'KenBcapper', 'win_streak', at, 'KenBcapper is on a 5-pick winning streak.'), ms(13, 'KenBcapper', 'pick_count', at)];
+    const out = sb.aggregateFeedItems(list);
+    const g = out.find((i) => i._group === 'milestones');
+    assert.strictEqual(g._members.length, 2);
+    assert.ok(!g._members.some((m) => m.item_id === 'milestone:12'), 'the 5 streak folds into the 7');
+    assert.ok(g._member_ids.includes('milestone:12'), 'still counted as on the page');
+    assert.strictEqual(out.length, 1);
+    const two = sb.aggregateFeedItems([ms(14, 'Ken', 'win_streak', at, 'Ken is on a 7-pick winning streak.'), ms(15, 'Ken', 'win_streak', at, 'Ken is on a 5-pick winning streak.')]);
+    assert.deepStrictEqual(two.map((i) => i.item_id), ['milestone:14'], 'only the longest stands alone');
+  });
+
+  await t('a mixed-sport sitting is labelled Multi in the header', () => {
+    const sb = boot();
+    sb.renderFeedHeader = (i) => '<div class="fi-header">' + (i.sport || i.pick_league) + '</div>';
+    const mixed = sb.aggregateFeedItems([openPick('Ken', 1, 'NCAAB'), openPick('Ken', 2, 'NBA'), openPick('Ken', 3, 'NCAAF')]);
+    assert.ok(sb.renderFeedItem(mixed[0]).includes('<div class="fi-header">Multi</div>'));
+    const same = sb.aggregateFeedItems([openPick('Ann', 1, 'NBA'), openPick('Ann', 2, 'NBA')]);
+    assert.ok(!sb.renderFeedItem(same[0]).includes('>Multi<'));
+  });
+
   console.log(passed + ' passed');
 })();

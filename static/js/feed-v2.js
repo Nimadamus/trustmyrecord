@@ -694,7 +694,25 @@ async function loadTrending(fresh) {
         // member per local day, so the rail adds up that member's same-day rows
         // too ("graded 39" here vs "181" on the card was the mismatch).
         const dayOf = p => { const d = new Date(p.graded_at || p.created_at || 0); return isNaN(d.getTime()) ? '' : d.toDateString(); };
-        const graded = ((data && data.feed) || [])
+        // FEED_RAIL_FULL_DAY_20261116: a member's earlier row for the same day can sit
+        // past the first 60 items (the card said 2 picks +1.36u, the rail 1 pick
+        // +0.45u). Read on, up to 180 items, until the page reaches past the start
+        // of the oldest day the rail shows.
+        let feedRows = ((data && data.feed) || []).slice();
+        const isGradedRow = p => p && p.username && !['pending', 'locked'].includes(String(p.status || p.pick_status || '').toLowerCase()) && isRealPublicFeedUser(p);
+        for (let off = 60; off < 180 && feedRows.length === off; off += 60) {
+            const shown = feedRows.filter(isGradedRow).filter((p, i, all) => all.findIndex(q => q.username === p.username) === i).slice(0, 3);
+            if (!shown.length) break;
+            const dayStart = Math.min.apply(null, shown.map(p => { const d = new Date(p.graded_at || p.created_at || 0); d.setHours(0, 0, 0, 0); return d.getTime(); }));
+            const oldest = new Date(feedRows[feedRows.length - 1].created_at || 0).getTime();
+            if (!(oldest >= dayStart)) break;
+            const more = await api.request('/feed?limit=60&offset=' + off + '&filter=picks').catch(() => null);
+            const add = (more && more.feed) || [];
+            if (!add.length) break;
+            const seen = new Set(feedRows.map(p => String(p.item_id)));
+            feedRows = feedRows.concat(add.filter(p => !seen.has(String(p.item_id))));
+        }
+        const graded = feedRows
             .filter(isRealPublicFeedUser)
             .filter(p => p.username && !['pending', 'locked'].includes(String(p.status || p.pick_status || '').toLowerCase()));
         const rows = graded
