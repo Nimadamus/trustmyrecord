@@ -826,7 +826,9 @@ async function fvRenderHighlights(items) {
 
     // Top Pick (24h): the best single graded win in the last day.
     try {
-        const data = await fetchDiscoverTop(12);
+        // FEED_HIGHLIGHTS_DEPTH_20261116: the 12 newest graded picks are not a
+        // day's worth; the best win of the last 24 hours was often older than them.
+        const data = await api.request('/social/discover?limit=100').catch(() => fetchDiscoverTop(12));
         const dayAgo = Date.now() - 24 * 3600 * 1000;
         const best = ((data && data.picks) || [])
             .filter(isRealPublicFeedUser)
@@ -854,8 +856,15 @@ async function fvRenderHighlights(items) {
             counts[top].display, fvPlural(counts[top].n, 'update'));
     }
 
-    // Best Streak: the longest winning streak announced in the feed.
-    const streak = (items || [])
+    // Best Streak: the longest winning streak announced this week. It read the
+    // first feed page only, which rarely holds a streak, so it hardly ever showed.
+    let streakPool = items || [];
+    try {
+        const ms = await api.request('/feed?limit=60&offset=0&filter=milestones');
+        const weekAgo = Date.now() - 7 * 864e5;
+        streakPool = ((ms && ms.feed) || []).filter(isRealPublicFeedUser).filter(i => new Date(i.created_at || 0).getTime() >= weekAgo);
+    } catch (e) { /* page items only */ }
+    const streak = streakPool
         .filter(i => i.item_type === 'milestone' && i.post_type === 'win_streak' && Number(i.milestone_threshold) > 0 && getUsername(i))
         .sort((a, b) => Number(b.milestone_threshold) - Number(a.milestone_threshold))[0];
     if (streak) {
