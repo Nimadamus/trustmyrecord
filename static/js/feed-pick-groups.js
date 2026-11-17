@@ -342,7 +342,13 @@
     function toggleBtn(gid, n, label) {
         var open = !!expanded[gid];
         return '<button type="button" class="fpg-toggle" data-fpg-toggle="' + e(gid) + '" aria-expanded="' + open + '">' +
-            '<span>' + (open ? 'Show fewer' : 'View all ' + n + ' ' + label) + '</span> <i class="fas fa-chevron-down"></i></button>';
+            '<span>' + (open ? 'Show fewer' : closedLabel(n, label)) + '</span> <i class="fas fa-chevron-down"></i></button>';
+    }
+    // FEED_TOGGLE_LABEL_20261116: "View all 2 record updates" under a card that
+    // already lists both names read as nothing new; it opens the full cards.
+    function closedLabel(n, label) {
+        if (label === 'record updates' && n <= PREVIEW) return 'Show full ' + (n === 1 ? 'update' : 'updates');
+        return 'View all ' + n + ' ' + label;
     }
 
     function renderOpenGroup(g) {
@@ -496,7 +502,7 @@
             var n2 = g2 ? g2._members.length : 0;
             var label = card.classList.contains('fpg-card--results') ? 'record updates'
                 : card.classList.contains('fpg-card--ms') ? 'milestones' : 'picks';
-            btn.querySelector('span').textContent = open ? 'Show fewer' : 'View all ' + n2 + ' ' + label;
+            btn.querySelector('span').textContent = open ? 'Show fewer' : closedLabel(n2, label);
         }
     }
 
