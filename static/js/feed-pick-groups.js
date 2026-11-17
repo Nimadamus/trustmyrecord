@@ -784,7 +784,11 @@
         var c = (window.api && typeof window.api.request === 'function') ? window.api : null;
         if (!btn || !c) return;
         c.request('/feed?limit=1&offset=0&filter=site_updates').then(function (d) {
-            if (!(d && d.feed && d.feed.length) && !btn.classList.contains('active')) btn.hidden = true;
+            if (!(d && d.feed && d.feed.length) && !btn.classList.contains('active')) {
+                btn.hidden = true;
+                // FEED_TAB_HIDDEN: a theme layer's display:flex beat [hidden].
+                if (btn.style && btn.style.setProperty) btn.style.setProperty('display', 'none', 'important');
+            }
         }).catch(function () { /* leave the tab as it is */ });
     }
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { setTimeout(hideEmptySiteUpdates, 0); });
