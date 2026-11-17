@@ -953,3 +953,11 @@ html body.tmr-ds .tmr-lc-launcher.is-wide:not(:hover):not(:focus-visible) .tmr-l
    paint and pushed the header down. Hold its space (crumb + 8px gap) until it arrives. */
 html body.tmr-ds .hm-page:not(:has(> .tmrlh-crumbs)){padding-top:70px}
 @media (max-width:768px){html body.tmr-ds .hm-page:not(:has(> .tmrlh-crumbs)){padding-top:68px}}
+/* CLS_HANDICAPPERS_20261116b. The title block is sized by its text, and its text changes width when
+   the web fonts replace the fallback a moment after the first paint: the laurels, the glow behind the
+   title and the intro paragraph all moved (layout shift ~0.12-0.17 on desktop). The block keeps its
+   finished width from the start; the headline keeps its finished width in em. */
+@media (min-width: 861px) {
+  html body.tmr-ds .hm-header.hx-hero[aria-label="Directory header"] .hx-title-core { width: 590px; }
+}
+html body.tmr-ds .hm-header.hx-hero[aria-label="Directory header"] h1 { width: 7.92em; }

@@ -847,3 +847,27 @@ body.tmr-ds .ticker { border-bottom: 1px solid rgba(124, 198, 255, .14); }
 .hero.hx .hb-pick { grid-template-columns: max(4.6cqw, calc(var(--hb-min, 10.5px) * 3.9)) minmax(0, 1.3fr) minmax(0, 1fr) 5.9cqw 6.6cqw; }
 /* avatar initials (shown when a member has no photo) */
 .hero.hx .hx-av i { font-size: max(.6em, var(--hb-min, 10.5px)); }
+
+/* CLS_HOME_20261116. The live board fills in after the page paints; it used to grow by ~50px
+   (desktop) or ~100px (phone) and, being centred, moved itself and everything below it. Its
+   finished shape is a fixed proportion of its width (every size inside is in cqw), so that
+   shape is held from the first paint. Content taller than that still grows the box. */
+@media (min-width: 641px) {
+    .hero.hx .hx-board { aspect-ratio: 1 / .6; }
+    .hero.hx .hx-board .hb-tabs { min-height: 4.8cqw; }
+}
+@media (max-width: 640px) {
+    .hero.hx .hx-board { aspect-ratio: 1 / 2.17; }
+}
+/* CLS_HOME_20261116b. The shield watermark and the blue glow under the hero were pseudo-elements
+   placed by percentage of the hero's height, so every change in that height (fonts, live data, the
+   first-screen fit) moved them and counted as layout shift. Painted as backgrounds of the same box
+   they look identical and cannot shift. */
+@media (min-width: 901px) {
+    body.tmr-ds .hero.hx .hero-in::after { content: none; }
+    body.tmr-ds .hero.hx .hero-in { background: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 140 152'%3E%3Cpath d='M70 3 137 23v15l-9 7 9 7v33c0 33-26 58-67 69C29 143 3 118 3 85V52l9-7-9-7V23z' fill='%234DA3FF' fill-opacity='.05'/%3E%3C/svg%3E") right -70px center / 520px 566px no-repeat; }
+}
+@media (min-width: 1041px) {
+    body.tmr-ds .hero.hx .hero-in::before { content: none; }
+    body.tmr-ds .hero.hx .hero-in { background: radial-gradient(60% 90% at 26% 100%, rgba(29, 127, 232, .34), transparent 70%) left bottom / 100% 36% no-repeat, radial-gradient(50% 80% at 78% 100%, rgba(29, 127, 232, .22), transparent 70%) left bottom / 100% 36% no-repeat, url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 140 152'%3E%3Cpath d='M70 3 137 23v15l-9 7 9 7v33c0 33-26 58-67 69C29 143 3 118 3 85V52l9-7-9-7V23z' fill='%234DA3FF' fill-opacity='.05'/%3E%3C/svg%3E") right -70px center / 520px 566px no-repeat; }
+}

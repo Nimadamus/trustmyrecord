@@ -485,19 +485,22 @@ body.tmr-ds .grain{opacity:.28; mix-blend-mode:overlay}
    9b. PAINT STREAKS — feathered angular slashes, not plain diagonal lines.
    -------------------------------------------------------------------------- */
 body.tmr-ds .tmrb-fx{position:absolute; inset:0; z-index:1; pointer-events:none; overflow:hidden}
+/* CLS_HOME_20261116: the bars start at the hero's top edge instead of 22% above it, so a hero
+   that grows while it loads no longer moves them (each move counted as a layout shift). The
+   gradient is shifted by the same amount, so the visible bar looks exactly as before. */
 body.tmr-ds .tmrb-fx i{
   position:absolute; display:block; transform:skewX(-15deg); border-radius:4px;
   background:linear-gradient(180deg,
-    rgba(29,127,232,0) 0%, rgba(29,127,232,.85) 16%, #2B8CFF 48%,
-    rgba(43,140,255,.75) 74%, rgba(29,127,232,0) 100%);
+    rgba(29,127,232,.78) 0%, rgba(29,127,232,.85) 1.33%, #2B8CFF 33.33%,
+    rgba(43,140,255,.75) 59.33%, rgba(29,127,232,0) 85.33%);
   filter:drop-shadow(0 0 18px rgba(43,140,255,.55));
 }
-body.tmr-ds .tmrb-fx i:nth-child(1){right:-8px;  top:-22%; width:34px; height:150%; opacity:1}
-body.tmr-ds .tmrb-fx i:nth-child(2){right:44px;  top:-22%; width:11px; height:150%; opacity:.72}
-body.tmr-ds .tmrb-fx i:nth-child(3){right:66px;  top:-22%; width:4px;  height:150%; opacity:.5}
-body.tmr-ds .tmrb-fx i:nth-child(4){right:92px;  top:-22%; width:86px; height:150%; opacity:.08; filter:none}
-body.tmr-ds .tmrb-fx i:nth-child(5){left:-14px;  top:-22%; width:6px;  height:150%; opacity:.42}
-body.tmr-ds .tmrb-fx i:nth-child(6){left:14px;   top:-22%; width:54px; height:150%; opacity:.07; filter:none}
+body.tmr-ds .tmrb-fx i:nth-child(1){right:-8px;  top:0; width:34px; height:150%; opacity:1}
+body.tmr-ds .tmrb-fx i:nth-child(2){right:44px;  top:0; width:11px; height:150%; opacity:.72}
+body.tmr-ds .tmrb-fx i:nth-child(3){right:66px;  top:0; width:4px;  height:150%; opacity:.5}
+body.tmr-ds .tmrb-fx i:nth-child(4){right:92px;  top:0; width:86px; height:150%; opacity:.08; filter:none}
+body.tmr-ds .tmrb-fx i:nth-child(5){left:-14px;  top:0; width:6px;  height:150%; opacity:.42}
+body.tmr-ds .tmrb-fx i:nth-child(6){left:14px;   top:0; width:54px; height:150%; opacity:.07; filter:none}
 
 /* -----------------------------------------------------------------------------
    9c. BRAND LOCKUP IN THE HERO

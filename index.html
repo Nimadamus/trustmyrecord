@@ -2442,6 +2442,14 @@ a.tkact-welcome:hover .tkact-mem b{color:#fff}
     <div class="cta-cell"><p>Every figure is auto-graded from final scores.</p><a class="tlink" href="/rules/">Grading rules →</a></div>
   </div><!--/MK:homeStats--></div>
 </section>
+<script>/* CLS_HOME_20261116: the same first-screen fit home-holo.js applies (stretch the top row so the
+   five cards sit at the bottom of the window), done here before the first paint instead of after it,
+   where it moved the headline and the board down by up to 170px. home-holo.js re-runs it unchanged. */
+(function(){try{var h=document.querySelector('.hero.hx'),g=h&&h.querySelector('.hero-grid'),c=h&&h.querySelector('.hx-cards'),n=h&&h.querySelector('.hero-in');
+if(!g||!c||!n||window.innerWidth<1041)return;var gap=parseFloat(getComputedStyle(g).rowGap)||0;
+var nat=c.getBoundingClientRect().top-g.getBoundingClientRect().top-gap;var top=h.getBoundingClientRect().top+window.pageYOffset;
+var av=window.innerHeight-top-parseFloat(getComputedStyle(n).paddingTop)-gap-c.offsetHeight-22;if(nat<=0||av<=0)return;
+if(av<nat)g.style.setProperty('--hxs',Math.max(0.74,av/nat).toFixed(3));else g.style.setProperty('--hxrow',Math.round(Math.min(av,nat+170))+'px');}catch(e){}})();</script>
 
 <div class="wrap dash">
   <div class="sec-head">

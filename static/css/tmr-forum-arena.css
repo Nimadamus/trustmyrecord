@@ -653,3 +653,12 @@ body.tmr-arena .tmrlh-footwrap{margin-left:0 !important}
 body.classic-forum:not(:has(#tfaHero)) .fshell{visibility:hidden;margin-top:192px;animation:tfaClsReveal 0s 3s forwards}
 @media (max-width:860px){body.classic-forum:not(:has(#tfaHero)) .fshell{margin-top:141px}}
 @keyframes tfaClsReveal{to{visibility:visible;margin-top:0}}
+/* CLS_FORUM_20261116b. On the forum index the categories and side rails fill in from the API
+   after the chrome is built and reflowed the page. The body stays out of sight until the
+   categories have rendered (at most 3 seconds), then appears once, complete. */
+body.classic-forum:not(.forum-ready):has(#tfaHero):has(#viewCategories:not([style*="none"])) .fshell{visibility:hidden;animation:tfaClsReveal2 0s 3s forwards}
+@keyframes tfaClsReveal2{to{visibility:visible}}
+/* The categories and the side rails settle within a moment of the data landing: hold the body
+   out of sight for that moment too, so it appears once, already in place. */
+body.classic-forum.forum-ready:has(#tfaHero):has(#viewCategories:not([style*="none"])) .fshell{animation:tfaClsHold .6s steps(1,end)}
+@keyframes tfaClsHold{from{visibility:hidden}to{visibility:visible}}
