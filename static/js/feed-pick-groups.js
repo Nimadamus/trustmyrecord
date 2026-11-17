@@ -632,6 +632,22 @@
     // A shared open pick leaves the feed once its game starts (it is graded into a
     // results card). When the first load is done and the pick is not on the page,
     // open its own pick page, which shows it pending or graded.
+    // FEED_END_MARK_20261116: the list just stopped; say it is the end.
+    function markEnd() {
+        var list = document.getElementById('feedList');
+        var more = document.getElementById('loadMore');
+        var mark = document.getElementById('fpgEnd');
+        var done = list && more && more.style.display === 'none' && list.querySelector(':scope > .feed-item');
+        if (!done) { if (mark) mark.remove(); return; }
+        if (!mark) {
+            mark = document.createElement('div');
+            mark.id = 'fpgEnd';
+            mark.className = 'fpg-end';
+            mark.innerHTML = '<i class="fas fa-circle-check"></i> You’re all caught up';
+            more.parentNode.insertBefore(mark, more.nextSibling);
+        }
+    }
+
     var sharedChecked = false;
     function sharedPickFallback() {
         if (sharedChecked || focused) return;
@@ -713,6 +729,7 @@
                 }
             } catch (x) { /* the Load More button still works */ }
             try { sharedPickFallback(); } catch (x) { /* optional */ }
+            try { markEnd(); } catch (x) { /* optional */ }
             return r;
         };
     }
