@@ -217,12 +217,13 @@
     }
     function paintGrid() {
         var list = visibleCards();
-        if (state.q) {
+        // BLP_SEARCH_BLANK: a search box holding only spaces emptied the grid.
+        if (state.q.trim()) {
             var hitCards = searchHits().cards;
             list = list.filter(function (c) { return hitCards[c.key]; });
         }
         $('bxGrid').innerHTML = list.length ? list.map(cardHtml).join('')
-            : '<p class="bx-empty">' + (state.favOnly && !state.q
+            : '<p class="bx-empty">' + (state.favOnly && !state.q.trim()
                 ? 'No favorites yet. Tap the star on any tool to pin it here.'
                 : 'No tool matches that search.') + '</p>';
     }
