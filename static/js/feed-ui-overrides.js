@@ -437,6 +437,9 @@ async function toggleComments(id, type) {
                 '<input class="cmt-input" id="ci-' + normalizedType + '-' + feedId(id) + '" placeholder="' + (normalizedType === 'milestone' ? 'Write a welcome...' : 'Write a comment...') + '" onkeypress="if(event.key===\'Enter\')postComment(' + jsArg(id) + ',' + jsArg(normalizedType) + ')">' +
                 '<button class="cmt-submit" onclick="postComment(' + jsArg(id) + ',' + jsArg(normalizedType) + ')">Post</button>' +
             '</div>';
+        } else {
+            // FEED_MS_COMMENT_SIGNIN_20261116: signed out, the thread had no way in.
+            html += '<div class="ic-signin" style="padding:8px 12px;"><a href="/login/?next=' + encodeURIComponent(location.pathname + location.search) + '">Log in</a> to ' + (normalizedType === 'milestone' ? 'welcome them' : 'join the conversation') + '</div>';
         }
 
         if (comments.length) {
