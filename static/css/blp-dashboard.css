@@ -482,3 +482,118 @@ main.blp .bx-hero .bx-title { font-size: clamp(40px, 5vw, 78px) !important; }
 @media (min-width: 1321px) and (max-width: 1560px) {
     .bx-checks li:nth-child(4) { display: none; }
 }
+
+/* ---------------------------------------------------------------
+ * LOCK_COLORS_20261116: the dashboard is a dark surface in every site
+ * theme. The site's generic p/li/span/button/input rules (and the whole
+ * light theme sheet) outrank single classes, so every color the
+ * dashboard depends on is pinned here with an id prefix.
+ * --------------------------------------------------------------- */
+:is(#bxHero, #tools-home, #bxDrawer, #bxToast) *:not(.bx-w):not(.bx-pro) { -webkit-text-fill-color: currentColor !important; }
+:is(#bxHero, #tools-home, #bxDrawer) { color: var(--bx-text) !important; }
+#bxHero .bx-tag { color: #dfe9ff !important; }
+#bxHero .bx-pills li, #bxHero .bx-pills li span, #bxHero .bx-pills li b { color: #e9f1ff !important; }
+#bxHero .bx-pills svg { color: var(--bx-cyan) !important; }
+#bxHero .bx-status-title, #bxHero .bx-status-title span { color: var(--bx-gold2) !important; }
+#bxHero .bx-status-sub { color: var(--bx-dim) !important; }
+#bxHero .bx-checks li { color: #f2f6ff !important; }
+#bxHero .bx-checks svg, #bxHero .bx-ok { color: var(--bx-green) !important; }
+:is(#bxHero, #tools-home, #bxDrawer) .bx-btn:not(.bx-btn--gold), #bxHero .bx-status-cta .blp-btn {
+    color: var(--bx-text) !important; background: rgba(13, 26, 51, .9) !important; border: 1px solid var(--bx-line2) !important; box-shadow: none !important;
+}
+:is(#bxHero, #tools-home, #bxDrawer) .bx-btn:not(.bx-btn--gold):hover, #bxHero .bx-status-cta .blp-btn:hover { border-color: var(--bx-cyan) !important; color: #fff !important; }
+:is(#bxHero, #tools-home, #bxDrawer) .bx-btn--gold {
+    color: #1a1200 !important; border: 0 !important;
+    background: linear-gradient(180deg, #ffe58f, var(--bx-gold) 55%, #d99a16) !important;
+    box-shadow: 0 0 22px rgba(246, 194, 62, .45), inset 0 1px 0 rgba(255, 255, 255, .6) !important;
+}
+#tools-home .bx-nav button, #tools-home .bx-nav a {
+    color: #dce6fb !important; background: transparent !important; border: 1px solid transparent !important; box-shadow: none !important;
+}
+#tools-home .bx-nav svg { color: #b9c9ea !important; }
+#tools-home .bx-nav button:hover, #tools-home .bx-nav a:hover { background: rgba(47, 139, 255, .12) !important; color: #fff !important; }
+#tools-home .bx-nav .is-on {
+    color: #fff !important; border-color: rgba(69, 200, 255, .6) !important;
+    background: linear-gradient(180deg, #2a7cff, #1550c8) !important;
+    box-shadow: 0 0 18px rgba(47, 139, 255, .45), inset 0 1px 0 rgba(255, 255, 255, .25) !important;
+}
+#tools-home .bx-nav .is-on svg { color: #fff !important; }
+#tools-home .bx-head h2, #tools-home .bx-lower h3, #tools-home .bx-promo h3, #tools-home .bx-stat b { color: #fff !important; }
+#tools-home .bx-promo h3 em { color: var(--bx-gold) !important; }
+#tools-home .bx-promo p { color: #cfd8ef !important; }
+#tools-home .bx-promo svg { color: #d8c8ff !important; }
+:is(#tools-home, #bxDrawer) .bx-sport { color: #cfdaf3 !important; background: transparent !important; border: 1px solid transparent !important; box-shadow: none !important; }
+:is(#tools-home, #bxDrawer) .bx-sport:hover { background: rgba(47, 139, 255, .12) !important; color: #fff !important; }
+:is(#tools-home, #bxDrawer) .bx-sport[aria-pressed="true"] { color: #fff !important; background: linear-gradient(180deg, #2a7cff, #1550c8) !important; box-shadow: 0 0 14px rgba(47, 139, 255, .5) !important; }
+#tools-home .bx-sport--fav[aria-pressed="true"] { background: linear-gradient(180deg, #6b4a06, #3b2902) !important; box-shadow: 0 0 14px rgba(246, 194, 62, .45) !important; }
+#tools-home .bx-sport--fav svg { color: var(--bx-gold) !important; }
+:is(#tools-home, #bxDrawer) .bx-lg { color: #fff !important; }
+#tools-home .bx-search input, #bxDrawer .bx-dr-filter input {
+    color: #fff !important; background: rgba(6, 13, 28, .92) !important; border: 1px solid var(--bx-line2) !important; box-shadow: none !important;
+}
+#tools-home .bx-search input:focus, #bxDrawer .bx-dr-filter input:focus { border-color: var(--bx-cyan) !important; box-shadow: 0 0 0 3px rgba(69, 200, 255, .18) !important; }
+#tools-home .bx-search svg, #bxDrawer .bx-dr-filter svg { color: var(--bx-dim) !important; }
+#tools-home .bx-card h3, #tools-home .bx-card h3 button {
+    color: #fff !important; background: none !important; border: 0 !important; box-shadow: none !important; padding: 0 !important; min-height: 0 !important;
+}
+#tools-home .bx-card p { color: #c9d5ee !important; }
+#tools-home .bx-card-ic { color: color-mix(in srgb, var(--c1) 70%, #fff) !important; }
+#tools-home .bx-card-wm { color: var(--c1) !important; }
+#tools-home .bx-count { color: color-mix(in srgb, var(--c1) 55%, #fff) !important; }
+#tools-home .bx-chip { color: #e6eeff !important; background: rgba(5, 11, 26, .72) !important; border: 1px solid color-mix(in srgb, var(--c1, #2f8bff) 55%, transparent) !important; box-shadow: none !important; }
+#tools-home .bx-chip:hover { background: color-mix(in srgb, var(--c1, #2f8bff) 30%, #050b1a) !important; border-color: var(--c1, #2f8bff) !important; }
+#tools-home .bx-go { color: #fff !important; background: rgba(5, 11, 26, .6) !important; border: 2px solid color-mix(in srgb, var(--c1) 80%, #fff) !important; box-shadow: 0 0 12px var(--cg) !important; }
+#tools-home .bx-card:hover .bx-go { background: var(--c1) !important; }
+#tools-home .bx-star { color: rgba(255, 255, 255, .55) !important; background: transparent !important; border: 1px solid transparent !important; box-shadow: none !important; }
+#tools-home .bx-star:hover { color: var(--bx-gold) !important; background: rgba(0, 0, 0, .3) !important; }
+#tools-home .bx-star[aria-pressed="true"] { color: var(--bx-gold) !important; }
+#tools-home .bx-qs { color: #e7efff !important; background: rgba(10, 22, 46, .9) !important; border: 1px solid var(--bx-line2) !important; box-shadow: none !important; }
+#tools-home .bx-qs:hover { border-color: var(--bx-cyan) !important; background: rgba(47, 139, 255, .16) !important; }
+#tools-home .bx-qs b, #tools-home .bx-results h3 { color: var(--bx-mute) !important; }
+#tools-home .bx-stat span, #tools-home .bx-act-note, #tools-home .bx-empty, #tools-home .bx-hit small { color: var(--bx-dim) !important; }
+#tools-home .bx-act-note a, #tools-home .bx-linkbtn, #tools-home .bx-hit-go { color: var(--bx-cyan) !important; background: none !important; border: 0 !important; box-shadow: none !important; min-height: 0 !important; padding: 0 !important; }
+#tools-home .bx-pin { color: color-mix(in srgb, var(--c1) 60%, #fff) !important; background: color-mix(in srgb, var(--c1) 16%, #071022) !important; border: 1.5px solid color-mix(in srgb, var(--c1) 70%, transparent) !important; box-shadow: none !important; }
+#tools-home .bx-pin--add { border-style: dashed !important; }
+#tools-home .bx-hit { color: var(--bx-text) !important; background: rgba(13, 26, 51, .7) !important; border: 1px solid var(--bx-line) !important; box-shadow: none !important; }
+#tools-home .bx-hit:hover { border-color: var(--bx-cyan) !important; background: rgba(47, 139, 255, .14) !important; }
+#bxDrawer .bx-dr-top h2, #bxDrawer .bx-opt-l { color: #fff !important; }
+#bxDrawer .bx-dr-top p, #bxDrawer .bx-opt-h, #bxDrawer .bx-dr-foot p { color: var(--bx-dim) !important; }
+#bxDrawer .bx-sec-h { color: var(--bx-mute) !important; }
+#bxDrawer .bx-card-ic { color: color-mix(in srgb, var(--c1) 70%, #fff) !important; }
+#bxDrawer .bx-dr-x { color: #fff !important; background: transparent !important; border: 1px solid var(--bx-line2) !important; box-shadow: none !important; }
+#bxDrawer .bx-opt { background: rgba(13, 26, 51, .6) !important; border: 1px solid var(--bx-line) !important; }
+#bxDrawer .bx-opt:hover { border-color: color-mix(in srgb, var(--c1) 70%, transparent) !important; background: rgba(19, 36, 70, .7) !important; }
+#bxDrawer .bx-opt-who { color: #bcd3ff !important; background: rgba(47, 139, 255, .16) !important; }
+#bxDrawer .bx-opt-who.is-game { color: #ffe3a1 !important; background: rgba(246, 194, 62, .14) !important; }
+#bxToast { color: #fff !important; background: #0b1630 !important; }
+#tools-home .bx-card h3 button { white-space: normal !important; text-align: left !important; font: inherit !important; }
+#tools-home .bx-search input::placeholder, #bxDrawer .bx-dr-filter input::placeholder { color: #8796b7 !important; -webkit-text-fill-color: #8796b7 !important; opacity: 1 !important; }
+#tools-home .bx-head h2 { opacity: 1 !important; background: none !important; text-shadow: none !important; }
+html[data-tmr-theme="light"] #tools-home .bx-head h2 { color: #07182A !important; }
+/* The page's own section headings were near white on the light theme. */
+html[data-tmr-theme="light"] body[data-tmr-route="betlegend-pro"] main.blp .blp-sectionhead h2 { color: #07182A !important; -webkit-text-fill-color: #07182A !important; }
+html[data-tmr-theme="light"] body[data-tmr-route="betlegend-pro"] main.blp .blp-sectionhead .kicker { color: #1E5BBF !important; }
+
+/* LIGHT_ISLANDS_20261116: on the light theme the page's dark cards kept
+ * their navy backgrounds while the theme turned their text slate, and the
+ * FAQ kept white text on the light page. Text inside a dark card stays
+ * light; text on the page itself goes dark. */
+html[data-tmr-theme="light"] body[data-tmr-route="betlegend-pro"] main.blp :is(.blp-step, .blp-feature, .blp-plan, .blp-finalcta, .blp-dataset, .blp-preview) :is(h2, h3, h4, .blp-plan-name, .blp-dataset-n, .blp-verdict-label) {
+    color: #f5f8fc !important; -webkit-text-fill-color: #f5f8fc !important;
+}
+html[data-tmr-theme="light"] body[data-tmr-route="betlegend-pro"] main.blp :is(.blp-step, .blp-feature, .blp-plan, .blp-finalcta, .blp-dataset, .blp-preview) :is(p, li, small, th, label, .blp-price-sub, .blp-plan-foot, .blp-dataset-note, .blp-dataset-k) {
+    color: #c3cfe2 !important; -webkit-text-fill-color: #c3cfe2 !important;
+}
+html[data-tmr-theme="light"] body[data-tmr-route="betlegend-pro"] main.blp .blp-preview td:not([class]) {
+    color: #dbe5f5 !important; -webkit-text-fill-color: #dbe5f5 !important;
+}
+html[data-tmr-theme="light"] body[data-tmr-route="betlegend-pro"] main.blp .blp-finalcta a.blp-btn:not(.blp-btn--primary) {
+    color: #fff !important; -webkit-text-fill-color: #fff !important;
+    background: rgba(255, 255, 255, .08) !important; border-color: rgba(255, 255, 255, .28) !important;
+}
+html[data-tmr-theme="light"] body[data-tmr-route="betlegend-pro"] main.blp .blp-faq summary {
+    color: #07182A !important; -webkit-text-fill-color: #07182A !important;
+}
+html[data-tmr-theme="light"] body[data-tmr-route="betlegend-pro"] main.blp .blp-faq details {
+    background: #fff !important; border-color: #d5dfea !important;
+}

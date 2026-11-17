@@ -344,21 +344,25 @@
             + (game.length ? '<p class="bx-sec-h">For the game itself</p>' + game.map(row).join('') : '')
             + (!shown.length ? '<p class="bx-empty">No filter in this category matches that search.</p>' : '');
         if (keepFocus) { var qi = $('bxDrQ'); qi.focus(); qi.setSelectionRange(qi.value.length, qi.value.length); }
-        $('bxDrOpen').textContent = 'Open all ' + ids.length + ' in BetLegend Pro';
+        $('bxDrOpen').textContent = loggedIn() ? 'Open all ' + ids.length + ' in BetLegend Pro' : 'Log in to open in BetLegend Pro';
         $('bxDrOpen').setAttribute('data-sport', sport);
     }
 
     // ------------------------------------------------- hand-off to app
     var frameReady = false, pending = null;
     function frame() { return $('blpLiveFrame'); }
+    function appUrl(msg) {
+        if (msg.tool && msg.tool !== 'matchup') return '/betlegend-pro/app/?tool=' + msg.tool + '#' + msg.tool;
+        if (!msg.ids || !msg.ids.length) return '/betlegend-pro/app/';
+        return '/betlegend-pro/app/?sport=' + encodeURIComponent(msg.sport || '') + '&focus=' + encodeURIComponent(msg.ids.join(','))
+            + '&focusLabel=' + encodeURIComponent(String(msg.label || '').replace(/&/g, 'and'));
+    }
     function post(msg) {
+        // The app needs an account. Signed out, go through login and land in
+        // the app with the same category already open.
+        if (!loggedIn()) { location.href = '/login/?next=' + encodeURIComponent(appUrl(msg)); return; }
         var f = frame();
-        if (!f || !f.contentWindow) { // no embed on this page: open the app itself
-            var u = '/betlegend-pro/app/?' + (msg.tool && msg.tool !== 'matchup' ? 'tool=' + msg.tool + '#' + msg.tool
-                : 'sport=' + encodeURIComponent(msg.sport || '') + '&focus=' + encodeURIComponent((msg.ids || []).join(','))
-                + '&focusLabel=' + encodeURIComponent(msg.label || ''));
-            location.href = u; return;
-        }
+        if (!f || !f.contentWindow) { location.href = appUrl(msg); return; }
         if (!frameReady) { pending = msg; } else { f.contentWindow.postMessage(msg, location.origin); }
         var tool = $('tool') || f;
         tool.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -379,11 +383,12 @@
         if (!ids.length) return;
         if (drawer.card) closeDrawer();
         post({ type: 'blp-focus', tool: 'matchup', sport: sport, ids: ids, label: label });
+        if (!loggedIn()) return;
         setNav('matchup');
         toast('Opening ' + label + ' for ' + sport + ' in BetLegend Pro');
     }
     function useOne(id, sport) { var s = specOf(id); if (s) useIds([id], s.l, sport); }
-    function openTool(tool) { post({ type: 'blp-focus', tool: tool }); setNav(tool); }
+    function openTool(tool) { post({ type: 'blp-focus', tool: tool }); if (loggedIn()) setNav(tool); }
     function setNav(k) {
         document.querySelectorAll('[data-nav]').forEach(function (b) { b.classList.toggle('is-on', b.getAttribute('data-nav') === k); });
     }
