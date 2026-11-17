@@ -1111,7 +1111,8 @@ async function loadFeedItems() {
             // Keep the posts on screen and step back so the button retries this page.
             feedOffset = Math.max(0, feedOffset - FEED_LIMIT);
             // FEED_LOAD_MORE_FAIL_20261116: say so; the button used to sit unchanged.
-            const lmBtn = document.querySelector('#loadMore .load-more-btn');
+            const lmWrap = document.getElementById('loadMore');
+            const lmBtn = lmWrap && typeof lmWrap.querySelector === 'function' ? lmWrap.querySelector('.load-more-btn') : null;
             if (lmBtn) {
                 lmBtn.textContent = 'Could not load. Tap to try again';
                 clearTimeout(lmBtn._fvReset);
