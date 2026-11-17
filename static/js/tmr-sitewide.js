@@ -1480,7 +1480,7 @@
         ["/static/js/config.js?v=60a0696a58ba", "config.js"],
         ["/static/js/backend-api.js?v=6bf3d750e7f5", "backend-api.js"],
         ["/static/js/auth-persistent.js?v=b0b217feaa25", "auth-persistent.js"],
-        ["/static/js/notifications.js?v=110ae0c6e964", "notifications.js"]
+        ["/static/js/notifications.js?v=a288c94878de", "notifications.js"]
     ].forEach(([src, name]) => {
         // REALM-LEVEL GUARD (2026-08-06). A DOM-only check is defeated by
         // document.open()/document.write() -- the /u/<username/ -> /profile/ swap in
