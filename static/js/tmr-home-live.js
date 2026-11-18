@@ -3100,5 +3100,5 @@
 
 // Load the visible homepage install CTA (separate file). Idempotent, fail-safe. 20260908.
 (function(){ if(window.__tmrCtaLoad)return; window.__tmrCtaLoad=1;
-  try{ var s=document.createElement('script'); s.src='/static/js/tmr-install-cta.js?v=979c01357501'; s.defer=true;
+  try{ var s=document.createElement('script'); s.src='/static/js/tmr-install-cta.js?v=c70e966a9eb1'; s.defer=true;
        (document.head||document.documentElement).appendChild(s);}catch(e){} })();
