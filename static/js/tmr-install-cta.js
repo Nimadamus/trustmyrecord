@@ -43,6 +43,7 @@
         ".tmr-install .tmr-install-go:hover{filter:brightness(1.06)}" +
         ".tmr-install .tmr-install-x{background:transparent;color:#9fb0bd;padding:4px 6px;font-size:18px;line-height:1}" +
         ".tmr-install .tmr-install-x:hover{color:#eef4f8}" +
+        "@media (max-width:480px){.tmr-install{bottom:calc(max(16px,env(safe-area-inset-bottom)) + 62px)}.tmr-install-hint{bottom:138px !important}}" +
         ".tmr-install-hint{position:fixed;left:50%;transform:translateX(-50%);bottom:76px;z-index:2147483000;" +
         "max-width:min(320px,calc(100vw - 24px));background:#111820;color:#eef4f8;border:1px solid rgba(255,255,255,.10);" +
         "border-radius:12px;padding:12px 14px;box-shadow:0 8px 30px rgba(0,0,0,.45);" +
