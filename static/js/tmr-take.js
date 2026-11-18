@@ -165,6 +165,8 @@
       '.tmr-take--feed .tmr-take-fav.is-team{background:#fff}',
       '.tmr-take--feed .tmr-take-fav.is-team img{object-fit:contain;padding:18%;box-sizing:border-box}',
       '.tmr-take--feed .tmr-take-h{font:800 19px/1.2 Inter,"Segoe UI",sans-serif;color:#F4F8FD;margin:0}',
+      /* The composer card stays navy in the light theme; keep its title light (light sheets repaint every h3 dark). 20261118 */
+      'html[data-tmr-theme="light"] .tmr-take--feed:not(#tmr-take-x) .tmr-take-h{color:#F4F8FD!important}',
       '.tmr-take--feed .tmr-take-sub{font:13.5px/1.4 Inter,"Segoe UI",sans-serif;color:#8FA3BC;margin-top:2px}',
       '.tmr-take--feed .tmr-take-row{align-items:stretch}',
       '.tmr-take--feed .tmr-take-input{min-height:48px;padding:13px 15px;border-radius:12px;background:#07111C;border-color:rgba(115,139,174,.3);font-size:16px}',

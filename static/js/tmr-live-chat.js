@@ -109,6 +109,8 @@
     '}',
     '.tmr-lc-label > span { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.25; }',
     '.tmr-lc-launcher .tmr-lc-label small { font-size: 11px; font-weight: 600; color: var(--lc-muted) !important; }',
+    // Light theme repaints every <small> dark; the launcher stays dark, so its caption keeps its own ink (#id in :not lifts specificity over that rule). 20261118
+    'html[data-tmr-theme="light"] .tmr-lc-launcher:not(#tmr-lc-x) .tmr-lc-label small { color: var(--lc-muted) !important; }',
     '.tmr-lc-panel {',
     '  display: none; flex-direction: column; width: 360px; max-width: calc(100vw - 32px);',
     '  height: 520px; max-height: calc(100vh - 120px); background: var(--lc-surface);',
