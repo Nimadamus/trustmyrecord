@@ -434,7 +434,7 @@
             (function () {
                 try {
                     var n = new URLSearchParams(location.search).get('next');
-                    if (!n || !/^\/(?!\/)/.test(n) || n.indexOf('://') !== -1) return;
+                    if (!n || !/^\/(?!\/)/.test(n) || n.indexOf('://') !== -1 || /[\\\x00-\x1f]/.test(n)) return;
                     n = n.split('#')[0];
                     document.getElementById('loginToRegister').setAttribute('href', '/register/?return=' + encodeURIComponent(n));
                 } catch (e) { }
@@ -539,6 +539,12 @@
                 if (!raw) return '';
                 try { raw = decodeURIComponent(raw); } catch (error) {}
                 if (!/^\/(?!\/)/.test(raw) || raw.indexOf('://') !== -1) return '';
+                // A backslash or control character passes the test above, but the URL
+                // parser reads a backslash or tab after the first slash as another slash,
+                // so the path became a link to another site: an open redirect after login.
+                // Reject them and require the resolved URL to be on this origin. 20261118
+                if (/[\\\x00-\x1f]/.test(raw)) return '';
+                try { if (new URL(raw, location.origin).origin !== location.origin) return ''; } catch (error) { return ''; }
                 return raw;
             }
 

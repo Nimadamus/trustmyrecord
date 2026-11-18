@@ -359,7 +359,7 @@
        so this can never become an open redirect. */
     function returnPath() {
         var base = (cfg && cfg.returnPath) || window.location.pathname;
-        if (!/^\/(?!\/)/.test(base) || base.indexOf('://') !== -1) base = window.location.pathname;
+        if (!/^\/(?!\/)/.test(base) || base.indexOf('://') !== -1 || /[\\\x00-\x1f]/.test(base)) base = window.location.pathname;
         return base + (base.indexOf('?') === -1 ? '?' : '&') + 'simResume=1';
     }
 

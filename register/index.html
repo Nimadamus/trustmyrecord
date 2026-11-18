@@ -499,7 +499,7 @@
             (function () {
                 try {
                     var r = new URLSearchParams(location.search).get('return');
-                    if (!r || !/^\/(?!\/)/.test(r) || r.indexOf('://') !== -1) return;
+                    if (!r || !/^\/(?!\/)/.test(r) || r.indexOf('://') !== -1 || /[\\\x00-\x1f]/.test(r)) return;
                     document.getElementById('registerToLogin').setAttribute('href', '/login/?next=' + encodeURIComponent(r.split('#')[0]));
                 } catch (e) { }
             })();
@@ -861,7 +861,10 @@
                         var returnTo = '';
                         if (returnRaw) {
                             try { returnRaw = decodeURIComponent(returnRaw); } catch (error) {}
-                            if (/^\/(?!\/)/.test(returnRaw) && returnRaw.indexOf('://') === -1) returnTo = returnRaw;
+                            // Backslash or control characters resolve to another host: reject, then require same origin. 20261118
+                            if (/^\/(?!\/)/.test(returnRaw) && returnRaw.indexOf('://') === -1 && !/[\\\x00-\x1f]/.test(returnRaw)) {
+                                try { if (new URL(returnRaw, location.origin).origin === location.origin) returnTo = returnRaw; } catch (error) {}
+                            }
                         }
                         if (returnTo) {
                             var pendingToken = returnParams.get('pendingToken');
