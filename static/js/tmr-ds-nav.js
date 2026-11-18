@@ -1037,6 +1037,24 @@
   else init();
 })();
 
+/* iOS input zoom guard (20261118). Separate from the install block below,
+   which exits early on pages where config.js already ran. */
+(function () {
+    try {
+        // iPhone zooms the whole page in when a field under 16px gets focus
+        // (search boxes and filters here are 13-15px) and the installed app has
+        // no easy way back out. maximum-scale=1 stops that on iOS while pinch
+        // zoom keeps working there; Android is left alone because on Android
+        // the same setting would block pinch zoom.
+        var ua = navigator.userAgent || '';
+        var iOS = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        var vp = document.querySelector('meta[name="viewport"]');
+        if (iOS && vp && !/maximum-scale/i.test(vp.content || '')) {
+            vp.setAttribute('content', (vp.content || 'width=device-width, initial-scale=1') + ', maximum-scale=1');
+        }
+    } catch (e) {}
+})();
+
 /* App install: every page that renders this header also carries the web
    manifest, the iOS home screen icon and the service worker, so "Install app" /
    "Add to Home Screen" works from any page, not only the homepage. Same block as
