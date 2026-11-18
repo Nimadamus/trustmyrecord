@@ -615,13 +615,22 @@ function positionNotificationsDropdown(dropdown) {
     const bell = getNotificationTrigger();
     if (!bell || dropdown.id !== 'notificationsDropdown') return;
     const rect = bell.getBoundingClientRect();
-    const width = Math.min(380, window.innerWidth - 20);
+    // clientWidth, not innerWidth: innerWidth counts a desktop scrollbar.
+    const vw = document.documentElement.clientWidth || window.innerWidth;
+    const vh = window.innerHeight;
+    const width = Math.min(380, vw - 20);
     let left = rect.right - width;
-    left = Math.max(10, Math.min(left, window.innerWidth - width - 10));
+    left = Math.max(10, Math.min(left, vw - width - 10));
     dropdown.style.width = width + 'px';
     dropdown.style.left = left + 'px';
     dropdown.style.right = 'auto';
-    dropdown.style.top = Math.round(rect.bottom + 10) + 'px';
+    // On phones the bell sits low in the scrolled menu panel, so "under the
+    // bell" put most of the panel (up to 72vh tall) below the screen. Keep the
+    // whole panel on screen. 20261118
+    let top = Math.round(rect.bottom + 10);
+    const maxTop = Math.round(vh - vh * 0.72 - 10);
+    if (top > maxTop) top = Math.max(10, maxTop);
+    dropdown.style.top = top + 'px';
 }
 
 function toggleNotificationsDropdown(e) {
