@@ -197,7 +197,9 @@
     '[data-drill-category],[data-drill-local],tr:has(> [data-drill-category]) > td.num{cursor:pointer}',
     'tr:has(> [data-drill-category]):hover > td.num{text-decoration:underline dotted rgba(124,192,255,.55);text-underline-offset:3px}',
     '.tdr-cta{display:inline-flex;align-items:center;gap:4px;margin-left:8px;padding:2px 8px;border-radius:999px;border:1px solid rgba(77,163,255,.35);color:#7cc0ff;font:900 9.5px Inter,sans-serif;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;vertical-align:middle;background:rgba(77,163,255,.06)}',
-    '[data-drill-category]:hover .tdr-cta{background:rgba(77,163,255,.16);color:#fff}'
+    '[data-drill-category]:hover .tdr-cta{background:rgba(77,163,255,.16);color:#fff}' +
+    /* light theme: #7cc0ff on a white card is 1.9:1. 20261118 */
+    'html[data-tmr-theme="light"] .tdr-cta:not(#tmr-x){color:#1B4F9E;border-color:rgba(30,91,191,.35)}html[data-tmr-theme="light"] [data-drill-category]:hover .tdr-cta:not(#tmr-x){color:#07182A}'
   ].join('\n');
   function ensureCss() {
     if (document.getElementById('tdr-css')) return;
