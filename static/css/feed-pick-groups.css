@@ -241,3 +241,94 @@ html[data-tmr-theme="light"] .fpg-end i { color: #0A8B4E; }
 @media (max-width: 640px) {
     .fi-user-subline .fi-dot { display: none !important; }
 }
+
+/* FEED_BATCH_20261117 - one submission, one compact post. Picks collapsed to a
+   one-line peek; "View All N Picks" opens every pick inline, and a big batch
+   scrolls inside its own bounded area. Row hierarchy: selection, market + odds,
+   opponent + game time, units + status. */
+.feed-item.fpg-batch { overflow-anchor: none; }
+.feed-item.fpg-batch .fpg-summary { margin: 2px 0 0; }
+.feed-item.fpg-batch .fpg-headline { gap: 12px; }
+.feed-item.fpg-batch .fpg-count { min-width: 42px; height: 42px; border-radius: 11px; font-size: 1.32rem; }
+.feed-item.fpg-batch .fpg-headline b { font-size: 1.1rem; line-height: 1.3; }
+.feed-item.fpg-batch .fpg-headline small { margin-top: 3px; font-size: .85rem; color: var(--fv-text-2, #C3CFE2); }
+.feed-item.fpg-batch .fpg-sports { margin-top: 10px; }
+
+.fpg-peek {
+    display: flex; align-items: center; gap: 8px; margin: 12px 0 0; padding: 10px 14px;
+    border-radius: 10px; border: 1px solid var(--fv-line-soft, rgba(110,145,205,.16)); background: rgba(8, 16, 34, .6);
+    color: var(--fv-text, #F3F7FD); font: 600 .9rem/1.35 'Inter', sans-serif;
+}
+.fpg-peek span {
+    flex: 1 1 auto; min-width: 0; overflow: hidden;
+    display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 1; line-clamp: 1;
+}
+.fpg-peek i { font-style: normal; color: var(--fv-muted, #8C9BB5); padding: 0 2px; }
+.fpg-peek em { flex: 0 0 auto; margin-left: auto; padding-left: 6px; font-style: normal; font-weight: 700; color: var(--fv-cyan, #63C3FF); }
+.fpg-peek[hidden] { display: none !important; }
+
+.feed-item.fpg-batch .fpg-batch-list {
+    margin-top: 12px; border: 1px solid var(--fv-line, rgba(70,118,200,.34)); border-radius: 12px;
+    background: rgba(8, 16, 34, .75); overflow: hidden;
+}
+.feed-item.fpg-batch--scroll .fpg-batch-list {
+    max-height: min(640px, 70vh); overflow-y: auto; overscroll-behavior: contain;
+    scrollbar-width: thin; scrollbar-color: rgba(99, 195, 255, .35) transparent;
+}
+.feed-item.fpg-batch--scroll .fpg-batch-list:focus-visible { outline: 2px solid var(--fv-cyan, #63C3FF); outline-offset: 2px; }
+.feed-item.fpg-batch .fpg-batch-list[hidden] { display: none !important; }
+
+.feed-item.fpg-batch .fpg-row { padding: 14px 16px; }
+.feed-item.fpg-batch .fpg-row + .fpg-row { border-top: 1px solid var(--fv-line-soft, rgba(110,145,205,.16)); }
+.feed-item.fpg-batch .fpg-row:first-child { border-top: 0; }
+.feed-item.fpg-batch .fpg-row-main { align-items: flex-start; gap: 14px; }
+.feed-item.fpg-batch .fpg-lg { margin-top: 2px; min-width: 52px; }
+.feed-item.fpg-batch .fpg-row-text { display: flex; flex-direction: column; gap: 4px; }
+.feed-item.fpg-batch .fpg-row-text .fpg-sel {
+    display: block; color: var(--fv-text, #F3F7FD); font: 800 1.08rem/1.3 'Inter', sans-serif;
+    letter-spacing: -.005em; overflow-wrap: break-word; word-break: normal;
+}
+.feed-item.fpg-batch .fpg-mkt { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; color: var(--fv-text-2, #C3CFE2); font: 600 .9rem/1.3 'Inter', sans-serif; }
+.feed-item.fpg-batch .fpg-mkt .fpg-odds {
+    display: inline-block; padding: 3px 8px; border-radius: 6px; background: rgba(99, 195, 255, .12);
+    color: var(--fv-text, #F3F7FD); font: 800 .9rem/1.1 'Inter', sans-serif; font-variant-numeric: tabular-nums;
+}
+.feed-item.fpg-batch .fpg-game { display: block; color: var(--fv-muted, #8C9BB5); font: 500 .85rem/1.4 'Inter', sans-serif; }
+.feed-item.fpg-batch .fpg-game span { white-space: nowrap; }
+/* the dot ends the first part, so a wrapped line never starts with it */
+.feed-item.fpg-batch .fpg-game span:not(:last-child)::after { content: ' \00B7'; white-space: pre; }
+.feed-item.fpg-batch .fpg-row-side { flex: 0 0 auto; display: flex; flex-direction: column; align-items: flex-end; gap: 7px; }
+.feed-item.fpg-batch .fpg-row-side .fpg-u { color: var(--fv-text, #F3F7FD); font: 800 .95rem/1 'Inter', sans-serif; font-variant-numeric: tabular-nums; }
+.feed-item.fpg-batch .fpg-row-actions { margin: 12px 0 0 66px; gap: 6px; }
+.feed-item.fpg-batch .fpg-act { min-height: 32px; padding: 0 12px; font-size: .8rem; }
+.feed-item.fpg-batch .fpg-row .fop-note, .feed-item.fpg-batch .fpg-row .fpg-verified { margin-left: 66px !important; }
+.feed-item.fpg-batch > .fpg-toggle { margin-top: 12px; font-size: .92rem; letter-spacing: .01em; }
+
+@media (max-width: 640px) {
+    .feed-item.fpg-batch .fpg-headline b { font-size: 1.02rem; }
+    .feed-item.fpg-batch .fpg-peek { padding: 9px 12px; font-size: .86rem; align-items: flex-end; }
+    .feed-item.fpg-batch .fpg-peek span { -webkit-line-clamp: 2; line-clamp: 2; }
+    .feed-item.fpg-batch .fpg-row { padding: 13px 12px; }
+    .feed-item.fpg-batch .fpg-row-main { flex-wrap: wrap; gap: 4px 11px; }
+    .feed-item.fpg-batch .fpg-lg { min-width: 44px; }
+    .feed-item.fpg-batch .fpg-row-text { flex: 1 1 calc(100% - 56px); }
+    /* units and status become the fourth line, under the game */
+    .feed-item.fpg-batch .fpg-row-side { flex: 1 1 100%; flex-direction: row; align-items: center; gap: 10px; padding-left: 55px; margin-top: 4px; }
+    .feed-item.fpg-batch .fpg-row-text .fpg-sel { font-size: 1.04rem; }
+    .feed-item.fpg-batch .fpg-row-actions { margin: 11px 0 0 0; }
+    .feed-item.fpg-batch .fpg-act { min-height: 38px; }
+    .feed-item.fpg-batch .fpg-row .fop-note, .feed-item.fpg-batch .fpg-row .fpg-verified { margin-left: 0 !important; }
+    .feed-item.fpg-batch--scroll .fpg-batch-list { max-height: 64vh; }
+}
+
+html[data-tmr-theme="light"] .fpg-peek,
+html[data-tmr-theme="light"] .feed-item.fpg-batch .fpg-batch-list { background: #FFFFFF; border-color: rgba(30, 91, 191, .26); }
+html[data-tmr-theme="light"] .fpg-peek { color: #07182A; }
+html[data-tmr-theme="light"] .fpg-peek i { color: #4A6079; }
+html[data-tmr-theme="light"] .fpg-peek em { color: #1B4F9E; }
+html[data-tmr-theme="light"] .feed-item.fpg-batch .fpg-headline small { color: #2E4459; }
+html[data-tmr-theme="light"] .feed-item.fpg-batch .fpg-row-text .fpg-sel,
+html[data-tmr-theme="light"] .feed-item.fpg-batch .fpg-row-side .fpg-u { color: #07182A; }
+html[data-tmr-theme="light"] .feed-item.fpg-batch .fpg-mkt { color: #2E4459; }
+html[data-tmr-theme="light"] .feed-item.fpg-batch .fpg-mkt .fpg-odds { color: #07182A; background: rgba(30, 91, 191, .10); }
+html[data-tmr-theme="light"] .feed-item.fpg-batch .fpg-game { color: #4A6079; }

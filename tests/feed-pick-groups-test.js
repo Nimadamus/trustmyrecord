@@ -91,18 +91,17 @@ function checkSession(n) {
   const g = groups[0];
   assert.strictEqual(g.pick_count, n);
   const html = sb.renderFeedItem(g);
-  assert.ok(html.includes('KenBcapper posted ' + n + ' new picks'), 'headline');
+  assert.ok(/KenBcapper posted \d+ (\w+ )?picks/.test(html), 'headline');
   const rowIds = idsIn(html).slice(1);
   assert.deepStrictEqual(rowIds.slice().sort(), picks.map((p) => p.item_id).sort(), 'every pick is a row, once');
   assert.strictEqual((html.match(/data-fop-react="tail"/g) || []).length, n, 'a Tail on every pick');
   assert.strictEqual((html.match(/data-fop-react="fade"/g) || []).length, n, 'a Fade on every pick');
   assert.strictEqual((html.match(/sharePost\(/g) || []).length, n, 'a Share on every pick');
-  if (n > 3) {
-    assert.ok(html.includes('View all ' + n + ' picks'), 'expand button');
-    assert.ok(/class="fpg-rest" hidden/.test(html), 'the rest starts collapsed');
-  } else {
-    assert.ok(!html.includes('View all'), 'no expand button for a short group');
-  }
+  // FEED_BATCH_20261117: every batch starts collapsed and opens to ALL picks
+  assert.ok(html.includes('View All ' + n + ' Picks'), 'expand button');
+  assert.ok(/class="fpg-rest fpg-batch-list" hidden/.test(html), 'picks start collapsed');
+  assert.ok(/class="fpg-peek"/.test(html), 'collapsed peek line');
+  assert.strictEqual(/fpg-batch--scroll/.test(html), n > 6, 'bounded scroll only for a big batch');
   picks.forEach((p) => assert.ok(sb.TMRFeedOpenPicks._cards[p.item_id], 'Tail/Fade handler can find ' + p.item_id));
   return html;
 }
@@ -116,6 +115,32 @@ function checkSession(n) {
     assert.ok(html.indexOf('NBA</span>') < html.indexOf('NHL</span>'), 'largest sport first');
   });
   await t('30 picks: one card, 30 actionable rows', () => checkSession(30));
+  await t('3 picks: one collapsed card', () => checkSession(3));
+  await t('40 picks: one card, 40 actionable rows, bounded scroll', () => checkSession(40));
+  await t('FEED_BATCH: 5 NBA picks read "posted 5 NBA picks", opponent and units shown', () => {
+    const sb = boot();
+    const picks = [0, 0.1, 0.2, 7, 7.1].map((m, i) => openPick('americanwiseguy', m, 'NBA', i === 0
+      ? { pick_text: 'Toronto Raptors ML', pick_selection: 'Toronto Raptors', pick_away_team: 'New York Knicks', pick_home_team: 'Toronto Raptors', pick_units: '5' }
+      : i === 1 ? { pick_text: 'Detroit Pistons ML', pick_selection: 'Detroit Pistons', pick_away_team: 'Detroit Pistons', pick_home_team: 'San Antonio Spurs', pick_units: '5' }
+      : { pick_text: 'Over 220.5', pick_away_team: 'A Team', pick_home_team: 'B Team', pick_units: '5' }));
+    const out = sb.aggregateFeedItems(picks);
+    assert.strictEqual(out.length, 1);
+    const html = sb.renderFeedItem(out[0]);
+    assert.ok(html.includes('americanwiseguy posted 5 NBA picks'), 'headline');
+    assert.ok(html.includes('vs New York Knicks'), 'home pick shows opponent');
+    assert.ok(html.includes('@ San Antonio Spurs'), 'away pick shows opponent');
+    assert.ok(html.includes('A Team @ B Team'), 'total keeps the matchup');
+    assert.ok(html.includes('25u total'), 'units total');
+    assert.ok(html.includes('+1 more'), 'peek counts the rest');
+  });
+  await t('FEED_BATCH: separate submissions 45 min apart stay separate cards', () => {
+    const sb = boot();
+    const a = session('KenBcapper', 3, 0);
+    const b2 = session('KenBcapper', 3, 46);
+    const out = sb.aggregateFeedItems(a.concat(b2));
+    assert.strictEqual(out.filter((i) => i._group).length, 2);
+    assert.ok(out.every((i) => i._members.length === 3));
+  });
 
   await t('several members posting at once each get their own card, nothing lost', () => {
     const sb = boot();
@@ -227,7 +252,7 @@ function checkSession(n) {
   await t('a first-pick milestone finds its sitting even when later picks pushed the card time on', () => {
     const sb = boot();
     const picks = session('newbie', 6, 0); // newest first, 30 s apart; oldest is the first pick
-    picks.push(openPick('newbie', 40)); // first pick, 40 min before the newest
+    picks.push(openPick('newbie', 20)); // first pick, 20 min before the newest (FEED_BATCH: 30 min gap)
     const m = ms(55, 'newbie', 'first_pick', picks[picks.length - 1].created_at, 'newbie just made their first official pick.');
     const out = sb.aggregateFeedItems(picks.concat([m]));
     assert.strictEqual(out.length, 1, 'one card, got ' + out.map((i) => i.item_id).join(','));

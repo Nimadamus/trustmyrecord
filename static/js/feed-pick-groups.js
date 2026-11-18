@@ -19,7 +19,9 @@
     'use strict';
     if (window.TMRFeedGroups) return;
 
-    var SESSION_GAP_MS = 90 * 60 * 1000;   // picks closer together than this are one sitting
+    // FEED_BATCH_20261117: one submission = picks locked within minutes of each
+    // other. 90 min chained separate sittings of one member into a single card.
+    var SESSION_GAP_MS = 30 * 60 * 1000;   // picks closer together than this are one sitting
     var MIN_SESSION = 2;                   // 2+ open picks from one member = one card
     var RESULTS_WINDOW_MS = 60 * 60 * 1000; // record updates inside one grading hour
     var MIN_RESULTS = 2;                   // 2+ members graded together = one card
@@ -314,30 +316,48 @@
             (kind === 'tail' ? 'Tail' : 'Fade') + ' <span>' + count + '</span></button>';
     }
 
+    // FEED_BATCH_20261117: the opponent, from the picked side. "Toronto Raptors ML"
+    // with Knicks @ Raptors reads "vs New York Knicks"; totals and props keep the matchup.
+    function opponent(item) {
+        var away = String(item.pick_away_team || ''), home = String(item.pick_home_team || '');
+        if (!away || !home) return '';
+        var sel = String(item.pick_selection || item.pick_text || '').toLowerCase();
+        var isAway = sel.indexOf(away.toLowerCase()) === 0, isHome = sel.indexOf(home.toLowerCase()) === 0;
+        if (isHome && !isAway) return 'vs ' + away;
+        if (isAway && !isHome) return '@ ' + home;
+        return away + ' @ ' + home;
+    }
+
     function openRow(item) {
         var id = String(item.item_id || ('openpick:' + item.pick_id));
         var op = window.TMRFeedOpenPicks;
         if (op && op._cards) op._cards[id] = item; // Tail / Fade / slip handlers read this
         var h = (op && typeof op._handoff === 'function') ? op._handoff(item) : null;
         var isStarted = started(item);
-        var matchup = (item.pick_away_team && item.pick_home_team) ? item.pick_away_team + ' @ ' + item.pick_home_team : '';
-        var meta = [item.pick_market_label, fmtOdds(item.pick_odds), fmtUnits(item.pick_units)].filter(Boolean).join(' · ');
-        var sub = [matchup, fmtStart(item.pick_game_time)].filter(Boolean).join(' · ');
+        var odds = fmtOdds(item.pick_odds);
+        var units = fmtUnits(item.pick_units);
+        var opp = opponent(item);
+        var when = fmtStart(item.pick_game_time);
         var vt = Number(item.verified_tails_count) || 0, vf = Number(item.verified_fades_count) || 0;
         return '<div class="fpg-row fop-card" data-id="' + e(id) + '" data-fop-pick="' + e(item.pick_id) + '">' +
             '<div class="fpg-row-main">' +
                 '<span class="fpg-lg">' + e(league(item)) + '</span>' +
-                '<div class="fpg-row-text"><b>' + e(item.pick_text || item.pick_selection || 'Pick') + '</b>' +
-                    (meta ? '<small class="fpg-row-meta">' + e(meta) + '</small>' : '') +
-                    (sub ? '<small>' + e(sub) + '</small>' : '') +
+                '<div class="fpg-row-text">' +
+                    '<b class="fpg-sel">' + e(item.pick_text || item.pick_selection || 'Pick') + '</b>' +
+                    '<span class="fpg-mkt">' + (item.pick_market_label ? '<span>' + e(item.pick_market_label) + '</span>' : '') +
+                        (odds ? '<b class="fpg-odds">' + e(odds) + '</b>' : '') + '</span>' +
+                    ((opp || when) ? '<span class="fpg-game">' + (opp ? '<span>' + e(opp) + '</span> ' : '') + (when ? '<span>' + e(when) + '</span>' : '') + '</span>' : '') +
                 '</div>' +
-                '<b class="fv-chip fv-chip--' + (isStarted ? 'graded' : 'pending') + '">' + (isStarted ? 'IN PLAY' : 'OPEN') + '</b>' +
+                '<div class="fpg-row-side">' +
+                    (units ? '<b class="fpg-u">' + e(units) + '</b>' : '') +
+                    '<b class="fv-chip fv-chip--' + (isStarted ? 'graded' : 'pending') + '">' + (isStarted ? 'IN PLAY' : 'OPEN') + '</b>' +
+                '</div>' +
             '</div>' +
             '<div class="fpg-row-actions">' +
                 reactBtn('tail', item) + reactBtn('fade', item) +
+                '<button type="button" class="fpg-act fpg-share" onclick="sharePost(' + e(JSON.stringify(id)) + ')" aria-label="Share this pick"><i class="fas fa-share"></i> Share</button>' +
                 (h ? '<button type="button" class="fpg-act fop-slip" data-fop-slip="same"><i class="fas fa-plus"></i> Add to my slip</button>' : '') +
                 (h ? '<button type="button" class="fpg-act fop-slip fop-slip--other" data-fop-slip="other">Take ' + e(h.otherLabel) + '</button>' : '') +
-                '<button type="button" class="fpg-act fpg-share" onclick="sharePost(' + e(JSON.stringify(id)) + ')" aria-label="Share this pick"><i class="fas fa-share"></i> Share</button>' +
             '</div>' +
             ((vt || vf) ? '<p class="fpg-verified"><i class="fas fa-circle-check"></i> ' +
                 e([vt ? plural(vt, 'verified pick') + ' with it' : '', vf ? plural(vf, 'verified pick') + ' against it' : ''].filter(Boolean).join(' · ')) + '</p>' : '') +
@@ -348,15 +368,22 @@
     function toggleBtn(gid, n, label) {
         var open = !!expanded[gid];
         return '<button type="button" class="fpg-toggle" data-fpg-toggle="' + e(gid) + '" aria-expanded="' + open + '">' +
-            '<span>' + (open ? 'Show fewer' : closedLabel(n, label)) + '</span> <i class="fas fa-chevron-down"></i></button>';
+            '<span>' + (open ? openLabel(label) : closedLabel(n, label)) + '</span> <i class="fas fa-chevron-down"></i></button>';
+    }
+    function openLabel(label) { return label === 'picks' ? 'Collapse Picks' : 'Show fewer';
     }
     // FEED_TOGGLE_LABEL_20261116: "View all 2 record updates" under a card that
     // already lists both names read as nothing new; it opens the full cards.
     function closedLabel(n, label) {
         if (label === 'record updates' && n <= PREVIEW) return 'Show full ' + (n === 1 ? 'update' : 'updates');
+        if (label === 'picks') return 'View All ' + n + ' Picks';
         return 'View all ' + n + ' ' + label;
     }
 
+    // FEED_BATCH_20261117: one submission is one compact post. Picks stay
+    // collapsed (a one-line peek of the selections) until "View All N Picks";
+    // a large batch opens into its own bounded scroll area.
+    var SCROLL_AT = 6; // more rows than this scroll inside the card
     function renderOpenGroup(g) {
         var members = g._members;
         var n = members.length;
@@ -366,7 +393,7 @@
         var live = members.filter(started).length;
         var span = Math.max(0, t(members[0]) - t(members[n - 1]));
         var mins = Math.round(span / 60000);
-        var when = mins < 2 ? 'Posted together' : 'Posted over ' + (mins < 90 ? mins + ' min' : Math.round(mins / 60) + ' h');
+        var when = mins < 2 ? 'Posted together' : 'Posted over ' + mins + ' min';
         var header = (typeof window.renderFeedHeader === 'function')
             ? window.renderFeedHeader(Object.assign({}, members[0], { item_type: 'pick', post_type: 'pick' },
                 // FEED_GROUP_SPORT_20261116: the header named the newest pick's sport even
@@ -379,22 +406,30 @@
         var ordered = members.map(function (m, i) { return { m: m, i: i }; })
             .sort(function (a, b) { return (gt(a.m) - gt(b.m)) || (a.i - b.i); })
             .map(function (x) { return x.m; });
-        var preview = ordered.slice(0, PREVIEW).map(openRow).join('');
-        var rest = ordered.slice(PREVIEW).map(openRow).join('');
-        return '<div class="feed-item fpg-card fpg-card--open' + (open ? ' is-open' : '') + '" data-id="' + e(g.item_id) + '" data-type="open_pick_group" data-group-sig="' + e(g._sig) + '">' +
+        var totalU = members.reduce(function (s, m) { var u = Number(m.pick_units); return s + (isFinite(u) && u > 0 ? u : 0); }, 0);
+        var stats = [];
+        if (live) stats.push(live + ' in play');
+        if (n - live) stats.push((n - live) + ' open');
+        if (totalU > 0) stats.push((Math.round(totalU * 100) / 100) + 'u total');
+        var name = g.display_name || g.username;
+        var what = sports.length === 1 ? plural(n, sports[0] + ' pick') : n + ' picks';
+        var peek = '<span>' + ordered.slice(0, 4).map(function (m) { return e(m.pick_text || m.pick_selection || 'Pick'); }).join(' <i aria-hidden="true">·</i> ') + '</span>' +
+            (n > 4 ? '<em>+' + (n - 4) + ' more</em>' : '');
+        return '<div class="feed-item fpg-card fpg-card--open fpg-batch' + (open ? ' is-open' : '') + (n > SCROLL_AT ? ' fpg-batch--scroll' : '') + '" data-id="' + e(g.item_id) + '" data-type="open_pick_group" data-group-sig="' + e(g._sig) + '">' +
             header +
             firstPickRibbon(g._first_pick_ms) +
             '<div class="fpg-summary">' +
-                '<div class="fpg-headline"><span class="fpg-count">' + n + '</span><div><b>' + e(g.display_name || g.username) + ' posted ' + n + ' new picks</b>' +
-                    '<small>' + e(when) + (live ? ' · ' + live + ' in play' : '') + '</small></div></div>' +
-                '<div class="fpg-sports" aria-label="Sport breakdown">' + sports.map(function (s) {
+                '<div class="fpg-headline"><span class="fpg-count">' + n + '</span><div><b>' + e(name) + ' posted ' + e(what) + '</b>' +
+                    '<small>' + e([when].concat(stats).join(' · ')) + '</small></div></div>' +
+                (sports.length > 1 ? '<div class="fpg-sports" aria-label="Sport breakdown">' + sports.map(function (s) {
                     return '<span class="fpg-sport"><b>' + counts[s] + '</b> ' + e(s) + '</span>';
-                }).join('') + '</div>' +
+                }).join('') + '</div>' : '') +
+                '<p class="fpg-peek"' + (open ? ' hidden' : '') + '>' + peek + '</p>' +
             '</div>' +
-            '<div class="fpg-list">' + preview +
-                (rest ? '<div class="fpg-rest"' + (open ? '' : ' hidden') + '>' + rest + '</div>' : '') +
+            '<div class="fpg-rest fpg-batch-list"' + (open ? '' : ' hidden') + ' role="region" aria-label="' + e(name + '’s ' + n + ' picks') + '"' + (n > SCROLL_AT ? ' tabindex="0"' : '') + '>' +
+                ordered.map(openRow).join('') +
             '</div>' +
-            (rest ? toggleBtn(g.item_id, n, 'picks') : '') +
+            toggleBtn(g.item_id, n, 'picks') +
         '</div>';
     }
 
@@ -506,6 +541,8 @@
         card.classList.toggle('is-open', open);
         var rest = card.querySelector(':scope > .fpg-list > .fpg-rest, :scope > .fpg-rest');
         if (rest) rest.hidden = !open;
+        var peek = card.querySelector(':scope > .fpg-summary > .fpg-peek');
+        if (peek) peek.hidden = open;
         if (card.classList.contains('fpg-card--results')) {
             // open: the full record cards replace the short name list
             var list = card.querySelector(':scope > .fpg-list');
@@ -518,7 +555,7 @@
             var n2 = g2 ? g2._members.length : 0;
             var label = card.classList.contains('fpg-card--results') ? 'record updates'
                 : card.classList.contains('fpg-card--ms') ? 'milestones' : 'picks';
-            btn.querySelector('span').textContent = open ? 'Show fewer' : closedLabel(n2, label);
+            btn.querySelector('span').textContent = open ? openLabel(label) : closedLabel(n2, label);
         }
     }
 
@@ -530,8 +567,20 @@
         if (!card) return;
         ev.preventDefault();
         var open = !card.classList.contains('is-open');
+        // FEED_BATCH_20261117: the feed does not move. Opening grows the card
+        // downward from where the reader is; closing keeps the button where it
+        // was on screen (a long open list would otherwise drop them far below).
+        var y0 = window.pageYOffset || 0;
+        var b0 = btn.getBoundingClientRect().top;
         setExpanded(card, open);
-        if (!open) card.scrollIntoView({ block: 'nearest' });
+        try {
+            if (open) window.scrollTo(window.pageXOffset || 0, y0);
+            else {
+                // only when the closed card went up out of sight; otherwise stay put
+                var bt = btn.getBoundingClientRect().top;
+                if (bt < 70) window.scrollBy(0, bt - Math.max(70, b0));
+            }
+        } catch (x) { /* the toggle itself already worked */ }
     });
 
     // ---------------- wiring ----------------
