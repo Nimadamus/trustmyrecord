@@ -1079,3 +1079,40 @@
         }
     } catch (e) {}
 })();
+
+/* Phones: the alerts bell lives inside the collapsed menu panel, so a member on
+   a phone (or in the installed app) never saw that they had unread alerts. Mirror
+   the bell badge as a red dot on the menu button. Follows #homeNotifBadge
+   whoever updates it (unread-count fetch, mark-read, live alerts). 20261118. */
+(function () {
+    if (typeof document === 'undefined' || typeof MutationObserver === 'undefined') return;
+    if (window.__tmrNavUnreadDot) return; window.__tmrNavUnreadDot = true;
+    var tries = 0;
+    function css() {
+        if (document.getElementById('tmr-nav-unread-css')) return;
+        var s = document.createElement('style'); s.id = 'tmr-nav-unread-css';
+        s.textContent = '.ds-nav-toggle{position:relative}' +
+            '.ds-nav-toggle.has-unread::after{content:"";position:absolute;top:5px;right:5px;width:9px;height:9px;' +
+            'border-radius:50%;background:#ef4444;box-shadow:0 0 0 2px #02050A;pointer-events:none}' +
+            '.ds-nav.is-open .ds-nav-toggle.has-unread::after{display:none}';
+        (document.head || document.documentElement).appendChild(s);
+    }
+    function sync(badge, toggle) {
+        var on = !badge.hidden && badge.style.display !== 'none' && (badge.textContent || '').trim() !== '';
+        toggle.classList.toggle('has-unread', on);
+        if (on) toggle.setAttribute('aria-label', 'Toggle navigation, ' + badge.textContent.trim() + ' unread alerts');
+        else toggle.setAttribute('aria-label', 'Toggle navigation');
+    }
+    function hook() {
+        var badge = document.getElementById('homeNotifBadge');
+        var toggle = document.querySelector('.ds-nav-toggle');
+        if (!badge || !toggle) { if (++tries < 40) setTimeout(hook, 250); return; }
+        css();
+        sync(badge, toggle);
+        new MutationObserver(function () { sync(badge, toggle); })
+            .observe(badge, { attributes: true, attributeFilter: ['hidden', 'style'], childList: true, characterData: true, subtree: true });
+    }
+    try {
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', hook); else hook();
+    } catch (e) {}
+})();
