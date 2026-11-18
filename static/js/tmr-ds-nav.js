@@ -1036,3 +1036,28 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
 })();
+
+/* App install: every page that renders this header also carries the web
+   manifest, the iOS home screen icon and the service worker, so "Install app" /
+   "Add to Home Screen" works from any page, not only the homepage. Same block as
+   static/js/config.js; the shared __tmrPwaInit flag makes it run once. 20261118. */
+(function () {
+    if (typeof document === 'undefined' || typeof window === 'undefined') return;
+    if (window.__tmrPwaInit) return; window.__tmrPwaInit = true;
+    try {
+        var head = document.head || document.documentElement;
+        if (!document.querySelector('link[rel="manifest"]')) {
+            var m = document.createElement('link'); m.rel = 'manifest'; m.href = '/manifest.webmanifest'; head.appendChild(m);
+        }
+        if (!document.querySelector('meta[name="theme-color"]')) {
+            var t = document.createElement('meta'); t.name = 'theme-color'; t.content = '#0b0f14'; head.appendChild(t);
+        }
+        if (!document.querySelector('link[rel="apple-touch-icon"]')) {
+            var a = document.createElement('link'); a.rel = 'apple-touch-icon'; a.href = '/apple-touch-icon.png'; head.appendChild(a);
+        }
+        if ('serviceWorker' in navigator && location.pathname.indexOf('/betlegend-pro/') !== 0) {
+            var reg = function () { navigator.serviceWorker.register('/sw.js').catch(function () {}); };
+            if (document.readyState === 'complete') reg(); else window.addEventListener('load', reg);
+        }
+    } catch (e) {}
+})();

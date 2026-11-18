@@ -170,6 +170,11 @@
         html.tmr-sbnext .sbn-railwrap,
         html.tmr-sbnext .sbn-slip,
         html.tmr-sbnext .sbn-colhead { top: 0 !important; }
+        /* On phones the slip is a bottom sheet (sportsbook-next.css: bottom 0,
+           translateY(105%) closed). top:0 above pinned it to the top instead, so a
+           closed slip peeked 82px behind the pick bar and an open one hid its own
+           header and close button under the site nav. 20261118. */
+        html.tmr-sbnext .sbn-slip { top: auto !important; }
         html.tmr-sbnext body { padding-bottom: 81px !important; }
         html.tmr-sbnext .sbn-util { padding: 4px 13px 0; }
     }
