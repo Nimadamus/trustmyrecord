@@ -56,7 +56,12 @@ def sheet_for(rel: str):
 # Pages that stay dark whatever the member chose: the sportsbook board is a
 # dark product surface (its own rule since 2026-08-31), and a half light board
 # reads worse than a consistent dark one.
-DARK_ONLY = re.compile(r"^sportsbook/")
+# 2026-11-18: pages whose own inline styles were never run through the light
+# build. In light mode their dark panels got dark ink and their light ink landed
+# on light surfaces (measured: Pending Picks explainer, Trend Spotter hero and
+# compare table, Premium plans, TMR Coin tags, Wallet filter chips, Trivia
+# lead, Polls leaderboard). Dark until each gets its own light sheet.
+DARK_ONLY = re.compile(r"^(sportsbook|pending-picks|trendspotter|premium|tmr-coin|wallet|trivia|polls)/")
 
 
 def snippet(rel: str) -> str:
