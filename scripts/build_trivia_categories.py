@@ -189,10 +189,18 @@ def build(slug, cfg, master):
             '<meta name="twitter:image:alt" content="%s">' % esc(img_alt), "twitter:image:alt")
 
     # ---- which league this shell initialises ------------------------------
-    t = one('    <meta charset="UTF-8">\r\n',
-            '    <meta charset="UTF-8">\r\n'
-            '    <script>window.TMR_TRIVIA_CATEGORY = "%s";</script>\r\n' % slug,
-            "TMR_TRIVIA_CATEGORY")
+    # THEME_BOOT_ANCHOR_20261118: since 11/15 the appearance boot snippet sits on the
+    # charset line, so the bare charset anchor no longer exists and --check aborted.
+    if '<!-- /TMR_THEME_BOOT -->\r\n\r\n' in t:
+        t = one('<!-- /TMR_THEME_BOOT -->\r\n\r\n',
+                '<!-- /TMR_THEME_BOOT -->\r\n\r\n'
+                '    <script>window.TMR_TRIVIA_CATEGORY = "%s";</script>\r\n' % slug,
+                "TMR_TRIVIA_CATEGORY")
+    else:
+        t = one('    <meta charset="UTF-8">\r\n',
+                '    <meta charset="UTF-8">\r\n'
+                '    <script>window.TMR_TRIVIA_CATEGORY = "%s";</script>\r\n' % slug,
+                "TMR_TRIVIA_CATEGORY")
 
     # ---- structured data --------------------------------------------------
     t = one('{"@type": "ListItem", "position": 2, "name": "SPORTS TRIVIA", "item": '
