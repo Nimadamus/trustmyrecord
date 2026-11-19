@@ -95,6 +95,8 @@ jobs:
         # warning and does not block the pages that rebuilt correctly.
         env:
           PRERENDER_ETAG_CACHE: ${{ runner.temp }}/api-etag-cache
+          # PRERENDER_RATE_KEY_20261118: lets these reads skip the API's 120/min GET limiter
+          PRERENDER_RATE_KEY: ${{ secrets.PRERENDER_RATE_KEY }}
         run: python scripts/prerender_run.py
 
       - name: Save API ETag cache

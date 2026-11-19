@@ -51,9 +51,15 @@ def _store(url, etag, body):
         pass
 
 
+RATE_KEY = os.environ.get("PRERENDER_RATE_KEY", "").strip()
+
+
 def fetch_bytes(url, headers, timeout=45):
     """Decoded (gunzipped) response body for a GET, using the ETag cache when enabled."""
     hdrs = dict(headers)
+    # PRERENDER_RATE_KEY_20261118: the API skips its per-IP GET limiter for this job when the key matches.
+    if RATE_KEY and url.startswith("https://api.trustmyrecord.com/"):
+        hdrs["X-TMR-Prerender-Key"] = RATE_KEY
     cached = _load(url) if CACHE_DIR else None
     if cached:
         hdrs["If-None-Match"] = cached[0]
