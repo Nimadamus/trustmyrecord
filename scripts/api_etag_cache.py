@@ -14,7 +14,7 @@ Only active when PRERENDER_ETAG_CACHE names a directory (the workflow restores
 and saves it with actions/cache). Unset = no caching, identical to before.
 Any cache read/write problem falls back to a plain request.
 """
-import gzip, hashlib, json, os, urllib.error, urllib.request
+import gzip, hashlib, json, os, time, urllib.error, urllib.request
 
 CACHE_DIR = os.environ.get("PRERENDER_ETAG_CACHE") or ""
 STATS = {"hit_304": 0, "miss_200": 0, "uncached": 0}
@@ -57,17 +57,29 @@ def fetch_bytes(url, headers, timeout=45):
     cached = _load(url) if CACHE_DIR else None
     if cached:
         hdrs["If-None-Match"] = cached[0]
-    try:
-        with urllib.request.urlopen(urllib.request.Request(url, headers=hdrs), timeout=timeout) as r:
-            raw = r.read()
-            if (r.headers.get("Content-Encoding") or "").lower() == "gzip":
-                raw = gzip.decompress(raw)
-            etag = r.headers.get("ETag")
-    except urllib.error.HTTPError as e:
-        if e.code == 304 and cached:
-            STATS["hit_304"] += 1
-            return cached[1]
-        raise
+    # RATE_LIMIT_RETRY_20261118: the prerender job reads hundreds of endpoints back to back and the API's
+    # read limiter answers some with 429 (forum categories and threads were "kept" as fetch failures on
+    # every run). Wait as told (Retry-After, at most 20 s) and ask again, up to 3 tries.
+    for attempt in range(3):
+        try:
+            with urllib.request.urlopen(urllib.request.Request(url, headers=hdrs), timeout=timeout) as r:
+                raw = r.read()
+                if (r.headers.get("Content-Encoding") or "").lower() == "gzip":
+                    raw = gzip.decompress(raw)
+                etag = r.headers.get("ETag")
+            break
+        except urllib.error.HTTPError as e:
+            if e.code == 304 and cached:
+                STATS["hit_304"] += 1
+                return cached[1]
+            if e.code == 429 and attempt < 2:
+                try:
+                    wait = float(e.headers.get("Retry-After") or 0)
+                except (TypeError, ValueError):
+                    wait = 0
+                time.sleep(min(20.0, max(2.0, wait or 5.0 * (attempt + 1))))
+                continue
+            raise
     if CACHE_DIR and etag:
         _store(url, etag, raw)
         STATS["miss_200"] += 1
