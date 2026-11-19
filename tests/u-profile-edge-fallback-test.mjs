@@ -92,7 +92,7 @@ function installFetch(opts) {
     const url = new URL(typeof input === 'string' ? input : input.url);
     calls.push(url.pathname);
 
-    if (url.hostname.endsWith('onrender.com')) {
+    if (url.hostname === 'api.trustmyrecord.com' || url.hostname.endsWith('onrender.com')) {
       if (opts.apiDown) throw new Error('API unreachable');
       if (url.pathname === '/api/users/directory-usernames') {
         return new Response(JSON.stringify({
