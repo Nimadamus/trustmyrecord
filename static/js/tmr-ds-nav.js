@@ -973,7 +973,7 @@
      anywhere on the site. This nav is the only file 684 pages already load, so
      it is the carrier; the module itself is independent of the nav and guards
      against being loaded twice. */
-  loadChain(['/static/js/tmr-ds-avatar.bb8006945b70.js']);
+  loadChain(['/static/js/tmr-ds-avatar.f928f66374c7.js']);
 
   /* FEATURED MATCHUPS DIRECT (2026-09-15). Every Featured Matchups menu entry
      (MLB, NCAAF, NFL, tennis, soccer, desktop and mobile) opens today's article
