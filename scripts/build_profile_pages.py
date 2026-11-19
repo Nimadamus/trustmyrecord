@@ -444,9 +444,56 @@ def sport_cell(lab):
     href = SPORT_TRACKER.get(lab)
     return f'<a href="{href}">{html.escape(lab)}</a>' if href else html.escape(lab)
 
-def get(url):
+# PARALLEL_PREFETCH_20261119: ~2,700 sequential GETs no longer fit the 420 s stage
+# budget once the prerender key stopped the 429s that used to cut the run short
+# (stage timed out every run since 11/19 09:37Z). prefetch() warms this memo with
+# a small thread pool; get() then answers from it. Failures are memoised too, so
+# every caller sees exactly the outcome a sequential call would have had.
+_MEMO = {}
+
+def _get_raw(url):
     # BANDWIDTH_ETAG_20261102: conditional GET via scripts/api_etag_cache.py (304 = reuse last run's body).
     return api_etag_cache.get_json(url, {"Accept": "application/json", "Accept-Encoding": "gzip"}, timeout=45)
+
+def get(url):
+    hit = _MEMO.pop(url, None)
+    if hit is None:
+        return _get_raw(url)
+    ok, val = hit
+    if ok:
+        return val
+    raise val
+
+def _warm(url):
+    try:
+        _MEMO[url] = (True, _get_raw(url))
+    except Exception as ex:
+        _MEMO[url] = (False, ex)
+
+def prefetch(fn, items, workers=6):
+    """Run fn over items on a thread pool purely to warm _MEMO via _warm()."""
+    from concurrent.futures import ThreadPoolExecutor
+    global get
+    real = get
+    def warming_get(url):
+        if url not in _MEMO:
+            _warm(url)
+        ok, val = _MEMO[url]
+        if ok:
+            return val
+        raise val
+    get = warming_get
+    try:
+        with ThreadPoolExecutor(max_workers=workers) as ex:
+            list(ex.map(lambda x: _safe(fn, x), items))
+    finally:
+        get = real
+
+def _safe(fn, x):
+    try:
+        fn(x)
+    except Exception:
+        pass
 
 def list_users():
     """Every verified public-directory member, regardless of graded-pick count.
@@ -1260,6 +1307,7 @@ def main():
                              # /u/ page so a leaderboard link to /u/<user>/ never
                              # 404s once those boards point at /u/ instead of the
                              # /profile/?user= shell.
+    prefetch(lambda un: get(f"{API}/users/{un}"), [u["username"] for u in base])
     for u in base:
         un = u["username"]
         try:
@@ -1344,6 +1392,11 @@ def main():
     # render fails keeps their previous page and every other member still bakes.
     # One member's failed picks request used to abort the whole run.
     full_ok = compact_ok = 0
+    def _warm_user(un):
+        fetch_picks(un); fetch_metrics(un); fetch_awards(un)
+        if un in to_compact:
+            get(f"{API}/users/{urllib.parse.quote(un)}")
+    prefetch(_warm_user, [d["username"] for d in eligible_pages] + list(to_compact))
     for d in eligible_pages:
         un = d["username"]
         ddir = os.path.join(UDIR, un)
