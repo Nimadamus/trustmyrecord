@@ -584,7 +584,10 @@
   var PLACEHOLDER_NAME = /^(username|user name|user_name|display ?name|your name|your username|handle|name|member name)$/i;
   function notAMember(text) {
     var t = String(text || '').trim().replace(/^@+/, '');
-    return !t || NOT_A_MEMBER.test(t) || PLACEHOLDER_NAME.test(t);
+    /* EMOJI_NOT_A_MEMBER_20261118: an icon slot that prints only an emoji
+       (feed system rows show a flag or a speech bubble) was read as a member and
+       requested /users/%F0%9F%8F%81/avatar (404). A handle always has a letter or digit. */
+    return !t || !/[a-z0-9]/i.test(t) || NOT_A_MEMBER.test(t) || PLACEHOLDER_NAME.test(t);
   }
 
   function subjectFor(el) {
