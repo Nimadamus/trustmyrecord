@@ -94,7 +94,7 @@ DS_HEAD = (
     # the shared header at the design system's unscaled size in Inter 13px -- a
     # visibly different bar from every other page on the site.
     '<link rel="stylesheet" href="/static/css/tmr-navbar.css?v=1">'
-    '<link rel="stylesheet" href="/static/css/tmr-ds-header.4de36f3898ee.css">'
+    '<link rel="stylesheet" href="/static/css/tmr-ds-header.e37e473f8d74.css">'
 )
 # Shared nav + footer, so these pages are no longer chrome-less dead ends.
 #

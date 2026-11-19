@@ -120,6 +120,11 @@
     if (inflight) return inflight;
     var rt = getRefreshToken();
     if (!rt) return Promise.resolve('invalid');
+    /* REFRESH_REJECTED_MEMO_20261118: a token the server already rejected is
+       rejected forever; do not re-POST it on every call (shared memo with
+       backend-api.js). A new login stores a new token, which clears this. */
+    var memo = String(rt).slice(-24);
+    if (ls(function () { return sessionStorage.getItem('tmr_refresh_rejected'); }, null) === memo) return Promise.resolve('invalid');
 
     inflight = fetch(API + '/auth/refresh', {
       method: 'POST',
@@ -139,7 +144,10 @@
         }, function () { return 'network'; });
       }
       // 401/403 = the server definitively rejected this refresh token.
-      if (r.status === 401 || r.status === 403) return 'invalid';
+      if (r.status === 401 || r.status === 403) {
+        ls(function () { sessionStorage.setItem('tmr_refresh_rejected', memo); });
+        return 'invalid';
+      }
       return 'network';                 // 5xx / cold start / gateway: keep the session
     }, function () {
       return 'network';                 // offline, CORS, DNS: keep the session

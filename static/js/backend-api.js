@@ -451,6 +451,14 @@ class TrustMyRecordAPI {
     // ('success' | 'invalid' | 'network' -- unchanged, and never a logout).
     refreshAccessToken(baseUrlOverride) {
         if (!this.refreshToken) return Promise.resolve('invalid');
+        // REFRESH_REJECTED_MEMO_20261118: once the server rejects a refresh
+        // token (401/403) it will reject it forever, yet every API call kept
+        // re-POSTing it (5 to 8 a minute per open tab). Remember the rejected
+        // token for this tab and answer 'invalid' without a request. Tokens are
+        // still kept (never-auto-logout); a new login saves a new token, which
+        // no longer matches the memo, so renewal works again.
+        if (this._rejectedRefresh === this.refreshToken) return Promise.resolve('invalid');
+        try { if (sessionStorage.getItem('tmr_refresh_rejected') === this.refreshToken.slice(-24)) { this._rejectedRefresh = this.refreshToken; return Promise.resolve('invalid'); } } catch (e) {}
         if (this._refreshInFlight) return this._refreshInFlight;
         const flight = this._refreshAccessTokenOnce(baseUrlOverride);
         this._refreshInFlight = flight;
@@ -482,6 +490,8 @@ class TrustMyRecordAPI {
             if (response.status === 401 || response.status === 403) {
                 // Refresh token rejected. Per the never-auto-logout rule we do
                 // NOT clear tokens here; return 'invalid' only to stop retrying.
+                this._rejectedRefresh = this.refreshToken;
+                try { sessionStorage.setItem('tmr_refresh_rejected', String(this.refreshToken).slice(-24)); } catch (e) {}
                 return 'invalid';
             }
             // 5xx / 429 / 502 / cold-start: transient backend problem. Keep

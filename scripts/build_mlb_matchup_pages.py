@@ -699,7 +699,7 @@ HEAD_ASSETS = (
     # injection in tmr-ds-nav.js: an injected stylesheet does not block
     # rendering, so the bar painted at the wrong type for a measured 168ms
     # before snapping. (2026-09-01)
-    '    <link rel="stylesheet" href="/static/css/tmr-ds-header.4de36f3898ee.css">\n'
+    '    <link rel="stylesheet" href="/static/css/tmr-ds-header.e37e473f8d74.css">\n'
     '    <link rel="stylesheet" href="/static/css/tmr-mlb-matchup.css">\n'
     '    <link rel="stylesheet" href="/static/css/tmr-linkhub.css">\n'
 ) % _hashed("static/css/tmr-ds.css")
