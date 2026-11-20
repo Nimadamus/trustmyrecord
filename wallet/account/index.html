@@ -410,6 +410,8 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
     deposit: 'Brought in from your wallet'
   };
 
+  function escTx(v) { return String(v == null ? '' : v).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+
   async function loadTx(more) {
     var q = '/wallet/transactions?limit=25' + (more && state.oldestTxId ? '&before=' + state.oldestTxId : '');
     var d = await window.api.request(q);
@@ -419,8 +421,10 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
     if (!rows.length && !more) { tb.innerHTML = '<tr><td colspan="5" class="skel">No transactions yet.</td></tr>'; $('btnMore').style.display = 'none'; return; }
     rows.forEach(function (t) {
       var amt = Number(t.amount);
-      var label = t.friendly_type || TYPE_LABEL[t.entry_type] || t.entry_type;
-      var detail = t.description || t.admin_note || '';
+      /* The API sends the kind as `type` and its plain name as `label`; this read entry_type / friendly_type, which do not exist, so every row said "undefined" (found 2026-11-20). */
+      var kind = t.entry_type || t.type || '';
+      var label = escTx(t.friendly_type || TYPE_LABEL[kind] || t.label || kind);
+      var detail = escTx(t.description || t.admin_note || '');
       var tr = document.createElement('tr');
       tr.innerHTML = '<td>' + new Date(t.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) + '</td>' +
         '<td>' + label + '</td>' +

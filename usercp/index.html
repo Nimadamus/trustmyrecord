@@ -396,7 +396,7 @@ a:hover{color:var(--link-hover);text-decoration:underline}
     if(!list || !list.length){ el.innerHTML = '<li class="ucp-empty">You are not following anyone yet. Find people on the <a href="/handicappers/">handicappers</a> page or in the <a href="/forum/">forum</a>.</li>'; return; }
     el.innerHTML = list.map(function(u){
       var name = esc(u.display_name || u.username || 'User');
-      var av = '<img src="'+esc(tmrAvaSrc(u))+'" alt="" loading="lazy" style="width:34px;height:34px;border-radius:50%;object-fit:cover;flex:0 0 34px;">';
+      var av = '<img src="'+esc(tmrAvaSrc(u))+'" alt="" loading="lazy" data-u="'+esc(u.username || '')+'" onerror="this.onerror=null;if(window.TMRAvatar){this.src=TMRAvatar.dataUri(TMRAvatar.identity({username:this.getAttribute('data-u')}));}else{this.style.visibility='hidden';}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;flex:0 0 34px;">';
       var toggles = FOLLOW_PREFS.map(function(p){
         var on = u[p.key]===true;
         return '<label style="display:inline-flex;align-items:center;gap:4px;margin-right:10px;white-space:nowrap;">'+
@@ -439,7 +439,7 @@ a:hover{color:var(--link-hover);text-decoration:underline}
     if(!list || !list.length){ el.innerHTML = '<li class="ucp-empty">You haven\'t blocked anyone.</li>'; return; }
     el.innerHTML = list.map(function(u){
       var name = esc(u.display_name || u.username || 'User');
-      var av = '<img src="'+esc(tmrAvaSrc(u))+'" alt="" loading="lazy" style="width:34px;height:34px;border-radius:50%;object-fit:cover;flex:0 0 34px;">';
+      var av = '<img src="'+esc(tmrAvaSrc(u))+'" alt="" loading="lazy" data-u="'+esc(u.username || '')+'" onerror="this.onerror=null;if(window.TMRAvatar){this.src=TMRAvatar.dataUri(TMRAvatar.identity({username:this.getAttribute('data-u')}));}else{this.style.visibility='hidden';}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;flex:0 0 34px;">';
       return '<li style="padding:10px 4px;">'+
         '<div style="display:flex;align-items:center;gap:10px;">'+
           av+
