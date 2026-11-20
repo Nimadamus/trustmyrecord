@@ -50,6 +50,9 @@ body.mb2-page .model-builder-page > :not(.mb-hero):not(.mb-toolbar):not(.mb2-cta
 .mb2-page .mb2-chart { height: 92%; display: flex; align-items: flex-end; gap: 6%; padding-bottom: 2%; border-bottom: 1px solid rgba(77, 163, 255, .4); }
 .mb2-page .mb2-chart i { flex: 1; border-radius: 3px 3px 0 0; background: linear-gradient(180deg, #4da3ff, #1456b8); box-shadow: 0 0 12px rgba(29, 127, 232, .55); }
 .mb2-page .mb2-scr-foot { margin-top: 3%; color: #8fa6c2; font-size: clamp(9px, .78vw, 11px); font-weight: 600; letter-spacing: .04em; text-align: right; }
+/* The laptop base is 5% wider than the tilted screen on each side; at 1280 px it poked 7 px past the page and
+   gave the whole page a sideways scrollbar (2026-11-20). Clip keeps position: sticky working. */
+body.mb2-page { overflow-x: clip; }
 .mb2-page .mb2-base { height: 16px; margin: 0 -5%; border-radius: 3px 3px 16px 16px; background: linear-gradient(180deg, #cfd6e2, #6c7688 45%, #2a3140); box-shadow: 0 2px 0 rgba(255, 255, 255, .5) inset; }
 
 /* ------------------------------------------------------------ four steps */

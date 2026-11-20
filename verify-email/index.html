@@ -27,6 +27,14 @@
             color: #07182A;
             font-family: 'Inter', sans-serif;
         }
+        /* NAV_IN_GRID_BODY_20261120: body is a centred grid with 24px padding, and the shared
+           navbar is injected as one of its items. The single auto column grew to the
+           navbar's full natural width, so the navbar sat 24px in from the left, ran off the
+           right edge (a sideways scrollbar on desktop) and on phones the card itself was cut
+           off at the right. One column that cannot outgrow the page; navbar edge to edge. */
+        body { grid-template-columns: minmax(0, 1fr); }
+        body > .ds-nav { justify-self: stretch !important; min-width: 0 !important; width: auto !important; max-width: none !important; margin: -24px -24px 0 !important; }
+        body > .tmr-global-footer { min-width: 0 !important; max-width: 100% !important; }
 
         .verify-container {
             width: min(560px, 100%);

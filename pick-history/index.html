@@ -91,6 +91,8 @@
 
   /* PICK_HISTORY_AGRADE_20261111: stadium page backdrop, a real starting point on the landing
      state (handicapper lookup), and larger figures on the record header. */
+  /* 100vw includes the scrollbar, so the backdrop ran 9 px past the page on desktop and added a sideways scrollbar (2026-11-20). */
+  html, body { overflow-x: clip; }
   .ph-wrap::before { content: ""; position: absolute; top: 0; left: 50%; width: 100vw; transform: translateX(-50%); height: 560px; z-index: -1; pointer-events: none;
     background: linear-gradient(90deg, rgba(4,10,22,.94) 0%, rgba(4,10,22,.78) 50%, rgba(4,10,22,.38) 100%), #040a16 url(/static/img/model-builder/stadium-hero.jpg) center top / cover no-repeat;
     -webkit-mask-image: linear-gradient(180deg, #000 0, #000 50%, transparent); mask-image: linear-gradient(180deg, #000 0, #000 50%, transparent); }
