@@ -67,7 +67,7 @@ r = ctx.drawConsensus({ league: 'all', proven: false });
 assert.ok(r.count.includes('<b>2</b> games'), 'started game hidden: ' + r.count);
 assert.ok(r.html.includes('Chicago &lt;Bears&gt;') && !r.html.includes('<Bears>'), 'escaped');
 assert.ok(r.html.includes('<b>4</b> on this side, 3 with 25+ graded'));
-assert.ok(r.html.includes('60-50-2') && r.html.includes('+4.25u') && r.html.includes('+3.8% ROI') && r.html.includes('3 up, 1 not up'));
+assert.ok(r.html.includes('60-50-2') && r.html.includes('+4.25u') && r.html.includes('+3.8% ROI') && r.html.includes('3 above break-even, 1 at or below'));
 assert.ok(r.html.includes('+3 (3), +3.5'), 'spread lines signed, counts shown');
 assert.ok(r.html.includes('1 on both sides, not counted'));
 assert.ok(r.html.includes('Over') && r.html.includes('220.5'));
