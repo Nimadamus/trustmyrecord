@@ -71,6 +71,15 @@
     '.tmr-bet .tb-boardtbl td:first-child a{color:inherit;font-weight:600;text-decoration:underline;text-underline-offset:2px}' +
     '.tmr-bet .tb-lock{color:#f2c14e;font-weight:600;text-decoration:none}' +
     '.tmr-bet td.tb-lockcell{text-align:center}' +
+    '.tmr-bet .tb-cards{display:none}' +
+    '.tmr-bet .tb-gcard{margin-top:8px;padding:10px 12px}' +
+    '.tmr-bet .tb-ghead{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:6px;font-size:.9rem}' +
+    '.tmr-bet .tb-ghead a{color:inherit;font-weight:700;text-decoration:underline;text-underline-offset:2px}' +
+    '.tmr-bet .tb-ghead span{font-size:.78rem;opacity:.75}' +
+    '.tmr-bet .tb-grow{display:grid;grid-template-columns:78px 1fr auto;gap:6px;font-size:.82rem;padding:3px 0;font-variant-numeric:tabular-nums;border-top:1px solid rgba(255,255,255,.05)}' +
+    '.tmr-bet .tb-glabel{opacity:.7}.tmr-bet .tb-gsim{font-weight:700;text-align:right}' +
+    '.tmr-bet .tb-glock{grid-template-columns:1fr;text-align:center;padding-top:6px}' +
+    '@media (max-width:640px){.tmr-bet .tb-board-scroll,.tmr-bet.tb-board .tb-scroll{display:none}.tmr-bet .tb-cards{display:block}}' +
     '.tmr-bet .tb-more{margin-top:8px;background:transparent;color:inherit;border:1px solid var(--line,#24344d);border-radius:8px;padding:8px 12px;font-size:.82rem;cursor:pointer}' +
     '@media (max-width:760px){.tmr-bet .tb-grid{grid-template-columns:1fr}.tmr-bet{padding:12px}}';
 
@@ -369,6 +378,42 @@
     });
     scroll.appendChild(tbl);
     box.appendChild(scroll);
+    // Phones: one card per game, every number on screen (the table needs 720px).
+    var cards = el('div', 'tb-cards');
+    (data.games || []).forEach(function (g) {
+      var b = g.betting || {}; var ml = b.moneyline || {}; var sp = b.spread || {}; var t = b.total || {};
+      var H = (g.home && (g.home.abbr || g.home.key)) || ''; var A = (g.away && (g.away.abbr || g.away.key)) || '';
+      var c = el('div', 'tb-card tb-gcard');
+      var hd = el('div', 'tb-ghead');
+      var a = el('a', '', A + ' @ ' + H);
+      a.href = '?away=' + encodeURIComponent(A.toLowerCase()) + '&home=' + encodeURIComponent(H.toLowerCase());
+      hd.appendChild(a);
+      hd.appendChild(el('span', '', new Date(g.commence_time).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })));
+      c.appendChild(hd);
+      function row(label, bookTxt, simTxt) {
+        var r = el('div', 'tb-grow');
+        r.appendChild(el('span', 'tb-glabel', label));
+        r.appendChild(el('span', 'tb-gbook', bookTxt));
+        if (simTxt != null) r.appendChild(el('span', 'tb-gsim', simTxt));
+        c.appendChild(r);
+      }
+      if (g.locked) {
+        row('Moneyline', H + ' ' + am(ml.book_home_price));
+        row('Spread', sp.home_line != null ? H + ' ' + line(sp.home_line) : '–');
+        row('Total', t.line != null ? String(t.line) : '–');
+        var lk = el('a', 'tb-lock', 'Unlock the sim read with TMR Pro'); lk.href = '/premium/?entry=sim_board';
+        var lr = el('div', 'tb-grow tb-glock'); lr.appendChild(lk); c.appendChild(lr);
+      } else {
+        row('Moneyline', H + ' ' + am(ml.book_home_price) + (ml.book_novig_home_prob != null ? ' · ' + pct(ml.book_novig_home_prob) : ''),
+          'Sim ' + pct(ml.sim_home_win_prob) + ' (' + am(ml.fair_home_price) + ')');
+        if (sp.home_line != null) row('Spread', H + ' ' + line(sp.home_line) + (sp.book_novig_home_prob != null ? ' · ' + pct(sp.book_novig_home_prob) : ''),
+          'Sim ' + pct(sp.home_cover_ex_push));
+        if (t.line != null) row('Over ' + t.line, t.book_novig_over_prob != null ? pct(t.book_novig_over_prob) : '–',
+          'Sim ' + pct(t.over_ex_push) + (t.basis === 'model' ? '*' : ''));
+      }
+      cards.appendChild(c);
+    });
+    box.appendChild(cards);
     var notes = 'Book is the sportsbook’s own chance with the vig removed.';
     if ((data.games || []).some(function (g) { return g.betting && g.betting.total && g.betting.total.basis === 'model'; })) notes += ' * Total is the simulator’s own (not anchored to the book).';
     if (!data.pro && data.free_games) notes += ' The first ' + data.free_games + ' games are open to everyone; TMR Pro opens the full board.';
