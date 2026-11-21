@@ -1668,7 +1668,7 @@ html body.pro-board-page main .wdv-stage .wdv-note a{color:#fff!important;-webki
             <div class="pro-wrap">
                 <div class="pro-section-head">
                     <span class="pxs-k">The record, as graded</span>
-                    <h2>How the proven handicappers on the board have done</h2>
+                    <h2>How handicappers with 25+ graded picks have done</h2>
                     <p>Every graded pick by a handicapper outside TMR, tracked by the Watchdog, who already had 25 or more graded picks on games before that one. Winners and losers count the same. The only picks left out are the few graded at futures or parlay prices, counted in the note below. 1 unit risked per pick. This is a record of what already happened, not a forecast.</p>
                 </div>
                 <div class="pperf-grid" id="pperfGrid"></div>
@@ -1852,7 +1852,7 @@ html body.pro-board-page main .wdv-stage .wdv-note a{color:#fff!important;-webki
                         <summary>Do the handicappers on the board win?</summary>
                         <p>
                             Some do and many do not. When the verified figures are available, this
-                            page shows the graded result of the proven group live, with the dates it
+                            page shows the graded result of the group with 25 or more graded picks live, with the dates it
                             covers, whichever way it goes. It describes past picks only. It is not a
                             forecast, an edge or a promise of profit.
                         </p>
@@ -2138,7 +2138,7 @@ html body.pro-board-page main .wdv-stage .wdv-note a{color:#fff!important;-webki
             var fmt = function (v) { return Number(v).toLocaleString('en-US'); };
             var head = n ? fmt(n) + ' live pick' + (n === 1 ? '' : 's') + '. Locked.' : 'Picks land here as they post.';
             var sub = n ? fmt(summary.handicappers) + ' handicapper' + (summary.handicappers === 1 ? '' : 's')
-                + (summary.proven_handicappers > 0 ? ', ' + fmt(summary.proven_handicappers) + ' proven' : '') + '.'
+                + (summary.proven_handicappers > 0 ? ', ' + fmt(summary.proven_handicappers) + ' with 25+ graded picks' : '') + '.'
                 : 'Every pick sits beside a verified record.';
             var signedOut = true;
             try { signedOut = !localStorage.getItem('trustmyrecord_token'); } catch (e) { }
@@ -2231,7 +2231,7 @@ html body.pro-board-page main .wdv-stage .wdv-note a{color:#fff!important;-webki
                     + '<ul class="wdg-picks">' + g.rows.map(function (x) {
                         var c = x.c, p = x.p;
                         return '<li class="wdg-pick"><div class="wdg-sel"><b>' + pickLabel(p) + '</b><span class="wd-muted">' + esc(p.bet_type || '') + (p.units != null ? ' &middot; ' + esc(p.units) + 'u stated' : '') + '</span></div>'
-                            + '<button type="button" class="wdg-cap wd-row" data-key="' + esc(c.key) + '" aria-label="Open the record of ' + esc(c.name) + '"><span class="wdg-name">' + esc(c.name) + (c.proven ? ' <span class="wd-badge">Proven</span>' : '') + '</span><span class="wdg-stats">' + capLine(c) + '</span></button>'
+                            + '<button type="button" class="wdg-cap wd-row" data-key="' + esc(c.key) + '" aria-label="Open the record of ' + esc(c.name) + '"><span class="wdg-name">' + esc(c.name) + (c.proven ? ' <span class="wd-badge" title="25 or more graded picks. A sample size, not a win rate.">25+ graded</span>' : '') + '</span><span class="wdg-stats">' + capLine(c) + '</span></button>'
                             + (c.profile_url ? '<a class="wdg-prof" href="' + esc(c.profile_url) + '">Profile</a>' : '')
                             + '</li>';
                     }).join('') + '</ul></div>';
@@ -2270,7 +2270,7 @@ html body.pro-board-page main .wdv-stage .wdv-note a{color:#fff!important;-webki
                 + '<span class="wdg-upd">Updated ' + esc(new Date(d.generated_at).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })) + ' <button type="button" id="wdRefresh">Refresh</button></span></div>'
                 + '<div class="wd-bar">' +
                 '<input type="search" id="wdSearch" class="wd-search" placeholder="Search handicappers" value="' + esc(f.q) + '" aria-label="Search handicappers">' +
-                '<label class="wd-check"><input type="checkbox" id="wdProven"' + (f.proven ? ' checked' : '') + '> Proven (25+ graded)</label>' +
+                '<label class="wd-check"><input type="checkbox" id="wdProven"' + (f.proven ? ' checked' : '') + '> 25+ graded picks</label>' +
                 '<select id="wdLeague" aria-label="League"><option value="all">All leagues</option>' + (d.summary.leagues || []).map(function (l) { return opt(l, f.league); }).join('') + '</select>' +
                 '<select id="wdSource" aria-label="Source"><option value="all">All sources</option>' + sources.map(function (s) { return opt(s, f.source); }).join('') + '</select>' +
                 (f.view === 'games' ? '<select id="wdWin" aria-label="Starts within">' + [['all', 'Any start time'], ['3', 'Starts within 3 hours'], ['12', 'Starts within 12 hours'], ['24', 'Starts within 24 hours']].map(function (o) { return '<option value="' + o[0] + '"' + (f.win === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select>'
@@ -2288,7 +2288,7 @@ html body.pro-board-page main .wdv-stage .wdv-note a{color:#fff!important;-webki
                     rows.map(function (c) {
                         var r = c.record;
                         return '<tr class="wd-row" tabindex="0" data-key="' + esc(c.key) + '">' +
-                            '<td><div class="wd-name">' + esc(c.name) + (c.proven ? ' <span class="wd-badge">Proven</span>' : '') + '</div><div class="wd-sub">' + esc(c.source || '') + (c.sports && c.sports.length ? ' &middot; ' + esc(c.sports.join(', ')) : '') + '</div>'
+                            '<td><div class="wd-name">' + esc(c.name) + (c.proven ? ' <span class="wd-badge" title="25 or more graded picks. A sample size, not a win rate.">25+ graded</span>' : '') + '</div><div class="wd-sub">' + esc(c.source || '') + (c.sports && c.sports.length ? ' &middot; ' + esc(c.sports.join(', ')) : '') + '</div>'
                             + (canFollow ? '<button type="button" class="wd-follow' + (followKeys[c.key] ? ' on' : '') + '" data-follow="' + esc(c.key) + '">' + (followKeys[c.key] ? 'Following' : 'Follow') + '</button>' : '')
                             + '</td>' +
                             '<td class="wd-rec">' + r.w + '-' + r.l + (r.p ? '-' + r.p : '') + '<div class="wd-sub">' + c.graded + ' graded</div></td>' +
@@ -2372,7 +2372,7 @@ html body.pro-board-page main .wdv-stage .wdv-note a{color:#fff!important;-webki
                 var stat = function (label, val, cls) { return '<div class="wd-stat"><span>' + label + '</span><b class="' + (cls || '') + '">' + val + '</b></div>'; };
                 var f25 = h.form && h.form.last_25;
                 var html = '<div class="wd-sheet" role="dialog" aria-label="' + esc(h.name) + '"><button type="button" class="wd-close" aria-label="Close">&times;</button>' +
-                    '<div class="wd-head"><div><h3>' + esc(h.name) + (h.proven ? ' <span class="wd-badge">Proven</span>' : '') + '</h3><div class="wd-muted">' + esc(h.source || '') +
+                    '<div class="wd-head"><div><h3>' + esc(h.name) + (h.proven ? ' <span class="wd-badge" title="25 or more graded picks. A sample size, not a win rate.">25+ graded</span>' : '') + '</h3><div class="wd-muted">' + esc(h.source || '') +
                     (h.tracked_since ? ' &middot; tracked since ' + esc(day(h.tracked_since)) : '') + (h.source_url ? ' &middot; <a href="' + esc(h.source_url) + '" target="_blank" rel="nofollow noopener">' + esc(h.source || 'Source') + ' profile</a>' : '') + '</div></div></div>' +
                     '<div class="wd-stats">' + stat('Record', r.w + '-' + r.l + (r.p ? '-' + r.p : '')) + stat('Units', signed(h.units) + 'u', unitsCls(h.units)) + stat('ROI', h.roi == null ? 'n/a' : signed(h.roi, 1) + '%', unitsCls(h.roi)) +
                     stat('Win rate', h.win_rate == null ? 'n/a' : Number(h.win_rate).toFixed(1) + '%') + stat('Streak', (st.current ? (st.current > 0 ? 'W' : 'L') + Math.abs(st.current) : 'n/a'), st.current > 0 ? 'up' : st.current < 0 ? 'down' : '') +
