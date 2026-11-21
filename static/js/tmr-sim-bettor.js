@@ -260,8 +260,10 @@
     var keys = PROP_KEYS[sport]; var m = d.matchup || {};
     var pd = d.result && d.result.player_distributions;
     if (!keys || !pd || !board) return [];
-    var hn = nameKey(m.home && m.home.name); var an = nameKey(m.away && m.away.name);
-    var g = (board.games || []).filter(function (x) { return nameKey(x.home_team) === hn && nameKey(x.away_team) === an; })[0];
+    // Same team when the full names match or the board name ends with the nickname ("Los Angeles Clippers" / "LA Clippers").
+    var tk = function (s) { return String(s || '').toLowerCase().replace(/[^a-z0-9]/g, ''); };
+    var same = function (boardName, t) { var b = tk(boardName); return !!t && (b === tk(t.name) || (!!t.nickname && tk(t.nickname).length >= 4 && b.slice(-tk(t.nickname).length) === tk(t.nickname))); };
+    var g = (board.games || []).filter(function (x) { return same(x.home_team, m.home) && same(x.away_team, m.away); })[0];
     if (!g) return [];
     var players = {};
     ['home', 'away'].forEach(function (side) {
