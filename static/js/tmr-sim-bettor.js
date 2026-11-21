@@ -67,6 +67,9 @@
     '.tmr-bet .tb-out{font-size:.84rem;margin-top:8px;line-height:1.5;font-variant-numeric:tabular-nums}' +
     '.tmr-bet .tb-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}' +
     '.tmr-bet .tb-props table{min-width:560px}' +
+    '.tmr-bet .tb-boardtbl{min-width:720px}' +
+    '.tmr-bet .tb-boardtbl td:first-child a{color:inherit;font-weight:600;text-decoration:underline;text-underline-offset:2px}' +
+    '.tmr-bet .tb-lock{color:#f2c14e;font-weight:600;text-decoration:none}' +
     '.tmr-bet .tb-more{margin-top:8px;background:transparent;color:inherit;border:1px solid var(--line,#24344d);border-radius:8px;padding:8px 12px;font-size:.82rem;cursor:pointer}' +
     '@media (max-width:760px){.tmr-bet .tb-grid{grid-template-columns:1fr}.tmr-bet{padding:12px}}';
 
@@ -323,6 +326,75 @@
     });
   }
 
+  /* ---------- tonight's board: every game's read, from /slate-bets ---------- */
+
+  function boardTable(sport, data) {
+    var box = el('section', 'tmr-bet tb-board');
+    box.setAttribute('aria-label', 'Tonight’s board: simulation against the sportsbook');
+    var top = el('div', 'tb-top');
+    var left = el('div');
+    left.appendChild(el('h3', '', 'Tonight’s board'));
+    left.appendChild(el('div', 'tb-src', 'Every game with a sportsbook line, ' + (data.simulations || 10000).toLocaleString() + ' simulations each. Sim and fair prices against the book’s no-vig line.'));
+    top.appendChild(left);
+    box.appendChild(top);
+    var rows = (data.games || []).map(function (g) {
+      var b = g.betting || {}; var ml = b.moneyline || {}; var sp = b.spread || {}; var t = b.total || {};
+      var H = (g.home && (g.home.abbr || g.home.key)) || ''; var A = (g.away && (g.away.abbr || g.away.key)) || '';
+      var when = new Date(g.commence_time).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+      if (g.locked) {
+        return [A + ' @ ' + H, when, am(ml.book_home_price), sp.home_line != null ? H + ' ' + line(sp.home_line) : '–', t.line != null ? String(t.line) : '–', 'TMR Pro', '', ''];
+      }
+      return [A + ' @ ' + H, when, am(ml.book_home_price),
+        sp.home_line != null ? H + ' ' + line(sp.home_line) : '–',
+        t.line != null ? String(t.line) : '–',
+        H + ' ' + pct(ml.sim_home_win_prob) + ' (' + am(ml.fair_home_price) + ')',
+        sp.home_cover_ex_push != null ? pct(sp.home_cover_ex_push) + ' (' + diff(sp.difference_pts) + ')' : '–',
+        t.over_ex_push != null ? pct(t.over_ex_push) + ' (' + diff(t.difference_pts) + ')' + (t.basis === 'model' ? '*' : '') : '–'];
+    });
+    var scroll = el('div', 'tb-scroll');
+    var tbl = table(['Game', 'Start', 'Home ML', 'Spread', 'Total', 'Sim win (fair)', 'Home covers', 'Over'], rows);
+    tbl.className = 'tb-boardtbl';
+    // Each game opens the simulator with that matchup selected.
+    Array.prototype.forEach.call(tbl.querySelectorAll ? tbl.querySelectorAll('tbody tr') : [], function (tr, i) {
+      var g = data.games[i]; if (!g) return;
+      var a = el('a', '', tr.firstChild.textContent);
+      a.href = '?away=' + encodeURIComponent((g.away.abbr || g.away.key || '').toLowerCase()) + '&home=' + encodeURIComponent((g.home.abbr || g.home.key || '').toLowerCase());
+      tr.firstChild.textContent = ''; tr.firstChild.appendChild(a);
+      if (g.locked) {
+        var lk = el('a', 'tb-lock', 'Unlock with TMR Pro'); lk.href = '/premium/?entry=sim_board';
+        var cell = tr.children[5]; cell.textContent = ''; cell.appendChild(lk);
+        cell.setAttribute('colspan', '3'); if (tr.children[7]) tr.removeChild(tr.children[7]); if (tr.children[6]) tr.removeChild(tr.children[6]);
+      }
+    });
+    scroll.appendChild(tbl);
+    box.appendChild(scroll);
+    var notes = 'Difference in brackets is sim minus book, no-vig.';
+    if ((data.games || []).some(function (g) { return g.betting && g.betting.total && g.betting.total.basis === 'model'; })) notes += ' * Total is the simulator’s own (not anchored to the book).';
+    if (!data.pro && data.free_games) notes += ' The first ' + data.free_games + ' games are open to everyone; TMR Pro opens the full board.';
+    box.appendChild(el('p', 'tb-note', notes));
+    return box;
+  }
+  var boardDone = {};
+  function mountBoard(app) {
+    var sport = app && app.sport;
+    if (!BOARD_KEYS[sport] || boardDone[sport]) return;
+    var pane = app.nodes && (app.nodes.schedulePane || app.nodes.result);
+    if (!pane) return;
+    boardDone[sport] = true;
+    var host = (global.TMRSim && global.TMRSim.API_HOST) || 'https://api.trustmyrecord.com';
+    var headers = { Accept: 'application/json' };
+    try { if (global.api && global.api.token) headers.Authorization = 'Bearer ' + global.api.token; } catch (e) { /* anonymous */ }
+    fetch(host + '/api/' + sport + '/public/slate-bets', { headers: headers })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) {
+        if (!data || !data.games || !data.games.length) return;
+        injectCss();
+        var board = boardTable(sport, data);
+        pane.insertBefore(board, pane.firstChild);
+      })
+      .catch(function () { boardDone[sport] = false; });
+  }
+
   function mount(app, d) {
     var host = app && app.nodes && app.nodes.result;
     if (!host) return;
@@ -346,8 +418,15 @@
       return r;
     };
     S.SimApp.prototype.__tmrBet = true;
+    // Tonight's board goes up once the page's app exists.
+    var tries = 0;
+    (function waitApp() {
+      var app = global.TMRNbaSim || global.TMRNhlSim;
+      if (app) { try { mountBoard(app); } catch (e) { /* the page works without it */ } return; }
+      if ((tries += 1) < 40) global.setTimeout(waitApp, 250);
+    }());
     return true;
   }
-  global.TMRSimBettor = { build: build, mount: mount, split: split, fairAmerican: fairAmerican, propRows: propRows, propsSection: propsSection, overOf: overOf };
+  global.TMRSimBettor = { build: build, mount: mount, split: split, fairAmerican: fairAmerican, propRows: propRows, propsSection: propsSection, overOf: overOf, boardTable: boardTable };
   if (!hook()) document.addEventListener('DOMContentLoaded', hook);
 }());

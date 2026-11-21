@@ -67,4 +67,10 @@ const rows = B.propRows('nba', { matchup: { home: { name: 'Home Team' }, away: {
     outcomes: [{ selection: 'Over', line: 0.5, odds: -110 }, { selection: 'Under', line: 0.5, odds: -110 }, { selection: 'Over', line: 5.5, odds: 900 }] }] }] }] });
 assert.strictEqual(rows.length, 1, 'main line only, name matched without suffix and punctuation');
 assert.ok(Math.abs(rows[0].sim_over - 0.5) < 1e-9 && Math.abs(rows[0].book_over - 0.5) < 1e-9);
+// tonight's board: open rows carry the sim read, locked rows keep only the book line
+const SB = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/sim-slate-bets-sample.json'), 'utf8'));
+const bt = B.boardTable('nhl', SB).textContent;
+assert.ok(/Tonight/.test(bt) && /first 2 games are open/.test(bt), 'board heading and free note');
+assert.strictEqual(SB.games.filter((g) => g.locked).length, SB.games.length - 2);
+assert.ok(SB.games.filter((g) => g.locked).every((g) => g.betting.moneyline.sim_home_win_prob === undefined), 'locked rows carry no sim read');
 console.log('SIM_BETTOR_PANEL PASSED');
