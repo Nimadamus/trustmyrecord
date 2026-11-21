@@ -449,6 +449,20 @@
       .catch(function () { boardDone[sport] = false; });
   }
 
+  /* SIM_BETTOR_NFL_20261121: the NFL page is its own app (no TMRSim). It calls this after
+     each result with its output node and the API body ({ game, projection.betting }). */
+  function mountNfl(out, d) {
+    if (!out || !d || d.unavailable || !d.projection || !d.projection.betting) return;
+    var old = out.querySelector('.tmr-bet'); if (old) old.remove();
+    var g = d.game || {};
+    var panel = build({ projection: d.projection, matchup: {
+      home: { name: g.home, abbr: g.home_abbr || g.home }, away: { name: g.away, abbr: g.away_abbr || g.away } } });
+    if (!panel) return;
+    var kpis = out.querySelector('.kpis');
+    if (kpis && kpis.parentNode) kpis.parentNode.insertBefore(panel, kpis.nextSibling);
+    else out.insertBefore(panel, out.firstChild ? out.firstChild.nextSibling : null);
+  }
+
   function mount(app, d) {
     var host = app && app.nodes && app.nodes.result;
     if (!host) return;
@@ -483,6 +497,6 @@
     }());
     return true;
   }
-  global.TMRSimBettor = { build: build, mount: mount, split: split, fairAmerican: fairAmerican, propRows: propRows, propsSection: propsSection, overOf: overOf, boardTable: boardTable };
+  global.TMRSimBettor = { build: build, mount: mount, mountNfl: mountNfl, split: split, fairAmerican: fairAmerican, propRows: propRows, propsSection: propsSection, overOf: overOf, boardTable: boardTable };
   if (!hook()) document.addEventListener('DOMContentLoaded', hook);
 }());

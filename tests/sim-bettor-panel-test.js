@@ -26,6 +26,7 @@ const window = { document };
 const ctx = vm.createContext({ window, document, isFinite, Math, Number, String, Date, parseFloat });
 vm.runInContext(fs.readFileSync(path.join(__dirname, '../static/js/tmr-sim-bettor.js'), 'utf8'), ctx);
 const B = window.TMRSimBettor;
+assert.ok(typeof B.mountNfl === 'function', 'NFL mount exported');
 assert.ok(B && B.build, 'module exposes build');
 const S = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/sim-bettor-sample.json'), 'utf8'));
 
@@ -73,4 +74,13 @@ const bt = B.boardTable('nhl', SB).textContent;
 assert.ok(/Tonight/.test(bt) && /first 2 games are open/.test(bt), 'board heading and free note');
 assert.strictEqual(SB.games.filter((g) => g.locked).length, SB.games.length - 2);
 assert.ok(SB.games.filter((g) => g.locked).every((g) => g.betting.moneyline.sim_home_win_prob === undefined), 'locked rows carry no sim read');
+// NFL page (its own app): mountNfl puts the panel right after the KPI row, from the live 11/21 body
+const NFL = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/sim-bettor-nfl-sample.json'), 'utf8'));
+const nflText = B.build({ projection: NFL.projection, matchup: { home: { name: NFL.game.home, abbr: NFL.game.home_abbr }, away: { name: NFL.game.away, abbr: NFL.game.away_abbr } } }).textContent;
+assert.ok(/Market anchored/.test(nflText) && /Spread/.test(nflText) && nflText.includes(NFL.game.home_abbr + ' ' + NFL.projection.betting.spread.home_line), 'NFL panel uses the game abbreviations');
+const kpis = node('div'); kpis.className = 'kpis'; const out = node('div'); out.appendChild(node('div')); out.appendChild(kpis);
+let placed = null; out.querySelector = (sel) => (sel === '.kpis' ? kpis : null); out.insertBefore = (c) => { placed = c; return c; };
+B.mountNfl(out, NFL);
+assert.ok(placed && /The bet/.test(placed.textContent), 'mounted next to the KPI row');
+B.mountNfl(out, { unavailable: true }); B.mountNfl(null, NFL);
 console.log('SIM_BETTOR_PANEL PASSED');

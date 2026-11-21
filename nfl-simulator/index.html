@@ -1501,6 +1501,8 @@ function simAfterRender(out,d){
   if(!d||d.unavailable){revealResult(out,null);return}
   // A shared link runs before the gate is installed; the conversion block still belongs under the headline.
   try{if(!$('#simConvertPanel',out))simRenderConversion(out,d)}catch(e){}
+  /* SIM_BETTOR_NFL_20261121: book vs sim, no-vig, fair prices and any-line pricing (static/js/tmr-sim-bettor.js). */
+  try{if(window.TMRSimBettor&&window.TMRSimBettor.mountNfl)window.TMRSimBettor.mountNfl(out,d)}catch(e){}
   const u=shareUrl();
   if(u){try{history.replaceState(history.state,'',u)}catch(e){}simCacheWrite(d)}
   const h=$('#resultHeading',out);
@@ -3011,7 +3013,7 @@ function nflUpgradeRender(out,d,ctx){
 boot().then(installSimGate,installSimGate);
 </script>
 <script src="/static/js/tmr-session.66e52858e490.js"></script><script src="/static/js/tmr-take.js?v=e3c9b272d0d8"></script><script src="/static/js/tmr-ds-nav.225d208c4c49.js"></script>
-  <script defer src="/static/js/tmr-nfl-game.js?v=18faa0a69b42"></script>
+  <script defer src="/static/js/tmr-nfl-game.js?v=18faa0a69b42"></script><script defer src="/static/js/tmr-sim-bettor.js?v=19506f908a65"></script>
   <script defer src="/static/js/pick-progress-nudge.js?v=d83b51180b6b"></script>
   <script defer src="/static/js/first-pick-onboarding.js?v=73dc762988a9"></script>
     <script src="/static/js/tmr-live-chat.js?v=ee595c3e3e4b"></script>
