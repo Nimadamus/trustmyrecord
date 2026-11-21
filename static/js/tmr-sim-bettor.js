@@ -338,6 +338,12 @@
 
   /* ---------- tonight's board: every game's read, from /slate-bets ---------- */
 
+  // Today's games show the time; a game on another day leads with the weekday.
+  function startText(iso) {
+    var d = new Date(iso); var now = new Date();
+    var t = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    return d.toDateString() === now.toDateString() ? t : d.toLocaleDateString([], { weekday: 'short' }) + ' ' + t;
+  }
   function boardTable(sport, data) {
     var box = el('section', 'tmr-bet tb-board');
     box.setAttribute('aria-label', 'Tonight’s board: simulation against the sportsbook');
@@ -350,7 +356,7 @@
     var rows = (data.games || []).map(function (g) {
       var b = g.betting || {}; var ml = b.moneyline || {}; var sp = b.spread || {}; var t = b.total || {};
       var H = (g.home && (g.home.abbr || g.home.key)) || ''; var A = (g.away && (g.away.abbr || g.away.key)) || '';
-      var when = new Date(g.commence_time).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+      var when = startText(g.commence_time);
       if (g.locked) {
         return [A + ' @ ' + H, when, am(ml.book_home_price), sp.home_line != null ? H + ' ' + line(sp.home_line) : '–', t.line != null ? String(t.line) : '–', 'TMR Pro', '', ''];
       }
@@ -388,7 +394,7 @@
       var a = el('a', '', A + ' @ ' + H);
       a.href = '?away=' + encodeURIComponent(A.toLowerCase()) + '&home=' + encodeURIComponent(H.toLowerCase());
       hd.appendChild(a);
-      hd.appendChild(el('span', '', new Date(g.commence_time).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })));
+      hd.appendChild(el('span', '', startText(g.commence_time)));
       c.appendChild(hd);
       function row(label, bookTxt, simTxt) {
         var r = el('div', 'tb-grow');
