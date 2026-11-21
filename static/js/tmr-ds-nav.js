@@ -985,7 +985,7 @@
      is). Live Handicapper Watchdog counts on the Picks Board, homepage, Around the Web
      and leaderboards, the one-a-day free reveal, GA4 on pages that lacked it, and funnel
      source tracking. Adds page elements after load only; no URL or metadata change. */
-  loadChain(['/static/js/tmr-pro-funnel.bf860e64747c.js']);
+  loadChain(['/static/js/tmr-pro-funnel.87db401cd556.js']);
 
   // ACCOUNT_SETTINGS_20261115: Light appearance contrast guard. A coloured
   // fill (active tab, primary button) keeps its hue in light mode; where a page

@@ -116,17 +116,17 @@
     function consensusText(g) {
         if (!g) return '';
         return '<b>' + esc(g.away) + ' at ' + esc(g.home) + '</b>: ' + g.handicappers + ' handicappers outside TMR'
-            + (g.proven ? ' (' + g.proven + ' proven)' : '') + ' have picks in, sides hidden';
+            + (g.proven ? ' (' + g.proven + ' with 25+ graded picks)' : '') + ' have picks in, sides hidden';
     }
     function upsell(comp) {
         return boardFacts().then(function (f) {
             return '<div class="tpf-up"><div class="tpf-k">On the Watchdog board right now</div>'
                 + '<div class="tpf-nums"><div><b>' + f.picks + '</b><small>pending picks</small></div><div><b>' + f.handicappers + '</b><small>handicappers outside TMR</small></div>'
-                + '<div><b>' + f.games + '</b><small>upcoming games covered</small></div>' + (f.proven3 ? '<div><b>' + f.proven3 + '</b><small>games where 3+ proven handicappers have picks</small></div>' : '') + '</div>'
+                + '<div><b>' + f.games + '</b><small>upcoming games covered</small></div>' + (f.proven3 ? '<div><b>' + f.proven3 + '</b><small>games where 3+ handicappers with 25+ graded picks are on</small></div>' : '') + '</div>'
                 + (f.top ? '<p class="tpf-muted">Biggest consensus: ' + consensusText(f.top) + '.</p>' : '')
                 + '<p style="margin:10px 0 4px"><b>TMR Pro unlocks all of it:</b></p><ul class="tpf-ul">'
                 + '<li>Every pending pick on the board, beside each handicapper&#39;s graded record, units, ROI and streak</li>'
-                + '<li>Where the proven handicappers agree, game by game, before kickoff</li>'
+                + '<li>Where the tracked handicappers line up, game by game, before kickoff</li>'
                 + '<li>Bet Legend Pro, unlimited simulators, TrendSpotter money figures and 15 tracked models</li></ul>'
                 + '<div class="tpf-row">' + proCta(comp, 'Unlock the full Watchdog board') + '</div></div>';
         }).catch(function () { return '<div class="tpf-row">' + proCta(comp, 'Unlock all picks with TMR Pro') + '</div>'; });
@@ -159,7 +159,7 @@
         if (!r || !g.proven) return '';
         /* PRICE_SANITY_20261019: units are withheld (null) while some Watchdog grades carry futures prices */
         var u = g.proven_units == null ? null : Number(g.proven_units);
-        return 'The ' + g.proven + ' proven handicapper' + (g.proven === 1 ? '' : 's') + ' on this game: combined ' + n0(r.w) + '-' + n0(r.l) + (r.p ? '-' + n0(r.p) : '')
+        return 'The ' + g.proven + ' handicapper' + (g.proven === 1 ? '' : 's') + ' with 25+ graded picks on this game: combined ' + n0(r.w) + '-' + n0(r.l) + (r.p ? '-' + n0(r.p) : '')
             + (u == null ? ' record' : ', ' + (u > 0 ? '+' : u < 0 ? '&minus;' : '') + Math.abs(u).toFixed(1) + 'u') + ' since ' + WINDOW.since + ' (graded by TMR)';
     }
     function kick(iso) { try { return new Date(iso).toLocaleString('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' }) + ' PT'; } catch (e) { return ''; } }
@@ -264,7 +264,7 @@
     function revealCard(rv, extra) {
         var h = rv.handicapper || {}, p = rv.pick || {}, r = h.record || {};
         var line = [p.selection, p.line != null && String(p.selection || '').indexOf(String(Math.abs(p.line))) < 0 ? p.line : '', odds(p.odds)].filter(Boolean).join(' ');
-        return '<div class="tpf-pick"><div class="tpf-k">' + esc(h.name) + ' &middot; ' + esc(h.source || '') + (h.proven ? ' &middot; Proven' : '') + '</div>'
+        return '<div class="tpf-pick"><div class="tpf-k">' + esc(h.name) + ' &middot; ' + esc(h.source || '') + (h.proven ? ' &middot; 25+ graded' : '') + '</div>'
             + '<div class="sel">' + esc(line) + '</div>'
             + '<div class="tpf-muted">' + esc(p.league || '') + ' &middot; ' + esc(p.matchup || '') + ' &middot; ' + esc(p.bet_type || '') + ' &middot; starts ' + esc(kick(p.start)) + '</div>'
             + '<div class="tpf-stats">'
@@ -299,7 +299,7 @@
         var g = opts.game, what = g ? esc(g.away) + ' at ' + esc(g.home) : esc(opts.name || 'this handicapper');
         var count = g ? g.handicappers : (opts.pending || 1);
         var head = '<div class="tpf-k">Handicapper Watchdog &middot; live</div><h3>' + what + '</h3>'
-            + '<p class="tpf-muted">' + (g ? count + ' handicapper' + (count === 1 ? ' outside TMR has a' : 's outside TMR have') + ' pending pick' + (g.picks === 1 ? '' : 's') + ' on this game' + (g.proven ? ', ' + g.proven + ' of them proven (25+ graded picks)' : '') + '.'
+            + '<p class="tpf-muted">' + (g ? count + ' handicapper' + (count === 1 ? ' outside TMR has a' : 's outside TMR have') + ' pending pick' + (g.picks === 1 ? '' : 's') + ' on this game' + (g.proven ? ', ' + g.proven + ' of them with 25+ graded picks' : '') + '.'
                 : count + ' pending pick' + (count === 1 ? '' : 's') + ' right now.') + ' Collected from Covers, X, Reddit and other public sources, with each handicapper&#39;s graded record.</p>'
             + (g && proofText(g) ? '<p class="tpf-muted" style="margin-top:-2px">' + proofText(g) + '.</p>' : '');
         var ov = openModal(head + '<div id="tpfBody"><p class="tpf-muted">Loading&hellip;</p></div>');
@@ -328,7 +328,7 @@
             /* PAYWALL_20261024 (Nima): the free daily reveal is closed. Anyone without TMR Pro sees the
                counts above, locked rows and the Pro offer; the API returns no pick to them. */
             body.innerHTML = lockedRows(count)
-                + '<p><b>Unlock ' + (g ? 'every pick on this game' : 'every pick from ' + esc(opts.name || 'this handicapper')) + ' with TMR Pro.</b> See the handicapper, the exact pick and price, their graded record, units, ROI and streak, and where the proven handicappers agree.</p>'
+                + '<p><b>Unlock ' + (g ? 'every pick on this game' : 'every pick from ' + esc(opts.name || 'this handicapper')) + ' with TMR Pro.</b> See the handicapper, the exact pick and price, their graded record, units, ROI and streak, and where the tracked handicappers line up.</p>'
                 + '<div class="tpf-row">' + proCta(comp, 'Unlock with TMR Pro, $49.99/month') + '</div>'
                 + '<p class="tpf-muted" style="margin-top:10px">TMR Pro: every pending pick from every tracked handicapper, full histories and records. $49.99/month or $500/year, cancel anytime.</p>';
             wireCtas(body);
@@ -355,7 +355,7 @@
                     btn.type = 'button';
                     btn.className = 'tpf-chip';
                     var proof = proofText(g);
-                    btn.innerHTML = '<span>&#128274; <b>' + g.handicappers + '</b> handicapper' + (g.handicappers === 1 ? ' outside TMR has a pending pick' : 's outside TMR have pending picks') + ' on this game' + (g.proven ? ' &middot; <b>' + g.proven + ' proven</b> (25+ graded picks)' : '') + ' &middot; <u>See who and what they picked</u>'
+                    btn.innerHTML = '<span>&#128274; <b>' + g.handicappers + '</b> handicapper' + (g.handicappers === 1 ? ' outside TMR has a pending pick' : 's outside TMR have pending picks') + ' on this game' + (g.proven ? ' &middot; <b>' + g.proven + '</b> with 25+ graded picks' : '') + ' &middot; <u>See who and what they picked</u>'
                         + (proof ? '<small class="tpf-proof">' + proof + '</small>' : '') + '</span>';
                     btn.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); preview({ game: g, component: 'picks_board_game' }); });
                     var wrap = document.createElement('div');
@@ -432,7 +432,7 @@
         var f = document.createElement('form');
         f.className = 'tpf-cap';
         f.setAttribute('novalidate', '');
-        f.innerHTML = '<b>Get tonight&#39;s proven handicapper consensus free.</b>'
+        f.innerHTML = '<b>Get tonight&#39;s handicapper consensus free.</b>'
             + '<div class="tpf-cap-row"><input type="email" name="email" autocomplete="email" placeholder="you@example.com" aria-label="Email address" required>'
             + '<button type="submit">Send it to me</button></div>'
             + '<input class="tpf-hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">'
@@ -553,7 +553,7 @@
                 if (g) {
                     var proof = proofText(g);
                     wrap.innerHTML = '<button type="button" class="tpf-chip"><span>&#128274; <b>' + g.handicappers + '</b> handicapper' + (g.handicappers === 1 ? ' outside TMR has a pending pick' : 's outside TMR have pending picks')
-                        + ' on ' + esc(g.away) + ' at ' + esc(g.home) + (g.proven ? ' &middot; <b>' + g.proven + ' proven</b>' : '') + ' &middot; <u>See who and what they picked</u>'
+                        + ' on ' + esc(g.away) + ' at ' + esc(g.home) + (g.proven ? ' &middot; <b>' + g.proven + '</b> with 25+ graded picks' : '') + ' &middot; <u>See who and what they picked</u>'
                         + (proof ? '<small class="tpf-proof">' + proof + '</small>' : '') + '</span></button>';
                     wrap.querySelector('button').addEventListener('click', function () { preview({ game: g, component: comp }); });
                 } else if (proMember) {
@@ -713,8 +713,8 @@
                 var comp = el.getAttribute('data-tpf-live');
                 el.style.display = 'block';
                 el.style.marginTop = '6px';
-                el.innerHTML = '<a data-tpf-cta="' + esc(comp) + '" href="' + proHref(comp, '#board') + '"><b>' + n0(n) + '</b> proven handicapper'
-                    + (n === 1 ? ' has picks' : 's have picks') + ' up on games that have not started. See the Watchdog board</a>';
+                el.innerHTML = '<a data-tpf-cta="' + esc(comp) + '" href="' + proHref(comp, '#board') + '"><b>' + n0(n) + '</b> handicapper'
+                    + (n === 1 ? ' with 25+ graded picks has picks' : 's with 25+ graded picks have picks') + ' up on games that have not started. See the Watchdog board</a>';
                 el.hidden = false;
                 wireCtas(el);
                 once('tmr_pro_impression', { component: comp });
