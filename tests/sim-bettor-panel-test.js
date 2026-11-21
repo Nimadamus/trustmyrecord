@@ -56,4 +56,15 @@ const hp = x.above / (1 - x.at);
 assert.ok(Math.abs(hp - sp.home_cover_ex_push) < 0.002, 'client alt line matches server cover at the book line');
 assert.strictEqual(B.fairAmerican(0.5), -100);
 assert.strictEqual(B.build({ projection: {} }), null, 'no betting block, no panel');
+// props: exact over share from the simulated counts (values 0..4)
+const ov = B.overOf({ from: 0, counts: [10, 20, 30, 20, 20], runs: 100 }, 2.5);
+assert.ok(Math.abs(ov.over - 0.4) < 1e-9 && ov.push === 0, 'over 2.5 = 40%');
+const ovp = B.overOf({ from: 0, counts: [10, 20, 30, 20, 20], runs: 100 }, 2);
+assert.ok(Math.abs(ovp.push - 0.3) < 1e-9 && Math.abs(ovp.over - 40 / 70) < 1e-9, 'push on a whole line removed');
+const rows = B.propRows('nba', { matchup: { home: { name: 'Home Team' }, away: { name: 'Away Team' } },
+  result: { player_distributions: { home: [{ name: 'A. Player Jr.', stats: { points: { dist: { from: 0, counts: [50, 50], runs: 100 } } } }], away: [] } } },
+  { games: [{ home_team: 'Home Team', away_team: 'Away Team', prop_groups: [{ markets: [{ _stat: 'Points', _player: 'A Player',
+    outcomes: [{ selection: 'Over', line: 0.5, odds: -110 }, { selection: 'Under', line: 0.5, odds: -110 }, { selection: 'Over', line: 5.5, odds: 900 }] }] }] }] });
+assert.strictEqual(rows.length, 1, 'main line only, name matched without suffix and punctuation');
+assert.ok(Math.abs(rows[0].sim_over - 0.5) < 1e-9 && Math.abs(rows[0].book_over - 0.5) < 1e-9);
 console.log('SIM_BETTOR_PANEL PASSED');

@@ -65,6 +65,9 @@
     '.tmr-bet .tb-alt label{display:flex;flex-direction:column;font-size:.74rem;gap:3px;opacity:.9}' +
     '.tmr-bet .tb-alt input{width:96px;padding:8px;border-radius:8px;border:1px solid var(--line,#24344d);background:transparent;color:inherit;font-size:16px}' +
     '.tmr-bet .tb-out{font-size:.84rem;margin-top:8px;line-height:1.5;font-variant-numeric:tabular-nums}' +
+    '.tmr-bet .tb-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}' +
+    '.tmr-bet .tb-props table{min-width:560px}' +
+    '.tmr-bet .tb-more{margin-top:8px;background:transparent;color:inherit;border:1px solid var(--line,#24344d);border-radius:8px;padding:8px 12px;font-size:.82rem;cursor:pointer}' +
     '@media (max-width:760px){.tmr-bet .tb-grid{grid-template-columns:1fr}.tmr-bet{padding:12px}}';
 
   function injectCss() {
@@ -204,6 +207,122 @@
     return box;
   }
 
+  /* ---------- player props: book main line vs the simulated distribution ---------- */
+
+  var PROP_KEYS = {
+    nba: { 'points': 'points', 'rebounds': 'rebounds', 'assists': 'assists', 'threes': 'threes',
+      'points + rebounds': 'points_rebounds', 'points + assists': 'points_assists', 'rebounds + assists': 'rebounds_assists',
+      'points + rebounds + assists': 'points_rebounds_assists' },
+    nhl: { 'points': 'points', 'assists': 'assists', 'shots on goal': 'shots', 'goals': 'goals' },
+  };
+  var BOARD_KEYS = { nba: 'basketball_nba', nhl: 'icehockey_nhl' };
+  var propBoards = {};
+  function propBoard(sport) {
+    if (!propBoards[sport]) {
+      var host = (global.TMRSim && global.TMRSim.API_HOST) || 'https://api.trustmyrecord.com';
+      propBoards[sport] = fetch(host + '/api/games/props/' + BOARD_KEYS[sport], { headers: { Accept: 'application/json' } })
+        .then(function (r) { return r.ok ? r.json() : { games: [] }; })
+        .catch(function () { delete propBoards[sport]; return { games: [] }; });
+    }
+    return propBoards[sport];
+  }
+  function nameKey(s) {
+    return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+      .replace(/\b(jr|sr|ii|iii|iv)\b\.?/g, '').replace(/[^a-z]/g, '');
+  }
+  function implied(a) { a = Number(a); if (!isFinite(a) || a === 0) return null; return a > 0 ? 100 / (a + 100) : -a / (-a + 100); }
+  // P(stat > line) and P(stat == line) from the exact simulated counts.
+  function overOf(dist, ln) {
+    if (!dist || !dist.counts || !dist.runs) return null;
+    var above = 0; var at = 0;
+    for (var i = 0; i < dist.counts.length; i += 1) {
+      var v = (dist.from || 0) + i;
+      if (Math.abs(v - ln) < 0.05) at += dist.counts[i]; else if (v > ln) above += dist.counts[i];
+    }
+    var dec = dist.runs - at;
+    return dec > 0 ? { over: above / dec, push: at / dist.runs, n: dist.runs } : null;
+  }
+  /** Rows: every book prop that has a main line (Over and Under at one line) and a simulated player. */
+  function propRows(sport, d, board) {
+    var keys = PROP_KEYS[sport]; var m = d.matchup || {};
+    var pd = d.result && d.result.player_distributions;
+    if (!keys || !pd || !board) return [];
+    var hn = nameKey(m.home && m.home.name); var an = nameKey(m.away && m.away.name);
+    var g = (board.games || []).filter(function (x) { return nameKey(x.home_team) === hn && nameKey(x.away_team) === an; })[0];
+    if (!g) return [];
+    var players = {};
+    ['home', 'away'].forEach(function (side) {
+      (pd[side] || []).forEach(function (p) { players[nameKey(p.name)] = { p: p, side: side }; });
+    });
+    var rows = [];
+    (g.prop_groups || []).forEach(function (gr) {
+      (gr.markets || []).forEach(function (mk) {
+        var stat = keys[String(mk._stat || '').toLowerCase()];
+        var who = players[nameKey(mk._player)];
+        if (!stat || !who || !who.p.stats || !who.p.stats[stat]) return;
+        var byLine = {};
+        (mk.outcomes || []).forEach(function (o) {
+          var k = String(o.line); byLine[k] = byLine[k] || {}; byLine[k][String(o.selection).toLowerCase()] = o.odds;
+        });
+        var main = Object.keys(byLine).filter(function (k) { return byLine[k].over != null && byLine[k].under != null; })[0];
+        if (main == null) return;
+        var ln = Number(main); var o = byLine[main];
+        var po = implied(o.over); var pu = implied(o.under);
+        var sim = overOf(who.p.stats[stat].dist, ln);
+        if (!po || !pu || !sim) return;
+        var nv = po / (po + pu);
+        rows.push({ player: who.p.name, side: who.side, prop: mk._stat, line: ln, over_price: o.over, under_price: o.under,
+          book_over: nv, sim_over: sim.over, push: sim.push, fair_over: fairAmerican(sim.over), diff: (sim.over - nv) * 100, n: sim.n });
+      });
+    });
+    return rows.sort(function (a, b) { return Math.abs(b.diff) - Math.abs(a.diff); });
+  }
+  function propsSection(rows, d, source) {
+    var m = d.matchup || {};
+    var wrap = el('div', 'tb-alt tb-props');
+    var h = el('h4', '', 'Player props');
+    wrap.appendChild(h);
+    var shown = 10;
+    var tableHost = el('div');
+    function draw() {
+      tableHost.textContent = '';
+      tableHost.appendChild(table(['Player', 'Prop', 'Book over', 'No-vig', 'Sim over', 'Fair', 'Sim − book'],
+        rows.slice(0, shown).map(function (r) {
+          var abbr = r.side === 'home' ? (m.home && m.home.abbr) : (m.away && m.away.abbr);
+          return [r.player + (abbr ? ' (' + abbr + ')' : ''), r.prop + ' ' + r.line, am(r.over_price), pct(r.book_over), pct(r.sim_over), am(r.fair_over), diff(r.diff)];
+        })));
+    }
+    draw();
+    wrap.appendChild(el('div', 'tb-scroll')).appendChild(tableHost);
+    if (rows.length > shown) {
+      var more = el('button', 'tb-more', 'Show all ' + rows.length + ' props');
+      more.type = 'button';
+      more.addEventListener('click', function () { shown = rows.length; draw(); more.remove(); });
+      wrap.appendChild(more);
+    }
+    wrap.appendChild(el('p', 'tb-note', 'Book main lines' + (source ? ' from ' + String(source).split('+').map(function (s) { return ({ fanduel: 'FanDuel', espn: 'ESPN', draftkings: 'DraftKings', bovada: 'Bovada' })[s] || s; }).join(' and ') : '') + ', vig removed. Sim over is the share of '
+      + (rows[0] && rows[0].n ? rows[0].n : '') + ' simulated games the player played in, pushes left out. Prop probabilities are the simulator’s own (not anchored to the book).'));
+    return wrap;
+  }
+  // PROPS HELD BACK (11/21): on the 11/21 slate the simulated player lines sat
+  // 10 to 20 points under the book on 85 to 90 percent of props, a calibration
+  // gap, not a finding. The section only renders in preview (?props_preview=1)
+  // until the prop ledger shows the distributions are calibrated.
+  function propsEnabled() {
+    try { return global.TMR_SIM_PROPS === true || /[?&]props_preview=1/.test(global.location.search); } catch (e) { return false; }
+  }
+  function addProps(panel, app, d) {
+    var sport = app && app.sport;
+    if (!BOARD_KEYS[sport] || !propsEnabled()) return;
+    propBoard(sport).then(function (board) {
+      if (!panel.isConnected && panel.parentNode == null) return;
+      var rows = propRows(sport, d, board);
+      if (!rows.length) return;
+      var note = panel.querySelector('.tb-note:last-child');
+      panel.insertBefore(propsSection(rows, d, board && board.source), note || null);
+    });
+  }
+
   function mount(app, d) {
     var host = app && app.nodes && app.nodes.result;
     if (!host) return;
@@ -214,6 +333,7 @@
     var anchor = host.querySelector('.scoreboard, .kpis, .panel');
     var after = anchor && anchor.parentNode === host ? anchor.nextSibling : host.firstChild;
     host.insertBefore(panel, after);
+    addProps(panel, app, d);
   }
 
   function hook() {
@@ -228,6 +348,6 @@
     S.SimApp.prototype.__tmrBet = true;
     return true;
   }
-  global.TMRSimBettor = { build: build, mount: mount, split: split, fairAmerican: fairAmerican };
+  global.TMRSimBettor = { build: build, mount: mount, split: split, fairAmerican: fairAmerican, propRows: propRows, propsSection: propsSection, overOf: overOf };
   if (!hook()) document.addEventListener('DOMContentLoaded', hook);
 }());
