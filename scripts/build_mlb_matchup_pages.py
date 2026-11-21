@@ -728,6 +728,11 @@ def page_head(title, description, canonical, ld_json, og_title=None, og_desc=Non
         "    <meta property=\"og:title\" content=\"%s\">\n"
         "    <meta property=\"og:description\" content=\"%s\">\n"
         "    <meta property=\"og:url\" content=\"%s\">\n"
+        # OG_IMAGE_20261120: these pages asked for a large-image share card and
+        # named no image, so every shared link unfurled as bare text.
+        "    <meta property=\"og:image\" content=\"https://trustmyrecord.com/static/og/og-home.png\">\n"
+        "    <meta property=\"og:image:width\" content=\"1200\">\n"
+        "    <meta property=\"og:image:height\" content=\"630\">\n"
         "    <meta name=\"twitter:card\" content=\"summary_large_image\">\n"
         "    <meta name=\"theme-color\" content=\"#06101f\">\n"
         "%s"
