@@ -70,6 +70,7 @@
     '.tmr-bet .tb-boardtbl{min-width:720px}' +
     '.tmr-bet .tb-boardtbl td:first-child a{color:inherit;font-weight:600;text-decoration:underline;text-underline-offset:2px}' +
     '.tmr-bet .tb-lock{color:#f2c14e;font-weight:600;text-decoration:none}' +
+    '.tmr-bet td.tb-lockcell{text-align:center}' +
     '.tmr-bet .tb-more{margin-top:8px;background:transparent;color:inherit;border:1px solid var(--line,#24344d);border-radius:8px;padding:8px 12px;font-size:.82rem;cursor:pointer}' +
     '@media (max-width:760px){.tmr-bet .tb-grid{grid-template-columns:1fr}.tmr-bet{padding:12px}}';
 
@@ -154,10 +155,10 @@
 
     // Differences, said plainly in one line per market.
     var diffs = [];
-    if (hasBook) diffs.push('Moneyline: ' + H + ' ' + diff(ml.difference_pts));
-    if (b.spread && b.spread.difference_pts != null) diffs.push('Spread: ' + H + ' ' + diff(b.spread.difference_pts));
-    if (b.total && b.total.difference_pts != null) diffs.push('Over: ' + diff(b.total.difference_pts));
-    if (diffs.length) box.appendChild(el('p', 'tb-ind', 'Sim minus book, no-vig: ' + diffs.join(' · ')));
+    if (hasBook) diffs.push(H + ' wins ' + pct(ml.sim_home_win_prob) + ' vs book ' + pct(ml.book_novig_home_prob));
+    if (b.spread && b.spread.book_novig_home_prob != null) diffs.push(H + ' ' + line(b.spread.home_line) + ' covers ' + pct(b.spread.home_cover_ex_push) + ' vs book ' + pct(b.spread.book_novig_home_prob));
+    if (b.total && b.total.book_novig_over_prob != null) diffs.push('Over ' + b.total.line + ' ' + pct(b.total.over_ex_push) + ' vs book ' + pct(b.total.book_novig_over_prob));
+    if (diffs.length) box.appendChild(el('p', 'tb-ind', 'Sim vs book (vig removed): ' + diffs.join(' · ')));
     var pushes = [];
     if (b.spread && b.spread.push > 0.0005) pushes.push('spread push ' + pct(b.spread.push));
     if (b.total && b.total.push > 0.0005) pushes.push('total push ' + pct(b.total.push));
@@ -206,7 +207,7 @@
     box.appendChild(alt);
 
     box.appendChild(el('p', 'tb-note', ((b.basis && b.basis.note) ? b.basis.note + ' ' : '')
-      + 'Priced from ' + (b.simulations || 'the') + ' simulated games. ' + (b.disclaimer || '')));
+      + 'Priced from ' + (b.simulations ? Number(b.simulations).toLocaleString() : 'the') + ' simulated games. ' + (b.disclaimer || '')));
     return box;
   }
 
@@ -348,8 +349,8 @@
         sp.home_line != null ? H + ' ' + line(sp.home_line) : '–',
         t.line != null ? String(t.line) : '–',
         H + ' ' + pct(ml.sim_home_win_prob) + ' (' + am(ml.fair_home_price) + ')',
-        sp.home_cover_ex_push != null ? pct(sp.home_cover_ex_push) + ' (' + diff(sp.difference_pts) + ')' : '–',
-        t.over_ex_push != null ? pct(t.over_ex_push) + ' (' + diff(t.difference_pts) + ')' + (t.basis === 'model' ? '*' : '') : '–'];
+        sp.home_cover_ex_push != null ? pct(sp.home_cover_ex_push) + (sp.book_novig_home_prob != null ? ' · book ' + pct(sp.book_novig_home_prob) : '') : '–',
+        t.over_ex_push != null ? pct(t.over_ex_push) + (t.book_novig_over_prob != null ? ' · book ' + pct(t.book_novig_over_prob) : '') + (t.basis === 'model' ? '*' : '') : '–'];
     });
     var scroll = el('div', 'tb-scroll');
     var tbl = table(['Game', 'Start', 'Home ML', 'Spread', 'Total', 'Sim win (fair)', 'Home covers', 'Over'], rows);
@@ -362,13 +363,13 @@
       tr.firstChild.textContent = ''; tr.firstChild.appendChild(a);
       if (g.locked) {
         var lk = el('a', 'tb-lock', 'Unlock with TMR Pro'); lk.href = '/premium/?entry=sim_board';
-        var cell = tr.children[5]; cell.textContent = ''; cell.appendChild(lk);
+        var cell = tr.children[5]; cell.textContent = ''; cell.className = 'tb-lockcell'; cell.appendChild(lk);
         cell.setAttribute('colspan', '3'); if (tr.children[7]) tr.removeChild(tr.children[7]); if (tr.children[6]) tr.removeChild(tr.children[6]);
       }
     });
     scroll.appendChild(tbl);
     box.appendChild(scroll);
-    var notes = 'Difference in brackets is sim minus book, no-vig.';
+    var notes = 'Book is the sportsbook’s own chance with the vig removed.';
     if ((data.games || []).some(function (g) { return g.betting && g.betting.total && g.betting.total.basis === 'model'; })) notes += ' * Total is the simulator’s own (not anchored to the book).';
     if (!data.pro && data.free_games) notes += ' The first ' + data.free_games + ' games are open to everyone; TMR Pro opens the full board.';
     box.appendChild(el('p', 'tb-note', notes));
@@ -402,7 +403,9 @@
     var panel = build(d);
     if (!panel) return;
     // Right under the score and win chance, the first things a bettor reads.
-    var anchor = host.querySelector('.scoreboard, .kpis, .panel');
+    // Broadcast view: under the win chance bar (.bc-odds); classic view: under the scoreboard.
+    var anchor = null;
+    ['.bc-odds', '.sb', '.scoreboard', '.kpis', '.panel'].some(function (sel) { anchor = host.querySelector(sel); return anchor && anchor.parentNode === host; });
     var after = anchor && anchor.parentNode === host ? anchor.nextSibling : host.firstChild;
     host.insertBefore(panel, after);
     addProps(panel, app, d);
