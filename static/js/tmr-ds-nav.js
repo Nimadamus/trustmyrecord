@@ -161,7 +161,7 @@
          /matchup-of-the-day/ncaaf/ is a stable door scoped to one sport: baked
          with the newest NCAAF Game File, canonicalised to it, and out of the
          sitemap so search consolidates on the article's own URL. */
-      /*FMENU ncaaf*/ ['/matchup-of-the-day/oregon-michigan-state-one-side-is-far-better/', 'NCAAF', '/matchup-of-the-day/ncaaf/'],
+      /*FMENU ncaaf*/ ['/matchup-of-the-day/georgia-south-carolina-two-ranked-teams-meet/', 'NCAAF', '/matchup-of-the-day/ncaaf/'],
       /* Repointed 2026-09-04 from /today/ to /matchup-of-the-day/mlb/. /today/ is
          newest-wins across every sport, so once college football started publishing
          its own Game Files this entry and the NCAAF one both landed on whichever
@@ -180,7 +180,7 @@
          is a dead link, and this one waited for the page rather than the other
          way round. Seven competitions feed it: the Premier League, LaLiga,
          Bundesliga, Serie A, Ligue 1, the Champions League and MLS. */
-      /*FMENU soccer*/ ['/matchup-of-the-day/fc-bayern-munich-the-table-says-one-side/', 'Soccer', '/matchup-of-the-day/soccer/'],
+      /*FMENU soccer*/ ['/matchup-of-the-day/celta-vigo-real-madrid-the-table-says-one-side/', 'Soccer', '/matchup-of-the-day/soccer/'],
       /* Added 2026-09-09, the day the NFL lane published its first Game File.
          Same stable-door pattern: /matchup-of-the-day/nfl/ bakes with the newest
          NFL Game File and is canonicalised to it. */

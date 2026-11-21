@@ -30,11 +30,11 @@
         // the product.
         ["@sub", "Featured Matchups", [
             /*FMENU nfl-gotw*/ ["/handicapping/nfl/minnesota-won-8-last-10-vs-49ers/", "NFL Game of the Week", "/nfl-game-of-the-week/"],
-            /*FMENU ncaaf*/ ["/matchup-of-the-day/oregon-michigan-state-one-side-is-far-better/", "NCAAF", "/matchup-of-the-day/ncaaf/"],
+            /*FMENU ncaaf*/ ["/matchup-of-the-day/georgia-south-carolina-two-ranked-teams-meet/", "NCAAF", "/matchup-of-the-day/ncaaf/"],
             /*FMENU mlb*/ ["/matchup-of-the-day/rays-brewers-bats-feast-on-righties/", "MLB", "/matchup-of-the-day/mlb/"],
             /*FMENU nhl*/ ["/nhl/oilers-hurricanes-draisaitl-vs-aho/", "NHL", "/matchup-of-the-day/nhl/"],
             /*FMENU tennis*/ ["/matchup-of-the-day/burillo-gormaz-the-games-say-something-else/", "Tennis", "/matchup-of-the-day/tennis/"],
-            /*FMENU soccer*/ ["/matchup-of-the-day/fc-bayern-munich-the-table-says-one-side/", "Soccer", "/matchup-of-the-day/soccer/"]
+            /*FMENU soccer*/ ["/matchup-of-the-day/celta-vigo-real-madrid-the-table-says-one-side/", "Soccer", "/matchup-of-the-day/soccer/"]
         ]],
         // Each row lands on that league's research page, and each of those
         // pages opens on today's board for its league. All seven leagues since
