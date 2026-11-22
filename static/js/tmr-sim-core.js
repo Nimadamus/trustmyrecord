@@ -634,7 +634,11 @@
       // daily run / TMR) before they pressed anything, including on a reload of
       // their own result URL. A seed in the link is kept and used by the first
       // Run press on that same matchup, so a shared result still reproduces.
-      this.pendingSeed = isFinite(seed) && seed > 0 ? { seed: seed, away: a, home: h } : null;
+      // SIM_FRESH_EVERY_RUN_20261121 (Nima: "different results every time ... never duplicates").
+      // Every run writes its seed into the address bar, so reopening or reloading the page
+      // and pressing Run replayed the visitor's own last game. Only a link made by Share
+      // (it carries shared=1) replays; everything else is a new game.
+      this.pendingSeed = isFinite(seed) && seed > 0 && q.get('shared') === '1' ? { seed: seed, away: a, home: h } : null;
       // SIM_RESULT_KEEP_20261106: the link carries everything that shapes the run,
       // so a shared seed replays the same game instead of a different count.
       var sims = parseInt(q.get('sims'), 10);
@@ -905,6 +909,13 @@
       : 'Simulating the game');
 
     this.api('/simulate?' + params.toString()).then(function (d) {
+      var gotSeed = d && d.meta && d.meta.seed;
+      self.seenSeeds = self.seenSeeds || {};
+      if (!opts.seed && gotSeed && self.seenSeeds[gotSeed] && !opts._retried) {
+        self.running = false;
+        return self.run(Object.assign({}, opts, { _retried: true }));
+      }
+      if (gotSeed) self.seenSeeds[gotSeed] = true;
       self.lastResult = d;
       // SIM_SHARE_20261114: ask for this game's own box score link now, so the
       // Share button has it the moment it is pressed.
@@ -1215,6 +1226,7 @@
 
     add('Share result', '', function () {
       var url = global.location.href;
+      try { var su = new URL(url); if (su.searchParams.get('seed')) { su.searchParams.set('shared', '1'); url = su.toString(); } } catch (e) { /* plain link */ }
       var boxScore = false;
       // SIM_SHARE_20261114: share this game's own archived box score page. It
       // unfurls as the game's scoreboard; the simulator URL unfurls as an advert

@@ -208,7 +208,10 @@ function tag(html, attr, name) {
   ok('NFL: the result notes its archive identity, both run paths', (nfl.match(/simShareNote\(d\);/g) || []).length === 2);
   ok('NFL: Copy link uses the run page', /async function copyShare\(btn\)\{\s*const url=shareLink\(\);/.test(nfl));
   ok('NFL: the share sheet uses the run page', /sh\.onclick=\(\)=>\{const u=shareLink\(\);/.test(nfl));
-  ok('NFL: the seed link is still the fallback', /function shareLink\(\)\{[\s\S]{0,400}return shareUrl\(\);\s*\}/.test(nfl));
+  // SIM_FRESH_EVERY_RUN_20261121: the fallback seed link is marked shared=1 so it replays for the reader.
+  ok('NFL: the seed link is still the fallback', /function shareLink\(\)\{[\s\S]{0,700}const u=shareUrl\(\);[\s\S]{0,200}searchParams\.set\('shared','1'\)/.test(nfl));
+  ok('NFL: only a shared link replays its seed', (nfl.match(/q\.get\('shared'\)==='1'\)PENDING_SEED/g) || []).length === 2 && /if\(g&&q\.get\('shared'\)==='1'\)PENDING_SEED/.test(nfl));
+  ok('NBA / NHL: only a shared link replays its seed', /q\.get\('shared'\) === '1' \? \{ seed: seed/.test(core) && /searchParams\.set\('shared', '1'\)/.test(core));
   ok('NFL: the archive client is on the page', nfl.indexOf('/static/js/tmr-sim-archive.js') > 0);
   const mlb = read('static/js/mlb-simulator.js');
   ok('MLB: Copy Share Link uses the run page', /copyText\(shareLinkFor\(state\.simulation\)/.test(mlb));

@@ -930,7 +930,10 @@ function simShareNote(d){
 function shareLink(){
   try{const r=STATE.lastRun,A=window.TMRSimArchive;
     if(r&&r.archiveUid&&A){const own=A.shareUrlFor(r.archiveUid);if(own)return own;A.primeShare(r.archiveUid)}}catch(e){}
-  return shareUrl();
+  /* SIM_FRESH_EVERY_RUN_20261121: a link handed out by Share replays; the address bar of a
+     visitor's own run does not (see runFromUrl). */
+  const u=shareUrl();if(!u)return u;
+  try{const x=new URL(u);x.searchParams.set('shared','1');return x.toString()}catch(e){return u}
 }
 async function copyShare(btn){
   const url=shareLink();
@@ -1002,10 +1005,10 @@ async function runFromUrl(){
     STATE.window=winOk||(g?defaultWindowFor(g):STATE.window);if(winOk)STATE.windowTouched=true;
     segSelect('#windowSeg','window',STATE.window);
     relabelVenue();segSelect('#venueSeg','venue',STATE.venue);updateChips();
-    if(g)renderFeatured({kind:'game',g,kicker:seedN!=null?'Shared simulation':'Selected game',src:'url'});
+    if(g)renderFeatured({kind:'game',g,kicker:(seedN!=null&&q.get('shared')==='1')?'Shared simulation':'Selected game',src:'url'});
     if(seedN==null&&g)return true;            // a game link preselects; Simulate runs it
     if(cached){STATE.lastRun=cached.run;renderResult($('#result'),cached.d);simAfterRender($('#result'),cached.d);return true}
-    if(g)PENDING_SEED={key:'g:'+ref,seed:seedN};
+    if(g&&q.get('shared')==='1')PENDING_SEED={key:'g:'+ref,seed:seedN};
     return true;
   }
   const home=q.get('home'),away=q.get('away');
@@ -1035,10 +1038,10 @@ async function runFromUrl(){
     segSelect('#windowSeg','window',STATE.window);
     relabelVenue();segSelect('#venueSeg','venue',STATE.venue);
     updateChips();
-    renderFeatured({kind:'custom',a:A,h:H,neutral:STATE.venue==='neutral',kicker:seedN!=null?'Shared simulation':'Your matchup',src:'url'});
+    renderFeatured({kind:'custom',a:A,h:H,neutral:STATE.venue==='neutral',kicker:(seedN!=null&&q.get('shared')==='1')?'Shared simulation':'Your matchup',src:'url'});
     if(seedN==null)return true;
     if(cached){STATE.lastRun=cached.run;renderResult($('#result'),cached.d);simAfterRender($('#result'),cached.d);return true}
-    PENDING_SEED={key:simCustomTarget(),seed:seedN};
+    if(q.get('shared')==='1')PENDING_SEED={key:simCustomTarget(),seed:seedN};
     return true;
   }
   return false;
