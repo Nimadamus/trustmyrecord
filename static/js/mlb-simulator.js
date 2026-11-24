@@ -61,7 +61,7 @@
     ];
 
     // EMERGENCY FALLBACK ONLY. Regenerated from the live MLB Stats API active
-    // rosters + real 2026 season pitching stats on 2026-11-09. This is shown ONLY
+    // rosters + real 2026 season pitching stats on 2026-11-24. This is shown ONLY
     // when a team's live active-roster feed fails to load; when used, the UI flags
     // it as an emergency profile and the reason is logged (see currentPitchersForTeam).
     // Never treated as authoritative current data: live roster always overrides.
@@ -74,22 +74,22 @@
         CHC: [['cabrera', "Edward Cabrera", 80, 5.96], ['assad', "Javier Assad", 108, 3.63], ['brown', "Ben Brown", 129, 1.85], ['rolison', "Ryan Rolison", 114, 3.14], ['wicks', "Jordan Wicks", 78, 10.45]],
         CIN: [['abbott', "Andrew Abbott", 96, 4.61], ['burns', "Chase Burns", 117, 2.86], ['lowder', "Rhett Lowder", 83, 5.74], ['lodolo', "Nick Lodolo", 92, 4.97], ['williamson', "Brandon Williamson", 88, 5.3]],
         CLE: [['bibee', "Tanner Bibee", 99, 4.36], ['messick', "Parker Messick", 121, 2.56], ['williams', "Gavin Williams", 106, 3.76], ['cantillo', "Joey Cantillo", 108, 3.62], ['cecconi', "Slade Cecconi", 93, 4.91]],
-        COL: [['feltner', "Ryan Feltner", 87, 5.4], ['hughes', "Gabriel Hughes", 78, 6.33], ['gordon', "Tanner Gordon", 78, 6.68], ['adams', "Mason Adams", 103, 4.03], ['sullivan', "Sean Sullivan", 78, 8.87]],
-        CWS: [['kay', "Anthony Kay", 98, 4.44], ['martin', "Davis Martin", 104, 3.95], ['burke', "Sean Burke", 112, 3.34], ['castillo', "Luis Castillo", 81, 5.85], ['schultz', "Noah Schultz", 85, 5.57]],
+        COL: [['martin', "Davis Martin", 104, 3.95], ['castillo', "Luis Castillo", 81, 5.85], ['feltner', "Ryan Feltner", 87, 5.4], ['hughes', "Gabriel Hughes", 78, 6.33], ['gordon', "Tanner Gordon", 78, 6.68]],
+        CWS: [['kay', "Anthony Kay", 98, 4.44], ['may', "Dustin May", 95, 4.7], ['burke', "Sean Burke", 112, 3.34], ['schultz', "Noah Schultz", 85, 5.57], ['hudson', "Bryan Hudson", 107, 3.74]],
         DET: [['valdez', "Framber Valdez", 103, 4.03], ['montero', "Keider Montero", 110, 3.48], ['melton', "Troy Melton", 118, 2.76], ['anderson', "Drew Anderson", 108, 3.67], ['jobe', "Jackson Jobe", 105, 3.91]],
         HOU: [['lambert', "Peter Lambert", 106, 3.82], ['brown', "Hunter Brown", 113, 3.19], ['burrows', "Mike Burrows", 80, 5.99], ['imai', "Tatsuya Imai", 92, 4.93], ['javier', "Cristian Javier", 90, 5.14]],
-        KC: [['wacha', "Michael Wacha", 112, 3.32], ['lugo', "Seth Lugo", 90, 5.17], ['cameron', "Noah Cameron", 102, 4.11], ['dobnak', "Randy Dobnak", 109, 3.51], ['iv', "Daniel Lynch IV", 103, 4.08]],
+        KC: [['wacha', "Michael Wacha", 112, 3.32], ['lugo', "Seth Lugo", 90, 5.17], ['cameron', "Noah Cameron", 102, 4.11], ['miller', "Bryce Miller", 102, 4.17], ['dobnak', "Randy Dobnak", 109, 3.51]],
         LAA: [['detmers', "Reid Detmers", 111, 3.36], ['urena', "Walbert Ureña", 116, 2.97], ['rodriguez', "Grayson Rodriguez", 79, 6.02], ['johnson', "Ryan Johnson", 91, 5.04], ['kikuchi', "Yusei Kikuchi", 93, 4.92]],
         LAD: [['yamamoto', "Yoshinobu Yamamoto", 121, 2.53], ['sasaki', "Roki Sasaki", 98, 4.49], ['wrobleski', "Justin Wrobleski", 108, 3.66], ['sheehan', "Emmet Sheehan", 97, 4.57], ['ohtani', "Shohei Ohtani", 130, 1.79]],
         MIA: [['alcantara', "Sandy Alcantara", 105, 3.87], ['perez', "Eury Pérez", 105, 3.91], ['junk', "Janson Junk", 101, 4.22], ['phillips', "Tyler Phillips", 112, 3.34], ['meyer', "Max Meyer", 119, 2.68]],
-        MIL: [['misiorowski', "Jacob Misiorowski", 130, 1.8], ['harrison', "Kyle Harrison", 101, 4.2], ['gasser', "Robert Gasser", 105, 3.87], ['drohan', "Shane Drohan", 101, 4.19], ['henderson', "Logan Henderson", 122, 2.47]],
-        MIN: [['bradley', "Taj Bradley", 107, 3.73], ['ryan', "Joe Ryan", 106, 3.79], ['ober', "Bailey Ober", 98, 4.47], ['matthews', "Zebby Matthews", 93, 4.9], ['prielipp', "Connor Prielipp", 93, 4.87]],
+        MIL: [['misiorowski', "Jacob Misiorowski", 130, 1.8], ['harrison', "Kyle Harrison", 101, 4.2], ['gasser', "Robert Gasser", 105, 3.87], ['drohan', "Shane Drohan", 101, 4.19], ['sproat', "Brandon Sproat", 85, 5.57]],
+        MIN: [['bradley', "Taj Bradley", 107, 3.73], ['gray', "Sonny Gray", 119, 2.72], ['ryan', "Joe Ryan", 106, 3.79], ['matthews', "Zebby Matthews", 93, 4.9], ['prielipp', "Connor Prielipp", 93, 4.87]],
         NYM: [['mclean', "Nolan McLean", 114, 3.16], ['scott', "Christian Scott", 105, 3.85], ['manaea', "Sean Manaea", 94, 4.78], ['thornton', "Zac Thornton", 111, 3.42], ['senga', "Kodai Senga", 78, 7.34]],
         NYY: [['schlittler', "Cam Schlittler", 128, 1.95], ['warren', "Will Warren", 105, 3.92], ['weathers', "Ryan Weathers", 108, 3.6], ['cole', "Gerrit Cole", 108, 3.61], ['fried', "Max Fried", 118, 2.8]],
         PHI: [['sanchez', "Cristopher Sánchez", 117, 2.91], ['nola', "Aaron Nola", 96, 4.67], ['luzardo', "Jesús Luzardo", 117, 2.86], ['wheeler', "Zack Wheeler", 116, 3], ['painter', "Andrew Painter", 87, 5.4]],
         PIT: [['skenes', "Paul Skenes", 106, 3.82], ['chandler', "Bubba Chandler", 98, 4.5], ['ashcraft', "Braxton Ashcraft", 108, 3.65], ['keller', "Mitch Keller", 88, 5.29], ['jones', "Jared Jones", 107, 3.72]],
-        SD: [['vasquez', "Randy Vásquez", 105, 3.9], ['sears', "JP Sears", 95, 4.68], ['peralta', "Wandy Peralta", 108, 3.61], ['rodriguez', "Bradgley Rodriguez", 125, 2.19], ['hart', "Kyle Hart", 93, 4.92]],
-        SEA: [['gilbert', "Logan Gilbert", 107, 3.73], ['kirby', "George Kirby", 100, 4.33], ['woo', "Bryan Woo", 103, 4.01], ['hancock', "Emerson Hancock", 109, 3.57], ['miller', "Bryce Miller", 102, 4.17]],
+        SD: [['vasquez', "Randy Vásquez", 105, 3.9], ['peralta', "Wandy Peralta", 108, 3.61], ['rodriguez', "Bradgley Rodriguez", 125, 2.19], ['hart', "Kyle Hart", 93, 4.92], ['weiss', "Ryan Weiss", 78, 7.62]],
+        SEA: [['gilbert', "Logan Gilbert", 107, 3.73], ['kirby', "George Kirby", 100, 4.33], ['woo', "Bryan Woo", 103, 4.01], ['hancock', "Emerson Hancock", 109, 3.57], ['anderson', "Kade Anderson", 106, 3.79]],
         SF: [['roupp', "Landen Roupp", 103, 4.01], ['webb', "Logan Webb", 100, 4.31], ['houser', "Adrian Houser", 103, 4.02], ['mcdonald', "Trevor McDonald", 90, 5.12], ['tidwell', "Blade Tidwell", 98, 4.45]],
         STL: [['mcgreevy', "Michael McGreevy", 104, 3.95], ['liberatore', "Matthew Liberatore", 89, 5.23], ['leahy', "Kyle Leahy", 108, 3.66], ['pallante', "Andre Pallante", 106, 3.83], ['mathews', "Quinn Mathews", 106, 3.83]],
         TB: [['rasmussen', "Drew Rasmussen", 120, 2.67], ['mcclanahan', "Shane McClanahan", 111, 3.36], ['jax', "Griffin Jax", 109, 3.53], ['seymour', "Ian Seymour", 101, 4.21], ['matz', "Steven Matz", 86, 5.49]],
@@ -1998,7 +1998,7 @@
             try {
                 if (reallyFailed) {
                     console.warn('[mlb-simulator] EMERGENCY FALLBACK: the live active-roster feed FAILED for '
-                        + abbrKey + '; showing static emergency pitcher profiles (regenerated 2026-11-09, may be outdated).');
+                        + abbrKey + '; showing static emergency pitcher profiles (regenerated 2026-11-24, may be outdated).');
                 } else {
                     console.info('[mlb-simulator] Rosters for ' + abbrKey + ' have not been loaded yet - they are '
                         + 'fetched when a simulation runs. Showing static pitcher profiles until then; this is not a feed failure.');
@@ -2016,7 +2016,7 @@
                     source: 'Emergency fallback profile (live roster unavailable)',
                     verified: false,
                     emergencyFallback: true,
-                    note: 'EMERGENCY fallback: the live MLB active-roster feed did not load, so this is a static profile (regenerated 2026-11-09) and may be outdated. Not confirmed current.'
+                    note: 'EMERGENCY fallback: the live MLB active-roster feed did not load, so this is a static profile (regenerated 2026-11-24) and may be outdated. Not confirmed current.'
                 };
             });
         }
