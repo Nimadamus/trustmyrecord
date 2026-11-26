@@ -434,6 +434,7 @@
     function initContest() {
         var section = byId('simv2Contest');
         if (!section) return;
+        return; // JustBet contest panel retired 2026-11-25 (no partner relationship)
         Promise.all([
             fetchJson(API_BASE + '/contests/justbet-mlb', 9000),
             fetchJson(API_BASE + '/contests/justbet-mlb/registrations', 9000)

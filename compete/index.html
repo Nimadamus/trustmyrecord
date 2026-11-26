@@ -55,6 +55,9 @@ h1{margin:14px 0 0;font:800 clamp(2.1rem,9vw,3.3rem)/.95 "Barlow Condensed",sans
 .note{font-size:.8rem;color:var(--muted);text-align:center;margin:2px 0 0}
 .sticky{position:fixed;left:0;right:0;bottom:0;z-index:40;padding:10px 16px calc(10px + env(safe-area-inset-bottom));background:linear-gradient(180deg,transparent,rgba(7,12,18,.92) 30%);display:none}
 .sticky .btn{max-width:728px;margin:0 auto}
+.cols{display:flex;flex-direction:column}.col{display:contents}.o1{order:1}.o2{order:2}.o3{order:3}.o4{order:4}.o5{order:5}.o6{order:6}
+@media(min-width:1100px){.wrap{width:min(1180px,100%);padding:0 28px 120px}.hero{margin:0 -28px;padding:40px 44px 30px;border-radius:0 0 var(--r) var(--r)}.hero h1{font-size:3.6rem}.hero .cta{max-width:520px}
+.cols{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:20px;align-items:start}.col{display:block}.stats{grid-template-columns:repeat(3,1fr);gap:14px}}
 section.card{margin-top:16px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px}
 h2{margin:0 0 12px;font:800 1.35rem "Barlow Condensed";text-transform:uppercase;letter-spacing:.02em;display:flex;justify-content:space-between;align-items:baseline}
 h2 small{font:600 .75rem Inter;color:var(--muted);text-transform:none;letter-spacing:0}
@@ -258,15 +261,19 @@ html,body.tmr-ds{background:var(--bg)!important;color:var(--ink)}
     html += '<div class="stats"><div class="stat"><b>' + d.participant_count + '</b><span>Joined</span></div><div class="stat"><b>' + d.ranked_count + '</b><span>Ranked</span></div>' +
       '<div class="stat"><b>' + esc(c.phase === 'upcoming' ? 'Soon' : c.phase === 'active' ? 'Live' : 'Final') + '</b><span>' + (c.phase === 'active' ? 'Ends ' + pt(c.end_date, { month: 'short', day: 'numeric' }) : c.phase === 'upcoming' ? 'Starts ' + pt(c.start_date, { month: 'short', day: 'numeric' }) : 'Ended') + '</span></div></div>';
 
+    // Two columns on desktop (table left, side panels right); one column on phones in the original order.
+    var side = '';
+    html += '<div class="cols"><div class="col col-main">';
     if (d.viewer && d.viewer.joined || d.host_standing) {
-      html += '<section class="card"><h2>Head to head</h2><div class="duo">' +
+      side += '<section class="card o1"><h2>Head to head</h2><div class="duo">' +
         (d.viewer && d.viewer.joined ? standingCard('You', viewerStanding, true) : standingCard('You', null, true, 'Join to get on the table')) +
-        standingCard(h ? '@' + h.username : 'Host', d.host_standing, false) + '</div>' +
+        (h ? standingCard('@' + h.username, d.host_standing, false) : standingCard('Leader' + (d.standings && d.standings[0] ? ' @' + d.standings[0].username : ''), d.standings && d.standings[0], false, 'Nobody ranked yet')) + '</div>' +
+        (!h && viewerStanding && viewerStanding.rank > 1 && d.standings && d.standings[0] ? '<div class="vs">' + (d.standings[0].units - viewerStanding.units).toFixed(2) + ' units behind the leader</div>' : '') +
         (h && viewerStanding && d.host_standing && viewerStanding.rank && d.host_standing.rank ? '<div class="vs">' + (viewerStanding.rank < d.host_standing.rank ? 'You are ahead of the host. Keep it up.' : viewerStanding.rank === d.host_standing.rank ? 'You are the host.' : (d.host_standing.units - viewerStanding.units).toFixed(2) + ' units behind @' + esc(h.username)) + '</div>' : '') +
         '</section>';
     }
 
-    html += '<section class="card"><h2>Standings <small>flat 1 unit per pick</small></h2>';
+    html += '<section class="card o2"><h2>Standings <small>flat 1 unit per pick</small></h2>';
     if (d.standings.length) {
       html += '<table><thead><tr><th>#</th><th>Member</th><th class="r">W-L</th><th class="r hide-sm">ROI</th><th class="r hide-sm">Last 5</th><th class="r">Units</th></tr></thead><tbody>' +
         d.standings.map(function (r) { return row(r, d, viewerId); }).join('') + '</tbody></table>';
@@ -278,23 +285,25 @@ html,body.tmr-ds{background:var(--bg)!important;color:var(--ink)}
     }
     html += '</section>';
 
-    html += '<section class="card"><h2>Recent results</h2>';
+    html += '<section class="card o3"><h2>Recent results</h2>';
     html += d.recent_results.length ? d.recent_results.slice(0, 8).map(function (x) {
       var o = x.odds > 0 ? '+' + x.odds : x.odds;
       return '<div class="res"><span class="dot ' + x.result + '">' + (x.result === 'won' ? 'W' : x.result === 'lost' ? 'L' : 'P') + '</span><div class="t"><b>' + esc(x.selection) + '</b><span>@' + esc(x.username) + ' · ' + esc(o) + '</span></div><span class="u ' + cls(x.flat_units) + '">' + units(x.flat_units) + '</span></div>';
     }).join('') : '<p class="empty">Graded picks show up here as games finish.</p>';
     html += '</section>';
 
-    html += '<section class="card"><h2>Invite friends</h2><div class="invite"><input id="inv" readonly value="' + esc(inviteUrl) + '" aria-label="Invite link"><button class="btn btn-ghost" id="copy" type="button">Copy</button></div>' +
+    html += '</div><div class="col col-side">' + side;
+    html += '<section class="card o4"><h2>Invite friends</h2><div class="invite"><input id="inv" readonly value="' + esc(inviteUrl) + '" aria-label="Invite link"><button class="btn btn-ghost" id="copy" type="button">Copy</button></div>' +
       (navigator.share ? '<button class="btn btn-ghost" id="share" type="button" style="margin-top:8px">Share</button>' : '') +
       '<p class="note" style="text-align:left;margin-top:8px">Anyone who joins from your link is credited to you on the table.</p></section>';
 
-    html += '<section class="card"><details open><summary><h2>Rules <small>tap to hide</small></h2></summary><ol class="rules">' + d.rules.map(function (r) { return '<li>' + esc(r) + '</li>'; }).join('') + '</ol></details></section>';
+    html += '<section class="card o5"><details open><summary><h2>Rules <small>tap to hide</small></h2></summary><ol class="rules">' + d.rules.map(function (r) { return '<li>' + esc(r) + '</li>'; }).join('') + '</ol></details></section>';
 
     if (state.me && state.me.joined && state.me.not_counted && state.me.not_counted.length) {
-      html += '<section class="card"><h2>Your picks that did not count <small>' + state.me.not_counted.length + '</small></h2>' +
+      html += '<section class="card o6"><h2>Your picks that did not count <small>' + state.me.not_counted.length + '</small></h2>' +
         state.me.not_counted.slice(0, 20).map(function (p) { return '<div class="nc"><span>' + esc(p.selection) + ' (' + (p.odds > 0 ? '+' : '') + esc(p.odds) + ')</span><em>' + esc(REASONS[p.reason] || p.reason) + '</em></div>'; }).join('') + '</section>';
     }
+    html += '</div></div>';
     html += '<p class="foot">Free competition with no entry fee and no prizes. Standings use verified TrustMyRecord picks only.</p>';
     app.innerHTML = html;
 
