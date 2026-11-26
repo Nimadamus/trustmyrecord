@@ -51,6 +51,7 @@ const cases = [
   [{ type: 'gaming_match_logged' }, '/arena/'],
   [{ type: 'arena_result_reported' }, '/arena/'],
   [{ type: 'pick_won', related_pick_id: 5 }, '/sportsbook/?pick=5#mypicks'],
+  [{ type: 'follow_public_pick', related_pick_id: 9, username: 'sam' }, '/profile/?user=sam&view=picks'],
   [{ type: 'forum_thread_reply', related_thread_id: 3, related_post_id: 8 }, '/forum/?thread=3#post-8'],
   [{ type: 'follow', username: 'sam' }, '/profile/?user=sam'],
   [{ type: 'message', username: 'sam' }, '/messages/?to=sam'],

@@ -797,7 +797,7 @@ function handleActorClick(e, notifId) {
 
 function getLegacyFilterType(type) {
     const normalized = String(type || '').toLowerCase();
-    if (normalized.indexOf('follow_new_pick') !== -1 || normalized === 'follow_grade') return 'picks';
+    if (normalized.indexOf('follow_new_pick') !== -1 || normalized === 'follow_grade' || normalized === 'follow_public_pick') return 'picks';
     if (normalized.indexOf('follow_new_thread') !== -1 || normalized.indexOf('follow_new_post') !== -1) return 'alerts';
     if (normalized.indexOf('forum') !== -1) return 'alerts';
     if (['friend_request', 'friend_accept', 'follow', 'mention', 'like', 'comment', 'milestone_congrats', 'award_received'].includes(normalized)) return 'social';
@@ -812,7 +812,7 @@ function getNotifIconClass(type) {
         new_message: 'message', message: 'message',
         forum_thread_reply: 'message', forum_post_reply: 'message',
         forum_mention: 'message', forum_post_like: 'friend',
-        follow_new_thread: 'message', follow_new_post: 'message', follow_new_pick: 'bet', follow_grade: 'bet',
+        follow_new_thread: 'message', follow_new_post: 'message', follow_new_pick: 'bet', follow_grade: 'bet', follow_public_pick: 'bet',
         challenge_invite: 'challenge', challenge_result: 'challenge', challenge: 'challenge',
         pick_won: 'bet', pick_lost: 'bet', bet_won: 'bet', bet_lost: 'bet',
         premium_upgrade: 'premium', premium_expired: 'premium',
@@ -828,7 +828,7 @@ function getNotifTone(type) {
     if (/pick_won|bet_won/.test(t) || (t.indexOf('graded') !== -1 && /win|won/.test(t))) return 'win';
     if (/pick_lost|bet_lost/.test(t) || (t.indexOf('graded') !== -1 && /lost|loss/.test(t))) return 'loss';
     if (t.indexOf('like') !== -1) return 'like';
-    if (t === 'friend_request' || t === 'friend_accept' || t === 'follow' || t === 'forum_thread_follow' || t === 'follow_grade' || t.indexOf('follow_new') !== -1) return 'follow';
+    if (t === 'friend_request' || t === 'friend_accept' || t === 'follow' || t === 'forum_thread_follow' || t === 'follow_grade' || t === 'follow_public_pick' || t.indexOf('follow_new') !== -1) return 'follow';
     if (t.indexOf('mention') !== -1) return 'mention';
     if (t === 'forum_mod_action') return 'mod';
     if (t.indexOf('reply') !== -1 || t.indexOf('subscription') !== -1 || t.indexOf('quote') !== -1) return 'reply';
@@ -875,6 +875,12 @@ function getNotificationDestination(notification) {
     if (type === 'follow_new_pick') {
         const seller = notification?.username || notification?.actor_username || notification?.from_username;
         return seller ? '/marketplace/seller/?u=' + encodeURIComponent(seller) : '/marketplace/';
+    }
+    // FOLLOW_PUBLIC_PICK_20261125: a followed member's PUBLIC pick opens that
+    // member's picks, never the viewer's own My Picks.
+    if (type === 'follow_public_pick') {
+        const author = notification?.username || notification?.actor_username || notification?.from_username;
+        return author ? '/profile/?user=' + encodeURIComponent(author) + '&view=picks' : '/feed/?filter=following';
     }
     if (type === 'follow_grade') {
         const capper = notification?.username || notification?.actor_username || notification?.from_username;

@@ -233,6 +233,8 @@
                 var base = String(raw.thread_area || '').toLowerCase() === 'sports_talk' ? '/sports-talk/' : '/forum/';
                 return threadId ? base + '?thread=' + encodeURIComponent(threadId) + (postId ? '#post-' + encodeURIComponent(postId) : '') : base;
             }
+            /* FOLLOW_PUBLIC_PICK_20261125: a followed member's public pick opens their picks. */
+            if (t === 'follow_public_pick') return un ? '/profile/?user=' + encodeURIComponent(un) + '&view=picks' : '/feed/?filter=following';
             var pickId = raw.related_pick_id || (rt === 'pick' ? raw.resource_id : null);
             if (pickId) return '/sportsbook/?pick=' + encodeURIComponent(pickId) + '#mypicks';
             if (t.indexOf('pick') !== -1 || rt === 'pick') return un ? '/profile/?user=' + encodeURIComponent(un) + '&view=picks' : '/mypicks/';
