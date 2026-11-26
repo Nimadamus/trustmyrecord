@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Prediction Championship | TrustMyRecord</title>
+<meta name="description" content="Free prediction competitions on TrustMyRecord. Post your picks the normal way and the standings score them automatically.">
+<!-- CREATOR_COMPETITION_20261125: kept out of search until launch is approved (no sitemap, robots or canonical changes). -->
+<meta name="robots" content="noindex,follow">
+<meta name="theme-color" content="#070c12">
+<link rel="icon" type="image/png" href="/static/favicon.png">
+<script defer src="/static/js/config.js?v=60a0696a58ba"></script>
+<script src="/static/js/analytics.js?v=471dc3fea1e5"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/tmr-navbar.css?v=6cf1ec145b8d">
+<link rel="stylesheet" href="/static/css/tmr-ds.d4d41a955166.css">
+<link rel="stylesheet" href="/static/css/tmr-ds-header.e37e473f8d74.css">
+<style>
+html body.tmr-ds{--bg:#070c12;--card:#0f1720;--card2:#131e29;--line:rgba(148,163,184,.14);--ink:#eef4fb;--ink2:#c5d2e0;--muted:#8da0b5;--green:#34d399;--red:#f87171;--accent:#2dd4bf;--accent-ink:#04201c;--r:18px}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif;line-height:1.45}
+a{color:inherit}
+.wrap{width:min(760px,100%);margin:0 auto;padding:0 16px 120px}
+.cond{font-family:"Barlow Condensed",Inter,sans-serif;letter-spacing:.01em}
+.hero{position:relative;margin:0 -16px;padding:28px 20px 22px;overflow:hidden;background:
+  radial-gradient(120% 90% at 100% 0%,color-mix(in srgb,var(--accent) 30%,transparent),transparent 60%),
+  radial-gradient(90% 70% at 0% 100%,rgba(59,130,246,.14),transparent 70%),linear-gradient(180deg,#0c1520,#070c12)}
+.hero:after{content:"";position:absolute;inset:auto 0 0 0;height:1px;background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--accent) 60%,transparent),transparent)}
+.kicker{display:inline-flex;gap:8px;align-items:center;font-size:.72rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--accent)}
+.kicker i{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 12px var(--accent)}
+.hostrow{display:flex;gap:14px;align-items:center;margin-top:16px}
+.cp-av{width:64px;height:64px;border-radius:50%;flex:none;object-fit:cover;border:3px solid var(--accent);background:#1c2a38;display:grid;place-items:center;font:800 1.5rem "Barlow Condensed";color:var(--ink)}
+.hostname{font-size:.72rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.hostwho{font-size:1.05rem;margin-top:2px}.hostwho b{font-weight:800}.hostwho a{font-size:.9rem;text-decoration:none;margin-left:4px}
+h1{margin:14px 0 0;font:800 clamp(2.1rem,9vw,3.3rem)/.95 "Barlow Condensed",sans-serif;text-transform:uppercase}
+.tagline{margin:12px 0 0;color:var(--ink2);font-size:1rem}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.chip{font-size:.74rem;font-weight:700;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid var(--line);color:var(--ink2)}
+.count{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:18px}
+.count div{background:rgba(7,12,18,.55);border:1px solid var(--line);border-radius:14px;padding:10px 0 8px;text-align:center}
+.count b{display:block;font:800 1.9rem/1 "Barlow Condensed";font-variant-numeric:tabular-nums}
+.count span{font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.countlabel{margin-top:16px;font-size:.78rem;font-weight:700;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px}
+.stat b{display:block;font:800 1.6rem/1 "Barlow Condensed"} .stat span{font-size:.72rem;color:var(--muted)}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:54px;border:0;border-radius:14px;font:800 1.15rem "Barlow Condensed";letter-spacing:.04em;text-transform:uppercase;cursor:pointer;text-decoration:none}
+.btn-join{background:var(--accent);color:var(--accent-ink);box-shadow:0 10px 30px color-mix(in srgb,var(--accent) 35%,transparent)}
+.btn-join:active{transform:translateY(1px)}
+.btn-ghost{background:rgba(255,255,255,.06);color:var(--ink);border:1px solid var(--line)}
+.cta{margin-top:18px;display:grid;gap:8px}
+.note{font-size:.8rem;color:var(--muted);text-align:center;margin:2px 0 0}
+.sticky{position:fixed;left:0;right:0;bottom:0;z-index:40;padding:10px 16px calc(10px + env(safe-area-inset-bottom));background:linear-gradient(180deg,transparent,rgba(7,12,18,.92) 30%);display:none}
+.sticky .btn{max-width:728px;margin:0 auto}
+section.card{margin-top:16px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+h2{margin:0 0 12px;font:800 1.35rem "Barlow Condensed";text-transform:uppercase;letter-spacing:.02em;display:flex;justify-content:space-between;align-items:baseline}
+h2 small{font:600 .75rem Inter;color:var(--muted);text-transform:none;letter-spacing:0}
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mine{border-radius:14px;padding:12px;background:var(--card2);border:1px solid var(--line)}
+.mine.me{border-color:color-mix(in srgb,var(--accent) 55%,transparent);background:color-mix(in srgb,var(--accent) 9%,var(--card2))}
+.mine .lbl{font-size:.68rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.mine .rk{font:800 2.2rem/1 "Barlow Condensed";margin-top:6px}
+.mine .sub{font-size:.8rem;color:var(--ink2);margin-top:4px}
+.vs{margin-top:10px;font-size:.86rem;color:var(--ink2);text-align:center}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+th{font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);text-align:left;font-weight:700;padding:0 6px 8px}
+td{padding:10px 4px;border-top:1px solid var(--line);font-size:.92rem;vertical-align:middle}
+td.r,th.r{text-align:right;white-space:nowrap}
+.rank{font:800 1.25rem "Barlow Condensed";width:34px}
+tr.lead .rank{color:var(--accent)}
+tr.host td{background:rgba(255,255,255,.025)}
+tr.you td{background:color-mix(in srgb,var(--accent) 10%,transparent)}
+.who{display:flex;align-items:center;gap:8px;min-width:0}
+.who img,.who .ph{width:28px;height:28px;border-radius:50%;flex:none;object-fit:cover;background:#1c2a38;display:grid;place-items:center;font:700 .8rem "Barlow Condensed"}
+.who a{font-weight:700;text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:9.5rem}
+@media(max-width:420px){.who .ph,.who img{display:none}.who a{max-width:8.2rem}th{padding:0 4px 8px}}
+table{table-layout:auto}section.card{overflow:hidden}
+.tag{font-size:.6rem;font-weight:800;letter-spacing:.1em;padding:2px 6px;border-radius:6px;background:rgba(255,255,255,.08);color:var(--ink2);text-transform:uppercase}
+.tag.h{background:color-mix(in srgb,var(--accent) 22%,transparent);color:var(--accent)}
+.mv{display:block;font:800 .66rem/1 Inter;margin-top:2px;white-space:nowrap}.up{color:var(--green)}.dn{color:var(--red)}
+.u{font:800 1.15rem "Barlow Condensed"}.pos{color:var(--green)}.neg{color:var(--red)}
+.form{display:flex;gap:3px}.form i{width:8px;height:8px;border-radius:2px;background:#334155}.form i.W{background:var(--green)}.form i.L{background:var(--red)}.form i.P{background:#94a3b8}
+.hide-sm{display:none}
+@media(min-width:560px){.hide-sm{display:table-cell}}
+.empty{color:var(--muted);text-align:center;padding:18px 8px;font-size:.92rem}
+.qual{margin-top:14px;font-size:.84rem;color:var(--muted)}
+.qual b{color:var(--ink2)}
+.res{display:flex;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.res:first-of-type{border-top:0}
+.dot{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font:800 .95rem "Barlow Condensed";flex:none}
+.dot.won{background:rgba(52,211,153,.15);color:var(--green)}.dot.lost{background:rgba(248,113,113,.15);color:var(--red)}.dot.push{background:rgba(148,163,184,.15);color:var(--ink2)}
+.res .t{min-width:0;flex:1}.res .t b{display:block;font-size:.9rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.res .t span{font-size:.76rem;color:var(--muted)}
+.invite{display:flex;gap:8px}
+.invite input{flex:1;min-width:0;background:#0a1118;border:1px solid var(--line);color:var(--ink2);border-radius:12px;padding:0 12px;font:500 .85rem Inter;height:48px}
+.invite button{flex:none;width:auto;padding:0 18px;min-height:48px}
+ol.rules{margin:0;padding-left:20px;display:grid;gap:8px;color:var(--ink2);font-size:.9rem}
+details summary{cursor:pointer;list-style:none}
+details summary::-webkit-details-marker{display:none}
+.nc{font-size:.84rem;color:var(--ink2);padding:8px 0;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:8px}
+.nc em{font-style:normal;color:var(--muted);text-align:right}
+.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#e2e8f0;color:#0b1320;font-weight:700;font-size:.86rem;padding:10px 16px;border-radius:10px;opacity:0;transition:opacity .2s;z-index:60;pointer-events:none}
+.toast.on{opacity:1}
+.list a.item{display:flex;gap:12px;align-items:center;text-decoration:none;padding:12px 0;border-top:1px solid var(--line)}
+.list .ph,.list img{width:42px;height:42px;border-radius:50%;flex:none;object-fit:cover;background:#1c2a38;display:grid;place-items:center;font:800 1.1rem "Barlow Condensed";border:2px solid var(--accent)}
+.list .item b{font-size:1rem}
+.err{margin-top:40px;text-align:center;color:var(--muted)}
+/* tmr-ds sets light theme colours on headings, bold and the body; this page is always dark */
+html,body.tmr-ds{background:var(--bg)!important;color:var(--ink)}
+#app,#app h1,#app h2,#app b,#app strong,#app td,#app .cp-av{color:var(--ink)!important}
+#app .hostname b{color:var(--ink)!important}
+#app .count b,#app .stat b,#app .mine .rk{color:var(--ink)!important}
+#app a{color:inherit!important}
+#app .note a,#app .hostwho a{color:var(--accent)!important}
+#app .u.pos,#app .pos{color:var(--green)!important} #app .u.neg,#app .neg{color:var(--red)!important}
+#app tr.lead .rank{color:var(--accent)!important}
+#app .btn-join,#sticky .btn-join{color:var(--accent-ink)!important}
+#app section.card,#app .stat{background:var(--card)!important}
+#app .mine .lbl,#app .hostname,#app .count span,#app .stat span,#app .note,#app th,#app .qual,#app .res .t span,#app .nc em,#app h2 small,#app .countlabel{color:var(--muted)!important}
+#app .tagline,#app .chip,#app .mine .sub,#app .vs,#app ol.rules,#app .nc,#app .rank{color:var(--ink2)!important}
+#app .kicker,#app tr.lead .rank,#app .tag.h{color:var(--accent)!important}
+#app .mv.up{color:var(--green)!important}#app .mv.dn{color:var(--red)!important}
+.foot{margin-top:28px;text-align:center;font-size:.78rem;color:var(--muted)}
+</style>
+</head>
+<body class="tmr-ds">
+<div id="tmr-nav-placeholder"></div>
+<main class="wrap" id="app" aria-live="polite"><p class="err">Loading competition…</p></main>
+<div class="sticky" id="sticky"></div>
+<div class="toast" id="toast" role="status"></div>
+<script>
+/* CREATOR_COMPETITION_20261125: /compete/?c=<slug>&ref=<username>
+   Free, bragging rights only. Reads /api/competitions; never changes picks. */
+(function () {
+  'use strict';
+  var qs = new URLSearchParams(location.search);
+  var slug = (qs.get('c') || '').toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 61);
+  var refParam = (qs.get('ref') || '').replace(/[^A-Za-z0-9_.-]/g, '').slice(0, 40);
+  var isLocal = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+  var MOCK = isLocal && qs.get('mock');
+  var app = document.getElementById('app');
+  var sticky = document.getElementById('sticky');
+  var state = { data: null, me: null, timer: null };
+
+  if (refParam) try { sessionStorage.setItem('tmr_comp_ref_' + slug, refParam); } catch (e) {}
+  var ref = refParam || (function () { try { return sessionStorage.getItem('tmr_comp_ref_' + slug) || ''; } catch (e) { return ''; } })();
+
+  function api() {
+    if (isLocal) return qs.get('api') || 'http://localhost:3000/api';
+    try { return CONFIG.api.baseUrl; } catch (e) { return 'https://api.trustmyrecord.com/api'; }
+  }
+  function token() {
+    var k = ['trustmyrecord_token', 'accessToken', 'access_token', 'token', 'tmr_token'];
+    for (var i = 0; i < k.length; i++) { try { var v = localStorage.getItem(k[i]); if (v) return v; } catch (e) {} }
+    return '';
+  }
+  function req(method, path, body) {
+    var h = { 'Content-Type': 'application/json' };
+    var t = token(); if (t) h.Authorization = 'Bearer ' + t;
+    return fetch(api() + '/competitions' + path, { method: method, headers: h, body: body ? JSON.stringify(body) : undefined, credentials: 'omit' })
+      .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { j.__status = r.status; return j; }); });
+  }
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function units(n) { n = Number(n) || 0; return (n > 0 ? '+' : '') + n.toFixed(2) + 'u'; }
+  function cls(n) { return n > 0 ? 'pos' : n < 0 ? 'neg' : ''; }
+  function rec(r) { return r.wins + '-' + r.losses + (r.pushes ? '-' + r.pushes : ''); }
+  function initial(u) { return esc(String(u || '?').charAt(0).toUpperCase()); }
+  function face(u, url, big) {
+    var c = big ? 'cp-av' : 'ph';
+    if (url && /^https:\/\//.test(url)) return '<img class="' + (big ? 'cp-av' : '') + '" src="' + esc(url) + '" alt="" loading="lazy" referrerpolicy="no-referrer">';
+    return '<span class="' + c + '" aria-hidden="true">' + initial(u) + '</span>';
+  }
+  function profile(u) { return '/u/' + encodeURIComponent(u) + '/'; }
+  function pt(d, o) { return new Date(d).toLocaleString('en-US', Object.assign({ timeZone: 'America/Los_Angeles' }, o)); }
+  function toast(m) { var t = document.getElementById('toast'); t.textContent = m; t.classList.add('on'); setTimeout(function () { t.classList.remove('on'); }, 2200); }
+  function setAccent(hex) {
+    if (!/^#[0-9a-fA-F]{6}$/.test(hex || '')) return;
+    var n = parseInt(hex.slice(1), 16), l = (0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255;
+    document.body.style.setProperty('--accent', hex);
+    document.body.style.setProperty('--accent-ink', l > 0.55 ? '#0b1320' : '#ffffff');
+  }
+  var REASONS = {
+    odds_outside_band: 'Odds outside the allowed range', same_market_already_counted: 'You already had a pick on this market',
+    daily_cap: 'Over the daily limit', before_join_or_start: 'Made before you joined or before the start', after_end: 'Made after the end',
+    private: 'Private pick', void: 'Game voided', no_odds: 'No odds on the pick', deleted: 'Deleted', not_member_pick: 'Not a member pick'
+  };
+
+  function visit() {
+    if (MOCK || !slug) return;
+    var k;
+    try { k = localStorage.getItem('tmr_comp_vk'); if (!k) { k = 'v' + Math.random().toString(36).slice(2) + Date.now().toString(36); localStorage.setItem('tmr_comp_vk', k); } } catch (e) { return; }
+    req('POST', '/' + slug + '/visit', { visitor_key: k, ref: ref || undefined }).catch(function () {});
+  }
+
+  function countdown(c) {
+    var target = c.phase === 'upcoming' ? c.start_date : c.phase === 'active' ? c.end_date : null;
+    if (!target) return '';
+    var label = c.phase === 'upcoming' ? 'Starts ' + pt(c.start_date, { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) + ' PT'
+      : 'Final day ' + pt(c.end_date, { month: 'short', day: 'numeric' });
+    return '<div class="countlabel">' + esc(label) + '</div><div class="count" id="count" data-t="' + esc(target) + '">' +
+      ['Days', 'Hrs', 'Min', 'Sec'].map(function (u) { return '<div><b>00</b><span>' + u + '</span></div>'; }).join('') + '</div>';
+  }
+  function tick() {
+    var el = document.getElementById('count'); if (!el) return;
+    var ms = Math.max(0, new Date(el.getAttribute('data-t')).getTime() - Date.now());
+    var v = [Math.floor(ms / 864e5), Math.floor(ms / 36e5) % 24, Math.floor(ms / 6e4) % 60, Math.floor(ms / 1e3) % 60];
+    var b = el.querySelectorAll('b'); for (var i = 0; i < 4; i++) b[i].textContent = (v[i] < 10 ? '0' : '') + v[i];
+  }
+
+  function joinState(d) {
+    var c = d.competition, closed = c.phase === 'completed' || c.phase === 'cancelled';
+    if (closed) return { html: '<a class="btn btn-ghost" href="/compete/">See other competitions</a>', note: 'This competition has ended. Final standings below.' };
+    if (d.viewer && d.viewer.joined) return { html: '<a class="btn btn-join" href="/sportsbook/">You are in. Make a pick</a>', note: 'Post picks the normal way. They count here automatically.', joined: true };
+    var back = location.pathname + location.search;
+    if (!token()) return { html: '<a class="btn btn-join" id="joinBtn" href="/register/?return=' + encodeURIComponent(back) + '">Join free</a>', note: 'Free. No deposit, no fee. Already a member? <a href="/login/?next=' + encodeURIComponent(back) + '">Log in</a>' };
+    return { html: '<button class="btn btn-join" id="joinBtn" type="button">Join free</button>', note: 'Free. One tap. Your normal record is not affected.' };
+  }
+
+  function standingCard(label, r, me, extra) {
+    if (!r) return '<div class="mine' + (me ? ' me' : '') + '"><div class="lbl">' + esc(label) + '</div><div class="rk">--</div><div class="sub">' + (extra || 'No graded picks yet') + '</div></div>';
+    var rk = r.rank ? '#' + r.rank : 'Qualifying';
+    var sub = rec(r) + ' · <span class="' + cls(r.units) + '">' + units(r.units) + '</span>' + (r.rank ? '' : '<br>' + r.picks_to_qualify + ' graded picks to be ranked');
+    return '<div class="mine' + (me ? ' me' : '') + '"><div class="lbl">' + esc(label) + '</div><div class="rk">' + rk + '</div><div class="sub">' + sub + '</div></div>';
+  }
+
+  function row(r, d, viewerId) {
+    var mv = r.movement > 0 ? '<span class="mv up" title="Up ' + r.movement + '">&#9650;' + r.movement + '</span>' : r.movement < 0 ? '<span class="mv dn" title="Down ' + (-r.movement) + '">&#9660;' + (-r.movement) + '</span>' : '';
+    var host = d.competition.host && r.username === d.competition.host.username;
+    var you = viewerId && r.user_id === viewerId;
+    var form = '<span class="form">' + (r.form || []).map(function (f) { return '<i class="' + f + '"></i>'; }).join('') + '</span>';
+    return '<tr class="' + (r.rank === 1 ? 'lead ' : '') + (host ? 'host ' : '') + (you ? 'you' : '') + '"><td class="rank">' + r.rank + mv + '</td>' +
+      '<td><div class="who">' + face(r.username, r.avatar_url) + '<a href="' + profile(r.username) + '">@' + esc(r.username) + '</a>' + (host ? '<span class="tag h">Host</span>' : '') + (you ? '<span class="tag">You</span>' : '') + '</div></td>' +
+      '<td class="r">' + rec(r) + '</td><td class="r hide-sm">' + (r.roi > 0 ? '+' : '') + r.roi + '%</td><td class="r hide-sm">' + form + '</td>' +
+      '<td class="r u ' + cls(r.units) + '">' + units(r.units) + '</td></tr>';
+  }
+
+  function render(d) {
+    state.data = d;
+    var c = d.competition, h = c.host, viewerStanding = d.viewer && d.viewer.standing, viewerId = viewerStanding ? viewerStanding.user_id : null;
+    setAccent(c.accent_color);
+    document.title = c.title + ' | TrustMyRecord';
+    var inviter = (d.viewer && d.viewer.joined && state.username) ? state.username : (h ? h.username : '');
+    var inviteUrl = location.origin + '/compete/?c=' + encodeURIComponent(c.slug) + (inviter ? '&ref=' + encodeURIComponent(inviter) : '');
+    var j = joinState(d);
+    var hostName = h ? (h.display_name || h.username) : 'TrustMyRecord';
+    var html = '';
+    html += '<header class="hero"><span class="kicker"><i></i>' + (c.kind === 'flagship' ? 'TrustMyRecord Championship' : 'Prediction Championship') + '</span>' +
+      '<div class="hostrow">' + (h ? face(h.username, h.avatar_url, true) : '<span class="cp-av">T</span>') +
+      '<div><div class="hostname">Hosted by</div><div class="hostwho"><b>' + esc(hostName) + '</b>' + (h ? ' <a href="' + profile(h.username) + '">@' + esc(h.username) + '</a>' : '') + '</div></div></div>' +
+      '<h1>' + esc(c.title) + '</h1>' +
+      (c.tagline ? '<p class="tagline">' + esc(c.tagline) + '</p>' : '') +
+      '<div class="chips"><span class="chip">Free to join</span><span class="chip">Verified picks only</span><span class="chip">Graded automatically</span><span class="chip">Bragging rights</span></div>' +
+      countdown(c) +
+      '<div class="cta">' + j.html + '<p class="note">' + j.note + '</p></div></header>';
+
+    html += '<div class="stats"><div class="stat"><b>' + d.participant_count + '</b><span>Joined</span></div><div class="stat"><b>' + d.ranked_count + '</b><span>Ranked</span></div>' +
+      '<div class="stat"><b>' + esc(c.phase === 'upcoming' ? 'Soon' : c.phase === 'active' ? 'Live' : 'Final') + '</b><span>' + (c.phase === 'active' ? 'Ends ' + pt(c.end_date, { month: 'short', day: 'numeric' }) : c.phase === 'upcoming' ? 'Starts ' + pt(c.start_date, { month: 'short', day: 'numeric' }) : 'Ended') + '</span></div></div>';
+
+    if (d.viewer && d.viewer.joined || d.host_standing) {
+      html += '<section class="card"><h2>Head to head</h2><div class="duo">' +
+        (d.viewer && d.viewer.joined ? standingCard('You', viewerStanding, true) : standingCard('You', null, true, 'Join to get on the table')) +
+        standingCard(h ? '@' + h.username : 'Host', d.host_standing, false) + '</div>' +
+        (h && viewerStanding && d.host_standing && viewerStanding.rank && d.host_standing.rank ? '<div class="vs">' + (viewerStanding.rank < d.host_standing.rank ? 'You are ahead of the host. Keep it up.' : viewerStanding.rank === d.host_standing.rank ? 'You are the host.' : (d.host_standing.units - viewerStanding.units).toFixed(2) + ' units behind @' + esc(h.username)) + '</div>' : '') +
+        '</section>';
+    }
+
+    html += '<section class="card"><h2>Standings <small>flat 1 unit per pick</small></h2>';
+    if (d.standings.length) {
+      html += '<table><thead><tr><th>#</th><th>Member</th><th class="r">W-L</th><th class="r hide-sm">ROI</th><th class="r hide-sm">Last 5</th><th class="r">Units</th></tr></thead><tbody>' +
+        d.standings.map(function (r) { return row(r, d, viewerId); }).join('') + '</tbody></table>';
+    } else {
+      html += '<p class="empty">' + (c.phase === 'upcoming' ? 'The table opens when the competition starts.' : 'Nobody has 10 graded picks yet. The first to get there tops the table.') + '</p>';
+    }
+    if (d.qualifying.length) {
+      html += '<p class="qual"><b>' + d.qualifying.length + ' qualifying</b> (need 10 graded picks): ' + d.qualifying.slice(0, 8).map(function (q) { return '@' + esc(q.username) + ' ' + q.graded + '/10'; }).join(', ') + (d.qualifying.length > 8 ? ' and more' : '') + '</p>';
+    }
+    html += '</section>';
+
+    html += '<section class="card"><h2>Recent results</h2>';
+    html += d.recent_results.length ? d.recent_results.slice(0, 8).map(function (x) {
+      var o = x.odds > 0 ? '+' + x.odds : x.odds;
+      return '<div class="res"><span class="dot ' + x.result + '">' + (x.result === 'won' ? 'W' : x.result === 'lost' ? 'L' : 'P') + '</span><div class="t"><b>' + esc(x.selection) + '</b><span>@' + esc(x.username) + ' · ' + esc(o) + '</span></div><span class="u ' + cls(x.flat_units) + '">' + units(x.flat_units) + '</span></div>';
+    }).join('') : '<p class="empty">Graded picks show up here as games finish.</p>';
+    html += '</section>';
+
+    html += '<section class="card"><h2>Invite friends</h2><div class="invite"><input id="inv" readonly value="' + esc(inviteUrl) + '" aria-label="Invite link"><button class="btn btn-ghost" id="copy" type="button">Copy</button></div>' +
+      (navigator.share ? '<button class="btn btn-ghost" id="share" type="button" style="margin-top:8px">Share</button>' : '') +
+      '<p class="note" style="text-align:left;margin-top:8px">Anyone who joins from your link is credited to you on the table.</p></section>';
+
+    html += '<section class="card"><details open><summary><h2>Rules <small>tap to hide</small></h2></summary><ol class="rules">' + d.rules.map(function (r) { return '<li>' + esc(r) + '</li>'; }).join('') + '</ol></details></section>';
+
+    if (state.me && state.me.joined && state.me.not_counted && state.me.not_counted.length) {
+      html += '<section class="card"><h2>Your picks that did not count <small>' + state.me.not_counted.length + '</small></h2>' +
+        state.me.not_counted.slice(0, 20).map(function (p) { return '<div class="nc"><span>' + esc(p.selection) + ' (' + (p.odds > 0 ? '+' : '') + esc(p.odds) + ')</span><em>' + esc(REASONS[p.reason] || p.reason) + '</em></div>'; }).join('') + '</section>';
+    }
+    html += '<p class="foot">Free competition with no entry fee and no prizes. Standings use verified TrustMyRecord picks only.</p>';
+    app.innerHTML = html;
+
+    sticky.innerHTML = j.html.replace('id="joinBtn"', 'id="joinBtn2"');
+    var heroCta = app.querySelector('.cta');
+    if ('IntersectionObserver' in window && heroCta) {
+      if (state.io) state.io.disconnect();
+      state.io = new IntersectionObserver(function (e) { sticky.style.display = e[e.length - 1].isIntersecting ? 'none' : 'block'; });
+      state.io.observe(heroCta);
+    }
+    clearInterval(state.timer); tick(); state.timer = setInterval(tick, 1000);
+    ['joinBtn', 'joinBtn2'].forEach(function (id) { var b = document.getElementById(id); if (b && b.tagName === 'BUTTON') b.addEventListener('click', join); });
+    document.getElementById('copy').addEventListener('click', function () {
+      var i = document.getElementById('inv'); i.select();
+      (navigator.clipboard ? navigator.clipboard.writeText(i.value) : Promise.reject()).then(function () { toast('Invite link copied'); }, function () { document.execCommand('copy'); toast('Invite link copied'); });
+    });
+    var s = document.getElementById('share');
+    if (s) s.addEventListener('click', function () { navigator.share({ title: c.title, text: 'Join me in ' + c.title + ' on TrustMyRecord. Free.', url: inviteUrl }).catch(function () {}); });
+  }
+
+  function join() {
+    if (MOCK) { state.data.viewer = { joined: true, standing: null }; state.data.participant_count++; render(state.data); toast('You are in'); return; }
+    var b = this; b.disabled = true; b.textContent = 'Joining…';
+    req('POST', '/' + slug + '/join', { ref: ref || undefined }).then(function (r) {
+      if (r.__status === 401) { location.href = '/login/?next=' + encodeURIComponent(location.pathname + location.search); return; }
+      if (r.__status === 403) { toast('Verify your email first, then tap Join'); b.disabled = false; b.textContent = 'Join free'; return; }
+      if (!r.joined) { toast(r.error || 'Could not join. Try again.'); b.disabled = false; b.textContent = 'Join free'; return; }
+      toast('You are in'); load();
+    }).catch(function () { toast('Could not join. Try again.'); b.disabled = false; b.textContent = 'Join free'; });
+  }
+
+  function renderList(list) {
+    app.innerHTML = '<header class="hero"><span class="kicker"><i></i>TrustMyRecord</span><h1>Prediction competitions</h1><p class="tagline">Free. Post your picks the normal way and the table scores them.</p></header>' +
+      '<section class="card list"><h2>Open now</h2>' + (list.length ? list.map(function (c) {
+        return '<a class="item" href="/compete/?c=' + encodeURIComponent(c.slug) + '">' + face(c.host_username || 'T', c.host_avatar_url) + '<div style="flex:1;min-width:0"><b>' + esc(c.title) + '</b><div class="note" style="text-align:left">' + (c.host_username ? '@' + esc(c.host_username) : 'TrustMyRecord') + ' · ' + c.participant_count + ' joined · ' + ({ upcoming: 'Starts soon', active: 'Live now', completed: 'Final', cancelled: 'Cancelled' }[c.phase] || '') + '</div></div></a>';
+      }).join('') : '<p class="empty">The December Prediction Championship opens soon.</p>') + '</section>';
+  }
+
+  function load() {
+    if (MOCK) {
+      var s = document.createElement('script'); s.src = '/compete/mock.js?v=1';
+      s.onload = function () { var m = window.TMR_COMPETE_MOCK(qs.get('mock')); state.username = m.username; state.me = m.me; slug ? render(m.page) : renderList(m.list); };
+      document.body.appendChild(s); return;
+    }
+    if (!slug) { req('GET', '/').then(function (r) { renderList(r.competitions || []); }).catch(function () { app.innerHTML = '<p class="err">Could not load competitions.</p>'; }); return; }
+    req('GET', '/' + slug).then(function (d) {
+      if (d.__status === 404) { app.innerHTML = '<p class="err">This competition does not exist. <a href="/compete/">See all competitions</a></p>'; return; }
+      if (!d.competition) { app.innerHTML = '<p class="err">Could not load this competition. Try again in a minute.</p>'; return; }
+      if (d.viewer && d.viewer.joined) {
+        return req('GET', '/' + slug + '/me').then(function (me) { state.me = me; state.username = d.viewer.standing ? d.viewer.standing.username : (window.TMRSession && TMRSession.username) || ''; render(d); });
+      }
+      render(d);
+    }).catch(function () { app.innerHTML = '<p class="err">Could not load this competition. Try again in a minute.</p>'; });
+  }
+
+  visit();
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', load); else load();
+})();
+</script>
+<script src="/static/js/tmr-session.66e52858e490.js"></script><script src="/static/js/tmr-ds-nav.4111ea1b6920.js"></script>
+</body>
+</html>
