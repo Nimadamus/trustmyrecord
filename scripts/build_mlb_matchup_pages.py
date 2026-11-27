@@ -937,7 +937,26 @@ def render_matchup(g, research, market, trends, game_file, consensus, built_at, 
         desc_bits.append("Moneyline %s %s, %s %s" % (away_n, ml_a, home_n, ml_h))
     desc_bits.append("Records, recent form, offense, bullpens and verified trends, "
                      "every number sourced")
-    description = (". ".join(desc_bits) + ".")[:300]
+    # Keep whole sentences. The boilerplate tail is last, so it drops first
+    # when the specific game facts already fill the description.
+    chosen = []
+    for bit in desc_bits:
+        candidate = ". ".join(chosen + [bit]).strip().rstrip(".") + "."
+        if len(candidate) <= 160:
+            chosen.append(bit)
+        else:
+            break
+    if chosen:
+        description = ". ".join(chosen).strip().rstrip(".") + "."
+    else:
+        first = desc_bits[0].strip().rstrip(".")
+        for sep in (" from ", " at "):
+            while sep in first and len(first) > 159:
+                nxt = first.rsplit(sep, 1)[0].rstrip()
+                if len(nxt) < 40:
+                    break
+                first = nxt
+        description = first if first.endswith(".") else first + "."
 
     # ---- structured data --------------------------------------------------
     # Built by scripts/schema_event.py so this page, the hub ItemList and the

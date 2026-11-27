@@ -767,9 +767,11 @@ def render(bld, sport, g, hist, slate, extras, built_at, hook=None):
     title = ("%s vs %s: %s" % (g["away"], g["home"], hook[0]) if hook
              else "%s vs %s%s: %s Odds, Head to Head and Betting Trends"
              % (g["away"], g["home"], (", " + short_d) if short_d else "", label))
-    desc = ("%s at %s%s. The line, the model's projected score and win probability, the head to head "
-            "record, against the spread and over/under splits, and current form for both teams."
-            % (g["away"], g["home"], long_d))
+    desc = "%s at %s%s." % (g["away"], g["home"], long_d)
+    tail = ("The line, the model's projected score and win probability, the head to head "
+            "record, against the spread and over/under splits, and current form for both teams.")
+    if len(desc) + 1 + len(tail) <= 160:
+        desc = desc + " " + tail
     url = bld.SITE + bld.game_url(sport, g)
     crumbs = [("Handicapping", "/handicapping/"), (label, "/handicapping/%s/" % sport),
               ("%s at %s" % (away["short"], home["short"]), None)]
