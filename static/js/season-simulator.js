@@ -8,7 +8,10 @@
      of the regular season (2026-09-27, 10:05 AM PT). The server enforces it; the
      page reads the server's window from /teams and falls back to this date. */
   var CLOSES_AT = '2026-09-27T17:05:00Z';
-  var closed = Date.now() >= Date.parse(CLOSES_AT);
+  /* The baked page follows the last known open window. Closed is set only when
+     /teams says this season's window is closed, so a date guess cannot paint
+     "entries closed" beside "entries open". */
+  var closed = false;
 
   function getToken() {
     try { if (window.api && window.api.token) return window.api.token; } catch (e) {}
@@ -246,10 +249,29 @@
     var when = new Date(CLOSES_AT).toLocaleString('en-US', { timeZone: 'America/Los_Angeles', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) + ' PT';
     return 'The ' + SEASON + ' entry window closed at first pitch on the final day of the regular season, ' + esc(when) + '.';
   }
+  function rememberOpenClaims() {
+    document.querySelectorAll('[data-entry-claim="open"]').forEach(function (n) {
+      if (!n.getAttribute('data-entry-open-text')) n.setAttribute('data-entry-open-text', n.textContent);
+    });
+  }
+  function restoreOpenClaims() {
+    document.querySelectorAll('[data-entry-open-text]').forEach(function (n) {
+      n.textContent = n.getAttribute('data-entry-open-text');
+      n.setAttribute('data-entry-claim', 'open');
+    });
+  }
+  function rewriteEntryClaims(text, stateName) {
+    rememberOpenClaims();
+    document.querySelectorAll('[data-entry-claim]').forEach(function (n) {
+      n.textContent = text;
+      n.setAttribute('data-entry-claim', stateName);
+    });
+  }
   function showClosedState(p) {
     locked = true;
     var kick = document.querySelector('.ss-kicker');
     if (kick) kick.innerHTML = '<i class="fas fa-lock"></i> ' + SEASON + ' Season &middot; Entries closed';
+    rewriteEntryClaims(SEASON + ' entries are closed. Predictions locked before the window shut stay on the public record.', 'closed');
     var cta = el('ss-auth-cta'); if (cta) cta.style.display = 'none';
     var actions = el('ss-actions'); if (actions) actions.style.display = 'none';
     var mine = p && p.locked
@@ -438,20 +460,32 @@
         /* SEASON_2027_ENTRIES_20261105: the server names the season open for entries. The
            page only moves forward, and only for an open window, so it stays on the final
            2026 board until the backend announces 2027. */
+        var windowKnown = false;
         if (pw && pw.open && pw.season_year > SEASON) {
           SEASON = pw.season_year;
           document.querySelectorAll('[data-season-label]').forEach(function (n) { n.textContent = String(SEASON); });
           var kick0 = document.querySelector('.ss-kicker');
           if (kick0) kick0.innerHTML = '<i class="fas fa-unlock"></i> ' + SEASON + ' Season &middot; Entries open';
         }
-        if (pw && pw.season_year === SEASON) {
+        if (pw && Number(pw.season_year) === Number(SEASON) && typeof pw.open === 'boolean') {
+          windowKnown = true;
           if (pw.closes_at) CLOSES_AT = pw.closes_at;
           closed = pw.open === false;
         }
+        if (!windowKnown) {
+          closed = false;
+          locked = false;
+          rewriteEntryClaims('The entry window was not in the team list, so this page is not saying whether entries are open.', 'unknown');
+          var kickU = document.querySelector('.ss-kicker');
+          if (kickU) kickU.textContent = 'Entry window not confirmed';
+          setStatus('<i class="fas fa-circle-exclamation"></i> The team list loaded without an entry window. Nothing was opened or closed from this page.', 'err');
+          renderAll();
+          return;
+        }
         if (closed) locked = true;
         else {
-          // The server says the window is open: undo the page's date based guess.
           locked = false;
+          restoreOpenClaims();
           /* SEASON_ENTRY_ACTIONS_20261111: the baked "season complete" block hides everything
              marked data-mlb-season-only with !important, which also hid Save, Lock and the log
              in prompt after the server opened 2027 entries: every pick could be made and none
@@ -480,7 +514,10 @@
       })
       .catch(function () {
         // SIM_UX_20261030 (#5): say it is retrying, never a silent spinner for 25 s.
-        if (attempt < 4) { setStatus('<i class="fas fa-spinner fa-spin"></i> The team list did not load. Trying again (' + (attempt + 2) + ' of 5)...', 'err'); setTimeout(function () { loadTeams(attempt + 1); }, 3000 + attempt * 2000); return; }
+        if (attempt < 4) { setStatus('<i class="fas fa-spinner fa-spin"></i> Still checking the entry window (' + (attempt + 2) + ' of 5)...', 'err'); setTimeout(function () { loadTeams(attempt + 1); }, 3000 + attempt * 2000); return; }
+        rewriteEntryClaims('The entry window could not be read, so this page is not saying whether entries are open.', 'unknown');
+        var kickF = document.querySelector('.ss-kicker');
+        if (kickF) kickF.textContent = 'Entry window not confirmed';
         ['ss-build-divisions', 'ss-build-wildcards', 'ss-build-champions', 'ss-build-wintotals', 'ss-build-bracket'].forEach(function (id) {
           var n = el(id); if (n) n.innerHTML = '<div class="ss-loading">The team list could not be loaded. Use Retry above.</div>';
         });

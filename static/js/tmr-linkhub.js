@@ -175,7 +175,7 @@
         /* One destination, one wording sitewide (2026-09-05): this was
            'MLB Handicapping Hub', a third name for the page the nav calls
            'MLB Matchups Today'. */
-        mlb: ['/handicapping/mlb/', 'MLB Matchups Today'],
+        mlb: ['/handicapping/mlb/', 'MLB Matchups'],
         nba: ['/nba-pick-tracker/', 'NBA Pick Tracker'],
         nfl: ['/nfl-pick-tracker/', 'NFL Pick Tracker'],
         nhl: ['/nhl-pick-tracker/', 'NHL Pick Tracker'],
@@ -244,7 +244,7 @@
             ['/matchup-of-the-day/ncaaf/', 'NCAAF Matchup of the Day'],
             ['/matchup-of-the-day/tennis/', 'Tennis Matchup of the Day'],
             ['/matchup-of-the-day/nhl/', 'NHL Featured Game of the Day'],
-            ['/handicapping/mlb/', 'MLB Matchups Today'],
+            ['/handicapping/mlb/', 'MLB Matchups'],
             ['/handicapping/', 'Handicapping Hub'],
             ['/my-record/', 'My record'],
             ['/mypicks/', 'My picks'],

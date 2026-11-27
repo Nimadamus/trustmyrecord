@@ -360,7 +360,7 @@
   @media(max-width:640px){.hl-h{font-size:1.25rem}.feat{padding:14px}.feat-m{font-size:1rem}.mh{padding:16px 12px}}
 </style>
 <link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=1851624eaf1a">
-<script defer src="/static/js/tmr-linkhub.js?v=e6689603a915"></script>
+<script defer src="/static/js/tmr-linkhub.js?v=4d1165a8c06a"></script>
 <script src="/static/js/tmr-analytics.js?v=d9a28154fb06"></script>
 <!-- SIM_ACTIVATION_20260808: measures the two activation milestones that
      happen away from the simulator - first verified pick and first TMR Coin
@@ -599,7 +599,40 @@
     // season-to-date table stays hidden rather than showing old numbers as current.
     var get=function(u){return fetch(u,{cache:'no-cache'}).then(function(r){return r.ok?r.json():null})};
     get('https://api.trustmyrecord.com/api/nfl/public/accuracy').catch(function(){return null}).then(function(d){
-      if(!d||!d.ytd||!d.ytd.model||!d.games||!d.games.length)return;
+      if(!d)return;
+      /* NFL_SERVED_LIVE_20261127: the baked table is the snapshot. Once this
+         response arrives, the same fields replace it so the page cannot lag
+         the API. The bake stays for no-JS visitors. */
+      if(d.served&&d.served.model_same_games&&d.served.market_same_games){
+        var servedBox=document.getElementById('nflServed');
+        if(servedBox){
+          var escS=function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})};
+          var s=d.served,Ms=s.model_same_games,K=s.market_same_games,M=s.model||{},p=s.period||{};
+          var f4=function(v){return v==null?'n/a':Number(v).toFixed(4)};
+          var pc=function(v){return v==null?'n/a':(Number(v)*100).toFixed(1)+'%'};
+          var row=function(l,a,b){return '<tr><th scope="row">'+l+'</th><td class="n">'+a+'</td><td class="n">'+b+'</td></tr>'};
+          var cap=escS(s.season)+' season, '+s.graded_games+' graded games, '+escS(p.first_pt)+' to '+escS(p.last_pt)+' (weeks '+escS((p.weeks||[]).join(', '))+'). Model '+escS((s.model_versions||[]).join(', '))+'; configuration '+escS((s.config_hashes||[]).length?s.config_hashes.join(', '):'hash not recorded for these games')+'; engine '+escS((s.engine_commits||[]).join(', '))+'.';
+          var html='<table><caption>'+cap+'</caption><tr><th scope="col">Measure</th><th scope="col" class="n">Served model</th><th scope="col" class="n">Betting market, same games</th></tr>'
+            +row('Brier score, win probability (lower is better)',f4(Ms.brier),f4(K.brier))
+            +row('Log loss, win probability',f4(Ms.log_loss),f4(K.log_loss))
+            +row('Winner accuracy',pc(Ms.winner_accuracy),pc(K.winner_accuracy))
+            +row('Games',Ms.games,K.games)
+            +(M.games!=null&&M.games!==Ms.games?row('All graded games (Brier, model only)',f4(M.brier)+', '+M.games+' games','n/a'):'')
+            +'</table>';
+          var table=servedBox.querySelector('table'); if(table) table.outerHTML=html;
+          servedBox.setAttribute('data-served-live','1');
+          var faqP=document.querySelector('#faq details p');
+          document.querySelectorAll('#faq details').forEach(function(det){
+            var sum=det.querySelector('summary');
+            if(sum&&/How accurate are the simulations/.test(sum.textContent)) faqP=det.querySelector('p');
+          });
+          if(faqP){
+            var lead='Graded live: the win probabilities this simulator served before kickoff for '+s.graded_games+' completed '+s.season+' games ('+(p.first_pt||'')+' to '+(p.last_pt||'')+') scored a Brier score of '+f4(s.model.brier)+' (lower is better; a coin flip scores 0.25) against '+f4(K.brier)+' for the no-vig betting market on the '+K.games+' of those games with a market price, and picked the winner '+pc(s.model.winner_accuracy)+' of the time. A sample this size cannot separate the model from the market. ';
+            faqP.textContent=faqP.textContent.replace(/^Graded live:[\s\S]*?A sample this size cannot separate the model from the market\.\s*/, lead);
+          }
+        }
+      }
+      if(!d.ytd||!d.ytd.model||!d.games||!d.games.length)return;
       if(d.holdout&&d.holdout.model){var ht=document.getElementById('nflAccHold');if(ht){[].forEach.call(ht.querySelectorAll('[data-k]'),function(td){var k=td.getAttribute('data-k').split('.'),v=d.holdout[k[0]]&&d.holdout[k[0]][k[1]];if(v==null)return;td.textContent=/accuracy/.test(k[1])?(v*100).toFixed(2)+'%':(k[1]==='margin_mae'?v.toFixed(1)+' points':v.toFixed(4))});}}
       var M=d.ytd.model,K=d.ytd.market_favourite||{};
       var e=function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})};
@@ -618,6 +651,7 @@
       var live=!!(P&&(P.live_graded===true||P.kind==='live'||P.type==='live'||P.source==='live'||P.source==='served'));
       var lab=live?'Live predictions graded: the pre-kickoff simulations served on this page, graded against the final score and the closing line.'
         :'Backtest: model re-run after each game with data available before kickoff. Not the live predictions shown on this page.';
+      if(d.stale) lab='Stale reconstruction'+(Array.isArray(d.stale_reasons)&&d.stale_reasons.length?': '+d.stale_reasons.join(', ')+'. ':'. ')+lab;
       var h='<table><caption>'+e(d.season)+' season to date, '+d.games.length+' completed games through Week '+e(d.through_week)+'. '+e(lab)+' Updated '+e(when)+'.</caption>'
         +'<tr><th scope="col">Measure</th><th scope="col" class="n">Model</th><th scope="col" class="n">Closing market favourite</th></tr>'
         +row('Brier score, win probability',br(M.brier),br(K.brier))
@@ -641,7 +675,7 @@
       var cal='';var cb=(d.holdout&&d.holdout.model&&d.holdout.model.calibration)||[];
       if(cb.length){cal='<details style="margin-top:10px"><summary style="cursor:pointer;color:var(--ink)">Calibration, 2025 holdout: stated favourite probability against how often the favourite won</summary><table><tr><th scope="col">Stated</th><th scope="col" class="n">Games</th><th scope="col" class="n">Average stated</th><th scope="col" class="n">Favourite won</th></tr>'
         +cb.map(function(b){return '<tr><td>'+Math.round(b.range[0]*100)+' to '+Math.round(b.range[1]*100)+'%</td><td class="n">'+b.n+'</td><td class="n">'+pc(b.predicted)+'</td><td class="n">'+pc(b.actual)+'</td></tr>'}).join('')+'</table></details>';}
-      box.innerHTML=h+(lead?'<p class="acc-note">'+lead+'</p>':'')+gl+cal;box.hidden=false;box.setAttribute('data-provenance',live?'live':'backtest');
+      box.innerHTML=h+(lead?'<p class="acc-note">'+lead+'</p>':'')+gl+cal;box.hidden=false;box.setAttribute('data-provenance',live?'live':'backtest');box.setAttribute('data-stale',d.stale?'1':'0');
     }).catch(function(){});
   })();
   </script>
@@ -2307,18 +2341,32 @@ function simTakeLabel(name){
 function simGoPick(team,g){
   const board=window.__simBoardGame;
   let boardId=null;
-  if(board&&board.id&&g){
+  if(board&&board.id&&g&&window.TMRSimBoard){
+    const hit=window.TMRSimBoard.uniqueBoardGame([{id:board.id,home:board.home,away:board.away}], g.home, g.away);
+    if(hit&&hit.id) boardId=hit.id;
+  }else if(board&&board.id&&g){
     const hn=(g.home||'').toLowerCase(), an=(g.away||'').toLowerCase();
     const bh=(board.home||'').toLowerCase(), ba=(board.away||'').toLowerCase();
     if(hn&&an&&bh&&ba&&(hn===bh||hn.indexOf(bh)!==-1||bh.indexOf(hn)!==-1)&&(an===ba||an.indexOf(ba)!==-1||ba.indexOf(an)!==-1))
       boardId=board.id;
   }
-  try{localStorage.setItem(SIM_PICK_INTENT_KEY,JSON.stringify({
-    v:1,ts:Date.now(),pick_team:team,away_team_name:g.away,home_team_name:g.home,
-    board_game_id:boardId||null,sport:'NFL',source:'nfl-simulator'
-  }))}catch(e){}
-  if(window.TMRSimGate)window.TMRSimGate.track('simulator_pick_started',{simulation_type:'nfl_game',pick_team:team});
-  window.location.href='/sportsbook/?simpick=1';
+  const write=function(id){
+    try{localStorage.setItem(SIM_PICK_INTENT_KEY,JSON.stringify({
+      v:1,ts:Date.now(),pick_team:team,selection:team,away_team_name:g.away,home_team_name:g.home,
+      board_game_id:id||null,market:'h2h',sport:'NFL',source:'nfl-simulator'
+    }))}catch(e){}
+    if(window.TMRSimGate)window.TMRSimGate.track('simulator_pick_started',{simulation_type:'nfl_game',pick_team:team,board_game_id:id?'yes':'no'});
+    window.location.href='/sportsbook/?simpick=1';
+  };
+  if(boardId||!window.TMRSimBoard){write(boardId);return;}
+  const base=(window.CONFIG&&window.CONFIG.api&&window.CONFIG.api.baseUrl)||'https://api.trustmyrecord.com/api';
+  fetch(base.replace(/\/$/,'')+'/games/board/americanfootball_nfl',{headers:{Accept:'application/json'},credentials:'omit'})
+    .then(function(r){return r.ok?r.json():{games:[]};})
+    .then(function(boardJson){
+      const hit=window.TMRSimBoard.uniqueBoardGame((boardJson&&boardJson.games)||[], g.home, g.away);
+      write(hit.id);
+    })
+    .catch(function(){write(null);});
 }
 function simRenderConversion(out,d){
   if(!window.TMRSimGate)return;
@@ -3015,7 +3063,8 @@ function nflUpgradeRender(out,d,ctx){
    auto-resume never fires against empty selectors. */
 boot().then(installSimGate,installSimGate);
 </script>
-<script src="/static/js/tmr-session.66e52858e490.js"></script><script src="/static/js/tmr-take.js?v=e3c9b272d0d8"></script><script src="/static/js/tmr-ds-nav.f8acc47826ae.js"></script>
+<script src="/static/js/tmr-session.66e52858e490.js"></script><script src="/static/js/tmr-take.js?v=e3c9b272d0d8"></script><script src="/static/js/tmr-ds-nav.6d338bede669.js"></script>
+  <script defer src="/static/js/sim-board-match.js?v=ff17b76659d9"></script>
   <script defer src="/static/js/tmr-nfl-game.js?v=18faa0a69b42"></script><script defer src="/static/js/tmr-sim-bettor.js?v=c1d7e57f806a"></script>
   <script defer src="/static/js/pick-progress-nudge.js?v=d83b51180b6b"></script>
   <script defer src="/static/js/first-pick-onboarding.js?v=73dc762988a9"></script>

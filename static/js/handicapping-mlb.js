@@ -1624,13 +1624,17 @@
         var count = (STATE.gamesByDate[iso] || []).length;
         dateMain.textContent = slateLabel(iso);
         dateSub.textContent = (count ? count + " game" + (count === 1 ? "" : "s") : "No games") + " · " + fmtSlateDate(iso);
+        if (!(STATE.games || []).length && iso === todayET()) {
+            dateMain.textContent = "Offseason";
+            dateSub.textContent = "No games. Opening Day is March 24, 2027";
+        }
         prevBtn.disabled = idx <= 0;
         nextBtn.disabled = idx < 0 || idx >= STATE.dates.length - 1;
         var isToday = iso === todayET();
         todayBtn.disabled = isToday;
         if (isToday) todayBtn.setAttribute("aria-current", "date");
         else todayBtn.removeAttribute("aria-current");
-        if (slateTitle) slateTitle.textContent = "MLB slate — " + fmtSlateDate(iso);
+        if (slateTitle) slateTitle.textContent = ((STATE.games || []).length ? "MLB slate, " : "MLB slate, offseason, ") + fmtSlateDate(iso);
     }
     function selectDate(iso) {
         if (STATE.dates.indexOf(iso) < 0 || iso === STATE.selDate) return;
@@ -1645,6 +1649,10 @@
         var jump = nextIso && (STATE.gamesByDate[nextIso] || []).length
             ? '<br><button type="button" class="hh-status__cta" data-gonext data-date="' + esc(nextIso) + '">View ' + esc(slateLabel(nextIso).toLowerCase()) + ' →</button>'
             : "";
+        var future = STATE.dates.some(function (d) { return d > todayET() && (STATE.gamesByDate[d] || []).length; });
+        if (!future && (STATE.games || []).length === 0) {
+            return "The 2026 MLB season is complete. No games are scheduled " + esc(when) + ". Opening Day 2027 is March 24. <a href=\"/mlb-playoff-odds/\">Final 2026 results</a>.";
+        }
         return "No MLB games are scheduled " + esc(when) + "." + jump;
     }
 

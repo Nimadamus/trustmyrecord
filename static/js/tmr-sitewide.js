@@ -117,7 +117,7 @@
         // from BOTH nav tables, so it appeared in no dropdown anywhere.
         ["/model-builder/", "Model Builder"],
         // Was missing here while the DS nav has carried it since 2026-08-11.
-        ["/handicapping/mlb/", "MLB Matchups Today"],
+        ["/handicapping/mlb/", "MLB Matchups"],
         ["/handicapping/", "Handicapping Hub"]
     ];
     // TMR Coin is the only remaining flat top-level link (still called

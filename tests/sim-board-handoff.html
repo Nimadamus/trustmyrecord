@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>sim board handoff</title>
+<script>
+window.__SBN_MOUNT = true;
+window.__picked = [];
+window.__api = [];
+var games = [
+  { id: 'g-ok', home: 'Boston Celtics', away: 'New York Knicks' },
+  { id: 'g-other', home: 'Los Angeles Lakers', away: 'Golden State Warriors' },
+  { id: 'fri', home: 'Anaheim Ducks', away: 'Los Angeles Kings' },
+  { id: 'sat', home: 'Los Angeles Kings', away: 'Anaheim Ducks' }
+];
+if (new URLSearchParams(location.search).get('case') === 'dup') {
+  games.push({ id: 'g-2', home: 'Boston Celtics', away: 'New York Knicks' });
+}
+window.__sbNext = {
+  state: { sport: 'NBA', loading: false, games: games },
+  load: function (sport) { this.state.sport = sport; this.state.loading = false; },
+  preselect: function (want) { window.__picked.push(want); return { status: 'ok' }; }
+};
+window.api = { request: function (path, opts) {
+  window.__api.push({ path: path, method: opts && opts.method });
+  if (String(path).indexOf('/picks') !== -1) return Promise.reject(new Error('pick post blocked'));
+  return Promise.resolve({});
+}};
+</script>
+<script defer src="/static/js/sim-board-match.js"></script>
+<script defer src="/static/js/sim-pick-prefill.js"></script>

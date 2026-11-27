@@ -88,18 +88,12 @@
        the other way round: a custom matchup can name either club as home, and
        the moneyline on a team is the same pick either way. */
     function findMatchup(games, homeOf, awayOf) {
-        var i, H = intent.home_team_name, A = intent.away_team_name;
-        if (intent.board_game_id) {
-            for (i = 0; i < games.length; i++) {
-                if (games[i] && String(games[i].id) === String(intent.board_game_id)) return i;
-            }
-        }
-        if (!H || !A) return -1;
-        for (i = 0; i < games.length; i++) {
-            if (games[i] && sameTeam(homeOf(games[i]), H) && sameTeam(awayOf(games[i]), A)) return i;
-        }
-        for (i = 0; i < games.length; i++) {
-            if (games[i] && sameTeam(homeOf(games[i]), A) && sameTeam(awayOf(games[i]), H)) return i;
+        var shaped = (games || []).map(function (g) {
+            if (!g) return g;
+            return Object.assign({}, g, { home: homeOf(g), away: awayOf(g) });
+        });
+        if (window.TMRSimBoard && typeof window.TMRSimBoard.prefillIndex === 'function') {
+            return window.TMRSimBoard.prefillIndex(shaped, intent);
         }
         return -1;
     }
@@ -255,7 +249,7 @@
             if (steam) label = steam + ' ' + signLine(intent.line);
         } else {
             var team = sameTeam(intent.pick_team, g.home) ? g.home : (sameTeam(intent.pick_team, g.away) ? g.away : null);
-            res = team ? sb.preselect({ gameId: g.id, team: team }) : { status: 'no_price' };
+            res = team ? sb.preselect({ gameId: g.id, team: team, market: 'h2h' }) : { status: 'no_price' };
             if (team) label = team + ' ML';
         }
         if (res.status === 'ok') {

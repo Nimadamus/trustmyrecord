@@ -386,7 +386,7 @@
          words; the section index takes its own name, Game Files, which is what
          the hub calls its pieces in its own copy. Neither link was removed. */
       ['/matchup-of-the-day/', 'Game Files'],
-      ['/handicapping/mlb/', 'MLB Matchups Today'],
+      ['/handicapping/mlb/', 'MLB Matchups'],
       /* Added 2026-09-07 with the Sportsbook menu entries. One destination, one
          wording sitewide: the footer takes the section's own name, Tennis; the
          menu keeps the two sport-scoped door labels. */

@@ -114,16 +114,24 @@
         var nick = t.common || t.nickname || String(t.name || '').trim().split(/\s+/).pop();
         return nick ? 'Take the ' + nick : 'Take this side';
     }
+    var BOARD_KEY = { nba: 'basketball_nba', nhl: 'icehockey_nhl' };
     function goPick(t, m) {
-        try {
-            localStorage.setItem('tmr_sim_pick_intent', JSON.stringify({
-                v: 1, ts: Date.now(), pick_team: t.name,
-                away_team_name: m.away.name, home_team_name: m.home.name,
-                board_game_id: null, sport: SPORT_CODE, source: sport + '-simulator'
-            }));
-        } catch (e) { }
-        try { G.track('simulator_pick_started', { simulation_type: sport + '_game', pick_team: t.name }); } catch (e) { }
-        window.location.href = '/sportsbook/?simpick=1';
+        var base = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://api.trustmyrecord.com/api';
+        var key = BOARD_KEY[sport];
+        var done = function (games) {
+            var built = window.TMRSimBoard
+                ? window.TMRSimBoard.intentFor(t.name, m.home.name, m.away.name, games, SPORT_CODE, sport + '-simulator')
+                : { v: 1, pick_team: t.name, selection: t.name, away_team_name: m.away.name, home_team_name: m.home.name, board_game_id: null, market: 'h2h', sport: SPORT_CODE, source: sport + '-simulator' };
+            built.ts = Date.now();
+            try { localStorage.setItem('tmr_sim_pick_intent', JSON.stringify(built)); } catch (e) { }
+            try { G.track('simulator_pick_started', { simulation_type: sport + '_game', pick_team: t.name, board_game_id: built.board_game_id ? 'yes' : 'no' }); } catch (e) { }
+            window.location.href = '/sportsbook/?simpick=1';
+        };
+        if (!key) { done([]); return; }
+        fetch(base.replace(/\/$/, '') + '/games/board/' + key, { headers: { Accept: 'application/json' }, credentials: 'omit' })
+            .then(function (r) { return r.ok ? r.json() : { games: [] }; })
+            .then(function (board) { done((board && board.games) || []); })
+            .catch(function () { done([]); });
     }
     function renderTakePanel(box, d) {
         var m = d && d.matchup;

@@ -40,14 +40,15 @@
 </script>
 <link rel="stylesheet" href="/static/css/tmr-sim-arena.css?v=07ef784c7f1e">
 <link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=1851624eaf1a">
-<script defer src="/static/js/tmr-linkhub.js?v=e6689603a915"></script>
+<script defer src="/static/js/tmr-linkhub.js?v=4d1165a8c06a"></script>
 <script src="/static/js/tmr-analytics.js?v=d9a28154fb06"></script>
 <script>window.SIM_GATE_FLAGS = { gate: true, resume: true, autoSave: true, meter: true };</script>
 <script src="/static/js/config.js?v=60a0696a58ba"></script>
 <script src="/static/js/backend-api.js?v=58f5508c2120"></script>
 <script defer src="/static/js/sim-auth-gate.js?v=e7ed2ba0f075"></script>
 <script defer src="/static/js/tmr-sim-core.3926e84befea.js"></script>
-<script defer src="/static/js/sim-run-gate.js?v=7d185f672e8c" data-sport="nba"></script>
+<script defer src="/static/js/sim-board-match.js?v=ff17b76659d9"></script>
+<script defer src="/static/js/sim-run-gate.js?v=fff662f379a3" data-sport="nba"></script>
 <script defer src="/static/js/nba-simulator-app.js?v=8ef97b579fd4"></script>
 <script defer src="/static/js/roster-clock.js?v=86ca2966df74"></script>
 <!-- Shell only: the nav and footer come from the shared design system, the tool
@@ -373,7 +374,7 @@
   <p class="lead">Two models make the numbers on the NBA pages, and each one is measured on its own. Every figure in this list is a <b>backtest</b> on past seasons unless it says live.</p>
   <ul>
     <li><b>Season, playoff and team page odds</b> come from NBA Forecasting V1 (version nba-forecast-v1, fingerprint f8337522827f4d91: Elo, an opponent adjusted margin, rest and back to backs). It was trained on 2021-22 to 2023-24, chosen on 2024-25, frozen, and then scored once on all <b>1,231</b> games of 2025-26: a Brier score of <b>0.206</b>, where always saying 50% scores 0.250 and lower is better.</li>
-    <li><b>This game simulator's win probability</b> (version tmr-nba-sim-1.1.0) is the share of simulated games each team wins, with team strength set by NBA Forecasting V1 for that game since October 30, 2026, and then moved by the players listed out. Since November 12, 2026, a scheduled game with a sportsbook line in the next 48 hours starts from that line instead (the moneyline with the bookmaker's margin removed), because on every game graded live so far the line was the more accurate number: a Brier of <b>0.176</b> against <b>0.190</b> for the simulator over the first 93 games. A player you hold out still moves it. That is the number the next slate prints. Odds further out use the forecast alone, because nobody knows who is out in March. The simulator still plays every possession and builds the box score. Before that it used its own ratings, which scored a Brier of <b>0.240</b> on the 1,231 games of 2025-26; set by the forecast model the same simulator scored <b>0.205</b> on those games (a backtest).</li>
+    <li><b>This game simulator's win probability</b> (version tmr-nba-sim-1.1.0) is the share of simulated games each team wins, with team strength set by NBA Forecasting V1 for that game since October 30, 2026, and then moved by the players listed out. Since November 12, 2026, a scheduled game with a sportsbook line in the next 48 hours starts from that line instead (the moneyline with the bookmaker's margin removed), because on the first 93 games graded live the line was the more accurate number: a Brier of <b>0.176</b> against <b>0.190</b> for the simulator. That opening sample is not the full season. The live record in the next line is the whole graded set. A player you hold out still moves it. That is the number the next slate prints. Odds further out use the forecast alone, because nobody knows who is out in March. The simulator still plays every possession and builds the box score. Before that it used its own ratings, which scored a Brier of <b>0.240</b> on the 1,231 games of 2025-26; set by the forecast model the same simulator scored <b>0.205</b> on those games (a backtest).</li>
     <li><b>The team ratings the simulator starts from</b> were scored walk forward on <b data-acc="games">3,701 NBA games</b> over three seasons (2023-24 to 2025-26), each projected only from games already played: the favourite won <b data-acc="accuracy">67.1%</b> of the time against <b data-acc="baseline">54.8%</b> for always picking the home team, the projected margin missed by <b data-acc="mae">11.1 points</b> against <b data-acc="baseline-mae">12.7</b> for the league average, and the calibration error was <b data-acc="cal">1.5%</b>. Measured August 2026.</li>
     <li><b>Live, 2026-27.</b> From October 30, 2026 both probabilities are frozen before every tip off and graded after the final. <span id="nbaLiveRecord">The first graded games appear here once they are final.</span></li>
   </ul>
@@ -502,7 +503,7 @@
   <a href="/nba-simulator/#faq">FAQ</a>
 </div>
 
-<script src="/static/js/tmr-session.66e52858e490.js"></script><script src="/static/js/tmr-take.js?v=e3c9b272d0d8"></script><script src="/static/js/tmr-ds-nav.f8acc47826ae.js"></script>
+<script src="/static/js/tmr-session.66e52858e490.js"></script><script src="/static/js/tmr-take.js?v=e3c9b272d0d8"></script><script src="/static/js/tmr-ds-nav.6d338bede669.js"></script>
     <script src="/static/js/tmr-live-chat.js?v=ee595c3e3e4b"></script>
 </body>
 </html>
