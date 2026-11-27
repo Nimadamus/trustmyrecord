@@ -284,6 +284,38 @@
             .form-row { grid-template-columns: 1fr; }
             .cc-grid { grid-template-columns: 1fr; }
         }
+        /* THESHOW_AUTOTRACK_20261127 */
+        .at-wrap { display: grid; grid-template-columns: minmax(0, 380px) minmax(0, 1fr); gap: 18px; align-items: start; }
+        .at-wrap.solo { grid-template-columns: minmax(0, 1fr); }
+        .at-wrap > * { min-width: 0; }
+        .at-card { border: 1px solid var(--line); border-radius: 18px; background: var(--surface); padding: 24px; box-shadow: var(--shadow); }
+        .at-card h3 { font-size: 20px; font-weight: 800; margin-bottom: 8px; }
+        .at-card p { color: var(--muted); font-size: 14.5px; line-height: 1.55; margin: 0 0 14px; }
+        .at-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 4px 0 18px; }
+        .at-step { border: 1px solid var(--line); border-radius: 14px; padding: 14px; font-size: 13.5px; color: var(--muted); }
+        .at-step b { display: block; color: var(--text); font-size: 14.5px; margin-bottom: 4px; }
+        .at-step .n { color: var(--gold); font-weight: 800; font-size: 12px; letter-spacing: .08em; }
+        .at-wrap:not(.solo) .at-steps { grid-template-columns: 1fr; }
+        .at-form { display: grid; grid-template-columns: 1fr 150px auto; gap: 10px; }
+        .at-wrap:not(.solo) .at-form { grid-template-columns: 1fr; }
+        .at-linked { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 14.5px; }
+        .at-linked .pill { padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line-strong); color: var(--cyan); font-weight: 700; font-size: 12.5px; }
+        .at-msg { margin-top: 10px; font-size: 13.5px; min-height: 18px; }
+        .at-msg.err { color: var(--red); } .at-msg.ok { color: var(--green); }
+        .at-side { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
+        .at-side > * { min-width: 0; overflow-x: auto; }
+        body .at-table { width: 100%; min-width: 0 !important; border-collapse: collapse; font-size: 14px; }
+        .at-table th { text-align: left; color: var(--muted); font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+        .at-table td { padding: 10px; border-bottom: 1px solid var(--line); }
+        .at-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+        .at-game { display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: center; padding: 12px 4px; border-bottom: 1px solid var(--line); font-size: 14px; }
+        .at-game:last-child { border-bottom: 0; }
+        .at-game .away { text-align: right; }
+        .at-game .who { font-weight: 700; } .at-game .team { color: var(--muted); font-size: 12.5px; }
+        .at-game .score { font-weight: 800; font-size: 18px; font-variant-numeric: tabular-nums; text-align: center; min-width: 74px; }
+        .at-game .score small { display: block; font-size: 11px; font-weight: 600; color: var(--muted); }
+        .at-game .w { color: var(--green); }
+        @media (max-width: 860px) { .at-wrap, .at-wrap.solo { grid-template-columns: minmax(0, 1fr); } .at-form { grid-template-columns: 1fr; } .at-steps { grid-template-columns: 1fr; } }
     </style>
 <link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=272776e56183">
 <script defer src="/static/js/tmr-linkhub.js?v=4d1165a8c06a"></script>
@@ -318,6 +350,7 @@
             <button class="btn btn-primary" onclick="openCreate()"><i class="fas fa-plus"></i> Create a Challenge</button>
             <a class="btn btn-ghost" href="#open-challenges"><i class="fas fa-bolt"></i> Browse Open Challenges</a>
             <a class="btn btn-ghost" href="#games"><i class="fas fa-gamepad"></i> Choose a Game</a>
+            <a class="btn btn-primary" href="#autotrack"><i class="fas fa-link"></i> Auto Track MLB The Show</a>
             <a class="btn btn-gold" href="/mlb-the-show-stat-league/"><i class="fas fa-baseball-bat-ball"></i> MLB The Show Stat League</a>
         </div>
         <div class="auth-banner" id="authBanner">
@@ -328,6 +361,37 @@
             <div class="og-hero-stat"><div class="num">5</div><div class="lbl">Supported Games</div></div>
             <div class="og-hero-stat"><div class="num" id="statCompleted">&mdash;</div><div class="lbl">Completed Matches</div></div>
             <div class="og-hero-stat"><div class="num">PS / Xbox</div><div class="lbl">Platforms</div></div>
+        </div>
+    </section>
+
+    <!-- ===================== THE SHOW AUTO TRACKING (THESHOW_AUTOTRACK_20261127) ===================== -->
+    <section class="section" id="autotrack">
+        <div class="section-head">
+            <div>
+                <h2>MLB The Show 26 Auto Tracking</h2>
+                <div class="sub">Link your PlayStation or Xbox username once. Every online game you finish from that moment on posts here by itself with the final score, hits, errors and pitchers. No screenshots, no reporting.</div>
+            </div>
+        </div>
+        <div class="at-wrap solo" id="atWrap">
+            <div class="at-card">
+                <div class="at-steps" id="atSteps">
+                    <div class="at-step"><span class="n">STEP 1</span><b>Link your username</b>Enter the name you play MLB The Show under.</div>
+                    <div class="at-step"><span class="n">STEP 2</span><b>Play online</b>Ranked, Battle Royale, Events or any online mode.</div>
+                    <div class="at-step"><span class="n">STEP 3</span><b>It posts itself</b>New games appear here within minutes and build your record.</div>
+                </div>
+                <div id="atBody"><div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading&hellip;</div></div>
+                <div class="at-msg" id="atMsg" role="status"></div>
+            </div>
+            <div class="at-side" id="atSide" hidden>
+                <div class="at-card" id="atBoardCard" hidden>
+                    <h3>Auto Tracked Standings</h3>
+                    <table class="at-table"><thead><tr><th>#</th><th>Player</th><th class="num">W</th><th class="num">L</th><th class="num">Run Diff</th></tr></thead><tbody id="atBoard"></tbody></table>
+                </div>
+                <div class="at-card" id="atFeedCard" hidden>
+                    <h3>Latest Games</h3>
+                    <div id="atFeed"></div>
+                </div>
+            </div>
         </div>
     </section>
 
@@ -938,6 +1002,93 @@
             else setTimeout(start, 600);
         });
     }
+})();
+</script>
+<script>
+/* THESHOW_AUTOTRACK_20261127: link a The Show username; new games post automatically. */
+(function () {
+    function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+    var PLAT = { psn: 'PlayStation', xbl: 'Xbox' };
+    function ready() { return typeof api !== 'undefined' && api && typeof api.request === 'function'; }
+    function loggedIn() { return ready() && (typeof api.isLoggedIn !== 'function' || api.isLoggedIn()); }
+    function $(id) { return document.getElementById(id); }
+    function msg(t, cls) { var m = $('atMsg'); m.textContent = t || ''; m.className = 'at-msg' + (cls ? ' ' + cls : ''); }
+    function when(ts) { try { return new Date(ts).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }); } catch (e) { return ''; } }
+
+    function renderForm() {
+        $('atSteps').hidden = false;
+        $('atBody').innerHTML =
+            '<form class="at-form" id="atForm">' +
+            '<input class="form-control" id="atTag" placeholder="Your MLB The Show username" maxlength="30" autocomplete="off" required aria-label="MLB The Show username">' +
+            '<select class="form-control" id="atPlat" aria-label="Platform"><option value="psn">PlayStation</option><option value="xbl">Xbox</option></select>' +
+            '<button class="btn btn-primary" type="submit" id="atBtn"><i class="fas fa-link"></i> Start Tracking</button></form>';
+        $('atForm').addEventListener('submit', link);
+    }
+    function renderGuest() {
+        $('atBody').innerHTML =
+            '<a class="btn btn-primary" href="/login/?next=' + encodeURIComponent('/online-gaming/#autotrack') + '"><i class="fas fa-right-to-bracket"></i> Log in to link your username</a> ' +
+            '<a class="btn btn-ghost" href="/register/">Create a free account</a>';
+    }
+    function renderLinked(l) {
+        $('atSteps').hidden = true;
+        $('atBody').innerHTML =
+            '<h3>You are being tracked</h3>' +
+            '<div class="at-linked"><span class="pill">' + esc(PLAT[l.platform] || l.platform) + '</span><b>' + esc(l.gamertag) + '</b></div>' +
+            '<p style="margin-top:12px">Tracking since ' + esc(when(l.linked_at)) + '. Games played before then are never posted. ' +
+            (l.games ? '<b>' + l.games + '</b> game' + (l.games === 1 ? '' : 's') + ' posted so far.' : 'Play an online game and it shows up here within minutes.') + '</p>' +
+            '<button class="btn btn-ghost" type="button" id="atStop">Stop tracking</button>';
+        $('atStop').addEventListener('click', unlink);
+    }
+
+    async function loadMe() {
+        if (!loggedIn()) { renderGuest(); return; }
+        try {
+            var r = await api.request('/gaming/theshow/me');
+            if (r && r.link && r.link.active) renderLinked(r.link); else renderForm();
+        } catch (e) { renderForm(); }
+    }
+    async function link(e) {
+        e.preventDefault();
+        var btn = $('atBtn'); btn.disabled = true; msg('Checking MLB The Show for that username…');
+        try {
+            await api.request('/gaming/theshow/link', { method: 'POST', body: { gamertag: $('atTag').value.trim(), platform: $('atPlat').value } });
+            msg('Linked. Your next online game will post here automatically.', 'ok');
+            loadMe(); loadBoard();
+        } catch (err) {
+            msg((err && err.message) || 'Could not link that username.', 'err'); btn.disabled = false;
+        }
+    }
+    async function unlink() {
+        try { await api.request('/gaming/theshow/link', { method: 'DELETE' }); msg('Tracking stopped.', 'ok'); renderForm(); loadBoard(); }
+        catch (e) { msg('Could not stop tracking. Try again.', 'err'); }
+    }
+
+    function sideHtml(s, cls) {
+        return '<div class="' + cls + '"><div class="who' + (s.result === 'W' ? ' w' : '') + '">' + esc(s.member || 'Opponent') + '</div><div class="team">' + esc(s.team || '') + '</div></div>';
+    }
+    async function loadBoard() {
+        if (!ready()) return;
+        var board = [], games = [];
+        try { var b = await api.request('/gaming/theshow/leaderboard'); board = (b && b.leaderboard) || []; } catch (e) {}
+        try { var f = await api.request('/gaming/theshow/feed?limit=12'); games = (f && f.games) || []; } catch (e) {}
+        var any = board.length || games.length;
+        $('atBoardCard').hidden = !board.length; $('atFeedCard').hidden = !games.length;
+        $('atSide').hidden = !any; $('atWrap').classList.toggle('solo', !any);
+        $('atBoard').innerHTML = board.slice(0, 15).map(function (p, i) {
+            var rd = p.runs_for - p.runs_against;
+            return '<tr><td>' + (i + 1) + '</td><td><a href="/u/' + encodeURIComponent(p.username) + '/"><b>' + esc(p.display_name || p.username) + '</b></a></td>' +
+                '<td class="num">' + p.wins + '</td><td class="num">' + p.losses + '</td><td class="num">' + (rd > 0 ? '+' : '') + rd + '</td></tr>';
+        }).join('');
+        $('atFeed').innerHTML = games.map(function (g) {
+            return '<div class="at-game">' + sideHtml(g.home, 'home') +
+                '<div class="score">' + esc(g.home.runs) + ' : ' + esc(g.away.runs) +
+                '<small>H ' + esc(g.home.hits) + ' : ' + esc(g.away.hits) + ' &middot; E ' + esc(g.home.errors) + ' : ' + esc(g.away.errors) + '</small></div>' +
+                sideHtml(g.away, 'away') + '</div>';
+        }).join('');
+    }
+    function start() { loadMe(); loadBoard(); }
+    if (typeof api !== 'undefined' && api && api.ready && typeof api.ready.then === 'function') api.ready.then(start).catch(start);
+    else window.addEventListener('load', function () { if (ready()) start(); else setTimeout(start, 600); });
 })();
 </script>
 <script src="/static/js/tmr-session.66e52858e490.js"></script><script src="/static/js/tmr-ds-nav.6d338bede669.js"></script>
