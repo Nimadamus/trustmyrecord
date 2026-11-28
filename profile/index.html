@@ -3639,6 +3639,13 @@
                     .og-stat .l { margin-top:6px; font-size:10px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:#94a3b8; }
                     .og-sub-head { font-size:12.5px; font-weight:900; letter-spacing:0.06em; text-transform:uppercase; color:#9fb0c3; margin:22px 0 11px; display:flex; align-items:center; gap:8px; }
                     .og-sub-head i { color:var(--cyan,#1D7FE8); }
+                    .og-tot-tabs { display:flex; flex-wrap:wrap; gap:6px; margin:4px 0 2px; }
+                    .og-tot-tab { background:rgba(148,163,184,0.08); border:1px solid rgba(148,163,184,0.18); color:#c8d2e0; border-radius:999px; padding:5px 12px; font-size:12px; font-weight:700; cursor:pointer; }
+                    .og-tot-tab.on { background:var(--cyan,#1D7FE8); border-color:var(--cyan,#1D7FE8); color:#fff; }
+                    .og-tot-wrap { overflow-x:auto; max-height:420px; overflow-y:auto; }
+                    .og-tot-wrap .og-tbl th, .og-tot-wrap .og-tbl td { white-space:nowrap; text-align:right; }
+                    .og-tot-wrap .og-tbl th:first-child, .og-tot-wrap .og-tbl td:first-child { text-align:left; }
+                    .og-tot-note { font-size:11.5px; color:#8391a7; margin-top:6px; }
                     .og-show-rec { display:flex; align-items:center; gap:10px; margin:0 0 10px; font-size:13px; color:#9fb0c3; font-weight:600; }
                     .og-show-row[role=button]:hover { background:rgba(29,127,232,0.07); }
                     .og-gcard { border:1px solid var(--line-2,rgba(148,163,184,0.2)); border-radius:14px; background:rgba(255,255,255,0.02); overflow:hidden; }
@@ -13795,7 +13802,31 @@
                     '<div class="og-rscore">' + esc(mine.runs) + '–' + esc(opp.runs) + '</div>' +
                     link + '</div>';
             });
-            return html + '</div>';
+            return html + '</div>' + renderShowTotals(sd.cumulative);
+        }
+        function renderShowTotals(c) {
+            if (!c || !c.games_with_box) return '';
+            const f3 = function (x) { return x == null ? '' : Number(x).toFixed(3).replace(/^0\./, '.'); };
+            const f2 = function (x) { return x == null ? '' : Number(x).toFixed(2); };
+            function bat(list) {
+                if (!list || !list.length) return '<div class="og-tot-note">No hitters yet.</div>';
+                let h = '<table class="og-tbl"><thead><tr><th>Player</th><th>G</th><th>AB</th><th>R</th><th>H</th><th>2B</th><th>3B</th><th>HR</th><th>RBI</th><th>BB</th><th>SO</th><th>SB</th><th>AVG</th><th>OBP</th><th>SLG</th><th>OPS</th></tr></thead><tbody>';
+                list.forEach(function (b) { h += '<tr><td><b>' + esc(b.name) + '</b></td><td>' + b.g + '</td><td>' + b.ab + '</td><td>' + b.r + '</td><td>' + b.h + '</td><td>' + b.doubles + '</td><td>' + b.triples + '</td><td>' + b.hr + '</td><td>' + b.rbi + '</td><td>' + b.bb + '</td><td>' + b.so + '</td><td>' + b.sb + '</td><td>' + f3(b.avg) + '</td><td>' + f3(b.obp) + '</td><td>' + f3(b.slg) + '</td><td>' + f3(b.ops) + '</td></tr>'; });
+                return h + '</tbody></table>';
+            }
+            function pit(list) {
+                if (!list || !list.length) return '<div class="og-tot-note">No pitchers yet.</div>';
+                let h = '<table class="og-tbl"><thead><tr><th>Pitcher</th><th>G</th><th>W</th><th>L</th><th>SV</th><th>IP</th><th>H</th><th>R</th><th>ER</th><th>BB</th><th>SO</th><th>ERA</th><th>WHIP</th></tr></thead><tbody>';
+                list.forEach(function (p) { h += '<tr><td><b>' + esc(p.name) + '</b></td><td>' + p.g + '</td><td>' + p.w + '</td><td>' + p.l + '</td><td>' + p.sv + '</td><td>' + esc(p.ip) + '</td><td>' + p.h + '</td><td>' + p.r + '</td><td>' + p.er + '</td><td>' + p.bb + '</td><td>' + p.so + '</td><td>' + f2(p.era) + '</td><td>' + f2(p.whip) + '</td></tr>'; });
+                return h + '</tbody></table>';
+            }
+            const m = c.mine || {}, a = c.against || {};
+            const views = [['mb', 'My hitters', bat(m.batting)], ['mp', 'My pitchers', pit(m.pitching)], ['ab', 'Hitters against me', bat(a.batting)], ['ap', 'Pitchers against me', pit(a.pitching)]];
+            let html = '<div class="og-sub-head"><i class="fas fa-chart-column"></i>MLB The Show season totals</div><div class="og-tot-tabs">';
+            views.forEach(function (v, i) { html += '<button type="button" class="og-tot-tab' + (i ? '' : ' on') + '" data-tot="' + v[0] + '">' + v[1] + '</button>'; });
+            html += '</div>';
+            views.forEach(function (v, i) { html += '<div class="og-tot-wrap" data-tot-view="' + v[0] + '"' + (i ? ' style="display:none"' : '') + '>' + v[2] + '</div>'; });
+            return html + '<div class="og-tot-note">Totals from ' + c.games_with_box + (c.games_with_box === 1 ? ' game' : ' games') + ' with a full box score. Opponent players are combined across every opponent.</div>';
         }
         function wireShow(body) {
             function go(e) {
@@ -13808,6 +13839,13 @@
                 if (window.TMRShowBox) return openIt();
                 const sc = document.createElement('script'); sc.src = '/static/js/tmr-show-box.js?v=27a86a8d32b4'; sc.onload = openIt; document.head.appendChild(sc);
             }
+            body.addEventListener('click', function (e) {
+                const t = e.target.closest && e.target.closest('.og-tot-tab');
+                if (!t) return;
+                const k = t.getAttribute('data-tot');
+                body.querySelectorAll('.og-tot-tab').forEach(function (b) { b.classList.toggle('on', b === t); });
+                body.querySelectorAll('[data-tot-view]').forEach(function (d) { d.style.display = d.getAttribute('data-tot-view') === k ? '' : 'none'; });
+            });
             body.addEventListener('click', go); body.addEventListener('keydown', go);
         }
 
