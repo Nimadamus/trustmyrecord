@@ -2165,11 +2165,11 @@ html body.pro-board-page main #board .dk-empty{color:var(--mute)!important;paddi
         var boardData = null;
         /* 2026-09-29: Proven was on by default, so a board with no handicapper at 25+ graded
            picks looked empty to a paying member. Every pending pick shows first; Proven is a filter. */
-        var boardFilter = { proven: false, league: 'all', source: 'all', q: '', view: 'cappers', win: 'all', sortG: 'time' };
+        var boardFilter = { proven: false, league: 'all', source: 'all', q: '', view: 'cappers', win: 'all', sortG: 'time', bt: 'all' };
         /* PRO_BOARD_RANKED_20261128 (Nima: rank the handicappers, show the top people's pending picks, with names): the board opens on the leaderboard, ranked by units; the view and filters live in the URL */
         try {
             var bq = new URLSearchParams(window.location.search);
-            ['view', 'league', 'source', 'win', 'sortG'].forEach(function (k) { if (bq.get(k)) boardFilter[k] = bq.get(k); });
+            ['view', 'league', 'source', 'win', 'sortG', 'bt'].forEach(function (k) { if (bq.get(k)) boardFilter[k] = bq.get(k); });
             if (bq.get('proven') === '1') boardFilter.proven = true;
             if (bq.get('q')) boardFilter.q = bq.get('q');
         } catch (eq) { }
@@ -2181,13 +2181,14 @@ html body.pro-board-page main #board .dk-empty{color:var(--mute)!important;paddi
                 if (f.source !== 'all') p.set('source', f.source);
                 if (f.win !== 'all') p.set('win', f.win);
                 if (f.sortG !== 'time') p.set('sortG', f.sortG);
+                if (f.bt && f.bt !== 'all') p.set('bt', f.bt);
                 if (f.proven) p.set('proven', '1');
                 if (f.q) p.set('q', f.q);
                 var qs = p.toString();
                 history.replaceState(history.state, '', window.location.pathname + (qs ? '?' + qs : '') + window.location.hash);
             } catch (e) { }
         }
-        var boardSort = { key: 'units', dir: -1 };
+        var boardSort = { key: 'record', dir: -1 };
         var followKeys = {};
         var settledHtml = '';
         var fromCheckout = false;
@@ -2257,7 +2258,7 @@ html body.pro-board-page main #board .dk-empty{color:var(--mute)!important;paddi
         }
         function sortVal(c, k) {
             if (k === 'name') return String(c.name || '').toLowerCase();
-            if (k === 'record') return (c.record.w + c.record.l) ? c.record.w / (c.record.w + c.record.l) : -1;
+            if (k === 'record') { var rn = c.record.w + c.record.l; if (!rn) return -1; var rp = c.record.w / rn, z = 1.96; return (rp + z * z / (2 * rn) - z * Math.sqrt(rp * (1 - rp) / rn + z * z / (4 * rn * rn))) / (1 + z * z / rn); }
             if (k === 'streak') return c.streak == null ? -99 : c.streak;
             if (k === 'last10') return c.last10 ? c.last10.units : -99;
             if (k === 'roi') return c.roi == null ? -999 : c.roi;
@@ -2431,15 +2432,22 @@ html body.pro-board-page main #board .dk-empty{color:var(--mute)!important;paddi
         }
         function drawDesk(rows, d, f, canFollow) {
             var q = f.q.trim().toLowerCase();
-            var base = d.handicappers.filter(function (c) { return (!f.proven || c.proven) && (!q || String(c.name).toLowerCase().indexOf(q) !== -1); });
-            var lg = {}, lgAll = 0, sc = {}, scAll = 0;
+            var base = d.handicappers.filter(function (c) { return !f.proven || c.proven; });
+            var lg = {}, lgAll = 0, sc = {}, scAll = 0, bt = {}, btAll = 0;
             base.forEach(function (c) {
-                var up = c.picks.filter(upcoming);
-                if (f.source === 'all' || c.source === f.source) up.forEach(function (p) { lgAll++; lg[p.league] = (lg[p.league] || 0) + 1; });
-                if (up.some(function (p) { return f.league === 'all' || p.league === f.league; })) { scAll++; sc[c.source] = (sc[c.source] || 0) + 1; }
+                dedupPicks(c);
+                var mine = f.source === 'all' || c.source === f.source;
+                c.picks.forEach(function (p) {
+                    if (!mine) return;
+                    if (pickShows(c, p, f, q, 'lg')) { lgAll++; lg[p.league] = (lg[p.league] || 0) + 1; }
+                    if (pickShows(c, p, f, q, 'bt')) { btAll++; bt[p.bet_type] = (bt[p.bet_type] || 0) + 1; }
+                });
+                if (c.picks.some(function (p) { return pickShows(c, p, f, q); })) { scAll++; sc[c.source] = (sc[c.source] || 0) + 1; }
             });
             var chip = function (kind, v, label, n, cur) { return '<button type="button" class="dk-chip' + (cur === v ? ' on' : '') + '" data-' + kind + '="' + esc(v) + '">' + esc(label) + ' <b>' + n + '</b></button>'; };
-            var lgs = Object.keys(lg).sort(function (a, b) { return lg[b] - lg[a]; }), scs = Object.keys(sc).sort(function (a, b) { return sc[b] - sc[a]; });
+            var lgs = Object.keys(lg).sort(function (a, b) { return lg[b] - lg[a]; }), scs = Object.keys(sc).sort(function (a, b) { return sc[b] - sc[a]; }), bts = Object.keys(bt).filter(function (k) { return k && k !== 'null'; }).sort(function (a, b) { return bt[b] - bt[a]; });
+            if (f.league !== 'all' && lgs.indexOf(f.league) === -1) lgs.unshift(f.league);
+            if (f.bt !== 'all' && bts.indexOf(f.bt) === -1) bts.unshift(f.bt);
             var sel = rows.filter(function (c) { return c.key === f.sel; })[0] || rows[0];
             f.sel = sel ? sel.key : null;
             var th = function (k, label, cls) {
@@ -2447,8 +2455,9 @@ html body.pro-board-page main #board .dk-empty{color:var(--mute)!important;paddi
                 return '<th class="' + (cls || '') + '"><button type="button" class="wd-sort' + (on ? ' on' : '') + '" data-sort="' + k + '">' + label + (on ? (boardSort.dir < 0 ? ' &#9660;' : ' &#9650;') : '') + '</button></th>';
             };
             var picks = rows.reduce(function (n, c) { return n + c.shown.length; }, 0);
-            return '<div class="dk"><div class="dk-top"><div class="dk-brand">TMR Pending Picks</div><h3 class="dk-title">All pending picks</h3><div class="dk-subl">' + rows.length + ' handicappers &middot; ' + picks + ' pending picks &middot; ranked by career (all sports) units</div></div>'
-                + '<div class="dk-chips">' + chip('lg', 'all', 'All', lgAll, f.league) + lgs.map(function (l) { return chip('lg', l, l, lg[l], f.league); }).join('') + '</div>'
+            return '<div class="dk"><div class="dk-top"><div class="dk-brand">TMR Pending Picks</div><h3 class="dk-title">All pending picks</h3><div class="dk-subl">' + rows.length + ' handicappers &middot; ' + picks + ' pending picks &middot; ranked by record (win rate weighted by how many picks are graded) &middot; click any column to re-sort</div></div>'
+                + '<div class="dk-chips">' + chip('lg', 'all', 'All', lgAll, f.league) + lgs.map(function (l) { return chip('lg', l, l, lg[l] || 0, f.league); }).join('') + '</div>'
+                + '<div class="dk-chips dk-chips2">' + chip('bt', 'all', 'All bet types', btAll, f.bt) + bts.map(function (b) { return chip('bt', b, b, bt[b] || 0, f.bt); }).join('') + '</div>'
                 + '<div class="dk-chips dk-chips2">' + chip('sc', 'all', 'All sources', scAll, f.source) + scs.map(function (s) { return chip('sc', s, s, sc[s], f.source); }).join('') + '</div>'
                 + '<div class="dk-main"><div class="dk-panel dk-left"><div class="dk-ph"><b>Leaderboard</b> <span>handicappers with a pending pick</span></div><div class="dk-tw"><table class="dk-t"><thead><tr><th class="n">#</th>' + th('name', '<span class="dk-hstar">&#9733; </span>Handicapper') + '<th class="hide-s">Source</th>' + th('record', 'Record', 'hide-xs') + th('units', 'Units', 'n') + th('roi', 'ROI', 'n hide-s') + '<th class="n hide-s">Win %</th>' + th('graded', 'Picks', 'n hide-s') + th('last10', 'Last 10', 'n hide-s') + th('streak', 'Streak', 'n hide-xs') + th('pending', 'Pending', 'n') + '</tr></thead><tbody>'
                 + rows.slice(0, f.all ? rows.length : 100).map(function (c, ri) {
@@ -2468,6 +2477,22 @@ html body.pro-board-page main #board .dk-empty{color:var(--mute)!important;paddi
                 }).join('') + '</tbody></table></div>' + (!f.all && rows.length > 100 ? '<button type="button" class="dk-more">Show all ' + rows.length + ' handicappers</button>' : '') + '</div>'
                 + '<div class="dk-panel dk-right" id="dkDetail">' + deskDetail(sel, canFollow) + '</div></div></div>';
         }
+        /* PRO_BOARD_FILTERS_20261128 (Nima: "all sports and types of bets are clickable and searchable"): one rule for which picks show,
+           used by the table, the chip counts and the detail panel. Same pick posted twice by a handicapper shows once. */
+        function dedupPicks(c) {
+            if (c._dd) return; var seen = {}; c._dd = true;
+            c.picks = c.picks.slice().sort(function (a, b) { return String(a.posted_at || '').localeCompare(String(b.posted_at || '')); }).filter(function (p) {
+                var k = [p.league, p.matchup, p.bet_type, p.selection, p.line, p.start].join('|'); if (seen[k]) return false; seen[k] = 1; return true;
+            });
+        }
+        function pickText(p) { return [p.league, p.bet_type, p.matchup, p.selection, p.home, p.away].join(' ').toLowerCase(); }
+        function capperHit(c, q) { return !q || [c.name, c.source].concat(c.sports || []).join(' ').toLowerCase().indexOf(q) !== -1; }
+        function pickShows(c, p, f, q, skip) {
+            if (!upcoming(p)) return false;
+            if (skip !== 'lg' && f.league !== 'all' && p.league !== f.league) return false;
+            if (skip !== 'bt' && f.bt !== 'all' && p.bet_type !== f.bt) return false;
+            return capperHit(c, q) || pickText(p).indexOf(q) !== -1;
+        }
         function drawBoard() {
             if (!boardEl || !boardData) return;
             var d = boardData, f = boardFilter;
@@ -2477,10 +2502,10 @@ html body.pro-board-page main #board .dk-empty{color:var(--mute)!important;paddi
             var rows = d.handicappers.filter(function (c) {
                 if (f.proven && !c.proven) return false;
                 if (f.source !== 'all' && c.source !== f.source) return false;
-                if (q && String(c.name).toLowerCase().indexOf(q) === -1) return false;
                 return true;
             }).map(function (c) {
-                c.shown = c.picks.filter(function (p) { return upcoming(p) && (f.league === 'all' || p.league === f.league); });
+                dedupPicks(c);
+                c.shown = c.picks.filter(function (p) { return pickShows(c, p, f, q); }).sort(function (a, b) { return Date.parse(a.start) - Date.parse(b.start); });
                 return c;
             }).filter(function (c) { return c.shown.length; });
             rows.sort(function (a, b) {
@@ -2501,7 +2526,7 @@ html body.pro-board-page main #board .dk-empty{color:var(--mute)!important;paddi
                 + '<button type="button" role="tab" data-view="consensus" aria-selected="' + (f.view === 'consensus') + '" class="' + (f.view === 'consensus' ? 'on' : '') + '">Consensus</button>'
                 + '<span class="wdg-upd">Updated ' + esc(new Date(d.generated_at).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })) + ' <button type="button" id="wdRefresh">Refresh</button></span></div>'
                 + '<div class="wd-bar">' +
-                '<input type="search" id="wdSearch" class="wd-search" placeholder="Search handicappers" value="' + esc(f.q) + '" aria-label="Search handicappers">' +
+                '<input type="search" id="wdSearch" class="wd-search" placeholder="Search names, teams, sports, bet types" value="' + esc(f.q) + '" aria-label="Search names, teams, sports and bet types">' +
                 '<label class="wd-check"><input type="checkbox" id="wdProven"' + (f.proven ? ' checked' : '') + '> 25+ graded picks</label>' +
                 (f.view === 'cappers' ? '' : '<select id="wdLeague" aria-label="League"><option value="all">All leagues</option>' + (d.summary.leagues || []).map(function (l) { return opt(l, f.league); }).join('') + '</select>' +
                 '<select id="wdSource" aria-label="Source"><option value="all">All sources</option>' + sources.map(function (s) { return opt(s, f.source); }).join('') + '</select>') +
@@ -2543,7 +2568,7 @@ html body.pro-board-page main #board .dk-empty{color:var(--mute)!important;paddi
                 });
             });
             Array.prototype.forEach.call(boardEl.querySelectorAll('.dk-chip'), function (b) {
-                b.addEventListener('click', function () { if (b.hasAttribute('data-lg')) boardFilter.league = b.getAttribute('data-lg'); else boardFilter.source = b.getAttribute('data-sc'); drawBoard(); });
+                b.addEventListener('click', function () { if (b.hasAttribute('data-lg')) boardFilter.league = b.getAttribute('data-lg'); else if (b.hasAttribute('data-bt')) boardFilter.bt = b.getAttribute('data-bt'); else boardFilter.source = b.getAttribute('data-sc'); boardFilter.all = false; drawBoard(); });
             });
             Array.prototype.forEach.call(boardEl.querySelectorAll('.dk-more'), function (b) { b.addEventListener('click', function () { boardFilter.all = true; var y = window.scrollY; drawBoard(); window.scrollTo(0, y); }); });
             Array.prototype.forEach.call(boardEl.querySelectorAll('.dk-full'), function (b) { b.addEventListener('click', function () { openCapper(b.getAttribute('data-full')); }); });
