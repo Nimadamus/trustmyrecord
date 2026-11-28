@@ -1110,12 +1110,18 @@
         });
         var out = tbl(['Final'].concat(inn, ['R', 'H', 'E']), line);
         var BK = ['ab', 'r', 'h', 'rbi', 'bb', 'so', 'hr', 'avg'], PK = ['ip', 'h', 'r', 'er', 'bb', 'so', 'era'];
+        function fmt(k, v) {
+            var x = parseFloat(v); if (v === '' || v == null || isNaN(x)) return v;
+            if (k === 'avg') return x.toFixed(3).replace(/^0/, '');
+            if (k === 'era') return x.toFixed(2);
+            return v;
+        }
         b.teams.forEach(function (t) {
-            var s = g[t.side], who = (s.member || s.tag || 'Opponent') + (t.team ? ' (' + t.team + ')' : '');
+            var s = g[t.side], nm = s.member || s.tag || 'Opponent', who = nm + (t.team && t.team.toLowerCase() !== nm.toLowerCase() ? ' (' + t.team + ')' : '');
             out += '<h4>' + esc(who) + '</h4>' +
-                tbl(['Batting', 'AB', 'R', 'H', 'RBI', 'BB', 'SO', 'HR', 'AVG'], t.batting.map(function (p) { return [p.name].concat(BK.map(function (k) { return p[k]; })); }),
+                tbl(['Batting', 'AB', 'R', 'H', 'RBI', 'BB', 'SO', 'HR', 'AVG'], t.batting.map(function (p) { return [p.name].concat(BK.map(function (k) { return fmt(k, p[k]); })); }),
                     ['Totals'].concat(BK.slice(0, 6).map(function (k) { return (t.batting_totals || {})[k]; }), ['', ''])) +
-                tbl(['Pitching', 'IP', 'H', 'R', 'ER', 'BB', 'SO', 'ERA'], t.pitching.map(function (p) { return [p.name].concat(PK.map(function (k) { return p[k]; })); }),
+                tbl(['Pitching', 'IP', 'H', 'R', 'ER', 'BB', 'SO', 'ERA'], t.pitching.map(function (p) { return [p.name].concat(PK.map(function (k) { return fmt(k, p[k]); })); }),
                     ['Totals'].concat(PK.slice(0, 6).map(function (k) { return (t.pitching_totals || {})[k]; }), ['']));
         });
         return out;
