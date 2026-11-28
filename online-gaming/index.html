@@ -1064,7 +1064,7 @@
     }
 
     function sideHtml(s, cls) {
-        return '<div class="' + cls + '"><div class="who' + (s.result === 'W' ? ' w' : '') + '">' + esc(s.member || 'Opponent') + '</div><div class="team">' + esc(s.team || '') + '</div></div>';
+        return '<div class="' + cls + '"><div class="who' + (s.result === 'W' ? ' w' : '') + '">' + esc(s.member || s.tag || 'Opponent') + '</div><div class="team">' + esc(s.team || '') + '</div></div>';
     }
     async function loadBoard() {
         if (!ready()) return;
