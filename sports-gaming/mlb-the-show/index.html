@@ -297,7 +297,7 @@
 (function () {
   var el = document.getElementById('sgFeed'); if (!el) return;
   function esc(v) { return String(v == null ? '' : v).replace(/[&<>"]/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
-  function side(t) { return t.member ? esc(t.team) + ' (<a href="/profile/?user=' + encodeURIComponent(t.member) + '">' + esc(t.member) + '</a>)' : esc(t.team); }
+  function side(t) { return t.member ? esc(t.team) + ' (<a href="/profile/?user=' + encodeURIComponent(t.member) + '#gaming">' + esc(t.member) + '</a>)' : esc(t.team); }
   function mode(m) { m = String(m || '').toLowerCase().replace(/_/g, ' '); return m ? m.charAt(0).toUpperCase() + m.slice(1) : 'Online'; }
   fetch('https://api.trustmyrecord.com/api/gaming/theshow/feed?limit=6')
     .then(function (r) { return r.ok ? r.json() : { games: [] }; })
