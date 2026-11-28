@@ -25,7 +25,7 @@
     '.sbx-ls th{font-size:12.5px;color:#9fb3d4;font-weight:700;border-bottom:1px solid #29466f}',
     '.sbx-ls td:first-child,.sbx-ls th:first-child{text-align:left;font-weight:800;min-width:120px}',
     '.sbx-ls .t{border-left:1px solid #29466f;font-weight:900}',
-    '.sbx-body{display:grid;grid-template-columns:280px 1fr 330px;gap:16px;padding:18px}',
+    '.sbx-body{display:grid;grid-template-columns:260px 1fr 380px;gap:16px;padding:18px}',
     '.sbx-card{background:#0d1b31;border:1px solid #1f3658;border-radius:12px;overflow:hidden;margin-bottom:16px}',
     '.sbx-card:last-child{margin-bottom:0}',
     '.sbx-card h3{margin:0;padding:11px 14px;font-size:17px;font-weight:800;background:#11233f;border-bottom:1px solid #1f3658;color:#fff}',
@@ -42,6 +42,7 @@
     '.sbx-st tr.tot td{font-weight:900;border-bottom:0;background:#0f2038}',
     '.sbx-st tr.hi td{background:rgba(31,111,229,.22)}',
     '.sbx-tw{overflow-x:auto}',
+    '.sbx-pt th,.sbx-pt td{padding:6px 5px}',
     '.sbx-nt div{margin:2px 0}.sbx-nt b{color:#fff;margin-right:4px}',
     '.sbx-msg{padding:40px;text-align:center;color:#b9c8e2}',
     '@media (max-width:1020px){.sbx-body{grid-template-columns:1fr}.sbx-l{display:grid;grid-template-columns:1fr 1fr;gap:16px}.sbx-l .sbx-card{margin:0}}',
@@ -72,7 +73,7 @@
     }
     var aw = A.result === 'W', hw = Hm.result === 'W';
     var aT = A.team || 'Away', hT = Hm.team || 'Home';
-    function tm(s, t, cls, won) { return '<div class="sbx-tm ' + cls + (won ? ' w' : ' lo') + '"><div class="n">' + esc(t) + '</div><div class="u">' + (s.member ? userLink(s) : (s.result === 'W' ? 'Winner' : '&nbsp;')) + '</div></div>'; }
+    function tm(s, t, cls, won) { return '<div class="sbx-tm ' + cls + (won ? ' w' : ' lo') + '"><div class="n">' + esc(t) + '</div><div class="u">' + (s.member && s.member !== t ? userLink(s) : (s.result === 'W' ? 'Winner' : '&nbsp;')) + '</div></div>'; }
     var head = '<tr><th></th>';
     for (var i = 1; i <= n; i++) head += '<th>' + i + '</th>';
     head += '<th class="t">R</th><th>H</th><th>E</th></tr>';
@@ -123,7 +124,7 @@
       '<div class="sbx-l"><div class="sbx-card"><h3>Game Summary</h3><div class="pad">' + sum + '</div></div>' +
       (kps.length ? '<div class="sbx-card"><h3>Key Performers</h3>' + kps.join('') + '</div>' : '') + '</div>' +
       '<div>' + hit(ta, aT) + hit(th, hT) + '</div>' +
-      '<div><div class="sbx-card sbx-tw"><h3>Pitching Summary</h3><table class="sbx-st"><thead><tr><th style="font-size:12px;color:#9fb3d4">Pitcher</th><th>IP</th><th>H</th><th>R</th><th>ER</th><th>BB</th><th>K</th><th>ERA</th></tr></thead><tbody>' + prow + '</tbody></table></div>' +
+      '<div><div class="sbx-card sbx-tw"><h3>Pitching Summary</h3><table class="sbx-st sbx-pt"><thead><tr><th style="font-size:12px;color:#9fb3d4">Pitcher</th><th>IP</th><th>H</th><th>R</th><th>ER</th><th>BB</th><th>K</th><th>ERA</th></tr></thead><tbody>' + prow + '</tbody></table></div>' +
       (notes.length ? '<div class="sbx-card"><h3>Game Notes</h3><div class="pad sbx-nt">' + notes.join('') + '</div></div>' : '') + '</div>' +
       '</div>';
   }
