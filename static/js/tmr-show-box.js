@@ -42,11 +42,12 @@
     '.sbx-st tr.tot td{font-weight:900;border-bottom:0;background:#0f2038}',
     '.sbx-st tr.hi td{background:rgba(31,111,229,.22)}',
     '.sbx-tw{overflow-x:auto}',
+    '.sbx-body>*,.sbx-l>*{min-width:0}',
     '.sbx-pt th,.sbx-pt td{padding:6px 5px}',
     '.sbx-nt div{margin:2px 0}.sbx-nt b{color:#fff;margin-right:4px}',
     '.sbx-msg{padding:40px;text-align:center;color:#b9c8e2}',
-    '@media (max-width:1020px){.sbx-body{grid-template-columns:1fr}.sbx-l{display:grid;grid-template-columns:1fr 1fr;gap:16px}.sbx-l .sbx-card{margin:0}}',
-    '@media (max-width:640px){.sbx-ov{padding:0}.sbx{border-radius:0;border:0}.sbx-hd{padding:14px 12px 16px}.sbx-sc{gap:8px;grid-template-columns:1fr auto auto auto 1fr}.sbx-tm .n{font-size:16px}.sbx-big{font-size:34px}.sbx-fin{font-size:11px}.sbx-body{padding:12px}.sbx-l{grid-template-columns:1fr}.sbx-ls th,.sbx-ls td{padding:6px 6px;font-size:13px}.sbx-ls td:first-child,.sbx-ls th:first-child{min-width:84px}}'
+    '@media (max-width:1020px){.sbx-body{grid-template-columns:minmax(0,1fr)}.sbx-l{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}.sbx-l .sbx-card{margin:0}}',
+    '@media (max-width:640px){.sbx-ov{padding:0}.sbx{border-radius:0;border:0}.sbx-hd{padding:14px 12px 16px}.sbx-sc{gap:8px;grid-template-columns:1fr auto auto auto 1fr}.sbx-tm .n{font-size:16px}.sbx-big{font-size:34px}.sbx-fin{font-size:11px}.sbx-body{padding:12px}.sbx-l{grid-template-columns:minmax(0,1fr)}.sbx-ls td:first-child,.sbx-ls th:first-child{min-width:50px}.sbx-ls th,.sbx-ls td{padding:6px 6px;font-size:13px}.sbx-ls td:first-child,.sbx-ls th:first-child{min-width:84px}}'
   ].join('\n');
   function esc(v) { return String(v == null ? '' : v).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function num(v) { var x = parseFloat(v); return isNaN(x) ? 0 : x; }
