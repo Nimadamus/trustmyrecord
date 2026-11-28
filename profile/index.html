@@ -13888,10 +13888,9 @@
             }
             try {
                 const both = await Promise.all([
-                    api.request('/gaming/online-stats/' + encodeURIComponent(uname)).catch(function () { return null; }),
-                    api.request('/gaming/theshow/player/' + encodeURIComponent(uname)).catch(function () { return null; })
+                    api.request('/gaming/online-stats/' + encodeURIComponent(uname)).catch(function () { return null; })
                 ]);
-                const data = both[0] || {}, show = renderShow(both[1], uname);
+                const data = both[0] || {}, show = ''; /* owner 1128: no online gaming box scores on record profiles */
                 const ov = (data && data.overall) ? data.overall : null;
                 const games = (data && data.by_game) ? data.by_game : [];
                 const hasCh = !!(ov && (ov.games || games.length));
