@@ -317,6 +317,9 @@
         .at-game .w { color: var(--green); }
         .at-game.has-box { cursor: pointer; } .at-game.has-box:hover { background: rgba(127,127,127,.07); }
         .at-game.has-box .score small:after { content: ' BE'; }
+        .at-box .bx-md { font-size: 12.5px; font-weight: 800; color: #f5c542; margin: 4px 0 6px; }
+        .at-box .bx-notes { font-size: 13px; line-height: 1.6; margin: 10px 0 4px; }
+        .at-box .bx-notes b { font-weight: 800; margin-right: 3px; }
         .at-box { padding: 6px 2px 16px; border-bottom: 1px solid var(--line); overflow-x: auto; }
         .at-box table { width: 100%; border-collapse: collapse; font-size: 12.5px; font-variant-numeric: tabular-nums; margin: 8px 0 4px; }
         .at-box th, .at-box td { padding: 4px 6px; text-align: right; border-bottom: 1px solid var(--line); white-space: nowrap; }
@@ -1106,9 +1109,25 @@
         for (var i = 1; i <= n; i++) inn.push(String(i));
         var line = b.teams.map(function (t) {
             var s = g[t.side], cells = inn.map(function (_, i) { return t.r[i] != null && t.r[i] !== '' ? t.r[i] : (i < b.innings ? 'X' : ''); });
+            if (t.side === 'home' && g.home.result === 'W' && cells[b.innings - 1] === '0') {
+                var pre = t.r.slice(0, b.innings - 1).reduce(function (a, v) { return a + (+v || 0); }, 0);
+                if (pre > +g.away.runs) cells[b.innings - 1] = 'X';
+            }
             return [s.member || s.tag || t.team].concat(cells, [s.runs, s.hits, s.errors]);
         });
-        var out = tbl(['Final'].concat(inn, ['R', 'H', 'E']), line);
+        var MODES = { ARENA: 'Diamond Dynasty', RANKED: 'Diamond Dynasty Ranked', BR: 'Battle Royale', EVENT: 'Diamond Dynasty Event' };
+        var md = String(g.mode || '').toUpperCase();
+        var out = '<div class="bx-md">' + esc(MODES[md] || (md ? md.charAt(0) + md.slice(1).toLowerCase().replace(/_/g, ' ') : 'Online')) + ' &middot; ' + esc(String(g.played || '').split(' ')[0]) + '</div>' +
+            tbl(['Final'].concat(inn, ['R', 'H', 'E']), line);
+        var notes = [], pp = {}, re = /\b(W|L|SV):\s*([^,(]+\([^)]*\))/g, m;
+        while ((m = re.exec(String(g.pitchers || '')))) pp[m[1]] = m[2].trim();
+        [['W', 'WP'], ['L', 'LP'], ['SV', 'SV']].forEach(function (k) { if (pp[k[0]]) notes.push('<b>' + k[1] + ':</b> ' + esc(pp[k[0]])); });
+        var hrs = b.teams.map(function (t) {
+            var l = (t.batting || []).filter(function (x) { return +x.hr > 0; }).map(function (x) { return esc(String(x.name || '').split(',')[0]) + (+x.hr > 1 ? ' ' + (+x.hr) : ''); });
+            return l.length ? esc(t.team) + ': ' + l.join(', ') + '.' : '';
+        }).filter(Boolean);
+        if (hrs.length) notes.push('<b>HR:</b> ' + hrs.join(' '));
+        if (notes.length) out += '<div class="bx-notes">' + notes.map(function (v) { return '<div>' + v + '</div>'; }).join('') + '</div>';
         var BK = ['ab', 'r', 'h', 'rbi', 'bb', 'so', 'hr', 'avg'], PK = ['ip', 'h', 'r', 'er', 'bb', 'so', 'era'];
         function fmt(k, v) {
             var x = parseFloat(v); if (v === '' || v == null || isNaN(x)) return v;
