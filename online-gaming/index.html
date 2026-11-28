@@ -315,6 +315,16 @@
         .at-game .score { font-weight: 800; font-size: 18px; font-variant-numeric: tabular-nums; text-align: center; min-width: 74px; }
         .at-game .score small { display: block; font-size: 11px; font-weight: 600; color: var(--muted); }
         .at-game .w { color: var(--green); }
+        .at-game.has-box { cursor: pointer; } .at-game.has-box:hover { background: rgba(127,127,127,.07); }
+        .at-game.has-box .score small:after { content: ' BE'; }
+        .at-box { padding: 6px 2px 16px; border-bottom: 1px solid var(--line); overflow-x: auto; }
+        .at-box table { width: 100%; border-collapse: collapse; font-size: 12.5px; font-variant-numeric: tabular-nums; margin: 8px 0 4px; }
+        .at-box th, .at-box td { padding: 4px 6px; text-align: right; border-bottom: 1px solid var(--line); white-space: nowrap; }
+        .at-box th:first-child, .at-box td:first-child { text-align: left; }
+        .at-box th { color: var(--muted); font-weight: 700; font-size: 11.5px; }
+        .at-box tr.tot td { font-weight: 800; border-bottom: 0; }
+        .at-box h4 { margin: 12px 0 0; font-size: 13px; }
+        .at-box .rhe { font-weight: 800; }
         @media (max-width: 860px) { .at-wrap, .at-wrap.solo { grid-template-columns: minmax(0, 1fr); } .at-form { grid-template-columns: 1fr; } .at-steps { grid-template-columns: 1fr; } }
     </style>
 <link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=272776e56183">
@@ -1080,12 +1090,48 @@
                 '<td class="num">' + p.wins + '</td><td class="num">' + p.losses + '</td><td class="num">' + (rd > 0 ? '+' : '') + rd + '</td></tr>';
         }).join('');
         $('atFeed').innerHTML = games.map(function (g) {
-            return '<div class="at-game">' + sideHtml(g.home, 'home') +
-                '<div class="score">' + esc(g.home.runs) + ' : ' + esc(g.away.runs) +
-                '<small>H ' + esc(g.home.hits) + ' : ' + esc(g.away.hits) + ' &middot; E ' + esc(g.home.errors) + ' : ' + esc(g.away.errors) + '</small></div>' +
+            return '<div class="at-game' + (g.has_box ? ' has-box" role="button" tabindex="0" data-id="' + esc(g.id) : '') + '">' + sideHtml(g.home, 'home') +
+                '<div class="score">' + esc(g.home.runs) + '-' + esc(g.away.runs) +
+                '<small>H ' + esc(g.home.hits) + '-' + esc(g.away.hits) + ' &middot; E ' + esc(g.home.errors) + '-' + esc(g.away.errors) + '</small></div>' +
                 sideHtml(g.away, 'away') + '</div>';
         }).join('');
     }
+    function tbl(head, rows, tot) {
+        return '<table><thead><tr>' + head.map(function (h) { return '<th>' + esc(h) + '</th>'; }).join('') + '</tr></thead><tbody>' +
+            rows.map(function (r) { return '<tr>' + r.map(function (c) { return '<td>' + esc(c) + '</td>'; }).join('') + '</tr>'; }).join('') +
+            (tot ? '<tr class="tot">' + tot.map(function (c) { return '<td>' + esc(c) + '</td>'; }).join('') + '</tr>' : '') + '</tbody></table>';
+    }
+    function boxHtml(g) {
+        var b = g.box, n = Math.max(b.innings || 9, 9), inn = [];
+        for (var i = 1; i <= n; i++) inn.push(String(i));
+        var line = b.teams.map(function (t) {
+            var s = g[t.side], cells = inn.map(function (_, i) { return t.r[i] != null && t.r[i] !== '' ? t.r[i] : (i < b.innings ? 'X' : ''); });
+            return [s.member || s.tag || t.team].concat(cells, [s.runs, s.hits, s.errors]);
+        });
+        var out = tbl(['Final'].concat(inn, ['R', 'H', 'E']), line);
+        var BK = ['ab', 'r', 'h', 'rbi', 'bb', 'so', 'hr', 'avg'], PK = ['ip', 'h', 'r', 'er', 'bb', 'so', 'era'];
+        b.teams.forEach(function (t) {
+            var s = g[t.side], who = (s.member || s.tag || 'Opponent') + (t.team ? ' (' + t.team + ')' : '');
+            out += '<h4>' + esc(who) + '</h4>' +
+                tbl(['Batting', 'AB', 'R', 'H', 'RBI', 'BB', 'SO', 'HR', 'AVG'], t.batting.map(function (p) { return [p.name].concat(BK.map(function (k) { return p[k]; })); }),
+                    ['Totals'].concat(BK.slice(0, 6).map(function (k) { return (t.batting_totals || {})[k]; }), ['', ''])) +
+                tbl(['Pitching', 'IP', 'H', 'R', 'ER', 'BB', 'SO', 'ERA'], t.pitching.map(function (p) { return [p.name].concat(PK.map(function (k) { return p[k]; })); }),
+                    ['Totals'].concat(PK.slice(0, 6).map(function (k) { return (t.pitching_totals || {})[k]; }), ['']));
+        });
+        return out;
+    }
+    async function toggleBox(el) {
+        var nx = el.nextElementSibling;
+        if (nx && nx.classList.contains('at-box')) { nx.remove(); return; }
+        try {
+            var r = await api.request('/gaming/theshow/game/' + encodeURIComponent(el.getAttribute('data-id')));
+            if (!r || !r.game || !r.game.box) return;
+            var d = document.createElement('div'); d.className = 'at-box'; d.innerHTML = boxHtml(r.game);
+            el.parentNode.insertBefore(d, el.nextSibling);
+        } catch (e) {}
+    }
+    document.addEventListener('click', function (e) { var el = e.target.closest && e.target.closest('.at-game.has-box'); if (el) toggleBox(el); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Enter' && e.target.classList && e.target.classList.contains('has-box')) toggleBox(e.target); });
     function start() { loadMe(); loadBoard(); }
     if (typeof api !== 'undefined' && api && api.ready && typeof api.ready.then === 'function') api.ready.then(start).catch(start);
     else window.addEventListener('load', function () { if (ready()) start(); else setTimeout(start, 600); });
