@@ -367,6 +367,7 @@
     window.TMRShowBox.open(li.getAttribute('data-id'));
   }
   el.addEventListener('click', openBox); el.addEventListener('keydown', openBox);
+  (function () { var m = String(location.search).match(/[?&]game=(\d{5,20})/); if (!m) return; (function t(k) { if (window.TMRShowBox) return window.TMRShowBox.open(m[1]); if (k < 75) setTimeout(function () { t(k + 1); }, 200); })(0); })();
   fetch('https://api.trustmyrecord.com/api/gaming/theshow/feed?limit=6')
     .then(function (r) { return r.ok ? r.json() : { games: [] }; })
     .then(function (d) {
