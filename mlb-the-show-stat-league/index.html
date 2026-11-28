@@ -153,6 +153,13 @@
         .sl-empty i { font-size: 1.6rem; color: var(--text-muted); display: block; margin-bottom: 10px; }
 
         /* LEADERBOARD PREVIEW */
+        .sl-tot-bar { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:14px; }
+        .sl-tot-bar select { background:var(--bg-card); color:inherit; border:1px solid var(--border); border-radius:10px; padding:8px 12px; font-weight:700; }
+        .sl-tot-bar .sl-tot-tab { background:transparent !important; color:inherit !important; opacity:.75; border:1px solid var(--border) !important; border-radius:999px !important; padding:7px 14px !important; font-weight:800; font-size:.82rem; cursor:pointer; box-shadow:none !important; }
+        .sl-tot-bar .sl-tot-tab.on { background:#c9a227 !important; border-color:#c9a227 !important; color:#111 !important; opacity:1; }
+        .sl-tot-scroll { overflow:auto; max-height:520px; }
+        .sl-tot-scroll .sl-lb-table th, .sl-tot-scroll .sl-lb-table td { text-align:right; white-space:nowrap; padding:9px 10px; }
+        .sl-tot-scroll .sl-lb-table th:first-child, .sl-tot-scroll .sl-lb-table td:first-child { text-align:left; }
         .sl-lb-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 18px; padding: 28px; position: relative; }
         .sl-lb-badge { display: inline-flex; align-items: center; gap: 7px; padding: 6px 12px; border-radius: 999px; background: rgba(185,133,5,0.1); border: 1px solid rgba(185,133,5,.30); color: var(--accent-gold); font-size: 0.72rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 16px; }
         .sl-lb-scroll { overflow-x: auto; }
@@ -388,6 +395,25 @@
         </div>
     </section>
 
+    <!-- CUMULATIVE PLAYER STATS (cumulative from /api/gaming/theshow/player/:username) -->
+    <section class="sl-section" id="player-stats">
+        <div class="sl-section-head">
+            <h2>Cumulative <span class="gold">Player Stats</span></h2>
+            <p>Season totals built from every box score. Pick a member to see their own hitters and pitchers across all their games, plus every opposing player's totals against them.</p>
+        </div>
+        <div class="sl-lb-card">
+            <div class="sl-tot-bar">
+                <select id="slTotUser" aria-label="Member"></select>
+                <button type="button" class="sl-tot-tab on" data-v="mb">My hitters</button>
+                <button type="button" class="sl-tot-tab" data-v="mp">My pitchers</button>
+                <button type="button" class="sl-tot-tab" data-v="ab">Hitters against</button>
+                <button type="button" class="sl-tot-tab" data-v="ap">Pitchers against</button>
+            </div>
+            <div class="sl-tot-scroll" id="slTotBody"><p class="sl-lb-foot"><i class="fas fa-circle-notch fa-spin"></i> Loading stats...</p></div>
+            <p class="sl-lb-foot" id="slTotNote"></p>
+        </div>
+    </section>
+
     <!-- FAQ -->
     <section class="sl-section" id="faq">
         <div class="sl-section-head">
@@ -544,7 +570,7 @@
     function lbRowHtml(r, i) {
         var name = r.display_name || r.username || 'Player';
         var nameCell = r.username
-            ? '<a href="/profile/?user=' + encodeURIComponent(r.username) + '#gaming">' + esc(name) + '</a>'
+            ? '<a href="#player-stats" data-tot-user="' + esc(r.username) + '">' + esc(name) + '</a>'
             : esc(name);
         var wins = r.wins || 0, losses = r.losses || 0, draws = r.draws || 0;
         var record = wins + '-' + losses + (draws ? '-' + draws : '');
@@ -573,11 +599,58 @@
                 }
                 lbBody.innerHTML = rows.map(lbRowHtml).join('');
                 if (lbBadge) lbBadge.innerHTML = '<i class="fas fa-bolt"></i> Live Standings';
+                initTotals(rows);
             })
             .catch(function () {
                 lbBody.innerHTML = lbEmpty();
                 if (lbBadge) lbBadge.innerHTML = '<i class="fas fa-bolt"></i> Live Standings';
             });
+    }
+
+    var totSel = document.getElementById('slTotUser'), totBody = document.getElementById('slTotBody'), totNote = document.getElementById('slTotNote');
+    var totView = 'mb', totData = null;
+    function f3(x) { return x == null ? '' : Number(x).toFixed(3).replace(/^0\./, '.'); }
+    function f2(x) { return x == null ? '' : Number(x).toFixed(2); }
+    function td(v) { return '<td>' + esc(v == null ? 0 : v) + '</td>'; }
+    function totTable() {
+        var c = totData;
+        if (!c || !c.games_with_box) { totBody.innerHTML = '<p class="sl-lb-foot">No box scores yet for this member.</p>'; totNote.textContent = ''; return; }
+        var side = totView.charAt(0) === 'm' ? c.mine : c.against, bat = totView.charAt(1) === 'b';
+        var list = (side && (bat ? side.batting : side.pitching)) || [], h;
+        if (bat) {
+            h = '<table class="sl-lb-table"><thead><tr><th>Player</th><th>G</th><th>AB</th><th>R</th><th>H</th><th>2B</th><th>3B</th><th>HR</th><th>RBI</th><th>BB</th><th>SO</th><th>SB</th><th>AVG</th><th>OBP</th><th>SLG</th><th>OPS</th></tr></thead><tbody>';
+            list.forEach(function (b) { h += '<tr><td><b>' + esc(b.name) + '</b></td>' + td(b.g) + td(b.ab) + td(b.r) + td(b.h) + td(b.doubles) + td(b.triples) + td(b.hr) + td(b.rbi) + td(b.bb) + td(b.so) + td(b.sb) + td(f3(b.avg)) + td(f3(b.obp)) + td(f3(b.slg)) + td(f3(b.ops)) + '</tr>'; });
+        } else {
+            h = '<table class="sl-lb-table"><thead><tr><th>Pitcher</th><th>G</th><th>W</th><th>L</th><th>SV</th><th>IP</th><th>H</th><th>R</th><th>ER</th><th>BB</th><th>SO</th><th>ERA</th><th>WHIP</th></tr></thead><tbody>';
+            list.forEach(function (p) { h += '<tr><td><b>' + esc(p.name) + '</b></td>' + td(p.g) + td(p.w) + td(p.l) + td(p.sv) + td(p.ip) + td(p.h) + td(p.r) + td(p.er) + td(p.bb) + td(p.so) + td(f2(p.era)) + td(f2(p.whip)) + '</tr>'; });
+        }
+        totBody.innerHTML = list.length ? h + '</tbody></table>' : '<p class="sl-lb-foot">Nothing here yet.</p>';
+        totNote.textContent = 'Totals from ' + c.games_with_box + (c.games_with_box === 1 ? ' game' : ' games') + ' with a full box score. Opposing players are combined across every opponent.';
+    }
+    function loadTotals(u) {
+        totBody.innerHTML = '<p class="sl-lb-foot"><i class="fas fa-circle-notch fa-spin"></i> Loading stats...</p>';
+        fetch(API + '/api/gaming/theshow/player/' + encodeURIComponent(u) + '?_=' + Date.now())
+            .then(function (r) { return r.ok ? r.json() : {}; })
+            .then(function (d) { totData = (d && d.cumulative) || null; totTable(); })
+            .catch(function () { totData = null; totTable(); });
+    }
+    function initTotals(rows) {
+        var users = rows.filter(function (r) { return r.username; });
+        if (!users.length) { totBody.innerHTML = '<p class="sl-lb-foot">No tracked games yet.</p>'; return; }
+        totSel.innerHTML = users.map(function (r) { return '<option value="' + esc(r.username) + '">' + esc(r.display_name || r.username) + '</option>'; }).join('');
+        totSel.addEventListener('change', function () { loadTotals(totSel.value); });
+        document.querySelectorAll('.sl-tot-tab').forEach(function (b) {
+            b.addEventListener('click', function () {
+                totView = b.getAttribute('data-v');
+                document.querySelectorAll('.sl-tot-tab').forEach(function (x) { x.classList.toggle('on', x === b); });
+                totTable();
+            });
+        });
+        lbBody.addEventListener('click', function (e) {
+            var a = e.target.closest && e.target.closest('[data-tot-user]');
+            if (a) { totSel.value = a.getAttribute('data-tot-user'); loadTotals(totSel.value); }
+        });
+        loadTotals(users[0].username);
     }
 
     loadSignups();
