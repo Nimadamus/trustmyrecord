@@ -36,6 +36,10 @@
     <style>.contest-promo-modal-backdrop,.tmr-contest-modal-backdrop,[data-contest-promo-modal-backdrop],[data-contest-promo-modal-backdrop="1"],#contestPromoModal{display:none!important;visibility:hidden!important;pointer-events:none!important;opacity:0!important}</style>
     <style>
       .sg-split{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+      .sg-feed{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+      .sg-feed li{background:var(--as-card);border:1px solid var(--as-border);border-radius:10px;padding:10px 12px;font-size:14px}
+      .sg-feed .sc{font-weight:800}
+      .sg-feed .mt{display:block;opacity:.75;font-size:12.5px;margin-top:3px}
       .sg-fields{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:8px}
       .sg-fields li{background:var(--as-card);border:1px solid var(--as-border);border-radius:10px;padding:10px 12px;font-size:14px}
       .sg-fields li::before{content:"\2713";color:var(--as-gold);font-weight:800;margin-right:8px}
@@ -141,6 +145,10 @@
             <h3>What your MLB The Show record builds into</h3>
             <p>Every tracked game adds to a running record: wins and losses, runs scored, runs allowed and run differential, all shown on the auto tracked standings next to every other linked player. Because the data comes straight from the game and not from a player typing it in, nobody can pad a record or leave out a bad loss.</p>
             <p>Tracking only counts games played after you link, so your record starts clean on the day you join. You can stop tracking at any time from the same panel. It is free, and there is no wagering of any kind.</p>
+
+            <h3>Latest auto tracked MLB The Show games</h3>
+            <ul class="sg-feed" id="sgFeed"><li>Loading the latest tracked games&hellip;</li></ul>
+            <p>See every linked player on the <a href="/mlb-the-show-stat-league/#leaderboard-preview">MLB The Show Stat League standings</a>.</p>
 
             <h2>The MLB The Show Stat League</h2>
             <p>Beyond one-off challenges, TrustMyRecord runs a season-long <a href="/mlb-the-show-stat-league/">MLB The Show Stat League</a>. Games are pulled in automatically through MLB The Show auto tracking, and the league keeps runs, hits, errors and pitchers of record on top of the win and loss standings, so a season produces a stat line and not just a record. It is free to join and open to PlayStation and Xbox players.</p>
@@ -285,5 +293,25 @@
     </script>
 <script src="/static/js/tmr-session.66e52858e490.js"></script><script src="/static/js/tmr-ds-nav.5b4d42af74a8.js"></script>
     <script src="/static/js/tmr-live-chat.js?v=ee595c3e3e4b"></script>
+<script>
+(function () {
+  var el = document.getElementById('sgFeed'); if (!el) return;
+  function esc(v) { return String(v == null ? '' : v).replace(/[&<>"]/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+  function side(t) { return t.member ? esc(t.team) + ' (<a href="/profile/?user=' + encodeURIComponent(t.member) + '">' + esc(t.member) + '</a>)' : esc(t.team); }
+  function mode(m) { m = String(m || '').toLowerCase().replace(/_/g, ' '); return m ? m.charAt(0).toUpperCase() + m.slice(1) : 'Online'; }
+  fetch('https://api.trustmyrecord.com/api/gaming/theshow/feed?limit=6')
+    .then(function (r) { return r.ok ? r.json() : { games: [] }; })
+    .then(function (d) {
+      var g = (d && d.games) || [];
+      if (!g.length) { el.innerHTML = '<li>No tracked games yet. Link your username and yours could be first.</li>'; return; }
+      el.innerHTML = g.map(function (x) {
+        var a = x.away || {}, h = x.home || {};
+        return '<li><span class="sc">' + side(a) + ' ' + esc(a.runs) + ', ' + side(h) + ' ' + esc(h.runs) + '</span>' +
+          '<span class="mt">' + mode(x.mode) + ' &middot; ' + esc(String(x.played || '').split(' ')[0]) + ' &middot; H ' + esc(a.hits) + ' to ' + esc(h.hits) + ' &middot; E ' + esc(a.errors) + ' to ' + esc(h.errors) + (x.pitchers ? ' &middot; ' + esc(x.pitchers) : '') + '</span></li>';
+      }).join('');
+    })
+    .catch(function () { el.innerHTML = '<li>Tracked games could not load right now.</li>'; });
+})();
+</script>
 </body>
 </html>
