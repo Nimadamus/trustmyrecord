@@ -1413,6 +1413,15 @@ html body.pro-board-page main #board .an-sheet a{color:var(--acc)!important}
 html body.pro-board-page main #board .an-more{width:100%;margin-top:10px;background:var(--card)!important;border:1px solid var(--line2)!important;color:var(--acc)!important;border-radius:10px;padding:10px;font-weight:700;cursor:pointer}
 html body.pro-board-page main #board .an-empty{padding:30px 4px;color:var(--mute)!important}
 html body.pro-board-page main #board .an-foot{margin-top:6px;font-size:13px}
+html body.pro-board-page main #board .an-nav{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:0 48px 14px 0;font-size:12.5px}
+html body.pro-board-page main #board .an-nb{background:var(--card)!important;border:1px solid var(--line2)!important;color:var(--ink2)!important;border-radius:8px;padding:6px 10px;font-weight:700;font-size:12.5px;cursor:pointer;max-width:42%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;box-shadow:none!important}
+html body.pro-board-page main #board .an-pos{color:var(--dim)!important;white-space:nowrap}
+html body.pro-board-page main #board .an-q{width:100%;box-sizing:border-box;margin:0 0 10px;background:var(--card)!important;border:1px solid var(--line2)!important;color:var(--ink)!important;border-radius:9px;padding:9px 12px;font-size:14px}
+html body.pro-board-page main #board .an-chart{position:relative}
+html body.pro-board-page main #board .an-tip{position:absolute;top:44px;transform:translateX(-50%);z-index:2;background:#0b0e13!important;border:1px solid var(--line2);border-radius:8px;padding:7px 10px;font-size:12px;color:var(--ink2)!important;pointer-events:none;max-width:280px;white-space:normal;box-shadow:0 6px 20px rgba(0,0,0,.5)}
+html body.pro-board-page main #board .an-tip em{font-style:normal;font-weight:800}
+html body.pro-board-page main #board .an-svg{cursor:crosshair}
+@media (max-width:640px){html body.pro-board-page main #board .an-tile b{white-space:normal;font-size:15px;line-height:1.25}html body.pro-board-page main #board .an-pos{display:none}html body.pro-board-page main #board .an-nb{max-width:48%}}
 @media (max-width:900px){html body.pro-board-page main #board .an-tiles{grid-template-columns:repeat(3,minmax(0,1fr))}html body.pro-board-page main #board .an-grid{grid-template-columns:1fr}}
 @media (max-width:640px){html body.pro-board-page main #board .wd-sheet.an-sheet{padding:16px 12px 48px!important}html body.pro-board-page main #board .an-head h3{font-size:22px}html body.pro-board-page main #board .an-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}html body.pro-board-page main #board .an-tile b{font-size:16px}html body.pro-board-page main #board .an-box{padding:10px}html body.pro-board-page main #board .an-t .hide-s{display:none}html body.pro-board-page main #board .an-t td,html body.pro-board-page main #board .an-t th{padding:6px 4px}html body.pro-board-page main #board .an-svg{height:150px}html body.pro-board-page main #board .an-chips{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px}html body.pro-board-page main #board .an-chip{flex:0 0 auto}}
 html body.pro-board-page main #board .dk-dhead h3.dk-an{cursor:pointer}html body.pro-board-page main #board .dk-dhead h3.dk-an span{font-size:16px;color:var(--acc)!important;-webkit-text-fill-color:var(--acc)}html body.pro-board-page main #board .dk-dhead h3.dk-an:hover{text-decoration:underline}
@@ -2250,6 +2259,7 @@ html body.pro-board-page main #board .dk-dhead h3.dk-an{cursor:pointer}html body
                 if (f.bt && f.bt !== 'all') p.set('bt', f.bt);
                 if (f.proven) p.set('proven', '1');
                 if (f.q) p.set('q', f.q);
+                try { var cp = new URLSearchParams(window.location.search).get('capper'); if (cp) p.set('capper', cp); } catch (e2) { }
                 var qs = p.toString();
                 history.replaceState(history.state, '', window.location.pathname + (qs ? '?' + qs : '') + window.location.hash);
             } catch (e) { }
@@ -2514,6 +2524,7 @@ html body.pro-board-page main #board .dk-dhead h3.dk-an{cursor:pointer}html body
             var lgs = Object.keys(lg).sort(function (a, b) { return lg[b] - lg[a]; }), scs = Object.keys(sc).sort(function (a, b) { return sc[b] - sc[a]; }), bts = Object.keys(bt).filter(function (k) { return k && k !== 'null'; }).sort(function (a, b) { return bt[b] - bt[a]; });
             if (f.league !== 'all' && lgs.indexOf(f.league) === -1) lgs.unshift(f.league);
             if (f.bt !== 'all' && bts.indexOf(f.bt) === -1) bts.unshift(f.bt);
+            anOrder = rows.map(function (c) { return { key: c.key, name: c.name }; });
             var sel = rows.filter(function (c) { return c.key === f.sel; })[0] || rows[0];
             f.sel = sel ? sel.key : null;
             var th = function (k, label, cls) {
@@ -2678,7 +2689,13 @@ html body.pro-board-page main #board .dk-dhead h3.dk-an{cursor:pointer}html body
             });
         }
         var lockY = null;
-        function closePanel() { var p = document.getElementById('wdPanel'); if (p) { p.hidden = true; p.innerHTML = ''; } document.body.classList.remove('wd-locked'); if (lockY != null) { window.scrollTo(0, lockY); lockY = null; } }
+        /* PRO_ANALYTICS2_20261128: shareable link to one handicapper's analytics (?capper=key), prev/next browsing, pick search, chart hover */
+        var anOrder = [], anBoot = null;
+        try { anBoot = new URLSearchParams(window.location.search).get('capper'); } catch (eb) { }
+        function anUrl(key) {
+            try { var u = new URL(window.location.href); if (key) u.searchParams.set('capper', key); else u.searchParams.delete('capper'); history.replaceState(history.state, '', u.pathname + u.search + u.hash); } catch (e) { }
+        }
+        function closePanel() { anUrl(null); var p = document.getElementById('wdPanel'); if (p) { p.hidden = true; p.innerHTML = ''; } document.body.classList.remove('wd-locked'); if (lockY != null) { window.scrollTo(0, lockY); lockY = null; } }
         /* PRO_ANALYTICS_20261128 (Nima: "when you click the person's account it shows their advanced analytics
            for all sports everything the whole nine yards"): every graded pick split by sport, bet type,
            favorite or underdog, odds range, month and weekday, a units chart, streaks and a full pick log. */
@@ -2720,7 +2737,8 @@ html body.pro-board-page main #board .dk-dhead h3.dk-an{cursor:pointer}html body
             var W = 1000, H = 220, n = pts.length - 1;
             var X = function (i) { return (i / n * W).toFixed(1); }, Y = function (v) { return (H - 8 - (v - mn) / (mx - mn) * (H - 16)).toFixed(1); };
             var line = pts.map(function (v, i) { return X(i) + ',' + Y(v); }).join(' '), z = Y(0), cls = pts[n] >= 0 ? 'pos' : 'neg';
-            return '<div class="an-box an-chart"><div class="an-bh">Units over time <span>' + n + ' graded picks &middot; ' + esc(day(asc[0].date)) + ' to ' + esc(day(asc[n - 1].date)) + '</span><b class="' + unitsCls(pts[n]) + '">' + signed(pts[n]) + 'u</b></div>'
+            anChart.last = { pts: pts, asc: asc, mn: mn, mx: mx };
+            return '<div class="an-box an-chart"><div class="an-tip" hidden></div><div class="an-bh">Units over time <span>' + n + ' graded picks &middot; ' + esc(day(asc[0].date)) + ' to ' + esc(day(asc[n - 1].date)) + '</span><b class="' + unitsCls(pts[n]) + '">' + signed(pts[n]) + 'u</b></div>'
                 + '<div class="an-cw"><div class="an-ax"><span>' + signed(mx, 1) + 'u</span><span>' + signed(mn, 1) + 'u</span></div>'
                 + '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" class="an-svg" role="img" aria-label="Cumulative units"><line x1="0" x2="' + W + '" y1="' + z + '" y2="' + z + '" class="an-zero" vector-effect="non-scaling-stroke"/>'
                 + '<polygon points="0,' + z + ' ' + line + ' ' + W + ',' + z + '" class="an-area ' + cls + '"/><polyline points="' + line + '" class="an-line ' + cls + '" vector-effect="non-scaling-stroke"/></svg></div></div>';
@@ -2728,7 +2746,12 @@ html body.pro-board-page main #board .dk-dhead h3.dk-an{cursor:pointer}html body
         function anRender(panel, h, st) {
             var sheet = panel.querySelector('.an-sheet'), keepY = sheet ? sheet.scrollTop : 0;
             var all = (h.history && h.history.length ? h.history : h.recent || []).slice();
+            if (st.lg !== 'all' && !all.some(function (x) { return x.league === st.lg; })) st.lg = 'all';
+            if (st.bt !== 'all' && !all.some(function (x) { return x.bet_type === st.bt; })) st.bt = 'all';
             var rows = all.filter(function (x) { return (st.lg === 'all' || x.league === st.lg) && (st.bt === 'all' || x.bet_type === st.bt); });
+            var lq = String(st.q || '').trim().toLowerCase();
+            var ix = -1; anOrder.forEach(function (o, i) { if (o.key === st.key) ix = i; });
+            var prv = ix > 0 ? anOrder[ix - 1] : null, nxt = ix >= 0 && ix < anOrder.length - 1 ? anOrder[ix + 1] : null;
             var asc = rows.slice().sort(function (a, b) { return Date.parse(a.date) - Date.parse(b.date); });
             var desc = asc.slice().reverse(), a = anAgg(rows), sk = anStreaks(asc), now = Date.now();
             var cnt = function (fld, other, cur) { var g = {}; all.forEach(function (x) { if (other === 'all' || x[fld === 'league' ? 'bet_type' : 'league'] === other) g[x[fld]] = (g[x[fld]] || 0) + 1; }); return g; };
@@ -2754,10 +2777,12 @@ html body.pro-board-page main #board .dk-dhead h3.dk-an{cursor:pointer}html body
             else if (st.sort === 'units') sortRows.sort(function (x, y) { return st.dir * ((Number(x.units) || 0) - (Number(y.units) || 0)); });
             else if (st.dir > 0) sortRows.reverse();
             var lth = function (k, l, cls) { var on = st.sort === k; return '<th class="' + (cls || '') + '"><button type="button" class="an-sort' + (on ? ' on' : '') + '" data-ansort="' + k + '">' + l + (on ? (st.dir < 0 ? ' &#9660;' : ' &#9650;') : '') + '</button></th>'; };
+            if (lq) sortRows = sortRows.filter(function (x) { return [x.pick, x.matchup, x.league, x.bet_type].join(' ').toLowerCase().indexOf(lq) !== -1; });
             var shown = st.more ? sortRows : sortRows.slice(0, 100);
             var scope = (st.lg === 'all' ? 'All sports' : esc(st.lg)) + ' &middot; ' + (st.bt === 'all' ? 'all bet types' : esc(st.bt));
             var r = h.record || { w: 0, l: 0 };
             var html = '<div class="wd-sheet an-sheet" role="dialog" aria-label="' + esc(h.name) + ' analytics"><button type="button" class="wd-close" aria-label="Close">&times;</button>'
+                + (ix >= 0 ? '<div class="an-nav">' + (prv ? '<button type="button" class="an-nb" data-annav="' + esc(prv.key) + '" title="Previous handicapper (left arrow)">&#8592; ' + esc(prv.name) + '</button>' : '<span></span>') + '<span class="an-pos">#' + (ix + 1) + ' of ' + anOrder.length + ' on the board</span>' + (nxt ? '<button type="button" class="an-nb" data-annav="' + esc(nxt.key) + '" title="Next handicapper (right arrow)">' + esc(nxt.name) + ' &#8594;</button>' : '<span></span>') + '</div>' : '')
                 + '<div class="an-head"><div class="an-kick">Advanced analytics</div><h3>' + esc(h.name) + '</h3><div class="an-meta">' + srcBadge(h.source)
                 + (h.source ? '<button type="button" class="an-src" data-ansrc="' + esc(h.source) + '">All ' + esc(h.source) + ' handicappers</button>' : '')
                 + (h.tracked_since ? '<span>Tracked since ' + esc(day(h.tracked_since)) + '</span>' : '')
@@ -2782,7 +2807,7 @@ html body.pro-board-page main #board .dk-dhead h3.dk-an{cursor:pointer}html body
                     return '<div class="an-pk"><div class="an-pkt"><span class="dk-lg">' + esc(p.league || '') + '</span><span>' + esc(kick(p.start)) + '</span></div><div class="an-pkm">' + esc(p.matchup || '') + '</div><div class="an-pks">' + pickLabel(p) + '</div><div class="an-pkx">' + esc(p.bet_type || 'Pick') + (p.units != null ? ' &middot; ' + esc(p.units) + 'u' : '')
                         + (p.home && p.away && /^(NFL|NBA|MLB|NHL)$/.test(String(p.league || '')) ? ' &middot; <a href="/betlegend-pro/app/?sport=' + esc(p.league) + '&amp;away=' + encodeURIComponent(p.away) + '&amp;home=' + encodeURIComponent(p.home) + '">Research in Bet Legend Pro</a>' : '') + '</div></div>';
                 }).join('') + '</div></div>' : '')
-                + (rows.length ? '<div class="an-box"><div class="an-bh">Every graded pick <span>' + rows.length + '</span></div><div class="an-lw"><table class="an-t an-log"><thead><tr>' + lth('date', 'Date') + '<th>Pick</th><th class="hide-s">Bet type</th>' + lth('odds', 'Odds', 'n') + '<th class="n">Result</th>' + lth('units', 'Units', 'n') + '</tr></thead><tbody>'
+                + (rows.length ? '<div class="an-box"><div class="an-bh">Every graded pick <span>' + (lq ? sortRows.length + ' of ' + rows.length + ' match' : rows.length) + '</span></div><input type="search" class="an-q" placeholder="Search this log: team, matchup, bet type" value="' + esc(st.q || '') + '" aria-label="Search picks"><div class="an-lw"><table class="an-t an-log"><thead><tr>' + lth('date', 'Date') + '<th>Pick</th><th class="hide-s">Bet type</th>' + lth('odds', 'Odds', 'n') + '<th class="n">Result</th>' + lth('units', 'Units', 'n') + '</tr></thead><tbody>'
                     + shown.map(function (x) {
                         return '<tr><td class="an-d">' + esc(day(x.date)) + '</td><td class="an-p"><b>' + esc(x.pick || '') + '</b><div>' + esc(x.league || '') + ' &middot; ' + esc(x.matchup || '') + '</div></td><td class="hide-s">' + esc(x.bet_type || '') + '</td><td class="n">' + (x.odds != null ? odds(x.odds) : '') + '</td><td class="n"><span class="an-res ' + esc(x.result) + '">' + esc(x.result) + '</span></td><td class="n ' + unitsCls(x.units) + '">' + signed(x.units) + '</td></tr>';
                     }).join('') + '</tbody></table></div>' + (!st.more && sortRows.length > 100 ? '<button type="button" class="an-more">Show all ' + sortRows.length + ' picks</button>' : '') + '</div>' : '')
@@ -2795,12 +2820,26 @@ html body.pro-board-page main #board .dk-dhead h3.dk-an{cursor:pointer}html body
             Array.prototype.forEach.call(panel.querySelectorAll('[data-anbt]'), function (b) { b.addEventListener('click', function () { st.bt = b.getAttribute('data-anbt'); st.more = false; re(); }); });
             Array.prototype.forEach.call(panel.querySelectorAll('[data-ansort]'), function (b) { b.addEventListener('click', function () { var k = b.getAttribute('data-ansort'); st.dir = st.sort === k ? -st.dir : -1; st.sort = k; re(); }); });
             var mb = panel.querySelector('.an-more'); if (mb) mb.addEventListener('click', function () { st.more = true; re(); });
+            Array.prototype.forEach.call(panel.querySelectorAll('[data-annav]'), function (b) { b.addEventListener('click', function () { openCapper(b.getAttribute('data-annav'), st); }); });
+            var qi = panel.querySelector('.an-q'); if (qi) qi.addEventListener('input', function () { var pos = qi.selectionStart; st.q = qi.value; st.more = false; re(); var n = panel.querySelector('.an-q'); if (n) { n.focus(); try { n.setSelectionRange(pos, pos); } catch (e) { } } });
+            var svg = panel.querySelector('.an-svg'), tip = panel.querySelector('.an-tip'), cd = anChart.last;
+            if (svg && tip && cd) {
+                var mv = function (ev) {
+                    var b = svg.getBoundingClientRect(), n = cd.pts.length - 1, i = Math.max(1, Math.min(n, Math.round((ev.clientX - b.left) / b.width * n))), x = cd.asc[i - 1];
+                    tip.hidden = false; tip.style.left = Math.min(b.width - 10, Math.max(10, ev.clientX - b.left)) + 'px';
+                    tip.innerHTML = '<b>' + esc(day(x.date)) + '</b> ' + esc(x.league || '') + ' &middot; ' + esc(x.pick || '') + ' <span class="an-res ' + esc(x.result) + '">' + esc(x.result) + '</span><br>Pick ' + i + ' of ' + n + ' &middot; running total <em class="' + unitsCls(cd.pts[i]) + '">' + signed(cd.pts[i]) + 'u</em>';
+                };
+                svg.addEventListener('mousemove', mv); svg.addEventListener('touchmove', function (e) { if (e.touches[0]) mv(e.touches[0]); }, { passive: true });
+                svg.addEventListener('mouseleave', function () { tip.hidden = true; });
+            }
             var sb = panel.querySelector('[data-ansrc]'); if (sb) sb.addEventListener('click', function () { boardFilter.source = sb.getAttribute('data-ansrc'); boardFilter.view = 'cappers'; closePanel(); drawBoard(); var t = document.getElementById('board'); if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
         }
-        function openCapper(key) {
+        function openCapper(key, keep) {
             var panel = document.getElementById('wdPanel'); if (!panel) return;
             panel.hidden = false; (lockY == null && (lockY = window.scrollY)), document.body.classList.add('wd-locked');
-            var st = { lg: 'all', bt: 'all', sort: 'date', dir: -1, more: false };
+            var st = { lg: keep ? keep.lg : (boardFilter.league || 'all'), bt: keep ? keep.bt : (boardFilter.bt || 'all'), sort: 'date', dir: -1, more: false, q: '', key: key };
+            if (keep) { var osh = panel.querySelector('.an-sheet'); if (osh) osh.scrollTop = 0; }
+            anUrl(key);
             if (anCache[key] && Date.now() - anCache[key].at < 5 * 60 * 1000) { anRender(panel, anCache[key].h, st); return; }
             panel.innerHTML = '<div class="wd-sheet an-sheet"><button type="button" class="wd-close" aria-label="Close">&times;</button><div class="an-empty">Loading advanced analytics</div></div>';
             panel.querySelector('.wd-close').addEventListener('click', closePanel);
@@ -2815,7 +2854,15 @@ html body.pro-board-page main #board .dk-dhead h3.dk-an{cursor:pointer}html body
                 panel.querySelector('.wd-close').addEventListener('click', closePanel);
             });
         }
-        document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closePanel(); });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') closePanel();
+            var p = document.getElementById('wdPanel');
+            if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && p && !p.hidden && !/^(INPUT|TEXTAREA|SELECT)$/.test((e.target || {}).tagName || '')) {
+                var b = p.querySelectorAll('[data-annav]'), t = null;
+                Array.prototype.forEach.call(b, function (x) { var nx = x.textContent.indexOf('\u2192') !== -1; if ((e.key === 'ArrowRight') === nx) t = x; });
+                if (t) { e.preventDefault(); t.click(); }
+            }
+        });
         document.addEventListener('click', function (e) { var p = document.getElementById('wdPanel'); if (p && !p.hidden && e.target === p) closePanel(); });
         /* First Pro visit (or right after purchase): a five step start list, dismissed once. */
         /* SIM_RECAP_20261017: yesterday's simulations next to the final scores, member's own runs only. */
@@ -3004,6 +3051,7 @@ html body.pro-board-page main #board .dk-dhead h3.dk-an{cursor:pointer}html body
                         (s.following_without_pending || []).forEach(function (k) { followKeys[k] = true; });
                     }
                     drawBoard();
+                    if (anBoot) { var bk = anBoot; anBoot = null; openCapper(bk); }
                     startRefresh();
                     if (s) loadSettled();
                 }).catch(function () {
