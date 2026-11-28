@@ -50,6 +50,8 @@
       .sg-feed .bx .t{border-left:1px solid var(--as-border);font-weight:800}
       .sg-feed .bx tr.w td:first-child{font-weight:800}
       .sg-feed .bn{margin-top:8px;font-size:12.5px;line-height:1.55}
+      .sg-feed li[data-id]{cursor:pointer}.sg-feed li[data-id]:hover{border-color:#f5c542}
+      .sg-feed .bh .vb{color:#7fb2ff;font-weight:800}
       .sg-feed .bn b{font-weight:800;margin-right:2px}
       .sg-fields{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:8px}
       .sg-fields li{background:var(--as-card);border:1px solid var(--as-border);border-radius:10px;padding:10px 12px;font-size:14px}
@@ -340,10 +342,17 @@
       for (var i = 0; i < n; i++) c += '<td>' + esc(r[i] != null ? r[i] : '') + '</td>';
       return c + '<td class="t">' + esc(t.runs) + '</td><td>' + esc(t.hits) + '</td><td>' + esc(t.errors) + '</td></tr>';
     }
-    return '<li><div class="bh"><span class="md">' + mode(x.mode) + '</span><span>' + esc(String(x.played || '').split(' ')[0]) + '</span></div>' +
+    return '<li' + (x.box ? ' data-id="' + esc(x.id) + '" role="button" tabindex="0"' : '') + '><div class="bh"><span class="md">' + mode(x.mode) + '</span><span>' + esc(String(x.played || '').split(' ')[0]) + (x.box ? ' &middot; <span class="vb">Full box score</span>' : '') + '</span></div>' +
       '<div class="bw"><table class="bx"><thead>' + head + '</thead><tbody>' + row(a, ai) + row(h, hi) + '</tbody></table></div>' +
       notes(x) + '</li>';
   }
+  function openBox(e) {
+    var li = e.target.closest && e.target.closest('li[data-id]');
+    if (!li || (e.target.closest && e.target.closest('a')) || !window.TMRShowBox) return;
+    if (e.type === 'keydown' && e.key !== 'Enter') return;
+    window.TMRShowBox.open(li.getAttribute('data-id'));
+  }
+  el.addEventListener('click', openBox); el.addEventListener('keydown', openBox);
   fetch('https://api.trustmyrecord.com/api/gaming/theshow/feed?limit=6')
     .then(function (r) { return r.ok ? r.json() : { games: [] }; })
     .then(function (d) {
@@ -360,5 +369,6 @@
     .catch(function () { el.innerHTML = '<li>Tracked games could not load right now.</li>'; });
 })();
 </script>
+<script src="/static/js/tmr-show-box.js?v=1127a" defer></script>
 </body>
 </html>
