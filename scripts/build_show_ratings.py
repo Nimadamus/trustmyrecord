@@ -2,7 +2,6 @@
 /mlb-the-show-ratings/                      hub
 /mlb-the-show-ratings/<team>/               30 team pages
 /mlb-the-show-ratings/best-<position>/      12 position leaderboards
-/mlb-the-show-ratings/players/<player>/     one page per Live Series card
 Data comes from the public mlb26.theshow.com items API via the laptop job (tools/theshow_ratings/refresh.py)."""
 import html, json, os, re, shutil, statistics, datetime, unicodedata
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -83,7 +82,7 @@ def purl(c):
 
 
 def plink(c):
-    return '<a href="%s">%s</a>' % (purl(c), E(c['name']))
+    return E(c['name'])
 
 
 def ovr(c):
@@ -312,10 +311,6 @@ def main():
     bypos = {p: sorted([c for c in cards if c['display_position'] == p], key=lambda c: -c['ovr']) for p in POSN}
     poslinks = '<div class="rt-grid">%s</div>' % ''.join('<a href="%sbest-%s/">Best %s<span>%d</span></a>' % (REL, s, E(lbl), bypos[p][0]['ovr']) for p, s, lbl, _ in POS if bypos[p])
     n = 0
-    for c in cards:
-        cs = bypos.get(c['display_position'])
-        player_page(c, cards, updated, (cs.index(c) + 1) if cs else 1, len(cs) if cs else 1)
-        n += 1
     for ab, (full, slug) in TEAMS.items():
         cs = [c for c in cards if c['team_short_name'] == ab]
         if not cs:
@@ -345,7 +340,7 @@ def main():
         others = ''.join('<a href="%s%s/">%s<span>%.1f</span></a>' % (REL, s, E(f), avg[a])
                          for a, (f, s) in sorted(TEAMS.items(), key=lambda t: t[1][0]) if a != ab and a in avg)
         body = ('<section class="rt-sec"><p>%s</p><div class="rt-facts">%s</div></section>' % (E(intro), fh) +
-                '<section class="rt-sec"><h2>%s hitter ratings</h2><p>Contact and power are split against left and right handed pitching. Tap a column to sort, tap a name for the full card.</p>%s</section>' % (E(nick), hit_table(hs)) +
+                '<section class="rt-sec"><h2>%s hitter ratings</h2><p>Contact and power are split against left and right handed pitching. Tap a column to sort.</p>%s</section>' % (E(nick), hit_table(hs)) +
                 MINI_CTA +
                 ('<section class="rt-sec"><h2>%s pitcher ratings</h2><p>H/9, K/9, BB/9 and HR/9 are The Show pitching ratings, not real stats. Pitch speeds are in mph.</p>%s</section>' % (E(nick), pit_table(ps)) if ps else '') +
                 '<section class="rt-sec"><h2>Best players by position</h2>%s</section>' % poslinks +
@@ -379,7 +374,7 @@ def main():
         tbl = pit_table(cs[:30], True, True) if isp else hit_table(cs[:30], True, True)
         others = '<div class="rt-grid">%s</div>' % ''.join('<a href="%sbest-%s/">Best %s<span>%d</span></a>' % (REL, s2, E(l2), bypos[p2][0]['ovr']) for p2, s2, l2, _ in POS if p2 != p and bypos[p2])
         body = ('<section class="rt-sec"><p class="rt-lead">%s</p></section>' % E(intro) +
-                '<section class="rt-sec"><h2>Top %d %s in MLB The Show 26</h2><p>Ranked by overall. Tap a column to sort, tap a name for the full card.</p>%s</section>' % (min(30, len(cs)), E(lbl.lower()), tbl) +
+                '<section class="rt-sec"><h2>Top %d %s in MLB The Show 26</h2><p>Ranked by overall. Tap a column to sort.</p>%s</section>' % (min(30, len(cs)), E(lbl.lower()), tbl) +
                 MINI_CTA + '<section class="rt-sec"><h2>Other positions</h2>%s</section>' % others)
         faq = [('Who is the best %s in MLB The Show 26?' % one, '%s of the %s is the highest rated %s in MLB The Show 26 Live Series at %d overall.' % (top['name'], team_name(top), one, top['ovr'])),
                ('Who are the top 5 %s in MLB The Show 26?' % lbl.lower(), ', '.join('%s (%d)' % (x['name'], x['ovr']) for x in cs[:5]) + '.')]
@@ -391,7 +386,7 @@ def main():
     teams = ''.join('<a href="%s%s/">%s<span>%.1f</span></a>' % (REL, TEAMS[a][1], E(TEAMS[a][0]), avg[a]) for a in sorted(avg, key=lambda a: -avg[a]))
     top, topp = H_all[0], P_all[0]
     intro = ('All %d Live Series cards on MLB The Show 26 big league rosters, rated attribute by attribute. %s is the top hitter at %d overall and %s the top pitcher at %d. '
-             'Pick a team, a position or a player for the full card, or sort the leaderboards below.') % (len(cards), top['name'], top['ovr'], topp['name'], topp['ovr'])
+             'Pick a team or a position, or sort the leaderboards below.') % (len(cards), top['name'], top['ovr'], topp['name'], topp['ovr'])
     body = ('<section class="rt-sec"><p>%s</p><div class="rt-facts">%s</div></section>' % (
                 E(intro), ''.join('<div class="rt-fact"><b><a href="%sbest-%s/">Best %s</a></b><span>%s · %d</span></div>' % (REL, s, p, plink(bypos[p][0]), bypos[p][0]['ovr']) for p, s, _, _ in POS if bypos[p])) +
             '<section class="rt-sec"><h2>Team ratings</h2><p>Teams ranked by the average overall of their top 26 Live Series cards.</p><div class="rt-grid">%s</div></section>' % teams +
