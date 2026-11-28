@@ -40,6 +40,17 @@
       .sg-feed li{background:var(--as-card);border:1px solid var(--as-border);border-radius:10px;padding:10px 12px;font-size:14px}
       .sg-feed .sc{font-weight:800}
       .sg-feed .mt{display:block;opacity:.75;font-size:12.5px;margin-top:3px}
+      .sg-feed .bh{display:flex;justify-content:space-between;gap:8px;font-size:12.5px;font-weight:700;letter-spacing:.02em;margin-bottom:6px}
+      .sg-feed .bh .md{color:#f5c542}
+      .sg-feed .bw{overflow-x:auto}
+      .sg-feed table.bx{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:13px}
+      .sg-feed .bx th,.sg-feed .bx td{padding:4px 6px;text-align:center;border-bottom:1px solid var(--as-border);white-space:nowrap}
+      .sg-feed .bx th{opacity:.6;font-weight:600;font-size:11.5px}
+      .sg-feed .bx th:first-child,.sg-feed .bx td:first-child{text-align:left;min-width:120px}
+      .sg-feed .bx .t{border-left:1px solid var(--as-border);font-weight:800}
+      .sg-feed .bx tr.w td:first-child{font-weight:800}
+      .sg-feed .bn{margin-top:8px;font-size:12.5px;line-height:1.55}
+      .sg-feed .bn b{font-weight:800;margin-right:2px}
       .sg-fields{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:8px}
       .sg-fields li{background:var(--as-card);border:1px solid var(--as-border);border-radius:10px;padding:10px 12px;font-size:14px}
       .sg-fields li::before{content:"\2713";color:var(--as-gold);font-weight:800;margin-right:8px}
@@ -298,17 +309,53 @@
   var el = document.getElementById('sgFeed'); if (!el) return;
   function esc(v) { return String(v == null ? '' : v).replace(/[&<>"]/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
   function side(t) { return t.member ? esc(t.team) + ' (<a href="/profile/?user=' + encodeURIComponent(t.member) + '#gaming">' + esc(t.member) + '</a>)' : esc(t.team); }
-  function mode(m) { m = String(m || '').toLowerCase().replace(/_/g, ' '); return m ? m.charAt(0).toUpperCase() + m.slice(1) : 'Online'; }
+  var MODES = { ARENA: 'Diamond Dynasty', RANKED: 'Diamond Dynasty Ranked', BR: 'Battle Royale', EVENT: 'Diamond Dynasty Event' };
+  function mode(m) { m = String(m || '').toUpperCase(); return MODES[m] || (m ? m.charAt(0) + m.slice(1).toLowerCase().replace(/_/g, ' ') : 'Online'); }
+  function inn(box, side) { var t = ((box && box.teams) || []).filter(function (x) { return x.side === side; })[0]; return (t && t.r) || []; }
+  function notes(x) {
+    var out = [], p = {}, re = /(W|L|SV):\s*([^,(]+\([^)]*\))/g, m;
+    while ((m = re.exec(String(x.pitchers || '')))) p[m[1]] = m[2].trim();
+    [['W', 'WP'], ['L', 'LP'], ['SV', 'SV']].forEach(function (k) { if (p[k[0]]) out.push('<b>' + k[1] + ':</b> ' + esc(p[k[0]])); });
+    var hr = ((x.box && x.box.teams) || []).map(function (t) {
+      var l = (t.batting || []).filter(function (b) { return +b.hr > 0; }).map(function (b) {
+        return esc(String(b.name || '').split(',')[0]) + (+b.hr > 1 ? ' ' + (+b.hr) : '');
+      });
+      return l.length ? esc(t.team) + ': ' + l.join(', ') + '.' : '';
+    }).filter(Boolean);
+    if (hr.length) out.push('<b>HR:</b> ' + hr.join(' '));
+    return out.length ? '<div class="bn">' + out.map(function (v) { return '<div>' + v + '</div>'; }).join('') + '</div>' : '';
+  }
+  function card(x) {
+    var a = x.away || {}, h = x.home || {}, ai = inn(x.box, 'away'), hi = inn(x.box, 'home');
+    var n = Math.max(+(x.box && x.box.innings) || 9, ai.length, hi.length);
+    if (h.result === 'W' && hi.length === n && hi[n - 1] === '0') {
+      var before = hi.slice(0, n - 1).reduce(function (s, v) { return s + (+v || 0); }, 0);
+      if (before > +a.runs) { hi = hi.slice(); hi[n - 1] = 'X'; }
+    }
+    var head = '<tr><th>Final</th>';
+    for (var i = 1; i <= n; i++) head += '<th>' + i + '</th>';
+    head += '<th class="t">R</th><th>H</th><th>E</th></tr>';
+    function row(t, r) {
+      var c = '<tr' + (t.result === 'W' ? ' class="w"' : '') + '><td>' + side(t) + '</td>';
+      for (var i = 0; i < n; i++) c += '<td>' + esc(r[i] != null ? r[i] : '') + '</td>';
+      return c + '<td class="t">' + esc(t.runs) + '</td><td>' + esc(t.hits) + '</td><td>' + esc(t.errors) + '</td></tr>';
+    }
+    return '<li><div class="bh"><span class="md">' + mode(x.mode) + '</span><span>' + esc(String(x.played || '').split(' ')[0]) + '</span></div>' +
+      '<div class="bw"><table class="bx"><thead>' + head + '</thead><tbody>' + row(a, ai) + row(h, hi) + '</tbody></table></div>' +
+      notes(x) + '</li>';
+  }
   fetch('https://api.trustmyrecord.com/api/gaming/theshow/feed?limit=6')
     .then(function (r) { return r.ok ? r.json() : { games: [] }; })
     .then(function (d) {
       var g = (d && d.games) || [];
       if (!g.length) { el.innerHTML = '<li>No tracked games yet. Link your username and yours could be first.</li>'; return; }
-      el.innerHTML = g.map(function (x) {
-        var a = x.away || {}, h = x.home || {};
-        return '<li><span class="sc">' + side(a) + ' ' + esc(a.runs) + ', ' + side(h) + ' ' + esc(h.runs) + '</span>' +
-          '<span class="mt">' + mode(x.mode) + ' &middot; ' + esc(String(x.played || '').split(' ')[0]) + ' &middot; H ' + esc(a.hits) + ' to ' + esc(h.hits) + ' &middot; E ' + esc(a.errors) + ' to ' + esc(h.errors) + (x.pitchers ? ' &middot; ' + esc(x.pitchers) : '') + '</span></li>';
-      }).join('');
+      return Promise.all(g.map(function (x) {
+        if (!x.has_box) return x;
+        return fetch('https://api.trustmyrecord.com/api/gaming/theshow/game/' + encodeURIComponent(x.id))
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .then(function (j) { return (j && j.game) || x; })
+          .catch(function () { return x; });
+      })).then(function (full) { el.innerHTML = full.map(card).join(''); });
     })
     .catch(function () { el.innerHTML = '<li>Tracked games could not load right now.</li>'; });
 })();
