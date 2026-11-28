@@ -13778,7 +13778,7 @@
             const MODES = { ARENA: 'Diamond Dynasty', RANKED: 'Diamond Dynasty Ranked', BR: 'Battle Royale', EVENT: 'Diamond Dynasty Event' };
             const me = String(uname || '').toLowerCase();
             let html = '<div class="og-sub-head"><i class="fas fa-baseball"></i>MLB The Show, auto tracked</div>';
-            html += '<div class="og-show-rec">' + recBadge(r.wins || 0, r.losses || 0) + '<span>' + (r.games || 0) + ' games · run diff ' + signed(diff) + '</span></div>';
+            html += '<div class="og-show-rec">' + recBadge(r.wins || 0, r.losses || 0) + '<span>' + (r.games || 0) + (r.games === 1 ? ' game' : ' games') + ' · run diff ' + signed(diff) + '</span></div>';
             html += '<div class="og-recent">';
             g.slice(0, 25).forEach(function (x) {
                 const a = x.away || {}, h = x.home || {};
