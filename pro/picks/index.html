@@ -2625,7 +2625,9 @@ html body.pro-board-page main #board .dk-dhead h3.dk-an{cursor:pointer}html body
                 html += drawDesk(rows, d, f, canFollow);
             }
             html += '<div class="wd-panel" id="wdPanel" hidden></div>';
+            var openP = document.getElementById('wdPanel'); if (openP && openP.hidden) openP = null;   /* PRO_ANALYTICS2: a redraw keeps an open analytics sheet */
             boardEl.innerHTML = html;
+            if (openP) { var freshP = document.getElementById('wdPanel'); if (freshP) freshP.parentNode.replaceChild(openP, freshP); }
             var on = function (id, ev, fn) { var el = document.getElementById(id); if (el) el.addEventListener(ev, fn); };
             on('wdProven', 'change', function (e) { boardFilter.proven = e.target.checked; drawBoard(); });
             on('wdLeague', 'change', function (e) { boardFilter.league = e.target.value; drawBoard(); });
