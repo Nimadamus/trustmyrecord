@@ -3639,6 +3639,8 @@
                     .og-stat .l { margin-top:6px; font-size:10px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:#94a3b8; }
                     .og-sub-head { font-size:12.5px; font-weight:900; letter-spacing:0.06em; text-transform:uppercase; color:#9fb0c3; margin:22px 0 11px; display:flex; align-items:center; gap:8px; }
                     .og-sub-head i { color:var(--cyan,#1D7FE8); }
+                    .og-show-rec { display:flex; align-items:center; gap:10px; margin:0 0 10px; font-size:13px; color:#9fb0c3; font-weight:600; }
+                    .og-show-row[role=button]:hover { background:rgba(29,127,232,0.07); }
                     .og-gcard { border:1px solid var(--line-2,rgba(148,163,184,0.2)); border-radius:14px; background:rgba(255,255,255,0.02); overflow:hidden; }
                     .og-gcard + .og-gcard { margin-top:11px; }
                     .og-gcard-head { display:flex; align-items:center; gap:12px; padding:14px 16px; cursor:pointer; user-select:none; }
@@ -13768,6 +13770,47 @@
             return html;
         }
 
+        // MLB The Show auto tracked games (relay import), click opens the full box score
+        function renderShow(sd, uname) {
+            const g = (sd && sd.games) || [];
+            if (!g.length) return '';
+            const r = sd.record || {}, diff = (r.runs_for || 0) - (r.runs_against || 0);
+            const MODES = { ARENA: 'Diamond Dynasty', RANKED: 'Diamond Dynasty Ranked', BR: 'Battle Royale', EVENT: 'Diamond Dynasty Event' };
+            const me = String(uname || '').toLowerCase();
+            let html = '<div class="og-sub-head"><i class="fas fa-baseball"></i>MLB The Show, auto tracked</div>';
+            html += '<div class="og-show-rec">' + recBadge(r.wins || 0, r.losses || 0) + '<span>' + (r.games || 0) + ' games · run diff ' + signed(diff) + '</span></div>';
+            html += '<div class="og-recent">';
+            g.slice(0, 25).forEach(function (x) {
+                const a = x.away || {}, h = x.home || {};
+                const mine = (a.member && String(a.member).toLowerCase() === me) ? a : ((h.member && String(h.member).toLowerCase() === me) ? h : a);
+                const opp = mine === a ? h : a;
+                const res = mine.result === 'W' ? 'win' : (mine.result === 'L' ? 'loss' : 'draw');
+                const oppName = opp.member ? '<a href="/profile/?user=' + encodeURIComponent(opp.member) + '#gaming">' + esc(opp.member) + '</a>' : esc(opp.tag || opp.team || 'Opponent');
+                const mode = MODES[String(x.mode || '').toUpperCase()] || 'Online';
+                const link = x.has_box ? '<span class="og-rlink">Box score &rarr;</span>' : '';
+                html += '<div class="og-rrow og-show-row" data-show-id="' + esc(x.id) + '"' + (x.has_box ? ' role="button" tabindex="0" style="cursor:pointer"' : '') + '>' +
+                    '<div class="og-rres">' + resBadge(res) + '</div>' +
+                    '<div class="og-rmid"><div class="top">' + esc(mine.team || '') + ' vs ' + oppName + '</div>' +
+                        '<div class="sub">' + esc(String(x.played || '').split(' ')[0]) + ' · ' + mode + '</div></div>' +
+                    '<div class="og-rscore">' + esc(mine.runs) + '–' + esc(opp.runs) + '</div>' +
+                    link + '</div>';
+            });
+            return html + '</div>';
+        }
+        function wireShow(body) {
+            function go(e) {
+                const row = e.target.closest && e.target.closest('.og-show-row[role="button"]');
+                if (!row || e.target.closest('a')) return;
+                if (e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ') return;
+                e.preventDefault();
+                const id = row.getAttribute('data-show-id');
+                function openIt() { if (window.TMRShowBox) window.TMRShowBox.open(id); }
+                if (window.TMRShowBox) return openIt();
+                const sc = document.createElement('script'); sc.src = '/static/js/tmr-show-box.js?v=27a86a8d32b4'; sc.onload = openIt; document.head.appendChild(sc);
+            }
+            body.addEventListener('click', go); body.addEventListener('keydown', go);
+        }
+
         function renderH2H(h2h) {
             if (!h2h || !h2h.length) return '';
             let html = '<div class="og-sub-head"><i class="fas fa-swords"></i>Head-to-Head</div>';
@@ -13806,11 +13849,18 @@
                 if (body) body.innerHTML = emptyState(); return;
             }
             try {
-                const data = await api.request('/gaming/online-stats/' + encodeURIComponent(uname));
+                const both = await Promise.all([
+                    api.request('/gaming/online-stats/' + encodeURIComponent(uname)).catch(function () { return null; }),
+                    api.request('/gaming/theshow/player/' + encodeURIComponent(uname)).catch(function () { return null; })
+                ]);
+                const data = both[0] || {}, show = renderShow(both[1], uname);
                 const ov = (data && data.overall) ? data.overall : null;
                 const games = (data && data.by_game) ? data.by_game : [];
-                if (!ov || (!ov.games && !games.length)) { body.innerHTML = emptyState(); loadArenaExtras(uname, body); return; }
-                let html = '<div class="og-sep-note"><i class="fas fa-shield-halved"></i>Online gaming challenges only. This record is kept completely separate from betting picks, units, ROI, and handicapping stats.</div>';
+                const hasCh = !!(ov && (ov.games || games.length));
+                if (!hasCh && !show) { body.innerHTML = emptyState(); loadArenaExtras(uname, body); return; }
+                let html = '<div class="og-sep-note"><i class="fas fa-shield-halved"></i>Online gaming only. This record is kept completely separate from betting picks, units, ROI, and handicapping stats.</div>';
+                html += show;
+                if (!hasCh) { body.innerHTML = html; wireShow(body); loadArenaExtras(uname, body); return; }
                 html += renderOverall(ov);
                 if (games.length) {
                     html += '<div class="og-sub-head"><i class="fas fa-gamepad"></i>By Game</div>';
@@ -13820,6 +13870,7 @@
                 html += renderH2H(data.h2h);
                 body.innerHTML = html;
                 wire(body);
+                if (show) wireShow(body);
                 loadArenaExtras(uname, body);
             } catch (err) {
                 body.innerHTML = emptyState();
