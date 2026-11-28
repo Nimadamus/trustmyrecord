@@ -349,6 +349,126 @@
         .at-box h4 { margin: 12px 0 0; font-size: 13px; }
         .at-box .rhe { font-weight: 800; }
         @media (max-width: 860px) { .at-wrap, .at-wrap.solo { grid-template-columns: minmax(0, 1fr); } .at-form { grid-template-columns: 1fr; } .at-steps { grid-template-columns: 1fr; } }
+        /* OG_REDESIGN_20261128: MLB The Show 26 auto tracking hero + dashboard */
+        .og-hero h2.og-h2 { font-size: clamp(26px, 3.6vw, 38px); font-weight: 900; line-height: 1.08; }
+        .og-hero h2.og-h2 .grad { background: linear-gradient(100deg, #38bdf8, #3b82f6 60%, #8b5cf6); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .og-hero { margin-top: 34px; }
+        .sh-hero, .sh-dash { --sh-line: rgba(59, 130, 246, .55); --sh-glow: 0 0 0 1px rgba(96, 165, 250, .25), 0 0 26px rgba(59, 130, 246, .28), inset 0 0 30px rgba(59, 130, 246, .08); --sh-cy: #38bdf8; --sh-gold: #f5c542; --sh-mut: #a9b8d6; color: #eef4ff; }
+        .sh-hero { position: relative; overflow: hidden; border-radius: 22px; min-height: 360px; padding: 30px 44px 36px; isolation: isolate;
+            background: radial-gradient(60% 90% at 18% 0%, rgba(59,130,246,.35), transparent 60%), radial-gradient(50% 80% at 62% 10%, rgba(139,92,246,.30), transparent 65%), linear-gradient(180deg, #0a1638 0%, #050b1f 100%);
+            border: 1px solid rgba(96,165,250,.35); box-shadow: 0 0 40px rgba(59,130,246,.22); }
+        .sh-hero::before { content: ""; position: absolute; inset: 0; z-index: -2; background: url(/static/img/blp/stadium-hero.jpg) center 30%/cover no-repeat; opacity: .28; }
+        .sh-hero-art { position: absolute; z-index: -1; top: 0; right: 0; bottom: 0; width: 60%; background: url(/static/img/online-gaming/show26-hero.webp) 12% center/cover no-repeat;
+            -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 30%); mask-image: linear-gradient(90deg, transparent 0%, #000 24%); }
+        .sh-hero::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: linear-gradient(90deg, transparent, #3b82f6 30%, #8b5cf6 70%, transparent); }
+        .sh-hero-in { position: relative; max-width: 620px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+        .sh-crumb { align-self: flex-start; font-size: 12.5px; font-weight: 700; color: var(--sh-mut); margin-bottom: 12px; }
+        .sh-crumb a { color: var(--sh-cy); }
+        .sh-h1 { display: flex; flex-direction: column; align-items: center; gap: 2px; margin: 0; }
+        .sh-kicker { font: 800 13px/1 "Inter", sans-serif; letter-spacing: .22em; text-transform: uppercase; color: var(--sh-cy); margin-bottom: 12px; }
+        .sh-logo { display: inline-flex; align-items: center; gap: 16px; }
+        .sh-badge { width: 70px; height: 50px; border-radius: 10px; background: linear-gradient(90deg, #1d4ed8 0 50%, #dc2626 50% 100%); border: 3px solid #fff; display: grid; place-items: center; color: #fff; font-size: 24px; box-shadow: 0 6px 18px rgba(0,0,0,.45); flex: none; }
+        .sh-t1 { font: italic 900 clamp(40px, 6.2vw, 72px)/.95 "Barlow Condensed", "Anton", sans-serif; text-transform: uppercase; letter-spacing: -.01em; white-space: nowrap;
+            background: linear-gradient(180deg, #ffffff 0%, #e8eefc 45%, #9fb0cf 52%, #f4f7ff 100%); -webkit-background-clip: text; background-clip: text; color: transparent !important; -webkit-text-fill-color: transparent !important; filter: drop-shadow(0 3px 6px rgba(0,0,0,.6)); }
+        .sh-t1 sup { font-size: .5em; vertical-align: .9em; margin-left: 4px; }
+        .sh-t2 { font: italic 900 clamp(30px, 4.6vw, 54px)/1.05 "Montserrat", "Barlow Condensed", sans-serif; letter-spacing: .08em; text-transform: uppercase; padding: 0 .1em;
+            background: linear-gradient(180deg, #7dd3fc, #2563eb); -webkit-background-clip: text; background-clip: text; color: transparent !important; -webkit-text-fill-color: transparent !important; filter: drop-shadow(0 0 14px rgba(56,189,248,.55)); margin-top: 6px; }
+        .sh-lede { color: #dbe6ff; font-size: 17px; line-height: 1.5; margin: 16px 0 22px; max-width: 600px; text-shadow: 0 2px 8px rgba(0,0,0,.6); }
+        .sh-pills { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 8px; }
+        .sh-pill { display: inline-flex; align-items: center; gap: 10px; padding: 11px 22px; border-radius: 999px; font-weight: 800; font-size: 15px; color: #fff; background: rgba(5, 12, 36, .78); border: 2px solid rgba(96,165,250,.85); box-shadow: 0 0 16px rgba(59,130,246,.45); transition: transform .15s, box-shadow .15s; }
+        .sh-pill:hover { transform: translateY(-1px); box-shadow: 0 0 24px rgba(59,130,246,.7); }
+        .sh-pill i { color: #93c5fd; font-size: 17px; }
+        .sh-dash i.gold, .sh-hero i.gold { color: var(--sh-gold); }
+        .sh-arrow { width: 14px; height: 2px; background: #60a5fa; position: relative; }
+        .sh-arrow::after { content: ""; position: absolute; right: -2px; top: -3px; border: 4px solid transparent; border-left-color: #60a5fa; }
+
+        .sh-dash { display: grid; grid-template-columns: minmax(0, 340px) minmax(0, 1fr) minmax(0, 250px); grid-template-areas: "start stats stats" "start board climb" "start feed climb"; gap: 20px; margin-top: 22px; align-items: stretch; }
+        .sh-card { position: relative; background: linear-gradient(180deg, rgba(10, 22, 58, .92), rgba(5, 11, 31, .94)); border: 1.5px solid var(--sh-line); border-radius: 18px; box-shadow: var(--sh-glow); padding: 20px 22px; min-width: 0; }
+        .sh-start { grid-area: start; display: flex; flex-direction: column; }
+        .sh-stats { grid-area: stats; display: grid; grid-template-columns: repeat(5, 1fr); padding: 16px 6px; }
+        .sh-board { grid-area: board; } .sh-feed { grid-area: feed; } .sh-climb { grid-area: climb; }
+        .sh-h { font: italic 800 26px/1.1 "Barlow Condensed", sans-serif; text-transform: uppercase; letter-spacing: .01em; color: #fff; margin: 0; display: flex; align-items: center; gap: 10px; }
+        .sh-start > .sh-h { padding-bottom: 14px; margin-bottom: 14px; border-bottom: 2px solid; border-image: linear-gradient(90deg, #3b82f6, transparent) 1; }
+        .sh-steps { list-style: none; margin: 0 0 18px; padding: 0; display: grid; gap: 10px; position: relative; }
+        .sh-steps::before { content: ""; position: absolute; left: 20px; top: 24px; bottom: 24px; width: 2px; background: rgba(96,165,250,.45); }
+        .sh-steps li { position: relative; display: grid; grid-template-columns: 42px 1fr 30px; gap: 14px; align-items: center; padding: 12px 12px 12px 0; border-radius: 12px; background: linear-gradient(90deg, transparent 0 21px, rgba(255,255,255,.04) 21px); font-size: 13px; line-height: 1.4; color: var(--sh-mut); }
+        .sh-steps li b { display: block; color: #fff; font-size: 17px; margin-bottom: 3px; }
+        .sh-steps .n { width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; font-weight: 900; font-size: 18px; color: #fff; background: radial-gradient(circle at 35% 30%, #3b82f6, #1e3a8a); border: 2px solid #60a5fa; box-shadow: 0 0 14px rgba(59,130,246,.6); position: relative; z-index: 1; }
+        .sh-steps .ic { color: #60a5fa; font-size: 22px; text-align: center; }
+        #atBody { margin-top: auto; }
+        .sh-start .at-form { display: grid; grid-template-columns: 1fr; gap: 10px; }
+        .sh-start .form-control { width: 100%; padding: 12px 14px; border-radius: 12px; border: 1px solid rgba(96,165,250,.45); background: rgba(2, 8, 26, .8); color: #fff; font-size: 15px; }
+        .sh-start .form-control::placeholder { color: #7f8fb0; }
+        .sh-big { display: flex; width: 100%; align-items: center; justify-content: center; gap: 12px; padding: 16px 18px; border-radius: 999px; border: 2px solid #60a5fa; cursor: pointer; font: italic 800 23px/1 "Barlow Condensed", sans-serif; text-transform: uppercase; letter-spacing: .02em; color: #fff;
+            background: linear-gradient(90deg, #0b2a6b, #1e40af 50%, #3b1d8f); box-shadow: 0 0 22px rgba(59,130,246,.6), inset 0 0 18px rgba(139,92,246,.35); transition: box-shadow .15s, transform .15s; }
+        .sh-big:hover { box-shadow: 0 0 32px rgba(99,102,241,.85), inset 0 0 18px rgba(139,92,246,.5); transform: translateY(-1px); }
+        .sh-big:disabled { opacity: .6; cursor: wait; }
+        .sh-sub { display: block; text-align: center; margin-top: 10px; font-size: 13px; color: var(--sh-mut); }
+        .sh-sub a, .sh-start p a { color: var(--sh-cy); font-weight: 700; }
+        .sh-start h3 { font-size: 19px; color: #fff; margin: 0 0 8px; }
+        .sh-start p { color: var(--sh-mut); font-size: 14px; line-height: 1.5; margin: 10px 0 14px; }
+        .sh-linked { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 16px; color: #fff; }
+        .sh-linked .pill { padding: 4px 10px; border-radius: 999px; border: 1px solid #60a5fa; color: #93c5fd; font-weight: 700; font-size: 12.5px; }
+        .sh-ghost { background: transparent; border: 1px solid rgba(96,165,250,.5); color: #cfe0ff; border-radius: 999px; padding: 8px 16px; font-weight: 700; cursor: pointer; }
+        .sh-stat { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 4px 8px; border-left: 1px solid rgba(96,165,250,.28); text-align: center; min-width: 0; }
+        .sh-stat:first-child { border-left: 0; }
+        .sh-stat i { font-size: 26px; color: #60a5fa; } .sh-dash .sh-stat i.fire { color: #fb923c; }
+        .sh-stat b { font: 800 30px/1 "Inter", sans-serif; color: #fff; font-variant-numeric: tabular-nums; }
+        .sh-stat span { font-size: 12.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .03em; color: #dbe6ff; }
+        .sh-cardhead { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+        .sh-cardhead a, .sh-more { color: var(--sh-cy); font-weight: 700; font-size: 14px; background: none; border: 0; cursor: pointer; padding: 0; }
+        .sh-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 15px; border: 1px solid rgba(96,165,250,.3); border-radius: 10px; overflow: hidden; min-width: 0 !important; }
+        .sh-table th { text-align: left; font-size: 12.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: #dbe6ff; background: rgba(255,255,255,.05); padding: 9px 14px; }
+        .sh-table td { padding: 11px 14px; color: #fff; font-weight: 700; border-top: 1px solid rgba(96,165,250,.18); background: rgba(2, 8, 26, .55); }
+        .sh-table .num { text-align: center; font-variant-numeric: tabular-nums; } .sh-table th:last-child, .sh-table td:last-child { text-align: right; }
+        .sh-table a { color: #fff; } .sh-table .crown { color: var(--sh-gold); margin-right: 8px; }
+        .sh-empty { color: var(--sh-mut) !important; font-weight: 500 !important; font-size: 14px; text-align: center !important; padding: 14px; }
+        .sh-dash .at-game { display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: center; padding: 11px 14px 11px 16px; margin-top: 10px; border: 1px solid rgba(96,165,250,.3); border-radius: 10px; background: rgba(2, 8, 26, .55); position: relative; font-size: 14px; }
+        .sh-dash .at-game::before { content: ""; position: absolute; left: 10px; top: 10px; bottom: 10px; width: 3px; border-radius: 2px; background: var(--sh-gold); }
+        .sh-dash .at-game.hw::before { background: #22c55e; }
+        .sh-dash .at-game .home { padding-left: 8px; min-width: 0; }
+        .sh-dash .at-game .away { text-align: right; min-width: 0; }
+        .sh-dash .at-game .who { font-weight: 800; font-size: 16px; color: #fff; overflow-wrap: anywhere; } .sh-dash .at-game .who.w { color: #4ade80; }
+        .sh-dash .at-game .team { color: var(--sh-mut); font-size: 13px; }
+        .sh-dash .at-game .score { text-align: center; font-weight: 800; font-size: 22px; color: #fff; font-variant-numeric: tabular-nums; min-width: 150px; }
+        .sh-dash .at-game .score small { display: block; font-size: 12px; font-weight: 600; color: var(--sh-mut); margin-top: 3px; }
+        .sh-dash .at-game .score small em { font-style: normal; color: var(--sh-cy); font-weight: 700; }
+        .sh-dash .at-game.has-box { cursor: pointer; } .sh-dash .at-game.has-box:hover { border-color: #60a5fa; box-shadow: 0 0 14px rgba(59,130,246,.35); }
+        .sh-dash .at-game.has-box .score small:after { content: none; }
+        .sh-dash .at-box { color: #e6eeff; }
+        .sh-climb { display: flex; flex-direction: column; align-items: center; text-align: center; justify-content: space-between; gap: 14px; border-color: rgba(139,92,246,.7); box-shadow: 0 0 0 1px rgba(139,92,246,.25), 0 0 26px rgba(139,92,246,.3), inset 0 0 30px rgba(139,92,246,.1); }
+        .sh-climb-h { font: italic 900 23px/1.08 "Barlow Condensed", sans-serif; text-transform: uppercase; color: var(--sh-gold) !important; overflow-wrap: anywhere; margin: 6px 0 0; }
+        .sh-climb-h span { display: block; color: #fff; }
+        .tmr-site-shell .sh-dash .sh-climb-h { font-size: 25px !important; line-height: 1.08 !important; color: var(--sh-gold) !important; -webkit-text-fill-color: currentColor !important; letter-spacing: 0 !important; }
+        .tmr-site-shell .sh-dash .sh-climb-h span { color: #fff !important; }
+        .sh-cup { font-size: 92px; line-height: 1; padding: 6px 0; }
+        .sh-cup i { background: linear-gradient(180deg, #fde68a, #f5c542 45%, #b45309); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 0 18px rgba(245,197,66,.55)); }
+        .sh-climb p { color: #e6eeff; font-size: 15px; line-height: 1.45; margin: 0; }
+        .sh-gold-btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; border-radius: 999px; border: 2px solid var(--sh-gold); color: #fff; font: italic 800 19px/1 "Barlow Condensed", sans-serif; text-transform: uppercase; background: rgba(40, 24, 0, .55); box-shadow: 0 0 18px rgba(245,197,66,.45); white-space: nowrap; }
+        .sh-gold-btn:hover { box-shadow: 0 0 26px rgba(245,197,66,.75); }
+        @media (max-width: 1080px) {
+            .sh-dash { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: "stats stats" "start board" "start climb" "feed feed"; }
+        }
+        @media (max-width: 760px) {
+            .sh-dash .at-game { grid-template-columns: 1fr 1fr; row-gap: 6px; }
+            .sh-dash .at-game .score { grid-column: 1 / -1; order: -1; min-width: 0; }
+            .sh-hero { padding: 24px 16px 28px; min-height: 0; }
+            .sh-hero-art { width: 100%; opacity: .3; -webkit-mask-image: none; mask-image: none; }
+            .sh-logo { gap: 10px; }
+            .sh-badge { width: 46px; height: 34px; font-size: 16px; border-width: 2px; }
+            .sh-t1 { font-size: clamp(32px, 10vw, 44px); }
+            .sh-t2 { font-size: clamp(24px, 8vw, 34px); letter-spacing: .05em; }
+            .sh-lede { font-size: 15.5px; }
+            .sh-pill { padding: 9px 16px; font-size: 14px; }
+            .sh-arrow { display: none; }
+            .sh-dash { grid-template-columns: minmax(0, 1fr); grid-template-areas: "start" "stats" "board" "feed" "climb"; }
+            .sh-stats { grid-template-columns: repeat(3, 1fr); row-gap: 18px; }
+            .sh-stat:nth-child(4) { border-left: 0; }
+            .sh-stat b { font-size: 24px; }
+            .sh-dash .at-game { padding-left: 14px; }
+            .sh-dash .at-game .score { min-width: 0; font-size: 19px; }
+            .sh-dash .at-game .score small { font-size: 11px; }
+        }
     </style>
 <link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=272776e56183">
 <script defer src="/static/js/tmr-linkhub.js?v=4d1165a8c06a"></script>
@@ -367,11 +487,71 @@
 <body class="tmr-site-shell tmr-ds-shell tmr-dark tmr-aplus" data-aplus="arena" data-tmr-route="online-gaming">
 <main class="page">
 
-    <!-- ===================== HERO ===================== -->
+    <!-- ===================== HERO: MLB THE SHOW 26 AUTO TRACKING (OG_REDESIGN_20261128) ===================== -->
+    <span class="aplus-hero" hidden></span><!-- page draws its own hero; keeps tmr-aplus.js from restyling it -->
+    <section class="sh-hero">
+        <div class="sh-hero-art" aria-hidden="true"></div>
+        <div class="sh-hero-in">
+            <nav class="sh-crumb" aria-label="Breadcrumb"><a href="/">Home</a> / Online Gaming</nav>
+            <h1 class="sh-h1">
+                <span class="sh-kicker">Online Gaming</span>
+                <span class="sh-logo"><span class="sh-badge"><i class="fas fa-baseball-bat-ball"></i></span><span class="sh-t1">MLB The Show<sup>26</sup></span></span>
+                <span class="sh-t2">Auto Tracking</span>
+            </h1>
+            <p class="sh-lede">Track your MLB The Show 26 games, build your record, climb the leaderboard, and compete against the TMR community.</p>
+            <div class="sh-pills">
+                <a class="sh-pill" href="#autotrack"><i class="fas fa-gamepad"></i> Track Games</a>
+                <span class="sh-arrow" aria-hidden="true"></span>
+                <a class="sh-pill" href="#atStats"><i class="fas fa-chart-simple"></i> Build Your Record</a>
+                <span class="sh-arrow" aria-hidden="true"></span>
+                <a class="sh-pill" href="/mlb-the-show-stat-league/#leaderboard-preview"><i class="fas fa-trophy gold"></i> Compete &amp; Climb</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===================== THE SHOW AUTO TRACKING (THESHOW_AUTOTRACK_20261127) ===================== -->
+    <section class="sh-dash" id="autotrack">
+        <div class="sh-card sh-start" id="atWrap">
+            <h2 class="sh-h">Get Started</h2>
+            <ol class="sh-steps" id="atSteps">
+                <li><span class="n">1</span><div><b>Link Your Username</b>Enter the name you play MLB The Show under.</div><i class="fas fa-user ic"></i></li>
+                <li><span class="n">2</span><div><b>Play Online</b>Ranked, Battle Royale, Events or any online mode.</div><i class="fas fa-gamepad ic"></i></li>
+                <li><span class="n">3</span><div><b>It Tracks Automatically</b>New games appear here within minutes and build your record.</div><i class="fas fa-rotate ic"></i></li>
+            </ol>
+            <div id="atBody"><div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading&hellip;</div></div>
+            <div class="at-msg" id="atMsg" role="status"></div>
+        </div>
+
+        <div class="sh-card sh-stats" id="atStats">
+            <div class="sh-stat"><i class="fas fa-gamepad"></i><b id="stA">&mdash;</b><span id="stAl">Games Tracked</span></div>
+            <div class="sh-stat"><i class="fas fa-trophy gold"></i><b id="stB">&mdash;</b><span id="stBl">Record (W-L)</span></div>
+            <div class="sh-stat"><i class="fas fa-bullseye"></i><b id="stC">&mdash;</b><span id="stCl">Win %</span></div>
+            <div class="sh-stat"><i class="fas fa-fire fire"></i><b id="stD">&mdash;</b><span id="stDl">Current Streak</span></div>
+            <div class="sh-stat"><i class="fas fa-chart-simple"></i><b id="stE">&mdash;</b><span id="stEl">Run Diff</span></div>
+        </div>
+
+        <div class="sh-card sh-board" id="atBoardCard">
+            <div class="sh-cardhead"><h2 class="sh-h"><i class="fas fa-trophy gold"></i> Auto Tracked Standings</h2><a href="/mlb-the-show-stat-league/#leaderboard-preview">View Full Standings <i class="fas fa-arrow-right"></i></a></div>
+            <table class="sh-table"><thead><tr><th>#</th><th>Player</th><th class="num">W</th><th class="num">L</th><th class="num">Run Diff</th></tr></thead><tbody id="atBoard"><tr><td colspan="5" class="sh-empty">Loading standings&hellip;</td></tr></tbody></table>
+        </div>
+
+        <div class="sh-card sh-feed" id="atFeedCard">
+            <div class="sh-cardhead"><h2 class="sh-h"><i class="fas fa-gamepad gold"></i> Latest Games</h2><button type="button" class="sh-more" id="atMore" hidden>View All Games <i class="fas fa-arrow-right"></i></button></div>
+            <div id="atFeed"><div class="sh-empty">Loading games&hellip;</div></div>
+        </div>
+
+        <div class="sh-card sh-climb">
+            <h2 class="sh-climb-h"><span>Climb The</span>TMR Leaderboard</h2>
+            <div class="sh-cup" aria-hidden="true"><i class="fas fa-trophy"></i></div>
+            <p>Compete for bragging rights and prove you're the top MLB The Show 26 player on TMR.</p>
+            <a class="sh-gold-btn" href="/mlb-the-show-stat-league/#leaderboard-preview">View Leaderboard <i class="fas fa-arrow-right"></i></a>
+        </div>
+    </section>
+
+    <!-- ===================== HEAD TO HEAD CHALLENGES ===================== -->
     <section class="og-hero">
-        <nav class="og-crumb" aria-label="Breadcrumb" style="font-size:13px;font-weight:700;letter-spacing:.02em;opacity:.8;margin-bottom:10px"><a href="/">Home</a> / Online Gaming</nav>
         <span class="og-eyebrow"><i class="fas fa-gamepad"></i> Head-to-head &middot; Verified results &middot; No wagering</span>
-        <h1>Online <span class="grad">Gaming</span></h1>
+        <h2 class="og-h2">Head to Head <span class="grad">Challenges</span></h2>
         <p class="lede">
             Play <strong>MLB The Show</strong>, <strong>Madden NFL</strong>, <strong>NBA 2K</strong>,
             <strong>EA SPORTS FC</strong> or <strong>EA SPORTS NHL</strong> against other members. Pick your game,
@@ -383,7 +563,6 @@
             <button class="btn btn-primary" onclick="openCreate()"><i class="fas fa-plus"></i> Create a Challenge</button>
             <a class="btn btn-ghost" href="#open-challenges"><i class="fas fa-bolt"></i> Browse Open Challenges</a>
             <a class="btn btn-ghost" href="#games"><i class="fas fa-gamepad"></i> Choose a Game</a>
-            <a class="btn btn-primary" href="#autotrack"><i class="fas fa-link"></i> Auto Track MLB The Show</a>
             <a class="btn btn-gold" href="/mlb-the-show-stat-league/"><i class="fas fa-baseball-bat-ball"></i> MLB The Show Stat League</a>
         </div>
         <div class="auth-banner" id="authBanner">
@@ -394,37 +573,6 @@
             <div class="og-hero-stat"><div class="num">5</div><div class="lbl">Supported Games</div></div>
             <div class="og-hero-stat"><div class="num" id="statCompleted">&mdash;</div><div class="lbl">Completed Matches</div></div>
             <div class="og-hero-stat"><div class="num">PS / Xbox</div><div class="lbl">Platforms</div></div>
-        </div>
-    </section>
-
-    <!-- ===================== THE SHOW AUTO TRACKING (THESHOW_AUTOTRACK_20261127) ===================== -->
-    <section class="section" id="autotrack">
-        <div class="section-head">
-            <div>
-                <h2>MLB The Show 26 Auto Tracking</h2>
-                <div class="sub">Link your PlayStation or Xbox username once. Every online game you finish from that moment on posts here by itself with the final score, hits, errors and pitchers. No screenshots, no reporting. See the <a href="/mlb-the-show-stat-league/#leaderboard-preview">auto tracked standings</a> or read the <a href="/sports-gaming/mlb-the-show/">MLB The Show stat tracker guide</a>.</div>
-            </div>
-        </div>
-        <div class="at-wrap solo" id="atWrap">
-            <div class="at-card">
-                <div class="at-steps" id="atSteps">
-                    <div class="at-step"><span class="n">STEP 1</span><b>Link your username</b>Enter the name you play MLB The Show under.</div>
-                    <div class="at-step"><span class="n">STEP 2</span><b>Play online</b>Ranked, Battle Royale, Events or any online mode.</div>
-                    <div class="at-step"><span class="n">STEP 3</span><b>It posts itself</b>New games appear here within minutes and build your record.</div>
-                </div>
-                <div id="atBody"><div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading&hellip;</div></div>
-                <div class="at-msg" id="atMsg" role="status"></div>
-            </div>
-            <div class="at-side" id="atSide" hidden>
-                <div class="at-card" id="atBoardCard" hidden>
-                    <h3>Auto Tracked Standings</h3>
-                    <table class="at-table"><thead><tr><th>#</th><th>Player</th><th class="num">W</th><th class="num">L</th><th class="num">Run Diff</th></tr></thead><tbody id="atBoard"></tbody></table>
-                </div>
-                <div class="at-card" id="atFeedCard" hidden>
-                    <h3>Latest Games</h3>
-                    <div id="atFeed"></div>
-                </div>
-            </div>
         </div>
     </section>
 
@@ -1070,30 +1218,31 @@
             '<form class="at-form" id="atForm">' +
             '<input class="form-control" id="atTag" placeholder="Your MLB The Show username" maxlength="30" autocomplete="off" required aria-label="MLB The Show username">' +
             '<select class="form-control" id="atPlat" aria-label="Platform"><option value="psn">PlayStation</option><option value="xbl">Xbox</option></select>' +
-            '<button class="btn btn-primary" type="submit" id="atBtn"><i class="fas fa-link"></i> Start Tracking</button></form>';
+            '<button class="sh-big" type="submit" id="atBtn"><i class="fas fa-gamepad"></i> Start Tracking Now</button></form>';
         $('atForm').addEventListener('submit', link);
     }
     function renderGuest() {
         $('atBody').innerHTML =
-            '<a class="btn btn-primary" href="/login/?next=' + encodeURIComponent('/online-gaming/#autotrack') + '"><i class="fas fa-right-to-bracket"></i> Log in to link your username</a> ' +
-            '<a class="btn btn-ghost" href="/register/">Create a free account</a>';
+            '<a class="sh-big" href="/login/?next=' + encodeURIComponent('/online-gaming/#autotrack') + '"><i class="fas fa-gamepad"></i> Start Tracking Now</a>' +
+            '<span class="sh-sub">Free account needed. <a href="/register/">Create one</a> in 30 seconds.</span>';
     }
     function renderLinked(l) {
         $('atSteps').hidden = true;
         $('atBody').innerHTML =
             '<h3>You are being tracked</h3>' +
-            '<div class="at-linked"><span class="pill">' + esc(PLAT[l.platform] || l.platform) + '</span><b>' + esc(l.gamertag) + '</b></div>' +
-            '<p style="margin-top:12px">Tracking since ' + esc(when(l.linked_at)) + '. Games played before then are never posted. ' +
+            '<div class="sh-linked"><span class="pill">' + esc(PLAT[l.platform] || l.platform) + '</span><b>' + esc(l.gamertag) + '</b></div>' +
+            '<p>Tracking since ' + esc(when(l.linked_at)) + '. Games played before then are never posted. ' +
             (l.games ? '<b>' + l.games + '</b> game' + (l.games === 1 ? '' : 's') + ' posted so far.' : 'Play an online game and it shows up here within minutes.') + '</p>' +
-            '<button class="btn btn-ghost" type="button" id="atStop">Stop tracking</button>';
+            '<button class="sh-ghost" type="button" id="atStop">Stop tracking</button>';
         $('atStop').addEventListener('click', unlink);
     }
+    var ME = null;
 
     async function loadMe() {
         if (!loggedIn()) { renderGuest(); return; }
         try {
             var r = await api.request('/gaming/theshow/me');
-            if (r && r.link && r.link.active) renderLinked(r.link); else renderForm();
+            if (r && r.link && r.link.active) { ME = r.link; renderLinked(r.link); } else { ME = null; renderForm(); }
         } catch (e) { renderForm(); }
     }
     async function link(e) {
@@ -1102,39 +1251,80 @@
         try {
             await api.request('/gaming/theshow/link', { method: 'POST', body: { gamertag: $('atTag').value.trim(), platform: $('atPlat').value } });
             msg('Linked. Your next online game will post here automatically.', 'ok');
-            loadMe(); loadBoard();
+            loadMe().then(loadBoard);
         } catch (err) {
             msg((err && err.message) || 'Could not link that username.', 'err'); btn.disabled = false;
         }
     }
     async function unlink() {
-        try { await api.request('/gaming/theshow/link', { method: 'DELETE' }); msg('Tracking stopped.', 'ok'); renderForm(); loadBoard(); }
+        try { await api.request('/gaming/theshow/link', { method: 'DELETE' }); msg('Tracking stopped.', 'ok'); ME = null; renderForm(); loadBoard(); }
         catch (e) { msg('Could not stop tracking. Try again.', 'err'); }
     }
 
     function sideHtml(s, cls) {
         return '<div class="' + cls + '"><div class="who' + (s.result === 'W' ? ' w' : '') + '">' + esc(s.member || s.tag || 'Opponent') + '</div><div class="team">' + esc(s.team || '') + '</div></div>';
     }
+    function setStat(k, v, label) { $('st' + k).textContent = v; if (label) $('st' + k + 'l').textContent = label; }
+    function sgn(n) { return (n > 0 ? '+' : '') + n; }
+    function pct(w, n) { if (!n) return '.000'; var x = w / n; return x >= 1 ? '1.000' : x.toFixed(3).replace(/^0/, ''); }
+    function renderStats(board, games) {
+        var mine = null, meName = '';
+        if (ME) {
+            var tag = String(ME.gamertag || '').toLowerCase();
+            games.forEach(function (g) { [g.home, g.away].forEach(function (x) { if (!meName && x.member && String(x.tag || '').toLowerCase() === tag) meName = String(x.member).toLowerCase(); }); });
+            if (!meName) { try { var cu = JSON.parse(localStorage.getItem('currentUser') || 'null'); meName = String((cu && (cu.username || cu.display_name)) || '').toLowerCase(); } catch (e) {} }
+            board.forEach(function (p) { if (meName && (String(p.display_name || '').toLowerCase() === meName || String(p.username || '').toLowerCase() === meName)) mine = p; });
+        }
+        if (mine) {
+            var n = mine.wins + mine.losses, st = 0, kind = '', nm = String(mine.display_name || mine.username).toLowerCase();
+            for (var gi = 0; gi < games.length; gi++) {
+                var g = games[gi], side = String(g.home.member || '').toLowerCase() === nm ? g.home : (String(g.away.member || '').toLowerCase() === nm ? g.away : null);
+                if (!side) continue;
+                if (!kind) kind = side.result;
+                if (side.result !== kind) break;
+                st++;
+            }
+            setStat('A', mine.games, 'Games Tracked'); setStat('B', mine.wins + ' - ' + mine.losses, 'Record (W-L)');
+            setStat('C', pct(mine.wins, n), 'Win %'); setStat('D', kind ? (kind + st) : '0', 'Current Streak');
+            setStat('E', sgn(mine.runs_for - mine.runs_against), 'Run Diff');
+            return;
+        }
+        var runs = 0, top = board[0];
+        board.forEach(function (p) { runs += p.runs_for; });
+        var total = board.reduce(function (a, p) { return a + p.games; }, 0);
+        setStat('A', Math.max(total, games.length), 'Games Tracked'); setStat('B', board.length, 'Players Tracked');
+        setStat('C', top ? (top.wins + ' - ' + top.losses) : '0 - 0', 'Leader Record'); setStat('D', runs, 'Runs Scored');
+        setStat('E', 'PS / Xbox', 'Platforms');
+    }
+    var FEED = [], SHOWALL = false;
+    function gameHtml(g) {
+        var hw = g.home.result === 'W';
+        return '<div class="at-game' + (hw ? ' hw' : '') + (g.has_box ? ' has-box" role="button" tabindex="0" data-id="' + esc(g.id) : '') + '">' + sideHtml(g.home, 'home') +
+            '<div class="score">' + esc(g.home.runs) + ' &ndash; ' + esc(g.away.runs) +
+            '<small>H: ' + esc(g.home.hits) + '-' + esc(g.away.hits) + ' &middot; E: ' + esc(g.home.errors) + '-' + esc(g.away.errors) +
+            (g.has_box ? ' &middot; <em>Box Score &rarr;</em>' : '') + '</small></div>' +
+            sideHtml(g.away, 'away') + '</div>';
+    }
+    function renderFeed() {
+        var list = SHOWALL ? FEED : FEED.slice(0, 4);
+        $('atFeed').innerHTML = list.length ? list.map(gameHtml).join('') : '<div class="sh-empty">No games tracked yet. Link your username and play an online game.</div>';
+        var more = $('atMore'); more.hidden = FEED.length <= 4;
+        more.innerHTML = SHOWALL ? 'Show Fewer <i class="fas fa-arrow-up"></i>' : 'View All Games <i class="fas fa-arrow-right"></i>';
+    }
     async function loadBoard() {
         if (!ready()) return;
         var board = [], games = [];
         try { var b = await api.request('/gaming/theshow/leaderboard'); board = (b && b.leaderboard) || []; } catch (e) {}
         try { var f = await api.request('/gaming/theshow/feed?limit=12'); games = (f && f.games) || []; } catch (e) {}
-        var any = board.length || games.length;
-        $('atBoardCard').hidden = !board.length; $('atFeedCard').hidden = !games.length;
-        $('atSide').hidden = !any; $('atWrap').classList.toggle('solo', !any);
-        $('atBoard').innerHTML = board.slice(0, 15).map(function (p, i) {
+        $('atBoard').innerHTML = board.length ? board.slice(0, 5).map(function (p, i) {
             var rd = p.runs_for - p.runs_against;
-            return '<tr><td>' + (i + 1) + '</td><td><a href="/mlb-the-show-stat-league/#player-stats"><b>' + esc(p.display_name || p.username) + '</b></a></td>' +
-                '<td class="num">' + p.wins + '</td><td class="num">' + p.losses + '</td><td class="num">' + (rd > 0 ? '+' : '') + rd + '</td></tr>';
-        }).join('');
-        $('atFeed').innerHTML = games.map(function (g) {
-            return '<div class="at-game' + (g.has_box ? ' has-box" role="button" tabindex="0" data-id="' + esc(g.id) : '') + '">' + sideHtml(g.home, 'home') +
-                '<div class="score">' + esc(g.home.runs) + '-' + esc(g.away.runs) +
-                '<small>H ' + esc(g.home.hits) + '-' + esc(g.away.hits) + ' &middot; E ' + esc(g.home.errors) + '-' + esc(g.away.errors) + '</small></div>' +
-                sideHtml(g.away, 'away') + '</div>';
-        }).join('');
+            return '<tr><td>' + (i + 1) + '</td><td><a href="/mlb-the-show-stat-league/#player-stats">' + (i === 0 ? '<i class="fas fa-crown crown"></i>' : '') + esc(p.display_name || p.username) + '</a></td>' +
+                '<td class="num">' + p.wins + '</td><td class="num">' + p.losses + '</td><td>' + sgn(rd) + '</td></tr>';
+        }).join('') : '<tr><td colspan="5" class="sh-empty">Be the first player on the board.</td></tr>';
+        FEED = games; renderFeed();
+        try { renderStats(board, games); } catch (e) {}
     }
+    document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('#atMore')) { SHOWALL = !SHOWALL; renderFeed(); } });
     function tbl(head, rows, tot) {
         return '<table><thead><tr>' + head.map(function (h) { return '<th>' + esc(h) + '</th>'; }).join('') + '</tr></thead><tbody>' +
             rows.map(function (r) { return '<tr>' + r.map(function (c) { return '<td>' + esc(c) + '</td>'; }).join('') + '</tr>'; }).join('') +
@@ -1194,7 +1384,7 @@
     }
     document.addEventListener('click', function (e) { var el = e.target.closest && e.target.closest('.at-game.has-box'); if (el) toggleBox(el); });
     document.addEventListener('keydown', function (e) { if (e.key === 'Enter' && e.target.classList && e.target.classList.contains('has-box')) toggleBox(e.target); });
-    function start() { loadMe(); loadBoard(); }
+    function start() { loadMe().then(loadBoard, loadBoard); }
     if (typeof api !== 'undefined' && api && api.ready && typeof api.ready.then === 'function') api.ready.then(start).catch(start);
     else window.addEventListener('load', function () { if (ready()) start(); else setTimeout(start, 600); });
 })();
