@@ -1125,7 +1125,7 @@
         $('atSide').hidden = !any; $('atWrap').classList.toggle('solo', !any);
         $('atBoard').innerHTML = board.slice(0, 15).map(function (p, i) {
             var rd = p.runs_for - p.runs_against;
-            return '<tr><td>' + (i + 1) + '</td><td><a href="/profile/?user=' + encodeURIComponent(p.username) + '#gaming"><b>' + esc(p.display_name || p.username) + '</b></a></td>' +
+            return '<tr><td>' + (i + 1) + '</td><td><a href="/mlb-the-show-stat-league/#player-stats"><b>' + esc(p.display_name || p.username) + '</b></a></td>' +
                 '<td class="num">' + p.wins + '</td><td class="num">' + p.losses + '</td><td class="num">' + (rd > 0 ? '+' : '') + rd + '</td></tr>';
         }).join('');
         $('atFeed').innerHTML = games.map(function (g) {
