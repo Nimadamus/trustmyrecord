@@ -502,6 +502,9 @@
         .wd-dots i { width: 8px; height: 8px; border-radius: 50%; background: #C9D3DE; }
         .wd-dots i.w { background: #1D7A46; }
         .wd-dots i.l { background: #B3261E; }
+        .wd-rank { font-weight: 900; font-size: 1.05rem; width: 34px; color: var(--pro-ink); }
+        .wd-top .wd-rank { color: #f5b301; }
+        .wd-src { color: inherit; text-decoration: underline; }
         .wd-pend { display: inline-block; min-width: 26px; padding: 2px 8px; border-radius: 999px; background: var(--pro-brand-dark); color: #fff; font-weight: 800; font-size: .8rem; text-align: center; }
         .wd-follow { display: inline-flex; align-items: center; margin-top: 6px; min-height: 32px; padding: 4px 12px; border-radius: 999px; border: 1px solid var(--pro-line); background: var(--pro-page); color: var(--pro-ink); font: inherit; font-size: .78rem; font-weight: 800; cursor: pointer; }
         .wd-follow.on { background: var(--pro-brand); color: #fff; border-color: transparent; }
@@ -1136,6 +1139,7 @@ html body.pro-board-page main #board .wd-count b{color:#ecf3ff!important}
 html body.pro-board-page main #board .wd-table-wrap,html body.pro-board-page main #board .wd-table th{background:#0c1324!important}
 html body.pro-board-page main #board .wd-table td{color:#b4c2d8}
 html body.pro-board-page main #board .wd-name,html body.pro-board-page main #board .wd-rec{color:#ecf3ff!important}
+html body.pro-board-page main #board .wd-rank{color:#ecf3ff!important}html body.pro-board-page main #board .wd-top .wd-rank{color:#f5c542!important}
 html body.pro-board-page main{color-scheme:dark}
 html body.pro-board-page main #board .wd-bar input[type=search]::placeholder{color:#8c9db8!important;-webkit-text-fill-color:#8c9db8;opacity:1}
 html body.pro-board-page main #board .wd-table,html body.pro-board-page main #board .wd-table tbody,html body.pro-board-page main #board .wd-table tr,html body.pro-board-page main #board .wd-table td{background:transparent!important}
@@ -1536,7 +1540,7 @@ html body.pro-board-page main #board .wd-since b{color:#f4f8ff!important;-webkit
                                     <li>Every collected pregame pick in one board: matchup, market, selection, odds and units where posted</li>
                                     <li>Each pick beside that handicapper's record, units, ROI, streak and last 10</li>
                                     <li>Updated as new picks are collected, only for games that have not started</li>
-                                    <li>Handicappers shown by tracking number, never by name</li>
+                                    <li>Handicappers ranked by units, each with their name and every pending pick</li>
                                     <li>Sort and filter by record, streak, ROI, league and source</li>
                                 </ul>
                                 <div class="px-actions">
@@ -1785,7 +1789,7 @@ html body.pro-board-page main #board .wd-since b{color:#f4f8ff!important;-webkit
                             From public posts by handicappers TrustMyRecord tracks on Covers, X,
                             TheRX, Reddit and other sites. We grade every pick they post against
                             the final score, so each one on the board comes with that
-                            handicapper's real record and units. Handicappers are shown by tracking number, never by name.
+                            handicapper's real record and units.
                             Only games that have not started are shown.
                         </p>
                     </details>
@@ -2075,8 +2079,8 @@ html body.pro-board-page main #board .wd-since b{color:#f4f8ff!important;-webkit
         var boardData = null;
         /* 2026-09-29: Proven was on by default, so a board with no handicapper at 25+ graded
            picks looked empty to a paying member. Every pending pick shows first; Proven is a filter. */
-        var boardFilter = { proven: false, league: 'all', source: 'all', q: '', view: 'games', win: 'all', sortG: 'time' };
-        /* PRO_BOARD_GAMES_20261102: the board opens on upcoming games; the view and filters live in the URL */
+        var boardFilter = { proven: false, league: 'all', source: 'all', q: '', view: 'cappers', win: 'all', sortG: 'time' };
+        /* PRO_BOARD_RANKED_20261128 (Nima: rank the handicappers, show the top people's pending picks, with names): the board opens on the leaderboard, ranked by units; the view and filters live in the URL */
         try {
             var bq = new URLSearchParams(window.location.search);
             ['view', 'league', 'source', 'win', 'sortG'].forEach(function (k) { if (bq.get(k)) boardFilter[k] = bq.get(k); });
@@ -2086,7 +2090,7 @@ html body.pro-board-page main #board .wd-since b{color:#f4f8ff!important;-webkit
         function boardUrl() {
             try {
                 var p = new URLSearchParams(), f = boardFilter;
-                if (f.view !== 'games') p.set('view', f.view);
+                if (f.view !== 'cappers') p.set('view', f.view);
                 if (f.league !== 'all') p.set('league', f.league);
                 if (f.source !== 'all') p.set('source', f.source);
                 if (f.win !== 'all') p.set('win', f.win);
@@ -2340,8 +2344,8 @@ html body.pro-board-page main #board .wd-since b{color:#f4f8ff!important;-webkit
             };
             var games = f.view === 'games' ? drawGames(d, f, q) : null;
             var html = sinceStrip(d) + '<div class="wdg-switch" role="tablist" aria-label="Board view">'
+                + '<button type="button" role="tab" data-view="cappers" aria-selected="' + (f.view === 'cappers') + '" class="' + (f.view === 'cappers' ? 'on' : '') + '">Leaderboard</button>'
                 + '<button type="button" role="tab" data-view="games" aria-selected="' + (f.view === 'games') + '" class="' + (f.view === 'games' ? 'on' : '') + '">By game</button>'
-                + '<button type="button" role="tab" data-view="cappers" aria-selected="' + (f.view === 'cappers') + '" class="' + (f.view === 'cappers' ? 'on' : '') + '">By handicapper</button>'
                 + '<button type="button" role="tab" data-view="consensus" aria-selected="' + (f.view === 'consensus') + '" class="' + (f.view === 'consensus' ? 'on' : '') + '">Consensus</button>'
                 + '<span class="wdg-upd">Updated ' + esc(new Date(d.generated_at).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })) + ' <button type="button" id="wdRefresh">Refresh</button></span></div>'
                 + '<div class="wd-bar">' +
@@ -2364,11 +2368,12 @@ html body.pro-board-page main #board .wd-since b{color:#f4f8ff!important;-webkit
             } else if (!rows.length) {
                 html += '<div class="pro-teaser">No picks match these filters.</div>';
             } else {
-                html += '<div class="wd-table-wrap"><table class="wd-table"><thead><tr>' + th('name', 'Handicapper') + th('record', 'Record') + th('units', 'Units', 'n') + th('roi', 'ROI', 'n hide-s') + th('streak', 'Streak', 'n') + th('last10', 'Last 10', 'hide-s') + th('pending', 'Pending', 'n') + '</tr></thead><tbody>' +
-                    rows.map(function (c) {
+                html += '<div class="wd-table-wrap"><table class="wd-table"><thead><tr><th class="n wd-rank-h">#</th>' + th('name', 'Handicapper') + th('record', 'Record') + th('units', 'Units', 'n') + th('roi', 'ROI', 'n hide-s') + th('streak', 'Streak', 'n') + th('last10', 'Last 10', 'hide-s') + th('pending', 'Pending', 'n') + '</tr></thead><tbody>' +
+                    rows.map(function (c, ri) {
                         var r = c.record;
-                        return '<tr class="wd-row" tabindex="0" data-key="' + esc(c.key) + '">' +
-                            '<td><div class="wd-name">' + esc(c.name) + (c.proven ? ' <span class="wd-badge" title="25 or more graded picks. A sample size, not a win rate.">25+ graded</span>' : '') + '</div><div class="wd-sub">' + esc(c.source || '') + (c.sports && c.sports.length ? ' &middot; ' + esc(c.sports.join(', ')) : '') + '</div>'
+                        return '<tr class="wd-row' + (ri < 3 ? ' wd-top' : '') + '" tabindex="0" data-key="' + esc(c.key) + '">' +
+                            '<td class="n wd-rank">' + (ri + 1) + '</td>' +
+                            '<td><div class="wd-name">' + esc(c.name) + (c.proven ? ' <span class="wd-badge" title="25 or more graded picks. A sample size, not a win rate.">25+ graded</span>' : '') + '</div><div class="wd-sub">' + (c.source_url ? '<a class="wd-src" href="' + esc(c.source_url) + '" target="_blank" rel="noopener nofollow">' + esc(c.source || 'Profile') + '</a>' : esc(c.source || '')) + (c.sports && c.sports.length ? ' &middot; ' + esc(c.sports.join(', ')) : '') + '</div>'
                             + (canFollow ? '<button type="button" class="wd-follow' + (followKeys[c.key] ? ' on' : '') + '" data-follow="' + esc(c.key) + '">' + (followKeys[c.key] ? 'Following' : 'Follow') + '</button>' : '')
                             + '</td>' +
                             '<td class="wd-rec">' + r.w + '-' + r.l + (r.p ? '-' + r.p : '') + '<div class="wd-sub">' + c.graded + ' graded</div></td>' +
@@ -2377,7 +2382,7 @@ html body.pro-board-page main #board .wd-since b{color:#f4f8ff!important;-webkit
                             '<td class="n">' + streakTag(c.streak) + '</td>' +
                             '<td class="hide-s">' + dots(c.last10_results) + '</td>' +
                             '<td class="n"><span class="wd-pend">' + c.shown.length + '</span></td></tr>' +
-                            '<tr class="wd-picks-row"><td colspan="7">' + c.shown.map(function (p) {
+                            '<tr class="wd-picks-row"><td colspan="8">' + c.shown.map(function (p) {
                                 return '<span class="wd-chip"><b>' + pickLabel(p) + '</b> <span class="wd-muted">' + esc(p.bet_type || '') + ' &middot; ' + esc(p.league || '') + ' &middot; ' + esc(kick(p.start)) + '</span></span>';
                             }).join('') + '</td></tr>';
                     }).join('') + '</tbody></table></div>';
@@ -2405,11 +2410,11 @@ html body.pro-board-page main #board .wd-since b{color:#f4f8ff!important;-webkit
             Array.prototype.forEach.call(boardEl.querySelectorAll('.wd-row'), function (tr) {
                 var open = function () { openCapper(tr.getAttribute('data-key')); };
                 tr.addEventListener('click', function (e) {
-                    if (e.target.closest && e.target.closest('.wd-follow')) return;
+                    if (e.target.closest && e.target.closest('.wd-follow, .wd-src')) return;
                     open();
                 });
                 tr.addEventListener('keydown', function (e) {
-                    if (e.target.closest && e.target.closest('.wd-follow')) return;
+                    if (e.target.closest && e.target.closest('.wd-follow, .wd-src')) return;
                     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); }
                 });
             });
